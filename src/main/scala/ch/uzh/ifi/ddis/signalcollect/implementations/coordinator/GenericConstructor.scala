@@ -1,4 +1,3 @@
-
 /*
  *  @author Philip Stutz
  *  
@@ -61,7 +60,7 @@ object GenericConstructor {
   }
 
   /*
-   * Creates an instance of a class given suitable parameters and the implicit class manifest
+   * Checks if a submitted parameter type is compatible with the required parameter type in the constructor
    */
   def isConstructorParameterTypeCompatibleWithSubmittedParameterType(constructorType: Class[_], submittedType: Class[_]): Boolean = {
     var submittedParameterType = submittedType
