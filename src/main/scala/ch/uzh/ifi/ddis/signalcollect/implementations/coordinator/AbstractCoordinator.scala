@@ -45,8 +45,6 @@ abstract class AbstractCoordinator(
   with DefaultGraphApi
   with Logging {
 
-  implicit def aggregator2boolean(a: WorkerAggregator[_]): Boolean = a.isDone
-  implicit def map2stats(m: collection.mutable.Map[String, Any]): ComputationStatistics = new ComputationStatistics(m)
 
   protected val messageBus = messageBusFactory()
 
@@ -157,7 +155,7 @@ abstract class AbstractCoordinator(
 
     statsMap.put("jvmCpuTime", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
-    statsMap
+    new ComputationStatistics(statsMap)
   }
 
   def performComputation: collection.mutable.Map[String, Any]
@@ -183,7 +181,7 @@ abstract class AbstractCoordinator(
   def pauseComputation {
     paused.reset
     messageBus.sendToWorkers(CommandPauseComputation)
-    while (!paused) {
+    while (!paused.isDone) {
       handleMessage
     }
     computationInProgress = false
@@ -204,7 +202,7 @@ abstract class AbstractCoordinator(
     def secondPassInProgress = secondPassInitiated && !computationProgressStatisticsSecondPass.isDone
     def passInProgress = firstPassInProgress || secondPassInProgress
     while (!computationStalled) {
-      if (idle) {
+      if (idle.isDone) {
         if (!passInProgress) {
           messageBus.sendToWorkers(CommandSendComputationProgressStats)
           if (!firstPassInitiated) {
