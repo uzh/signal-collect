@@ -17,11 +17,12 @@
  *  
  */
 
-package signalcollect.api
+package signalcollect.implementations.graph
 
+import signalcollect.interfaces.ComputationStatistics
 import scala.collection.mutable
 
-class ComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.LinkedHashMap[String, Any]()) {
+class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.LinkedHashMap[String, Any]()) extends ComputationStatistics {
   def numberOfWorkers: Option[Int] = statsMap.get("numberOfWorkers") collect { case x:Int => x }
   def computationTimeInMilliseconds: Option[Long] = statsMap.get("computationTimeInMilliseconds") collect { case x:Long => x }
   def jvmCpuTimeInMilliseconds: Option[Long] = statsMap.get("jvmCpuTimeInMilliseconds") collect { case x:Long => x }

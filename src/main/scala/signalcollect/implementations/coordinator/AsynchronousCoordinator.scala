@@ -19,9 +19,9 @@
 
 package signalcollect.implementations.coordinator
 
-import signalcollect.api.Queues._
-import signalcollect.api.Workers._
-import signalcollect.api.MessageBuses._
+import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Worker._
+import signalcollect.interfaces.MessageBus._
 import signalcollect.implementations.logging.SeparateThreadLogger
 import signalcollect.interfaces._
 import java.util.concurrent.BlockingQueue

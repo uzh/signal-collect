@@ -17,20 +17,18 @@
  *  
  */
 
-package signalcollect.api
-
-import signalcollect.interfaces.Vertex
-import signalcollect._
+package signalcollect.interfaces
 
 object ComputeGraph {
-	lazy val defaultNumberOfThreads = Runtime.getRuntime.availableProcessors
-	def apply() = {
-		new AsynchronousComputeGraph()
-	}
+  lazy val defaultNumberOfThreads = Runtime.getRuntime.availableProcessors
 }
 
-trait ComputeGraph extends interfaces.GraphApi {
-  def execute(signalThreshold: Double = 0.001, collectThreshold: Double = 0, stepsLimit: Int = 100000): ComputationStatistics
+trait ComputeGraph extends GraphApi {
+  def execute: ComputationStatistics
   def shutDown
   def foreach(f: (Vertex[_, _]) => Unit)
+
+  def setSignalThreshold(t: Double)
+  def setCollectThreshold(t: Double)
+  def setStepsLimit(l: Int)
 }

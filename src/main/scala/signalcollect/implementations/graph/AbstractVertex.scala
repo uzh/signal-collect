@@ -19,12 +19,11 @@
 
 package signalcollect.implementations.graph
 
-import signalcollect.api.Queues
-import signalcollect.api.Queues._
+import signalcollect.implementations.messaging.AbstractMessageRecipient
+import signalcollect.interfaces.Queue._
 import scala.collection.mutable.ListBuffer
-import signalcollect.api.ComputeGraph
 import signalcollect.implementations.messaging.MultiQueue
-import signalcollect.implementations.messaging.MessageRecipient
+import signalcollect.implementations.messaging.AbstractMessageRecipient
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.ArrayBuffer
@@ -34,7 +33,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 
-abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queues.linkedBlockingQueueFactory) extends MessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
+abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
 
   protected def process(message: Any) = {}
 	

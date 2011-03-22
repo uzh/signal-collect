@@ -19,20 +19,15 @@
 
 package signalcollect.implementations.worker
 
-import signalcollect.api.Queues._
-import signalcollect.api.Workers._
-import signalcollect.api.MessageBuses._
+import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.api._
 import signalcollect.implementations._
 import signalcollect.interfaces._
+import signalcollect.interfaces.Queue._
 import java.util.concurrent.BlockingQueue
 import java.util.HashSet
 import java.util.HashMap
-import java.util.Collections
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicReference
-import java.util.LinkedList
 import java.util.LinkedHashSet
 import java.util.LinkedHashMap
 import java.util.Map
@@ -41,7 +36,7 @@ import java.util.Set
 abstract class AbstractWorker(
   protected val messageBus: MessageBus[Any, Any],
   messageInboxFactory: QueueFactory)
-  extends messaging.MessageRecipient(messageInboxFactory)
+  extends AbstractMessageRecipient(messageInboxFactory)
   with Worker
   with Logging
   with Traversable[Vertex[_, _]] {

@@ -20,17 +20,18 @@
 package signalcollect.api
 
 import signalcollect.implementations.coordinator.AsynchronousCoordinator
-import signalcollect.api.Queues._
-import signalcollect.api.Workers._
-import signalcollect.api.MessageBuses._
+import signalcollect.interfaces._
+import signalcollect.interfaces.ComputeGraph._
+import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Worker._
+import signalcollect.interfaces.MessageBus._
 import signalcollect.interfaces.MessageRecipient
-import signalcollect._
 
 class AsynchronousComputeGraph(
 	  numberOfWorkers: Int = ComputeGraph.defaultNumberOfThreads,
-	  workerFactory: WorkerFactory = Workers.defaultFactory,
-	  messageInboxFactory: QueueFactory = Queues.defaultFactory,
-	  messageBusFactory: MessageBusFactory = MessageBuses.defaultFactory,
+	  workerFactory: WorkerFactory = Worker.defaultFactory,
+	  messageInboxFactory: QueueFactory = Queue.defaultFactory,
+	  messageBusFactory: MessageBusFactory = MessageBus.defaultFactory,
 	  logger: Option[MessageRecipient[Any]] = None
 	) extends AsynchronousCoordinator(
 	  numberOfWorkers,

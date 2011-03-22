@@ -19,24 +19,18 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.logging.DefaultLogger
-import scala.annotation.elidable
-import scala.annotation.elidable._
-
-object Logging {
-	def createDefaultLogger = createConsoleLogger 
-	def createConsoleLogger: MessageRecipient[Any] = new DefaultLogger
-}
-
-trait Logging {
-	protected def messageBus: MessageBus[_, _]
-	
-	@elidable(FINE)
-	lazy val className = this.getClass.getSimpleName
-	
-	@elidable(FINE)
-	def log(msg: Any) = {
-		messageBus.sendToLogger(className + ": " + msg)
-	}
-
+trait ComputationStatistics {
+  def numberOfWorkers: Option[Int]
+  def computationTimeInMilliseconds: Option[Long]
+  def jvmCpuTimeInMilliseconds: Option[Long]
+  def computeGraph: Option[String]
+  def worker: Option[String]
+  def messageBus: Option[String]
+  def messageInbox: Option[String]
+  def logger: Option[String]
+  def signalCollectSteps: Option[Long]
+  def numberOfVertices: Option[Long]
+  def numberOfEdges: Option[Long]
+  def vertexCollectOperations: Option[Long]
+  def vertexSignalOperations: Option[Long]
 }

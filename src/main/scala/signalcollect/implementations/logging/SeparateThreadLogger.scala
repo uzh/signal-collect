@@ -19,11 +19,11 @@
 
 package signalcollect.implementations.logging
 
+import signalcollect.implementations.messaging.AbstractMessageRecipient
 import signalcollect.interfaces.CommandShutDown
-import signalcollect.implementations.messaging.MessageRecipient
 import java.util.concurrent.BlockingQueue
 
-abstract class SeparateThreadLogger(messageInboxFactory: () => BlockingQueue[Any]) extends MessageRecipient(messageInboxFactory) with Runnable {
+abstract class SeparateThreadLogger(messageInboxFactory: () => BlockingQueue[Any]) extends AbstractMessageRecipient(messageInboxFactory) with Runnable {
 
 	protected var shutDown = false
 	

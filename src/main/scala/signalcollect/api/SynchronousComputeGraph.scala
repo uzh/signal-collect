@@ -20,17 +20,19 @@
 package signalcollect.api
 
 import signalcollect.implementations.coordinator.SynchronousCoordinator
-import signalcollect.api.Queues._
-import signalcollect.api.Workers._
-import signalcollect.api.MessageBuses._
+import signalcollect.interfaces._
+import signalcollect.interfaces.ComputeGraph._
 import signalcollect.interfaces.MessageRecipient
+import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Worker._
+import signalcollect.interfaces.MessageBus._
 import signalcollect._
 
 class SynchronousComputeGraph(
 	  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-	  workerFactory: WorkerFactory = Workers.synchronousWorkerFactory,
-	  messageInboxFactory: QueueFactory = Queues.defaultFactory,
-	  messageBusFactory: MessageBusFactory = MessageBuses.defaultFactory,
+	  workerFactory: WorkerFactory = Worker.synchronousWorkerFactory,
+	  messageInboxFactory: QueueFactory = Queue.defaultFactory,
+	  messageBusFactory: MessageBusFactory = MessageBus.defaultFactory,
 	  logger: Option[MessageRecipient[Any]] = None
 	) extends SynchronousCoordinator(
 	  numberOfWorkers,

@@ -19,15 +19,17 @@
 
 package signalcollect.implementations.coordinator
 
+import signalcollect.implementations.graph.DefaultComputationStatistics
+import signalcollect.implementations.messaging.AbstractMessageRecipient
 import signalcollect.implementations.graph.DefaultGraphApi
-import signalcollect.api.Queues._
-import signalcollect.api.Workers._
-import signalcollect.api.MessageBuses._
-import signalcollect.api.ComputationStatistics
+import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Worker._
+import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
 import java.util.concurrent.ArrayBlockingQueue
 import signalcollect.implementations.messaging.MultiQueue
-import signalcollect.api.ComputeGraph
+import signalcollect.interfaces.ComputeGraph
 import java.util.concurrent.BlockingQueue
 import signalcollect.interfaces._
 import signalcollect._
@@ -40,11 +42,10 @@ abstract class AbstractCoordinator(
   messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
   optionalLogger: Option[MessageRecipient[Any]] = None)
-  extends implementations.messaging.MessageRecipient(messageInboxFactory)
+  extends AbstractMessageRecipient(messageInboxFactory)
   with ComputeGraph
   with DefaultGraphApi
   with Logging {
-
 
   protected val messageBus = messageBusFactory()
 
@@ -113,10 +114,19 @@ abstract class AbstractCoordinator(
   var computationStalled: Boolean = false
   var computationInProgress = false
 
-  def execute(signalThreshold: Double = 0.001, collectThreshold: Double = 0, stepsLimit: Int = 100000): ComputationStatistics = {
-    log("Initializing graph ...")
-    initializeGraph(signalThreshold, collectThreshold)
-    log("\t\t\tDONE")
+  def setSignalThreshold(t: Double) {
+    messageBus.sendToWorkers(CommandSetSignalThreshold(t))
+  }
+
+  def setCollectThreshold(t: Double) {
+    messageBus.sendToWorkers(CommandSetCollectThreshold(t))
+  }
+
+  def setStepsLimit(l: Int) {
+    throw new UnsupportedOperationException("Steps limit not supported yet.")
+  }
+
+  def execute: ComputationStatistics = {
 
     /*******************************/
     log("Waiting for graph loading to finish ...")
@@ -155,7 +165,7 @@ abstract class AbstractCoordinator(
 
     statsMap.put("jvmCpuTime", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
-    new ComputationStatistics(statsMap)
+    new DefaultComputationStatistics(statsMap)
   }
 
   def performComputation: collection.mutable.Map[String, Any]
@@ -171,11 +181,6 @@ abstract class AbstractCoordinator(
       workers(i) = worker
     }
     workers
-  }
-
-  def initializeGraph(signalThreshold: Double, collectThreshold: Double) {
-    messageBus.sendToWorkers(CommandSetSignalThreshold(signalThreshold))
-    messageBus.sendToWorkers(CommandSetCollectThreshold(collectThreshold))
   }
 
   def pauseComputation {

@@ -19,6 +19,24 @@
 
 package signalcollect.interfaces
 
-import java.util.concurrent.BlockingQueue
+import signalcollect.implementations.worker.AsynchronousPriorityWorker
+import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
+import signalcollect.implementations.worker.AsynchronousWorker
+import signalcollect.implementations.worker.SynchronousWorker
+import signalcollect.interfaces.Queue._
+
+object Worker {
+	type WorkerFactory = (MessageBus[Any, Any], QueueFactory) => Worker
+	
+	lazy val defaultFactory = asynchronousDirectDeliveryWorkerFactory
+	def createSynchronousWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new SynchronousWorker(mb, qf)
+	lazy val synchronousWorkerFactory = createSynchronousWorker _
+	def createAsynchronousWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new AsynchronousWorker(mb, qf)
+	lazy val asynchronousWorkerFactory = createAsynchronousWorker _
+	def createAsynchronousDirectDeliveryWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new DirectDeliveryAsynchronousWorker(mb, qf)
+	lazy val asynchronousDirectDeliveryWorkerFactory = createAsynchronousDirectDeliveryWorker _
+	def createAsynchronousPriorityWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new AsynchronousPriorityWorker(mb, qf)
+	lazy val asynchronousPriorityWorkerFactory = createAsynchronousPriorityWorker _
+}
 
 trait Worker extends MessageRecipient[Any] with Runnable
