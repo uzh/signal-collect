@@ -52,11 +52,11 @@ trait DefaultGraphApi extends GraphApi {
     messageBus.sendToWorkerForId(CommandRemoveOutgoingEdge(edgeId: (Any, Any, String)), edgeId._1)
   }
 
-  override def removeVertices[VertexType <: Vertex[_, _]](predicate: VertexType => Boolean) {
+  override def removeVertices(predicate: Vertex[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveVertices(predicate))
   }
 
-  override def removeEdges[EdgeType <: Edge[_, _]](predicate: EdgeType => Boolean) {
+  override def removeEdges(predicate: Edge[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveOutgoingEdges(predicate))
   }
 
