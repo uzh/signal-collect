@@ -59,12 +59,10 @@ abstract class AbstractCoordinator(
     }
   }
 
-  def foreach(f: (interfaces.Vertex[_, _]) => Unit) {
+  def foreach(f: (Vertex[_, _]) => Unit) {
     awaitStalledComputation
     pauseComputation
     messageBus.sendToWorkers(CommandForEachVertex(f))
-    awaitStalledComputation
-    startComputation
     awaitStalledComputation
   }
 
