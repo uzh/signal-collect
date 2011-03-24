@@ -19,6 +19,7 @@
 
 package signalcollect.interfaces
 
+import signalcollect.implementations.worker.DirectDeliverySynchronousWorker
 import signalcollect.implementations.worker.AsynchronousPriorityWorker
 import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 import signalcollect.implementations.worker.AsynchronousWorker
@@ -29,8 +30,11 @@ object Worker {
 	type WorkerFactory = (MessageBus[Any, Any], QueueFactory) => Worker
 	
 	lazy val defaultFactory = asynchronousDirectDeliveryWorkerFactory
+	
 	def createSynchronousWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new SynchronousWorker(mb, qf)
 	lazy val synchronousWorkerFactory = createSynchronousWorker _
+	def createSynchronousDirectDeliveryWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new DirectDeliverySynchronousWorker(mb, qf)
+	lazy val synchronousDirectDeliveryWorkerFactory = createSynchronousDirectDeliveryWorker _
 	def createAsynchronousWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new AsynchronousWorker(mb, qf)
 	lazy val asynchronousWorkerFactory = createAsynchronousWorker _
 	def createAsynchronousDirectDeliveryWorker(mb: MessageBus[Any, Any], qf: QueueFactory) = new DirectDeliveryAsynchronousWorker(mb, qf)

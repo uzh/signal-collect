@@ -26,13 +26,14 @@ import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.LinkedHashSet
+import util.collections.ConcurrentHashSet
 
 class DirectDeliveryAsynchronousWorker(
   mb: MessageBus[Any, Any],
   messageInboxFactory: () => BlockingQueue[Any]) extends AsynchronousWorker(mb, messageInboxFactory) {
 
-  protected override def vertexMapFactory = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, Runtime.getRuntime.availableProcessors)
-  protected override def vertexSetFactory = new util.collections.ConcurrentHashSet[Vertex[_, _]](100000, 0.75f, Runtime.getRuntime.availableProcessors)
+  protected override def vertexMapFactory = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreads)
+  protected override def vertexSetFactory = new ConcurrentHashSet[Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreads)
 
   override def send(message: Any) = {
     message match {

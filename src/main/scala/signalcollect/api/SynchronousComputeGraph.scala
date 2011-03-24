@@ -29,8 +29,8 @@ import signalcollect.interfaces.MessageBus._
 import signalcollect._
 
 class SynchronousComputeGraph(
-	  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-	  workerFactory: WorkerFactory = Worker.synchronousWorkerFactory,
+	  numberOfWorkers: Int = ComputeGraph.defaultNumberOfThreads,
+	  workerFactory: WorkerFactory = Worker.synchronousDirectDeliveryWorkerFactory,
 	  messageInboxFactory: QueueFactory = Queue.defaultFactory,
 	  messageBusFactory: MessageBusFactory = MessageBus.defaultFactory,
 	  logger: Option[MessageRecipient[Any]] = None
