@@ -31,8 +31,8 @@ trait GraphApi {
   
   def removeEdge(edgeId: (Any, Any, String))
   
-  def removeVertices(predicate: Vertex[_, _] => Boolean)
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
   
-  def removeEdges(predicate: Edge[_, _] => Boolean)
+//  def removeEdges(predicate: Edge[_, _] => Boolean)
   
 }

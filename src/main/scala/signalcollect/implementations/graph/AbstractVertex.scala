@@ -72,15 +72,27 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
    * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
    * @param e the edge to be added.
    */
-  def removeOutgoingEdge(edgeId: (Any, Any, String)) {
+  def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
     val castEdgeId = edgeId.asInstanceOf[(IdType, Any, String)]
     if (outgoingEdges.contains(castEdgeId)) {
     	val outgoingEdge = outgoingEdges.get(castEdgeId).get
     	processRemoveOutgoingEdge(outgoingEdge)
+    	true
+    } else {
+    	false
     }
   }
   
+  /**
+   * Removes all outgoing {@link Edge}s from this {@link Vertex}.
+   * @return returns the number of {@link Edge}s that were removed. 
+   */
+  def removeAllOutgoingEdges {
+	  outgoingEdges.keys foreach (removeOutgoingEdge(_))
+  }
+  
   protected def processRemoveOutgoingEdge(e: Edge[IdType, _]) {
+	  messageBus.sendToWorkerForIdHash(CommandRemoveIncomingEdge(e.id), e.targetHashCode)
       outgoingEdges.remove(e.id)
   }
   
@@ -94,8 +106,10 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
    * Informs this vertex that an incoming edge was removed.
    * @param edgeId the id of the incoming edge that was removed
    */
-  def removeIncomingEdge(edgeId: (Any, Any, String)) {}
-
+  def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean] = {
+	  None
+  }
+  
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */

@@ -43,7 +43,7 @@ abstract class AbstractWorker(
 
   override protected def process(message: Any) {
     message match {
-      case s: Signal[_, _, _] => handleSignal(s)
+      case s: Signal[_, _, _] => processSignal(s)
       case CommandShutDown => shutDown = true
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
@@ -51,10 +51,9 @@ abstract class AbstractWorker(
       case CommandAddVertexFromFactory(vertexFactory, parameters) => addVertex(vertexFactory(parameters))
       case CommandAddEdgeFromFactory(edgeFactory, parameters) => addOutgoingEdge(edgeFactory(parameters))
       case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
-      case CommandRemoveVertex(vertexId) => throw new UnsupportedOperationException(this.getClass.getSimpleName + """ does not implement "RemoveVertex"""")
-      case CommandRemoveOutgoingEdge(edgeId) => throw new UnsupportedOperationException(this.getClass.getSimpleName + """ does not implement "RemoveEdge"""")
-      case CommandRemoveVertices(predicate) => throw new UnsupportedOperationException(this.getClass.getSimpleName + """ does not implement "RemoveVertices"""")
-      case CommandRemoveOutgoingEdges(predicate) => throw new UnsupportedOperationException(this.getClass.getSimpleName + """ does not implement "RemoveEdges"""")
+      case CommandRemoveVertex(vertexId) => removeVertex(vertexId)
+      case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
+      case CommandRemoveVertices(shouldRemove) => removeVertices(shouldRemove)
       case CommandAddIncomingEdge(edgeId) => addIncomingEdge(edgeId)
       case CommandSetSignalThreshold(sT) => signalThreshold = sT
       case CommandSetCollectThreshold(cT) => collectThreshold = cT
@@ -65,11 +64,11 @@ abstract class AbstractWorker(
     }
   }
 
-  def startComputation {
+  protected def startComputation {
     shouldStart = true
   }
 
-  def pauseComputation {
+  protected def pauseComputation {
     shouldPause = true
   }
 
@@ -95,7 +94,7 @@ abstract class AbstractWorker(
   protected var toSignal = vertexSetFactory
   protected def vertexSetFactory: Set[Vertex[_, _]] = new HashSet[Vertex[_, _]]()
 
-  def setIdle(newIdleState: Boolean) {
+  protected def setIdle(newIdleState: Boolean) {
     if (isIdle != newIdleState) {
       if (newIdleState == true) {
         messageBus.sendToCoordinator(StatusWorkerIsIdle)
@@ -106,7 +105,7 @@ abstract class AbstractWorker(
     }
   }
 
-  val idleTimeoutNanoseconds: Long = 1000000l * 10l// * 50l //1000000 * 50000 // 50 milliseconds
+  protected val idleTimeoutNanoseconds: Long = 1000000l * 10l // * 50l //1000000 * 50000 // 50 milliseconds
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
     var message = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
@@ -120,20 +119,6 @@ abstract class AbstractWorker(
     }
   }
 
-  var verticesRemovedCounter = 0l
-
-  def removeVertex(vertexId: Any) {
-    verticesRemovedCounter += 1
-  }
-
-  var outgoingEdgesRemovedCounter = 0l
-
-  def removeOutgoingEdge(edgeId: (Any, Any, String)) {
-    outgoingEdgesRemovedCounter += 1
-  }
-
-  var incomingEdgesRemovedCounter = 0l
-
   def foreach[U](f: (Vertex[_, _]) => U) {
     val i = vertices.iterator
     while (i.hasNext) {
@@ -142,14 +127,61 @@ abstract class AbstractWorker(
     }
   }
 
+  protected def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+    foreach { vertex =>
+      if (shouldRemove(vertex)) {
+        processRemoveVertex(vertex)
+      }
+    }
+  }
+
+  protected var verticesRemovedCounter = 0l
+
+  protected def removeVertex(vertexId: Any) {
+    val vertex = vertexMap.get(vertexId)
+    if (vertex != null) {
+      processRemoveVertex(vertex)
+    } else {
+      log("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+    }
+  }
+
+  protected def processRemoveVertex(vertex: Vertex[_, _]) {
+    vertex.incomingEdgeCount foreach (incomingEdgesRemovedCounter += _)
+    vertex.outgoingEdgeCount foreach (outgoingEdgesRemovedCounter += _)
+    vertex.removeAllOutgoingEdges
+    verticesRemovedCounter += 1
+    vertexMap.remove(vertex.id)
+    toSignal.remove(vertex.id)
+    toCollect.remove(vertex.id)
+  }
+
+  protected var outgoingEdgesRemovedCounter = 0l
+
+  protected def removeOutgoingEdge(edgeId: (Any, Any, String)) {
+    var removed = false
+    val vertex = vertexMap.get(edgeId._1)
+    if (vertex != null) {
+      if (vertex.removeOutgoingEdge(edgeId)) {
+        outgoingEdgesRemovedCounter += 1
+      } else {
+        log("Outgoing edge not found when trying to remove edge with id " + edgeId)
+      }
+    } else {
+      log("Source vertex not found found when trying to remove edge with id " + edgeId)
+    }
+  }
+
+  protected var incomingEdgesRemovedCounter = 0l
+
   protected def removeIncomingEdge(edgeId: (Any, Any, String)) {
     val targetVertexId = edgeId._2
     val targetVertex = vertexMap.get(targetVertexId)
     if (targetVertex != null) {
-      incomingEdgesRemovedCounter += 1
-      targetVertex.removeIncomingEdge(edgeId)
+      val removed = targetVertex.removeIncomingEdge(edgeId)
+      removed map (if (_) incomingEdgesRemovedCounter += 1)
     } else {
-      log("Not found when modifying number of incoming edges: vertex with id " + targetVertexId)
+      log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
     }
   }
 
@@ -162,7 +194,7 @@ abstract class AbstractWorker(
       incomingEdgesAddedCounter += 1
       targetVertex.addIncomingEdge(edgeId)
     } else {
-      log("Not found when modifying number of incoming edges: vertex with id " + targetVertexId)
+      log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
     }
   }
 
@@ -172,14 +204,13 @@ abstract class AbstractWorker(
     val key = e.sourceId
     val vertex = vertexMap.get(key)
     if (vertex != null) {
-      log("Adding outgoing edge: " + e + " to vertex " + vertex)
       outgoingEdgesAddedCounter += 1
       vertex.addOutgoingEdge(e)
       messageBus.sendToWorkerForIdHash(CommandAddIncomingEdge(e.id), e.targetHashCode)
       toCollect.add(vertex)
       toSignal.add(vertex)
     } else {
-      log("Not found when adding edge " + e + ": vertex with id " + e.sourceId)
+      log("Did not find vertex with id " + e.sourceId + " when adding edge " + e)
     }
   }
 
@@ -290,23 +321,12 @@ abstract class AbstractWorker(
     numberOfEdges
   }
 
-  protected def handleSignal(signal: Signal[_, _, _]) {
-    signal.targetId match {
-      case c: Class[_] =>
-        val i = vertices.iterator
-        while (i.hasNext) {
-          val vertex = i.next
-          if (c.isInstance(vertex)) {
-            deliverSignal(signal, vertex)
-          }
-        }
-      case _ =>
-        val vertex = vertexMap.get(signal.targetId)
-        if (vertex != null) {
-          deliverSignal(signal, vertex)
-        } else {
-          log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
-        }
+  protected def processSignal(signal: Signal[_, _, _]) {
+    val vertex = vertexMap.get(signal.targetId)
+    if (vertex != null) {
+      deliverSignal(signal, vertex)
+    } else {
+      log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
     }
   }
 

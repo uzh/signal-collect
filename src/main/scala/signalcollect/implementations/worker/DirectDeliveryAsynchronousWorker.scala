@@ -37,7 +37,7 @@ class DirectDeliveryAsynchronousWorker(
 
   override def send(message: Any) = {
     message match {
-      case s: Signal[_, _, _] => handleSignal(s)
+      case s: Signal[_, _, _] => processSignal(s)
       case other => messageInbox.put(message)
     }
   }

@@ -25,8 +25,6 @@ case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdT
 case class CommandAddVertexFromFactory(factory: Seq[AnyRef] => Vertex[_, _], parameters: Seq[AnyRef])
 case class CommandAddEdgeFromFactory(factory: Seq[AnyRef] => Edge[_, _], parameters: Seq[AnyRef])
 
-//case class CommandAddVertex(vertex: Vertex[_, _])
-//case class CommandAddOutgoingEdge(edge: Edge[_, _])
 case class CommandAddIncomingEdge(edgeId: (Any, Any, String))
 
 case class CommandAddPatternEdge[IdType](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
@@ -35,8 +33,8 @@ case class CommandRemoveVertex(vertexId: Any)
 case class CommandRemoveOutgoingEdge(edgeId: (Any, Any, String))
 case class CommandRemoveIncomingEdge(edgeId: (Any, Any, String))
 
-case class CommandRemoveVertices(predicate: Vertex[_, _] => Boolean)
-case class CommandRemoveOutgoingEdges(predicate: Edge[_, _] => Boolean)
+case class CommandRemoveVertices(shouldRemove: Vertex[_, _] => Boolean)
+//case class CommandRemoveOutgoingEdges(predicate: Edge[_, _] => Boolean)
 
 case class CommandSetSignalThreshold(signalThreshold: Double)
 case class CommandSetCollectThreshold(collectThreshold: Double)

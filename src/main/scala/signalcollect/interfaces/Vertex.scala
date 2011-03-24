@@ -69,17 +69,23 @@ package signalcollect.interfaces
   def setMessageBus(mb: MessageBus[Any, Any])
 
   /**
-   * Adds a new outgoing {@link Edge} to this {@link FrameworkVertex}.
+   * Adds a new outgoing {@link Edge} to this {@link Vertex}.
    * @param e the edge to be added.
    */
   def addOutgoingEdge(e: Edge[_, _])
 
   /**
-   * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
-   * @param e the edge to be added.
+   * Removes an outgoing {@link Edge} from this {@link Vertex}.
+   * @param e the edge to be added..
+   * @return returns if an edge was removed
    */
-  def removeOutgoingEdge(edgeId: (Any, Any, String))
+  def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean
 
+  /**
+   * Removes all outgoing {@link Edge}s from this {@link Vertex}.
+   */
+  def removeAllOutgoingEdges
+  
   /**
    * Informs this vertex that there is a new incoming edge.
    * @param edgeId the id of the new incoming edge
@@ -89,9 +95,10 @@ package signalcollect.interfaces
   /**
    * Informs this vertex that an incoming edge was removed.
    * @param edgeId the id of the incoming edge that was removed
+   * @return Optionally returns if an edge was removed
    */
-  def removeIncomingEdge(edgeId: (Any, Any, String))
-  
+  def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean]
+   
   /**
    * This method tells this {@link FrameworkVertex} to execute the signal operation
    * on all its outgoing {@Edge}s. This method is going to be
@@ -99,7 +106,7 @@ package signalcollect.interfaces
    * {@link Worker} implementations).
    *
    * @see Worker
-   * @see FrameworkEdge#executeSignalOperation
+   * @see Edge#executeSignalOperation
    */
   def executeSignalOperation
 
@@ -124,7 +131,7 @@ package signalcollect.interfaces
    */
   def scoreSignal: Double
 
-  /** @return optionally the number of outgoing edges of this {@link FrameworkVertex} */
+  /** @return optionally the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Option[Int]
 
   /** @return optionally the number of incoming edges of this {@link Vertex}. Modified by {@link FrameworkVertex} */

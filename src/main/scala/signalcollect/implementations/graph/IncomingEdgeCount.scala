@@ -38,7 +38,9 @@ trait IncomingEdgeCount[IdType, StateType] extends AbstractVertex[IdType, StateT
    * Informs this vertex that an incoming edge was removed.
    * @param edgeId the id of the incoming edge that was removed
    */
-  override def removeIncomingEdge(edgeId: (Any, Any, String)) {
+  override def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean] = {
 	  _incomingEdgeCount -= 1
+	  None
   }
+ 
 }
