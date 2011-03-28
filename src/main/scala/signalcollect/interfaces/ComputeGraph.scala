@@ -29,6 +29,7 @@ trait ComputeGraph extends GraphApi {
   def execute: ComputationStatistics
   def shutDown
   def foreach(f: (Vertex[_, _]) => Unit)
+  def foreach(f: PartialFunction[Vertex[_, _], Unit])
 
   def setSignalThreshold(t: Double)
   def setCollectThreshold(t: Double)

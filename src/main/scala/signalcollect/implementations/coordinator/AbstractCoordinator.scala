@@ -66,6 +66,15 @@ abstract class AbstractCoordinator(
     awaitStalledComputation
   }
 
+  def foreach(f: PartialFunction[Vertex[_, _], Unit]) {
+    def transformedFunction(v: Vertex[_, _]) {
+      if (f.isDefinedAt(v)) {
+        f(v)
+      }
+    }
+    foreach(transformedFunction _)
+  }
+
   def process(message: Any) {
     message match {
       case StatusWorkerIsIdle => idle.increment
