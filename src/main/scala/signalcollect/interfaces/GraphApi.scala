@@ -24,7 +24,7 @@ trait GraphApi {
   def addVertex[VertexType <: Vertex[_, _]](id: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType])
   
   def addEdge[EdgeType <: Edge[_, _]](sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[EdgeType])
-	  
+
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 
   def removeVertex(vertexId: Any)
@@ -32,7 +32,5 @@ trait GraphApi {
   def removeEdge(edgeId: (Any, Any, String))
   
   def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
-  
-//  def removeEdges(predicate: Edge[_, _] => Boolean)
-  
+    
 }

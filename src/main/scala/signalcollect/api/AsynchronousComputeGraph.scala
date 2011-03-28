@@ -39,4 +39,7 @@ class AsynchronousComputeGraph(
 	  messageInboxFactory,
 	  messageBusFactory,
 	  logger
-  )
+  ) {
+	// Hack for Java: no-arg constructor that will use the default parameters
+	def this() =  this(AsynchronousComputeGraph.init$default$1)
+}

@@ -21,7 +21,6 @@ package signalcollect.implementations.worker
 
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
-import signalcollect.api._
 import signalcollect.implementations._
 import signalcollect.interfaces._
 import signalcollect.interfaces.Queue._

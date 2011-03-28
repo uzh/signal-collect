@@ -17,7 +17,7 @@
  *  
  */
 
-package signalcollect.api.edges
+package signalcollect.api
 
 import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractEdge

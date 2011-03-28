@@ -17,7 +17,7 @@
  *  
  */
 
-package signalcollect.api.vertices
+package signalcollect.api
 
 import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractVertex
@@ -28,4 +28,4 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LinkedHashMap
 
-abstract class UncollectedMessagesVertex[IdType, StateType](val id: IdType, var state: StateType) extends AbstractVertex[IdType, StateType] with UncollectedSignalsList[IdType, StateType]
+abstract class SignalMapVertex[IdType, StateType](val id: IdType, var state: StateType) extends AbstractVertex[IdType, StateType] with MostRecentSignalMap[IdType, StateType]

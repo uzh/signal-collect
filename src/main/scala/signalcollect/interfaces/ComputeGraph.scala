@@ -19,6 +19,8 @@
 
 package signalcollect.interfaces
 
+import signalcollect.api.AsynchronousComputeGraph
+
 object ComputeGraph {
   lazy val defaultNumberOfThreads = Runtime.getRuntime.availableProcessors
 }

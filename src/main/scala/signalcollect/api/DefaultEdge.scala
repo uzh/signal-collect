@@ -17,20 +17,9 @@
  *  
  */
 
-package signalcollect.api.edges
+package signalcollect.api
 
 import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractEdge
 
-abstract class OnlySignalOnChangeEdge[@specialized SourceIdType, @specialized TargetIdType](val sourceId: SourceIdType, val targetId: TargetIdType) extends AbstractEdge[SourceIdType, TargetIdType] {
-
-  var lastSignalSent: Option[SignalType] = None
-
-  override def executeSignalOperation(mb: MessageBus[Any, Any]) {
-    val newSignal = signal
-    if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      	mb.sendToWorkerForIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
-      	lastSignalSent = Some(newSignal)
-    }
-  }
-}
+abstract class DefaultEdge[@specialized SourceIdType, @specialized TargetIdType](val sourceId: SourceIdType, val targetId: TargetIdType) extends AbstractEdge[SourceIdType, TargetIdType]

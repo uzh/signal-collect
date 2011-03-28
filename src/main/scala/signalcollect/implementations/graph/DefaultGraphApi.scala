@@ -22,6 +22,7 @@ package signalcollect.implementations.graph
 import signalcollect.implementations.coordinator.GenericConstructor
 import signalcollect._
 import signalcollect.interfaces._
+import scala.collection.JavaConversions._
 
 trait DefaultGraphApi extends GraphApi {
   protected def messageBus: MessageBus[Any, Any]
@@ -55,9 +56,5 @@ trait DefaultGraphApi extends GraphApi {
   override def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveVertices(shouldRemove))
   }
-
-//  override def removeEdges(predicate: Edge[_, _] => Boolean) {
-//    messageBus.sendToWorkers(CommandRemoveOutgoingEdges(predicate))
-//  }
-
+  
 }

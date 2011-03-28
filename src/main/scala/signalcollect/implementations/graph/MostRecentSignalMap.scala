@@ -25,12 +25,11 @@ import signalcollect.interfaces.Signal
 
 trait MostRecentSignalMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
 
-  /** should be protected, but the verifier needs access to it */
   protected val mostRecentSignalMap: Map[Any, UpperSignalTypeBound] = HashMap[Any, UpperSignalTypeBound]() // key: signal source id, value: signal
 
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
   
-  protected def typeFilteredSignals[G <: Any](implicit m: Manifest[G]): Traversable[G] = new Traversable[G] {
+  protected def signals[G <: Any](implicit m: Manifest[G]): Traversable[G] = new Traversable[G] {
     def foreach[U](f: G => U) = {
       mostRecentSignalMap.valuesIterator foreach { x => try { f(x.asInstanceOf[G]) } catch { case _ => } } // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     }

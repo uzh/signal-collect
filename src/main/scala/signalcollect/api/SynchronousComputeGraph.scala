@@ -40,4 +40,7 @@ class SynchronousComputeGraph(
 	  messageInboxFactory,
 	  messageBusFactory,
 	  logger
-  )
+  ) {
+	// Hack for Java: no-arg constructor that will use the default parameters
+	def this() =  this(SynchronousComputeGraph.init$default$1)
+}

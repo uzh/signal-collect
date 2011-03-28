@@ -17,7 +17,7 @@
  *  
  */
 
-package signalcollect.api.vertices
+package signalcollect.api
 
 import signalcollect.implementations.graph.SumOfOutWeights
 import signalcollect.implementations.graph.IncomingEdgeCount
