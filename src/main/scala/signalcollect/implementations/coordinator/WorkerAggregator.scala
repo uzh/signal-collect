@@ -20,11 +20,11 @@
 package signalcollect.implementations.coordinator
 
 class Counter(workers: Int) extends WorkerAggregator[Int](workers, 0, (_ + _)) {
-	def increment = aggregate(1)
-	def decrement = {
-      aggregateValue -= 1
-      aggregationCounter -= 1
-	}
+  def increment = aggregate(1)
+  def decrement = {
+    aggregateValue -= 1
+    aggregationCounter -= 1
+  }
 }
 
 class LongAggregator(workers: Int) extends WorkerAggregator[Long](workers: Int, 0l, (_ + _))
@@ -45,7 +45,19 @@ class WorkerAggregator[G](workers: Int, initialValue: G, aggregationFunction: (G
       throw new Exception("Aggregation error: too many results to aggregate")
     }
   }
-  
+
+  def tryAggregate(item: Any) {
+    if (!isDone) {
+      val castItem = try { Some(item.asInstanceOf[G]) } catch { case _ => None }  // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+      if (castItem.isDefined) {
+        aggregateValue = aggregationFunction(aggregateValue, castItem.get)
+        aggregationCounter += 1
+      }
+    } else {
+      throw new Exception("Aggregation error: too many results to aggregate")
+    }
+  }
+
   def apply(): Option[G] = {
     if (isDone) {
       Some(aggregateValue)

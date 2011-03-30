@@ -59,6 +59,43 @@ abstract class AbstractCoordinator(
     }
   }
 
+  def sum[N](implicit numeric: Numeric[N]): N = {
+    aggregate(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
+  }
+
+  def product[N](implicit numeric: Numeric[N]): N = {
+    aggregate(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
+  }
+
+  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType = {
+    val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
+      {
+        try {
+          v.state.asInstanceOf[ValueType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+        } catch {
+          case _ => neutralElement
+        }
+      }
+    }
+    customAggregate(neutralElement, aggregator, stateExtractor)
+  }
+
+  var valueAggregator: Option[WorkerAggregator[_]] = None
+
+  def customAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    awaitStalledComputation
+    pauseComputation
+    valueAggregator = Some(new WorkerAggregator[ValueType](numberOfWorkers, neutralElement, aggregator))
+    messageBus.sendToWorkers(CommandAggregate(neutralElement, aggregator, extractor))
+    awaitStalledComputation
+    val aggregate = valueAggregator.get()
+    if (aggregate.isDefined) {
+      aggregate.get.asInstanceOf[ValueType]
+    } else {
+      throw new Exception("Aggregation error, computation supposedly done, but no aggregated value found.")
+    }
+  }
+
   def foreach(f: (Vertex[_, _]) => Unit) {
     awaitStalledComputation
     pauseComputation
@@ -84,6 +121,10 @@ abstract class AbstractCoordinator(
       case StatusNumberOfEdges(e) => numberOfEdges.aggregate(e)
       case StatusSignalStepDone => signalStep.increment
       case StatusCollectStepDone(toSignal) => collectStep.aggregate(toSignal)
+      case StatusAggregatedValue(value) =>
+        if (valueAggregator.isDefined) {
+          valueAggregator.get.tryAggregate(value)
+        }
       case stats: ComputationProgressStats =>
         if (!computationProgressStatistics.isDone) {
           computationProgressStatistics.aggregate(stats)

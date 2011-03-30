@@ -59,10 +59,16 @@ abstract class AbstractWorker(
       case CommandSignalStep => executeSignalStep
       case CommandCollectStep => executeCollectStep
       case CommandSendComputationProgressStats => sendComputationProgressStats
+      case CommandAggregate(neutralElement, aggregator, extractor) => aggregate(neutralElement, aggregator, extractor)
       case other => log("Could not handle message " + message)
     }
   }
 
+  protected def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType) {
+	  val aggregatedValue = foldLeft(neutralElement){ (a: ValueType, v: Vertex[_,_]) => aggregator(a, extractor(v)) }
+	  messageBus.sendToCoordinator(StatusAggregatedValue(aggregatedValue))
+  }
+  
   protected def startComputation {
     shouldStart = true
   }

@@ -28,7 +28,7 @@ import signalcollect.interfaces._
 import java.util.concurrent.BlockingQueue
 
 class SynchronousCoordinator(
-  numberOfWorkers: Int = java.lang.Runtime.getRuntime.availableProcessors,
+  numberOfWorkers: Int,
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,

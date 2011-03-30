@@ -34,16 +34,17 @@ case class CommandRemoveOutgoingEdge(edgeId: (Any, Any, String))
 case class CommandRemoveIncomingEdge(edgeId: (Any, Any, String))
 
 case class CommandRemoveVertices(shouldRemove: Vertex[_, _] => Boolean)
-//case class CommandRemoveOutgoingEdges(predicate: Edge[_, _] => Boolean)
 
 case class CommandSetSignalThreshold(signalThreshold: Double)
 case class CommandSetCollectThreshold(collectThreshold: Double)
 
 case class CommandForEachVertex[U](f: (Vertex[_, _]) => U)
+case class CommandAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType)
+case class StatusAggregatedValue[ValueType](value: ValueType)
 
 // vertex/edge counting
-case class StatusNumberOfVertices(v: Int)
-case class StatusNumberOfEdges(e: Int)
+case class StatusNumberOfVertices(v: Long)
+case class StatusNumberOfEdges(e: Long)
 
 // synchronous control messages
 case object CommandSignalStep
