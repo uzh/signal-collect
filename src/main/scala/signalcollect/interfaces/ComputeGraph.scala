@@ -32,6 +32,9 @@ trait ComputeGraph extends GraphApi {
   def foreach(f: (Vertex[_, _]) => Unit)
   def foreach(f: PartialFunction[Vertex[_, _], Unit])
   
+  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long
+//  def countEdges: Long
+  
   def sum[N](implicit numeric: Numeric[N]): N
   def product[N](implicit numeric: Numeric[N]): N
   def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType
@@ -39,7 +42,5 @@ trait ComputeGraph extends GraphApi {
 
   def setSignalThreshold(t: Double)
   def setCollectThreshold(t: Double)
-  def setStepsLimit(l: Int)
-
-  //  protected def defaultExtractor[ValueType](v: Vertex[_, _]): = 
+  def setStepsLimit(l: Int) 
 }

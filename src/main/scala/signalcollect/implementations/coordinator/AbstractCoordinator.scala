@@ -58,6 +58,18 @@ abstract class AbstractCoordinator(
       messageBus.registerLogger(optionalLogger.get)
     }
   }
+  
+  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
+	    val matchingTypeCounter: (Vertex[_, _]) => Long = { v: Vertex[_, _] => {
+	          if (m.erasure.isInstance(v)) {
+	          	1l
+	          } else {
+	          	0l
+	          }
+	      }
+		}
+  	customAggregate(0l, { (aggrValue: Long, vertexIncrement: Long) => aggrValue + vertexIncrement }, matchingTypeCounter)
+  }
 
   def sum[N](implicit numeric: Numeric[N]): N = {
     aggregate(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
