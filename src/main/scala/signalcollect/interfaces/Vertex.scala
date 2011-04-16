@@ -48,7 +48,7 @@ package signalcollect.interfaces
   override def equals(other: Any): Boolean = {
 	  other match {
 	 	  case v: Vertex[_, _] => v.id == id
-	 	  case other => false
+	 	  case _ => false
 	  }
   }
  

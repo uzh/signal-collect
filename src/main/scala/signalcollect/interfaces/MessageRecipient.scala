@@ -22,7 +22,6 @@ package signalcollect.interfaces
 trait MessageRecipient[-MessageType] {
   /*
    * Sends @message to the recipient object.
-   * Return value true indicates successful delivery, false indicates failure.
    */
   def send(message: MessageType)
 }

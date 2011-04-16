@@ -37,7 +37,7 @@ trait ComputeGraph extends GraphApi {
   
   def sum[N](implicit numeric: Numeric[N]): N
   def product[N](implicit numeric: Numeric[N]): N
-  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType
+  def aggregateStates[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType
   def customAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
 
   def setSignalThreshold(t: Double)
