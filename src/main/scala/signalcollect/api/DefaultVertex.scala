@@ -19,6 +19,7 @@
 
 package signalcollect.api
 
+import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.graph.SumOfOutWeights
 import signalcollect.implementations.graph.IncomingEdgeCount
 import signalcollect.interfaces._
@@ -30,7 +31,7 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LinkedHashMap
 
-abstract class DefaultVertex[IdType, StateType](val id: IdType, initialState: StateType) extends AbstractVertex[IdType, StateType] with UncollectedSignalsList[IdType, StateType] with MostRecentSignalMap[IdType, StateType] with IncomingEdgeCount[IdType, StateType] with SumOfOutWeights[IdType, StateType] {
+abstract class DefaultVertex[IdType, StateType](val id: IdType, initialState: StateType) extends AbstractVertex[IdType, StateType] with UncollectedSignalsList[IdType, StateType] with MostRecentSignalMap[IdType, StateType] with IncomingEdgeCount[IdType, StateType] with SumOfOutWeights[IdType, StateType] with DefaultGraphApi {
   
 	var state = initialState
   

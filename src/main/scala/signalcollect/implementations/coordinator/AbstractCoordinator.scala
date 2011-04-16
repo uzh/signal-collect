@@ -193,14 +193,14 @@ abstract class AbstractCoordinator(
     throw new UnsupportedOperationException("Steps limit not supported yet.")
   }
 
-  def execute: ComputationStatistics = {
-
-    /*******************************/
-    log("Waiting for graph loading to finish ...")
+  def awaitIdle: Long = {
+    val startTime = System.nanoTime
     awaitStalledComputation
-    log("\t\t\tDONE")
-    /*******************************/
-
+    val stopTime = System.nanoTime
+    stopTime - startTime
+  }
+  
+  def execute: ComputationStatistics = {
     log("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime

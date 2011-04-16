@@ -27,6 +27,7 @@ object ComputeGraph {
 
 trait ComputeGraph extends GraphApi {
   def execute: ComputationStatistics
+  def awaitIdle: Long
   def shutDown
 
   def foreach(f: (Vertex[_, _]) => Unit)
