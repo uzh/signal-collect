@@ -33,4 +33,7 @@ trait ComputationStatistics {
   def numberOfEdges: Option[Long]
   def vertexCollectOperations: Option[Long]
   def vertexSignalOperations: Option[Long]
+  def stepsLimit: Option[Long]
+  def signalThreshold: Option[Double]
+  def collectThreshold: Option[Double]
 }

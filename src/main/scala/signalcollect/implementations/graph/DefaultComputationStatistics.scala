@@ -36,6 +36,9 @@ class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.
   def numberOfEdges: Option[Long] = statsMap.get("numberOfEdges") collect { case x:Long => x }
   def vertexCollectOperations: Option[Long] = statsMap.get("vertexCollectOperations") collect { case x:Long => x }
   def vertexSignalOperations: Option[Long] = statsMap.get("vertexSignalOperations") collect { case x:Long => x }
+  def stepsLimit: Option[Long] = statsMap.get("stepsLimit") collect { case x:Long => x }
+  def signalThreshold: Option[Double] = statsMap.get("signalThreshold") collect { case x:Double => x }
+  def collectThreshold: Option[Double] = statsMap.get("collectThreshold") collect { case x:Double => x }
   
   override def toString = statsMap.foldLeft(""){ (aggr, mapEntry) => aggr + "\n" + mapEntry._1 + ": " + mapEntry._2 }
 }
