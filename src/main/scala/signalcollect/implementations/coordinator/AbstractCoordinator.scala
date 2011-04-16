@@ -41,7 +41,9 @@ abstract class AbstractCoordinator(
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
-  optionalLogger: Option[MessageRecipient[Any]] = None)
+  optionalLogger: Option[MessageRecipient[Any]] = None,
+  protected var signalThreshold: Double = 0.01,
+  protected var collectThreshold: Double = 0)
   extends AbstractMessageRecipient(messageInboxFactory)
   with ComputeGraph
   with DefaultGraphApi
@@ -57,29 +59,32 @@ abstract class AbstractCoordinator(
     if (optionalLogger.isDefined) {
       messageBus.registerLogger(optionalLogger.get)
     }
+    setSignalThreshold(signalThreshold)
+    setCollectThreshold(collectThreshold)
   }
-  
+
   def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
-	    val matchingTypeCounter: (Vertex[_, _]) => Long = { v: Vertex[_, _] => {
-	          if (m.erasure.isInstance(v)) {
-	          	1l
-	          } else {
-	          	0l
-	          }
-	      }
-		}
-  	customAggregate(0l, { (aggrValue: Long, vertexIncrement: Long) => aggrValue + vertexIncrement }, matchingTypeCounter)
+    val matchingTypeCounter: (Vertex[_, _]) => Long = { v: Vertex[_, _] =>
+      {
+        if (m.erasure.isInstance(v)) {
+          1l
+        } else {
+          0l
+        }
+      }
+    }
+    customAggregate(0l, { (aggrValue: Long, vertexIncrement: Long) => aggrValue + vertexIncrement }, matchingTypeCounter)
   }
 
   def sum[N](implicit numeric: Numeric[N]): N = {
-    aggregate(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
+    aggregateStates(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
   }
 
   def product[N](implicit numeric: Numeric[N]): N = {
-    aggregate(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
+    aggregateStates(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
   }
 
-  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType = {
+  def aggregateStates[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType = {
     val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
       {
         try {
@@ -175,10 +180,12 @@ abstract class AbstractCoordinator(
   var computationInProgress = false
 
   def setSignalThreshold(t: Double) {
+    signalThreshold = t
     messageBus.sendToWorkers(CommandSetSignalThreshold(t))
   }
 
   def setCollectThreshold(t: Double) {
+    collectThreshold = t
     messageBus.sendToWorkers(CommandSetCollectThreshold(t))
   }
 
@@ -208,6 +215,9 @@ abstract class AbstractCoordinator(
     val totalJvmCpuTime: Long = jvmCpuStopTime - jvmCpuStartTime
     log("\t\t\tDONE")
 
+    //  	statsMap.put("stepsLimit", stepsLimit)
+    statsMap.put("signalThreshold", signalThreshold)
+    statsMap.put("collectThreshold", collectThreshold)
     statsMap.put("numberOfWorkers", numberOfWorkers)
     statsMap.put("computeGraph", computeGraphName)
     statsMap.put("worker", workerName)
