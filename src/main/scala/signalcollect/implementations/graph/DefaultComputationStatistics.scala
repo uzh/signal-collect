@@ -26,6 +26,7 @@ class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.
   def numberOfWorkers: Option[Int] = statsMap.get("numberOfWorkers") collect { case x:Int => x }
   def computationTimeInMilliseconds: Option[Long] = statsMap.get("computationTimeInMilliseconds") collect { case x:Long => x }
   def jvmCpuTimeInMilliseconds: Option[Long] = statsMap.get("jvmCpuTimeInMilliseconds") collect { case x:Long => x }
+  def graphLoadingWaitInMilliseconds: Option[Long] = statsMap.get("graphLoadingWaitInMilliseconds") collect { case x:Long => x }
   def computeGraph: Option[String] = statsMap.get("computeGraph") collect { case x:String => x }
   def worker: Option[String] = statsMap.get("worker") collect { case x:String => x }
   def messageBus: Option[String] = statsMap.get("messageBus") collect { case x:String => x }

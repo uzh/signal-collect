@@ -201,6 +201,10 @@ abstract class AbstractCoordinator(
   }
   
   def execute: ComputationStatistics = {
+    log("Waiting for graph loading to finish ...")
+    
+    val graphLoadingWait = awaitIdle
+    
     log("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
@@ -232,8 +236,8 @@ abstract class AbstractCoordinator(
     statsMap.put("vertexSignalOperations", progressStats.signalOperationsExecuted)
     statsMap.put("numberOfVertices", progressStats.verticesAdded - progressStats.verticesRemoved)
     statsMap.put("numberOfEdges", progressStats.outgoingEdgesAdded - progressStats.outgoingEdgesRemoved)
-
-    statsMap.put("jvmCpuTime", (totalJvmCpuTime / 1000000.0).toLong)
+    statsMap.put("graphLoadingWaitInMilliseconds", (graphLoadingWait / 1000000.0).toLong)
+    statsMap.put("jvmCpuTimeInMilliseconds", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
     new DefaultComputationStatistics(statsMap)
   }

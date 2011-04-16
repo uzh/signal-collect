@@ -23,6 +23,7 @@ trait ComputationStatistics {
   def numberOfWorkers: Option[Int]
   def computationTimeInMilliseconds: Option[Long]
   def jvmCpuTimeInMilliseconds: Option[Long]
+  def graphLoadingWaitInMilliseconds: Option[Long]
   def computeGraph: Option[String]
   def worker: Option[String]
   def messageBus: Option[String]
