@@ -19,24 +19,28 @@
 
 package signalcollect.api
 
-import signalcollect.implementations.graph.DefaultGraphApi
-import signalcollect.implementations.graph.SumOfOutWeights
-import signalcollect.implementations.graph.IncomingEdgeCount
-import signalcollect.interfaces._
-import signalcollect.implementations.graph.AbstractVertex
-import signalcollect.implementations.graph.UncollectedSignalsList
-import signalcollect.implementations.graph.MostRecentSignalMap
-import scala.collection.mutable.Map
-import scala.collection.mutable.Buffer
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LinkedHashMap
+import signalcollect.implementations.graph._
 
-abstract class DefaultVertex[IdType, StateType](val id: IdType, initialState: StateType) extends AbstractVertex[IdType, StateType] with UncollectedSignalsList[IdType, StateType] with MostRecentSignalMap[IdType, StateType] with IncomingEdgeCount[IdType, StateType] with SumOfOutWeights[IdType, StateType] with DefaultGraphApi {
-  
-	var state = initialState
-  
-	override def toString: String = {
-		this.getClass.getSimpleName + "> Id: " + id + ", State: " + state
-	}
-	
+/**
+ * Default [[signalcollect.interfaces.Vertex]] implementation.
+ *
+ * @param id unique vertex id
+ * @param initialState initial state of this vertex
+ *
+ * Vertices are the main processing units in a Signal/Collect algorithm.
+ * The only method that has to be implemented is the abstract collect function.
+ * The collect function uses the received signals to calculate the new state.
+ */
+abstract class DefaultVertex[IdType, StateType](
+  val id: IdType,
+  initialState: StateType)
+  extends AbstractVertex[IdType, StateType]
+  with UncollectedSignalsList[IdType, StateType]
+  with MostRecentSignalMap[IdType, StateType]
+  with IncomingEdgeCount[IdType, StateType]
+  with SumOfOutWeights[IdType, StateType] {
+
+  /** vertex state is initialized to initialState */
+  var state = initialState
+
 }

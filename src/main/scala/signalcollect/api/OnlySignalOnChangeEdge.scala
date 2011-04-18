@@ -22,15 +22,33 @@ package signalcollect.api
 import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractEdge
 
-abstract class OnlySignalOnChangeEdge[@specialized SourceIdType, @specialized TargetIdType](val sourceId: SourceIdType, val targetId: TargetIdType) extends AbstractEdge[SourceIdType, TargetIdType] {
+/**
+ * [[signalcollect.interfaces.Edge]] implementation that only signals
+ * when the signal has changed compared to the last signal sent.
+ *
+ * @param sourceId id of this edge's source vertex
+ * @param targetId id of this edges's target vertex
+ *
+ * See [[signalcollect.api.DefaultEdge]] for more information about edges
+ * in general.
+ */
+abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
+  val sourceId: SourceIdType,
+  val targetId: TargetIdType)
+  extends AbstractEdge[SourceIdType, TargetIdType] {
 
+  /** Last signal sent along this edge */
   var lastSignalSent: Option[SignalType] = None
 
+  /**
+   * Calculates the new signal, compares it with the last signal sent and
+   * only sends a signal if they are not equal.
+   */
   override def executeSignalOperation(mb: MessageBus[Any, Any]) {
     val newSignal = signal
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      	mb.sendToWorkerForIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
-      	lastSignalSent = Some(newSignal)
+      mb.sendToWorkerForIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
+      lastSignalSent = Some(newSignal)
     }
   }
 }

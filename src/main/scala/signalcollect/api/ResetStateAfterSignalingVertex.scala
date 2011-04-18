@@ -19,14 +19,22 @@
 
 package signalcollect.api
 
-import signalcollect.implementations.graph.ResetStateAfterSignaling
-import signalcollect.interfaces._
-import signalcollect.implementations.graph.AbstractVertex
-import signalcollect.implementations.graph.UncollectedSignalsList
-import signalcollect.implementations.graph.MostRecentSignalMap
-import scala.collection.mutable.Map
-import scala.collection.mutable.Buffer
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LinkedHashMap
+import signalcollect.implementations.graph._
 
-abstract class ResetStateAfterSignalingVertex[IdType, StateType](id: IdType, val initialState: StateType) extends DefaultVertex[IdType, StateType](id, initialState) with ResetStateAfterSignaling[IdType, StateType]
+/**
+ * [[signalcollect.interfaces.Vertex]] implementation that
+ * sets the state to initialState after signaling.
+ *
+ * @param id unique vertex id
+ * @param initialState initial state of this vertex
+ *
+ * See [[signalcollect.api.DefaultVertex]] for more information about vertices
+ * in general.
+ */
+abstract class ResetStateAfterSignalingVertex[IdType, StateType](
+  id: IdType,
+  val initialState: StateType)
+  extends DefaultVertex[IdType, StateType](
+    id,
+    initialState)
+  with ResetStateAfterSignaling[IdType, StateType]

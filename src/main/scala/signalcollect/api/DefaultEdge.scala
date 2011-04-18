@@ -19,7 +19,20 @@
 
 package signalcollect.api
 
-import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractEdge
 
-abstract class DefaultEdge[@specialized SourceIdType, @specialized TargetIdType](val sourceId: SourceIdType, val targetId: TargetIdType) extends AbstractEdge[SourceIdType, TargetIdType]
+/**
+ * Default [[signalcollect.interfaces.Edge]] implementation.
+ *
+ * @param sourceId id of this edge's source vertex
+ * @param targetId id of this edges's target vertex
+ *
+ * Edges send signals from the source vertex to the target vertex.
+ * The only method that has to be implemented is the abstract signal function.
+ * The signal function usually uses the state of the source vertex
+ * to calculate the signal sent to the target vertex.
+ */
+abstract class DefaultEdge[SourceIdType, TargetIdType](
+  val sourceId: SourceIdType,
+  val targetId: TargetIdType)
+  extends AbstractEdge[SourceIdType, TargetIdType]
