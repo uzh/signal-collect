@@ -19,12 +19,22 @@
 
 package signalcollect.api
 
-import signalcollect.interfaces._
-import signalcollect.implementations.graph.AbstractVertex
-import signalcollect.implementations.graph.UncollectedSignalsList
+import signalcollect.implementations.graph._
 
+/**
+ * [[signalcollect.interfaces.Vertex]] implementation that offers only
+ * a subset of the [[signalcollect.api.DefaultVertex]] functionality
+ * to save memory.
+ *
+ * @param id unique vertex id
+ * @param initialState initial state of this vertex
+ *
+ * See [[signalcollect.api.DefaultVertex]] for more information about vertices
+ * in general.
+ */
 abstract class UncollectedSignalsVertex[IdType, StateType](
-    val id: IdType,
-    var state: StateType)
-    extends AbstractVertex[IdType, StateType] 
-with UncollectedSignalsList[IdType, StateType]
+  val id: IdType,
+  var state: StateType)
+  extends AbstractVertex[IdType, StateType]
+  with UncollectedSignalsList[IdType, StateType]
+  with DefaultGraphApi

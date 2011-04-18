@@ -19,22 +19,24 @@
 
 package signalcollect.implementations.coordinator
 
+import signalcollect.interfaces._
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
-import signalcollect.implementations.logging.SeparateThreadLogger
-import signalcollect.interfaces._
-import java.util.concurrent.BlockingQueue
-
 
 class AsynchronousCoordinator(
   numberOfWorkers: Int,
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
-  messageBusFactory: MessageBusFactory,
-  logger: Option[MessageRecipient[Any]] = None 
-  ) extends SynchronousCoordinator(numberOfWorkers, workerFactory, messageInboxFactory, messageBusFactory, logger) {
-	 
+  messageBus: MessageBusFactory,
+  logger: Option[MessageRecipient[Any]] = None)
+  extends SynchronousCoordinator(
+    numberOfWorkers,
+    workerFactory,
+    messageInboxFactory,
+    messageBus,
+    logger) {
+
   override def performComputation: collection.mutable.Map[String, Any] = {
     executeComputationStep
     startComputation

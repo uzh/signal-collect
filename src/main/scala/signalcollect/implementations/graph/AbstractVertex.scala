@@ -36,7 +36,7 @@ import scala.collection.mutable.Map
 abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
 
   protected def process(message: Any) = {}
-	
+
   protected def afterInitialization = {}
   
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
@@ -61,16 +61,16 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
   def addOutgoingEdge(e: Edge[_, _]) {
     val newEdge = e.asInstanceOf[Edge[IdType, _]]
     if (!outgoingEdges.contains(newEdge.id)) {
-    	processNewOutgoingEdge(newEdge)
+      processNewOutgoingEdge(newEdge)
     }
   }
 
   protected def processNewOutgoingEdge(e: Edge[IdType, _]) {
-      outgoingEdgeAddedSinceSignalOperation = true
-      e.setSource(this)
-      outgoingEdges.put(e.id, e)
+    outgoingEdgeAddedSinceSignalOperation = true
+    e.setSource(this)
+    outgoingEdges.put(e.id, e)
   }
-  
+
   /**
    * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
    * @param e the edge to be added.
@@ -78,27 +78,27 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
   def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
     val castEdgeId = edgeId.asInstanceOf[(IdType, Any, String)]
     if (outgoingEdges.contains(castEdgeId)) {
-    	val outgoingEdge = outgoingEdges.get(castEdgeId).get
-    	processRemoveOutgoingEdge(outgoingEdge)
-    	true
+      val outgoingEdge = outgoingEdges.get(castEdgeId).get
+      processRemoveOutgoingEdge(outgoingEdge)
+      true
     } else {
-    	false
+      false
     }
   }
-  
+
   /**
    * Removes all outgoing {@link Edge}s from this {@link Vertex}.
-   * @return returns the number of {@link Edge}s that were removed. 
+   * @return returns the number of {@link Edge}s that were removed.
    */
   def removeAllOutgoingEdges {
-	  outgoingEdges.keys foreach (removeOutgoingEdge(_))
+    outgoingEdges.keys foreach (removeOutgoingEdge(_))
   }
-  
+
   protected def processRemoveOutgoingEdge(e: Edge[IdType, _]) {
-	  messageBus.sendToWorkerForIdHash(CommandRemoveIncomingEdge(e.id), e.targetHashCode)
-      outgoingEdges.remove(e.id)
+    messageBus.sendToWorkerForIdHash(CommandRemoveIncomingEdge(e.id), e.targetHashCode)
+    outgoingEdges.remove(e.id)
   }
-  
+
   /**
    * Informs this vertex that there is a new incoming edge.
    * @param edgeId the id of the new incoming edge
@@ -110,9 +110,9 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
    * @param edgeId the id of the incoming edge that was removed
    */
   def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean] = {
-	  None
+    None
   }
-  
+
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
@@ -138,7 +138,7 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
    * @see #collect
    */
   def executeCollectOperation {
-	processInbox
+    processInbox
     state = collect
   }
 
@@ -176,12 +176,17 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
     }
   }
 
-  /**  Number of outgoing edges of this {@link FrameworkVertex} */
+  /** Optionally returns the number of outgoing edges of this [signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = Some(outgoingEdges.size)
 
-  /** @return optionally the number of incoming edges of this {@link Vertex}. Modified by {@link FrameworkVertex} */
+  /** Optionally returns the number of incoming edges of this [signalcollect.interfaces.Vertex] */
   def incomingEdgeCount: Option[Int] = None
 
-  override def toString = "Vertex<id=" + id + ", state=" + state + ">"  
-  
+  /**
+   * Returns "VertexClassName> Id: vertexId, State: vertexState"
+   */
+  override def toString: String = {
+    this.getClass.getSimpleName + "> Id: " + id + ", State: " + state
+  }
+
 }

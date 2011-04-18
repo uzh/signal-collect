@@ -38,7 +38,8 @@ abstract class DefaultVertex[IdType, StateType](
   with UncollectedSignalsList[IdType, StateType]
   with MostRecentSignalMap[IdType, StateType]
   with IncomingEdgeCount[IdType, StateType]
-  with SumOfOutWeights[IdType, StateType] {
+  with SumOfOutWeights[IdType, StateType]
+  with DefaultGraphApi {
 
   /** vertex state is initialized to initialState */
   var state = initialState

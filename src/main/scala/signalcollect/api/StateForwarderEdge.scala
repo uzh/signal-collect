@@ -22,10 +22,23 @@ package signalcollect.api
 import signalcollect.interfaces._
 import signalcollect.implementations.graph.AbstractEdge
 
+/**
+ * Companion object that provides a simplified constructor
+ */
 object StateForwarderEdge {
 	def apply(sId: Any, tId: Any) = new StateForwarderEdge(sId, tId)
 }
 
-class StateForwarderEdge(sId: Any, tId: Any) extends DefaultEdge(sId, tId) {
+/**
+ * [[signalcollect.interfaces.Edge]] implementation that sends the state
+ * of the source vertex as the signal.
+ *
+ * @param sourceId id of this edge's source vertex
+ * @param targetId id of this edges's target vertex
+ *
+ * See [[signalcollect.api.DefaultEdge]] for more information about edges
+ * in general.
+ */
+class StateForwarderEdge(sourceId: Any, targetId: Any) extends DefaultEdge(sourceId, targetId) {
   def signal = source.state
 }

@@ -19,9 +19,7 @@
 
 package signalcollect.api
 
-import signalcollect.interfaces._
-import signalcollect.implementations.graph.AbstractVertex
-import signalcollect.implementations.graph.MostRecentSignalMap
+import signalcollect.implementations.graph._
 
 /**
  * [[signalcollect.interfaces.Vertex]] implementation that offers only
@@ -39,3 +37,4 @@ abstract class SignalMapVertex[IdType, StateType](
   var state: StateType)
   extends AbstractVertex[IdType, StateType]
   with MostRecentSignalMap[IdType, StateType]
+  with DefaultGraphApi
