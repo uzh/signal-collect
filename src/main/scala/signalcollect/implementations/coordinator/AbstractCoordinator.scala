@@ -84,7 +84,29 @@ abstract class AbstractCoordinator(
     aggregateStates(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
   }
 
-  def aggregateStates[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType): ValueType = {
+  def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType] = {
+    val stateExtractor: (Vertex[_, _]) => Option[ValueType] = { v: Vertex[_, _] =>
+      {
+        try {
+          Some(v.state.asInstanceOf[ValueType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+        } catch {
+          case _ => None
+        }
+      }
+    }
+    val optionOperation: (Option[ValueType], Option[ValueType]) => Option[ValueType] = {
+      (a, b) =>
+        (a,b) match {
+          case (Some(x), Some(y)) => Some(operation(x,y))
+          case (Some(x), None) => Some(x)
+          case (None, Some(y)) => Some(y)
+          case (None, None) => None
+        }
+    }
+    customAggregate[Option[ValueType]](None, optionOperation, stateExtractor)
+  }
+  
+  def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType = {
     val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
       {
         try {
@@ -94,16 +116,16 @@ abstract class AbstractCoordinator(
         }
       }
     }
-    customAggregate(neutralElement, aggregator, stateExtractor)
+    customAggregate(neutralElement, operation, stateExtractor)
   }
 
   var valueAggregator: Option[WorkerAggregator[_]] = None
 
-  def customAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType = {
+  def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType = {
     awaitStalledComputation
     pauseComputation
-    valueAggregator = Some(new WorkerAggregator[ValueType](numberOfWorkers, neutralElement, aggregator))
-    messageBus.sendToWorkers(CommandAggregate(neutralElement, aggregator, extractor))
+    valueAggregator = Some(new WorkerAggregator[ValueType](numberOfWorkers, neutralElement, operation))
+    messageBus.sendToWorkers(CommandAggregate(neutralElement, operation, extractor))
     awaitStalledComputation
     val aggregate = valueAggregator.get()
     if (aggregate.isDefined) {
