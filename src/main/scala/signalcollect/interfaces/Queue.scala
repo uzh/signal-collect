@@ -26,14 +26,10 @@ import java.util.concurrent.BlockingQueue
 
 object Queue {
 	type QueueFactory = () => BlockingQueue[Any]
+	
 	lazy val defaultFactory = linkedTransferQueueFactory
 	
-	def createLinkedTransferQueue = new LinkedTransferQueue[Any]
-	lazy val linkedTransferQueueFactory = createLinkedTransferQueue _
-	
-	def createLinkedBlockingQueue = new LinkedBlockingQueue[Any]
-	lazy val linkedBlockingQueueFactory = createLinkedBlockingQueue _
-	
-	def createMultiQueue(qf: QueueFactory = linkedBlockingQueueFactory, numberOfQueues: Int = ComputeGraph.defaultNumberOfThreads) = new MultiQueue[Any](qf, numberOfQueues)
-	lazy val multiQueueFactory = createMultiQueue _
+	lazy val linkedTransferQueueFactory = () => new LinkedTransferQueue[Any]
+	lazy val linkedBlockingQueueFactory = () => new LinkedBlockingQueue[Any]
+	lazy val multiQueueFactory = new MultiQueue[Any](_, _)
 }

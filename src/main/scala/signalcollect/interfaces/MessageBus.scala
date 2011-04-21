@@ -23,13 +23,11 @@ import signalcollect.implementations.messaging._
 
 object MessageBus {
 	type MessageBusFactory = () => MessageBus[Any, Any]
+	
 	lazy val defaultFactory = sharedMemoryMessageBusFactory
 	
-	def createSharedMemoryMessageBus: MessageBus[Any, Any] = new DefaultMessageBus[Any, Any]
-	lazy val sharedMemoryMessageBusFactory = createSharedMemoryMessageBus _
-	
-	def createVerboseSharedMemoryMessageBus: MessageBus[Any, Any] = new DefaultMessageBus[Any, Any] with Verbosity[Any, Any]
-	lazy val verboseMessageBusFactory = createVerboseSharedMemoryMessageBus _
+	lazy val sharedMemoryMessageBusFactory = () => new DefaultMessageBus[Any, Any]
+	lazy val verboseMessageBusFactory = () => new DefaultMessageBus[Any, Any] with Verbosity[Any, Any]
 }
 
 trait MessageBus[MessageType, IdType] {
@@ -43,6 +41,5 @@ trait MessageBus[MessageType, IdType] {
 
   def registerWorker(id: Int, worker: MessageRecipient[MessageType])
   def registerCoordinator(coordinator: MessageRecipient[MessageType])
-  def registerLogger(logger: MessageRecipient[Any])
-  
+  def registerLogger(logger: MessageRecipient[Any]) 
 }
