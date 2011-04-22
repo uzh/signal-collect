@@ -21,7 +21,7 @@ package signalcollect.implementations.graph
 
 import signalcollect.interfaces._
 
-abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdType, TargetIdType] {
+abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdType, TargetIdType] with Serializable {
 
   /** The identifier of the {@link Vertex} where this {@link Edge} originates from. */
   val sourceId: SourceIdType

@@ -33,7 +33,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 
-abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
+abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] with Serializable {
 
   protected def process(message: Any) = {}
 
@@ -49,7 +49,7 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
   protected var lastSignalState: Option[StateType] = None
 
   /** The message bus over which this vertex is communicating with its outgoing edges. */
-  protected var messageBus: MessageBus[Any, Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
+  @transient protected var messageBus: MessageBus[Any, Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false

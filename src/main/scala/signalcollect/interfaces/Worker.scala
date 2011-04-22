@@ -25,17 +25,18 @@ import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 import signalcollect.implementations.worker.AsynchronousWorker
 import signalcollect.implementations.worker.SynchronousWorker
 import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Storage._
 
 object Worker {
-  type WorkerFactory = (MessageBus[Any, Any], QueueFactory) => Worker
+
+  type WorkerFactory = (MessageBus[Any, Any], QueueFactory, StorageFactory) => Worker
   
   lazy val defaultFactory = asynchronousDirectDeliveryWorkerFactory
-  
-  lazy val synchronousWorkerFactory = new SynchronousWorker(_, _)
-  lazy val synchronousDirectDeliveryWorkerFactory = new DirectDeliverySynchronousWorker(_, _)
-  lazy val asynchronousWorkerFactory = new AsynchronousWorker(_, _)
-  lazy val asynchronousDirectDeliveryWorkerFactory = new DirectDeliveryAsynchronousWorker(_, _)
-  lazy val asynchronousPriorityWorkerFactory = new AsynchronousPriorityWorker(_, _)
+  lazy val synchronousWorkerFactory = new SynchronousWorker(_, _, _)
+  lazy val synchronousDirectDeliveryWorkerFactory = new DirectDeliverySynchronousWorker(_, _, _)
+  lazy val asynchronousWorkerFactory = new AsynchronousWorker(_, _, _)
+  lazy val asynchronousDirectDeliveryWorkerFactory = new DirectDeliveryAsynchronousWorker(_, _, _)
+  lazy val asynchronousPriorityWorkerFactory = new AsynchronousPriorityWorker(_, _, _)
 }
 
 trait Worker extends MessageRecipient[Any] with Runnable

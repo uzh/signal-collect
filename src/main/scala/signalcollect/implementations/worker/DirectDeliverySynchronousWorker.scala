@@ -21,6 +21,7 @@ package signalcollect.implementations.worker
 
 import java.util.concurrent.ConcurrentHashMap
 import signalcollect.interfaces._
+import signalcollect.interfaces.Storage._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader
@@ -30,10 +31,8 @@ import util.collections.ConcurrentHashSet
 
 class DirectDeliverySynchronousWorker(
   mb: MessageBus[Any, Any],
-  messageInboxFactory: () => BlockingQueue[Any]) extends SynchronousWorker(mb, messageInboxFactory) {
-
-  protected override def vertexMapFactory = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, Runtime.getRuntime.availableProcessors)
-  protected override def vertexSetFactory = new ConcurrentHashSet[Vertex[_, _]](100000, 0.75f, Runtime.getRuntime.availableProcessors)
+  messageInboxFactory: () => BlockingQueue[Any],
+  storageFactory: StorageFactory) extends SynchronousWorker(mb, messageInboxFactory, storageFactory) {
 
   override def send(message: Any) = {
     message match {

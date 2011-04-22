@@ -20,12 +20,14 @@
 package signalcollect.implementations.worker
 
 import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces._
 import java.util.concurrent.BlockingQueue
 
 class SynchronousWorker(
   mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory) extends AbstractWorker(mb, messageInboxFactory) {
+  messageInboxFactory: QueueFactory,
+  storageFactory: StorageFactory) extends AbstractWorker(mb, messageInboxFactory, storageFactory) {
 
   override def run {
     // While the computation isn't finished, process the inbox or wait if it's empty

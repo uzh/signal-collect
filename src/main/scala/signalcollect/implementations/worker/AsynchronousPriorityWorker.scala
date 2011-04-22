@@ -23,6 +23,7 @@ import java.util.Arrays
 import java.util.Collections
 import signalcollect.interfaces._
 import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Storage._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader
@@ -36,7 +37,8 @@ import java.util.LinkedHashSet
  */
 class AsynchronousPriorityWorker(
   mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory) extends AbstractWorker(mb, messageInboxFactory) {
+  messageInboxFactory: QueueFactory,
+  storageFactory: StorageFactory) extends AbstractWorker(mb, messageInboxFactory, storageFactory) {
 
   def handlePauseAndContinue {
     if (shouldStart) {
@@ -64,24 +66,9 @@ class AsynchronousPriorityWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        if (!toSignal.isEmpty) {
-          val i = toSignal.iterator
-          while (i.hasNext) {
-            val vertex = i.next
-            signal(vertex)
-          }
-          toSignal.clear
-        }
-        while (!toCollect.isEmpty) {
-          processInbox
-          val toCollectSnapshot = toCollect.toArray
-          Arrays.sort(toCollectSnapshot) // horribly, horribly inefficient. i only needed this to test something.
-          val vertex = toCollectSnapshot(0).asInstanceOf[Vertex[_, _]]
-          if (collect(vertex)) {
-            signal(vertex)
-          }
-          toCollect.remove(vertex)
-        }
+    	  vertexStore.foreachToSignal(vertex => signal(vertex))
+          vertexStore.foreachToCollect(vertex => if (collect(vertex)) {signal(vertex)}, true)
+
       }
     }
   }

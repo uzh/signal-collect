@@ -20,6 +20,7 @@
 package signalcollect.implementations.worker
 
 import signalcollect.interfaces.Queue._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
@@ -29,7 +30,8 @@ import java.util.LinkedHashSet
 
 class AsynchronousWorker(
   mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory) extends AbstractWorker(mb, messageInboxFactory) {
+  messageInboxFactory: QueueFactory,
+  storageFactory: StorageFactory) extends AbstractWorker(mb, messageInboxFactory, storageFactory) {
 
   def handlePauseAndContinue {
     if (shouldStart) {
@@ -57,26 +59,8 @@ class AsynchronousWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        if (!toSignal.isEmpty) {
-          val i = toSignal.iterator
-          while (i.hasNext) {
-            val vertex = i.next
-            signal(vertex)
-          }
-          toSignal.clear
-        }
-        if (!toCollect.isEmpty) {
-          val toCollectSnapshot = toCollect
-          toCollect = vertexSetFactory
-          val i = toCollectSnapshot.iterator
-          while (i.hasNext) {
-            processInbox
-            val vertex = i.next
-            if (collect(vertex)) {
-              signal(vertex)
-            }
-          }
-        }
+        vertexStore.foreachToSignal(vertex => signal(vertex))
+        vertexStore.foreachToCollect(vertex => {processInbox; if (collect(vertex)) {signal(vertex)}}, true)
       }
     }
   }

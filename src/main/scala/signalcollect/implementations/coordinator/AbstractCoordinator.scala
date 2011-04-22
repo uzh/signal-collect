@@ -271,7 +271,7 @@ abstract class AbstractCoordinator(
   protected def createWorkers: Array[Worker] = {
     val workers = new Array[Worker](numberOfWorkers)
     for (i <- 0 until numberOfWorkers) {
-      val worker = workerFactory(messageBus, messageInboxFactory)
+      val worker = workerFactory(messageBus, messageInboxFactory, Storage.defaultFactory)
       messageBus.registerWorker(i, worker)
       new Thread(worker, "Worker#" + i).start
       workers(i) = worker
@@ -327,7 +327,7 @@ abstract class AbstractCoordinator(
   }
 
   lazy val computeGraphName = getClass.getSimpleName
-  lazy val workerName = workerFactory(messageBusFactory(), messageInboxFactory).getClass.getSimpleName
+  lazy val workerName = workerFactory(messageBusFactory(), messageInboxFactory, Storage.defaultFactory).getClass.getSimpleName
   lazy val messageBusName = messageBusFactory().getClass.getSimpleName
   lazy val messageInboxName = messageInboxFactory().getClass.getSimpleName
   lazy val loggerName = optionalLogger.getClass.getSimpleName
