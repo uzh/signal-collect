@@ -33,7 +33,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 
-abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] with Serializable {
+abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Queue.linkedBlockingQueueFactory) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
 
   protected def process(message: Any) = {}
 

@@ -8,10 +8,16 @@
 	</modules>
 	<repositories>
 		<repository>
-			<id>scala-tools.org</id>
-			<name>Scala-Tools Maven2 Releases Repository</name>
-			<url>http://scala-tools.org/repo-snapshots/</url>
-		</repository>
+          <id>scala-tools.org</id>
+          <name>Scala Tools Maven2 Repository</name>
+          <url>http://scala-tools.org/repo-releases</url>
+        </repository>
+        <repository>
+          <id>scala-tools.org.snapshots</id>
+          <name>Scala Tools Maven2 Repository</name>
+          <url>http://scala-tools.org/repo-snapshots</url>
+          <snapshots />
+        </repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
@@ -33,6 +39,12 @@
 			<version>4.8.2</version>
 			<type>jar</type>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+    		<groupId>com.mongodb.casbah</groupId>
+    		<artifactId>casbah_2.8.1</artifactId>
+    		<version>2.1.1</version>
+    		<type>pom</type>
 		</dependency>
 	</dependencies>
 	<build>

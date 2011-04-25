@@ -18,27 +18,29 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.serialization.InMemoryStorage
+import signalcollect.implementations.serialization.{InMemoryStorage, MongoDBStore, MongoDBStoreAllOnDisk}
+ 
 
-
-
-object Storage extends Serializable {
+object Storage {
   type StorageFactory = (MessageBus[Any, Any]) => Storage
-  lazy val defaultFactory = inMemoryFactory
+  lazy val defaultFactory = createInMemoryStorage _
 
   def createInMemoryStorage(messageBus: MessageBus[Any, Any]) = new InMemoryStorage(messageBus)
-  lazy val inMemoryFactory = createInMemoryStorage _
-
+  
+  //Highly experimental
+  //Use at your own risk!
+  def createMongoDBStorage(messageBus: MessageBus[Any, Any]) = new MongoDBStore(messageBus)
+  def createMongoDBStorageAOD(messageBus: MessageBus[Any, Any]) = new MongoDBStoreAllOnDisk(messageBus)
 }
 
-trait Storage {
+trait Storage {  
   def getVertexWithID(id: Any): Vertex[_, _]
   def addVertexToStore(vertex: Vertex[_, _]): Boolean
   def removeVertexFromStore(id: Any)
   def updateStateOfVertex(vertex: Vertex[_, _])
   def getNumberOfVertices: Long
   def foreach[U](f: (Vertex[_, _]) => U)
-  
+
   def addForSignling(vertexId: Any)
   def addForCollecting(vertexId: Any)
   def removeFromSignaling(vertexId: Any)

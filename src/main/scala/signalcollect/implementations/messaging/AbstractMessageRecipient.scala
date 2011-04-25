@@ -24,7 +24,7 @@ import signalcollect._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 
-abstract class AbstractMessageRecipient[G](messageInboxFactory: () => BlockingQueue[G]) extends interfaces.MessageRecipient[G] {
+abstract class AbstractMessageRecipient[G](messageInboxFactory: () => BlockingQueue[G]) extends interfaces.MessageRecipient[G] with Serializable {
 
   val messageInbox: BlockingQueue[G] = messageInboxFactory()
 
