@@ -18,37 +18,25 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.serialization.{InMemoryStorage, MongoDBStore, MongoDBStoreAllOnDisk}
+import signalcollect.implementations.serialization.{DefaultStorage, InMemoryStorage, MongoDBToDoList, MongoDB}
  
 
 object Storage {
   type StorageFactory = (MessageBus[Any, Any]) => Storage
   lazy val defaultFactory = createInMemoryStorage _
 
-  def createInMemoryStorage(messageBus: MessageBus[Any, Any]) = new InMemoryStorage(messageBus)
+  def createInMemoryStorage(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus)
   
   //Highly experimental
   //Use at your own risk!
-  def createMongoDBStorage(messageBus: MessageBus[Any, Any]) = new MongoDBStore(messageBus)
-  def createMongoDBStorageAOD(messageBus: MessageBus[Any, Any]) = new MongoDBStoreAllOnDisk(messageBus)
+  def createMongoDBStorage(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus) with MongoDB
+  def createMongoDBStorageAOD(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus) with MongoDB with MongoDBToDoList
+
 }
 
-trait Storage {  
-  def getVertexWithID(id: Any): Vertex[_, _]
-  def addVertexToStore(vertex: Vertex[_, _]): Boolean
-  def removeVertexFromStore(id: Any)
-  def updateStateOfVertex(vertex: Vertex[_, _])
-  def getNumberOfVertices: Long
-  def foreach[U](f: (Vertex[_, _]) => U)
-
-  def addForSignling(vertexId: Any)
-  def addForCollecting(vertexId: Any)
-  def removeFromSignaling(vertexId: Any)
-  def removeFromCollecting(vertexId: Any)
-  def hasToSignal: Boolean
-  def hasToCollect: Boolean
-  def numberOfVerticesToSignal: Long
-  def numberOfVerticesToCollect: Long
-  def foreachToSignal[U](f: (Vertex[_, _]) => U)
-  def foreachToCollect[U](f: (Vertex[_, _]) => U, makeSnapShot: Boolean)
+abstract class Storage(messageBus: MessageBus[Any, Any]) {
+  def getMessageBus = messageBus
+  def vertices: VertexStore
+  def toSignal: VertexIdSet
+  def toCollect: VertexIdSet
 }

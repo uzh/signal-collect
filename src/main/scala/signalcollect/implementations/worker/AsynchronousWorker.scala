@@ -59,8 +59,8 @@ class AsynchronousWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        vertexStore.foreachToSignal(vertex => signal(vertex))
-        vertexStore.foreachToCollect(vertex => {processInbox; if (collect(vertex)) {signal(vertex)}}, true)
+        vertexStore.toSignal.foreach(vertex => signal(vertex))
+        vertexStore.toCollect.foreachWithSnapshot(vertex => {processInbox; if (collect(vertex)) {signal(vertex)}})
       }
     }
   }

@@ -92,7 +92,7 @@ abstract class AbstractWorker(
 
   protected var vertexStore = storageFactory(messageBus)
 
-  protected def isConverged = !vertexStore.hasToCollect && !vertexStore.hasToSignal
+  protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
   protected def setIdle(newIdleState: Boolean) {
     if (isIdle != newIdleState) {
@@ -120,7 +120,7 @@ abstract class AbstractWorker(
   }
 
   def foreach[U](f: (Vertex[_, _]) => U) {
-    vertexStore.foreach(f)
+    vertexStore.vertices.foreach(f)
   }
 
   protected def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
@@ -134,7 +134,7 @@ abstract class AbstractWorker(
   protected var verticesRemovedCounter = 0l
 
   protected def removeVertex(vertexId: Any) {
-    val vertex = vertexStore.getVertexWithID(vertexId)
+    val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
@@ -147,18 +147,18 @@ abstract class AbstractWorker(
     vertex.outgoingEdgeCount foreach (outgoingEdgesRemovedCounter += _)
     vertex.removeAllOutgoingEdges
     verticesRemovedCounter += 1
-    vertexStore.removeVertexFromStore(vertex.id)
+    vertexStore.vertices.remove(vertex.id)
   }
 
   protected var outgoingEdgesRemovedCounter = 0l
 
   protected def removeOutgoingEdge(edgeId: (Any, Any, String)) {
     var removed = false
-    val vertex = vertexStore.getVertexWithID(edgeId._1)
+    val vertex = vertexStore.vertices.get(edgeId._1)
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
         outgoingEdgesRemovedCounter += 1
-        vertexStore.updateStateOfVertex(vertex)
+        vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         log("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
@@ -171,11 +171,11 @@ abstract class AbstractWorker(
 
   protected def removeIncomingEdge(edgeId: (Any, Any, String)) {
     val targetVertexId = edgeId._2
-    val targetVertex = vertexStore.getVertexWithID(targetVertexId)
+    val targetVertex = vertexStore.vertices.get(targetVertexId)
     if (targetVertex != null) {
       val removed = targetVertex.removeIncomingEdge(edgeId)
       removed map (if (_) incomingEdgesRemovedCounter += 1)
-      vertexStore.updateStateOfVertex(targetVertex)
+      vertexStore.vertices.updateStateOfVertex(targetVertex)
     } else {
       log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
     }
@@ -185,11 +185,11 @@ abstract class AbstractWorker(
 
   protected def addIncomingEdge(edgeId: (Any, Any, String)) {
     val targetVertexId = edgeId._2
-    val targetVertex = vertexStore.getVertexWithID(targetVertexId)
+    val targetVertex = vertexStore.vertices.get(targetVertexId)
     if (targetVertex != null) {
       incomingEdgesAddedCounter += 1
       targetVertex.addIncomingEdge(edgeId)
-      vertexStore.updateStateOfVertex(targetVertex)
+      vertexStore.vertices.updateStateOfVertex(targetVertex)
     } else {
       log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
     }
@@ -199,14 +199,14 @@ abstract class AbstractWorker(
 
   protected def addOutgoingEdge(e: Edge[_, _]) = {
     val key = e.sourceId
-    val vertex = vertexStore.getVertexWithID(key)
+    val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
       outgoingEdgesAddedCounter += 1
       vertex.addOutgoingEdge(e)
       messageBus.sendToWorkerForIdHash(CommandAddIncomingEdge(e.id), e.targetHashCode)
-      vertexStore.addForCollecting(vertex.id)
-      vertexStore.addForSignling(vertex.id)
-      vertexStore.updateStateOfVertex(vertex)
+      vertexStore.toCollect+=vertex.id
+      vertexStore.toSignal+=vertex.id
+      vertexStore.vertices.updateStateOfVertex(vertex)
 
     } else {
       log("Did not find vertex with id " + e.sourceId + " when adding edge " + e)
@@ -228,22 +228,22 @@ abstract class AbstractWorker(
   }
 
   protected def executeSignalStep {
-    var converged = !vertexStore.hasToSignal
-    vertexStore.foreachToSignal{vertex => signal(vertex) }
+    var converged = vertexStore.toSignal.isEmpty
+    vertexStore.toSignal.foreach{vertex => signal(vertex) }
     messageBus.sendToCoordinator(StatusSignalStepDone)
   }
 
   protected def executeCollectStep {
-   vertexStore.foreachToCollect(
+   vertexStore.toCollect.foreach(
    vertex => {collect (vertex); 
-   vertexStore.addForSignling(vertex.id) }, false)
-   messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.numberOfVerticesToSignal))
+   vertexStore.toSignal+=vertex.id })
+   messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
 
   var verticesAddedCounter = 0l
 
   protected def addVertex(vertex: Vertex[_, _]) {
-    if (vertexStore.addVertexToStore(vertex)) {
+    if (vertexStore.vertices.put(vertex)) {
       verticesAddedCounter += 1
     }
   }
@@ -254,7 +254,7 @@ abstract class AbstractWorker(
     if (vertex.scoreCollect > collectThreshold) {
       collectOperationsExecutedCounter += 1
       vertex.executeCollectOperation
-      vertexStore.updateStateOfVertex(vertex)
+      vertexStore.vertices.updateStateOfVertex(vertex)
       true
     } else {
       false
@@ -267,7 +267,7 @@ abstract class AbstractWorker(
     if (v.scoreSignal > signalThreshold) {
       signalOperationsExecutedCounter += 1
       v.executeSignalOperation
-      vertexStore.updateStateOfVertex(v)
+      vertexStore.vertices.updateStateOfVertex(v)
       true
     } else {
       false
@@ -275,15 +275,15 @@ abstract class AbstractWorker(
   }
 
   protected def sendStatsToCoordinator {
-    messageBus.sendToCoordinator(StatusNumberOfVertices(vertexStore.getNumberOfVertices))
+    messageBus.sendToCoordinator(StatusNumberOfVertices(vertexStore.vertices.size))
     messageBus.sendToCoordinator(StatusNumberOfEdges(countOutgoingEdges))
   }
 
   def sendComputationProgressStats {
     val stats = ComputationProgressStats(
-      vertexStore.numberOfVerticesToCollect,
+      vertexStore.toCollect.size,
       collectOperationsExecutedCounter,
-      vertexStore.numberOfVerticesToSignal,
+      vertexStore.toSignal.size,
       signalOperationsExecutedCounter,
       verticesAddedCounter,
       verticesRemovedCounter,
@@ -301,18 +301,18 @@ abstract class AbstractWorker(
   }
 
   protected def processSignal(signal: Signal[_, _, _]) {
-    val vertex = vertexStore.getVertexWithID(signal.targetId)
+    val vertex = vertexStore.vertices.get(signal.targetId)
     if (vertex != null) {
       deliverSignal(signal, vertex)
     } else {
       log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
     }
-    vertexStore.updateStateOfVertex(vertex)
+    vertexStore.vertices.updateStateOfVertex(vertex)
   }
 
   protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
     vertex.send(signal)
-    vertexStore.addForCollecting(vertex.id)
+    vertexStore.toCollect+=vertex.id
   }
 
 }

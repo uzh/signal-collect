@@ -66,8 +66,8 @@ class AsynchronousPriorityWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-    	  vertexStore.foreachToSignal(vertex => signal(vertex))
-          vertexStore.foreachToCollect(vertex => if (collect(vertex)) {signal(vertex)}, true)
+    	  vertexStore.toSignal.foreach(vertex => signal(vertex))
+          vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) {signal(vertex)})
 
       }
     }

@@ -23,28 +23,28 @@ import java.util.Set
 import signalcollect.interfaces._
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryStorage(messageBus: MessageBus[Any, Any]) extends AbstractStorage {
-
+class InMemoryStorage(storage: Storage) extends VertexStore {
+  val messageBus =  storage.getMessageBus
   var vertexMap = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreads)
 
-  def getVertexWithID(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex[_, _] = {
     vertexMap.get(id)
   }
 
-  def addVertexToStore(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex[_, _]): Boolean = {
     if (!vertexMap.containsKey(vertex.id)) {
       vertex.setMessageBus(messageBus)
       vertexMap.put(vertex.id, vertex)
-      addForCollecting(vertex.id)
-      addForSignling(vertex.id)
+      storage.toCollect +=vertex.id
+      storage.toSignal+=vertex.id
       true
     } else
       false
   }
-  def removeVertexFromStore(id: Any) = {
+  def remove(id: Any) = {
     vertexMap.remove(id)
-    removeFromCollecting(id)
-    removeFromSignaling(id)
+    storage.toCollect-=id
+    storage.toSignal-=id
   }
 
   def updateStateOfVertex(vertex: Vertex[_, _]) = {} // Not needed for in-memory implementation
@@ -57,5 +57,5 @@ class InMemoryStorage(messageBus: MessageBus[Any, Any]) extends AbstractStorage 
     }
   }
 
-  def getNumberOfVertices: Long = vertexMap.size
+  def size: Long = vertexMap.size
 }

@@ -76,7 +76,7 @@ class DirectDeliveryAsynchronousWorker(
 
   protected override def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
     vertex.send(signal)
-    vertexStore.addForCollecting(vertex.id)
+    vertexStore.toCollect+=vertex.id
   }
 
   override def handleIdling {

@@ -29,13 +29,14 @@ import java.util.HashMap
  * Uses Mongo DB to Store the vertices and their according edges on disk
  * The lists of Vertices to collect/signal are kept in memory.
  */
-class MongoDBStore(messageBus: MessageBus[Any, Any]) extends AbstractStorage {
-	
+class MongoDBStorage(storage: Storage) extends VertexStore with DefaultSerializer {
+  val messageBus =  storage.getMessageBus
+
   val randomID = getRandomString("sc-", 16) //To make sure that different workers operate on different MongoDB collections 
   var mongoStore = MongoConnection()("sc")(randomID) //connect to localhost at port 27017 
 
   
-  def addVertexToStore(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex[_, _]): Boolean = {
 	  val builder = MongoDBObject.newBuilder
 	  builder += "id" -> vertex.id.toString
 	  if(mongoStore.findOne(builder.result) != None) {
@@ -45,23 +46,23 @@ class MongoDBStore(messageBus: MessageBus[Any, Any]) extends AbstractStorage {
 	 	  vertex.setMessageBus(messageBus)
 	 	  builder += "obj" -> write(vertex)
 	 	  mongoStore += builder.result
-	 	  addForCollecting(vertex.id)
-          addForSignling(vertex.id)
+	 	  storage.toCollect+=vertex.id
+          storage.toSignal+=vertex.id
 	 	  true 
 	  }
   }
   
-  def getVertexWithID(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex[_, _] = {
   	 mongoStore.findOne(MongoDBObject("id" -> id.toString)) match {
 		 case Some(x) => val serialized = x.getAs[Array[Byte]]("obj"); val vertex = read(serialized.get).asInstanceOf[Vertex[_, _]]; vertex.setMessageBus(messageBus); vertex;
 		 case _ => null
 	 }
   }
 
-  def removeVertexFromStore(id: Any) = {
+  def remove(id: Any) = {
 	  mongoStore.remove(MongoDBObject("id" -> id.toString))
-	  removeFromCollecting(id)
-    removeFromSignaling(id)
+	  storage.toCollect-=id
+      storage.toSignal-=id
   }
 
   def updateStateOfVertex(vertex: Vertex[_, _]) = {  
@@ -79,7 +80,7 @@ class MongoDBStore(messageBus: MessageBus[Any, Any]) extends AbstractStorage {
 	   })
   }
   
-  def getNumberOfVertices = mongoStore.size
+  def size = mongoStore.size
   
   def removeAll = { mongoStore.foreach(obj => mongoStore.remove(obj)) }
   
@@ -91,4 +92,8 @@ class MongoDBStore(messageBus: MessageBus[Any, Any]) extends AbstractStorage {
 	  }
 	  res
   }
+}
+
+trait MongoDB extends DefaultStorage {
+	override protected def vertexStoreFactory = new MongoDBStorage(this)
 }
