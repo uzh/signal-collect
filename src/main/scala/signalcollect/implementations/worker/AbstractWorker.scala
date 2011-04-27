@@ -19,6 +19,7 @@
 
 package signalcollect.implementations.worker
 
+import signalcollect.implementations.coordinator.GenericConstructor
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._
@@ -49,8 +50,8 @@ abstract class AbstractWorker(
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
       case CommandForEachVertex(f) => foreach(f)
-      case CommandAddVertexFromFactory(vertexFactory, parameters) => addVertex(vertexFactory(parameters))
-      case CommandAddEdgeFromFactory(edgeFactory, parameters) => addOutgoingEdge(edgeFactory(parameters))
+      case CommandAddVertex(vertexClass, parameters) => addVertex(vertexClass, parameters)
+      case CommandAddEdge(edgeClass, parameters) => addOutgoingEdge(edgeClass, parameters)
       case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
       case CommandRemoveVertex(vertexId) => removeVertex(vertexId)
       case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
@@ -195,6 +196,11 @@ abstract class AbstractWorker(
     }
   }
 
+  protected def addOutgoingEdge(edgeClass: Class[Edge[_, _]], parameters: Seq[AnyRef]) {
+	  val edge = GenericConstructor.newInstanceFromClass(edgeClass)(parameters)
+	  addOutgoingEdge(edge)
+  }
+  
   var outgoingEdgesAddedCounter = 0l
 
   protected def addOutgoingEdge(e: Edge[_, _]) = {
@@ -240,6 +246,11 @@ abstract class AbstractWorker(
    messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
 
+  protected def addVertex(vertexClass: Class[Vertex[_, _]], parameters: Seq[AnyRef]) {
+	  val vertex = GenericConstructor.newInstanceFromClass(vertexClass)(parameters)
+	  addVertex(vertex)
+  }
+  
   var verticesAddedCounter = 0l
 
   protected def addVertex(vertex: Vertex[_, _]) {

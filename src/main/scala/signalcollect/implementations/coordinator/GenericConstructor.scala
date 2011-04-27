@@ -78,7 +78,7 @@ object GenericConstructor {
    * Creates an instance of a class given suitable parameters and the implicit class manifest.
    * Throws a ConstructorException exception if no matching constructor is found.
    */
-  def newInstance[InstanceType](parameters: Seq[Object])(implicit m: Manifest[InstanceType]): InstanceType = {
+  def newInstanceFromManifest[InstanceType](parameters: Seq[Object])(implicit m: Manifest[InstanceType]): InstanceType = {
     val clazz = m.erasure
     val constructor = getConstructorForParameters(clazz, parameters)
     val result = constructor.newInstance(parameters: _*)
@@ -88,7 +88,7 @@ object GenericConstructor {
   /*
    * Java compatible version without manifest.
    */
-  def newInstanceJava[InstanceType](clazz: Class[InstanceType])(parameters: Seq[Object]): InstanceType = {
+  def newInstanceFromClass[InstanceType](clazz: Class[InstanceType])(parameters: Seq[Object]): InstanceType = {
     val constructor = getConstructorForParameters(clazz, parameters)
     val result = constructor.newInstance(parameters: _*)
     result.asInstanceOf[InstanceType]

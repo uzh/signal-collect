@@ -29,15 +29,13 @@ trait DefaultGraphApi extends GraphApi {
   
   def addVertex[VertexType <: Vertex[_, _]](vertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType]) {
     val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val constructor = GenericConstructor.newInstance[VertexType] _
-    val operation = CommandAddVertexFromFactory(constructor, parameters)
+    val operation = CommandAddVertex(m.erasure.asInstanceOf[Class[Vertex[_, _]]], parameters)
     messageBus.sendToWorkerForId(operation, vertexId)
   }
 
   def addEdge[EdgeType <: Edge[_, _]](sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[EdgeType]) {
     val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val constructor = GenericConstructor.newInstance[EdgeType] _
-    val operation = CommandAddEdgeFromFactory(constructor, parameters)
+    val operation = CommandAddEdge(m.erasure.asInstanceOf[Class[Edge[_, _]]], parameters)
     messageBus.sendToWorkerForId(operation, sourceVertexId)
   }
 
