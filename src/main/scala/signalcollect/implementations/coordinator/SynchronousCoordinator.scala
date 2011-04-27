@@ -45,6 +45,11 @@ class SynchronousCoordinator(
     } while ((steps < stepsLimit) && collectStep().get > 0l)
     log("Steps: " + steps)
     val statsMap = collection.mutable.LinkedHashMap[String, Any]()
+    messageBus.sendToWorkers(CommandSendComputationProgressStats)
+    handleMessage
+    messageBus.sendToWorkers(CommandSendComputationProgressStats)
+    handleMessage
+    computationProgressStatisticsSecondPass = computationProgressStatistics
     statsMap.put("signalCollectSteps", steps)
     statsMap
   }
