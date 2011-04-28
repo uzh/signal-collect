@@ -42,7 +42,7 @@ class DirectDeliveryAsynchronousWorker(
     }
   }
 
-  val pollingTimeoutNanoseconds: Long = 1000000l
+  val pollingTimeoutNanoseconds: Long = 1000l * 1000l * 100l
 
   def poll {
     if (isIdle) {

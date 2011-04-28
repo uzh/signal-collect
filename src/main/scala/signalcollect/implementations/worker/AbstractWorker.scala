@@ -106,7 +106,7 @@ abstract class AbstractWorker(
     }
   }
 
-  protected val idleTimeoutNanoseconds: Long = 1000000l * 10l // * 50l //1000000 * 50000 // 50 milliseconds
+  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 100l //100ms // * 50l //1000000 * 50000 // 50 milliseconds
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
     var message = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
@@ -234,7 +234,7 @@ abstract class AbstractWorker(
   }
 
   protected def executeSignalStep {
-    var converged = vertexStore.toSignal.isEmpty
+    //var converged = vertexStore.toSignal.isEmpty
     vertexStore.toSignal.foreach{vertex => signal(vertex) }
     messageBus.sendToCoordinator(StatusSignalStepDone)
   }
@@ -315,10 +315,10 @@ abstract class AbstractWorker(
     val vertex = vertexStore.vertices.get(signal.targetId)
     if (vertex != null) {
       deliverSignal(signal, vertex)
+      vertexStore.vertices.updateStateOfVertex(vertex)
     } else {
       log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
     }
-    vertexStore.vertices.updateStateOfVertex(vertex)
   }
 
   protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
