@@ -56,6 +56,9 @@ object Hamiltonian extends App {
  * The state of a vertex is all the paths currently collected from the graph
  * Each path will be kept such that there will be no "revisiting" of vertices (each path will not have a repeated vertex id)
  * Implementation is rather inefficient since it keeps a map where the value is the weights sum and keys as lists
+ * 
+ * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
+ * 
  */
 class MyVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
 
