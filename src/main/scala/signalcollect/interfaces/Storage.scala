@@ -29,7 +29,9 @@ object Storage {
   
   //Highly experimental
   //Use at your own risk!
-  def createMongoDBStorage(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus) with MongoDB
+  class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
+  
+  lazy val mongoDBStorageFactory = new MongoDBStorage(_)
   def createMongoDBStorageAOD(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus) with MongoDB with MongoDBToDoList
 
 }
