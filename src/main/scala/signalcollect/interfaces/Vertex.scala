@@ -136,5 +136,8 @@ package signalcollect.interfaces
 
   /** @return optionally the number of incoming edges of this {@link Vertex}. Modified by {@link FrameworkVertex} */
   def incomingEdgeCount: Option[Int]
+  
+  /** This method gets called by the framework after the vertex has been fully initialized. */
+  def afterInitialization
 
 }

@@ -256,6 +256,7 @@ abstract class AbstractWorker(
   protected def addVertex(vertex: Vertex[_, _]) {
     if (vertexStore.vertices.put(vertex)) {
       verticesAddedCounter += 1
+      vertex.afterInitialization
     }
   }
 
