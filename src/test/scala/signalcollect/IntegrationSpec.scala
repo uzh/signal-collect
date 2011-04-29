@@ -45,6 +45,8 @@ class IntegrationSpec extends SpecificationWithJUnit {
     { workers: Int => new AsynchronousComputeGraph(workers, workerFactory = Worker.asynchronousDirectDeliveryWorkerFactory) },
     { workers: Int => new AsynchronousComputeGraph(workers, workerFactory = Worker.asynchronousPriorityWorkerFactory) })
 
+  val testWorkerCounts = List(1, 2, 16, 64)
+
   /**
    * Utility Methods
    */
@@ -58,19 +60,19 @@ class IntegrationSpec extends SpecificationWithJUnit {
     cg
   }
 
-  def test(graphProviders: List[Int => ComputeGraph], verify: Vertex[_, _] => Boolean, numberOfWorkers: Traversable[Int] = List(8), signalThreshold: Double = 0.001, collectThreshold: Double = 0): Boolean = {
+  def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ComputationStatistics]]()
     for (workers <- numberOfWorkers) {
       for (graphProvider <- graphProviders) {
         val cg = graphProvider.apply(workers)
-        //print("\tMode: " + cg)
+        buildGraph(cg)
         cg.setSignalThreshold(signalThreshold)
         cg.setCollectThreshold(collectThreshold)
-        cg.execute
+        val stats = cg.execute
         cg foreach (vertex => if (!verify(vertex)) {
-          System.err.println("Test Failed in mode: " + cg + " at vertex: " + vertex.id + " (state:" + vertex.state + ")")
           correct = false
+          System.err.println("Test failed. Computation stats: " + stats)
         })
         cg.shutDown
       }
@@ -78,7 +80,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     correct
   }
 
-  def buildVerifiedVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
+  def buildVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         cg.addVertex[VerifiedColoredVertex](sourceId.asInstanceOf[AnyRef], numColors)
@@ -106,110 +108,113 @@ class IntegrationSpec extends SpecificationWithJUnit {
     cg
   }
 
-  "PageRank Algorithm" should {
+  "PageRank algorithm" should {
     "deliver correct results on a 5-cycle graph" in {
-      val et1 = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
-      val gp1: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildPageRankGraph(cgFactory(workers), et1) }
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        ((v.state.asInstanceOf[Double] - 1).abs < 0.00001)
-      }
-      test(graphProviders = gp1, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
-    }
-
-    "deliver correct results  a 5-star graph" in {
-      val et2 = List((0, 4), (1, 4), (2, 4), (3, 4))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        if (v.id != 4) {
-          ((v.state.asInstanceOf[Double] - 0.15).abs < 0.00001)
-        } else {
-          ((v.state.asInstanceOf[Double] - 0.66).abs < 0.00001)
+      val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
+      def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val expectedState = 1.0
+        val correct = (state - expectedState).abs < 0.00001
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
+        correct
       }
-      val gp2: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildPageRankGraph(cgFactory(workers), et2) }
-      test(graphProviders = gp2, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges)) must_== true
     }
 
-    "deliver correct results  a 2*2 symmetric grid" in {
-      val et3 = new Grid(2, 2)
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        ((v.state.asInstanceOf[Double] - 1).abs < 0.00001)
+    "deliver correct results on a 5-star graph" in {
+      val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
+      def pageRankFiveStarVerifier(v: Vertex[_, _]): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val expectedState = if (v.id == 4.0) 0.66 else 0.15
+        val correct = (state - expectedState).abs < 0.00001
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        }
+        correct
       }
-      val gp3: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildPageRankGraph(cgFactory(workers), et3) }
-      test(graphProviders = gp3, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = pageRankFiveStarVerifier, buildGraph = buildPageRankGraph(_, fiveStarEdges)) must_== true
+    }
+
+    "deliver correct results on a 2*2 symmetric grid" in {
+      val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
+      def pageRankTwoOnTwoGridVerifier(v: Vertex[_, _]): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val expectedState = 1.0
+        val correct = (state - expectedState).abs < 0.00001
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        }
+        correct
+      }
+      test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges)) must_== true
     }
   }
 
-  "VertexColoring" should {
+  "VertexColoring algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
-      val et1 = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
+      val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
+      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
         v match {
           case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => false
+          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
         }
       }
-      val gp1: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildVerifiedVertexColoringGraph(2, cgFactory(workers), et1) }
-      test(graphProviders = gp1, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) must_== true
     }
+
     "deliver correct results on a symmetric 5-star" in {
-      val et2 = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
+      val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
+      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
         v match {
           case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => false
+          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
         }
       }
-      val gp2: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildVerifiedVertexColoringGraph(2, cgFactory(workers), et2) }
-      test(graphProviders = gp2, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) must_== true
     }
     "deliver correct results on a 2*2 symmetric grid" in {
-      val et3 = new Grid(2, 2)
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
+      val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
+      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
         v match {
           case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => false
+          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
         }
       }
-      val gp3: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildVerifiedVertexColoringGraph(2, cgFactory(workers), et3) }
-      test(graphProviders = gp3, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) must_== true
     }
   }
 
-  "SSSP" should {
+  "SSSP algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
-      val et1 = List((0, 1), (1, 2), (2, 3), (3, 0))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        (v.id == v.state.asInstanceOf[Option[Int]].get)
+      val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
+      def ssspSymmetricsFourCycleVerifier(v: Vertex[_, _]): Boolean = {
+        val state = v.state.asInstanceOf[Option[Int]].get
+        val expectedState = v.id
+        val correct = state == expectedState
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        }
+        correct
       }
-      val gp1: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildSsspGraph(0, cgFactory(workers), et1) }
-      test(graphProviders = gp1, verify _, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = ssspSymmetricsFourCycleVerifier, buildGraph = buildSsspGraph(0, _, symmetricFourCycleEdges)) must_== true
     }
-    
+
     "deliver correct results on a symmetric 5-star" in {
-      val et2 = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        if (v.id.asInstanceOf[Int] == 4) {
-          v.state.asInstanceOf[Option[Int]].get == 0
-        } else {
-          v.state.asInstanceOf[Option[Int]].get == 1
+      val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
+      def ssspSymmetricFiveStarVerifier(v: Vertex[_, _]): Boolean = {
+        val state = v.state.asInstanceOf[Option[Int]].get
+        val expectedState = if (v.id == 4) 0 else 1
+        val correct = state == expectedState
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
+        correct
       }
-      val gp2: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildSsspGraph(4, cgFactory(workers), et2) }
-      test(graphProviders = gp2, verify, numberOfWorkers = List(1, 2, 16, 64), signalThreshold = 0, collectThreshold = 0) must_== true
+      test(verify = ssspSymmetricFiveStarVerifier, buildGraph = buildSsspGraph(4, _, symmetricFiveStarEdges)) must_== true
     }
-    
-    "deliver correct results on a 2*2 symmetric grid" in {
-      val et2 = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      def verify(v: interfaces.Vertex[_, _]): Boolean = {
-        if (v.id.asInstanceOf[Int] == 4) {
-          v.state.asInstanceOf[Option[Int]].get == 0
-        } else {
-          v.state.asInstanceOf[Option[Int]].get == 1
-        }
-      }
-      val gp2: List[Int => ComputeGraph] = for (cgFactory <- computeGraphFactories) yield { workers: Int => buildSsspGraph(4, cgFactory(workers), et2) }
-      test(graphProviders = gp2, verify, numberOfWorkers = List(1, 2, 4, 8), signalThreshold = 0, collectThreshold = 0)
-    }
+
   }
 }
 
