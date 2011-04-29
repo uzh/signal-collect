@@ -20,7 +20,6 @@
 package signalcollect.interfaces
 
 import java.util.concurrent.LinkedBlockingQueue
-import signalcollect.implementations.messaging.MultiQueue
 import scala.concurrent.forkjoin.LinkedTransferQueue
 import java.util.concurrent.BlockingQueue
 

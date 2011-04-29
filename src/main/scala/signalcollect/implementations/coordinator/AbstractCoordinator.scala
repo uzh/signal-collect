@@ -28,7 +28,6 @@ import signalcollect.interfaces.MessageBus._
 import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
 import java.util.concurrent.ArrayBlockingQueue
-import signalcollect.implementations.messaging.MultiQueue
 import signalcollect.interfaces.ComputeGraph
 import java.util.concurrent.BlockingQueue
 import signalcollect.interfaces._

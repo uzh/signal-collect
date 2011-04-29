@@ -22,7 +22,6 @@ package signalcollect.implementations.graph
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import signalcollect.interfaces.Queue._
 import scala.collection.mutable.ListBuffer
-import signalcollect.implementations.messaging.MultiQueue
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.LinkedHashMap

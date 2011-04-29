@@ -18,22 +18,27 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.serialization.{DefaultStorage, InMemoryStorage, MongoDBToDoList, MongoDB}
- 
+import signalcollect.implementations.serialization.{ DefaultStorage, InMemoryStorage, MongoDBToDoList, MongoDB, BerkDBJE }
 
 object Storage {
   type StorageFactory = (MessageBus[Any, Any]) => Storage
-  lazy val defaultFactory = createInMemoryStorage _
+  lazy val defaultFactory = inMemoryStorageFactory
 
-  def createInMemoryStorage(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus)
-  
+  val inMemoryStorageFactory = new DefaultStorage(_)
+
   //Highly experimental
   //Use at your own risk!
-  class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
-  
-  lazy val mongoDBStorageFactory = new MongoDBStorage(_)
-  def createMongoDBStorageAOD(messageBus: MessageBus[Any, Any]) = new DefaultStorage(messageBus) with MongoDB with MongoDBToDoList
 
+  //can be run directly from jar
+  class BerkeleyDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
+  lazy val berkeleyDBStorageFactory = new BerkeleyDBStorage(_)
+
+  //usage requires a running mongoDB installation
+  class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
+  lazy val mongoDBStorageFactory = new MongoDBStorage(_)
+
+  class AllOnDiskMongoDBStorage(messageBus: MessageBus[Any, Any]) extends MongoDBStorage(messageBus) with MongoDBToDoList
+  lazy val allOnDiskMongoDBStorageFactory = new AllOnDiskMongoDBStorage(_)
 }
 
 abstract class Storage(messageBus: MessageBus[Any, Any]) {

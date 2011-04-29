@@ -81,17 +81,6 @@ class MongoDBStorage(storage: Storage) extends VertexStore with DefaultSerialize
   }
   
   def size = mongoStore.size
-  
-  def removeAll = { mongoStore.foreach(obj => mongoStore.remove(obj)) }
-  
-  def getRandomString(prefix: String, length: Int): String = {
-	  val chars = (('a' to 'z') ++ ('A' to 'Z') ++ ('1' to '9')).toList
-	  var res = prefix
-	  for(i <- 0 to length) {
-	 	  res+=chars(scala.util.Random.nextInt(chars.size))
-	  }
-	  res
-  }
 }
 
 trait MongoDB extends DefaultStorage {
