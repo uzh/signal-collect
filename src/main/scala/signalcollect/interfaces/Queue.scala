@@ -31,5 +31,4 @@ object Queue {
 	
 	lazy val linkedTransferQueueFactory = () => new LinkedTransferQueue[Any]
 	lazy val linkedBlockingQueueFactory = () => new LinkedBlockingQueue[Any]
-	lazy val multiQueueFactory = new MultiQueue[Any](_, _)
 }
