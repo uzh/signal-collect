@@ -28,7 +28,6 @@ import signalcollect.api._
 import signalcollect.interfaces._
 import signalcollect.interfaces.Worker._
 import signalcollect.algorithms._
-import signalcollect.implementations.messaging.MultiQueue
 import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 
 /**
