@@ -51,10 +51,10 @@ class IntegrationSpec extends SpecificationWithJUnit {
    */
   def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
-      case (sourceId, targetId) =>
-        cg.addVertex[Page](sourceId, 0.85)
-        cg.addVertex[Page](targetId, 0.85)
-        cg.addEdge[Link](sourceId, targetId)
+      case (sourceId: Int, targetId: Int) =>
+        cg.addVertex(classOf[Page], sourceId, 0.85)
+        cg.addVertex(classOf[Page], targetId, 0.85)
+        cg.addEdge(classOf[Link], sourceId, targetId)
     }
     cg
   }
@@ -82,9 +82,9 @@ class IntegrationSpec extends SpecificationWithJUnit {
   def buildVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
-        cg.addVertex[VerifiedColoredVertex](sourceId.asInstanceOf[AnyRef], numColors)
-        cg.addVertex[VerifiedColoredVertex](targetId.asInstanceOf[AnyRef], numColors)
-        cg.addEdge[StateForwarderEdge](sourceId, targetId)
+        cg.addVertex(classOf[VerifiedColoredVertex], sourceId.asInstanceOf[AnyRef], numColors)
+        cg.addVertex(classOf[VerifiedColoredVertex], targetId.asInstanceOf[AnyRef], numColors)
+        cg.addEdge(classOf[StateForwarderEdge], sourceId, targetId)
     }
     cg
   }
@@ -93,16 +93,16 @@ class IntegrationSpec extends SpecificationWithJUnit {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         if (sourceId.equals(pathSourceId)) {
-          cg.addVertex[Location](sourceId.asInstanceOf[AnyRef], Some(0))
+          cg.addVertex(classOf[Location], sourceId.asInstanceOf[AnyRef], Some(0))
         } else {
-          cg.addVertex[Location](sourceId.asInstanceOf[AnyRef], None)
+          cg.addVertex(classOf[Location], sourceId.asInstanceOf[AnyRef], None)
         }
         if (targetId.equals(pathSourceId)) {
-          cg.addVertex[Location](targetId.asInstanceOf[AnyRef], Some(0))
+          cg.addVertex(classOf[Location], targetId.asInstanceOf[AnyRef], Some(0))
         } else {
-          cg.addVertex[Location](targetId.asInstanceOf[AnyRef], None)
+          cg.addVertex(classOf[Location], targetId.asInstanceOf[AnyRef], None)
         }
-        cg.addEdge[Path](sourceId, targetId)
+        cg.addEdge(classOf[Path], sourceId, targetId)
     }
     cg
   }

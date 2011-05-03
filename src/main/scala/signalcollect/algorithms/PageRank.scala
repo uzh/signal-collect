@@ -68,13 +68,13 @@ class Page(id: Any, dampingFactor: Double) extends SignalMapVertex(id, 1 - dampi
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
   val cg = new AsynchronousComputeGraph()
-  cg.addVertex[Page](1, 0.85)
-  cg.addVertex[Page](2, 0.85)
-  cg.addVertex[Page](3, 0.85)
-  cg.addEdge[Link](1, 2)
-  cg.addEdge[Link](2, 1)
-  cg.addEdge[Link](2, 3)
-  cg.addEdge[Link](3, 2)
+  cg.addVertex(classOf[Page], 1, 0.85)
+  cg.addVertex(classOf[Page], 2, 0.85)
+  cg.addVertex(classOf[Page], 3, 0.85)
+  cg.addEdge(classOf[Link], 1, 2)
+  cg.addEdge(classOf[Link], 2, 1)
+  cg.addEdge(classOf[Link], 2, 3)
+  cg.addEdge(classOf[Link], 3, 2)
   val stats = cg.execute
   println(stats)
   cg.foreach (println(_))

@@ -22,8 +22,8 @@ package signalcollect.interfaces
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
-case class CommandAddVertex(vertexClass: Class[Vertex[_, _]], parameters: Seq[AnyRef])
-case class CommandAddEdge(edgeClass: Class[Edge[_, _]], parameters: Seq[AnyRef])
+case class CommandAddVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef])
+case class CommandAddEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef])
 
 case class CommandAddIncomingEdge(edgeId: (Any, Any, String))
 

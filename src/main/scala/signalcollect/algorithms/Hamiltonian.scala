@@ -31,20 +31,20 @@ object Hamiltonian extends App {
    * Still need to test performance on complete and larger graphs
    */
 
-  cg.addVertex[MyVertex]("a", Map(List("a") -> 0))
-  cg.addVertex[MyVertex]("b", Map(List("b") -> 0))
-  cg.addVertex[MyVertex]("c", Map(List("c") -> 0))
-  cg.addVertex[MyVertex]("d", Map(List("d") -> 0))
-  cg.addVertex[MyVertex]("e", Map(List("e") -> 0))
+  cg.addVertex(classOf[MyVertex], "a", Map(List("a") -> 0))
+  cg.addVertex(classOf[MyVertex], "b", Map(List("b") -> 0))
+  cg.addVertex(classOf[MyVertex], "c", Map(List("c") -> 0))
+  cg.addVertex(classOf[MyVertex], "d", Map(List("d") -> 0))
+  cg.addVertex(classOf[MyVertex], "e", Map(List("e") -> 0))
 
-  cg.addEdge[MyEdge]("a", "d", 3); cg.addEdge[MyEdge]("d", "a", 3)
-  cg.addEdge[MyEdge]("a", "b", 1); cg.addEdge[MyEdge]("b", "a", 1)
-  cg.addEdge[MyEdge]("d", "b", 2); cg.addEdge[MyEdge]("b", "d", 2)
-  cg.addEdge[MyEdge]("d", "c", 1); cg.addEdge[MyEdge]("c", "d", 1)
-  cg.addEdge[MyEdge]("b", "c", 1); cg.addEdge[MyEdge]("c", "b", 1)
+  cg.addEdge(classOf[MyEdge], "a", "d", 3); cg.addEdge(classOf[MyEdge], "d", "a", 3)
+  cg.addEdge(classOf[MyEdge], "a", "b", 1); cg.addEdge(classOf[MyEdge], "b", "a", 1)
+  cg.addEdge(classOf[MyEdge], "d", "b", 2); cg.addEdge(classOf[MyEdge], "b", "d", 2)
+  cg.addEdge(classOf[MyEdge], "d", "c", 1); cg.addEdge(classOf[MyEdge], "c", "d", 1)
+  cg.addEdge(classOf[MyEdge], "b", "c", 1); cg.addEdge(classOf[MyEdge], "c", "b", 1)
 
   // a problem with isolated vertices is that it is not able to find hamiltonian paths depending on the starting vertex
-  cg.addEdge[MyEdge]("e", "a", 1); cg.addEdge[MyEdge]("a", "e", 1)
+  cg.addEdge(classOf[MyEdge], "e", "a", 1); cg.addEdge(classOf[MyEdge], "a", "e", 1)
 
   val stats = cg.execute
   println(stats)

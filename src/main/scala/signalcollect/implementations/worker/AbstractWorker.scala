@@ -196,7 +196,7 @@ abstract class AbstractWorker(
     }
   }
 
-  protected def addOutgoingEdge(edgeClass: Class[Edge[_, _]], parameters: Seq[AnyRef]) {
+  protected def addOutgoingEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
 	  val edge = GenericConstructor.newInstanceFromClass(edgeClass)(parameters)
 	  addOutgoingEdge(edge)
   }
@@ -246,7 +246,7 @@ abstract class AbstractWorker(
    messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
 
-  protected def addVertex(vertexClass: Class[Vertex[_, _]], parameters: Seq[AnyRef]) {
+  protected def addVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
 	  val vertex = GenericConstructor.newInstanceFromClass(vertexClass)(parameters)
 	  addVertex(vertex)
   }

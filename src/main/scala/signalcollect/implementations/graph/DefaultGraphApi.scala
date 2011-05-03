@@ -26,26 +26,14 @@ import scala.collection.JavaConversions._
 
 trait DefaultGraphApi extends GraphApi {
   protected def messageBus: MessageBus[Any, Any]
-  
-  def addVertex[VertexType <: Vertex[_, _]](vertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType]) {
-    val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddVertex(m.erasure.asInstanceOf[Class[Vertex[_, _]]], parameters)
-    messageBus.sendToWorkerForId(operation, vertexId)
-  }
 
-  def addEdge[EdgeType <: Edge[_, _]](sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[EdgeType]) {
-    val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddEdge(m.erasure.asInstanceOf[Class[Edge[_, _]]], parameters)
-    messageBus.sendToWorkerForId(operation, sourceVertexId)
-  }
-  
-  def addVertex[VertexClass <: Class[Vertex[_, _]]](vertexClass: VertexClass, vertexId: Any, otherConstructorParameters: Any*) {
+  def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*) {
     val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
     val operation = CommandAddVertex(vertexClass, parameters)
     messageBus.sendToWorkerForId(operation, vertexId)
   }
 
-  def addEdge[EdgeClass <: Class[Edge[_, _]]](edgeClass: EdgeClass, sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*) {
+  def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*) {
     val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
     val operation = CommandAddEdge(edgeClass, parameters)
     messageBus.sendToWorkerForId(operation, sourceVertexId)
@@ -66,6 +54,5 @@ trait DefaultGraphApi extends GraphApi {
   override def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveVertices(shouldRemove))
   }
-  
-  
+
 }

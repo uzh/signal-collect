@@ -19,7 +19,7 @@
 
 package signalcollect.interfaces
 
-trait Edge[SourceIdType, TargetIdType] {
+trait Edge[+SourceIdType, +TargetIdType] {
 
   /** The identifier of the {@link Vertex} where this {@link Edge} originates from. */
   def sourceId: SourceIdType

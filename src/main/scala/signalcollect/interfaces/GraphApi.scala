@@ -23,23 +23,18 @@ trait GraphApi {
 
   /**
    * Adds a vertex with type VertexType.
-   * The constructor is called with the parameter sequence id::otherConstructorParameters.
+   * The constructor is called with the parameter sequence vertexClass, id, otherConstructorParameters.
    *
    * If a vertex with the same id already exists, then this operation is ignored.
    */
-  def addVertex[VertexType <: Vertex[_, _]](vertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType])
+  def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*)
 
   /**
    * Adds an edge with type EdgeType.
    *
-   * The constructor is called with the parameter sequence sourceVertexId::targetVertexId::otherConstructorParameters.
+   * The constructor is called with the parameter sequence edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters.
    */
-  def addEdge[EdgeType <: Edge[_, _]](sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[EdgeType])
-
-  def addVertex[VertexClass <: Class[Vertex[_, _]]](vertexClass: VertexClass, vertexId: Any, otherConstructorParameters: Any*)
-
-  def addEdge[EdgeClass <: Class[Edge[_, _]]](edgeClass: EdgeClass, sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)
-
+  def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*)
   
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 
