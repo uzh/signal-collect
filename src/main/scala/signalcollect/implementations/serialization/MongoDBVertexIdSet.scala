@@ -1,5 +1,5 @@
 /*
- *  @author Daniel Strebel
+use *  @author Daniel Strebel
  *
  *  Copyright 2011 University of Zurich
  *      
@@ -53,5 +53,5 @@ class MongoDBVertexIdSet(vertexStore: Storage) extends VertexIdSet with DefaultS
 }
 
 trait MongoDBToDoList extends DefaultStorage {
-	override protected def vertexSetFactory: VertexIdSet = new InMemoryVertexIdSet(this)
+	override protected def vertexSetFactory: VertexIdSet = new MongoDBVertexIdSet(this)
 }
