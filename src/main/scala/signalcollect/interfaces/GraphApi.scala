@@ -27,7 +27,7 @@ trait GraphApi {
    *
    * If a vertex with the same id already exists, then this operation is ignored.
    */
-  def addVertex[VertexType <: Vertex[_, _]](id: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType])
+  def addVertex[VertexType <: Vertex[_, _]](vertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[VertexType])
 
   /**
    * Adds an edge with type EdgeType.
@@ -36,6 +36,11 @@ trait GraphApi {
    */
   def addEdge[EdgeType <: Edge[_, _]](sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)(implicit m: Manifest[EdgeType])
 
+  def addVertex[VertexClass <: Class[Vertex[_, _]]](vertexClass: VertexClass, vertexId: Any, otherConstructorParameters: Any*)
+
+  def addEdge[EdgeClass <: Class[Edge[_, _]]](edgeClass: EdgeClass, sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*)
+
+  
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 
   def removeVertex(vertexId: Any)

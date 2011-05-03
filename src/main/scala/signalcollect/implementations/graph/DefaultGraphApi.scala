@@ -38,6 +38,18 @@ trait DefaultGraphApi extends GraphApi {
     val operation = CommandAddEdge(m.erasure.asInstanceOf[Class[Edge[_, _]]], parameters)
     messageBus.sendToWorkerForId(operation, sourceVertexId)
   }
+  
+  def addVertex[VertexClass <: Class[Vertex[_, _]]](vertexClass: VertexClass, vertexId: Any, otherConstructorParameters: Any*) {
+    val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
+    val operation = CommandAddVertex(vertexClass, parameters)
+    messageBus.sendToWorkerForId(operation, vertexId)
+  }
+
+  def addEdge[EdgeClass <: Class[Edge[_, _]]](edgeClass: EdgeClass, sourceVertexId: Any, targetVertexId: Any, otherConstructorParameters: Any*) {
+    val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
+    val operation = CommandAddEdge(edgeClass, parameters)
+    messageBus.sendToWorkerForId(operation, sourceVertexId)
+  }
 
   override def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _]) {
     messageBus.sendToWorkers(CommandAddPatternEdge(sourceVertexPredicate, edgeFactory))
@@ -54,5 +66,6 @@ trait DefaultGraphApi extends GraphApi {
   override def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveVertices(shouldRemove))
   }
+  
   
 }
