@@ -69,10 +69,10 @@ class IntegrationSpec extends SpecificationWithJUnit {
         cg.setSignalThreshold(signalThreshold)
         cg.setCollectThreshold(collectThreshold)
         val stats = cg.execute
-        cg foreach (vertex => if (!verify(vertex)) {
-          correct = false
+        correct = cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
+        if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)
-        })
+        }
         cg.shutDown
       }
     }
