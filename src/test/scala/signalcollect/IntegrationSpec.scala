@@ -46,19 +46,6 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val testWorkerCounts = List(1, 2, 16, 64)
 
-  /**
-   * Utility Methods
-   */
-  def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
-    edgeTuples foreach {
-      case (sourceId: Int, targetId: Int) =>
-        cg.addVertex(classOf[Page], sourceId, 0.85)
-        cg.addVertex(classOf[Page], targetId, 0.85)
-        cg.addEdge(classOf[Link], sourceId, targetId)
-    }
-    cg
-  }
-
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ComputationStatistics]]()
@@ -77,6 +64,16 @@ class IntegrationSpec extends SpecificationWithJUnit {
       }
     }
     correct
+  }
+
+  def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
+    edgeTuples foreach {
+      case (sourceId: Int, targetId: Int) =>
+        cg.addVertex(classOf[Page], sourceId, 0.85)
+        cg.addVertex(classOf[Page], targetId, 0.85)
+        cg.addEdge(classOf[Link], sourceId, targetId)
+    }
+    cg
   }
 
   def buildVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {

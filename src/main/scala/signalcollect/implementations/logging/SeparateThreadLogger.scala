@@ -25,21 +25,21 @@ import java.util.concurrent.BlockingQueue
 
 abstract class SeparateThreadLogger(messageInboxFactory: () => BlockingQueue[Any]) extends AbstractMessageRecipient(messageInboxFactory) with Runnable {
 
-	protected var shutDown = false
-	
-	override protected def process(message: Any) {
-		message match {
-	  		case CommandShutDown => shutDown = true
-	  		case other => synchronized { logMessage(other) }
-		}
-	}
-	
-	def logMessage(message: Any)
-	
-	def run {
-		while (!shutDown) {
-			handleMessage
-		}
-	}
-	
+  protected var shutDown = false
+
+  override protected def process(message: Any) {
+    message match {
+      case CommandShutDown => shutDown = true
+      case other => synchronized { logMessage(other) }
+    }
+  }
+
+  def logMessage(message: Any)
+
+  def run {
+    while (!shutDown) {
+      handleMessage
+    }
+  }
+
 }

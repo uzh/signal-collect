@@ -22,11 +22,10 @@ package signalcollect.implementations.logging
 import signalcollect.interfaces._
 
 class DefaultLogger extends MessageRecipient[Any] {
-	def send(loggingMessage: Any) = {
+	def send(loggingMessage: Any) {
 		synchronized {
 			logMessage(loggingMessage)
 		}
-		true
 	}
 	
 	def logMessage(message: Any) {

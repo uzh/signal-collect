@@ -117,7 +117,21 @@
 				<version>2.15.2</version>
 				<configuration>
 					<scalaVersion>${scala.version}</scalaVersion>
+					<sourceDir>src/main/java</sourceDir>
+					<sourceDir>src/main/scala</sourceDir>
+					<jvmArgs>
+						<jvmArg>-Xms64m</jvmArg>
+						<jvmArg>-Xmx1024m</jvmArg>
+					</jvmArgs>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -132,15 +146,6 @@
 						<include>**/*Test.class</include>
 					</includes>
 				</configuration>
-				<executions>
-					<execution>
-						<id>surefire-it</id>
-						<phase>integration-test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -162,6 +167,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
 				<configuration>
 					<source>1.6</source>
 					<target>jsr14</target>
@@ -184,19 +190,6 @@
 	</build>
 	<reporting>
 		<plugins>
-			<plugin>
-				<groupId>org.scala-tools</groupId>
-				<artifactId>maven-scala-plugin</artifactId>
-				<version>2.14.2</version>
-				<configuration>
-					<scalaVersion>${scala.version}</scalaVersion>
-					<sourceDir>src/main/java</sourceDir>
-					<jvmArgs>
-						<jvmArg>-Xms64m</jvmArg>
-						<jvmArg>-Xmx1024m</jvmArg>
-					</jvmArgs>
-				</configuration>
-			</plugin>
 		</plugins>
 	</reporting>
 	<properties>
@@ -210,5 +203,4 @@
 		<scala.version>2.9.0.RC1</scala.version>
 	</properties>
 	<name>signalcollect</name>
-
 </project>
