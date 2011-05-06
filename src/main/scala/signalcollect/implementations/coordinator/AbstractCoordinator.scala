@@ -25,6 +25,7 @@ import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
 import java.util.concurrent.ArrayBlockingQueue
@@ -40,6 +41,7 @@ abstract class AbstractCoordinator(
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
+  storageFactory: StorageFactory,
   optionalLogger: Option[MessageRecipient[Any]] = None,
   protected var signalThreshold: Double = 0.01,
   protected var collectThreshold: Double = 0)
@@ -270,7 +272,7 @@ abstract class AbstractCoordinator(
   protected def createWorkers: Array[Worker] = {
     val workers = new Array[Worker](numberOfWorkers)
     for (i <- 0 until numberOfWorkers) {
-      val worker = workerFactory(messageBus, messageInboxFactory, Storage.defaultFactory)
+      val worker = workerFactory(messageBus, messageInboxFactory, storageFactory)
       messageBus.registerWorker(i, worker)
       new Thread(worker, "Worker#" + i).start
       workers(i) = worker
@@ -326,7 +328,7 @@ abstract class AbstractCoordinator(
   }
 
   lazy val computeGraphName = getClass.getSimpleName
-  lazy val workerName = workerFactory(messageBusFactory(), messageInboxFactory, Storage.defaultFactory).getClass.getSimpleName
+  lazy val workerName = workerFactory(messageBusFactory(), messageInboxFactory, storageFactory).getClass.getSimpleName
   lazy val messageBusName = messageBusFactory().getClass.getSimpleName
   lazy val messageInboxName = messageInboxFactory().getClass.getSimpleName
   lazy val loggerName = optionalLogger.getClass.getSimpleName

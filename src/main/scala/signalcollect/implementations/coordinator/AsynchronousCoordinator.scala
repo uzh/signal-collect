@@ -23,18 +23,21 @@ import signalcollect.interfaces._
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.Storage._
 
 class AsynchronousCoordinator(
   numberOfWorkers: Int,
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
   messageBus: MessageBusFactory,
+  storageFactory: StorageFactory,
   logger: Option[MessageRecipient[Any]] = None)
   extends SynchronousCoordinator(
     numberOfWorkers,
     workerFactory,
     messageInboxFactory,
     messageBus,
+    storageFactory,
     logger) {
 
   override def performComputation: collection.mutable.Map[String, Any] = {

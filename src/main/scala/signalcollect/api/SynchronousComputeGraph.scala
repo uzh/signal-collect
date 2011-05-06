@@ -25,6 +25,7 @@ import signalcollect.interfaces.ComputeGraph._
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces.MessageRecipient
 
 /**
@@ -54,12 +55,14 @@ class SynchronousComputeGraph(
   workerFactory: WorkerFactory = Worker.synchronousDirectDeliveryWorkerFactory,
   messageInboxFactory: QueueFactory = Queue.defaultFactory,
   messageBusFactory: MessageBusFactory = MessageBus.defaultFactory,
+  storageFactory: StorageFactory = Storage.defaultFactory,
   logger: Option[MessageRecipient[Any]] = None)
   extends SynchronousCoordinator(
     numberOfWorkers,
     workerFactory,
     messageInboxFactory,
     messageBusFactory,
+    storageFactory,
     logger) {
   /** Java: no-arg constructor that uses default parameters */
   def this() = this(SynchronousComputeGraph.init$default$1)

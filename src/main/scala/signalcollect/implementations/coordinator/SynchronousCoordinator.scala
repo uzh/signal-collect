@@ -22,6 +22,7 @@ package signalcollect.implementations.coordinator
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
 import signalcollect.interfaces._
@@ -32,8 +33,9 @@ class SynchronousCoordinator(
   workerFactory: WorkerFactory,
   messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
+  storageFactory: StorageFactory,
   logger: Option[MessageRecipient[Any]] = None
-  ) extends AbstractCoordinator(numberOfWorkers, workerFactory, messageInboxFactory, messageBusFactory, logger) {
+  ) extends AbstractCoordinator(numberOfWorkers, workerFactory, messageInboxFactory, messageBusFactory, storageFactory, logger) {
 
   var steps = 0
   

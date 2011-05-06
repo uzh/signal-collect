@@ -25,6 +25,7 @@ import signalcollect.interfaces.ComputeGraph._
 import signalcollect.interfaces.Queue._
 import signalcollect.interfaces.Worker._
 import signalcollect.interfaces.MessageBus._
+import signalcollect.interfaces.Storage._
 import signalcollect.interfaces.MessageRecipient
 
 /**
@@ -54,12 +55,14 @@ class AsynchronousComputeGraph(
   workerFactory: WorkerFactory = Worker.defaultFactory,
   messageInboxFactory: QueueFactory = Queue.defaultFactory,
   messageBusFactory: MessageBusFactory = MessageBus.defaultFactory,
+  storageFactory: StorageFactory = Storage.defaultFactory,
   logger: Option[MessageRecipient[Any]] = None)
   extends AsynchronousCoordinator(
     numberOfWorkers,
     workerFactory,
     messageInboxFactory,
     messageBusFactory,
+    storageFactory,
     logger) {
   /** Java: no-arg constructor that uses default parameters */
   def this() = this(AsynchronousComputeGraph.init$default$1)

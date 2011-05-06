@@ -22,6 +22,7 @@ package signalcollect.implementations.worker
 import java.util.concurrent.ConcurrentHashMap
 import signalcollect.interfaces._
 import signalcollect.interfaces.Storage._
+import signalcollect.interfaces.Queue._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader
@@ -31,7 +32,7 @@ import util.collections.ConcurrentHashSet
 
 class DirectDeliveryAsynchronousWorker(
   mb: MessageBus[Any, Any],
-  messageInboxFactory: () => BlockingQueue[Any],
+  messageInboxFactory: QueueFactory,
   storageFactory: StorageFactory
   ) extends AsynchronousWorker(mb, messageInboxFactory, storageFactory) {
 
