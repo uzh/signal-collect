@@ -65,7 +65,7 @@ class Location(id: Any, initialDistance: Option[Int]) extends SignalMapVertex(id
    *  up to now (= state) or one of the paths that had been advertised via a signal
    *  by a neighbor.
    */
-  def collect: Option[Int] = Some(signals[Int].foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
+  def collect: Option[Int] = Some(signals(classOf[Int]).foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
 
 }
 

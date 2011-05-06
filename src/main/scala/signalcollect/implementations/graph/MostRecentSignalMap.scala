@@ -24,21 +24,36 @@ import scala.collection.mutable.Map
 import signalcollect.interfaces.Signal
 
 trait MostRecentSignalMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
-
+  
   protected val mostRecentSignalMap: Map[Any, UpperSignalTypeBound] = HashMap[Any, UpperSignalTypeBound]() // key: signal source id, value: signal
 
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
-  
-  protected def signals[G <: Any](implicit m: Manifest[G]): Traversable[G] = new Traversable[G] {
-    def foreach[U](f: G => U) = {
-      mostRecentSignalMap.valuesIterator foreach { x => try { f(x.asInstanceOf[G]) } catch { case _ => } } // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+
+  protected def signals[G](filterClass: Class[G]): Traversable[G] = {
+    mostRecentSignalMap.values flatMap (value => filter(filterClass, value))
+  }
+    
+  protected def filter[G](filterClass: Class[G], toTest: Any): Option[G] = {
+    toTest match {
+      case t: Byte if filterClass == classOf[Byte] => Some(t.asInstanceOf[G])
+      case t: Short if filterClass == classOf[Short] => Some(t.asInstanceOf[G])
+      case t: Char if filterClass == classOf[Char] => Some(t.asInstanceOf[G])
+      case t: Int if filterClass == classOf[Int] => Some(t.asInstanceOf[G])
+      case t: Long if filterClass == classOf[Long] => Some(t.asInstanceOf[G])
+      case t: Float if filterClass == classOf[Float] => Some(t.asInstanceOf[G])
+      case t: Double if filterClass == classOf[Double] => Some(t.asInstanceOf[G])
+      case t: Boolean if filterClass == classOf[Boolean] => Some(t.asInstanceOf[G])
+      case t: Unit if filterClass == classOf[Unit] => Some(t.asInstanceOf[G])
+      case t: Any if filterClass == classOf[Any] => Some(t.asInstanceOf[G])
+      case reference if (reference.asInstanceOf[AnyRef].getClass == filterClass) => Some(reference.asInstanceOf[G])
+      case other => None
     }
   }
 
   protected def mostRecentSignalFrom[G <: Any](id: Any): Option[G] = {
     mostRecentSignalMap.get(id) match {
-    	case Some(x) => try { Some(x.asInstanceOf[G]) } catch { case _ => None }
-    	case other => None
+      case Some(x) => try { Some(x.asInstanceOf[G]) } catch { case _ => None }
+      case other => None
     }
   }
 
