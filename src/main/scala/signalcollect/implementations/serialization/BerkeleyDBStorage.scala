@@ -25,16 +25,17 @@ import signalcollect.interfaces._
 import java.io.File
 import com.sleepycat.je.{ Environment, EnvironmentConfig }
 import com.sleepycat.persist.{ EntityCursor, EntityStore, StoreConfig }
+import scala.concurrent.Lock
 
 /**
  * Wrapper for vertices to be compatible with Berkeley DB JE
- * 
+ *
  * @Precondition Parameter idParam is unique and consistent within a vertex storage
  */
 @Entity
 class Vertex2EntityAdapter(idParam: String, vertexParam: Array[Byte]) {
 
-  @PrimaryKey 
+  @PrimaryKey
   var id: String = idParam
   var vertex = vertexParam
 
@@ -44,37 +45,59 @@ class Vertex2EntityAdapter(idParam: String, vertexParam: Array[Byte]) {
 
 /**
  * Saves Vertices in a Berlekey DB JE database
- * 
- * For more information about Berkeley DB JE visit: 
+ *
+ * For more information about Berkeley DB JE visit:
  * @See <a href="http://www.oracle.com/technetwork/database/berkeleydb/overview/index-093405.html">Oracle Berkeley DB Java Edition product page</a>
- * 
+ *
  * @SeeAlso Persistency of the database is currently handled by the worker class
- * 
+ *
  * @param storage 	provides the messageBus and pointers to the collection that hold the toSignal and toCollect Lists
  * @param envFolder	Make sure this folder actually exists by typing "mkdir /tmp" or set parameter to an existing folder
  */
-class BerkeleyDBStorage(storage: Storage, envFolder:String="/tmp") extends VertexStore with DefaultSerializer {
+class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "/tmp/") extends VertexStore with DefaultSerializer {
 
   val messageBus = storage.getMessageBus
   var count = 0l
+  val lock = new Lock()
 
   /* Open the JE Environment. */
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
-  val env = new Environment(new File("/tmp"), envConfig)
+  
+  /* Create folder for environment */
+  var envFolder = new File(envFolderPath)
+  if (!envFolder.exists) {
+    val folderCreated = new File(envFolderPath).mkdir
+    if (!folderCreated) {
+      System.err.println("Couldn't create folder: " + envFolderPath + " for Berkeley DB.");
+      System.err.println("Specify another folder or try to create it manually");
+      System.exit(-1);
+    }
+    envFolder = new File(envFolderPath)
+  }
+  val env = new Environment(envFolder, envConfig)
 
   /* Open the DPL Store. */
   val storeConfig = new StoreConfig()
   storeConfig.setAllowCreate(true)
   val store = new EntityStore(env, getRandomString("sc", 16), storeConfig)
-  
+
   val primaryIndex = store.getPrimaryIndex(classOf[String], classOf[Vertex2EntityAdapter])
 
   def get(id: Any): Vertex[_, _] = {
-    var vertex = read(primaryIndex.get(id.toString).vertex).asInstanceOf[Vertex[_, _]]
-    vertex.setMessageBus(messageBus)
-    vertex
+	lock.acquire
+    val storedObject = primaryIndex.get(id.toString)
+    lock.release
+    if (storedObject != null) {
+      var vertex = read(storedObject.vertex).asInstanceOf[Vertex[_, _]]
+      vertex.setMessageBus(messageBus)
+      vertex
+    }
+    else {
+    	null
+    }
+
   }
 
   def put(vertex: Vertex[_, _]): Boolean = {
@@ -89,24 +112,26 @@ class BerkeleyDBStorage(storage: Storage, envFolder:String="/tmp") extends Verte
       false
     }
   }
+  
   def remove(id: Any) = {
     primaryIndex.delete(id.toString)
     count -= 1
   }
+  
   def updateStateOfVertex(vertex: Vertex[_, _]) = {
+	lock.acquire
     primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, write(vertex)))
+    lock.release
   }
+  
   def size: Long = count
+  
   def foreach[U](f: (Vertex[_, _]) => U) {
     val cursor = primaryIndex.entities
     var currentElement = cursor.first
     while (currentElement != null) {
-      val vertex = read(currentElement.vertex).asInstanceOf[Vertex[_,_]]
-      val before = vertex.hashCode
+      val vertex = read(currentElement.vertex).asInstanceOf[Vertex[_, _]]
       f(vertex)
-      if(vertex.hashCode!=before) {
-    	  updateStateOfVertex(vertex)
-      }
       currentElement = cursor.next
     }
   }
@@ -116,5 +141,5 @@ class BerkeleyDBStorage(storage: Storage, envFolder:String="/tmp") extends Verte
  * To allow mixing-in this storage implementation into a more general storage implementation
  */
 trait BerkDBJE extends DefaultStorage {
-  override protected def vertexStoreFactory = new BerkeleyDBStorage(this)
+  override protected def vertexStoreFactory = new BerkeleyDBStorage(this, getRandomString("/tmp/", 3))
 }
