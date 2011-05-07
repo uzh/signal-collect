@@ -20,9 +20,9 @@
 package signalcollect.algorithms
 
 import signalcollect.api._
-import collection.mutable.{HashMap, SynchronizedMap}
+import collection.mutable.{ HashMap, SynchronizedMap }
 import collection.mutable.ListMap
-import signalcollect.interfaces.{ComputationStatistics, ComputeGraph}
+import signalcollect.interfaces.{ ComputationStatistics, ComputeGraph }
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine
@@ -45,7 +45,7 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends SignalMapVer
   type UpperSignalTypeBound = Int
 
   var possibleValues = SudokuHelper.legalNumbers
-  if(initialState.isDefined) possibleValues=Set(initialState.get)
+  if (initialState.isDefined) possibleValues = Set(initialState.get)
 
   def collect: Option[Int] = {
 
@@ -55,106 +55,102 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends SignalMapVer
     //If own value is determined i.e. if only one possible value is left choose own value
     if (possibleValues.size == 1) {
       Some(possibleValues.head)
-    }
-    else
+    } else
       state
   }
 }
 
 object Sudoku extends App {
-    //Setting the values that are given, rest has default value 'None'
+  //Setting the values that are given, rest has default value 'None'
 
-    //Very simple Sudoku
-    val sudoku1 = Map(
-      4 -> 9,
-      5 -> 6,
-      8 -> 5,
-      10 -> 9,
-      11 -> 4,
-      13 -> 2,
-      14 -> 1,
-      15 -> 8,
-      16 -> 6,
-      19 -> 1,
-      21 -> 4,
-      24 -> 3,
-      25 -> 2,
-      29 -> 3,
-      31 -> 4,
-      34 -> 7,
-      36 -> 1,
-      38 -> 6,
-      42 -> 4,
-      44 -> 2,
-      46 -> 4,
-      49 -> 6,
-      51 -> 5,
-      55 -> 5,
-      56 -> 2,
-      59 -> 4,
-      61 -> 1,
-      64 -> 6,
-      65 -> 1,
-      66 -> 2,
-      67 -> 3,
-      69 -> 7,
-      70 -> 8,
-      72 -> 4,
-      75 -> 8,
-      76 -> 1)
+  //Very simple Sudoku
+  val sudoku1 = Map(
+    4 -> 9,
+    5 -> 6,
+    8 -> 5,
+    10 -> 9,
+    11 -> 4,
+    13 -> 2,
+    14 -> 1,
+    15 -> 8,
+    16 -> 6,
+    19 -> 1,
+    21 -> 4,
+    24 -> 3,
+    25 -> 2,
+    29 -> 3,
+    31 -> 4,
+    34 -> 7,
+    36 -> 1,
+    38 -> 6,
+    42 -> 4,
+    44 -> 2,
+    46 -> 4,
+    49 -> 6,
+    51 -> 5,
+    55 -> 5,
+    56 -> 2,
+    59 -> 4,
+    61 -> 1,
+    64 -> 6,
+    65 -> 1,
+    66 -> 2,
+    67 -> 3,
+    69 -> 7,
+    70 -> 8,
+    72 -> 4,
+    75 -> 8,
+    76 -> 1)
 
-    //bad-ass Sudoku Puzzle
-    val sudoku2 = Map(
-      0->9, 8->4,
-      11->5, 13->3, 15->8, 16->9,
-      21->6, 24 -> 2,
-      28->9, 31->8, 33->3, 35->7,
-      38->1, 42->4,
-      45->7, 47->3, 49->2, 52->8,
-      56->9, 59->6,
-      64->7, 65->8, 67->5, 69->1,
-      72->6, 80->3
-    )
+  //bad-ass Sudoku Puzzle
+  val sudoku2 = Map(
+    0 -> 9, 8 -> 4,
+    11 -> 5, 13 -> 3, 15 -> 8, 16 -> 9,
+    21 -> 6, 24 -> 2,
+    28 -> 9, 31 -> 8, 33 -> 3, 35 -> 7,
+    38 -> 1, 42 -> 4,
+    45 -> 7, 47 -> 3, 49 -> 2, 52 -> 8,
+    56 -> 9, 59 -> 6,
+    64 -> 7, 65 -> 8, 67 -> 5, 69 -> 1,
+    72 -> 6, 80 -> 3)
 
+  //select a sudoku puzzle
+  val initialSeed = sudoku2
 
-    //select a sudoku puzzle
-    val initialSeed = sudoku2
+  var cg = computeGraphFactory(initialSeed)
 
-    var cg = computeGraphFactory(initialSeed)
+  //print initial Sudoku
+  var seed = new HashMap[Int, Option[Int]]()
+  cg.foreach { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  SudokuHelper.printSudoku(seed)
 
-    //print initial Sudoku
-    var seed = new HashMap[Int, Option[Int]]()
-    cg.foreach { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
-    SudokuHelper.printSudoku(seed)
+  val stats = cg.execute
+  println(stats)
 
-    val stats = cg.execute
-
-    //If simple constraint propagation did not solve the problem apply a dept search algorithm to find a suitable solution
-    if(!isDone(cg)) {
-      cg = tryPossibilities(cg)
-      if(cg == null) {
-        println()
-        println("Sorry this Sudoku is not solvable")
-        sys.exit(5)
-      }
+  //If simple constraint propagation did not solve the problem apply a depth first search algorithm to find a suitable solution
+  if (!isDone(cg)) {
+    cg = tryPossibilities(cg)
+    if (cg == null) {
+      println()
+      println("Sorry this Sudoku is not solvable")
+      sys.exit(5)
     }
-    println(stats)
-    println()
+  }
+  println()
 
-    var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-    cg.foreach { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
-    cg.shutDown
-    SudokuHelper.printSudoku(result)
+  var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
+  cg.foreach { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  cg.shutDown
+  SudokuHelper.printSudoku(result)
 
   /**
    * Check if all cells have a value assigned to it
    */
   def isDone(cg: ComputeGraph): Boolean = {
-    var isDone=true
-    cg.foreach(v => if(v.state.asInstanceOf[Option[Int]] == None) isDone = false)
+    var isDone = true
+    cg.foreach(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
   }
-
 
   /**
    * Recursive depth first search for possible values
@@ -164,39 +160,38 @@ object Sudoku extends App {
     val possibleValues = new ListMap[Int, Set[Int]]()
     cg.foreach(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
     cg.shutDown
-    
-    // Try different values for the cell with the highest probability for each possible value i.e. the one with
-    // the smallest number of alternatives.
-    def mostConstrainedCell: (Int, Set[Int]) = {
-    	//Sort all cells that are not yet decided
-    	val possibilities=possibleValues.toList.sortBy(_._2.size).filter(_._2.size>1) // Just selects the smallest set of possible values among the cells
-    	if(possibilities.size == 0) {
-    		println("No solution found")
-    	      System.exit(-1)
-    	}
-    	possibilities.head
-    }
-    
 
     var solutionFound = false
 
-
-    val candidate = mostConstrainedCell
-    
-    val iterator = candidate._2.iterator
-    while(iterator.hasNext && !solutionFound) {
-      var determinedValues = possibleValues.filter(_._2.size==1).map(x => (x._1, x._2.head)).toMap[Int, Int]
-      determinedValues+=(candidate._1 -> iterator.next)
-      var cgTry = computeGraphFactory(determinedValues)
-      cgTry.execute
-      if(isDone(cgTry)) {
-        solutionFound = true
-        return cgTry
+    // Try different values for the cell with the highest probability for each possible value i.e. the one with
+    // the smallest number of alternatives.
+    def mostConstrainedCell(possibilites: ListMap[Int, Set[Int]]): Option[(Int, Set[Int])] = {
+      val mostConstrained = possibilites.toList.filter(_._2.size > 1).sortBy(_._2.size) // Just selects the smallest set of possible values among the cells
+      if (mostConstrained.size == 0) {
+        None //dead end
+      } else {
+        Some(mostConstrained.head)
       }
-      else {
-        val result = tryPossibilities(cgTry)
-        if(result != null)
-          return result //Search was successful
+    }
+
+    val candidate = mostConstrainedCell(possibleValues)
+    
+    if (candidate != None) {
+      val iterator = candidate.get._2.iterator
+      while (iterator.hasNext && !solutionFound) {
+        var determinedValues = possibleValues.filter(_._2.size == 1).map(x => (x._1, x._2.head)).toMap[Int, Int]
+        determinedValues += (candidate.get._1 -> iterator.next)
+        var cgTry = computeGraphFactory(determinedValues)
+        cgTry.execute
+        if (isDone(cgTry)) {
+          solutionFound = true
+          return cgTry
+        } else {
+        	val nextTryResult = tryPossibilities(cgTry)
+        	if(nextTryResult!=null) {
+        		return nextTryResult
+        	}        
+        }
       }
     }
     null
@@ -291,7 +286,7 @@ object SudokuHelper {
 
     for (i <- 0 to 8) {
       val j = i * 9
-      print("||")
+      print("II")
       for (k <- j to j + 8) {
         data.get(k) match {
           case Some(Some(v)) => print(" " + v + " ")
