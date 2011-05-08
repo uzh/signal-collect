@@ -19,28 +19,34 @@
 
 package signalcollect.implementations.coordinator
 
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Worker._
-import signalcollect.interfaces.MessageBus._
-import signalcollect.interfaces.Storage._
+import signalcollect.api.Factory._
+import signalcollect.api.Factory
+import signalcollect.interfaces._
 import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
-import signalcollect.interfaces._
 import java.util.concurrent.BlockingQueue
 
 class SynchronousCoordinator(
   numberOfWorkers: Int,
   workerFactory: WorkerFactory,
-  messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
   storageFactory: StorageFactory,
-  logger: Option[MessageRecipient[Any]] = None
-  ) extends AbstractCoordinator(numberOfWorkers, workerFactory, messageInboxFactory, messageBusFactory, storageFactory, logger) {
+  logger: Option[MessageRecipient[Any]],
+  signalThreshold: Double,
+  collectThreshold: Double,
+  messageInboxFactory: QueueFactory = Factory.Queue.Default)
+  extends AbstractCoordinator(
+    numberOfWorkers,
+    workerFactory,
+    messageBusFactory,
+    storageFactory,
+    logger,
+    signalThreshold,
+    collectThreshold,
+    messageInboxFactory) {
 
-  var steps = 0
-  
   var stepsLimit = Int.MaxValue
-  
+
   def performComputation: collection.mutable.Map[String, Any] = {
     do {
       executeComputationStep
@@ -54,20 +60,6 @@ class SynchronousCoordinator(
     computationProgressStatisticsSecondPass = computationProgressStatistics
     statsMap.put("signalCollectSteps", steps)
     statsMap
-  }
-  
-  def executeComputationStep {
-    steps += 1
-    signalStep.reset
-    collectStep.reset
-    messageBus.sendToWorkers(CommandSignalStep)
-    while (!signalStep.isDone) {
-      handleMessage
-    }
-    messageBus.sendToWorkers(CommandCollectStep)
-    while (!collectStep.isDone) {
-      handleMessage
-    }
   }
 
 }

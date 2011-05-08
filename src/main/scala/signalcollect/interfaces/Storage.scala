@@ -18,36 +18,6 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.serialization.{ DefaultStorage, InMemoryStorage, MongoDBToDoList, MongoDB, BerkDBJE, CachedDB }
-
-object Storage {
-  type StorageFactory = (MessageBus[Any, Any]) => Storage
-  lazy val defaultFactory = inMemoryStorageFactory
-
-  val inMemoryStorageFactory = new DefaultStorage(_)
-
-  //Highly experimental
-  //Use at your own risk!
-
-  //Berkeley DB Storage (can be run directly from jar)
-  class BerkeleyDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
-  lazy val berkeleyDBStorageFactory = new BerkeleyDBStorage(_)
-  
-  //Berkeley DB Storage with InMemory caching
-  class CachedStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with CachedDB
-  lazy val cachedStorageFactory = new CachedStorage(_)
-
-  //Mongo DB Storage (requires a running mongoDB installation)
-  class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
-  lazy val mongoDBStorageFactory = new MongoDBStorage(_)
-
-  class AllOnDiskMongoDBStorage(messageBus: MessageBus[Any, Any]) extends MongoDBStorage(messageBus) with MongoDBToDoList
-  lazy val allOnDiskMongoDBStorageFactory = new AllOnDiskMongoDBStorage(_)
-  
-
-  
-}
-
 abstract class Storage(messageBus: MessageBus[Any, Any]) {
   def getMessageBus = messageBus
   def vertices: VertexStore

@@ -19,40 +19,24 @@
 
 package signalcollect.implementations.graph
 
+import util.collections.Filter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import signalcollect.interfaces.Signal
 
-trait MostRecentSignalMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
+trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
   
   protected val mostRecentSignalMap: Map[Any, UpperSignalTypeBound] = HashMap[Any, UpperSignalTypeBound]() // key: signal source id, value: signal
 
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
 
   protected def signals[G](filterClass: Class[G]): Traversable[G] = {
-    mostRecentSignalMap.values flatMap (value => filter(filterClass, value))
-  }
-    
-  protected def filter[G](filterClass: Class[G], toTest: Any): Option[G] = {
-    toTest match {
-      case t: Byte if filterClass == classOf[Byte] => Some(t.asInstanceOf[G])
-      case t: Short if filterClass == classOf[Short] => Some(t.asInstanceOf[G])
-      case t: Char if filterClass == classOf[Char] => Some(t.asInstanceOf[G])
-      case t: Int if filterClass == classOf[Int] => Some(t.asInstanceOf[G])
-      case t: Long if filterClass == classOf[Long] => Some(t.asInstanceOf[G])
-      case t: Float if filterClass == classOf[Float] => Some(t.asInstanceOf[G])
-      case t: Double if filterClass == classOf[Double] => Some(t.asInstanceOf[G])
-      case t: Boolean if filterClass == classOf[Boolean] => Some(t.asInstanceOf[G])
-      case t: Unit if filterClass == classOf[Unit] => Some(t.asInstanceOf[G])
-      case t: Any if filterClass == classOf[Any] => Some(t.asInstanceOf[G])
-      case reference if (reference.asInstanceOf[AnyRef].getClass == filterClass) => Some(reference.asInstanceOf[G])
-      case other => None
-    }
+    mostRecentSignalMap.values flatMap (value => Filter.byClass(filterClass, value))
   }
 
-  protected def mostRecentSignalFrom[G <: Any](id: Any): Option[G] = {
+  protected def mostRecentSignalFrom[G](signalClass: Class[G], id: Any): Option[G] = {
     mostRecentSignalMap.get(id) match {
-      case Some(x) => try { Some(x.asInstanceOf[G]) } catch { case _ => None }
+      case Some(x) => Filter.byClass(signalClass, x)
       case other => None
     }
   }

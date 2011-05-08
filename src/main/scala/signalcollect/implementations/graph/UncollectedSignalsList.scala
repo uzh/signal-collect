@@ -19,6 +19,7 @@
 
 package signalcollect.implementations.graph
 
+import util.collections.Filter
 import signalcollect.interfaces.Signal
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ListBuffer
@@ -27,12 +28,10 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
 
   /** a buffer containing uncollected messages */
   protected val uncollectedMessages: Buffer[Signal[_, _, UpperSignalTypeBound]] = ListBuffer[Signal[_, _, UpperSignalTypeBound]]()
-
-  /** traversable uncollected signals */
-  protected def uncollectedSignals[G <: Any](implicit m: Manifest[G]): Traversable[G] = new Traversable[G] {
-    def foreach[U](f: G => U) = {
-      uncollectedMessages foreach { message => try { f(message.signal.asInstanceOf[G]) } catch { case _ => } } // not nice, but isAssignableFrom is slow and has ugly issues with boxed/unboxed
-    }
+  
+  /** traversable uncollected signals */  
+  protected def uncollectedSignals[G](filterClass: Class[G]): Traversable[G] = {
+    uncollectedMessages flatMap (message => Filter.byClass(filterClass, message.signal))
   }
 
   /**

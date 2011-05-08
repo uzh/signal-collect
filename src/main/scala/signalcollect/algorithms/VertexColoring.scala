@@ -101,7 +101,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = new AsynchronousComputeGraph()
+  val cg = new DefaultComputeGraph()
   cg.addVertex(classOf[ColoredVertex], 1, 2, 1, false)
   cg.addVertex(classOf[ColoredVertex], 2, 2, 1, false)
   cg.addVertex(classOf[ColoredVertex], 3, 2, 1, false)

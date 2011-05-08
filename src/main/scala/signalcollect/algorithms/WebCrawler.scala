@@ -35,7 +35,7 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = new AsynchronousComputeGraph()
+  val cg = new DefaultComputeGraph()
   cg.addVertex(classOf[Webpage], "http://www.ifi.uzh.ch/ddis/", 2, 0.85)
   val stats = cg.execute
   cg.foreach(println(_))

@@ -19,13 +19,12 @@
 
 package signalcollect.implementations.worker
 
-import signalcollect.implementations.coordinator.GenericConstructor
+import util.constructors.ConstructorFinder
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._
 import signalcollect.interfaces._
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Storage._
+import signalcollect.api.Factory._
 import java.util.concurrent.BlockingQueue
 import java.util.HashSet
 import java.util.HashMap
@@ -197,7 +196,7 @@ abstract class AbstractWorker(
   }
 
   protected def addOutgoingEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
-	  val edge = GenericConstructor.newInstanceFromClass(edgeClass)(parameters)
+	  val edge = ConstructorFinder.newInstanceFromClass(edgeClass)(parameters)
 	  addOutgoingEdge(edge)
   }
   
@@ -247,7 +246,7 @@ abstract class AbstractWorker(
   }
 
   protected def addVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
-	  val vertex = GenericConstructor.newInstanceFromClass(vertexClass)(parameters)
+	  val vertex = ConstructorFinder.newInstanceFromClass(vertexClass)(parameters)
 	  addVertex(vertex)
   }
   

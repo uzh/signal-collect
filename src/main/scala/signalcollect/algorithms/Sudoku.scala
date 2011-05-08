@@ -198,7 +198,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-    var cg = new AsynchronousComputeGraph
+  val cg = new DefaultComputeGraph()
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {

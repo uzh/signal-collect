@@ -19,10 +19,7 @@
 
 package signalcollect.implementations.graph
 
-import signalcollect.implementations.coordinator.GenericConstructor
-import signalcollect._
 import signalcollect.interfaces._
-import scala.collection.JavaConversions._
 
 trait DefaultGraphApi extends GraphApi {
   protected def messageBus: MessageBus[Any, Any]

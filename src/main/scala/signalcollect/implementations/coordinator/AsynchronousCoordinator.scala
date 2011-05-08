@@ -20,25 +20,27 @@
 package signalcollect.implementations.coordinator
 
 import signalcollect.interfaces._
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Worker._
-import signalcollect.interfaces.MessageBus._
-import signalcollect.interfaces.Storage._
+import signalcollect.api.Factory._
+import signalcollect.api.Factory
 
 class AsynchronousCoordinator(
   numberOfWorkers: Int,
   workerFactory: WorkerFactory,
-  messageInboxFactory: QueueFactory,
-  messageBus: MessageBusFactory,
+  messageBusFactory: MessageBusFactory,
   storageFactory: StorageFactory,
-  logger: Option[MessageRecipient[Any]] = None)
-  extends SynchronousCoordinator(
+  logger: Option[MessageRecipient[Any]],
+  signalThreshold: Double,
+  collectThreshold: Double,
+  messageInboxFactory: QueueFactory = Factory.Queue.Default)
+  extends AbstractCoordinator(
     numberOfWorkers,
     workerFactory,
-    messageInboxFactory,
-    messageBus,
+    messageBusFactory,
     storageFactory,
-    logger) {
+    logger,
+    signalThreshold,
+    collectThreshold,
+    messageInboxFactory) {
 
   override def performComputation: collection.mutable.Map[String, Any] = {
     executeComputationStep

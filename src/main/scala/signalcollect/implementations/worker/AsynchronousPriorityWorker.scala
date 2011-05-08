@@ -21,9 +21,8 @@ package signalcollect.implementations.worker
 
 import java.util.Arrays
 import java.util.Collections
+import signalcollect.api.Factory._
 import signalcollect.interfaces._
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Storage._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader

@@ -19,17 +19,6 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.messaging._
-
-object MessageBus {
-	type MessageBusFactory = () => MessageBus[Any, Any]
-	
-	lazy val defaultFactory = sharedMemoryMessageBusFactory
-	
-	lazy val sharedMemoryMessageBusFactory = () => new DefaultMessageBus[Any, Any]
-	lazy val verboseMessageBusFactory = () => new DefaultMessageBus[Any, Any] with Verbosity[Any, Any]
-}
-
 trait MessageBus[MessageType, IdType] {
   def numberOfWorkers: Int
 	

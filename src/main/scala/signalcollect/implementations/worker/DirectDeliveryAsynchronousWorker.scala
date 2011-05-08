@@ -20,9 +20,8 @@
 package signalcollect.implementations.worker
 
 import java.util.concurrent.ConcurrentHashMap
+import signalcollect.api.Factory._
 import signalcollect.interfaces._
-import signalcollect.interfaces.Storage._
-import signalcollect.interfaces.Queue._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader

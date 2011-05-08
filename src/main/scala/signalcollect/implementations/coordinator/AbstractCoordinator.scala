@@ -22,29 +22,26 @@ package signalcollect.implementations.coordinator
 import signalcollect.implementations.graph.DefaultComputationStatistics
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import signalcollect.implementations.graph.DefaultGraphApi
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Worker._
-import signalcollect.interfaces.MessageBus._
-import signalcollect.interfaces.Storage._
+import signalcollect.api.Factory
+import signalcollect.api.Factory._
+import signalcollect.interfaces._
 import signalcollect.interfaces.ComputationStatistics
 import signalcollect.implementations.logging.SeparateThreadLogger
 import java.util.concurrent.ArrayBlockingQueue
 import signalcollect.interfaces.ComputeGraph
 import java.util.concurrent.BlockingQueue
-import signalcollect.interfaces._
-import signalcollect._
 import java.lang.management._
 import com.sun.management.OperatingSystemMXBean
 
 abstract class AbstractCoordinator(
   numberOfWorkers: Int,
   workerFactory: WorkerFactory,
-  messageInboxFactory: QueueFactory,
   messageBusFactory: MessageBusFactory,
   storageFactory: StorageFactory,
   optionalLogger: Option[MessageRecipient[Any]] = None,
-  protected var signalThreshold: Double = 0.01,
-  protected var collectThreshold: Double = 0)
+  protected var signalThreshold: Double,
+  protected var collectThreshold: Double,
+  messageInboxFactory: QueueFactory)
   extends AbstractMessageRecipient(messageInboxFactory)
   with ComputeGraph
   with DefaultGraphApi
@@ -62,6 +59,22 @@ abstract class AbstractCoordinator(
     }
     setSignalThreshold(signalThreshold)
     setCollectThreshold(collectThreshold)
+  }
+
+  var steps = 0
+
+  def executeComputationStep {
+    steps += 1
+    signalStep.reset
+    collectStep.reset
+    messageBus.sendToWorkers(CommandSignalStep)
+    while (!signalStep.isDone) {
+      handleMessage
+    }
+    messageBus.sendToWorkers(CommandCollectStep)
+    while (!collectStep.isDone) {
+      handleMessage
+    }
   }
 
   def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
@@ -95,18 +108,17 @@ abstract class AbstractCoordinator(
         }
       }
     }
-    val optionOperation: (Option[ValueType], Option[ValueType]) => Option[ValueType] = {
-      (a, b) =>
-        (a,b) match {
-          case (Some(x), Some(y)) => Some(operation(x,y))
-          case (Some(x), None) => Some(x)
-          case (None, Some(y)) => Some(y)
-          case (None, None) => None
-        }
+    val optionOperation: (Option[ValueType], Option[ValueType]) => Option[ValueType] = { (a, b) =>
+      (a, b) match {
+        case (Some(x), Some(y)) => Some(operation(x, y))
+        case (Some(x), None) => Some(x)
+        case (None, Some(y)) => Some(y)
+        case (None, None) => None
+      }
     }
     customAggregate[Option[ValueType]](None, optionOperation, stateExtractor)
   }
-  
+
   def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType = {
     val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
       {
@@ -222,12 +234,12 @@ abstract class AbstractCoordinator(
     val stopTime = System.nanoTime
     stopTime - startTime
   }
-  
+
   def execute: ComputationStatistics = {
     log("Waiting for graph loading to finish ...")
-    
+
     val graphLoadingWait = awaitIdle
-    
+
     log("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
@@ -272,7 +284,7 @@ abstract class AbstractCoordinator(
   protected def createWorkers: Array[Worker] = {
     val workers = new Array[Worker](numberOfWorkers)
     for (i <- 0 until numberOfWorkers) {
-      val worker = workerFactory(messageBus, messageInboxFactory, storageFactory)
+      val worker = workerFactory(messageBus, storageFactory)
       messageBus.registerWorker(i, worker)
       new Thread(worker, "Worker#" + i).start
       workers(i) = worker
@@ -327,10 +339,10 @@ abstract class AbstractCoordinator(
     }
   }
 
-  lazy val computeGraphName = getClass.getSimpleName
-  lazy val workerName = workerFactory(messageBusFactory(), messageInboxFactory, storageFactory).getClass.getSimpleName
-  lazy val messageBusName = messageBusFactory().getClass.getSimpleName
-  lazy val messageInboxName = messageInboxFactory().getClass.getSimpleName
-  lazy val loggerName = optionalLogger.getClass.getSimpleName
+  def computeGraphName = getClass.getSimpleName
+  def workerName = workerFactory(messageBusFactory(), storageFactory).getClass.getSimpleName
+  def messageBusName = messageBusFactory().getClass.getSimpleName
+  def messageInboxName = messageInboxFactory().getClass.getSimpleName
+  def loggerName = optionalLogger.getClass.getSimpleName
 
 }

@@ -25,7 +25,7 @@ import signalcollect.api._
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = new AsynchronousComputeGraph()
+  val cg = new DefaultComputeGraph()
 
   /**
    * Still need to test performance on complete and larger graphs

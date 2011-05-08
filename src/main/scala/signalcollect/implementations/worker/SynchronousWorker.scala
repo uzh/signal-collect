@@ -19,10 +19,8 @@
 
 package signalcollect.implementations.worker
 
-import signalcollect.interfaces.Queue._
-import signalcollect.interfaces.Storage._
+import signalcollect.api.Factory._
 import signalcollect.interfaces._
-import java.util.concurrent.BlockingQueue
 
 class SynchronousWorker(
   mb: MessageBus[Any, Any],

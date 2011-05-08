@@ -71,7 +71,7 @@ class Location(id: Any, initialDistance: Option[Int]) extends SignalMapVertex(id
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = new AsynchronousComputeGraph()
+  val cg = new DefaultComputeGraph()
   cg.addVertex(classOf[Location], 1, Some(0))
   cg.addVertex(classOf[Location], 2, None)
   cg.addVertex(classOf[Location], 3, None)

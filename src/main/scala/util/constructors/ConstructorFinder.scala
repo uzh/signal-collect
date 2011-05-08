@@ -17,7 +17,7 @@
  *  
  */
 
-package signalcollect.implementations.coordinator
+package util.constructors
 
 import java.lang.reflect.Constructor
 
@@ -26,7 +26,7 @@ import java.lang.reflect.Constructor
  * Contains functions to automatically determine the appropriate constructor for parameters 
  * and to create instances from a class and parameters for a constructor of that class. 
  */
-object GenericConstructor {
+object ConstructorFinder {
 
   case class ConstructorException(msg: String) extends Exception(msg)
 

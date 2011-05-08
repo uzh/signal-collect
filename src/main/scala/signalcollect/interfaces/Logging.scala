@@ -19,14 +19,8 @@
 
 package signalcollect.interfaces
 
-import signalcollect.implementations.logging.DefaultLogger
 import scala.annotation.elidable
 import scala.annotation.elidable._
-
-object Logging {
-	def createDefaultLogger = createConsoleLogger 
-	def createConsoleLogger: MessageRecipient[Any] = new DefaultLogger
-}
 
 trait Logging {
 	protected def messageBus: MessageBus[_, _]

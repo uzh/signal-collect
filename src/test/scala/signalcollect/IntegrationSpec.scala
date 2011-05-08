@@ -26,7 +26,7 @@ import org.specs2.runner.JUnitRunner
 import signalcollect._
 import signalcollect.api._
 import signalcollect.interfaces._
-import signalcollect.interfaces.Worker._
+import signalcollect.api.Factory._
 import signalcollect.algorithms._
 import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 
@@ -37,12 +37,14 @@ import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit {
 
+  val synchronousCg = DefaultSynchronousBuilder
+
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    { workers: Int => new SynchronousComputeGraph(workers) },
-    { workers: Int => new SynchronousComputeGraph(workers, workerFactory = Worker.synchronousDirectDeliveryWorkerFactory) },
-    { workers: Int => new AsynchronousComputeGraph(workers) },
-    { workers: Int => new AsynchronousComputeGraph(workers, workerFactory = Worker.asynchronousDirectDeliveryWorkerFactory) },
-    { workers: Int => new AsynchronousComputeGraph(workers, workerFactory = Worker.asynchronousPriorityWorkerFactory) })
+    (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).build,
+    (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Synchronous).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.AsynchronousPriority).build)
 
   val testWorkerCounts = List(1, 2, 16, 64)
 
