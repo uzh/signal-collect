@@ -1,5 +1,5 @@
 /*
-use *  @author Daniel Strebel
+ *  @author Daniel Strebel
  *
  *  Copyright 2011 University of Zurich
  *      
@@ -45,10 +45,15 @@ class MongoDBVertexIdSet(vertexStore: Storage) extends VertexIdSet with DefaultS
     }
   }
 
-  def foreachWithSnapshot[U](f: (Vertex[_, _]) => U) = {
+  def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakCondition: () => Boolean):Boolean = {
 	  val toHandleSnapshot = toHandle
       toHandle = vertexSetFactory
       toHandleSnapshot.foreach{s => f(vertexStore.vertices.get(read((s.getAs[Array[Byte]]("k")).get))); toHandle.remove(s)}
+	  true
+  }
+  
+  def resumeProcessingSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
+	  true
   }
 }
 
