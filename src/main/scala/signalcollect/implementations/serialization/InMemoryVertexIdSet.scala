@@ -18,7 +18,7 @@
 
 package signalcollect.implementations.serialization
 
-import java.util.Set
+import scala.collection.mutable.Set
 import signalcollect.interfaces._
 import util.collections.ConcurrentHashSet
 

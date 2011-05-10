@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.

@@ -117,7 +117,6 @@
 				<version>2.15.2</version>
 				<configuration>
 					<scalaVersion>${scala.version}</scalaVersion>
-					<sourceDir>src/main/java</sourceDir>
 					<sourceDir>src/main/scala</sourceDir>
 					<jvmArgs>
 						<jvmArg>-Xms64m</jvmArg>
@@ -126,9 +125,23 @@
 				</configuration>
 				<executions>
 					<execution>
+						<id>compile</id>
 						<goals>
 							<goal>compile</goal>
+						</goals>
+						<phase>compile</phase>
+					</execution>
+					<execution>
+						<id>test-compile</id>
+						<goals>
 							<goal>testCompile</goal>
+						</goals>
+						<phase>test-compile</phase>
+					</execution>
+					<execution>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>compile</goal>
 						</goals>
 					</execution>
 				</executions>
