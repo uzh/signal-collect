@@ -49,8 +49,10 @@ abstract class AbstractWorker(
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
       case CommandForEachVertex(f) => foreach(f)
-      case CommandAddVertex(vertexClass, parameters) => addVertex(vertexClass, parameters)
-      case CommandAddEdge(edgeClass, parameters) => addOutgoingEdge(edgeClass, parameters)
+      case CommandAddVertex(vertex) => addVertex(vertex)
+      case CommandAddEdge(edge) => addOutgoingEdge(edge)
+      case CommandAddVertexFromFactory(vertexClass, parameters) => addVertex(vertexClass, parameters)
+      case CommandAddEdgeFromFactory(edgeClass, parameters) => addOutgoingEdge(edgeClass, parameters)
       case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
       case CommandRemoveVertex(vertexId) => removeVertex(vertexId)
       case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
@@ -143,8 +145,7 @@ abstract class AbstractWorker(
   }
 
   protected def processRemoveVertex(vertex: Vertex[_, _]) {
-    vertex.incomingEdgeCount foreach (incomingEdgesRemovedCounter += _)
-    vertex.outgoingEdgeCount foreach (outgoingEdgesRemovedCounter += _)
+    outgoingEdgesRemovedCounter += vertex.outgoingEdgeCount
     vertex.removeAllOutgoingEdges
     verticesRemovedCounter += 1
     vertexStore.vertices.remove(vertex.id)
@@ -167,14 +168,11 @@ abstract class AbstractWorker(
     }
   }
 
-  protected var incomingEdgesRemovedCounter = 0l
-
   protected def removeIncomingEdge(edgeId: (Any, Any, String)) {
     val targetVertexId = edgeId._2
     val targetVertex = vertexStore.vertices.get(targetVertexId)
     if (targetVertex != null) {
       val removed = targetVertex.removeIncomingEdge(edgeId)
-      removed map (if (_) incomingEdgesRemovedCounter += 1)
       vertexStore.vertices.updateStateOfVertex(targetVertex)
     } else {
       log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
@@ -300,14 +298,13 @@ abstract class AbstractWorker(
       verticesRemovedCounter,
       outgoingEdgesAddedCounter,
       outgoingEdgesRemovedCounter,
-      incomingEdgesAddedCounter,
-      incomingEdgesRemovedCounter)
+      incomingEdgesAddedCounter)
     messageBus.sendToCoordinator(stats)
   }
 
   protected def countOutgoingEdges = {
     var numberOfEdges = 0
-    foreach(vertex => numberOfEdges += vertex.outgoingEdgeCount.getOrElse(0))
+    foreach(vertex => numberOfEdges += vertex.outgoingEdgeCount)
     numberOfEdges
   }
 

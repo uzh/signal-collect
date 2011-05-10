@@ -30,11 +30,21 @@ trait GraphApi {
   def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*)
 
   /**
+   * Simpler alternative. Might have scalability/performance issues.
+   */
+  def addVertex(vertex: Vertex[_, _])
+
+  /**
    * Adds an edge with type EdgeType.
    *
    * The constructor is called with the parameter sequence edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters.
    */
   def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*)
+  
+  /**
+   * Simpler alternative. Might have scalability/performance issues.
+   */
+  def addEdge(edge: Edge[_, _])
   
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 

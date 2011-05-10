@@ -196,11 +196,10 @@
 		<project.build.sourceEncoding>
 			UTF-8
         </project.build.sourceEncoding>
-
 		<project.reporting.outputEncoding>
 			UTF-8
         </project.reporting.outputEncoding>
-		<scala.version>2.9.0.RC1</scala.version>
+		<scala.version>2.9.0.RC3</scala.version>
 	</properties>
 	<name>signalcollect</name>
 </project>

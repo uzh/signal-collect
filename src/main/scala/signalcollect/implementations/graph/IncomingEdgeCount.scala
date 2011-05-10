@@ -21,17 +21,14 @@ package signalcollect.implementations.graph
 
 trait IncomingEdgeCount[IdType, StateType] extends AbstractVertex[IdType, StateType] {
 
-  protected var _incomingEdgeCount = 0
-
-  /** @return optionally the number of incoming edges of this {@link Vertex}. Modified by {@link FrameworkVertex} */
-  override def incomingEdgeCount: Option[Int] = Some(_incomingEdgeCount)
+  var incomingEdgeCount = 0
   
   /**
    * Informs this vertex that there is a new incoming edge.
    * @param edgeId the id of the new incoming edge
    */
   override def addIncomingEdge(edgeId: (Any, Any, String)) {
-	  _incomingEdgeCount += 1
+	  incomingEdgeCount += 1
   }
 
   /**
@@ -39,7 +36,7 @@ trait IncomingEdgeCount[IdType, StateType] extends AbstractVertex[IdType, StateT
    * @param edgeId the id of the incoming edge that was removed
    */
   override def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean] = {
-	  _incomingEdgeCount -= 1
+	  incomingEdgeCount -= 1
 	  None
   }
  

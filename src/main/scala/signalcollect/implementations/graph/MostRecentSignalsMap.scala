@@ -30,7 +30,7 @@ trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, Sta
 
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
 
-  protected def signals[G](filterClass: Class[G]): Traversable[G] = {
+  protected def signals[G](filterClass: Class[G]): Iterable[G] = {
     mostRecentSignalMap.values flatMap (value => Filter.byClass(filterClass, value))
   }
 

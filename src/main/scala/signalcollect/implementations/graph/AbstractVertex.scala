@@ -33,7 +33,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 
-abstract class AbstractVertex[@specialized IdType, @specialized StateType](messageInboxFactory: QueueFactory = Factory.Queue.Default) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
+abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFactory = Factory.Queue.Default) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
 
   protected def process(message: Any) = {}
 
@@ -175,11 +175,8 @@ abstract class AbstractVertex[@specialized IdType, @specialized StateType](messa
     }
   }
 
-  /** Optionally returns the number of outgoing edges of this [signalcollect.interfaces.Vertex] */
-  def outgoingEdgeCount = Some(outgoingEdges.size)
-
-  /** Optionally returns the number of incoming edges of this [signalcollect.interfaces.Vertex] */
-  def incomingEdgeCount: Option[Int] = None
+  /** Returns the number of outgoing edges of this [signalcollect.interfaces.Vertex] */
+  def outgoingEdgeCount = outgoingEdges.size
 
   /**
    * Returns "VertexClassName> Id: vertexId, State: vertexState"

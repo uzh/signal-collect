@@ -131,6 +131,11 @@ class DefaultComputeGraph(
   }
 
   /**
+   * Simpler alternative. Might have scalability/performance issues.
+   */
+  def addVertex(vertex: Vertex[_, _]) = coordinator.addVertex(vertex)
+  
+  /**
    * Adds an edge with type EdgeType.
    *
    * The constructor is called with the parameter sequence: sourceVertexId, targetVertexId, otherConstructorParameters.
@@ -143,6 +148,12 @@ class DefaultComputeGraph(
     coordinator.addEdge(edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters: _*)
   }
 
+  /**
+   * Simpler alternative. Might have scalability/performance issues.
+   */
+  def addEdge(edge: Edge[_, _]) = coordinator.addEdge(edge)
+
+  
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](
     sourceVertexPredicate: Vertex[IdType, _] => Boolean,
     edgeFactory: IdType => Edge[IdType, _]) = {

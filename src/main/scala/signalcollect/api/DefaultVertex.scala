@@ -31,7 +31,7 @@ import signalcollect.implementations.graph._
  * The only method that has to be implemented is the abstract collect function.
  * The collect function uses the received signals to calculate the new state.
  */
-abstract class DefaultVertex[IdType, StateType](
+abstract class DefaultVertex[@specialized IdType, @specialized StateType](
   val id: IdType,
   initialState: StateType)
   extends AbstractVertex[IdType, StateType]

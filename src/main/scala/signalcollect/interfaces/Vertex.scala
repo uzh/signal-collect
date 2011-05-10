@@ -25,7 +25,7 @@ package signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
- trait Vertex[@specialized IdType, @specialized StateType] extends MessageRecipient[Any] with Comparable[Vertex[_, _]] {
+ trait Vertex[IdType, StateType] extends MessageRecipient[Any] with Comparable[Vertex[_, _]] {
 
   def compareTo(other: Vertex[_, _]): Int = {
 	  scoreCollect.compareTo(other.scoreCollect)
@@ -36,7 +36,6 @@ package signalcollect.interfaces
    * This type can be overridden to set an upper bound for the types of signals
    * that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
    */
-  @specialized
   type UpperSignalTypeBound
 	
   /**
@@ -132,10 +131,7 @@ package signalcollect.interfaces
   def scoreSignal: Double
 
   /** @return optionally the number of outgoing edges of this {@link Vertex} */
-  def outgoingEdgeCount: Option[Int]
-
-  /** @return optionally the number of incoming edges of this {@link Vertex}. Modified by {@link FrameworkVertex} */
-  def incomingEdgeCount: Option[Int]
+  def outgoingEdgeCount: Int
   
   /** This method gets called by the framework after the vertex has been fully initialized. */
   def afterInitialization

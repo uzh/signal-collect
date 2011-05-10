@@ -22,8 +22,11 @@ package signalcollect.interfaces
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
-case class CommandAddVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef])
-case class CommandAddEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef])
+case class CommandAddVertexFromFactory(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef])
+case class CommandAddEdgeFromFactory(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef])
+
+case class CommandAddVertex(vertex: Vertex[_, _])
+case class CommandAddEdge(edge: Edge[_, _])
 
 case class CommandAddIncomingEdge(edgeId: (Any, Any, String))
 
@@ -68,8 +71,7 @@ case class ComputationProgressStats(
   verticesRemoved: Long = 0l,
   outgoingEdgesAdded: Long = 0l,
   outgoingEdgesRemoved: Long = 0l,
-  incomingEdgesAdded: Long = 0l,
-  incomingEdgesRemoved: Long = 0l) {
+  incomingEdgesAdded: Long = 0l) {
   def +(other: ComputationProgressStats) = {
     ComputationProgressStats(
       collectOperationsPending + other.collectOperationsPending,
@@ -80,8 +82,7 @@ case class ComputationProgressStats(
       verticesRemoved + other.verticesRemoved,
       outgoingEdgesAdded + other.outgoingEdgesAdded,
       outgoingEdgesRemoved + other.outgoingEdgesRemoved,
-	  incomingEdgesAdded + other.incomingEdgesAdded,
-	  incomingEdgesRemoved + other.incomingEdgesRemoved)
+	  incomingEdgesAdded + other.incomingEdgesAdded)
   }
 }
 

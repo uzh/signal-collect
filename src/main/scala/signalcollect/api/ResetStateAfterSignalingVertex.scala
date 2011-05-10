@@ -33,7 +33,7 @@ import signalcollect.implementations.graph._
  */
 abstract class ResetStateAfterSignalingVertex[IdType, StateType](
   id: IdType,
-  val initialState: StateType)
+  initialState: StateType)
   extends DefaultVertex[IdType, StateType](
     id,
     initialState)

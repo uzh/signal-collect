@@ -63,7 +63,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * Edges are always assigned to the same worker as their source vertex. This means that
    * an edge can directly reference that source vertex, even in a distributed environment.
    */
-  protected var source: SourceVertexType = _ // null instead of None (Option) because it simplifies the API and S/C guarantees that for the API user it will never be null
+  var source: SourceVertexType = _ // null instead of None (Option) because it simplifies the API and S/C guarantees that for the API user it will never be null
 
   /** Setter with an unsafe cast. The user is responsible for not setting vertex types that don't match in practice */
   def setSource(v: Vertex[_, _]) {

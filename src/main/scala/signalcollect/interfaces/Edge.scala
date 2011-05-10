@@ -37,7 +37,6 @@ trait Edge[+SourceIdType, +TargetIdType] {
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
   def weight: Double
 
-  @specialized
   type SignalType = Any
 
   /** The identifier of this {@link Edge}. */

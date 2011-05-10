@@ -26,29 +26,39 @@ trait DefaultGraphApi extends GraphApi {
 
   def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*) {
     val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddVertex(vertexClass, parameters)
+    val operation = CommandAddVertexFromFactory(vertexClass, parameters)
     messageBus.sendToWorkerForId(operation, vertexId)
+  }
+
+  def addVertex(vertex: Vertex[_, _]) {
+    val operation = CommandAddVertex(vertex)
+    messageBus.sendToWorkerForId(operation, vertex.id)
   }
 
   def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*) {
     val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddEdge(edgeClass, parameters)
+    val operation = CommandAddEdgeFromFactory(edgeClass, parameters)
     messageBus.sendToWorkerForId(operation, sourceVertexId)
   }
 
-  override def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _]) {
+  def addEdge(edge: Edge[_, _]) {
+    val operation = CommandAddEdge(edge)
+    messageBus.sendToWorkerForId(operation, edge.sourceId)
+  }
+
+  def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _]) {
     messageBus.sendToWorkers(CommandAddPatternEdge(sourceVertexPredicate, edgeFactory))
   }
 
-  override def removeVertex(vertexId: Any) {
+  def removeVertex(vertexId: Any) {
     messageBus.sendToWorkerForId(CommandRemoveVertex(vertexId), vertexId)
   }
 
-  override def removeEdge(edgeId: (Any, Any, String)) {
+  def removeEdge(edgeId: (Any, Any, String)) {
     messageBus.sendToWorkerForId(CommandRemoveOutgoingEdge(edgeId: (Any, Any, String)), edgeId._1)
   }
 
-  override def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
     messageBus.sendToWorkers(CommandRemoveVertices(shouldRemove))
   }
 
