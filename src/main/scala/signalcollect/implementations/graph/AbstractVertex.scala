@@ -129,6 +129,10 @@ abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFacto
   def executeSignalOperation {
     outgoingEdgeAddedSinceSignalOperation = false
     lastSignalState = Some(state)
+    doSignal
+  }
+  
+  def doSignal {
     outgoingEdges.values.foreach(_.executeSignalOperation(messageBus))
   }
 
