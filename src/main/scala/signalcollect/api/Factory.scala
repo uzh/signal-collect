@@ -22,7 +22,7 @@ package signalcollect.api
 import signalcollect.interfaces._
 import signalcollect.implementations.worker._
 import signalcollect.implementations.messaging._
-import signalcollect.implementations.serialization._
+import signalcollect.implementations.storage._
 import java.util.concurrent.LinkedBlockingQueue
 import scala.concurrent.forkjoin.LinkedTransferQueue
 import java.util.concurrent.BlockingQueue
