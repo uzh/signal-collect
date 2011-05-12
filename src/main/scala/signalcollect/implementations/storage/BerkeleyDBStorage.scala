@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package signalcollect.implementations.serialization
+package signalcollect.implementations.storage
 
 import com.sleepycat.persist.model.KeyField
 import com.sleepycat.persist.model.PrimaryKey

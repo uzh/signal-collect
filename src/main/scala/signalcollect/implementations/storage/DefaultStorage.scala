@@ -1,4 +1,4 @@
-package signalcollect.implementations.serialization
+package signalcollect.implementations.storage
 
 import java.util.Set
 import signalcollect.interfaces._

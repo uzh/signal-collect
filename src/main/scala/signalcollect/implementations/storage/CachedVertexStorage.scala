@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package signalcollect.implementations.serialization
+package signalcollect.implementations.storage
 
 import scala.collection.mutable.Queue
 import signalcollect.interfaces._

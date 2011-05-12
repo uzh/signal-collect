@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package signalcollect.implementations.serialization
+package signalcollect.implementations.storage
 
 import com.mongodb.casbah.Imports._
 import signalcollect.interfaces._
