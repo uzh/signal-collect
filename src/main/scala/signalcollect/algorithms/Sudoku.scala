@@ -175,7 +175,7 @@ object Sudoku extends App {
     }
 
     val candidate = mostConstrainedCell(possibleValues)
-    
+
     if (candidate != None) {
       val iterator = candidate.get._2.iterator
       while (iterator.hasNext && !solutionFound) {
@@ -187,10 +187,10 @@ object Sudoku extends App {
           solutionFound = true
           return cgTry
         } else {
-        	val nextTryResult = tryPossibilities(cgTry)
-        	if(nextTryResult!=null) {
-        		return nextTryResult
-        	}        
+          val nextTryResult = tryPossibilities(cgTry)
+          if (nextTryResult != null) {
+            return nextTryResult
+          }
         }
       }
     }
@@ -198,7 +198,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-  val cg = new DefaultComputeGraph()
+    val cg = new DefaultComputeGraph()
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {
@@ -229,7 +229,7 @@ object SudokuHelper {
     numbers
   }
 
-  //Get Rows, Columns and Bocks from ID
+  //Get Rows, Columns and Blocks from ID
   def getRow(id: Int) = id / 9
   def getColumn(id: Int) = id % 9
   def getBlock(id: Int) = getRow(id) * 3 + getColumn(id)

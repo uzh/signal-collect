@@ -48,7 +48,8 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   def foreach[U](f: (Vertex[_, _]) => U) = {
     val i = toHandle.iterator
     while (i.hasNext) {
-      f(vertexStore.vertices.get(i.next))
+      val vertex = vertexStore.vertices.get(i.next)
+      f(vertex)        
     }
     toHandle.clear
   }

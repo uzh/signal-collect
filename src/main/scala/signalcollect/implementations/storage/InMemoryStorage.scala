@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryStorage(storage: Storage) extends VertexStore {
   val messageBus =  storage.getMessageBus
-  var vertexMap = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
+  protected var vertexMap = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
 
   def get(id: Any): Vertex[_, _] = {
     vertexMap.get(id)
