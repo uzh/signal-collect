@@ -31,7 +31,7 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
   
   /** traversable uncollected signals */  
   protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
-    uncollectedMessages flatMap (message => Filter.byClass(filterClass, message.signal))
+    uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
   }
 
   /**
