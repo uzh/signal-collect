@@ -31,12 +31,12 @@ trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, Sta
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
 
   protected def signals[G](filterClass: Class[G]): Iterable[G] = {
-    mostRecentSignalMap.values flatMap (value => Filter.byClass(filterClass, value))
+    mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
   }
 
   protected def mostRecentSignalFrom[G](signalClass: Class[G], id: Any): Option[G] = {
     mostRecentSignalMap.get(id) match {
-      case Some(x) => Filter.byClass(signalClass, x)
+      case Some(x) => Filter.bySuperClass(signalClass, x)
       case other => None
     }
   }
