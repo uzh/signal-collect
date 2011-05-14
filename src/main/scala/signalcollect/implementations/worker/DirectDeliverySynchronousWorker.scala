@@ -27,7 +27,6 @@ import java.util.concurrent.BlockingQueue
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.LinkedHashSet
-import util.collections.ConcurrentHashSet
 
 class DirectDeliverySynchronousWorker(
   mb: MessageBus[Any, Any],

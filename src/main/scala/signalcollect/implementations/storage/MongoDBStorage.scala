@@ -21,7 +21,6 @@ package signalcollect.implementations.storage
 import com.mongodb.casbah.Imports._
 import signalcollect.interfaces._
 import signalcollect.api.DefaultVertex
-import util.collections.ConcurrentHashSet
 import java.util.Set
 import java.util.HashMap
 

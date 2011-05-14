@@ -17,7 +17,7 @@
  *  
  */
 
-package util.constructors
+package signalcollect.util.constructors
 
 import java.lang.reflect.Constructor
 

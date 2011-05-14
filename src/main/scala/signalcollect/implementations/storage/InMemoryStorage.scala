@@ -18,7 +18,7 @@
 
 package signalcollect.implementations.storage
 
-import util.collections.ConcurrentHashSet
+import signalcollect.util.collections.ConcurrentHashSet
 import java.util.Set
 import signalcollect.interfaces._
 import java.util.concurrent.ConcurrentHashMap

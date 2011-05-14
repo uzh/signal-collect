@@ -1,4 +1,4 @@
-package util.collections
+package signalcollect.util.collections
 
 object Filter {
 

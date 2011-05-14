@@ -19,10 +19,10 @@
 
 package signalcollect.implementations.graph
 
-import util.collections.Filter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import signalcollect.interfaces.Signal
+import signalcollect.util.collections.Filter;
 
 trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
   

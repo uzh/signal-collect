@@ -19,7 +19,7 @@
 
 package signalcollect.implementations.worker
 
-import util.constructors.ConstructorFinder
+import signalcollect.util.constructors.ConstructorFinder
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._

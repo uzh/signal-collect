@@ -1,4 +1,4 @@
-package util.collections
+package signalcollect.util.collections
 
 import org.junit.Test
 import org.specs2.mutable._

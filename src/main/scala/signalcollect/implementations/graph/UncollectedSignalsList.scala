@@ -19,7 +19,7 @@
 
 package signalcollect.implementations.graph
 
-import util.collections.Filter
+import signalcollect.util.collections.Filter
 import signalcollect.interfaces.Signal
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ListBuffer

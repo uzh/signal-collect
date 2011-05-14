@@ -2,7 +2,6 @@ package signalcollect.implementations.storage
 
 import java.util.Set
 import signalcollect.interfaces._
-import util.collections.ConcurrentHashSet
 import java.util.Set
 
  class DefaultStorage(val messageBus: MessageBus[Any, Any]) extends Storage(messageBus) with DefaultSerializer {

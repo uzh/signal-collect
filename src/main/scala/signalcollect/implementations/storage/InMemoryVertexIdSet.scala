@@ -20,7 +20,7 @@ package signalcollect.implementations.storage
 
 import scala.collection.mutable.Set
 import signalcollect.interfaces._
-import util.collections.ConcurrentHashSet
+import signalcollect.util.collections.ConcurrentHashSet
 
 /**
  * Stores a set of vertex IDs in main memory.

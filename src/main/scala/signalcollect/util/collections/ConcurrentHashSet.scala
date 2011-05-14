@@ -17,7 +17,7 @@
  *  
  */
 
-package util.collections;
+package signalcollect.util.collections;
 
 import scala.collection.generic.GenericCompanion
 import scala.collection.mutable.SetLike
