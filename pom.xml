@@ -146,7 +146,7 @@
 				<version>2.5</version>
 				<configuration>
 					<useSystemClassLoader>false</useSystemClassLoader>
-					<argLine>-Xmx512m</argLine>
+					<argLine>-Xmx1024m</argLine>
 					<includes>
 						<include>**/*Spec.class</include>
 						<include>**/*Suite.class</include>
