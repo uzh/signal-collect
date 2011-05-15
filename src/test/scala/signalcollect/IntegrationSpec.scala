@@ -26,6 +26,7 @@ import org.specs2.runner.JUnitRunner
 import signalcollect._
 import signalcollect.api._
 import signalcollect.interfaces._
+import signalcollect.graphproviders._
 import signalcollect.api.Factory._
 import signalcollect.algorithms._
 import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
