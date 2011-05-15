@@ -18,7 +18,6 @@ object Filter {
       case t: Double if filterClass == classOf[Double] => Some(t.asInstanceOf[G])
       case t: Boolean if filterClass == classOf[Boolean] => Some(t.asInstanceOf[G])
       case t: Unit if filterClass == classOf[Unit] => Some(t.asInstanceOf[G])
-      case t: Any if filterClass == classOf[Any] => Some(t.asInstanceOf[G])
       case reference if (reference.asInstanceOf[AnyRef].getClass == filterClass) => Some(reference.asInstanceOf[G])
       case other => None
     }
