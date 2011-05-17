@@ -129,20 +129,6 @@ package signalcollect.interfaces
    * @return the score value. The meaning of this value depends on the thresholds set in {@link ComputeGraph#execute}.
    */
   def scoreSignal: Double
-  
-  
-  /**
-   * This method is used by the framework in order to decide whether the vertex should be held in cache or can be serialized to disk.
-   * 
-   * @return the cache value.
-   */
-  def scoreCache: Double
-  
-  /**
-   * Sets the new caching score for the vertex.
-   * @param score the new caching score
-   */
-  def setScoreCache(score: Double)
 
   /** @return optionally the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int

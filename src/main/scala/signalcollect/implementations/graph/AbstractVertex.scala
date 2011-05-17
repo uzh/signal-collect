@@ -179,21 +179,6 @@ abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFacto
       }
     }
   }
-  
-  /**
-   * This method is used by the framework in order to decide whether the vertex should be held in cache or can be serialized to disk.
-   * 
-   * @return the cache value.
-   */
-  def scoreCache: Double = cachingScore 
-  
-  /**
-   * Sets the new caching score for the vertex.
-   * @param score the new caching score
-   */
-  def setScoreCache(score: Double) {
-    cachingScore = score
-  }
 
   /** Returns the number of outgoing edges of this [signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size
