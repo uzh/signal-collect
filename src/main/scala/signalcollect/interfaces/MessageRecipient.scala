@@ -20,8 +20,8 @@
 package signalcollect.interfaces
 
 trait MessageRecipient[-MessageType] {
-  /*
-   * Sends @message to the recipient object.
-   */
-  def send(message: MessageType)
+
+  /** Receives a message which has been sent to this object. */
+  def receive(message: MessageType)
+
 }

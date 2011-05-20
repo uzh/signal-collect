@@ -44,28 +44,28 @@ class DefaultMessageBus[MessageType, IdType] extends interfaces.MessageBus[Messa
   var numberOfWorkers = 0
 
   def sendToCoordinator(message: MessageType) {
-    coordinator.send(message)
+    coordinator.receive(message)
   }
   
   def sendToLogger(message: Any) {
-    logger foreach (_.send(message))
+    logger foreach (_.receive(message))
   }
 
   def sendToWorkerForId(message: MessageType, recipientId: IdType) {
     val worker = workers.get((recipientId.hashCode % numberOfWorkers).abs)
-    worker.send(message)
+    worker.receive(message)
   }
 
   def sendToWorkerForIdHash(message: MessageType, recipientIdHash: Int) {
     val worker = workers.get((recipientIdHash % numberOfWorkers).abs)
-    worker.send(message)
+    worker.receive(message)
   }
   
   def sendToWorkers(message: MessageType) {
 	val i = workers.values.iterator
 	while (i.hasNext) {
 		val worker = i.next
-		worker.send(message)
+		worker.receive(message)
 	}
   }
 }

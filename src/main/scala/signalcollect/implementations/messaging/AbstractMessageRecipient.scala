@@ -28,7 +28,7 @@ abstract class AbstractMessageRecipient[G](messageInboxFactory: () => BlockingQu
 
   val messageInbox: BlockingQueue[G] = messageInboxFactory()
 
-  override def send(message: G) = messageInbox.put(message)
+  override def receive(message: G) = messageInbox.put(message)
 
   protected def processInbox = {
 	  var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)

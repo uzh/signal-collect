@@ -33,7 +33,7 @@ class DirectDeliverySynchronousWorker(
   messageInboxFactory: QueueFactory,
   storageFactory: StorageFactory) extends SynchronousWorker(mb, messageInboxFactory, storageFactory) {
 
-  override def send(message: Any) = {
+  override def receive(message: Any) = {
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case other => messageInbox.put(message)

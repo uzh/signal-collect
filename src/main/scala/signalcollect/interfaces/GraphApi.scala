@@ -25,13 +25,13 @@ trait GraphApi {
    * Sends a signal to the vertex with vertex.id=targetId.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def send[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType)
+  def sendSignalToVertex[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType)
 
   /**
    * Sends a signal to all vertices.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def sendAll[SignalType](signal: SignalType)
+  def sendSignalToAllVertices[SignalType](signal: SignalType)
 
   /**
    * Adds a vertex with type VertexType.

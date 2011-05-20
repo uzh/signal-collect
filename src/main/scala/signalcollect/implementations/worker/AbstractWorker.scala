@@ -325,7 +325,7 @@ abstract class AbstractWorker(
   }
 
   protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
-    vertex.send(signal)
+    vertex.receive(signal)
     vertexStore.toCollect += vertex.id
     vertexStore.vertices.updateStateOfVertex(vertex)
   }

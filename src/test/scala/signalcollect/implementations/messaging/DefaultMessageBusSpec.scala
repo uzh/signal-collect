@@ -46,39 +46,39 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     "deliver message for id to worker0" in {
       // the id string's hash code mod 2 equals 0
       defaultMessageBus.sendToWorkerForId("someMessage1", "this.hashCode.abs % 2 == 0")
-      there was one(mockWorker0).send("someMessage1")
+      there was one(mockWorker0).receive("someMessage1")
     }
 
     "deliver message for id to worker1" in {
       // the id string's hash code mod 2 equals 1
       defaultMessageBus.sendToWorkerForId("someMessage1", "this.hashCode.abs % 2 == 1")
-      there was one(mockWorker1).send("someMessage1")
+      there was one(mockWorker1).receive("someMessage1")
     }
 
     "deliver message for id hash to worker0" in {
       defaultMessageBus.sendToWorkerForIdHash("someMessage2", 0)
-      there was one(mockWorker0).send("someMessage2")
+      there was one(mockWorker0).receive("someMessage2")
     }
 
     "deliver message for id hash to worker1" in {
       defaultMessageBus.sendToWorkerForIdHash("someMessage2", 1)
-      there was one(mockWorker1).send("someMessage2")
+      there was one(mockWorker1).receive("someMessage2")
     }
     
     "deliver message to all workers" in {
       defaultMessageBus.sendToWorkers("someMessageForAll")
-      there was one(mockWorker0).send("someMessageForAll")
-      there was one(mockWorker1).send("someMessageForAll")
+      there was one(mockWorker0).receive("someMessageForAll")
+      there was one(mockWorker1).receive("someMessageForAll")
     }
 
     "deliver message to coordinator" in {
       defaultMessageBus.sendToCoordinator("someMessage")
-      there was one(mockCoordinator).send("someMessage")
+      there was one(mockCoordinator).receive("someMessage")
     }
 
     "deliver message to logger" in {
       defaultMessageBus.sendToLogger("someMessage")
-      there was one(mockLogger).send("someMessage")
+      there was one(mockLogger).receive("someMessage")
     }
 
   }
