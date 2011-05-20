@@ -22,6 +22,18 @@ package signalcollect.interfaces
 trait GraphApi {
 
   /**
+   * Sends a signal to the vertex with vertex.id=targetId.
+   * The senderId of this signal will be signalcollect.interfaces.External
+   */
+  def send[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType)
+
+  /**
+   * Sends a signal to all vertices.
+   * The senderId of this signal will be signalcollect.interfaces.External
+   */
+  def sendAll[SignalType](signal: SignalType)
+
+  /**
    * Adds a vertex with type VertexType.
    * The constructor is called with the parameter sequence vertexClass, id, otherConstructorParameters.
    *
@@ -40,12 +52,12 @@ trait GraphApi {
    * The constructor is called with the parameter sequence edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters.
    */
   def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*)
-  
+
   /**
    * Simpler alternative. Might have scalability/performance issues.
    */
   def addEdge(edge: Edge[_, _])
-  
+
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 
   def removeVertex(vertexId: Any)

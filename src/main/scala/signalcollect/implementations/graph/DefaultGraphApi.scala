@@ -24,6 +24,22 @@ import signalcollect.interfaces._
 trait DefaultGraphApi extends GraphApi {
   protected def messageBus: MessageBus[Any, Any]
 
+  /**
+   * Sends a signal to the vertex with vertex.id=targetId.
+   * The senderId of this signal will be signalcollect.interfaces.External
+   */
+  def send[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType) {
+    messageBus.sendToWorkerForId(Signal(EXTERNAL, targetId, signal), targetId)
+  }
+
+  /**
+   * Sends a signal to all vertices.
+   * The senderId of this signal will be signalcollect.interfaces.External
+   */
+  def sendAll[SignalType](signal: SignalType) {
+    messageBus.sendToWorkers(Signal(EXTERNAL, ALL, signal))
+  }
+
   def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*) {
     val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
     val operation = CommandAddVertexFromFactory(vertexClass, parameters)

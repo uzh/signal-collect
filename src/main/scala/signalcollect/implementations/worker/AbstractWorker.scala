@@ -32,6 +32,7 @@ import java.util.LinkedHashSet
 import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
+import signalcollect.interfaces.ALL
 
 abstract class AbstractWorker(
   protected val messageBus: MessageBus[Any, Any],
@@ -194,10 +195,10 @@ abstract class AbstractWorker(
   }
 
   protected def addOutgoingEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
-	  val edge = ConstructorFinder.newInstanceFromClass(edgeClass)(parameters)
-	  addOutgoingEdge(edge)
+    val edge = ConstructorFinder.newInstanceFromClass(edgeClass)(parameters)
+    addOutgoingEdge(edge)
   }
-  
+
   var outgoingEdgesAddedCounter = 0l
 
   protected def addOutgoingEdge(e: Edge[_, _]) = {
@@ -207,8 +208,8 @@ abstract class AbstractWorker(
       outgoingEdgesAddedCounter += 1
       vertex.addOutgoingEdge(e)
       messageBus.sendToWorkerForIdHash(CommandAddIncomingEdge(e.id), e.targetHashCode)
-      vertexStore.toCollect+=vertex.id
-      vertexStore.toSignal+=vertex.id
+      vertexStore.toCollect += vertex.id
+      vertexStore.toSignal += vertex.id
       vertexStore.vertices.updateStateOfVertex(vertex)
 
     } else {
@@ -232,22 +233,24 @@ abstract class AbstractWorker(
 
   protected def executeSignalStep {
     //var converged = vertexStore.toSignal.isEmpty
-    vertexStore.toSignal.foreach{vertex => signal(vertex) }
+    vertexStore.toSignal.foreach { vertex => signal(vertex) }
     messageBus.sendToCoordinator(StatusSignalStepDone)
   }
 
   protected def executeCollectStep {
-   vertexStore.toCollect.foreach(
-   vertex => {collect (vertex); 
-   vertexStore.toSignal+=vertex.id })
-   messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
+    vertexStore.toCollect.foreach(
+      vertex => {
+        collect(vertex);
+        vertexStore.toSignal += vertex.id
+      })
+    messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
 
   protected def addVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
-	  val vertex = ConstructorFinder.newInstanceFromClass(vertexClass)(parameters)
-	  addVertex(vertex)
+    val vertex = ConstructorFinder.newInstanceFromClass(vertexClass)(parameters)
+    addVertex(vertex)
   }
-  
+
   var verticesAddedCounter = 0l
 
   protected def addVertex(vertex: Vertex[_, _]) {
@@ -309,18 +312,22 @@ abstract class AbstractWorker(
   }
 
   protected def processSignal(signal: Signal[_, _, _]) {
-    val vertex = vertexStore.vertices.get(signal.targetId)
-    if (vertex != null) {
-      deliverSignal(signal, vertex)
-      vertexStore.vertices.updateStateOfVertex(vertex)
+    if (signal.targetId == ALL) {
+      vertexStore.vertices foreach (deliverSignal(signal, _))
     } else {
-      log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
+      val vertex = vertexStore.vertices.get(signal.targetId)
+      if (vertex != null) {
+        deliverSignal(signal, vertex)
+      } else {
+        log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
+      }
     }
   }
 
   protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
     vertex.send(signal)
-    vertexStore.toCollect+=vertex.id
+    vertexStore.toCollect += vertex.id
+    vertexStore.vertices.updateStateOfVertex(vertex)
   }
 
 }

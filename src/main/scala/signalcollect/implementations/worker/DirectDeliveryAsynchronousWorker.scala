@@ -73,11 +73,6 @@ class DirectDeliveryAsynchronousWorker(
     setIdle(!messageReceived && (isConverged || isPaused))
   }
 
-  protected override def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
-    vertex.send(signal)
-    vertexStore.toCollect+=vertex.id
-  }
-
   override def handleIdling {
     handlePauseAndContinue
     if (isConverged || isPaused) {

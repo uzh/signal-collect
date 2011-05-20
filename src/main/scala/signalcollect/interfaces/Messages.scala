@@ -19,6 +19,12 @@
 
 package signalcollect.interfaces
 
+// sender id used to indicate that a signal was sent from an external source
+object EXTERNAL
+
+// target id used to indicate that a signal should be delivered to all vertices
+object ALL
+
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
