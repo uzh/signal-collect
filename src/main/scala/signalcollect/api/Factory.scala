@@ -34,7 +34,7 @@ object Factory {
   type QueueFactory = () => BlockingQueue[Any]
 
   object Storage {
-    lazy val Default: StorageFactory = InMemory
+    lazy val Default: StorageFactory = Cached
     lazy val InMemory: StorageFactory = new DefaultStorage(_)
     //Highly experimental
     //Use at your own risk!
@@ -42,7 +42,7 @@ object Factory {
     class BerkeleyDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
     lazy val BerkeleyDB: StorageFactory = new BerkeleyDBStorage(_)
     //Berkeley DB Storage with InMemory caching
-    class CachedStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with CachedDB
+    class CachedStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with ScoredCache
     lazy val Cached: StorageFactory = new CachedStorage(_)
     //Mongo DB Storage (requires a running mongoDB installation)
     class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB

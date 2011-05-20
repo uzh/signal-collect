@@ -23,21 +23,35 @@ import scala.concurrent.Lock
 import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 
-class CachedVertexStorage(persistentStorageFactory: Storage => VertexStore, storage: Storage) extends VertexStore {
+/**
+ * Can be used to cache vertices based on some scoring function.
+ * The vertices with the highest caching scores should remain in main memory
+ *
+ * @param scoreUpdate used to update the score each time that vertex is requested from the storage
+ * @param inMemoryRatio percentage of main memory usage from where the storage should start to use the secondary storage
+ */
+class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
+  storage: Storage,
+  scoreUpdate: Double => Double,
+  inMemoryRatio: Float = 0.5f) extends VertexStore {
 
-  val CACHING_THRESHOLD = 0.50 // % of main memory that can be used by the in-memory vertex store
-  val cacheScores = new HashMap[Any, Double]()
-  var averageScore = 0.0;
-  val lock = new Lock()
+  protected val CACHING_THRESHOLD = inMemoryRatio
+  protected var cacheRatioReached = false
 
-  val inMemoryCache = new InMemoryCache(storage)
-  lazy val persistentStore: VertexStore = persistentStorageFactory(storage) // Storage that should be cached
+  protected val cacheScores = new HashMap[Any, Double]()
+  protected var averageScore = 0.0;
+  private val lock = new Lock()
+
+  protected val inMemoryCache = new InMemoryCache(storage)
+  protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage) // Storage that should be cached
 
   def get(id: Any): Vertex[_, _] = {
+    //Update the cache scores
     val oldCacheScore = cacheScores.get(id)
-    val newScore = oldCacheScore + 1
-    cacheScores.put(id, newScore)
-    averageScore = ((averageScore * cacheScores.size) - oldCacheScore + newScore) / cacheScores.size
+    val newCacheScore = scoreUpdate(oldCacheScore)
+    cacheScores.put(id, newCacheScore)
+    averageScore = ((averageScore * cacheScores.size) - oldCacheScore + newCacheScore) / cacheScores.size
+
     if (inMemoryCache.contains(id)) {
       lock.acquire
       val vertex = inMemoryCache.get(id)
@@ -62,6 +76,11 @@ class CachedVertexStorage(persistentStorageFactory: Storage => VertexStore, stor
       lock.acquire
       inMemoryCache.put(vertex)
       lock.release
+      var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
+      if ((usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD) {
+        cacheRatioReached = true
+        inMemoryCache.maxSize = inMemoryCache.size
+      }
       true
     } else {
       persistentStore.put(vertex)
@@ -74,6 +93,10 @@ class CachedVertexStorage(persistentStorageFactory: Storage => VertexStore, stor
       inMemoryCache.remove(id)
     }
     persistentStore.remove(id)
+    var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
+    if ((usedMemory / Runtime.getRuntime().maxMemory) < CACHING_THRESHOLD) {
+      cacheRatioReached = false
+    }
   }
 
   def updateStateOfVertex(vertex: Vertex[_, _]) {
@@ -88,9 +111,8 @@ class CachedVertexStorage(persistentStorageFactory: Storage => VertexStore, stor
     persistentStore.foreach(f)
   }
 
-  def cacheRatioReached = ((Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory) / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD
-
-  class InMemoryCache(storage: Storage) extends VertexStore {
+  protected class InMemoryCache(storage: Storage) extends VertexStore {
+    var maxSize = Long.MaxValue //gets reset if cache ratio is reached
     val messageBus = storage.getMessageBus
     val cachedVertices = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
 
@@ -145,13 +167,13 @@ class CachedVertexStorage(persistentStorageFactory: Storage => VertexStore, stor
 
     def size: Long = cachedVertices.size
 
-    def isFull = size > 500 // TODO find a better condition
+    def isFull = size > maxSize
 
   }
 }
 
-trait CachedDB extends DefaultStorage {
+trait ScoredCache extends DefaultStorage {
   def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, getRandomString("/tmp/", 5))
-  override protected def vertexStoreFactory = new CachedVertexStorage(berkeleyDBFactory, this)
+  override protected def vertexStoreFactory = new ScoredVertexCache(berkeleyDBFactory, this, score => score + 1)
 }
 
