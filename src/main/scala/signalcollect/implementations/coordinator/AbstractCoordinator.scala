@@ -236,6 +236,8 @@ abstract class AbstractCoordinator(
   }
 
   def execute: ComputationStatistics = {
+    steps = 0
+
     log("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = awaitIdle

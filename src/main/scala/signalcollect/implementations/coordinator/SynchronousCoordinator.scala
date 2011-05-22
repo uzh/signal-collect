@@ -62,4 +62,8 @@ class SynchronousCoordinator(
     statsMap
   }
 
+  override def setStepsLimit(l: Int) {
+    stepsLimit = 0
+  }
+  
 }
