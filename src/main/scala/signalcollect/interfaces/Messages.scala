@@ -20,16 +20,24 @@
 package signalcollect.interfaces
 
 // sender id used to indicate that a signal was sent from an external source
-object EXTERNAL
+object EXTERNAL { override val toString = "EXTERNAL" }
 
 // target id used to indicate that a signal should be delivered to all vertices
-object ALL
+object ALL { override val toString = "ALL" }
 
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
-case class CommandAddVertexFromFactory(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef])
-case class CommandAddEdgeFromFactory(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef])
+case class CommandAddVertexFromFactory(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
+  override def toString = {
+    "CommandAddVertexFromFactory(" + vertexClass.getSimpleName + ", " + parameters.toString + ")"
+  }
+}
+case class CommandAddEdgeFromFactory(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
+  override def toString = {
+    "CommandAddEdgeFromFactory(" + edgeClass.getSimpleName + ", " + parameters.toString + ")"
+  }
+}
 
 case class CommandAddVertex(vertex: Vertex[_, _])
 case class CommandAddEdge(edge: Edge[_, _])
@@ -88,7 +96,7 @@ case class ComputationProgressStats(
       verticesRemoved + other.verticesRemoved,
       outgoingEdgesAdded + other.outgoingEdgesAdded,
       outgoingEdgesRemoved + other.outgoingEdgesRemoved,
-	  incomingEdgesAdded + other.incomingEdgesAdded)
+      incomingEdgesAdded + other.incomingEdgesAdded)
   }
 }
 
