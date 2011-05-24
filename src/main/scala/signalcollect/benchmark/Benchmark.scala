@@ -52,7 +52,7 @@ object Benchmark extends App {
     val stats = evalGraph.execute
     val computationTime = stats.computationTimeInMilliseconds
     val score = 100.0 * computationTime.get / 91424.0
-    println("Performance Score: " + score + "%")
+    println("Performance Score: " + score.toInt + "%")
     
     evalGraph.shutDown
 }
