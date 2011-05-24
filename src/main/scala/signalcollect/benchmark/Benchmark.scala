@@ -51,5 +51,5 @@ object Benchmark extends App {
         
     val stats = evalGraph.execute
     val computationTime = stats.computationTimeInMilliseconds
-
+    println(computationTime)
 }
