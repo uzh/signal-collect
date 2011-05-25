@@ -34,7 +34,7 @@ object Factory {
   type QueueFactory = () => BlockingQueue[Any]
 
   object Storage {
-    lazy val Default: StorageFactory = InMemory
+    lazy val Default: StorageFactory = Cached
     lazy val InMemory: StorageFactory = new DefaultStorage(_)
     //Highly experimental
     //Use at your own risk!
@@ -58,7 +58,7 @@ object Factory {
   }
 
   object Worker {
-    lazy val Default: WorkerFactory = new BeforeStorageAsynchronousWorker(_, Queue.Default, _)
+    lazy val Default: WorkerFactory = Asynchronous
     lazy val Synchronous: WorkerFactory = new SynchronousWorker(_, Queue.Default, _)
     lazy val SynchronousDirectDelivery: WorkerFactory = new DirectDeliverySynchronousWorker(_, Queue.Default, _)
     lazy val Asynchronous: WorkerFactory = new AsynchronousWorker(_, Queue.Default, _)

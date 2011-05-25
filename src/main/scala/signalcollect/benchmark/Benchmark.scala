@@ -85,7 +85,7 @@ object Benchmark extends App {
   evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
   val computationTime6Workers = stats.computationTimeInMilliseconds
-  val scalabilityScore = ((computationTime3Workers.get / computationTime6Workers.get) * 100.0) - 100.0
+  val scalabilityScore = ((computationTime3Workers.get.toDouble / computationTime6Workers.get.toDouble) * 100.0) - 100.0
   println("Scalability Score:\t" + scalabilityScore.toInt + "%")
   evalGraph.shutDown
     
