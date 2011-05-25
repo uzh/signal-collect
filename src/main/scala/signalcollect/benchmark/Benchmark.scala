@@ -58,6 +58,7 @@ object Benchmark extends App {
   computationTime = stats.computationTimeInMilliseconds
   score = 100.0 * computationTime.get / 91424.0
   println("Time with 3 workers: " + computationTime)
+  evalGraph.shutDown
   
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(6).build, et)
   System.gc
@@ -65,5 +66,6 @@ object Benchmark extends App {
   computationTime = stats.computationTimeInMilliseconds
   score = 100.0 * computationTime.get / 91424.0
   println("Time with 6 workers: " + computationTime)
+  evalGraph.shutDown
   
 }
