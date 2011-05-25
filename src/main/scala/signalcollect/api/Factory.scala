@@ -34,7 +34,7 @@ object Factory {
   type QueueFactory = () => BlockingQueue[Any]
 
   object Storage {
-    lazy val Default: StorageFactory = Cached
+    lazy val Default: StorageFactory = InMemory
     lazy val InMemory: StorageFactory = new DefaultStorage(_)
     //Highly experimental
     //Use at your own risk!

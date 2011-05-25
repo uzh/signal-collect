@@ -67,7 +67,7 @@ object Benchmark extends App {
   evalGraph.setCollectThreshold(0.0)
   var stats = evalGraph.execute
   var computationTime = stats.computationTimeInMilliseconds
-  var performanceScore = 100.0 * computationTime.get / 91424.0
+  var performanceScore = 100.0 * 91424.0 / computationTime.get
   println("Performance Score:\t" + performanceScore.toInt + "%")
   evalGraph.shutDown
 
