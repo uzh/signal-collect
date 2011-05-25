@@ -33,7 +33,6 @@ trait ComputeGraph extends GraphApi {
   def foreach(f: PartialFunction[Vertex[_, _], Unit])
 
   def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long
-  //  def countEdges: Long
 
   def sum[N](implicit numeric: Numeric[N]): N
   def product[N](implicit numeric: Numeric[N]): N
@@ -44,6 +43,7 @@ trait ComputeGraph extends GraphApi {
   def setSignalThreshold(t: Double)
   def setCollectThreshold(t: Double)
   def setStepsLimit(l: Int)
+  def setUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit)
 }
 
 

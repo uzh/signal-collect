@@ -52,6 +52,8 @@ case class CommandRemoveIncomingEdge(edgeId: (Any, Any, String))
 
 case class CommandRemoveVertices(shouldRemove: Vertex[_, _] => Boolean)
 
+case class CommandSetUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit)
+
 case class CommandSetSignalThreshold(signalThreshold: Double)
 case class CommandSetCollectThreshold(collectThreshold: Double)
 

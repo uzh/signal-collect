@@ -33,6 +33,7 @@ import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
 import signalcollect.interfaces.ALL
+import signalcollect.implementations.graph.DefaultGraphApi
 
 abstract class AbstractWorker(
   protected val messageBus: MessageBus[Any, Any],
@@ -41,6 +42,7 @@ abstract class AbstractWorker(
   extends AbstractMessageRecipient(messageInboxFactory)
   with Worker
   with Logging
+  with DefaultGraphApi
   with Traversable[Vertex[_, _]] {
 
   override protected def process(message: Any) {
@@ -50,15 +52,16 @@ abstract class AbstractWorker(
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
       case CommandForEachVertex(f) => foreach(f)
-      case CommandAddVertex(vertex) => addVertex(vertex)
+      case CommandAddVertex(vertex) => addLocalVertex(vertex)
       case CommandAddEdge(edge) => addOutgoingEdge(edge)
-      case CommandAddVertexFromFactory(vertexClass, parameters) => addVertex(vertexClass, parameters)
+      case CommandAddVertexFromFactory(vertexClass, parameters) => addLocalVertex(vertexClass, parameters)
       case CommandAddEdgeFromFactory(edgeClass, parameters) => addOutgoingEdge(edgeClass, parameters)
       case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
-      case CommandRemoveVertex(vertexId) => removeVertex(vertexId)
+      case CommandRemoveVertex(vertexId) => removeLocalVertex(vertexId)
       case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
-      case CommandRemoveVertices(shouldRemove) => removeVertices(shouldRemove)
+      case CommandRemoveVertices(shouldRemove) => removeLocalVertices(shouldRemove)
       case CommandAddIncomingEdge(edgeId) => addIncomingEdge(edgeId)
+      case CommandSetUndeliverableSignalHandler(h) => undeliverableSignalHandler = h
       case CommandSetSignalThreshold(sT) => signalThreshold = sT
       case CommandSetCollectThreshold(cT) => collectThreshold = cT
       case CommandSignalStep => executeSignalStep
@@ -69,6 +72,8 @@ abstract class AbstractWorker(
     }
   }
 
+  protected var undeliverableSignalHandler: (Signal[_,_,_], GraphApi) => Unit = (s, g) => {}
+  
   protected def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType) {
     val aggregatedValue = foldLeft(neutralElement) { (a: ValueType, v: Vertex[_, _]) => aggregator(a, extractor(v)) }
     messageBus.sendToCoordinator(StatusAggregatedValue(aggregatedValue))
@@ -126,7 +131,7 @@ abstract class AbstractWorker(
     vertexStore.vertices.foreach(f)
   }
 
-  protected def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+  protected def removeLocalVertices(shouldRemove: Vertex[_, _] => Boolean) {
     foreach { vertex =>
       if (shouldRemove(vertex)) {
         processRemoveVertex(vertex)
@@ -136,7 +141,7 @@ abstract class AbstractWorker(
 
   protected var verticesRemovedCounter = 0l
 
-  protected def removeVertex(vertexId: Any) {
+  protected def removeLocalVertex(vertexId: Any) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
@@ -246,14 +251,14 @@ abstract class AbstractWorker(
     messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
 
-  protected def addVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
+  protected def addLocalVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
     val vertex = ConstructorFinder.newInstanceFromClass(vertexClass)(parameters)
     addVertex(vertex)
   }
 
   var verticesAddedCounter = 0l
 
-  protected def addVertex(vertex: Vertex[_, _]) {
+  protected def addLocalVertex(vertex: Vertex[_, _]) {
     if (vertexStore.vertices.put(vertex)) {
       verticesAddedCounter += 1
       vertex.afterInitialization
@@ -319,7 +324,7 @@ abstract class AbstractWorker(
       if (vertex != null) {
         deliverSignal(signal, vertex)
       } else {
-        log("Could not deliver signal " + signal + " to vertex with id " + signal.targetId)
+        undeliverableSignalHandler(signal, this)
       }
     }
   }

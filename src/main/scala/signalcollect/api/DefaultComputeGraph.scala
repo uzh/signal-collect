@@ -121,6 +121,7 @@ class DefaultComputeGraph(
     coordinator.customAggregate[ValueType](neutralElement, operation, extractor)
   }
 
+  def setUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit) = coordinator.setUndeliverableSignalHandler(h)
   def setSignalThreshold(t: Double) = coordinator.setSignalThreshold(t)
   def setCollectThreshold(t: Double) = coordinator.setCollectThreshold(t)
   def setStepsLimit(l: Int) = coordinator.setStepsLimit(l)

@@ -214,6 +214,10 @@ abstract class AbstractCoordinator(
   var computationStalled: Boolean = false
   var computationInProgress = false
 
+  def setUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit) {
+    messageBus.sendToWorkers(CommandSetUndeliverableSignalHandler(h))
+  }
+  
   def setSignalThreshold(t: Double) {
     signalThreshold = t
     messageBus.sendToWorkers(CommandSetSignalThreshold(t))
