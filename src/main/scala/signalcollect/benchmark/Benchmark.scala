@@ -48,24 +48,22 @@ object Benchmark extends App {
 
   var stats = evalGraph.execute
   var computationTime = stats.computationTimeInMilliseconds
-  var score = 100.0 * computationTime.get / 91424.0
-  println("Performance Score: " + score.toInt + "%")
+  var performanceScore = 100.0 * computationTime.get / 91424.0
+  println("Performance Score: " + performanceScore.toInt + "%")
   evalGraph.shutDown
 
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(3).build, et)
   System.gc
   stats = evalGraph.execute
-  computationTime = stats.computationTimeInMilliseconds
-  score = 100.0 * computationTime.get / 91424.0
-  println("Time with 3 workers: " + computationTime)
+  val computationTime3Workers = stats.computationTimeInMilliseconds
   evalGraph.shutDown
   
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(6).build, et)
   System.gc
   stats = evalGraph.execute
-  computationTime = stats.computationTimeInMilliseconds
-  score = 100.0 * computationTime.get / 91424.0
-  println("Time with 6 workers: " + computationTime)
+  val computationTime6Workers = stats.computationTimeInMilliseconds
+  val scalabilityScore = ((computationTime3Workers.get / computationTime6Workers.get) - 1.0) * 100.0
+  println("Scalability Score: " + scalabilityScore.toInt)
   evalGraph.shutDown
-  
+    
 }
