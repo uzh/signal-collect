@@ -27,12 +27,9 @@ class LogNormal(vertices: Int, seed: Long = 0, sigma: Double = 1, mu: Double = 3
 
 }
 
-
-
-
 /** A simple benchmark to test how uch the generall performance of signal/collect has increased with each build. */
 object Benchmark extends App {
-  
+
   def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
@@ -42,17 +39,31 @@ object Benchmark extends App {
     }
     cg
   }
+
+  val et = new LogNormal(500 * 1000, 0, 1, 2.5)
+  var evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(100).build, et)
+
+  evalGraph.setSignalThreshold(0.001)
+  evalGraph.setCollectThreshold(0.0)
+
+  var stats = evalGraph.execute
+  var computationTime = stats.computationTimeInMilliseconds
+  var score = 100.0 * computationTime.get / 91424.0
+  println("Performance Score: " + score.toInt + "%")
+  evalGraph.shutDown
+
+  evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(3).build, et)
+  System.gc
+  stats = evalGraph.execute
+  computationTime = stats.computationTimeInMilliseconds
+  score = 100.0 * computationTime.get / 91424.0
+  println("Time with 3 workers: " + computationTime)
   
-    val et = new LogNormal(500*1000, 0, 1, 2.5)
-    val evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(100).build, et)
-    
-    evalGraph.setSignalThreshold(0.001)
-    evalGraph.setCollectThreshold(0.0)
-        
-    val stats = evalGraph.execute
-    val computationTime = stats.computationTimeInMilliseconds
-    val score = 100.0 * computationTime.get / 91424.0
-    println("Performance Score: " + score.toInt + "%")
-    
-    evalGraph.shutDown
+  evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(6).build, et)
+  System.gc
+  stats = evalGraph.execute
+  computationTime = stats.computationTimeInMilliseconds
+  score = 100.0 * computationTime.get / 91424.0
+  println("Time with 6 workers: " + computationTime)
+  
 }
