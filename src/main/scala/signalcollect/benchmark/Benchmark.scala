@@ -63,10 +63,8 @@ object Benchmark extends App {
 
   val et = new LogNormal(500 * 1000, 0, 1, 2.5)
   var evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(100).build, et)
-
   evalGraph.setSignalThreshold(0.001)
   evalGraph.setCollectThreshold(0.0)
-
   var stats = evalGraph.execute
   var computationTime = stats.computationTimeInMilliseconds
   var performanceScore = 100.0 * computationTime.get / 91424.0
@@ -75,12 +73,16 @@ object Benchmark extends App {
 
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(3).build, et)
   System.gc
+  evalGraph.setSignalThreshold(0.001)
+  evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
   val computationTime3Workers = stats.computationTimeInMilliseconds
   evalGraph.shutDown
   
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(6).build, et)
   System.gc
+  evalGraph.setSignalThreshold(0.001)
+  evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
   val computationTime6Workers = stats.computationTimeInMilliseconds
   val scalabilityScore = ((computationTime3Workers.get / computationTime6Workers.get) * 100.0) - 100.0
