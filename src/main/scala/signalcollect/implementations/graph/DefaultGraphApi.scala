@@ -28,16 +28,16 @@ trait DefaultGraphApi extends GraphApi {
    * Sends a signal to the vertex with vertex.id=targetId.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def sendSignalToVertex[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType) {
-    messageBus.sendToWorkerForId(Signal(EXTERNAL, targetId, signal), targetId)
+  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
+    messageBus.sendToWorkerForId(Signal(sourceId, targetId, signal), targetId)
   }
 
   /**
    * Sends a signal to all vertices.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def sendSignalToAllVertices[SignalType](signal: SignalType) {
-    messageBus.sendToWorkers(Signal(EXTERNAL, ALL, signal))
+  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) {
+    messageBus.sendToWorkers(Signal(sourceId, ALL, signal))
   }
 
   def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*) {

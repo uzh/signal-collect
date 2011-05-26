@@ -86,13 +86,18 @@ class DefaultComputeGraph(
    * Sends a signal to the vertex with vertex.id=targetId.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def sendSignalToVertex[TargetIdType, SignalType](targetId: TargetIdType, signal: SignalType) = coordinator.sendSignalToVertex(targetId, signal)
+  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
+    coordinator.sendSignalToVertex(signal, targetId, sourceId)
+  }
 
   /**
    * Sends a signal to all vertices.
    * The senderId of this signal will be signalcollect.interfaces.External
    */
-  def sendSignalToAllVertices[SignalType](signal: SignalType) = coordinator.sendSignalToAllVertices(signal)
+  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) {
+    coordinator.sendSignalToAllVertices(signal, sourceId)
+  }
+  
   
   def execute = coordinator.execute
   def shutDown = coordinator.shutDown
