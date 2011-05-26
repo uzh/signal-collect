@@ -25,6 +25,7 @@ import signalcollect.interfaces.ComputeGraph
 import signalcollect.api.DefaultBuilder
 import signalcollect.algorithms.Page
 import signalcollect.algorithms.Link
+import signalcollect.api.DefaultSynchronousBuilder
 
 class LogNormal(vertices: Int, seed: Long = 0, sigma: Double = 1, mu: Double = 3) extends Traversable[(Int, Int)] {
 
@@ -62,31 +63,35 @@ object Benchmark extends App {
   }
 
   val et = new LogNormal(500 * 1000, 0, 1, 2.5)
-  var evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(100).build, et)
+  var evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(24).build, et)
   evalGraph.setSignalThreshold(0.001)
   evalGraph.setCollectThreshold(0.0)
   var stats = evalGraph.execute
-  var computationTime = stats.computationTimeInMilliseconds
-  var performanceScore = 100.0 * 91424.0 / computationTime.get
-  println("Performance Score:\t" + performanceScore.toInt + "%")
+  var asynchronousComputationTime24Workers = stats.computationTimeInMilliseconds
+  val asynchronousPerformanceScore = 100.0 * 91424.0 / asynchronousComputationTime24Workers.get
+  println("Asynchronous Performance Score:\t" + asynchronousPerformanceScore.toInt + "%")
   evalGraph.shutDown
 
-  evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(3).build, et)
+  evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(24).build, et)
   System.gc
   evalGraph.setSignalThreshold(0.001)
   evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
-  val computationTime3Workers = stats.computationTimeInMilliseconds
+  val synchronousComputationTime24Workers = stats.computationTimeInMilliseconds
+  val synchronousPerformanceScore = 100.0 * 91424.0 / synchronousComputationTime24Workers.get
+  println("Synchronous Performance Score:\t" + synchronousPerformanceScore.toInt + "%")
   evalGraph.shutDown
   
-  evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(6).build, et)
+  evalGraph = buildPageRankGraph(DefaultSynchronousBuilder.withNumberOfWorkers(12).build, et)
   System.gc
   evalGraph.setSignalThreshold(0.001)
   evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
-  val computationTime6Workers = stats.computationTimeInMilliseconds
-  val scalabilityScore = ((computationTime3Workers.get.toDouble / computationTime6Workers.get.toDouble) * 100.0) - 100.0
-  println("Scalability Score:\t" + scalabilityScore.toInt + "%")
+  val asynchronousComputationTime12Workers = stats.computationTimeInMilliseconds
   evalGraph.shutDown
-    
+  
+  val scalabilityScore = ((asynchronousComputationTime12Workers.get.toDouble / asynchronousComputationTime24Workers.get.toDouble) * 100.0) - 100.0
+  println("Asynchronous Scalability Score:\t" + scalabilityScore.toInt + "%")
+  evalGraph.shutDown
+
 }

@@ -14,7 +14,6 @@ export PATH=$working_dir/apache-maven-2.2.1/bin:$PATH
 # build Signal/Collect
 cd core
 export MAVEN_OPTS="-Xms256m -Xmx2048m"
-export JAVA_HOME=/usr/lib/jvm/java-6-sun
 mvn --quiet -Dmaven.test.skip=true clean package
 
 # run benchmark
