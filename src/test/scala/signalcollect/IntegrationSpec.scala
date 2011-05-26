@@ -29,7 +29,6 @@ import signalcollect.interfaces._
 import signalcollect.graphproviders._
 import signalcollect.api.Factory._
 import signalcollect.algorithms._
-import signalcollect.implementations.worker.DirectDeliveryAsynchronousWorker
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -41,9 +40,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
   val synchronousCg = DefaultSynchronousBuilder
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.SynchronousDirectDelivery).build,
     (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Synchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.AsynchronousDirectDelivery).build,
     (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build)
 
   val testWorkerCounts = List(1, 2, 16, 64)

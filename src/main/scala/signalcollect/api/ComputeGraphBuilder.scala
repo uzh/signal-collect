@@ -30,7 +30,7 @@ import signalcollect.interfaces._
 object DefaultBuilder extends ComputeGraphBuilder
 object DefaultSynchronousBuilder extends ComputeGraphBuilder(
   executionMode = SynchronousExecutionMode,
-  workerFactory = Factory.Worker.SynchronousDirectDelivery)
+  workerFactory = Factory.Worker.Synchronous)
 
 sealed trait ExecutionMode
 object SynchronousExecutionMode extends ExecutionMode
