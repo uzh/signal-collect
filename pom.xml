@@ -122,9 +122,6 @@
 						<jvmArg>-Xms64m</jvmArg>
 						<jvmArg>-Xmx1024m</jvmArg>
 					</jvmArgs>
-					<args>
-						<arg>-optimise</arg>
-					</args>
 				</configuration>
 				<executions>
 					<execution>
@@ -215,7 +212,7 @@
 		<project.reporting.outputEncoding>
 			UTF-8
         </project.reporting.outputEncoding>
-		<scala.version>2.9.0</scala.version>
+		<scala.version>2.9.0-1</scala.version>
 	</properties>
 	<name>signalcollect</name>
 </project>
