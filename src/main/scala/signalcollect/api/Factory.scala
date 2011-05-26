@@ -58,12 +58,11 @@ object Factory {
   }
 
   object Worker {
-    lazy val Default: WorkerFactory = Asynchronous
+    lazy val Default: WorkerFactory = AsynchronousDirectDelivery
     lazy val Synchronous: WorkerFactory = new SynchronousWorker(_, Queue.Default, _)
     lazy val SynchronousDirectDelivery: WorkerFactory = new DirectDeliverySynchronousWorker(_, Queue.Default, _)
     lazy val Asynchronous: WorkerFactory = new AsynchronousWorker(_, Queue.Default, _)
     lazy val AsynchronousDirectDelivery: WorkerFactory = new DirectDeliveryAsynchronousWorker(_, Queue.Default, _)
-    lazy val AsynchronousPriority: WorkerFactory = new AsynchronousPriorityWorker(_, Queue.Default, _)
   }
 
   object Queue {
