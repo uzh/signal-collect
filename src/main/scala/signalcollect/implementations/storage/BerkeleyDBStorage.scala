@@ -103,8 +103,8 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "/tmp/") exten
   def put(vertex: Vertex[_, _]): Boolean = {
     if (primaryIndex.get(vertex.id.toString) == null) {
       primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, write(vertex)))
-      storage.toCollect += vertex.id
-      storage.toSignal += vertex.id
+      storage.toCollect.add(vertex.id)
+      storage.toSignal.add(vertex.id)
       count += 1l
 
       true

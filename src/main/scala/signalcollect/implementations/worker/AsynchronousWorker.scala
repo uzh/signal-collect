@@ -59,7 +59,7 @@ class AsynchronousWorker(
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
         vertexStore.toSignal.foreach(vertex => signal(vertex))
-        vertexStore.toCollect.foreachWithSnapshot(vertex => {processInbox; if (collect(vertex)) {vertexStore.toSignal+=vertex.id}}, () => false)
+        vertexStore.toCollect.foreachWithSnapshot(vertex => {processInbox; if (collect(vertex)) {vertexStore.toSignal.add(vertex.id)}}, () => false)
       }
     }
   }

@@ -31,11 +31,11 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   protected var toHandleSnapshot: Set[Any] = vertexSetFactory
   protected def vertexSetFactory = new ConcurrentHashSet[Any](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
 
-  def +=(vertexId: Any): Unit = {
+  def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)
   }
 
-  def -=(vertexId: Any): Unit = {
+  def remove(vertexId: Any): Unit = {
     toHandle.remove(vertexId)
   }
 

@@ -45,8 +45,8 @@ class MongoDBStorage(storage: Storage) extends VertexStore with DefaultSerialize
 	 	  vertex.setMessageBus(messageBus)
 	 	  builder += "obj" -> write(vertex)
 	 	  mongoStore += builder.result
-	 	  storage.toCollect+=vertex.id
-          storage.toSignal+=vertex.id
+	 	  storage.toCollect.add(vertex.id)
+          storage.toSignal.add(vertex.id)
 	 	  true 
 	  }
   }
@@ -60,8 +60,8 @@ class MongoDBStorage(storage: Storage) extends VertexStore with DefaultSerialize
 
   def remove(id: Any) = {
 	  mongoStore.remove(MongoDBObject("id" -> id.toString))
-	  storage.toCollect-=id
-      storage.toSignal-=id
+	  storage.toCollect.remove(id)
+      storage.toSignal.remove(id)
   }
 
   def updateStateOfVertex(vertex: Vertex[_, _]) = {  

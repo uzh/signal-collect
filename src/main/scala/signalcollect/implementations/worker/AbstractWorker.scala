@@ -213,8 +213,8 @@ abstract class AbstractWorker(
       outgoingEdgesAddedCounter += 1
       vertex.addOutgoingEdge(e)
       messageBus.sendToWorkerForIdHash(CommandAddIncomingEdge(e.id), e.targetHashCode)
-      vertexStore.toCollect += vertex.id
-      vertexStore.toSignal += vertex.id
+      vertexStore.toCollect.add(vertex.id)
+      vertexStore.toSignal.add(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
 
     } else {
@@ -246,7 +246,7 @@ abstract class AbstractWorker(
     vertexStore.toCollect.foreach(
       vertex => {
         collect(vertex);
-        vertexStore.toSignal += vertex.id
+        vertexStore.toSignal.add(vertex.id)
       })
     messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
   }
@@ -331,7 +331,7 @@ abstract class AbstractWorker(
 
   protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
     vertex.receive(signal)
-    vertexStore.toCollect += vertex.id
+    vertexStore.toCollect.add(vertex.id)
     vertexStore.vertices.updateStateOfVertex(vertex)
   }
 

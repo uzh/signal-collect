@@ -132,16 +132,16 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
       if (!cachedVertices.containsKey(vertex.id)) {
         vertex.setMessageBus(messageBus)
         cachedVertices.put(vertex.id, vertex)
-        storage.toCollect += vertex.id
-        storage.toSignal += vertex.id
+        storage.toCollect.add(vertex.id)
+        storage.toSignal.add(vertex.id)
         true
       } else
         false
     }
     def remove(id: Any) = {
       cachedVertices.remove(id)
-      storage.toCollect -= id
-      storage.toSignal -= id
+      storage.toCollect.remove(id)
+      storage.toSignal.remove(id)
     }
 
     def updateStateOfVertex(vertex: Vertex[_, _]) = {} // Not needed for in-memory implementation

@@ -26,11 +26,11 @@ class MongoDBVertexIdSet(vertexStore: Storage) extends VertexIdSet with DefaultS
   protected var toHandle = vertexSetFactory
   protected def vertexSetFactory = MongoConnection()("todo")(getRandomString("", 16))
 
-  def +=(vertexId: Any): Unit = {
+  def add(vertexId: Any): Unit = {
     toHandle += MongoDBObject("k" -> write(vertexId))
   }
 
-  def -=(vertexId: Any): Unit = {
+  def remove(vertexId: Any): Unit = {
     toHandle.remove(MongoDBObject("k" -> write(vertexId)))
   }
 

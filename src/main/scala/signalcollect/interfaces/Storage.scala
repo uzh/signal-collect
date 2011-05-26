@@ -41,8 +41,8 @@ trait VertexStore {
  * Allows storing a set of id and iterating through them
  */
 trait VertexIdSet {
-  def +=(vertexId: Any)
-  def -=(vertexId: Any)
+  def add(vertexId: Any)
+  def remove(vertexId: Any)
   def isEmpty: Boolean
   def size: Long
   def foreach[U](f: (Vertex[_, _]) => U)
