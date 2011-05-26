@@ -32,14 +32,20 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
+import java.util.LinkedList
 
-abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFactory = Factory.Queue.Default) extends AbstractMessageRecipient[Any](messageInboxFactory) with Vertex[IdType, StateType] {
+abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_,_,_]] {
 
-  protected var cachingScore= 0.0
-  protected def process(message: Any) = {}
+  protected val messageInbox = new LinkedList[Signal[_,_,_]]
+
+  def receive(message: Signal[_,_,_]) {
+    messageInbox.addLast(message)
+  }
+  
+  protected def process(message: Signal[_,_,_]) = {}
 
   def afterInitialization = {}
-  
+
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
   def setMessageBus(mb: MessageBus[Any, Any]) {
     messageBus = mb
@@ -49,7 +55,8 @@ abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFacto
   protected var lastSignalState: Option[StateType] = None
 
   /** The message bus over which this vertex is communicating with its outgoing edges. */
-  @transient protected var messageBus: MessageBus[Any, Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
+  @transient
+  protected var messageBus: MessageBus[Any, Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false
@@ -132,7 +139,7 @@ abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFacto
     lastSignalState = Some(state)
     doSignal
   }
-  
+
   def doSignal {
     outgoingEdges.values.foreach(_.executeSignalOperation(messageBus))
   }
@@ -144,6 +151,15 @@ abstract class AbstractVertex[IdType, StateType](messageInboxFactory: QueueFacto
   def executeCollectOperation {
     processInbox
     state = collect
+  }
+
+  protected def processInbox = {
+    val it = messageInbox.iterator
+    while (it.hasNext) {
+      val message = it.next
+      process(message)
+    }
+    messageInbox.clear
   }
 
   /**

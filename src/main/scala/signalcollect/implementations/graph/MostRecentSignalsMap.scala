@@ -49,7 +49,7 @@ trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, Sta
    * @param s the signal to add (deliver).
    * @see #collect
    */
-  abstract override protected def process(s: Any) {
+  abstract override protected def process(s: Signal[_, _, _]) {
     super.process(s)
     val castS = s.asInstanceOf[Signal[_, _, UpperSignalTypeBound]]
     mostRecentSignalMap.put(castS.sourceId, castS.signal)

@@ -25,7 +25,7 @@ package signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
- trait Vertex[IdType, StateType] extends MessageRecipient[Any] with Comparable[Vertex[_, _]] {
+ trait Vertex[IdType, StateType] extends MessageRecipient[Signal[_, _, _]] with Comparable[Vertex[_, _]] {
 
   def compareTo(other: Vertex[_, _]): Int = {
 	  scoreCollect.compareTo(other.scoreCollect)

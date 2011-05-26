@@ -42,7 +42,7 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
    * @param s the signal to add (deliver).
    * @see #collect
    */
-  abstract override protected def process(s: Any) {
+  abstract override protected def process(s: Signal[_, _, _]) {
 	super.process(s)
     uncollectedMessages += s.asInstanceOf[Signal[_, _, UpperSignalTypeBound]]
   }
