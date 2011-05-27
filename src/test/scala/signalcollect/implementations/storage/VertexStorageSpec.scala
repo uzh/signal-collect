@@ -118,9 +118,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         val berkeleyStore = new BerkeleyStorage2(defaultMessageBus) // This should create the folder with path directoryPath if not existent.
         directoryPath must beADirectoryPath
       }
-
-      // Has permission
-    } else {
+    } else { //No permission in /temp folder
       "fail gracefully because no write permissions for temp folder exist" in {
         1 === 1
       }
@@ -128,22 +126,38 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "LRU cached Berkeley DB" should {
-    val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-    val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
-    class CachedBerkeley(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with LRUCache
-    val cachedStore = new CachedBerkeley(defaultMessageBus)
-    vertexList.foreach(v => cachedStore.vertices.put(v))
 
-    "hold all vertices inserted" in {
-      cachedStore.vertices.size must_== vertexList.size
+    var canCreateFolder = false
+
+    try {
+      AccessController.checkPermission(new FilePermission("/tmp/*", "read,write"));
+      // Has permission
+    } catch {
+      case e: SecurityException => canCreateFolder = false
     }
+    if (canCreateFolder) {
 
-    "add all added vertices to the toSignal list" in {
-      cachedStore.toSignal.size must_== vertexList.size
-    }
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
+      class CachedBerkeley(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with LRUCache
+      val cachedStore = new CachedBerkeley(defaultMessageBus)
+      vertexList.foreach(v => cachedStore.vertices.put(v))
 
-    "add all added vertices to the toCollect list" in {
-      cachedStore.toCollect.size must_== vertexList.size
+      "hold all vertices inserted" in {
+        cachedStore.vertices.size must_== vertexList.size
+      }
+
+      "add all added vertices to the toSignal list" in {
+        cachedStore.toSignal.size must_== vertexList.size
+      }
+
+      "add all added vertices to the toCollect list" in {
+        cachedStore.toCollect.size must_== vertexList.size
+      }
+    } else { //No permission in /tmp folder
+      "fail gracefully because no write permissions for temp folder exist" in {
+        1 === 1
+      }
     }
   }
 }

@@ -111,7 +111,6 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
   }
 
   def serializeLRU {
-    println("Serialize")
     val vertexToSerialize = this.firstEntry.value
     storage.put(vertexToSerialize.asInstanceOf[Vertex[_, _]]);
     remove(firstEntry.key)

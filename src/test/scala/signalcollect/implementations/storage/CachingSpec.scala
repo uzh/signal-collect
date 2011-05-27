@@ -90,7 +90,6 @@ class CachingSpec extends SpecificationWithJUnit with Mockito {
       lruCache3.put(v1.id, v1)
       lruCache3.put(v2.id, v2)
       lruCache3.put(v3.id, v3)
-      lruCache3.applyFunction(v => println(v))
       lruCache3.get(0).get.asInstanceOf[Vertex[Int, Float]] === v0
       lruCache3.get(1).get.asInstanceOf[Vertex[Int, Float]] === v1
       lruCache3.get(2).get.asInstanceOf[Vertex[Int, Float]] === v2
