@@ -125,6 +125,25 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         1 === 1
       }
     }
+  }
 
+  "LRU cached Berkeley DB" should {
+    val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+    val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
+    class CachedBerkeley(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with LRUCache
+    val cachedStore = new CachedBerkeley(defaultMessageBus)
+    vertexList.foreach(v => cachedStore.vertices.put(v))
+
+    "hold all vertices inserted" in {
+      cachedStore.vertices.size must_== vertexList.size
+    }
+
+    "add all added vertices to the toSignal list" in {
+      cachedStore.toSignal.size must_== vertexList.size
+    }
+
+    "add all added vertices to the toCollect list" in {
+      cachedStore.toCollect.size must_== vertexList.size
+    }
   }
 }
