@@ -94,9 +94,8 @@ package signalcollect.interfaces
   /**
    * Informs this vertex that an incoming edge was removed.
    * @param edgeId the id of the incoming edge that was removed
-   * @return Optionally returns if an edge was removed
    */
-  def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean]
+  def removeIncomingEdge(edgeId: (Any, Any, String))
    
   /**
    * This method tells this {@link FrameworkVertex} to execute the signal operation
