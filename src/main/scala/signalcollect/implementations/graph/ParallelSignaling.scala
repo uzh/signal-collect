@@ -19,15 +19,12 @@
 
 package signalcollect.implementations.graph
 
-import scala.collection.parallel.mutable.ParHashMap
+import scala.collection.parallel.immutable.ParHashMap
 import signalcollect.interfaces.Edge
+import scala.collection.GenMap
 
 trait ParallelSignaling[IdType, StateType] extends AbstractVertex[IdType, StateType] {
-	 
-  override def doSignal {
-    for (edge <- outgoingEdges.par) {
-    	edge._2.executeSignalOperation(messageBus)
-    }
-  }
-  
+
+  outgoingEdges = ParHashMap[(IdType, Any, String), Edge[IdType, _]]()
+
 }

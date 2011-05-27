@@ -30,22 +30,28 @@ import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Map
+import scala.collection.immutable.HashMap
+import scala.collection.immutable.Map
 import java.util.LinkedList
+import scala.collection.GenMap
 
-abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_,_,_]] {
+abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_, _, _]] {
+ 
+  protected val messageInbox = new LinkedList[Signal[_, _, _]]
 
-  protected val messageInbox = new LinkedList[Signal[_,_,_]]
-
-  def receive(message: Signal[_,_,_]) {
+  def receive(message: Signal[_, _, _]) {
     messageInbox.addLast(message)
   }
-  
-  protected def process(message: Signal[_,_,_]) = {}
+
+  protected def process(message: Signal[_, _, _]) = {}
 
   def afterInitialization = {}
 
+  /**
+   * Access to the outgoing edges is required for some calculations and for executing the signal operations
+   */
+  protected var outgoingEdges: GenMap[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
+  
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
   def setMessageBus(mb: MessageBus[Any, Any]) {
     messageBus = mb
@@ -67,7 +73,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    */
   def addOutgoingEdge(e: Edge[_, _]) {
     val newEdge = e.asInstanceOf[Edge[IdType, _]]
-    if (!outgoingEdges.contains(newEdge.id)) {
+    if (!outgoingEdges.get(newEdge.id).isDefined) {
       processNewOutgoingEdge(newEdge)
     }
   }
@@ -75,7 +81,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   protected def processNewOutgoingEdge(e: Edge[IdType, _]) {
     outgoingEdgeAddedSinceSignalOperation = true
     e.setSource(this)
-    outgoingEdges.put(e.id, e)
+    outgoingEdges += ((e.id, e))
   }
 
   /**
@@ -84,8 +90,9 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    */
   def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
     val castEdgeId = edgeId.asInstanceOf[(IdType, Any, String)]
-    if (outgoingEdges.contains(castEdgeId)) {
-      val outgoingEdge = outgoingEdges.get(castEdgeId).get
+    val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
+    if (optionalOutgoinEdge.isDefined) {
+      val outgoingEdge = optionalOutgoinEdge.get
       processRemoveOutgoingEdge(outgoingEdge)
       true
     } else {
@@ -98,12 +105,12 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * @return returns the number of {@link Edge}s that were removed.
    */
   def removeAllOutgoingEdges {
-    outgoingEdges.keys foreach (removeOutgoingEdge(_))
+    outgoingEdges foreach ((tuple: ((IdType, Any, String), Edge[IdType, _])) => removeOutgoingEdge(tuple._1))
   }
 
   protected def processRemoveOutgoingEdge(e: Edge[IdType, _]) {
     messageBus.sendToWorkerForIdHash(CommandRemoveIncomingEdge(e.id), e.targetHashCode)
-    outgoingEdges.remove(e.id)
+    outgoingEdges -= e.id
   }
 
   /**
@@ -116,14 +123,9 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * Informs this vertex that an incoming edge was removed.
    * @param edgeId the id of the incoming edge that was removed
    */
-  def removeIncomingEdge(edgeId: (Any, Any, String)): Option[Boolean] = {
-    None
-  }
+  def removeIncomingEdge(edgeId: (Any, Any, String)) {
 
-  /**
-   * Access to the outgoing edges is required for some calculations and for executing the signal operations
-   */
-  protected val outgoingEdges: Map[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
+  }
 
   /**
    * This method tells this {@link FrameworkVertex} to execute the signal operation
@@ -141,7 +143,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   }
 
   def doSignal {
-    outgoingEdges.values.foreach(_.executeSignalOperation(messageBus))
+    outgoingEdges.foreach(_._2.executeSignalOperation(messageBus))
   }
 
   /**
