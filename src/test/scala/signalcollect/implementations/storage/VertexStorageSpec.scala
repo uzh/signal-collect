@@ -28,9 +28,6 @@ import signalcollect.interfaces._
 import signalcollect.implementations.messaging.DefaultMessageBus
 import signalcollect.algorithms.Page
 import java.io.File
-import java.security.AccessController
-import java.io.FilePermission
-import java.lang.SecurityException
 
 @RunWith(classOf[JUnitRunner])
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
@@ -62,15 +59,10 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "Berkeley DB Vertex Store" should {
-    var canCreateFolder = true
-
-    try {
-      AccessController.checkPermission(new FilePermission("/tmp/*", "read,write"));
-      // Has permission
-    } catch {
-      case e: SecurityException => canCreateFolder = false
-    }
-    if (canCreateFolder) {
+    
+    //Check for read/write permission on temporary folder
+    val tempFolder = new File("/tmp/")
+    if (tempFolder.canWrite && tempFolder.canRead) {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
       class BerkeleyStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
@@ -126,16 +118,10 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "LRU cached Berkeley DB" should {
-
-    var canCreateFolder = false
-
-    try {
-      AccessController.checkPermission(new FilePermission("/tmp/*", "read,write"));
-      // Has permission
-    } catch {
-      case e: SecurityException => canCreateFolder = false
-    }
-    if (canCreateFolder) {
+	  
+    //Check for read/write permission on temporary folder
+    val tempFolder = new File("/tmp/")
+    if (tempFolder.canWrite && tempFolder.canRead) {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
