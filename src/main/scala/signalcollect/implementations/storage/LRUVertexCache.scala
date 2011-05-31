@@ -36,9 +36,9 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
   protected val cache = new LRUMap[Any, Vertex[_, _]](persistentStore, capacity)
 
   def get(id: Any): Vertex[_, _] = {
-    val result = cache.get(id).get
+    val result = cache.get(id)
     if (result != None) {
-      result
+      result.get
     } else {
       persistentStore.get(id)
     }
