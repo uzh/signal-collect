@@ -8,19 +8,14 @@
 	</modules>
 	<repositories>
 		<repository>
-			<id>nativelibs4java</id>
-			<name>nativelibs4java Maven2 Repository</name>
-			<url>http://nativelibs4java.sourceforge.net/maven</url>
-		</repository>
-		<repository>
 			<id>scala-tools.org</id>
 			<name>Scala Tools Maven2 Repository</name>
 			<url>http://scala-tools.org/repo-releases</url>
 		</repository>
 		<repository>
-			<id>scala-tools.org.snapshots</id>
-			<name>Scala Tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-snapshots</url>
+			<id>nativelibs4java</id>
+			<name>nativelibs4java Maven2 Repository</name>
+			<url>http://nativelibs4java.sourceforge.net/maven</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -46,8 +41,8 @@
 		</dependency>
 		<dependency>
 			<groupId>com.mongodb.casbah</groupId>
-			<artifactId>casbah_2.9.0</artifactId>
-			<version>2.2.0-SNAPSHOT</version>
+			<artifactId>casbah_2.9.0-1</artifactId>
+			<version>2.1.5-1</version>
 			<type>pom</type>
 		</dependency>
 		<dependency>
