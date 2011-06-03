@@ -8,6 +8,11 @@
 	</modules>
 	<repositories>
 		<repository>
+			<id>nativelibs4java</id>
+			<name>nativelibs4java Maven2 Repository</name>
+			<url>http://nativelibs4java.sourceforge.net/maven</url>
+		</repository>
+		<repository>
 			<id>scala-tools.org</id>
 			<name>Scala Tools Maven2 Repository</name>
 			<url>http://scala-tools.org/repo-releases</url>
@@ -16,7 +21,6 @@
 			<id>scala-tools.org.snapshots</id>
 			<name>Scala Tools Maven2 Repository</name>
 			<url>http://scala-tools.org/repo-snapshots</url>
-			<snapshots />
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -122,6 +126,14 @@
 						<jvmArg>-Xms64m</jvmArg>
 						<jvmArg>-Xmx1024m</jvmArg>
 					</jvmArgs>
+					<compilerPlugins>
+						<compilerPlugin>
+							<groupId>com.nativelibs4java</groupId>
+							<artifactId>scalacl-compiler-plugin</artifactId>
+							<version>0.2.Beta14</version>
+							<!-- or "-SNAPSHOT" to get a development version -->
+						</compilerPlugin>
+					</compilerPlugins>
 				</configuration>
 				<executions>
 					<execution>
