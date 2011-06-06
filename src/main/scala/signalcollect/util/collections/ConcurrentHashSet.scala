@@ -33,6 +33,8 @@ class ConcurrentHashSet[A](initialCapacity: Int = 16, loadFactor: Float = 0.75f,
   with GenericSetTemplate[A, ConcurrentHashSet]
   with SetLike[A, ConcurrentHashSet[A]]
   with Serializable {
+  
+  override def isEmpty: Boolean = map.isEmpty
 
   private val map = new ConcurrentHashMap[A, Object](initialCapacity, loadFactor, concurrencyLevel)
 
