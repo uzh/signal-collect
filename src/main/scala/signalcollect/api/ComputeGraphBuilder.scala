@@ -43,8 +43,8 @@ class ComputeGraphBuilder(
   messageBusFactory: MessageBusFactory = Factory.MessageBus.Default,
   storageFactory: StorageFactory = Factory.Storage.Default,
   optionalLogger: Option[MessageRecipient[Any]] = None,
-  signalThreshold: Double = 0.01,
-  collectThreshold: Double = 0) {
+  signalThreshold: Double = ComputeGraph.defaultSignalThreshold,
+  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) {
 
   def build: ComputeGraph = new DefaultComputeGraph(
     executionMode,
@@ -72,8 +72,8 @@ class ComputeGraphBuilder(
     newMessageBusFactory: MessageBusFactory = messageBusFactory,
     newStorageFactory: StorageFactory = storageFactory,
     newOptionalLogger: Option[MessageRecipient[Any]] = optionalLogger,
-    newSignalThreshold: Double = 0.01,
-    newCollectThreshold: Double = 0): ComputeGraphBuilder = {
+    newSignalThreshold: Double = signalThreshold,
+    newCollectThreshold: Double = collectThreshold): ComputeGraphBuilder = {
     new ComputeGraphBuilder(
       newExecutionMode,
       newNumberOfWorkers,
