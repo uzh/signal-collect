@@ -40,8 +40,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.specs2</groupId>
-			<artifactId>specs2_2.9.0</artifactId>
-			<version>1.3</version>
+			<artifactId>specs2_2.9.0-1</artifactId>
+			<version>1.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
