@@ -32,7 +32,7 @@ object DefaultSynchronousBuilder extends ComputeGraphBuilder(
   executionMode = SynchronousExecutionMode,
   workerFactory = Factory.Worker.Synchronous)
 
-sealed trait ExecutionMode
+sealed trait ExecutionMode extends Serializable
 object SynchronousExecutionMode extends ExecutionMode
 object AsynchronousExecutionMode extends ExecutionMode
 
@@ -44,7 +44,8 @@ class ComputeGraphBuilder(
   storageFactory: StorageFactory = Factory.Storage.Default,
   optionalLogger: Option[MessageRecipient[Any]] = None,
   signalThreshold: Double = ComputeGraph.defaultSignalThreshold,
-  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) {
+  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) extends Serializable {
+
 
   def build: ComputeGraph = new DefaultComputeGraph(
     executionMode,
