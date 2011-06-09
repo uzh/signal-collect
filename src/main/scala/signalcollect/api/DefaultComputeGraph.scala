@@ -100,7 +100,7 @@ class DefaultComputeGraph(
   
   
   def execute = coordinator.execute
-  def shutDown = coordinator.shutDown
+  def shutdown = coordinator.shutdown
 
   def foreach(f: (Vertex[_, _]) => Unit) = coordinator.foreach(f)
   def foreach(f: PartialFunction[Vertex[_, _], Unit]) = coordinator.foreach(f)

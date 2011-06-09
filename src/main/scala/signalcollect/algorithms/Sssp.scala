@@ -87,5 +87,5 @@ object SSSP extends App {
   val stats = cg.execute
   println(stats)
   cg.foreach(println(_))
-  cg.shutDown
+  cg.shutdown
 }

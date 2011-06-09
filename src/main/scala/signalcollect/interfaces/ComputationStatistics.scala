@@ -25,6 +25,7 @@ trait ComputationStatistics {
   def jvmCpuTimeInMilliseconds: Option[Long]
   def graphLoadingWaitInMilliseconds: Option[Long]
   def computeGraph: Option[String]
+  def storage: Option[String]
   def worker: Option[String]
   def messageBus: Option[String]
   def messageInbox: Option[String]
@@ -37,4 +38,5 @@ trait ComputationStatistics {
   def stepsLimit: Option[Long]
   def signalThreshold: Option[Double]
   def collectThreshold: Option[Double]
+  def stallingDetectionCycles: Option[Long]
 }

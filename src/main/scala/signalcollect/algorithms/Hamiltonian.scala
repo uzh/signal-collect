@@ -49,7 +49,7 @@ object Hamiltonian extends App {
   val stats = cg.execute
   println(stats)
   cg.foreach { x => println(x) }
-  cg.shutDown
+  cg.shutdown
 }
 
 /**

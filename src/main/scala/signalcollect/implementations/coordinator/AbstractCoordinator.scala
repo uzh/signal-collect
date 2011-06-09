@@ -62,6 +62,7 @@ abstract class AbstractCoordinator(
   }
 
   var steps = 0
+  var stallingDetectionCycles = 0
 
   def executeComputationStep {
     steps += 1
@@ -194,7 +195,7 @@ abstract class AbstractCoordinator(
     }
   }
 
-  def shutDown {
+  def shutdown {
     messageBus.sendToWorkers(CommandShutDown)
     if (optionalLogger.isDefined && optionalLogger.get.isInstanceOf[SeparateThreadLogger]) {
       messageBus.sendToLogger(CommandShutDown)
@@ -214,10 +215,10 @@ abstract class AbstractCoordinator(
   var computationStalled: Boolean = false
   var computationInProgress = false
 
-  def setUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit) {
+  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) {
     messageBus.sendToWorkers(CommandSetUndeliverableSignalHandler(h))
   }
-  
+
   def setSignalThreshold(t: Double) {
     signalThreshold = t
     messageBus.sendToWorkers(CommandSetSignalThreshold(t))
@@ -241,7 +242,8 @@ abstract class AbstractCoordinator(
 
   def execute: ComputationStatistics = {
     steps = 0
-
+    stallingDetectionCycles = 0
+    
     log("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = awaitIdle
@@ -265,6 +267,7 @@ abstract class AbstractCoordinator(
     statsMap.put("collectThreshold", collectThreshold)
     statsMap.put("numberOfWorkers", numberOfWorkers)
     statsMap.put("computeGraph", computeGraphName)
+    statsMap.put("storage", storageName)
     statsMap.put("worker", workerName)
     statsMap.put("messageBus", messageBusName)
     statsMap.put("messageInbox", messageInboxName)
@@ -280,6 +283,7 @@ abstract class AbstractCoordinator(
     statsMap.put("graphLoadingWaitInMilliseconds", (graphLoadingWait / 1000000.0).toLong)
     statsMap.put("jvmCpuTimeInMilliseconds", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
+    statsMap.put("stallingDetectionCycles", stallingDetectionCycles.toLong)
     new DefaultComputationStatistics(statsMap)
   }
 
@@ -313,6 +317,7 @@ abstract class AbstractCoordinator(
   }
 
   def awaitStalledComputation {
+    stallingDetectionCycles += 1
     computationStalled = false
     computationProgressStatistics.reset
     computationProgressStatisticsSecondPass.reset
@@ -348,6 +353,7 @@ abstract class AbstractCoordinator(
   def computeGraphName = getClass.getSimpleName
   def workerName = workerFactory(messageBusFactory(), storageFactory).getClass.getSimpleName
   def messageBusName = messageBusFactory().getClass.getSimpleName
+  def storageName = storageFactory(messageBusFactory()).getClass.getSimpleName
   def messageInboxName = messageInboxFactory().getClass.getSimpleName
   def loggerName = optionalLogger.getClass.getSimpleName
 

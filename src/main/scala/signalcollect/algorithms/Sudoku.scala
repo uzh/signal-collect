@@ -140,7 +140,7 @@ object Sudoku extends App {
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
   cg.foreach { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
-  cg.shutDown
+  cg.shutdown
   SudokuHelper.printSudoku(result)
 
   /**
@@ -159,7 +159,7 @@ object Sudoku extends App {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
     cg.foreach(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
-    cg.shutDown
+    cg.shutdown
 
     var solutionFound = false
 

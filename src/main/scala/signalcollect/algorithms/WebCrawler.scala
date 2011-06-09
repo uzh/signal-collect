@@ -40,7 +40,7 @@ object WebCrawler extends App {
   val stats = cg.execute
   cg.foreach(println(_))
   println(stats)
-  cg.shutDown
+  cg.shutdown
 }
 
 /**

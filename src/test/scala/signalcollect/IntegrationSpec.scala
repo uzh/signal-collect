@@ -59,7 +59,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
         if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)
         }
-        cg.shutDown
+        cg.shutdown
       }
     }
     correct

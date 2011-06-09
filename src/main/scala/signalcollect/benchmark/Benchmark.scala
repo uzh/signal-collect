@@ -70,7 +70,7 @@ object Benchmark extends App {
   var asynchronousComputationTime24Workers = stats.computationTimeInMilliseconds
   val asynchronousPerformanceScore = 100.0 * 91424.0 / asynchronousComputationTime24Workers.get
   println("Asynchronous Performance Score:\t" + asynchronousPerformanceScore.toInt + "%")
-  evalGraph.shutDown
+  evalGraph.shutdown
 
   evalGraph = buildPageRankGraph(DefaultBuilder.withNumberOfWorkers(24).build, et)
   System.gc
@@ -80,7 +80,7 @@ object Benchmark extends App {
   val synchronousComputationTime24Workers = stats.computationTimeInMilliseconds
   val synchronousPerformanceScore = 100.0 * 91424.0 / synchronousComputationTime24Workers.get
   println("Synchronous Performance Score:\t" + synchronousPerformanceScore.toInt + "%")
-  evalGraph.shutDown
+  evalGraph.shutdown
   
   evalGraph = buildPageRankGraph(DefaultSynchronousBuilder.withNumberOfWorkers(12).build, et)
   System.gc
@@ -88,10 +88,10 @@ object Benchmark extends App {
   evalGraph.setCollectThreshold(0.0)
   stats = evalGraph.execute
   val asynchronousComputationTime12Workers = stats.computationTimeInMilliseconds
-  evalGraph.shutDown
+  evalGraph.shutdown
   
   val scalabilityScore = ((asynchronousComputationTime12Workers.get.toDouble / asynchronousComputationTime24Workers.get.toDouble) * 100.0) - 100.0
   println("Asynchronous Scalability Score:\t" + scalabilityScore.toInt + "%")
-  evalGraph.shutDown
+  evalGraph.shutdown
 
 }

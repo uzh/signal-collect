@@ -28,6 +28,7 @@ class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.
   def jvmCpuTimeInMilliseconds: Option[Long] = statsMap.get("jvmCpuTimeInMilliseconds") collect { case x:Long => x }
   def graphLoadingWaitInMilliseconds: Option[Long] = statsMap.get("graphLoadingWaitInMilliseconds") collect { case x:Long => x }
   def computeGraph: Option[String] = statsMap.get("computeGraph") collect { case x:String => x }
+  def storage: Option[String] = statsMap.get("storage") collect { case x:String => x }
   def worker: Option[String] = statsMap.get("worker") collect { case x:String => x }
   def messageBus: Option[String] = statsMap.get("messageBus") collect { case x:String => x }
   def messageInbox: Option[String] = statsMap.get("messageInbox") collect { case x:String => x }
@@ -40,6 +41,7 @@ class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.
   def stepsLimit: Option[Long] = statsMap.get("stepsLimit") collect { case x:Long => x }
   def signalThreshold: Option[Double] = statsMap.get("signalThreshold") collect { case x:Double => x }
   def collectThreshold: Option[Double] = statsMap.get("collectThreshold") collect { case x:Double => x }
+  def stallingDetectionCycles: Option[Long] = statsMap.get("stallingDetectionCycles") collect { case x:Long => x }
   
   override def toString = statsMap.foldLeft(""){ (aggr, mapEntry) => aggr + "\n" + mapEntry._1 + ": " + mapEntry._2 }
 }

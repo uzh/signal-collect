@@ -27,7 +27,7 @@ object ComputeGraph {
 
 trait ComputeGraph extends GraphApi {
   def execute: ComputationStatistics
-  def shutDown
+  def shutdown
 
   def foreach(f: (Vertex[_, _]) => Unit)
   def foreach(f: PartialFunction[Vertex[_, _], Unit])
