@@ -353,7 +353,7 @@ abstract class AbstractCoordinator(
   def computeGraphName = getClass.getSimpleName
   def workerName = workerFactory(messageBusFactory(), storageFactory).getClass.getSimpleName
   def messageBusName = messageBusFactory().getClass.getSimpleName
-  def storageName = storageFactory(messageBusFactory()).getClass.getSimpleName
+  def storageName = storageFactory(messageBusFactory()).getClass.toString.split('.').last.split('$').last
   def messageInboxName = messageInboxFactory().getClass.getSimpleName
   def loggerName = optionalLogger.getClass.getSimpleName
 
