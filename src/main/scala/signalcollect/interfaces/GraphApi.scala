@@ -33,30 +33,9 @@ trait GraphApi {
    */
   def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL)
 
-  /**
-   * Adds a vertex with type VertexType.
-   * The constructor is called with the parameter sequence vertexClass, id, otherConstructorParameters.
-   *
-   * If a vertex with the same id already exists, then this operation is ignored.
-   */
-  def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*)
+  def add(vertex: Vertex[_, _])
 
-  /**
-   * Simpler alternative. Might have scalability/performance issues.
-   */
-  def addVertex(vertex: Vertex[_, _])
-
-  /**
-   * Adds an edge with type EdgeType.
-   *
-   * The constructor is called with the parameter sequence edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters.
-   */
-  def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*)
-
-  /**
-   * Simpler alternative. Might have scalability/performance issues.
-   */
-  def addEdge(edge: Edge[_, _])
+  def add(edge: Edge[_, _])
 
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
 

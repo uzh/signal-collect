@@ -20,8 +20,9 @@
 package signalcollect.implementations.graph
 
 import signalcollect.interfaces._
+import signalcollect.implementations.storage.DefaultSerializer
 
-trait DefaultGraphApi extends GraphApi {
+trait DefaultGraphApi extends GraphApi with DefaultSerializer {
   protected def messageBus: MessageBus[Any, Any]
 
   /**
@@ -40,25 +41,13 @@ trait DefaultGraphApi extends GraphApi {
     messageBus.sendToWorkers(Signal(sourceId, ALL, signal))
   }
 
-  def addVertex[VertexIdType](vertexClass: Class[_ <: Vertex[VertexIdType, _]], vertexId: VertexIdType, otherConstructorParameters: Any*) {
-    val parameters: List[AnyRef] = vertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddVertexFromFactory(vertexClass, parameters)
-    messageBus.sendToWorkerForId(operation, vertexId)
-  }
-
-  def addVertex(vertex: Vertex[_, _]) {
-    val operation = CommandAddVertex(vertex)
+  def add(vertex: Vertex[_, _]) {
+    val operation = CommandAddVertex(write(vertex))
     messageBus.sendToWorkerForId(operation, vertex.id)
   }
 
-  def addEdge[SourceIdType, TargetIdType](edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]], sourceVertexId: SourceIdType, targetVertexId: TargetIdType, otherConstructorParameters: Any*) {
-    val parameters: List[AnyRef] = sourceVertexId.asInstanceOf[AnyRef] :: targetVertexId.asInstanceOf[AnyRef] :: otherConstructorParameters.toList.asInstanceOf[List[AnyRef]]
-    val operation = CommandAddEdgeFromFactory(edgeClass, parameters)
-    messageBus.sendToWorkerForId(operation, sourceVertexId)
-  }
-
-  def addEdge(edge: Edge[_, _]) {
-    val operation = CommandAddEdge(edge)
+  def add(edge: Edge[_, _]) {
+    val operation = CommandAddEdge(write(edge))
     messageBus.sendToWorkerForId(operation, edge.sourceId)
   }
 

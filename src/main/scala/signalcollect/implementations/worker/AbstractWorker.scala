@@ -19,7 +19,6 @@
 
 package signalcollect.implementations.worker
 
-import signalcollect.util.constructors.ConstructorFinder
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._
@@ -34,6 +33,7 @@ import java.util.Map
 import java.util.Set
 import signalcollect.interfaces.ALL
 import signalcollect.implementations.graph.DefaultGraphApi
+import signalcollect.implementations.storage.DefaultSerializer
 
 abstract class AbstractWorker(
   protected val messageBus: MessageBus[Any, Any],
@@ -52,10 +52,8 @@ abstract class AbstractWorker(
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
       case CommandForEachVertex(f) => foreach(f)
-      case CommandAddVertex(vertex) => addLocalVertex(vertex)
-      case CommandAddEdge(edge) => addOutgoingEdge(edge)
-      case CommandAddVertexFromFactory(vertexClass, parameters) => addLocalVertex(vertexClass, parameters)
-      case CommandAddEdgeFromFactory(edgeClass, parameters) => addOutgoingEdge(edgeClass, parameters)
+      case CommandAddVertex(serializedVertex) => addLocalVertex(read[Vertex[_, _]](serializedVertex))
+      case CommandAddEdge(serializedEdge) => addOutgoingEdge(read[Edge[_, _]](serializedEdge))
       case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
       case CommandRemoveVertex(vertexId) => removeLocalVertex(vertexId)
       case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
@@ -199,11 +197,6 @@ abstract class AbstractWorker(
     }
   }
 
-  protected def addOutgoingEdge(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
-    val edge = ConstructorFinder.newInstanceFromClass(edgeClass)(parameters)
-    addOutgoingEdge(edge)
-  }
-
   var outgoingEdgesAddedCounter = 0l
 
   protected def addOutgoingEdge(e: Edge[_, _]) = {
@@ -249,11 +242,6 @@ abstract class AbstractWorker(
         vertexStore.toSignal.add(vertex.id)
       })
     messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
-  }
-
-  protected def addLocalVertex(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
-    val vertex = ConstructorFinder.newInstanceFromClass(vertexClass)(parameters)
-    addLocalVertex(vertex)
   }
 
   var verticesAddedCounter = 0l

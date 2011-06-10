@@ -28,19 +28,8 @@ object ALL { override val toString = "ALL" }
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
-case class CommandAddVertexFromFactory(vertexClass: Class[_ <: Vertex[_, _]], parameters: Seq[AnyRef]) {
-  override def toString = {
-    "CommandAddVertexFromFactory(" + vertexClass.getSimpleName + ", " + parameters.toString + ")"
-  }
-}
-case class CommandAddEdgeFromFactory(edgeClass: Class[_ <: Edge[_, _]], parameters: Seq[AnyRef]) {
-  override def toString = {
-    "CommandAddEdgeFromFactory(" + edgeClass.getSimpleName + ", " + parameters.toString + ")"
-  }
-}
-
-case class CommandAddVertex(vertex: Vertex[_, _])
-case class CommandAddEdge(edge: Edge[_, _])
+case class CommandAddVertex(serializedVertex: Array[Byte])
+case class CommandAddEdge(serializedEdge: Array[Byte])
 
 case class CommandAddIncomingEdge(edgeId: (Any, Any, String))
 

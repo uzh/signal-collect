@@ -31,20 +31,20 @@ object Hamiltonian extends App {
    * Still need to test performance on complete and larger graphs
    */
 
-  cg.addVertex(classOf[MyVertex], "a", Map(List("a") -> 0))
-  cg.addVertex(classOf[MyVertex], "b", Map(List("b") -> 0))
-  cg.addVertex(classOf[MyVertex], "c", Map(List("c") -> 0))
-  cg.addVertex(classOf[MyVertex], "d", Map(List("d") -> 0))
-  cg.addVertex(classOf[MyVertex], "e", Map(List("e") -> 0))
+  cg.add(new HamiltonianVertex("a", Map(List("a") -> 0)))
+  cg.add(new HamiltonianVertex("b", Map(List("b") -> 0)))
+  cg.add(new HamiltonianVertex("c", Map(List("c") -> 0)))
+  cg.add(new HamiltonianVertex("d", Map(List("d") -> 0)))
+  cg.add(new HamiltonianVertex("e", Map(List("e") -> 0)))
 
-  cg.addEdge(classOf[MyEdge], "a", "d", 3); cg.addEdge(classOf[MyEdge], "d", "a", 3)
-  cg.addEdge(classOf[MyEdge], "a", "b", 1); cg.addEdge(classOf[MyEdge], "b", "a", 1)
-  cg.addEdge(classOf[MyEdge], "d", "b", 2); cg.addEdge(classOf[MyEdge], "b", "d", 2)
-  cg.addEdge(classOf[MyEdge], "d", "c", 1); cg.addEdge(classOf[MyEdge], "c", "d", 1)
-  cg.addEdge(classOf[MyEdge], "b", "c", 1); cg.addEdge(classOf[MyEdge], "c", "b", 1)
+  cg.add(new HamiltonianEdge("a", "d", 3)); cg.add(new HamiltonianEdge("d", "a", 3))
+  cg.add(new HamiltonianEdge("a", "b", 1)); cg.add(new HamiltonianEdge("b", "a", 1))
+  cg.add(new HamiltonianEdge("d", "b", 2)); cg.add(new HamiltonianEdge("b", "d", 2))
+  cg.add(new HamiltonianEdge("d", "c", 1)); cg.add(new HamiltonianEdge("c", "d", 1))
+  cg.add(new HamiltonianEdge("b", "c", 1)); cg.add(new HamiltonianEdge("c", "b", 1))
 
   // a problem with isolated vertices is that it is not able to find hamiltonian paths depending on the starting vertex
-  cg.addEdge(classOf[MyEdge], "e", "a", 1); cg.addEdge(classOf[MyEdge], "a", "e", 1)
+  cg.add(new HamiltonianEdge("e", "a", 1)); cg.add(new HamiltonianEdge("a", "e", 1))
 
   val stats = cg.execute
   println(stats)
@@ -60,7 +60,7 @@ object Hamiltonian extends App {
  * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
  * 
  */
-class MyVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
+class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
 
   type UpperSignalTypeBound = Map[List[String], Int]
 
@@ -116,11 +116,11 @@ class MyVertex(id: String, initialState: Map[List[String], Int]) extends SignalM
  *
  * @param w the initial weight of the vertex
  */
-class MyEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, t) {
+class HamiltonianEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, t) {
 
   override def weight: Double = w
 
-  type SourceVertexType = MyVertex
+  type SourceVertexType = HamiltonianVertex
 
   def signal: Map[List[String], Int] = {
 

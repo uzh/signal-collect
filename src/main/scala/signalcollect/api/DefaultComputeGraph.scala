@@ -136,40 +136,14 @@ class DefaultComputeGraph(
    */
 
   /**
-   * Adds a vertex with type VertexType.
-   * The constructor is called with the parameter sequence: id, otherConstructorParameters.
-   *
-   * If a vertex with the same id already exists, then this operation is ignored.
-   */
-  def addVertex[VertexIdType](
-    vertexClass: Class[_ <: Vertex[VertexIdType, _]],
-    vertexId: VertexIdType,
-    otherConstructorParameters: Any*) = {
-    coordinator.addVertex[VertexIdType](vertexClass, vertexId, otherConstructorParameters: _*)
-  }
-
-  /**
    * Simpler alternative. Might have scalability/performance issues.
    */
-  def addVertex(vertex: Vertex[_, _]) = coordinator.addVertex(vertex)
+  def add(vertex: Vertex[_, _]) = coordinator.add(vertex)
   
   /**
-   * Adds an edge with type EdgeType.
-   *
-   * The constructor is called with the parameter sequence: sourceVertexId, targetVertexId, otherConstructorParameters.
-   */
-  def addEdge[SourceIdType, TargetIdType](
-    edgeClass: Class[_ <: Edge[SourceIdType, TargetIdType]],
-    sourceVertexId: SourceIdType,
-    targetVertexId: TargetIdType,
-    otherConstructorParameters: Any*) = {
-    coordinator.addEdge(edgeClass, sourceVertexId, targetVertexId, otherConstructorParameters: _*)
-  }
-
-  /**
    * Simpler alternative. Might have scalability/performance issues.
    */
-  def addEdge(edge: Edge[_, _]) = coordinator.addEdge(edge)
+  def add(edge: Edge[_, _]) = coordinator.add(edge)
 
   
   def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](

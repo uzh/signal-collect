@@ -102,13 +102,13 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  */
 object VertexColoring extends App {
   val cg = new DefaultComputeGraph()
-  cg.addVertex(classOf[ColoredVertex], 1, 2, 1, false)
-  cg.addVertex(classOf[ColoredVertex], 2, 2, 1, false)
-  cg.addVertex(classOf[ColoredVertex], 3, 2, 1, false)
-  cg.addEdge(classOf[StateForwarderEdge], 1, 2)
-  cg.addEdge(classOf[StateForwarderEdge], 2, 1)
-  cg.addEdge(classOf[StateForwarderEdge], 2, 3)
-  cg.addEdge(classOf[StateForwarderEdge], 3, 2)
+  cg.add(new ColoredVertex(1, 2, 1, false))
+  cg.add(new ColoredVertex(2, 2, 1, false))
+  cg.add(new ColoredVertex(3, 2, 1, false))
+  cg.add(new StateForwarderEdge(1, 2))
+  cg.add(new StateForwarderEdge(2, 1))
+  cg.add(new StateForwarderEdge(2, 3))
+  cg.add(new StateForwarderEdge(3, 2))
   val stats = cg.execute
   println(stats)
   cg.foreach { x => println(x) }

@@ -203,13 +203,13 @@ object Sudoku extends App {
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {
       val seedValue = seed.get(index)
-      cg.addVertex(classOf[SudokuCell], index, seedValue)
+      cg.add(new SudokuCell(index, seedValue))
     }
 
     //Determine neighboring cells for each cell and draw the edges between them
     for (index <- 0 to 80) {
       SudokuHelper.cellsToConsider(index).foreach({ i =>
-        cg.addEdge(classOf[SudokuAssociation], i, index)
+        cg.add(new SudokuAssociation(i, index))
       })
     }
     cg

@@ -55,9 +55,9 @@ object Benchmark extends App {
   def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
-        cg.addVertex(classOf[Page], sourceId, 0.85)
-        cg.addVertex(classOf[Page], targetId, 0.85)
-        cg.addEdge(classOf[Link], sourceId, targetId)
+        cg.add(new Page(sourceId, 0.85))
+        cg.add(new Page(targetId, 0.85))
+        cg.add(new Link(sourceId, targetId))
     }
     cg
   }

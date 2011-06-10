@@ -36,7 +36,7 @@ object Regex {
  */
 object WebCrawler extends App {
   val cg = new DefaultComputeGraph()
-  cg.addVertex(classOf[Webpage], "http://www.ifi.uzh.ch/ddis/", 2, 0.85)
+  cg.add(new Webpage("http://www.ifi.uzh.ch/ddis/", 2, 0.85))
   val stats = cg.execute
   cg.foreach(println(_))
   println(stats)
@@ -52,8 +52,8 @@ class Webpage(id: String, crawlDepth: Int, dampingFactor: Double) extends Page(i
       try {
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString
         Regex.hyperlink.findAllIn(webpage).matchData map (_.group(1)) foreach { linked =>
-          addVertex(classOf[Webpage], linked, crawlDepth - 1, dampingFactor)
-          addEdge(classOf[Link], id, linked)
+          add(new Webpage(linked, crawlDepth - 1, dampingFactor))
+          add(new Link(id, linked))
         }
       } catch {
         case _ =>
