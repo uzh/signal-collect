@@ -100,10 +100,14 @@ class DefaultComputeGraph(
   
   
   def execute = coordinator.execute
+  def recalculateScores = coordinator.recalculateScores
+  def recalculateScoresForVertexId(vertexId: Any) = coordinator.recalculateScoresForVertexId(vertexId: Any)
   def shutdown = coordinator.shutdown
 
-  def foreach(f: (Vertex[_, _]) => Unit) = coordinator.foreach(f)
-  def foreach(f: PartialFunction[Vertex[_, _], Unit]) = coordinator.foreach(f)
+  
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) = coordinator.forVertexWithId(vertexId, f)
+  
+  def foreachVertex(f: (Vertex[_, _]) => Unit) = coordinator.foreachVertex(f)
 
   def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
     coordinator.countVertices[VertexType]

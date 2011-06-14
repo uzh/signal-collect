@@ -86,6 +86,6 @@ object SSSP extends App {
   cg.add(new Path(5, 6))
   val stats = cg.execute
   println(stats)
-  cg.foreach(println(_))
+  cg.foreachVertex(println(_))
   cg.shutdown
 }

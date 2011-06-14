@@ -46,7 +46,12 @@ case class CommandSetUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => 
 case class CommandSetSignalThreshold(signalThreshold: Double)
 case class CommandSetCollectThreshold(collectThreshold: Double)
 
+object CommandRecalculateScores
+case class CommandRecalculateScoresForVertexId(vertexId: Any)
+
+case class CommandForVertexWithId[U](vertexId: Any, f: (Vertex[_, _]) => U)
 case class CommandForEachVertex[U](f: (Vertex[_, _]) => U)
+
 case class CommandAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType)
 case class StatusAggregatedValue[ValueType](value: ValueType)
 

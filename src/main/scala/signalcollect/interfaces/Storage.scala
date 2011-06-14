@@ -43,6 +43,7 @@ trait VertexStore {
 trait VertexIdSet {
   def add(vertexId: Any)
   def remove(vertexId: Any)
+  def clear
   def isEmpty: Boolean
   def size: Long
   def foreach[U](f: (Vertex[_, _]) => U)

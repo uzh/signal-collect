@@ -34,6 +34,10 @@ class MongoDBVertexIdSet(vertexStore: Storage) extends VertexIdSet with DefaultS
     toHandle.remove(MongoDBObject("k" -> write(vertexId)))
   }
 
+  def clear {
+    toHandle = vertexSetFactory
+  }
+  
   def isEmpty(): Boolean = {
     toHandle.isEmpty
   }

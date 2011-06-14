@@ -27,10 +27,12 @@ object ComputeGraph {
 
 trait ComputeGraph extends GraphApi {
   def execute: ComputationStatistics
+  def recalculateScores
+  def recalculateScoresForVertexId(vertexId: Any)
   def shutdown
 
-  def foreach(f: (Vertex[_, _]) => Unit)
-  def foreach(f: PartialFunction[Vertex[_, _], Unit])
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit)
+  def foreachVertex(f: (Vertex[_, _]) => Unit)
 
   def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long
 

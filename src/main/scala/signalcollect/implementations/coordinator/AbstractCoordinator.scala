@@ -149,22 +149,17 @@ abstract class AbstractCoordinator(
     }
   }
 
-  def foreach(f: (Vertex[_, _]) => Unit) {
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) {
+    messageBus.sendToWorkerForId(CommandForVertexWithId(vertexId, f), vertexId)
+  }
+  
+  def foreachVertex(f: (Vertex[_, _]) => Unit) {
     awaitStalledComputation
     pauseComputation
     messageBus.sendToWorkers(CommandForEachVertex(f))
     awaitStalledComputation
   }
-
-  def foreach(f: PartialFunction[Vertex[_, _], Unit]) {
-    def transformedFunction(v: Vertex[_, _]) {
-      if (f.isDefinedAt(v)) {
-        f(v)
-      }
-    }
-    foreach(transformedFunction _)
-  }
-
+  
   def process(message: Any) {
     message match {
       case StatusWorkerIsIdle => idle.increment
@@ -193,6 +188,14 @@ abstract class AbstractCoordinator(
         def noOperationsPending = firstPass().get.collectOperationsPending == 0 && firstPass().get.signalOperationsPending == 0
         computationStalled = firstPass.isDone && secondPass.isDone && (firstPass().get equals secondPass().get) && (!computationInProgress || noOperationsPending)
     }
+  }
+
+  def recalculateScores {
+    messageBus.sendToWorkers(CommandRecalculateScores)
+  }
+
+  def recalculateScoresForVertexId(vertexId: Any) {
+    messageBus.sendToWorkers(CommandRecalculateScoresForVertexId(vertexId))
   }
 
   def shutdown {
@@ -243,7 +246,7 @@ abstract class AbstractCoordinator(
   def execute: ComputationStatistics = {
     steps = 0
     stallingDetectionCycles = 0
-    
+
     log("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = awaitIdle

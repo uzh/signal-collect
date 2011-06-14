@@ -38,7 +38,7 @@ object WebCrawler extends App {
   val cg = new DefaultComputeGraph()
   cg.add(new Webpage("http://www.ifi.uzh.ch/ddis/", 2, 0.85))
   val stats = cg.execute
-  cg.foreach(println(_))
+  cg.foreachVertex(println(_))
   println(stats)
   cg.shutdown
 }

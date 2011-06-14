@@ -38,7 +38,11 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   def remove(vertexId: Any): Unit = {
     toHandle.remove(vertexId)
   }
-
+  
+  def clear {
+    toHandle = vertexSetFactory
+  }
+  
   def isEmpty: Boolean = {
     toHandle.isEmpty && toHandleSnapshot.isEmpty
   }

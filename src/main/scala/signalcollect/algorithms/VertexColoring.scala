@@ -111,6 +111,6 @@ object VertexColoring extends App {
   cg.add(new StateForwarderEdge(3, 2))
   val stats = cg.execute
   println(stats)
-  cg.foreach { x => println(x) }
+  cg.foreachVertex(println(_))
   cg.shutdown
 }

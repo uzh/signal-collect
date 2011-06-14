@@ -49,8 +49,11 @@ abstract class AbstractWorker(
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case CommandShutDown => shutDown = true
+      case CommandRecalculateScores => recalculateScores
+      case CommandRecalculateScoresForVertexId(vertexId) => recalculateScoresForVertexId(vertexId)
       case CommandStartComputation => startComputation
       case CommandPauseComputation => pauseComputation
+      case CommandForVertexWithId(vertexId, f) => forVertexWithId(vertexId, f)
       case CommandForEachVertex(f) => foreach(f)
       case CommandAddVertex(serializedVertex) => addLocalVertex(read[Vertex[_, _]](serializedVertex))
       case CommandAddEdge(serializedEdge) => addOutgoingEdge(read[Edge[_, _]](serializedEdge))
@@ -70,8 +73,30 @@ abstract class AbstractWorker(
     }
   }
 
-  protected var undeliverableSignalHandler: (Signal[_,_,_], GraphApi) => Unit = (s, g) => {}
-  
+  protected def recalculateScores {
+    vertexStore.toSignal.clear
+    vertexStore.toCollect.clear
+    foreach(recalculateVertexScores(_))
+  }
+
+  protected def recalculateScoresForVertexId(vertexId: Any) {
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      recalculateVertexScores(vertex)
+    }
+  }
+
+  protected def recalculateVertexScores(vertex: Vertex[_, _]) {
+    if (vertex.scoreCollect > collectThreshold) {
+      vertexStore.toCollect.add(vertex)
+    }
+    if (vertex.scoreSignal > signalThreshold) {
+      vertexStore.toSignal.add(vertex)
+    }
+  }
+
+  protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
+
   protected def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType) {
     val aggregatedValue = foldLeft(neutralElement) { (a: ValueType, v: Vertex[_, _]) => aggregator(a, extractor(v)) }
     messageBus.sendToCoordinator(StatusAggregatedValue(aggregatedValue))
@@ -122,6 +147,14 @@ abstract class AbstractWorker(
     } else {
       process(message)
       processInbox
+    }
+  }
+
+  def forVertexWithId[U](vertexId: Any, f: (Vertex[_, _]) => U) {
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      f(vertex)
+      vertexStore.vertices.updateStateOfVertex(vertex)
     }
   }
 

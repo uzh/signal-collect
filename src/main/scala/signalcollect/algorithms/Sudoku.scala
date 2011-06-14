@@ -121,7 +121,7 @@ object Sudoku extends App {
 
   //print initial Sudoku
   var seed = new HashMap[Int, Option[Int]]()
-  cg.foreach { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  cg.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
   val stats = cg.execute
@@ -139,7 +139,7 @@ object Sudoku extends App {
   println()
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-  cg.foreach { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  cg.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   cg.shutdown
   SudokuHelper.printSudoku(result)
 
@@ -148,7 +148,7 @@ object Sudoku extends App {
    */
   def isDone(cg: ComputeGraph): Boolean = {
     var isDone = true
-    cg.foreach(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
+    cg.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
   }
 
@@ -158,7 +158,7 @@ object Sudoku extends App {
   def tryPossibilities(cg: ComputeGraph): ComputeGraph = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
-    cg.foreach(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
+    cg.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
     cg.shutdown
 
     var solutionFound = false
