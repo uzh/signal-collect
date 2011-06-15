@@ -299,7 +299,7 @@ abstract class AbstractCoordinator(
     for (i <- 0 until numberOfWorkers) {
       val worker = workerFactory(messageBus, storageFactory)
       messageBus.registerWorker(i, worker)
-      new Thread(worker, "Worker#" + i).start
+      worker.initialize // for akka to start the actor
       workers(i) = worker
     }
     workers
@@ -354,7 +354,8 @@ abstract class AbstractCoordinator(
   }
 
   def computeGraphName = getClass.getSimpleName
-  def workerName = workerFactory(messageBusFactory(), storageFactory).getClass.getSimpleName
+  def workerName = workerFactory(messageBusFactory(), storageFactory).toString // hack to get akka worker types
+  //def workerName = workerFactory(messageBusFactory(), storageFactory).getClass.getSimpleName
   def messageBusName = messageBusFactory().getClass.getSimpleName
   def storageName = storageFactory(messageBusFactory()).getClass.toString.split('.').last.split('$').last
   def messageInboxName = messageInboxFactory().getClass.getSimpleName

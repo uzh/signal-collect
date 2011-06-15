@@ -43,12 +43,20 @@ abstract class AbstractWorker(
   with Worker
   with Logging
   with DefaultGraphApi
-  with Traversable[Vertex[_, _]] {
+  with Traversable[Vertex[_, _]]
+  with Runnable {
+
+  /**
+   * Generalization of worker initialization
+   */
+  def initialize = {
+    new Thread(this).start
+  }
 
   override protected def process(message: Any) {
     message match {
       case s: Signal[_, _, _] => processSignal(s)
-      case CommandShutDown => shutDown = true
+      case CommandShutDown => processShutDownMessage
       case CommandRecalculateScores => recalculateScores
       case CommandRecalculateScoresForVertexId(vertexId) => recalculateScoresForVertexId(vertexId)
       case CommandStartComputation => startComputation
@@ -73,6 +81,15 @@ abstract class AbstractWorker(
     }
   }
 
+  /**
+   * Generalization for processing of shutdown
+   */
+  def processShutDownMessage = {
+    shutDown = true
+  }
+
+  protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
+
   protected def recalculateScores {
     vertexStore.toSignal.clear
     vertexStore.toCollect.clear
@@ -94,8 +111,6 @@ abstract class AbstractWorker(
       vertexStore.toSignal.add(vertex)
     }
   }
-
-  protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
 
   protected def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType) {
     val aggregatedValue = foldLeft(neutralElement) { (a: ValueType, v: Vertex[_, _]) => aggregator(a, extractor(v)) }

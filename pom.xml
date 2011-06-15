@@ -6,6 +6,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<modules>
 	</modules>
+
+	<!-- Repositories -->
 	<repositories>
 		<repository>
 			<id>scala-tools.org</id>
@@ -17,8 +19,45 @@
 			<name>nativelibs4java Maven2 Repository</name>
 			<url>http://nativelibs4java.sourceforge.net/maven</url>
 		</repository>
+		<repository>
+			<id>project</id>
+			<name>Project Maven Repository</name>
+			<layout>default</layout>
+			<url>file://${basedir}/lib</url>
+		</repository>
 	</repositories>
+	<!-- Repositories -->
+
+	<!-- Plugin Repos -->
+	<pluginRepositories>
+		<pluginRepository>
+			<id>scala-tools.org</id>
+			<name>Scala-Tools Maven2 Snapshots Repository</name>
+			<url>http://scala-tools.org/repo-snapshots</url>
+		</pluginRepository>
+	</pluginRepositories>
+	<!-- Plugin Repos -->
+
+	<!-- Dependencies -->
 	<dependencies>
+	
+		<!-- AKKA -->
+		<dependency>
+			<groupId>se.scalablesolutions.akka</groupId>
+			<artifactId>akka-actor</artifactId>
+			<version>2.0-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.scalablesolutions.akka</groupId>
+			<artifactId>akka-remote</artifactId>
+			<version>2.0-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<!-- AKKA -->
+		
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
@@ -50,6 +89,8 @@
 			<version>3.2.76</version>
 		</dependency>
 	</dependencies>
+	<!-- Dependencies -->
+	
 	<build>
 		<sourceDirectory>src/main/scala</sourceDirectory>
 		<testSourceDirectory>src/test/scala</testSourceDirectory>

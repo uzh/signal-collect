@@ -29,6 +29,7 @@ import signalcollect.interfaces._
 import signalcollect.graphproviders._
 import signalcollect.api.Factory._
 import signalcollect.algorithms._
+import signalcollect.implementations.logging.DefaultLogger
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -41,13 +42,17 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
     (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Synchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build)
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(AsynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaAsynchronous).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(SynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaSynchronous).build
+    )
 
   val testWorkerCounts = List(1, 2, 16, 64)
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ComputationStatistics]]()
+
     for (workers <- numberOfWorkers) {
       for (graphProvider <- graphProviders) {
         val cg = graphProvider.apply(workers)

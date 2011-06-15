@@ -19,4 +19,13 @@
 
 package signalcollect.interfaces
 
-trait Worker extends MessageRecipient[Any] with Runnable
+trait Worker extends MessageRecipient[Any] {
+  
+  override def toString = this.getClass.getSimpleName
+  
+  /**
+   * initialization method for the worker (akka needs for starting the actor)
+   */
+  def initialize
+  
+}
