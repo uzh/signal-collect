@@ -105,10 +105,10 @@ abstract class AbstractWorker(
 
   protected def recalculateVertexScores(vertex: Vertex[_, _]) {
     if (vertex.scoreCollect > collectThreshold) {
-      vertexStore.toCollect.add(vertex)
+      vertexStore.toCollect.add(vertex.id)
     }
     if (vertex.scoreSignal > signalThreshold) {
-      vertexStore.toSignal.add(vertex)
+      vertexStore.toSignal.add(vertex.id)
     }
   }
 
