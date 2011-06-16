@@ -20,16 +20,17 @@ package signalcollect.implementations.storage
 
 import scala.collection.mutable.Set
 import signalcollect.interfaces._
-import signalcollect.util.collections.ConcurrentHashSet
+import java.util.HashSet
 
 /**
  * Stores a set of vertex IDs in main memory.
  */
 class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
-  protected var toHandle: Set[Any] = vertexSetFactory
-  protected var toHandleSnapshot: Set[Any] = vertexSetFactory
-  protected def vertexSetFactory = new ConcurrentHashSet[Any](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
+  protected var toHandle: HashSet[Any] = vertexSetFactory
+  protected var toHandleSnapshot: HashSet[Any] = vertexSetFactory
+  protected var verticesDoneInSnapshot = 0
+  protected def vertexSetFactory = new HashSet[Any]()
 
   def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)
@@ -47,13 +48,13 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
     toHandle.isEmpty && toHandleSnapshot.isEmpty
   }
 
-  def size: Long = { toHandle.size }
+  def size: Long = { toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot }
 
   def foreach[U](f: (Vertex[_, _]) => U) = {
     val i = toHandle.iterator
     while (i.hasNext) {
       val vertex = vertexStore.vertices.get(i.next)
-      f(vertex)        
+      f(vertex)
     }
     toHandle.clear
   }
@@ -67,19 +68,16 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
    * 									@see resumeProcessingSnapshot on how to resume an aborted processing.
    */
   def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
-    var processedAll = false
+    verticesDoneInSnapshot = 0
     toHandleSnapshot = toHandle
     toHandle = vertexSetFactory
     val i = toHandleSnapshot.iterator
     while (i.hasNext && !breakConditionReached()) {
       val currentVertexId = i.next
       f(vertexStore.vertices.get(currentVertexId))
-      toHandleSnapshot.remove(currentVertexId)
+      verticesDoneInSnapshot += 1
     }
-    if (toHandleSnapshot.isEmpty) {
-      processedAll = true
-    }
-    processedAll
+    !i.hasNext
   }
 
   /**
@@ -87,17 +85,12 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
    * Can be interrupted again.
    */
   def resumeProcessingSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
-    var processedAll = false
     val i = toHandleSnapshot.iterator
-
     while (i.hasNext && !breakConditionReached()) {
       val currentVertexId = i.next
       f(vertexStore.vertices.get(currentVertexId))
-      toHandleSnapshot.remove(currentVertexId)
+      verticesDoneInSnapshot += 1
     }
-    if (toHandleSnapshot.isEmpty) {
-      processedAll = true
-    }
-    processedAll
+    !i.hasNext
   }
 }

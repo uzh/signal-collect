@@ -18,14 +18,13 @@
 
 package signalcollect.implementations.storage
 
-import signalcollect.util.collections.ConcurrentHashSet
 import java.util.Set
 import signalcollect.interfaces._
-import java.util.concurrent.ConcurrentHashMap
+import java.util.HashMap
 
 class InMemoryStorage(storage: Storage) extends VertexStore {
   val messageBus =  storage.getMessageBus
-  protected var vertexMap = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
+  protected var vertexMap = new HashMap[Any, Vertex[_, _]]()
 
   def get(id: Any): Vertex[_, _] = {
     vertexMap.get(id)
