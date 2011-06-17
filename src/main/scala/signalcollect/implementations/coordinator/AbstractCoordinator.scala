@@ -186,7 +186,12 @@ abstract class AbstractCoordinator(
         val firstPass = computationProgressStatistics
         val secondPass = computationProgressStatisticsSecondPass
         def noOperationsPending = firstPass().get.collectOperationsPending == 0 && firstPass().get.signalOperationsPending == 0
-        computationStalled = firstPass.isDone && secondPass.isDone && (firstPass().get equals secondPass().get) && (!computationInProgress || noOperationsPending)
+        computationStalled = {
+          firstPass.isDone &&
+          secondPass.isDone &&
+          (firstPass().get equals secondPass().get) &&
+          (computationStopped || noOperationsPending)
+        }
     }
   }
 
@@ -216,7 +221,7 @@ abstract class AbstractCoordinator(
   var computationProgressStatisticsSecondPass = new WorkerAggregator[ComputationProgressStats](numberOfWorkers, ComputationProgressStats(), (_ + _))
 
   var computationStalled: Boolean = false
-  var computationInProgress = false
+  var computationStopped = true
 
   def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) {
     messageBus.sendToWorkers(CommandSetUndeliverableSignalHandler(h))
@@ -242,8 +247,9 @@ abstract class AbstractCoordinator(
     val stopTime = System.nanoTime
     stopTime - startTime
   }
-
+  
   def execute: ComputationStatistics = {
+    pauseComputation
     steps = 0
     stallingDetectionCycles = 0
 
@@ -254,7 +260,7 @@ abstract class AbstractCoordinator(
     log("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
-
+    
     /*******************************/
     val statsMap = performComputation
     /*******************************/
@@ -280,9 +286,19 @@ abstract class AbstractCoordinator(
 
     val progressStats = computationProgressStatistics().get
     statsMap.put("vertexCollectOperations", progressStats.collectOperationsExecuted)
+    statsMap.put("collectOperationsPending", progressStats.collectOperationsPending)
+    
     statsMap.put("vertexSignalOperations", progressStats.signalOperationsExecuted)
-    statsMap.put("numberOfVertices", progressStats.verticesAdded - progressStats.verticesRemoved)
+    statsMap.put("signalOperationsPending", progressStats.signalOperationsPending)
+
+    statsMap.put("numberOfVertices", progressStats.verticesAdded - progressStats.verticesRemoved)  
+    statsMap.put("verticesAdded", progressStats.verticesAdded)
+    statsMap.put("verticesRemoved", progressStats.verticesRemoved)
+    
     statsMap.put("numberOfEdges", progressStats.outgoingEdgesAdded - progressStats.outgoingEdgesRemoved)
+    statsMap.put("edgesAdded", progressStats.outgoingEdgesAdded)
+    statsMap.put("edgesRemoved", progressStats.outgoingEdgesRemoved)
+    
     statsMap.put("graphLoadingWaitInMilliseconds", (graphLoadingWait / 1000000.0).toLong)
     statsMap.put("jvmCpuTimeInMilliseconds", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
@@ -311,12 +327,12 @@ abstract class AbstractCoordinator(
     while (!paused.isDone) {
       handleMessage
     }
-    computationInProgress = false
+    computationStopped = true
   }
 
   def startComputation {
     messageBus.sendToWorkers(CommandStartComputation)
-    computationInProgress = true
+    computationStopped = false
   }
 
   def awaitStalledComputation {
@@ -360,5 +376,4 @@ abstract class AbstractCoordinator(
   def storageName = storageFactory(messageBusFactory()).getClass.toString.split('.').last.split('$').last
   def messageInboxName = messageInboxFactory().getClass.getSimpleName
   def loggerName = optionalLogger.getClass.getSimpleName
-
 }

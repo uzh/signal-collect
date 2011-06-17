@@ -35,9 +35,15 @@ class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.
   def logger: Option[String] = statsMap.get("logger") collect { case x:String => x }
   def signalCollectSteps: Option[Long] = statsMap.get("signalCollectSteps") collect { case x:Long => x }
   def numberOfVertices: Option[Long] = statsMap.get("numberOfVertices") collect { case x:Long => x }
+  def verticesAdded: Option[Long] = statsMap.get("verticesAdded") collect { case x:Long => x }
+  def verticesRemoved: Option[Long] = statsMap.get("verticesRemoved") collect { case x:Long => x }
   def numberOfEdges: Option[Long] = statsMap.get("numberOfEdges") collect { case x:Long => x }
+  def edgesAdded: Option[Long] = statsMap.get("edgesAdded") collect { case x:Long => x }
+  def edgesRemoved: Option[Long] = statsMap.get("edgesRemoved") collect { case x:Long => x }
   def vertexCollectOperations: Option[Long] = statsMap.get("vertexCollectOperations") collect { case x:Long => x }
+  def collectOperationsPending: Option[Long] = statsMap.get("collectOperationsPending") collect { case x:Long => x }
   def vertexSignalOperations: Option[Long] = statsMap.get("vertexSignalOperations") collect { case x:Long => x }
+  def signalOperationsPending: Option[Long] = statsMap.get("signalOperationsPending") collect { case x:Long => x }
   def stepsLimit: Option[Long] = statsMap.get("stepsLimit") collect { case x:Long => x }
   def signalThreshold: Option[Double] = statsMap.get("signalThreshold") collect { case x:Double => x }
   def collectThreshold: Option[Double] = statsMap.get("collectThreshold") collect { case x:Double => x }

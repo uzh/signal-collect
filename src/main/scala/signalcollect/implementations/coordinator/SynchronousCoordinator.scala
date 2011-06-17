@@ -48,17 +48,13 @@ class SynchronousCoordinator(
   var stepsLimit = Int.MaxValue
 
   def performComputation: collection.mutable.Map[String, Any] = {
+    startComputation // TODO: hack until I have time to properly revamp termination detection 
     do {
       executeComputationStep
     } while ((steps < stepsLimit) && collectStep().get > 0l)
     awaitStalledComputation
     log("Steps: " + steps)
     val statsMap = collection.mutable.LinkedHashMap[String, Any]()
-    messageBus.sendToWorkers(CommandSendComputationProgressStats)
-    handleMessage
-    messageBus.sendToWorkers(CommandSendComputationProgressStats)
-    handleMessage
-    computationProgressStatisticsSecondPass = computationProgressStatistics
     statsMap.put("signalCollectSteps", steps)
     statsMap
   }
