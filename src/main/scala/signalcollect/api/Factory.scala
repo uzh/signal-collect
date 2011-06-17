@@ -21,11 +21,9 @@ package signalcollect.api
 
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import akka.util.Duration
-import akka.dispatch.Dispatcher
 import akka.dispatch.Dispatchers
 import akka.dispatch.Dispatchers._
 import akka.dispatch.MessageDispatcher
-import akka.dispatch.PinnedDispatcher
 import akka.dispatch.UnboundedMailbox
 import akka.dispatch.UnboundedMessageQueueSemantics
 import akka.dispatch.ExecutableMailbox
@@ -96,7 +94,7 @@ object Factory {
     def receive(message: Any) = actorRef ! message
 
     def initialize = {
-      actorRef.dispatcher = Dispatchers.newPinnedDispatcher(actorRef)
+      actorRef.dispatcher = Dispatchers.newThreadBasedDispatcher(actorRef)
       actorRef.start()
     }
 
