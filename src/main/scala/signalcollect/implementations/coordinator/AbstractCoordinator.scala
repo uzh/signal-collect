@@ -152,14 +152,14 @@ abstract class AbstractCoordinator(
   def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) {
     messageBus.sendToWorkerForId(CommandForVertexWithId(vertexId, f), vertexId)
   }
-  
+
   def foreachVertex(f: (Vertex[_, _]) => Unit) {
     awaitStalledComputation
     pauseComputation
     messageBus.sendToWorkers(CommandForEachVertex(f))
     awaitStalledComputation
   }
-  
+
   def process(message: Any) {
     message match {
       case StatusWorkerIsIdle => idle.increment
@@ -188,9 +188,9 @@ abstract class AbstractCoordinator(
         def noOperationsPending = firstPass().get.collectOperationsPending == 0 && firstPass().get.signalOperationsPending == 0
         computationStalled = {
           firstPass.isDone &&
-          secondPass.isDone &&
-          (firstPass().get equals secondPass().get) &&
-          (computationStopped || noOperationsPending)
+            secondPass.isDone &&
+            (firstPass().get equals secondPass().get) &&
+            (computationStopped || noOperationsPending)
         }
     }
   }
@@ -247,9 +247,10 @@ abstract class AbstractCoordinator(
     val stopTime = System.nanoTime
     stopTime - startTime
   }
-  
+
   def execute: ComputationStatistics = {
     pauseComputation
+    
     steps = 0
     stallingDetectionCycles = 0
 
@@ -260,7 +261,7 @@ abstract class AbstractCoordinator(
     log("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
-    
+
     /*******************************/
     val statsMap = performComputation
     /*******************************/
@@ -287,22 +288,25 @@ abstract class AbstractCoordinator(
     val progressStats = computationProgressStatistics().get
     statsMap.put("vertexCollectOperations", progressStats.collectOperationsExecuted)
     statsMap.put("collectOperationsPending", progressStats.collectOperationsPending)
-    
+
     statsMap.put("vertexSignalOperations", progressStats.signalOperationsExecuted)
     statsMap.put("signalOperationsPending", progressStats.signalOperationsPending)
 
-    statsMap.put("numberOfVertices", progressStats.verticesAdded - progressStats.verticesRemoved)  
+    statsMap.put("numberOfVertices", progressStats.verticesAdded - progressStats.verticesRemoved)
     statsMap.put("verticesAdded", progressStats.verticesAdded)
     statsMap.put("verticesRemoved", progressStats.verticesRemoved)
-    
+
     statsMap.put("numberOfEdges", progressStats.outgoingEdgesAdded - progressStats.outgoingEdgesRemoved)
     statsMap.put("edgesAdded", progressStats.outgoingEdgesAdded)
     statsMap.put("edgesRemoved", progressStats.outgoingEdgesRemoved)
-    
+
     statsMap.put("graphLoadingWaitInMilliseconds", (graphLoadingWait / 1000000.0).toLong)
     statsMap.put("jvmCpuTimeInMilliseconds", (totalJvmCpuTime / 1000000.0).toLong)
     statsMap.put("computationTimeInMilliseconds", (totalTime / 1000000.0).toLong)
     statsMap.put("stallingDetectionCycles", stallingDetectionCycles.toLong)
+
+    pauseComputation
+
     new DefaultComputationStatistics(statsMap)
   }
 
