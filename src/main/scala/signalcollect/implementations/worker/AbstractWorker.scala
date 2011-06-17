@@ -151,7 +151,7 @@ abstract class AbstractWorker(
     }
   }
 
-  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 100l //100ms // * 50l //1000000 * 50000 // 50 milliseconds
+  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
     var message = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
