@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>se.scalablesolutions.akka</groupId>
+    <artifactId>akka-testkit</artifactId>
+    <packaging>jar</packaging>
+    <version>1.2-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>se.scalablesolutions.akka</groupId>
+            <artifactId>akka-actor</artifactId>
+            <version>1.2-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.9.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>ScalaToolsReleasesRepo</id>
+            <name>Scala Tools Releases Repo</name>
+            <url>http://scala-tools.org/repo-releases/</url>
+        </repository>
+        <repository>
+            <id>javanetRepo</id>
+            <name>java.net Repo</name>
+            <url>http://download.java.net/maven/2/</url>
+        </repository>
+        <repository>
+            <id>JBossRepo</id>
+            <name>JBoss Repo</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>public</id>
+            <name>public</name>
+            <url>http://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>CodehausRepo</id>
+            <name>Codehaus Repo</name>
+            <url>http://repository.codehaus.org/</url>
+        </repository>
+        <repository>
+            <id>GuiceyFruitRepo</id>
+            <name>GuiceyFruit Repo</name>
+            <url>http://guiceyfruit.googlecode.com/svn/repo/releases/</url>
+        </repository>
+        <repository>
+            <id>DatabinderRepo</id>
+            <name>Databinder Repo</name>
+            <url>http://databinder.net/repo/</url>
+        </repository>
+        <repository>
+            <id>AkkaRepository</id>
+            <name>Akka Repository</name>
+            <url>http://akka.io/repository/</url>
+        </repository>
+        <repository>
+            <id>GlassfishRepo</id>
+            <name>Glassfish Repo</name>
+            <url>http://download.java.net/maven/glassfish/</url>
+        </repository>
+    </repositories>
+</project>

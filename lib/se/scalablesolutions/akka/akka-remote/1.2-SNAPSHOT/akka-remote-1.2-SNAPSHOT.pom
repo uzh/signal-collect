@@ -4,20 +4,8 @@
     <groupId>se.scalablesolutions.akka</groupId>
     <artifactId>akka-remote</artifactId>
     <packaging>jar</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <dependencies>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.0.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.8.0</version>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>org.jboss.netty</groupId>
             <artifactId>netty</artifactId>
@@ -25,15 +13,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>voldemort.store.compress</groupId>
-            <artifactId>h2-lzf</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.4</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -49,6 +31,24 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>voldemort.store.compress</groupId>
+            <artifactId>h2-lzf</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.8.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.guiceyfruit</groupId>
             <artifactId>guice-all</artifactId>
             <version>2.0</version>
@@ -57,19 +57,13 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>2.4.1</version>
+            <version>2.3.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.scalablesolutions.akka</groupId>
-            <artifactId>akka-stm</artifactId>
-            <version>2.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>se.scalablesolutions.akka</groupId>
-            <artifactId>akka-actor-tests</artifactId>
-            <version>2.0-SNAPSHOT</version>
+            <artifactId>akka-typed-actor</artifactId>
+            <version>1.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -114,11 +108,6 @@
             <id>DatabinderRepo</id>
             <name>Databinder Repo</name>
             <url>http://databinder.net/repo/</url>
-        </repository>
-        <repository>
-            <id>WP5Repository</id>
-            <name>WP5 Repository</name>
-            <url>http://wp5.e-taxonomy.eu/cdmlib/mavenrepo/</url>
         </repository>
         <repository>
             <id>AkkaRepository</id>
