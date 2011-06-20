@@ -123,7 +123,9 @@ class DefaultComputeGraph(
 
   /** GraphApi */
 
-  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToVertex(signal, sourceId)
+  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
+    workerApi.sendSignalToVertex(signal=signal, targetId=targetId, sourceId=sourceId)
+  }
 
   def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToAllVertices(signal, sourceId)
 
