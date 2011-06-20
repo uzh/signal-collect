@@ -115,7 +115,7 @@ object Sudoku extends App {
     72 -> 6, 80 -> 3)
 
   //select a sudoku puzzle
-  val initialSeed = sudoku2
+  val initialSeed = sudoku1
 
   var cg = computeGraphFactory(initialSeed)
 

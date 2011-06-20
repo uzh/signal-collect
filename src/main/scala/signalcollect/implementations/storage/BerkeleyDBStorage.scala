@@ -114,6 +114,8 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "/tmp/") exten
   }
   
   def remove(id: Any) = {
+    storage.toCollect.remove(id)
+    storage.toSignal.remove(id)
     primaryIndex.delete(id.toString)
     count -= 1
   }

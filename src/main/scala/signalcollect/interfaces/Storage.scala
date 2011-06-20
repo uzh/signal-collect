@@ -18,6 +18,9 @@
 
 package signalcollect.interfaces
 
+/**
+ * High level interface to abstract all vertex storage related implementations 
+ */
 abstract class Storage(messageBus: MessageBus[Any, Any]) {
   def getMessageBus = messageBus
   def vertices: VertexStore
@@ -50,3 +53,12 @@ trait VertexIdSet {
   def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
   def resumeProcessingSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
 }
+
+/**
+ * Defines all functionality needed for serialization/deserialization
+ */
+trait Serializer {
+  def write[A](inputObject: A): Array[Byte]
+  def read[A](buffer: Array[Byte]): A
+}
+

@@ -50,19 +50,31 @@ object Factory {
   object Storage {
     lazy val Default: StorageFactory = InMemory
     lazy val InMemory: StorageFactory = new DefaultStorage(_)
+    
+    //==================================================
     //Highly experimental
     //Use at your own risk!
+    //==================================================
+    
     //Berkeley DB Storage (can be run directly from jar)
     class BerkeleyDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
     lazy val BerkeleyDB: StorageFactory = new BerkeleyDBStorage(_)
+    
     //Berkeley DB Storage with InMemory caching
     class CachedStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with ScoredCache
     lazy val Cached: StorageFactory = new CachedStorage(_)
+    
     //Mongo DB Storage (requires a running mongoDB installation)
     class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
     lazy val MongoDB: StorageFactory = new MongoDBStorage(_)
+    
+    //Mongo DB Storage that also stores all toSignal/toCollect lists on disk
     class AllOnDiskMongoDBStorage(messageBus: MessageBus[Any, Any]) extends MongoDBStorage(messageBus) with MongoDBToDoList
     lazy val AllOnDiskMongoDB: StorageFactory = new AllOnDiskMongoDBStorage(_)
+    
+    //Orient DB Storage (can be run directly from jar, pure java)
+    class OrientDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with Orient
+    lazy val OrientDB: StorageFactory = new OrientDBStorage(_)
   }
 
   object MessageBus {

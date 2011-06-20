@@ -32,6 +32,14 @@ import java.io.File
 @RunWith(classOf[JUnitRunner])
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
+  /**
+   * Check for read/write permission on temporary folder
+   */
+  def hasReadAndWritePermission(path: String): Boolean = {
+    val tempFolder = new File(path)
+    tempFolder.canWrite && tempFolder.canRead
+  }
+
   "InMemory Vertex Store" should {
     val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
     val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
@@ -59,12 +67,9 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "Berkeley DB Vertex Store" should {
-    
-    //Check for read/write permission on temporary folder
-    val tempFolder = new File("/tmp/")
-    if (tempFolder.canWrite && tempFolder.canRead) {
+    if (hasReadAndWritePermission("/tmp/")) {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
+      val vertexList = List(new Page(0, 0.5), new Page(1, 0.5), new Page(2, 0.5))
       class BerkeleyStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
       val berkeleyStore = new BerkeleyStorage(defaultMessageBus)
       vertexList.foreach(v => berkeleyStore.vertices.put(v))
@@ -118,10 +123,8 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "LRU cached Berkeley DB" should {
-	  
-    //Check for read/write permission on temporary folder
-    val tempFolder = new File("/tmp/")
-    if (tempFolder.canWrite && tempFolder.canRead) {
+
+    if (hasReadAndWritePermission("/tmp/")) {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
@@ -139,6 +142,64 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
       "add all added vertices to the toCollect list" in {
         cachedStore.toCollect.size must_== vertexList.size
+      }
+    } else { //No permission in /tmp folder
+      "fail gracefully because no write permissions for temp folder exist" in {
+        1 === 1
+      }
+    }
+  }
+
+  "OrientDB" should {
+    if (hasReadAndWritePermission("/tmp/")) {
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new Page(0, 0.1), new Page(1, 0.1), new Page(2, 0.1))
+      class OrientDB(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with Orient
+      val orientStore = new OrientDB(defaultMessageBus)
+      vertexList.foreach(v => orientStore.vertices.put(v))
+
+      "Hold all inserted Vertices" in {
+        vertexList.size === orientStore.vertices.size
+      }
+
+      "add all added vertices to the toSignal list" in {
+        orientStore.toSignal.size must_== vertexList.size
+      }
+
+      "add all added vertices to the toCollect list" in {
+        orientStore.toCollect.size must_== vertexList.size
+      }
+
+      "retreive an added vertex" in {
+        orientStore.vertices.get(1).hashCode === vertexList(1).hashCode
+      }
+
+      "reflect Changes" in {
+        val v1_old: Vertex[_, _] = orientStore.vertices.get(1)
+        var v1_changed = new Page(1, 0.9)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        v1_changed = new Page(1, 0.8)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        v1_changed = new Page(1, 0.7)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        v1_changed = new Page(1, 0.6)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        v1_changed = new Page(1, 0.5)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        v1_changed = new Page(1, 0.4)
+        orientStore.vertices.updateStateOfVertex(v1_changed)
+        val v1_new = orientStore.vertices.get(1)
+        if (v1_old != v1_changed) {
+          v1_new.state must_!= v1_old.state //Entries returned differ
+        }
+        v1_new.state === v1_changed.state
+        orientStore.vertices.size === 3l //old entry is replaced
+      }
+
+      "delete a vertex" in {
+        orientStore.vertices.remove(1)
+        orientStore.vertices.size === 2l //old entry is replaced
+
       }
     } else { //No permission in /tmp folder
       "fail gracefully because no write permissions for temp folder exist" in {

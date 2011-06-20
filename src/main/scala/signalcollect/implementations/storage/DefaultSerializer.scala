@@ -18,11 +18,12 @@
 
 package signalcollect.implementations.storage
 
-import signalcollect.interfaces.Vertex
+import signalcollect.interfaces.{Vertex, Serializer}
 import signalcollect.api.SignalMapVertex
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 
-trait DefaultSerializer {
+trait DefaultSerializer extends Serializer {
   def getRandomString(prefix: String, length: Int): String = {
 	  val chars = (('a' to 'z') ++ ('A' to 'Z') ++ ('1' to '9')).toList
 	  var res = prefix
@@ -33,15 +34,15 @@ trait DefaultSerializer {
   }
   
   def write[A](inputObject: A): Array[Byte] = {
-    val barr = new java.io.ByteArrayOutputStream(512)
-    val out = new java.io.ObjectOutputStream(barr)
+    val barr = new ByteArrayOutputStream(512)
+    val out = new ObjectOutputStream(barr)
     out.writeObject(inputObject)
     out.close()
     barr.toByteArray()
   }
 
-  def read[A](buffer: Array[Byte]): A= {
-	val input = new java.io.ObjectInputStream(new java.io.ByteArrayInputStream(buffer))
+  def read[A](buffer: Array[Byte]): A = {
+	val input = new ObjectInputStream(new ByteArrayInputStream(buffer))
 	val obj = input.readObject()
 	input.close()
 	obj.asInstanceOf[A]

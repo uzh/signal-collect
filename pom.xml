@@ -20,6 +20,15 @@
 			<url>http://nativelibs4java.sourceforge.net/maven</url>
 		</repository>
 		<repository>
+			<id>orientechnologies-repository</id>
+			<name>Orient Technologies Maven2 Repository</name>
+			<url>http://www.orientechnologies.com/listing/m2</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
 			<id>project</id>
 			<name>Project Maven Repository</name>
 			<layout>default</layout>
@@ -87,6 +96,21 @@
 			<groupId>berkeleydb</groupId>
 			<artifactId>je</artifactId>
 			<version>3.2.76</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.persistence</groupId>
+			<artifactId>persistence-api</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orient-commons</artifactId>
+			<version>1.0rc2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.orientechnologies</groupId>
+			<artifactId>orientdb-core</artifactId>
+			<version>1.0rc2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<!-- Dependencies -->
