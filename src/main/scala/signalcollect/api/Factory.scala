@@ -43,8 +43,8 @@ import java.util.concurrent.BlockingQueue
 
 object Factory {
   type StorageFactory = (MessageBus[Any, Any]) => Storage
-  type MessageBusFactory = () => MessageBus[Any, Any]
-  type WorkerFactory = (MessageBus[Any, Any], StorageFactory) => Worker
+  type MessageBusFactory = (Int, VertexToWorkerMapper) => MessageBus[Any, Any]
+  type WorkerFactory = (Int, MessageBus[Any, Any], StorageFactory) => Worker
   type QueueFactory = () => BlockingQueue[Any]
 
   object Storage {
@@ -79,38 +79,40 @@ object Factory {
 
   object MessageBus {
     lazy val Default: MessageBusFactory = SharedMemory
-    lazy val SharedMemory: MessageBusFactory = () => new DefaultMessageBus[Any, Any]
-    lazy val Verbose: MessageBusFactory = () => new DefaultMessageBus[Any, Any] with Verbosity[Any, Any]
+    lazy val SharedMemory: MessageBusFactory = new DefaultMessageBus[Any, Any](_, _)
+    lazy val Verbose: MessageBusFactory = new DefaultMessageBus[Any, Any](_, _) with Verbosity[Any, Any]
   }
 
   object Worker {
     lazy val Default: WorkerFactory = Asynchronous
-    lazy val Synchronous: WorkerFactory = new SynchronousWorker(_, Queue.Default, _)
-    lazy val Asynchronous: WorkerFactory = new AsynchronousWorker(_, Queue.Default, _)
+    lazy val Synchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _)
+    lazy val Asynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _)
 
-    lazy val AkkaSynchronous: WorkerFactory = { (mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(mb, Queue.Default, sf)) ) }
-    lazy val AkkaAsynchronous: WorkerFactory = { (mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(mb, Queue.Default, sf)) ) }
-
-  }
-
-  /**
-   * Wrapper class for the actor reference to be kept
-   */
-  class ActorRefAdapter(actorType: String, actorRef: ActorRef) extends Worker {
-
-    /**
-     * used for getting the correct type of actor
-     */
-    override def toString = actorType
-
-    def receive(message: Any) = actorRef ! message
-
-    def initialize = {
-      actorRef.dispatcher = Dispatchers.newThreadBasedDispatcher(actorRef)
-      actorRef.start()
-    }
+//    lazy val AkkaSynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
+//    lazy val AkkaAsynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
 
   }
+
+//  /**
+//   * Wrapper class for the actor reference to be kept
+//   */
+//  class ActorRefAdapter(actorType: String, actorRef: ActorRef) extends Worker {
+//
+//    /**
+//     * used for getting the correct type of actor
+//     */
+//    override def toString = actorType
+//
+//    def receive(message: Any) = actorRef ! message
+//
+//    def initialize = {
+//      actorRef.dispatcher = Dispatchers.newThreadBasedDispatcher(actorRef)
+//      actorRef.start()
+//    }
+//
+//  }
+  
+  
   object Queue {
     lazy val Default: QueueFactory = LinkedTransfer
     lazy val LinkedTransfer: QueueFactory = () => new LinkedTransferQueue[Any]

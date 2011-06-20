@@ -19,12 +19,13 @@
 
 package signalcollect.api
 
-import signalcollect.implementations.coordinator.SynchronousCoordinator
-import signalcollect.implementations.coordinator.AsynchronousCoordinator
 import signalcollect.api.Factory._
 import signalcollect.interfaces._
 import signalcollect.interfaces.ComputeGraph._
 import signalcollect.interfaces.MessageRecipient
+import signalcollect.implementations.graph.DefaultGraphApi
+import signalcollect.implementations.coordinator._
+import signalcollect.implementations.messaging.DefaultVertexToWorkerMapper
 
 /**
  * Default [[signalcollect.interfaces.ComputeGraph]] implementation.
@@ -55,111 +56,89 @@ class DefaultComputeGraph(
   storageFactory: StorageFactory = Factory.Storage.Default,
   optionalLogger: Option[MessageRecipient[Any]] = None,
   signalThreshold: Double = ComputeGraph.defaultSignalThreshold,
-  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) extends ComputeGraph {
+  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) extends ComputeGraph with GraphApi {
 
-  val coordinator = {
+  val workerApi = new WorkerApi(
+    numberOfWorkers = numberOfWorkers,
+    messageBusFactory = messageBusFactory,
+    workerFactory = workerFactory,
+    storageFactory = storageFactory)
+
+  protected val coordinator = {
+    var configrationMap = Map[String, Any]()
+    configrationMap += (("signalThreshold", signalThreshold))
+    configrationMap += (("collectThreshold", collectThreshold))
+    configrationMap += (("numberOfWorkers", numberOfWorkers))
+    configrationMap += (("executionMode", executionMode.toString))
+    configrationMap += (("storage", storageName))
+    configrationMap += (("worker", workerName))
+    configrationMap += (("messageBus", messageBusName))
+    configrationMap += (("loggerName", loggerName))
+
+    def workerName = workerFactory(0, messageBusFactory(1, new DefaultVertexToWorkerMapper(1)), storageFactory).toString // hack to get akka worker types
+    def messageBusName = messageBusFactory(1, new DefaultVertexToWorkerMapper(1)).getClass.getSimpleName
+    def storageName = storageFactory(messageBusFactory(1, new DefaultVertexToWorkerMapper(1))).getClass.toString.split('.').last.split('$').last
+    def loggerName = optionalLogger.getClass.getSimpleName
+
+    if (optionalLogger.isDefined) {
+      workerApi.registerLogger(optionalLogger.get)
+    }
+
     executionMode match {
-      case AsynchronousExecutionMode => new AsynchronousCoordinator(
-        numberOfWorkers,
-        workerFactory,
-        messageBusFactory,
-        storageFactory,
-        optionalLogger,
-        signalThreshold,
-        collectThreshold)
-      case SynchronousExecutionMode => new SynchronousCoordinator(
-        numberOfWorkers,
-        workerFactory,
-        messageBusFactory,
-        storageFactory,
-        optionalLogger,
-        signalThreshold,
-        collectThreshold)
+      case AsynchronousExecutionMode => new AsynchronousCoordinator(workerApi, configrationMap)
+      case SynchronousExecutionMode => new SynchronousCoordinator(workerApi, configrationMap)
     }
   }
 
-  /**
-   * Forward ComputeGraph calls to coordinator
-   */
+  /** GraphApi */
 
-  /**
-   * Sends a signal to the vertex with vertex.id=targetId.
-   * The senderId of this signal will be signalcollect.interfaces.External
-   */
-  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    coordinator.sendSignalToVertex(signal, targetId, sourceId)
-  }
+  def execute: ComputationStatistics = coordinator.execute
 
-  /**
-   * Sends a signal to all vertices.
-   * The senderId of this signal will be signalcollect.interfaces.External
-   */
-  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) {
-    coordinator.sendSignalToAllVertices(signal, sourceId)
-  }
-  
-  
-  def execute = coordinator.execute
-  def recalculateScores = coordinator.recalculateScores
-  def recalculateScoresForVertexId(vertexId: Any) = coordinator.recalculateScoresForVertexId(vertexId: Any)
-  def shutdown = coordinator.shutdown
+  def setStepsLimit(l: Int) = coordinator.setStepsLimit(l)
 
-  
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) = coordinator.forVertexWithId(vertexId, f)
-  
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = coordinator.foreachVertex(f)
+  /** WorkerApi */
 
-  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
-    coordinator.countVertices[VertexType]
-  }
+  def recalculateScores = workerApi.recalculateScores
 
-  def sum[N](implicit numeric: Numeric[N]): N = coordinator.sum[N]
-  def product[N](implicit numeric: Numeric[N]): N = coordinator.product[N]
-  def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType] = {
-    coordinator.reduce[ValueType](operation)
-  }
-  def aggregateStates[ValueType](
-    neutralElement: ValueType,
-    operation: (ValueType, ValueType) => ValueType): ValueType = {
-    coordinator.aggregateStates[ValueType](neutralElement, operation)
-  }
+  def recalculateScoresForVertexId(vertexId: Any) = workerApi.recalculateScoresForVertexId(vertexId)
+
+  def shutdown = workerApi.shutdown
+
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) = workerApi.forVertexWithId(vertexId, f)
+
+  def foreachVertex(f: (Vertex[_, _]) => Unit) = workerApi.foreachVertex(f)
+
   def customAggregate[ValueType](
     neutralElement: ValueType,
     operation: (ValueType, ValueType) => ValueType,
     extractor: (Vertex[_, _]) => ValueType): ValueType = {
-    coordinator.customAggregate[ValueType](neutralElement, operation, extractor)
+    workerApi.customAggregate(neutralElement, operation, extractor)
   }
 
-  def setUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit) = coordinator.setUndeliverableSignalHandler(h)
-  def setSignalThreshold(t: Double) = coordinator.setSignalThreshold(t)
-  def setCollectThreshold(t: Double) = coordinator.setCollectThreshold(t)
-  def setStepsLimit(l: Int) = coordinator.setStepsLimit(l)
+  def setSignalThreshold(t: Double) = workerApi.setSignalThreshold(t)
 
-  /**
-   * Forward GraphApi calls to coordinator
-   */
+  def setCollectThreshold(t: Double) = workerApi.setCollectThreshold(t)
 
-  /**
-   * Simpler alternative. Might have scalability/performance issues.
-   */
-  def add(vertex: Vertex[_, _]) = coordinator.add(vertex)
-  
-  /**
-   * Simpler alternative. Might have scalability/performance issues.
-   */
-  def add(edge: Edge[_, _]) = coordinator.add(edge)
+  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
-  
-  def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](
-    sourceVertexPredicate: Vertex[IdType, _] => Boolean,
-    edgeFactory: IdType => Edge[IdType, _]) = {
-    coordinator.addPatternEdge(sourceVertexPredicate, edgeFactory)
+  /** GraphApi */
+
+  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToVertex(signal, sourceId)
+
+  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToAllVertices(signal, sourceId)
+
+  def add(vertex: Vertex[_, _]) = workerApi.add(vertex)
+
+  def add(edge: Edge[_, _]) = workerApi.add(edge)
+
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+    workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
   }
 
-  def removeVertex(vertexId: Any) = coordinator.removeVertex(vertexId)
+  def removeVertex(vertexId: Any) = workerApi.removeVertex(vertexId)
 
-  def removeEdge(edgeId: (Any, Any, String)) = coordinator.removeEdge(edgeId)
+  def removeEdge(edgeId: (Any, Any, String)) = workerApi.removeEdge(edgeId)
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) = coordinator.removeVertices(shouldRemove)
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) = workerApi.removeVertices(shouldRemove)
 
 }

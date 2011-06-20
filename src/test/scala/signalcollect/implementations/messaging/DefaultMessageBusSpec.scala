@@ -37,7 +37,7 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     val mockWorker0 = mock[Worker]
     val mockWorker1 = mock[Worker]
     val mockLogger = mock[MessageRecipient[Any]]
-    val defaultMessageBus = new DefaultMessageBus[Any, Any]
+    val defaultMessageBus = new DefaultMessageBus[Any, Any](2, new DefaultVertexToWorkerMapper(2))
     defaultMessageBus.registerCoordinator(mockCoordinator)
     defaultMessageBus.registerWorker(0, mockWorker0)
     defaultMessageBus.registerWorker(1, mockWorker1)
@@ -45,23 +45,23 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
 
     "deliver message for id to worker0" in {
       // the id string's hash code mod 2 equals 0
-      defaultMessageBus.sendToWorkerForId("someMessage1", "this.hashCode.abs % 2 == 0")
+      defaultMessageBus.sendToWorkerForVertexId("someMessage1", "this.hashCode.abs % 2 == 0")
       there was one(mockWorker0).receive("someMessage1")
     }
 
     "deliver message for id to worker1" in {
       // the id string's hash code mod 2 equals 1
-      defaultMessageBus.sendToWorkerForId("someMessage1", "this.hashCode.abs % 2 == 1")
+      defaultMessageBus.sendToWorkerForVertexId("someMessage1", "this.hashCode.abs % 2 == 1")
       there was one(mockWorker1).receive("someMessage1")
     }
 
     "deliver message for id hash to worker0" in {
-      defaultMessageBus.sendToWorkerForIdHash("someMessage2", 0)
+      defaultMessageBus.sendToWorkerForVertexIdHash("someMessage2", 0)
       there was one(mockWorker0).receive("someMessage2")
     }
 
     "deliver message for id hash to worker1" in {
-      defaultMessageBus.sendToWorkerForIdHash("someMessage2", 1)
+      defaultMessageBus.sendToWorkerForVertexIdHash("someMessage2", 1)
       there was one(mockWorker1).receive("someMessage2")
     }
     

@@ -36,67 +36,124 @@ import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.storage.DefaultSerializer
 
 abstract class AbstractWorker(
-  protected val messageBus: MessageBus[Any, Any],
+  val workerId: Int,
+  val messageBus: MessageBus[Any, Any],
   messageInboxFactory: QueueFactory,
   storageFactory: StorageFactory)
-  extends AbstractMessageRecipient(messageInboxFactory)
+  extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
-  with DefaultGraphApi
-  with Traversable[Vertex[_, _]]
   with Runnable {
 
   /**
    * Generalization of worker initialization
    */
-  def initialize = {
-    new Thread(this).start
+  def initialize {
+    new Thread(this, "Worker" + workerId).start
   }
 
-  override protected def process(message: Any) {
-    message match {
-      case s: Signal[_, _, _] => processSignal(s)
-      case CommandShutDown => processShutDownMessage
-      case CommandRecalculateScores => recalculateScores
-      case CommandRecalculateScoresForVertexId(vertexId) => recalculateScoresForVertexId(vertexId)
-      case CommandStartComputation => startComputation
-      case CommandPauseComputation => pauseComputation
-      case CommandForVertexWithId(vertexId, f) => forVertexWithId(vertexId, f)
-      case CommandForEachVertex(f) => foreach(f)
-      case CommandAddVertex(serializedVertex) => addLocalVertex(read[Vertex[_, _]](serializedVertex))
-      case CommandAddEdge(serializedEdge) => addOutgoingEdge(read[Edge[_, _]](serializedEdge))
-      case CommandAddPatternEdge(sourceVertexPredicate, vertexFactory) => addOutgoingEdges(sourceVertexPredicate, vertexFactory)
-      case CommandRemoveVertex(vertexId) => removeLocalVertex(vertexId)
-      case CommandRemoveOutgoingEdge(edgeId) => removeOutgoingEdge(edgeId)
-      case CommandRemoveVertices(shouldRemove) => removeLocalVertices(shouldRemove)
-      case CommandAddIncomingEdge(edgeId) => addIncomingEdge(edgeId)
-      case CommandSetUndeliverableSignalHandler(h) => undeliverableSignalHandler = h
-      case CommandSetSignalThreshold(sT) => signalThreshold = sT
-      case CommandSetCollectThreshold(cT) => collectThreshold = cT
-      case CommandSignalStep => executeSignalStep
-      case CommandCollectStep => executeCollectStep
-      case CommandSendComputationProgressStats => sendComputationProgressStats
-      case CommandAggregate(neutralElement, aggregator, extractor) => aggregate(neutralElement, aggregator, extractor)
-      case other => log("Could not handle message " + message)
-    }
-  }
-
-  /**
-   * Generalization for processing of shutdown
-   */
-  def processShutDownMessage = {
-    shutDown = true
-  }
+  protected val stats = new WorkerStats()
+  protected val graphApi = DefaultGraphApi.createInstance(messageBus)
 
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
 
-  protected def recalculateScores {
-    vertexStore.toSignal.clear
-    vertexStore.toCollect.clear
-    foreach(recalculateVertexScores(_))
+  def addVertex(serializedVertex: Array[Byte]) {
+    val vertex = DefaultSerializer.read[Vertex[_, _]](serializedVertex)
+    addVertex(vertex)
   }
 
-  protected def recalculateScoresForVertexId(vertexId: Any) {
+  protected def addVertex(vertex: Vertex[_, _]) {
+    if (vertexStore.vertices.put(vertex)) {
+      stats.verticesAdded += 1
+      vertex.afterInitialization
+    }
+  }
+
+  def addEdge(serializedEdge: Array[Byte]) {
+    val edge = DefaultSerializer.read[Edge[_, _]](serializedEdge)
+    addEdge(edge)
+  }
+
+  protected def addEdge(edge: Edge[_, _]) {
+    val key = edge.sourceId
+    val vertex = vertexStore.vertices.get(key)
+    if (vertex != null) {
+      stats.outgoingEdgesAdded += 1
+      vertex.addOutgoingEdge(edge)
+      vertexStore.toCollect.add(vertex.id)
+      vertexStore.toSignal.add(vertex.id)
+      vertexStore.vertices.updateStateOfVertex(vertex)
+    } else {
+      log("Did not find vertex with id " + edge.sourceId + " when adding edge " + edge)
+    }
+  }
+
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+    vertexStore.vertices foreach { vertex =>
+      if (sourceVertexPredicate(vertex)) {
+        addEdge(edgeFactory(vertex))
+      }
+    }
+  }
+
+  def removeVertex(vertexId: Any) {
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      processRemoveVertex(vertex)
+    } else {
+      log("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+    }
+  }
+
+  def removeOutgoingEdge(edgeId: (Any, Any, String)) {
+    val vertex = vertexStore.vertices.get(edgeId._1)
+    if (vertex != null) {
+      if (vertex.removeOutgoingEdge(edgeId)) {
+        stats.outgoingEdgesRemoved += 1
+        vertexStore.vertices.updateStateOfVertex(vertex)
+      } else {
+        log("Outgoing edge not found when trying to remove edge with id " + edgeId)
+      }
+    } else {
+      log("Source vertex not found found when trying to remove edge with id " + edgeId)
+    }
+  }
+
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+    vertexStore.vertices foreach { vertex =>
+      if (shouldRemove(vertex)) {
+        processRemoveVertex(vertex)
+      }
+    }
+  }
+
+  protected def processRemoveVertex(vertex: Vertex[_, _]) {
+    stats.outgoingEdgesRemoved += vertex.outgoingEdgeCount
+    val edgesRemoved = vertex.removeAllOutgoingEdges
+    stats.outgoingEdgesRemoved += edgesRemoved
+    stats.verticesRemoved += 1
+    vertexStore.vertices.remove(vertex.id)
+  }
+
+  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) {
+    undeliverableSignalHandler = h
+  }
+
+  def setSignalThreshold(st: Double) {
+    signalThreshold = st
+  }
+
+  def setCollectThreshold(ct: Double) {
+    collectThreshold = ct
+  }
+
+  def recalculateScores {
+    vertexStore.toSignal.clear
+    vertexStore.toCollect.clear
+    vertexStore.vertices.foreach(recalculateVertexScores(_))
+  }
+
+  def recalculateScoresForVertexId(vertexId: Any) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       recalculateVertexScores(vertex)
@@ -112,21 +169,52 @@ abstract class AbstractWorker(
     }
   }
 
-  protected def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType) {
-    val aggregatedValue = foldLeft(neutralElement) { (a: ValueType, v: Vertex[_, _]) => aggregator(a, extractor(v)) }
-    messageBus.sendToCoordinator(StatusAggregatedValue(aggregatedValue))
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) {
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      f(vertex)
+      vertexStore.vertices.updateStateOfVertex(vertex)
+    }
   }
 
-  protected def startComputation {
+  def foreachVertex(f: (Vertex[_, _]) => Unit) {
+    vertexStore.vertices.foreach(f)
+  }
+
+  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    var acc = neutralElement
+    vertexStore.vertices.foreach { vertex => acc = aggregator(acc, extractor(vertex)) }
+    acc
+  }
+
+  def startComputation {
     shouldStart = true
   }
 
-  protected def pauseComputation {
+  def pauseComputation {
     shouldPause = true
   }
 
+  def signalStep {
+    vertexStore.toSignal foreach (signal(_))
+  }
+
+  def collectStep: Boolean = {
+    vertexStore.toCollect foreach { vertex =>
+      collect(vertex);
+      vertexStore.toSignal.add(vertex.id)
+    }
+    vertexStore.toSignal.isEmpty
+  }
+
+  def getWorkerStats: WorkerStats = {
+    stats.copy()
+  }
+
+  def shutdown = shouldShutdown = true
+
+  protected var shouldShutdown = false
   protected var isIdle = false
-  protected var shutDown = false
   protected var isPaused = true
   protected var shouldPause = false
   protected var shouldStart = false
@@ -134,27 +222,44 @@ abstract class AbstractWorker(
   protected var signalThreshold = 0.001
   protected var collectThreshold = 0.0
 
-  protected var resultProcessingDone = false
+  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
+
+  protected def process(message: Any) {
+    stats.messagesReceived += 1
+    message match {
+      case s: Signal[_, _, _] => processSignal(s)
+      case WorkerRequest(command) => command(this)
+      case other => log("Could not handle message " + message)
+    }
+  }
 
   protected var vertexStore = storageFactory(messageBus)
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
+  protected def getWorkerStatus: WorkerStatus = {
+    WorkerStatus(
+      workerId = workerId,
+      isIdle = isIdle,
+      isPaused = isPaused,
+      messagesSent = messageBus.messagesSent,
+      messagesReceived = stats.messagesReceived)
+  }
+
+  protected def sendStatusToCoordinator {
+    val status = getWorkerStatus
+    messageBus.sendToCoordinator(status)
+  }
+
   protected def setIdle(newIdleState: Boolean) {
     if (isIdle != newIdleState) {
-      if (newIdleState == true) {
-        messageBus.sendToCoordinator(StatusWorkerIsIdle)
-      } else {
-        messageBus.sendToCoordinator(StatusWorkerIsBusy)
-      }
       isIdle = newIdleState
+      sendStatusToCoordinator
     }
   }
 
-  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
-
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
-    var message = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
+    var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
     if (message == null) {
       setIdle(true)
       handleMessage
@@ -165,147 +270,9 @@ abstract class AbstractWorker(
     }
   }
 
-  def forVertexWithId[U](vertexId: Any, f: (Vertex[_, _]) => U) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      f(vertex)
-      vertexStore.vertices.updateStateOfVertex(vertex)
-    }
-  }
-
-  def foreach[U](f: (Vertex[_, _]) => U) {
-    vertexStore.vertices.foreach(f)
-  }
-
-  protected def removeLocalVertices(shouldRemove: Vertex[_, _] => Boolean) {
-    foreach { vertex =>
-      if (shouldRemove(vertex)) {
-        processRemoveVertex(vertex)
-      }
-    }
-  }
-
-  protected var verticesRemovedCounter = 0l
-
-  protected def removeLocalVertex(vertexId: Any) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      processRemoveVertex(vertex)
-    } else {
-      log("Should remove vertex with id " + vertexId + ": could not find this vertex.")
-    }
-  }
-
-  protected def processRemoveVertex(vertex: Vertex[_, _]) {
-    outgoingEdgesRemovedCounter += vertex.outgoingEdgeCount
-    vertex.removeAllOutgoingEdges
-    verticesRemovedCounter += 1
-    vertexStore.vertices.remove(vertex.id)
-  }
-
-  protected var outgoingEdgesRemovedCounter = 0l
-
-  protected def removeOutgoingEdge(edgeId: (Any, Any, String)) {
-    var removed = false
-    val vertex = vertexStore.vertices.get(edgeId._1)
-    if (vertex != null) {
-      if (vertex.removeOutgoingEdge(edgeId)) {
-        outgoingEdgesRemovedCounter += 1
-        vertexStore.vertices.updateStateOfVertex(vertex)
-      } else {
-        log("Outgoing edge not found when trying to remove edge with id " + edgeId)
-      }
-    } else {
-      log("Source vertex not found found when trying to remove edge with id " + edgeId)
-    }
-  }
-
-  protected def removeIncomingEdge(edgeId: (Any, Any, String)) {
-    val targetVertexId = edgeId._2
-    val targetVertex = vertexStore.vertices.get(targetVertexId)
-    if (targetVertex != null) {
-      val removed = targetVertex.removeIncomingEdge(edgeId)
-      vertexStore.vertices.updateStateOfVertex(targetVertex)
-    } else {
-      log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
-    }
-  }
-
-  var incomingEdgesAddedCounter = 0l
-
-  protected def addIncomingEdge(edgeId: (Any, Any, String)) {
-    val targetVertexId = edgeId._2
-    val targetVertex = vertexStore.vertices.get(targetVertexId)
-    if (targetVertex != null) {
-      incomingEdgesAddedCounter += 1
-      targetVertex.addIncomingEdge(edgeId)
-      vertexStore.vertices.updateStateOfVertex(targetVertex)
-    } else {
-      log("Did not find vertex with id " + targetVertexId + " when modifying number of incoming edges")
-    }
-  }
-
-  var outgoingEdgesAddedCounter = 0l
-
-  protected def addOutgoingEdge(e: Edge[_, _]) = {
-    val key = e.sourceId
-    val vertex = vertexStore.vertices.get(key)
-    if (vertex != null) {
-      outgoingEdgesAddedCounter += 1
-      vertex.addOutgoingEdge(e)
-      messageBus.sendToWorkerForIdHash(CommandAddIncomingEdge(e.id), e.targetHashCode)
-      vertexStore.toCollect.add(vertex.id)
-      vertexStore.toSignal.add(vertex.id)
-      vertexStore.vertices.updateStateOfVertex(vertex)
-
-    } else {
-      log("Did not find vertex with id " + e.sourceId + " when adding edge " + e)
-    }
-  }
-
-  def addOutgoingEdges[IdType, VertexType <: Vertex[IdType, _]](sourceVertexPredicate: VertexType => Boolean, edgeFactory: IdType => Edge[_, _]) {
-    foreach(vertex => {
-      try {
-        val castVertex = vertex.asInstanceOf[VertexType]
-        if (sourceVertexPredicate(castVertex)) {
-          addOutgoingEdge(edgeFactory(vertex.id.asInstanceOf[IdType]))
-        }
-      } catch {
-        case badCast =>
-      }
-
-    })
-  }
-
-  protected def executeSignalStep {
-    //var converged = vertexStore.toSignal.isEmpty
-    vertexStore.toSignal.foreach { vertex => signal(vertex) }
-    messageBus.sendToCoordinator(StatusSignalStepDone)
-  }
-
-  protected def executeCollectStep {
-    vertexStore.toCollect.foreach(
-      vertex => {
-        collect(vertex);
-        vertexStore.toSignal.add(vertex.id)
-      })
-    messageBus.sendToCoordinator(StatusCollectStepDone(vertexStore.toSignal.size))
-  }
-
-  var verticesAddedCounter = 0l
-
-  protected def addLocalVertex(vertex: Vertex[_, _]) {
-    if (vertexStore.vertices.put(vertex)) {
-      verticesAddedCounter += 1
-      vertex.afterInitialization
-    }
-  }
-
-  var collectOperationsExecutedCounter = 0l
-
   protected def collect(vertex: Vertex[_, _]): Boolean = {
     if (vertex.scoreCollect > collectThreshold) {
-      collectOperationsExecutedCounter += 1
+      stats.collectOperationsExecuted += 1
       vertex.executeCollectOperation
       vertexStore.vertices.updateStateOfVertex(vertex)
       true
@@ -314,42 +281,15 @@ abstract class AbstractWorker(
     }
   }
 
-  var signalOperationsExecutedCounter = 0l
-
   protected def signal(v: Vertex[_, _]): Boolean = {
     if (v.scoreSignal > signalThreshold) {
-      signalOperationsExecutedCounter += 1
+      stats.signalOperationsExecuted += 1
       v.executeSignalOperation
       vertexStore.vertices.updateStateOfVertex(v)
       true
     } else {
       false
     }
-  }
-
-  protected def sendStatsToCoordinator {
-    messageBus.sendToCoordinator(StatusNumberOfVertices(vertexStore.vertices.size))
-    messageBus.sendToCoordinator(StatusNumberOfEdges(countOutgoingEdges))
-  }
-
-  def sendComputationProgressStats {
-    val stats = ComputationProgressStats(
-      vertexStore.toCollect.size,
-      collectOperationsExecutedCounter,
-      vertexStore.toSignal.size,
-      signalOperationsExecutedCounter,
-      verticesAddedCounter,
-      verticesRemovedCounter,
-      outgoingEdgesAddedCounter,
-      outgoingEdgesRemovedCounter,
-      incomingEdgesAddedCounter)
-    messageBus.sendToCoordinator(stats)
-  }
-
-  protected def countOutgoingEdges = {
-    var numberOfEdges = 0
-    foreach(vertex => numberOfEdges += vertex.outgoingEdgeCount)
-    numberOfEdges
   }
 
   protected def processSignal(signal: Signal[_, _, _]) {
@@ -360,7 +300,7 @@ abstract class AbstractWorker(
       if (vertex != null) {
         deliverSignal(signal, vertex)
       } else {
-        undeliverableSignalHandler(signal, this)
+        undeliverableSignalHandler(signal, graphApi)
       }
     }
   }
@@ -371,4 +311,16 @@ abstract class AbstractWorker(
     vertexStore.vertices.updateStateOfVertex(vertex)
   }
 
+  def registerWorker(workerId: Int, worker: MessageRecipient[Any]) {
+    messageBus.registerWorker(workerId, worker)
+  }
+  
+  def registerCoordinator(coordinator: MessageRecipient[Any]) {
+    
+  }
+  
+  def registerLogger(logger: MessageRecipient[Any]) {
+    
+  }
+  
 }

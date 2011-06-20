@@ -28,19 +28,21 @@ import java.io.InputStreamReader
 import java.util.LinkedHashSet
 
 class AsynchronousWorker(
+  workerId: Int,
   mb: MessageBus[Any, Any],
   messageInboxFactory: QueueFactory,
-  storageFactory: StorageFactory) extends AbstractWorker(mb, messageInboxFactory, storageFactory) {
+  storageFactory: StorageFactory)
+  extends AbstractWorker(workerId, mb, messageInboxFactory, storageFactory) {
 
   def handlePauseAndContinue {
     if (shouldStart) {
       shouldStart = false
       isPaused = false
-    }
-    if (shouldPause) {
+      sendStatusToCoordinator
+    } else if (shouldPause) {
       shouldPause = false
       isPaused = true
-      messageBus.sendToCoordinator(StatusWorkerHasPaused)
+      sendStatusToCoordinator
     }
   }
 
@@ -54,12 +56,12 @@ class AsynchronousWorker(
   }
 
   def run {
-    while (!shutDown) {
+    while (!shouldShutdown) {
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
         vertexStore.toSignal.foreach(vertex => signal(vertex))
-        vertexStore.toCollect.foreachWithSnapshot(vertex => {processInbox; if (collect(vertex)) {signal(vertex)}}, () => false)
+        vertexStore.toCollect.foreachWithSnapshot(vertex => { processInbox; if (collect(vertex)) { signal(vertex) } }, () => false)
       }
     }
   }

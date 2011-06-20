@@ -36,7 +36,7 @@ import java.util.LinkedList
 import scala.collection.GenMap
 
 abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_, _, _]] {
- 
+
   protected val messageInbox = new LinkedList[Signal[_, _, _]]
 
   def receive(message: Signal[_, _, _]) {
@@ -51,7 +51,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
   protected var outgoingEdges: GenMap[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
-  
+
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
   def setMessageBus(mb: MessageBus[Any, Any]) {
     messageBus = mb
@@ -71,17 +71,16 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * Adds a new outgoing {@link Edge} to this {@link FrameworkVertex}.
    * @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge[_, _]) {
+  def addOutgoingEdge(e: Edge[_, _]): Boolean = {
     val newEdge = e.asInstanceOf[Edge[IdType, _]]
     if (!outgoingEdges.get(newEdge.id).isDefined) {
-      processNewOutgoingEdge(newEdge)
+      outgoingEdgeAddedSinceSignalOperation = true
+      e.setSource(this)
+      outgoingEdges += ((newEdge.id, newEdge))
+      true
+    } else {
+      false
     }
-  }
-
-  protected def processNewOutgoingEdge(e: Edge[IdType, _]) {
-    outgoingEdgeAddedSinceSignalOperation = true
-    e.setSource(this)
-    outgoingEdges += ((e.id, e))
   }
 
   /**
@@ -93,7 +92,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
     if (optionalOutgoinEdge.isDefined) {
       val outgoingEdge = optionalOutgoinEdge.get
-      processRemoveOutgoingEdge(outgoingEdge)
+      outgoingEdges -= outgoingEdge.id
       true
     } else {
       false
@@ -104,27 +103,10 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * Removes all outgoing {@link Edge}s from this {@link Vertex}.
    * @return returns the number of {@link Edge}s that were removed.
    */
-  def removeAllOutgoingEdges {
+  def removeAllOutgoingEdges: Int = {
+    val edgesRemoved = outgoingEdges.size
     outgoingEdges foreach ((tuple: ((IdType, Any, String), Edge[IdType, _])) => removeOutgoingEdge(tuple._1))
-  }
-
-  protected def processRemoveOutgoingEdge(e: Edge[IdType, _]) {
-    messageBus.sendToWorkerForIdHash(CommandRemoveIncomingEdge(e.id), e.targetHashCode)
-    outgoingEdges -= e.id
-  }
-
-  /**
-   * Informs this vertex that there is a new incoming edge.
-   * @param edgeId the id of the new incoming edge
-   */
-  def addIncomingEdge(edgeId: (Any, Any, String)) {}
-
-  /**
-   * Informs this vertex that an incoming edge was removed.
-   * @param edgeId the id of the incoming edge that was removed
-   */
-  def removeIncomingEdge(edgeId: (Any, Any, String)) {
-
+    edgesRemoved
   }
 
   /**

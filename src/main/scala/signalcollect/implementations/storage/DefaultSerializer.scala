@@ -22,6 +22,7 @@ import signalcollect.interfaces.{Vertex, Serializer}
 import signalcollect.api.SignalMapVertex
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
+object DefaultSerializer extends DefaultSerializer
 
 trait DefaultSerializer extends Serializer {
   def getRandomString(prefix: String, length: Int): String = {

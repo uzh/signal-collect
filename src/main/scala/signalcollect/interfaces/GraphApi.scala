@@ -37,7 +37,7 @@ trait GraphApi {
 
   def add(edge: Edge[_, _])
 
-  def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _])
 
   def removeVertex(vertexId: Any)
 

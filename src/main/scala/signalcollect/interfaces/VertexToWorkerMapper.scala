@@ -1,5 +1,5 @@
 /*
- *  @author Daniel Strebel
+ *  @author Philip Stutz
  *
  *  Copyright 2011 University of Zurich
  *      
@@ -16,9 +16,9 @@
  *  limitations under the License.
  */
 
-package signalcollect.serialization
+package signalcollect.interfaces
 
-trait Serializer {
-  def write[A](o: A): Array[Byte]
-  def read[A](buffer: Array[Byte]) : A
+trait VertexToWorkerMapper {
+  def getWorkerIdForVertexId(vertexId: Any): Int
+  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int
 }

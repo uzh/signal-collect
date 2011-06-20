@@ -23,35 +23,36 @@ import signalcollect.interfaces._
 import signalcollect._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
+import scala.concurrent.forkjoin.LinkedTransferQueue
 
-abstract class AbstractMessageRecipient[G](messageInboxFactory: () => BlockingQueue[G]) extends interfaces.MessageRecipient[G] {
+abstract class AbstractMessageRecipient[G] extends MessageRecipient[G] {
 
-  val messageInbox: BlockingQueue[G] = messageInboxFactory()
+  val messageInbox: BlockingQueue[G] = new LinkedTransferQueue[G]
 
   override def receive(message: G) = messageInbox.put(message)
 
-  protected def processInbox = {
-	  var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
-	  while (message != null) {
-	 	  process(message)
-	 	  message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
-	  }
+  protected def processInbox {
+    var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
+    while (message != null) {
+      process(message)
+      message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
+    }
   }
 
   protected def handleMessage {
-	val message = messageInbox.take
-	process(message)
+    val message = messageInbox.take
+    process(message)
   }
-  
+
   protected def handleMessageIfAvailable(waitTimeNanoseconds: Long = 0): Boolean = {
-	val message = messageInbox.poll(waitTimeNanoseconds, TimeUnit.NANOSECONDS)
-	if (message != null) {
-		process(message)
-		true
-	}
-	false
-  } 
-  
+    val message = messageInbox.poll(waitTimeNanoseconds, TimeUnit.NANOSECONDS)
+    if (message != null) {
+      process(message)
+      true
+    }
+    false
+  }
+
   protected def process(message: G)
 
 }

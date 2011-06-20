@@ -33,8 +33,12 @@ object DefaultSynchronousBuilder extends ComputeGraphBuilder(
   workerFactory = Factory.Worker.Synchronous)
 
 sealed trait ExecutionMode extends Serializable
-object SynchronousExecutionMode extends ExecutionMode
-object AsynchronousExecutionMode extends ExecutionMode
+object SynchronousExecutionMode extends ExecutionMode {
+  override def toString = "SynchronousExecutionMode"
+}
+object AsynchronousExecutionMode extends ExecutionMode {
+  override def toString = "AsynchronousExecutionMode"
+}
 
 class ComputeGraphBuilder(
   executionMode: ExecutionMode = AsynchronousExecutionMode,

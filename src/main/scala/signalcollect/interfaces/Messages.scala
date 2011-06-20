@@ -19,87 +19,44 @@
 
 package signalcollect.interfaces
 
-// sender id used to indicate that a signal was sent from an external source
-object EXTERNAL { override val toString = "EXTERNAL" }
-
-// target id used to indicate that a signal should be delivered to all vertices
-object ALL { override val toString = "ALL" }
-
 // algorithm-specific message
 case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType)
 
-case class CommandAddVertex(serializedVertex: Array[Byte])
-case class CommandAddEdge(serializedEdge: Array[Byte])
+// signal sender id used to indicate that a signal was sent from an external source
+object EXTERNAL { override val toString = "EXTERNAL" }
 
-case class CommandAddIncomingEdge(edgeId: (Any, Any, String))
+// signal target id used to indicate that a signal should be delivered to all vertices
+object ALL { override val toString = "ALL" }
 
-case class CommandAddPatternEdge[IdType](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _])
+// rpc request
+case class WorkerRequest(command: Worker => Unit)
+// rpc reply
+case class WorkerReply(workerId: Int, result: Any)
 
-case class CommandRemoveVertex(vertexId: Any)
-case class CommandRemoveOutgoingEdge(edgeId: (Any, Any, String))
-case class CommandRemoveIncomingEdge(edgeId: (Any, Any, String))
+// stalling detection
+case class WorkerStatus(
+  workerId: Int,
+  isIdle: Boolean,
+  isPaused: Boolean,
+  messagesSent: Long,
+  messagesReceived: Long)
 
-case class CommandRemoveVertices(shouldRemove: Vertex[_, _] => Boolean)
-
-case class CommandSetUndeliverableSignalHandler(h: (Signal[_,_,_], GraphApi) => Unit)
-
-case class CommandSetSignalThreshold(signalThreshold: Double)
-case class CommandSetCollectThreshold(collectThreshold: Double)
-
-object CommandRecalculateScores
-case class CommandRecalculateScoresForVertexId(vertexId: Any)
-
-case class CommandForVertexWithId[U](vertexId: Any, f: (Vertex[_, _]) => U)
-case class CommandForEachVertex[U](f: (Vertex[_, _]) => U)
-
-case class CommandAggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType)
-case class StatusAggregatedValue[ValueType](value: ValueType)
-
-// vertex/edge counting
-case class StatusNumberOfVertices(v: Long)
-case class StatusNumberOfEdges(e: Long)
-
-// synchronous control messages
-case object CommandSignalStep
-case object CommandCollectStep
-
-// synchronous worker to coordinator messages
-case object StatusSignalStepDone
-case class StatusCollectStepDone(signalOperationsPending: Long)
-
-// asynchronous worker to coordinator messages
-case object StatusWorkerIsIdle
-case object StatusWorkerIsBusy
-case object StatusWorkerHasPaused
-
-case class ComputationProgressStats(
-  collectOperationsPending: Long = 0l,
-  collectOperationsExecuted: Long = 0l,
-  signalOperationsPending: Long = 0l,
-  signalOperationsExecuted: Long = 0l,
-  verticesAdded: Long = 0l,
-  verticesRemoved: Long = 0l,
-  outgoingEdgesAdded: Long = 0l,
-  outgoingEdgesRemoved: Long = 0l,
-  incomingEdgesAdded: Long = 0l) {
-  def +(other: ComputationProgressStats) = {
-    ComputationProgressStats(
-      collectOperationsPending + other.collectOperationsPending,
+case class WorkerStats(
+  var messagesReceived: Long = 0l,
+  var collectOperationsExecuted: Long = 0l,
+  var signalOperationsExecuted: Long = 0l,
+  var verticesAdded: Long = 0l,
+  var verticesRemoved: Long = 0l,
+  var outgoingEdgesAdded: Long = 0l,
+  var outgoingEdgesRemoved: Long = 0l) {
+  def +(other: WorkerStats): WorkerStats = {
+    WorkerStats(
+      messagesReceived + other.messagesReceived,
       collectOperationsExecuted + other.collectOperationsExecuted,
-      signalOperationsPending + other.signalOperationsPending,
       signalOperationsExecuted + other.signalOperationsExecuted,
       verticesAdded + other.verticesAdded,
       verticesRemoved + other.verticesRemoved,
       outgoingEdgesAdded + other.outgoingEdgesAdded,
-      outgoingEdgesRemoved + other.outgoingEdgesRemoved,
-      incomingEdgesAdded + other.incomingEdgesAdded)
+      outgoingEdgesRemoved + other.outgoingEdgesRemoved)
   }
 }
-
-// asynchronous worker to coordinator messages
-case object CommandSendComputationProgressStats
-case object CommandPauseComputation
-case object CommandStartComputation
-
-// coordinator to worker/logger message
-case object CommandShutDown

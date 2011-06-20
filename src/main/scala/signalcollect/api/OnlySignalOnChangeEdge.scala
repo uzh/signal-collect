@@ -47,7 +47,7 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
   override def executeSignalOperation(mb: MessageBus[Any, Any]) {
     val newSignal = signal
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      mb.sendToWorkerForIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
+      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

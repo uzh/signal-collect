@@ -22,6 +22,11 @@ package signalcollect.implementations.graph
 import signalcollect.interfaces._
 import signalcollect.implementations.storage.DefaultSerializer
 
+object DefaultGraphApi {
+  protected class InstantiatableGraphApi(val messageBus: MessageBus[Any, Any]) extends DefaultGraphApi
+  def createInstance(messageBus: MessageBus[Any, Any]): GraphApi = new InstantiatableGraphApi(messageBus)
+}
+
 trait DefaultGraphApi extends GraphApi with DefaultSerializer {
   protected def messageBus: MessageBus[Any, Any]
 
@@ -30,7 +35,7 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
    * The senderId of this signal will be signalcollect.interfaces.External
    */
   def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    messageBus.sendToWorkerForId(Signal(sourceId, targetId, signal), targetId)
+    messageBus.sendToWorkerForVertexId(Signal(sourceId, targetId, signal), targetId)
   }
 
   /**
@@ -42,29 +47,33 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
   }
 
   def add(vertex: Vertex[_, _]) {
-    val operation = CommandAddVertex(write(vertex))
-    messageBus.sendToWorkerForId(operation, vertex.id)
+    val request = WorkerRequest((_.addVertex(write(vertex))))
+    messageBus.sendToWorkerForVertexId(request, vertex.id)
   }
 
   def add(edge: Edge[_, _]) {
-    val operation = CommandAddEdge(write(edge))
-    messageBus.sendToWorkerForId(operation, edge.sourceId)
+    val request = WorkerRequest((_.addEdge(write(edge))))
+    messageBus.sendToWorkerForVertexId(request, edge.sourceId)
   }
 
-  def addPatternEdge[IdType, SourceVertexType <: Vertex[IdType, _]](sourceVertexPredicate: Vertex[IdType, _] => Boolean, edgeFactory: IdType => Edge[IdType, _]) {
-    messageBus.sendToWorkers(CommandAddPatternEdge(sourceVertexPredicate, edgeFactory))
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+    val request = WorkerRequest(_.addPatternEdge(sourceVertexPredicate, edgeFactory))
+    messageBus.sendToWorkers(request)
   }
 
   def removeVertex(vertexId: Any) {
-    messageBus.sendToWorkerForId(CommandRemoveVertex(vertexId), vertexId)
+    val request = WorkerRequest((_.removeVertex(vertexId)))
+    messageBus.sendToWorkerForVertexId(request, vertexId)
   }
 
   def removeEdge(edgeId: (Any, Any, String)) {
-    messageBus.sendToWorkerForId(CommandRemoveOutgoingEdge(edgeId: (Any, Any, String)), edgeId._1)
+    val request = WorkerRequest((_.removeOutgoingEdge(edgeId: (Any, Any, String))))
+    messageBus.sendToWorkerForVertexId(request, edgeId._1)
   }
 
   def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
-    messageBus.sendToWorkers(CommandRemoveVertices(shouldRemove))
+    val request = WorkerRequest(_.removeVertices(shouldRemove))
+    messageBus.sendToWorkers(request)
   }
 
 }

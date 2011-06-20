@@ -23,20 +23,26 @@ import signalcollect.api.Factory._
 import signalcollect.interfaces._
 
 class SynchronousWorker(
+  workerId: Int,
   mb: MessageBus[Any, Any],
   messageInboxFactory: QueueFactory,
-  storageFactory: StorageFactory) extends AbstractWorker(mb, messageInboxFactory, storageFactory) {
+  storageFactory: StorageFactory) extends AbstractWorker(workerId, mb, messageInboxFactory, storageFactory) {
 
   override def run {
     // While the computation isn't finished, process the inbox or wait if it's empty
-    while (!shutDown) {
+    while (!shouldShutdown) {
       processInboxOrIdle(idleTimeoutNanoseconds)
     }
   }
 
   override def pauseComputation {
-    shouldPause = true
-    messageBus.sendToCoordinator(StatusWorkerHasPaused)
+    isPaused = true
+    sendStatusToCoordinator
+  }
+
+  override def startComputation {
+    isPaused = false
+    sendStatusToCoordinator
   }
 
 }

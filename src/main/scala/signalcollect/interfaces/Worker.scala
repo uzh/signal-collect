@@ -19,13 +19,45 @@
 
 package signalcollect.interfaces
 
-trait Worker extends MessageRecipient[Any] {
+trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry[Any] {
+  def workerId: Int
+  def messageBus: MessageBus[Any, Any]
   
   override def toString = this.getClass.getSimpleName
-  
+
   /**
-   * initialization method for the worker (akka needs for starting the actor)
+   * initialization method for the worker (to start thread/actor)
    */
   def initialize
   
+  def addVertex(serializedVertex: Array[Byte])
+  def addEdge(serializedEdge: Array[Byte])
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _])
+  def removeVertex(vertexId: Any)
+  def removeOutgoingEdge(edgeId: (Any, Any, String))
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
+
+  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit)
+
+  def setSignalThreshold(signalThreshold: Double)
+  def setCollectThreshold(collectThreshold: Double)
+
+  def recalculateScores
+  def recalculateScoresForVertexId(vertexId: Any)
+
+  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit)
+  def foreachVertex(f: (Vertex[_, _]) => Unit)
+
+  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
+
+  def pauseComputation
+  def startComputation
+
+  def signalStep
+  def collectStep: Boolean
+
+  def getWorkerStats: WorkerStats
+
+  def shutdown
+
 }

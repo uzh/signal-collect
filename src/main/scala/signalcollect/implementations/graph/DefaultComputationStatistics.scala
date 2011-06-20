@@ -22,16 +22,15 @@ package signalcollect.implementations.graph
 import signalcollect.interfaces.ComputationStatistics
 import scala.collection.mutable
 
-class DefaultComputationStatistics(statsMap: mutable.Map[String, Any] = mutable.LinkedHashMap[String, Any]()) extends ComputationStatistics {
+class DefaultComputationStatistics(statsMap: Map[String, Any]) extends ComputationStatistics {
   def numberOfWorkers: Option[Int] = statsMap.get("numberOfWorkers") collect { case x:Int => x }
   def computationTimeInMilliseconds: Option[Long] = statsMap.get("computationTimeInMilliseconds") collect { case x:Long => x }
   def jvmCpuTimeInMilliseconds: Option[Long] = statsMap.get("jvmCpuTimeInMilliseconds") collect { case x:Long => x }
   def graphLoadingWaitInMilliseconds: Option[Long] = statsMap.get("graphLoadingWaitInMilliseconds") collect { case x:Long => x }
-  def computeGraph: Option[String] = statsMap.get("computeGraph") collect { case x:String => x }
+  def executionMode: Option[String] = statsMap.get("executionMode") collect { case x:String => x }
   def storage: Option[String] = statsMap.get("storage") collect { case x:String => x }
   def worker: Option[String] = statsMap.get("worker") collect { case x:String => x }
   def messageBus: Option[String] = statsMap.get("messageBus") collect { case x:String => x }
-  def messageInbox: Option[String] = statsMap.get("messageInbox") collect { case x:String => x }
   def logger: Option[String] = statsMap.get("logger") collect { case x:String => x }
   def signalCollectSteps: Option[Long] = statsMap.get("signalCollectSteps") collect { case x:Long => x }
   def numberOfVertices: Option[Long] = statsMap.get("numberOfVertices") collect { case x:Long => x }

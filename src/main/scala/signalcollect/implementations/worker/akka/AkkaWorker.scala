@@ -41,29 +41,30 @@ import signalcollect.interfaces.ALL
 import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.storage.DefaultSerializer
 
-abstract class AkkaWorker(
-  mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory,
-  storageFactory: StorageFactory)
-  extends AbstractWorker(mb, messageInboxFactory, storageFactory)
-  with Actor {
-
-  /**
-   * Terminate the actor
-   */
-  override def processShutDownMessage = { 
-    self.stop()
-  }
-  
-  /**
-   * Checks if the Actor mailbox is empty 
-   */
-  def mailboxIsEmpty: Boolean = if (self == null) true else self.dispatcher.mailboxIsEmpty(self)
-    
-  def run = sys.error("Run should not be called from Akka Workers")
-  
-  override def initialize = sys.error("Initialize should not be called from Akka Worker but from the wrapper")
-  
-  override def receive(message: Any) = sys.error("Receive should not be called from Akka Workers. This receive is not the same one from Akka.")
-  
-}
+//abstract class AkkaWorker(
+//  workerId: Int,
+//  mb: MessageBus[Any, Any],
+//  messageInboxFactory: QueueFactory,
+//  storageFactory: StorageFactory)
+//  extends AbstractWorker(workerId, mb, messageInboxFactory, storageFactory)
+//  with Actor {
+//
+//  /**
+//   * Terminate the actor
+//   */
+//  override def processShutDownMessage = { 
+//    self.stop()
+//  }
+//  
+//  /**
+//   * Checks if the Actor mailbox is empty 
+//   */
+//  def mailboxIsEmpty: Boolean = if (self == null) true else self.dispatcher.mailboxIsEmpty(self)
+//    
+//  def run = sys.error("Run should not be called from Akka Workers")
+//  
+//  override def initialize = sys.error("Initialize should not be called from Akka Worker but from the wrapper")
+//  
+//  override def receive(message: Any) = sys.error("Receive should not be called from Akka Workers. This receive is not the same one from Akka.")
+//  
+//}

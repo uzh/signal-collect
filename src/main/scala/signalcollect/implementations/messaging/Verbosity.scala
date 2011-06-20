@@ -24,26 +24,31 @@ import signalcollect.interfaces._
 
 trait Verbosity[MessageType, IdType] extends MessageBus[MessageType, IdType] with Logging {
   protected def messageBus = this
-  
+
   abstract override def sendToCoordinator(m: MessageType) {
-	  sendToLogger(Thread.currentThread.getName + "=>Coordinator:\t" + m)
-	  super.sendToCoordinator(m)
-  }
-  
-  abstract override def sendToWorkerForIdHash(m: MessageType, recipientIdHash: Int) = {
-	  val workerNumber = (recipientIdHash % numberOfWorkers).abs
-	  sendToLogger(Thread.currentThread.getName + "=>Worker#" + workerNumber + ":\t" + m)
-	  super.sendToWorkerForIdHash(m, recipientIdHash)
+    sendToLogger(Thread.currentThread.getName + "=>Coordinator:\t" + m)
+    super.sendToCoordinator(m)
   }
 
-  abstract override def sendToWorkerForId(m: MessageType, recipientId: IdType) {
-	  val workerNumber = (recipientId.hashCode % numberOfWorkers).abs
-	  sendToLogger(Thread.currentThread.getName + "=>Worker#" + workerNumber + ":\t" + m)
-	  super.sendToWorkerForId(m, recipientId)
+  override abstract def sendToWorkerForVertexIdHash(m: MessageType, recipientIdHash: Int) {
+    val workerId = (recipientIdHash % numberOfWorkers).abs
+    sendToLogger(Thread.currentThread.getName + "=>Worker" + workerId + ":\t" + m)
+    super.sendToWorkerForVertexIdHash(m, recipientIdHash)
+  }
+
+  override abstract def sendToWorkerForVertexId(m: MessageType, recipientId: IdType) {
+    val workerId = (recipientId.hashCode % numberOfWorkers).abs
+    sendToLogger(Thread.currentThread.getName + "=>Worker" + workerId + ":\t" + m)
+    super.sendToWorkerForVertexId(m, recipientId)
+  }
+
+  abstract override def sendToWorker(workerId: Int, m: MessageType) {
+    sendToLogger(Thread.currentThread.getName + "=>Worker" + workerId + ":\t" + m)
+    super.sendToWorker(workerId, m)
   }
 
   abstract override def sendToWorkers(m: MessageType) {
-	  sendToLogger(Thread.currentThread.getName + "=>Workers:\t" + m)
-	  super.sendToWorkers(m)
+    sendToLogger(Thread.currentThread.getName + "=>AllWorkers:\t" + m)
+    super.sendToWorkers(m)
   }
 }

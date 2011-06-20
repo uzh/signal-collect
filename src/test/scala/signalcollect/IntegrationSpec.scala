@@ -42,12 +42,12 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
     (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Synchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(AsynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaAsynchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(SynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaSynchronous).build
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build
+//    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(AsynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaAsynchronous).build,
+//    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(SynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaSynchronous).build
     )
 
-  val testWorkerCounts = List(1, 2, 4, 8, 16, 32, 64, 128)
+  val testWorkerCounts = List(1, 2, 4, 8, 16, 32, 64, 128, 128, 128, 128)
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true

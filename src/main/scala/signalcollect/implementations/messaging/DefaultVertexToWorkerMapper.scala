@@ -17,19 +17,11 @@
  *  
  */
 
-package signalcollect.implementations.logging
+package signalcollect.implementations.messaging
 
-import signalcollect.interfaces._
+import signalcollect.interfaces.VertexToWorkerMapper
 
-class DefaultLogger extends MessageRecipient[Any] {
-  def receive(loggingMessage: Any) {
-    synchronized {
-      logMessage(loggingMessage)
-    }
-  }
-
-  def logMessage(message: Any) {
-    println(message)
-  }
-
+class DefaultVertexToWorkerMapper(numberOfWorkers: Int) extends VertexToWorkerMapper {
+  def getWorkerIdForVertexId(vertexId: Any): Int = getWorkerIdForVertexIdHash(vertexId.hashCode)
+  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = (vertexIdHash % numberOfWorkers).abs
 }

@@ -50,7 +50,7 @@ abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
   override def executeSignalOperation(mb: MessageBus[Any, Any]) {
     val optionalSignal = signal
     if (optionalSignal.isDefined) {
-      mb.sendToWorkerForIdHash(Signal(sourceId, targetId, optionalSignal.get), targetHashCode)
+      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, optionalSignal.get), targetHashCode)
     }
   }
 }

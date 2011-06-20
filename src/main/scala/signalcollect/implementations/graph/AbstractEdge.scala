@@ -78,7 +78,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * @param mb the message bus to use for sending the signal
    */
   def executeSignalOperation(mb: MessageBus[Any, Any]) {
-      mb.sendToWorkerForIdHash(Signal(sourceId, targetId, signal), targetHashCode)
+      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, signal), targetHashCode)
   }
 
 }

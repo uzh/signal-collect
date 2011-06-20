@@ -80,12 +80,85 @@ trait ComputeGraph extends GraphApi {
    */
   def foreachVertex(f: (Vertex[_, _]) => Unit)
 
-  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long
 
-  def sum[N](implicit numeric: Numeric[N]): N
-  def product[N](implicit numeric: Numeric[N]): N
-  def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType]
-  def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType
+  /*
+   * Returns the number of vertices that are instances of @VertexType.
+   */
+  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
+    val matchingTypeCounter: (Vertex[_, _]) => Long = { v: Vertex[_, _] =>
+      {
+        if (m.erasure.isInstance(v)) {
+          1l
+        } else {
+          0l
+        }
+      }
+    }
+    customAggregate(0l, { (aggrValue: Long, vertexIncrement: Long) => aggrValue + vertexIncrement }, matchingTypeCounter)
+  }
+
+  /*
+   * Returns the sum of all numeric states.
+   */
+  def sum[N](implicit numeric: Numeric[N]): N = {
+    aggregateStates(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
+  }
+
+  /*
+   * Returns the product of all numeric states.
+   */
+  def product[N](implicit numeric: Numeric[N]): N = {
+    aggregateStates(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
+  }
+
+  /*
+   * Returns some aggregate of all states of type @ValueType calculated by the
+   * associative function @operation. Returns none if there is no state of that
+   * type. 
+   */
+  def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType] = {
+    val stateExtractor: (Vertex[_, _]) => Option[ValueType] = { v: Vertex[_, _] =>
+      {
+        try {
+          Some(v.state.asInstanceOf[ValueType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+        } catch {
+          case _ => None
+        }
+      }
+    }
+    val optionOperation: (Option[ValueType], Option[ValueType]) => Option[ValueType] = { (a, b) =>
+      (a, b) match {
+        case (Some(x), Some(y)) => Some(operation(x, y))
+        case (Some(x), None) => Some(x)
+        case (None, Some(y)) => Some(y)
+        case (None, None) => None
+      }
+    }
+    customAggregate[Option[ValueType]](None, optionOperation, stateExtractor)
+  }
+
+  /*
+   * Returns the aggregate of all states calculated by the associative @operation function.
+   * States that are not instances of @ValueType get mapped to of @neutralElement.
+   */
+  def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType = {
+    val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
+      {
+        try {
+          v.state.asInstanceOf[ValueType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+        } catch {
+          case _ => neutralElement
+        }
+      }
+    }
+    customAggregate(neutralElement, operation, stateExtractor)
+  }
+  
+  /*
+   * Returns the aggregate of all states calculated by applying the associative @operation function to
+   * the values that have been extracted by the @extractor function from vertex states. The function needs to have a
+   * neutral element @neutralElement.
+   */
   def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
 
   def setSignalThreshold(t: Double)

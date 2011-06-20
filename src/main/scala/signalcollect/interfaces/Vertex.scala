@@ -71,7 +71,7 @@ package signalcollect.interfaces
    * Adds a new outgoing {@link Edge} to this {@link Vertex}.
    * @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge[_, _])
+  def addOutgoingEdge(e: Edge[_, _]): Boolean
 
   /**
    * Removes an outgoing {@link Edge} from this {@link Vertex}.
@@ -81,21 +81,9 @@ package signalcollect.interfaces
   def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean
 
   /**
-   * Removes all outgoing {@link Edge}s from this {@link Vertex}.
+   * Removes all outgoing {@link Edge}s from this {@link Vertex}, returns the number of edges that were removed.
    */
-  def removeAllOutgoingEdges
-  
-  /**
-   * Informs this vertex that there is a new incoming edge.
-   * @param edgeId the id of the new incoming edge
-   */
-  def addIncomingEdge(edgeId: (Any, Any, String))
-
-  /**
-   * Informs this vertex that an incoming edge was removed.
-   * @param edgeId the id of the incoming edge that was removed
-   */
-  def removeIncomingEdge(edgeId: (Any, Any, String))
+  def removeAllOutgoingEdges: Int
    
   /**
    * This method tells this {@link FrameworkVertex} to execute the signal operation
@@ -129,7 +117,7 @@ package signalcollect.interfaces
    */
   def scoreSignal: Double
 
-  /** @return optionally the number of outgoing edges of this {@link Vertex} */
+  /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int
   
   /** This method gets called by the framework after the vertex has been fully initialized. */

@@ -19,34 +19,24 @@
 
 package signalcollect.implementations.coordinator
 
-import signalcollect.interfaces._
 import signalcollect.api.Factory._
 import signalcollect.api.Factory
+import signalcollect.interfaces._
+import signalcollect.interfaces.ComputationStatistics
+import java.util.concurrent.BlockingQueue
 
-class AsynchronousCoordinator(
-  numberOfWorkers: Int,
-  workerFactory: WorkerFactory,
-  messageBusFactory: MessageBusFactory,
-  storageFactory: StorageFactory,
-  logger: Option[MessageRecipient[Any]],
-  signalThreshold: Double,
-  collectThreshold: Double,
-  messageInboxFactory: QueueFactory = Factory.Queue.Default)
-  extends AbstractCoordinator(
-    numberOfWorkers,
-    workerFactory,
-    messageBusFactory,
-    storageFactory,
-    logger,
-    signalThreshold,
-    collectThreshold,
-    messageInboxFactory) {
+trait SynchronousExecution {
 
-  override def performComputation: collection.mutable.Map[String, Any] = {
-    executeComputationStep
-    startComputation
-    awaitStalledComputation
-    collection.mutable.LinkedHashMap[String, Any]()
+  protected def stepsLimit: Int
+  
+  protected def workerApi: WorkerApi
+  
+  protected def performComputation {
+    var done = false
+    do {
+      workerApi.signalStep
+      done = workerApi.collectStep
+    } while ((workerApi.collectSteps < stepsLimit) && !done)
   }
-
+  
 }

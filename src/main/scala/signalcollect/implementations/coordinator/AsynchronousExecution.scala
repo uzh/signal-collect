@@ -17,27 +17,21 @@
  *  
  */
 
-package signalcollect.implementations.graph
+package signalcollect.implementations.coordinator
 
-trait IncomingEdgeCount[IdType, StateType] extends AbstractVertex[IdType, StateType] {
+import signalcollect.interfaces._
+import signalcollect.api.Factory._
+import signalcollect.api.Factory
 
-  var incomingEdgeCount = 0
+trait AsynchronousExecution {
   
-  /**
-   * Informs this vertex that there is a new incoming edge.
-   * @param edgeId the id of the new incoming edge
-   */
-  override def addIncomingEdge(edgeId: (Any, Any, String)) {
-	  incomingEdgeCount += 1
+  protected def workerApi: WorkerApi
+  
+  protected def performComputation {
+	workerApi.signalStep
+	workerApi.startComputation
+	workerApi.awaitIdle
+	workerApi.pauseComputation
   }
 
-  /**
-   * Informs this vertex that an incoming edge was removed.
-   * @param edgeId the id of the incoming edge that was removed
-   */
-  override def removeIncomingEdge(edgeId: (Any, Any, String)) {
-	  incomingEdgeCount -= 1
-	  None
-  }
- 
 }

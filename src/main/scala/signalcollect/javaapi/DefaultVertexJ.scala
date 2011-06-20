@@ -29,7 +29,6 @@ class DefaultVertexJ[IdType, StateType](
   extends AbstractVertex[IdType, StateType]
   with UncollectedSignalsList[IdType, StateType]
   with MostRecentSignalsMap[IdType, StateType]
-  with IncomingEdgeCount[IdType, StateType]
   with SumOfOutWeights[IdType, StateType]
   with DefaultGraphApi {
   

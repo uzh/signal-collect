@@ -25,71 +25,73 @@ import akka.actor.Actor._
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 
-class AkkaAsynchronousWorker(
-  mb: MessageBus[Any, Any],
-  mif: QueueFactory,
-  storageFactory: StorageFactory) extends AkkaWorker(mb, mif, storageFactory) {
-  
-  //self.receiveTimeout = Some(100L)
-
-  var processedAll = true
-
-  def handlePauseAndContinue {
-    if (shouldStart) {
-      shouldStart = false
-      isPaused = false
-    }
-    if (shouldPause) {
-      shouldPause = false
-      isPaused = true
-      messageBus.sendToCoordinator(StatusWorkerHasPaused)
-    }
-  }
-
-  def receive = {
-
-    // TODO: FIXME still testing the correct effect of this
-    /*case ReceiveTimeout =>
-      // handleIdling
-      if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
-        if (mailboxIsEmpty)
-          setIdle(true)
-      }*/
-    
-    case x =>
-      setIdle(false)
-      process(x)
-      handlePauseAndContinue
-      
-      // handleIdling
-      if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
-        if (mailboxIsEmpty)
-          setIdle(true)
-      }
-      
-      performComputation
-
-  }
-
-  def performComputation = {
-
-    // While the computation is in progress (work to do)
-    if (!isPaused) {
-
-      // alternately check the inbox and collect/signal
-      while (mailboxIsEmpty && !isConverged) {
-
-        if (processedAll) {
-          vertexStore.toSignal.foreach(vertex => signal(vertex))
-          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
-        } else
-          processedAll = vertexStore.toCollect.resumeProcessingSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
-
-      } // end while
-    } // !isPaused
-
-    if (processedAll && mailboxIsEmpty) setIdle(true)
-
-  }
-
-}
+//class AkkaAsynchronousWorker(
+//  workerId: Int,
+//  mb: MessageBus[Any, Any],
+//  mif: QueueFactory,
+//  storageFactory: StorageFactory) extends AkkaWorker(workerId, mb, mif, storageFactory) {
+//
+//  //self.receiveTimeout = Some(100L)
+//
+//  var processedAll = true
+//
+//  def handlePauseAndContinue {
+//    if (shouldStart) {
+//      shouldStart = false
+//      isPaused = false
+//      messageBus.sendToCoordinator(StatusWorkerIsRunning(workerId))
+//    }
+//    if (shouldPause) {
+//      shouldPause = false
+//      isPaused = true
+//      messageBus.sendToCoordinator(StatusWorkerIsPaused(workerId))
+//    }
+//  }
+//
+//  def receive = {
+//
+//    // TODO: FIXME still testing the correct effect of this
+//    /*case ReceiveTimeout =>
+//      // handleIdling
+//      if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
+//        if (mailboxIsEmpty)
+//          setIdle(true)
+//      }*/
+//
+//    case x =>
+//      setIdle(false)
+//      process(x)
+//      handlePauseAndContinue
+//
+//      // handleIdling
+//      if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
+//        if (mailboxIsEmpty)
+//          setIdle(true)
+//      }
+//
+//      performComputation
+//
+//  }
+//
+//  def performComputation = {
+//
+//    // While the computation is in progress (work to do)
+//    if (!isPaused) {
+//
+//      // alternately check the inbox and collect/signal
+//      while (mailboxIsEmpty && !isConverged) {
+//
+//        if (processedAll) {
+//          vertexStore.toSignal.foreach(vertex => signal(vertex))
+//          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+//        } else
+//          processedAll = vertexStore.toCollect.resumeProcessingSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+//
+//      } // end while
+//    } // !isPaused
+//
+//    if (processedAll && mailboxIsEmpty) setIdle(true)
+//
+//  }
+//
+//}
