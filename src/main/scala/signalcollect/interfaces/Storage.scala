@@ -51,7 +51,6 @@ trait VertexIdSet {
   def size: Long
   def foreach[U](f: (Vertex[_, _]) => U)
   def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
-  def resumeProcessingSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
 }
 
 /**
