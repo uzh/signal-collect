@@ -56,6 +56,15 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
    */
+  abstract override def executeCollectOperation(signals: Option[List[Signal[_, _, _]]]) {
+	super.executeCollectOperation(signals)
+	uncollectedMessages.clear
+  }
+  
+    /**
+   * Executes the {@link #collect} method on this vertex.
+   * @see #collect
+   */
   abstract override def executeCollectOperation {
 	super.executeCollectOperation
 	uncollectedMessages.clear

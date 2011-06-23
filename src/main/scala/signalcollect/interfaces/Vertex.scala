@@ -99,6 +99,13 @@ package signalcollect.interfaces
   /**
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
+   * @param signals the new signals that have not been transferred to the vertex jet.
+   */
+  def executeCollectOperation(signals: Option[List[Signal[_, _, _]]])
+  
+  /**
+   * Executes the {@link #collect} method on this vertex.
+   * @see #collect
    */
   def executeCollectOperation
 

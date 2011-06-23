@@ -50,31 +50,14 @@ object Factory {
   object Storage {
     lazy val Default: StorageFactory = InMemory
     lazy val InMemory: StorageFactory = new DefaultStorage(_)
-    
-    //==================================================
-    //Highly experimental
-    //Use at your own risk!
-    //==================================================
-    
+
     //Berkeley DB Storage (can be run directly from jar)
     class BerkeleyDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
     lazy val BerkeleyDB: StorageFactory = new BerkeleyDBStorage(_)
-    
+
     //Berkeley DB Storage with InMemory caching
     class CachedStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with ScoredCache
     lazy val Cached: StorageFactory = new CachedStorage(_)
-    
-    //Mongo DB Storage (requires a running mongoDB installation)
-    class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
-    lazy val MongoDB: StorageFactory = new MongoDBStorage(_)
-    
-    //Mongo DB Storage that also stores all toSignal/toCollect lists on disk
-    class AllOnDiskMongoDBStorage(messageBus: MessageBus[Any, Any]) extends MongoDBStorage(messageBus) with MongoDBToDoList
-    lazy val AllOnDiskMongoDB: StorageFactory = new AllOnDiskMongoDBStorage(_)
-    
-    //Orient DB Storage (can be run directly from jar, pure java)
-    class OrientDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with Orient
-    lazy val OrientDB: StorageFactory = new OrientDBStorage(_)
   }
 
   object MessageBus {
@@ -87,32 +70,33 @@ object Factory {
     lazy val Default: WorkerFactory = Asynchronous
     lazy val Synchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _)
     lazy val Asynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _)
+    lazy val BufferingSynchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
+    lazy val BufferingAsynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
 
-//    lazy val AkkaSynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
-//    lazy val AkkaAsynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
+    //    lazy val AkkaSynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
+    //    lazy val AkkaAsynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
 
   }
 
-//  /**
-//   * Wrapper class for the actor reference to be kept
-//   */
-//  class ActorRefAdapter(actorType: String, actorRef: ActorRef) extends Worker {
-//
-//    /**
-//     * used for getting the correct type of actor
-//     */
-//    override def toString = actorType
-//
-//    def receive(message: Any) = actorRef ! message
-//
-//    def initialize = {
-//      actorRef.dispatcher = Dispatchers.newThreadBasedDispatcher(actorRef)
-//      actorRef.start()
-//    }
-//
-//  }
-  
-  
+  //  /**
+  //   * Wrapper class for the actor reference to be kept
+  //   */
+  //  class ActorRefAdapter(actorType: String, actorRef: ActorRef) extends Worker {
+  //
+  //    /**
+  //     * used for getting the correct type of actor
+  //     */
+  //    override def toString = actorType
+  //
+  //    def receive(message: Any) = actorRef ! message
+  //
+  //    def initialize = {
+  //      actorRef.dispatcher = Dispatchers.newThreadBasedDispatcher(actorRef)
+  //      actorRef.start()
+  //    }
+  //
+  //  }
+
   object Queue {
     lazy val Default: QueueFactory = LinkedTransfer
     lazy val LinkedTransfer: QueueFactory = () => new LinkedTransferQueue[Any]

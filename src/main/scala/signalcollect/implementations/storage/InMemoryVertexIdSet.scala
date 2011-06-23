@@ -31,6 +31,7 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   protected var toHandleSnapshot: HashSet[Any] = vertexSetFactory
   protected var verticesDoneInSnapshot = 0
   protected def vertexSetFactory = new HashSet[Any]()
+  protected var snapshotIterator = toHandleSnapshot.iterator
 
   def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)
@@ -39,16 +40,14 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   def remove(vertexId: Any): Unit = {
     toHandle.remove(vertexId)
   }
-  
+
   def clear {
     toHandle = vertexSetFactory
   }
-  
-  def isEmpty: Boolean = {
-    toHandle.isEmpty && toHandleSnapshot.isEmpty
-  }
 
-  def size: Long = { toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot }
+  def isEmpty: Boolean = toHandle.isEmpty && !snapshotIterator.hasNext
+
+  def size: Long = toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot
 
   def foreach[U](f: (Vertex[_, _]) => U) = {
     val i = toHandle.iterator
@@ -62,35 +61,27 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   /**
    * Iterates through all stored IDs and applies a function to all vertices associated with these IDs.
    * The iteration process can also be interrupted via the breakConditionReached function parameter.
-   * 
+   *
    * @param f							the function to apply to each vertex who's id is stored in the set
    * @param breakConditionReached		determines if the foreach-processing needs to be escaped do do other work
    * 									@see resumeProcessingSnapshot on how to resume an aborted processing.
    */
   def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
-    verticesDoneInSnapshot = 0
-    toHandleSnapshot = toHandle
-    toHandle = vertexSetFactory
-    val i = toHandleSnapshot.iterator
-    while (i.hasNext && !breakConditionReached()) {
-      val currentVertexId = i.next
-      f(vertexStore.vertices.get(currentVertexId))
-      verticesDoneInSnapshot += 1
+    
+    if (!snapshotIterator.hasNext) {
+    	verticesDoneInSnapshot = 0
+    	toHandleSnapshot = toHandle
+    	toHandle = vertexSetFactory
+    	snapshotIterator = toHandleSnapshot.iterator
     }
-    !i.hasNext
-  }
+    
+    while (snapshotIterator.hasNext && !breakConditionReached()) {
+    	val currentVertexId = snapshotIterator.next
+    	f(vertexStore.vertices.get(currentVertexId))
+    	verticesDoneInSnapshot += 1
+    }
+    !snapshotIterator.hasNext
 
-  /**
-   * Resumes an aborted iteration process
-   * Can be interrupted again.
-   */
-  def resumeProcessingSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
-    val i = toHandleSnapshot.iterator
-    while (i.hasNext && !breakConditionReached()) {
-      val currentVertexId = i.next
-      f(vertexStore.vertices.get(currentVertexId))
-      verticesDoneInSnapshot += 1
-    }
-    !i.hasNext
+
   }
 }

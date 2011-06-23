@@ -136,6 +136,19 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     processInbox
     state = collect
   }
+  
+  /**
+   * Adds the buffered signals for that vertex and executes the {@link #collect} method on this vertex.
+   * @see #collect
+   * @param signals Buffered Signals for this vertex
+   */
+  def executeCollectOperation(signals: Option[List[Signal[_, _, _]]]) {
+    signals match {
+      case Some(signals) => signals.foreach(signal=>messageInbox.addLast(signal))
+      case None =>
+    }
+    executeCollectOperation
+  }
 
   protected def processInbox = {
     val it = messageInbox.iterator
