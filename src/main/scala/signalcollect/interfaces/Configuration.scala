@@ -27,7 +27,7 @@ trait Configuration {
   def optionalLogger: Option[MessageRecipient[Any]]
 }
 
-trait Factory {
+trait Factory extends Serializable {
   def name: String = this.getClass.getSimpleName
 }
 

@@ -63,9 +63,17 @@ abstract class AbstractWorker(
  
   protected val counters = new WorkerOperationCounters()
   protected val graphApi = DefaultGraphApi.createInstance(messageBus)
-
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
 
+  protected def process(message: Any) {
+    counters.messagesReceived += 1
+    message match {
+      case s: Signal[_, _, _] => processSignal(s)
+      case WorkerRequest(command) => command(this)
+      case other => log("Could not handle message " + message)
+    }
+  }
+  
   def addVertex(serializedVertex: Array[Byte]) {
     val vertex = DefaultSerializer.read[Vertex[_, _]](serializedVertex)
     addVertex(vertex)
@@ -248,15 +256,6 @@ abstract class AbstractWorker(
   protected var collectThreshold = 0.0
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
-
-  protected def process(message: Any) {
-    counters.messagesReceived += 1
-    message match {
-      case s: Signal[_, _, _] => processSignal(s)
-      case WorkerRequest(command) => command(this)
-      case other => log("Could not handle message " + message)
-    }
-  }
 
   protected var vertexStore = storageFactory.createInstance(messageBus)
 
