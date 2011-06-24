@@ -19,7 +19,6 @@
 
 package signalcollect.api
 
-import signalcollect.api.Factory._
 import signalcollect.interfaces._
 
 /**
@@ -28,65 +27,28 @@ import signalcollect.interfaces._
  * as when using Scala default parameters.
  */
 object DefaultBuilder extends ComputeGraphBuilder
-object DefaultSynchronousBuilder extends ComputeGraphBuilder(
-  executionMode = SynchronousExecutionMode,
-  workerFactory = Factory.Worker.Synchronous)
 
-sealed trait ExecutionMode extends Serializable
-object SynchronousExecutionMode extends ExecutionMode {
-  override def toString = "SynchronousExecutionMode"
-}
-object AsynchronousExecutionMode extends ExecutionMode {
-  override def toString = "AsynchronousExecutionMode"
-}
+class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfiguration) extends Serializable {
+  def build: ComputeGraph = new DefaultComputeGraph(config)
 
-class ComputeGraphBuilder(
-  executionMode: ExecutionMode = AsynchronousExecutionMode,
-  numberOfWorkers: Int = ComputeGraph.defaultNumberOfThreadsUsed,
-  workerFactory: WorkerFactory = Factory.Worker.Default,
-  messageBusFactory: MessageBusFactory = Factory.MessageBus.Default,
-  storageFactory: StorageFactory = Factory.Storage.Default,
-  optionalLogger: Option[MessageRecipient[Any]] = None,
-  signalThreshold: Double = ComputeGraph.defaultSignalThreshold,
-  collectThreshold: Double = ComputeGraph.defaultCollectThreshold) extends Serializable {
+  def withExecutionMode(newExecutionMode: ExecutionMode) = newBuilder(executionMode = newExecutionMode)
+  def withNumberOfWorkers(newNumberOfWorkers: Int) = newBuilder(numberOfWorkers = newNumberOfWorkers)
+  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = newBuilder(messageBusFactory = newMessageBusFactory)
+  def withStorageFactory(newStorageFactory: StorageFactory) = newBuilder(storageFactory = newStorageFactory)
+  def withLogger(logger: MessageRecipient[Any]) = newBuilder(optionalLogger = Some(logger))
 
-
-  def build: ComputeGraph = new DefaultComputeGraph(
-    executionMode,
-    numberOfWorkers,
-    workerFactory,
-    messageBusFactory,
-    storageFactory,
-    optionalLogger,
-    signalThreshold,
-    collectThreshold)
-
-  def withExecutionMode(newExecutionMode: ExecutionMode) = newComputeGraph(newExecutionMode = newExecutionMode)
-  def withNumberOfWorkers(newNumberOfWorkers: Int) = newComputeGraph(newNumberOfWorkers = newNumberOfWorkers)
-  def withWorkerFactory(newWorkerFactory: WorkerFactory) = newComputeGraph(newWorkerFactory = newWorkerFactory)
-  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = newComputeGraph(newMessageBusFactory = newMessageBusFactory)
-  def withStorageFactory(newStorageFactory: StorageFactory) = newComputeGraph(newStorageFactory = newStorageFactory)
-  def withLogger(logger: MessageRecipient[Any]) = newComputeGraph(newOptionalLogger = Some(logger))
-  def withSignalThreshold(newSignalThreshold: Double) = newComputeGraph(newSignalThreshold = newSignalThreshold)
-  def withCollectThreshold(newCollectThreshold: Double) = newComputeGraph(newCollectThreshold = newCollectThreshold)
-
-  def newComputeGraph(
-    newExecutionMode: ExecutionMode = executionMode,
-    newNumberOfWorkers: Int = numberOfWorkers,
-    newWorkerFactory: WorkerFactory = workerFactory,
-    newMessageBusFactory: MessageBusFactory = messageBusFactory,
-    newStorageFactory: StorageFactory = storageFactory,
-    newOptionalLogger: Option[MessageRecipient[Any]] = optionalLogger,
-    newSignalThreshold: Double = signalThreshold,
-    newCollectThreshold: Double = collectThreshold): ComputeGraphBuilder = {
+  def newBuilder(
+    executionMode: ExecutionMode = config.executionMode,
+    numberOfWorkers: Int = config.numberOfWorkers,
+    messageBusFactory: MessageBusFactory = config.messageBusFactory,
+    storageFactory: StorageFactory = config.storageFactory,
+    optionalLogger: Option[MessageRecipient[Any]] = config.optionalLogger): ComputeGraphBuilder = {
     new ComputeGraphBuilder(
-      newExecutionMode,
-      newNumberOfWorkers,
-      newWorkerFactory,
-      newMessageBusFactory,
-      newStorageFactory,
-      newOptionalLogger,
-      newSignalThreshold,
-      newCollectThreshold)
+      DefaultConfiguration(
+        executionMode = executionMode,
+        numberOfWorkers = numberOfWorkers,
+        messageBusFactory = messageBusFactory,
+        storageFactory = storageFactory,
+        optionalLogger = optionalLogger))
   }
 }

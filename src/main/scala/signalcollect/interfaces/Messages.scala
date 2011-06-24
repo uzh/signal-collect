@@ -41,21 +41,29 @@ case class WorkerStatus(
   messagesSent: Long,
   messagesReceived: Long)
 
-case class WorkerStats(
-  var messagesReceived: Long = 0l,
-  var collectOperationsExecuted: Long = 0l,
-  var signalOperationsExecuted: Long = 0l,
-  var verticesAdded: Long = 0l,
-  var verticesRemoved: Long = 0l,
-  var outgoingEdgesAdded: Long = 0l,
-  var outgoingEdgesRemoved: Long = 0l) {
-  def +(other: WorkerStats): WorkerStats = {
-    WorkerStats(
+case class WorkerStatistics(
+  signalSteps: Long = 0l,
+  collectSteps: Long = 0l,
+  messagesReceived: Long = 0l,
+  messagesSent: Long = 0l,
+  collectOperationsExecuted: Long = 0l,
+  signalOperationsExecuted: Long = 0l,
+  numberOfVertices: Long = 0l,
+  verticesAdded: Long = 0l,
+  verticesRemoved: Long = 0l,
+  numberOfOutgoingEdges: Long = 0l,
+  outgoingEdgesAdded: Long = 0l,
+  outgoingEdgesRemoved: Long = 0l) {
+  def +(other: WorkerStatistics): WorkerStatistics = {
+    WorkerStatistics(
       messagesReceived + other.messagesReceived,
+      messagesSent + other.messagesSent,
       collectOperationsExecuted + other.collectOperationsExecuted,
       signalOperationsExecuted + other.signalOperationsExecuted,
+      numberOfVertices + other.numberOfVertices,
       verticesAdded + other.verticesAdded,
       verticesRemoved + other.verticesRemoved,
+      numberOfOutgoingEdges + other.numberOfOutgoingEdges,
       outgoingEdgesAdded + other.outgoingEdgesAdded,
       outgoingEdgesRemoved + other.outgoingEdgesRemoved)
   }

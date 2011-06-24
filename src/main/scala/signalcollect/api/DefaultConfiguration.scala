@@ -17,32 +17,13 @@
  *  
  */
 
-package signalcollect.implementations.worker
+package signalcollect.api
 
-import signalcollect.api.Factory._
 import signalcollect.interfaces._
 
-class SynchronousWorker(
-  workerId: Int,
-  mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory,
-  storageFactory: StorageFactory) extends AbstractWorker(workerId, mb, messageInboxFactory, storageFactory) {
-
-  override def run {
-    // While the computation isn't finished, process the inbox or wait if it's empty
-    while (!shouldShutdown) {
-      processInboxOrIdle(idleTimeoutNanoseconds)
-    }
-  }
-
-  override def pauseComputation {
-    isPaused = true
-    sendStatusToCoordinator
-  }
-
-  override def startComputation {
-    isPaused = false
-    sendStatusToCoordinator
-  }
-
-}
+case class DefaultConfiguration(
+  executionMode: ExecutionMode = AsynchronousExecutionMode,
+  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+  messageBusFactory: MessageBusFactory = Factory.MessageBus.SharedMemory,
+  storageFactory: StorageFactory = Factory.Storage.InMemory,
+  optionalLogger: Option[MessageRecipient[Any]] = None) extends Configuration

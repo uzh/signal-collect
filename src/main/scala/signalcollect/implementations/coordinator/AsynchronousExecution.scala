@@ -19,10 +19,6 @@
 
 package signalcollect.implementations.coordinator
 
-import signalcollect.interfaces._
-import signalcollect.api.Factory._
-import signalcollect.api.Factory
-
 trait AsynchronousExecution {
   
   protected def workerApi: WorkerApi

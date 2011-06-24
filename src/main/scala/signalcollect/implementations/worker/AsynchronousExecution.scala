@@ -19,7 +19,6 @@
 
 package signalcollect.implementations.worker
 
-import signalcollect.api.Factory._
 import signalcollect.interfaces._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
@@ -27,14 +26,21 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.LinkedHashSet
 
-class AsynchronousWorker(
-  workerId: Int,
-  mb: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory,
-  storageFactory: StorageFactory)
-  extends AbstractWorker(workerId, mb, messageInboxFactory, storageFactory) {
-
-  def handlePauseAndContinue {
+trait AsynchronousExecution {
+  this: AbstractWorker =>
+   
+  def run {
+    while (!shouldShutdown) {
+      handleIdling
+      // While the computation is in progress, alternately check the inbox and collect/signal
+      if (!isPaused) {
+        vertexStore.toSignal.foreach(signal(_))
+        vertexStore.toCollect.foreachWithSnapshot(vertex => { processInbox; if (collect(vertex)) { signal(vertex) } }, () => false)
+      }
+    }
+  }
+  
+  protected def handlePauseAndContinue {
     if (shouldStart) {
       shouldStart = false
       isPaused = false
@@ -46,7 +52,7 @@ class AsynchronousWorker(
     }
   }
 
-  def handleIdling {
+  protected def handleIdling {
     handlePauseAndContinue
     if (isConverged || isPaused) {
       processInboxOrIdle(idleTimeoutNanoseconds)
@@ -54,15 +60,5 @@ class AsynchronousWorker(
       processInbox
     }
   }
-
-  def run {
-    while (!shouldShutdown) {
-      handleIdling
-      // While the computation is in progress, alternately check the inbox and collect/signal
-      if (!isPaused) {
-        vertexStore.toSignal.foreach(vertex => signal(vertex))
-        vertexStore.toCollect.foreachWithSnapshot(vertex => { processInbox; if (collect(vertex)) { signal(vertex) } }, () => false)
-      }
-    }
-  }
+  
 }

@@ -17,20 +17,28 @@
  *  
  */
 
-package signalcollect.implementations.coordinator
+package signalcollect.implementations.worker
+
+import signalcollect.interfaces._
 
 trait SynchronousExecution {
+  this: AbstractWorker =>
 
-  protected def stepsLimit: Int
-  
-  protected def workerApi: WorkerApi
-  
-  protected def performComputation {
-    var done = false
-    do {
-      workerApi.signalStep
-      done = workerApi.collectStep
-    } while ((workerApi.collectSteps < stepsLimit) && !done)
+  override def run {
+    // While the computation isn't finished, process the inbox or wait if it's empty
+    while (!shouldShutdown) {
+      processInboxOrIdle(idleTimeoutNanoseconds)
+    }
   }
-  
+
+  override def pauseComputation {
+    isPaused = true
+    sendStatusToCoordinator
+  }
+
+  override def startComputation {
+    isPaused = false
+    sendStatusToCoordinator
+  }
+
 }

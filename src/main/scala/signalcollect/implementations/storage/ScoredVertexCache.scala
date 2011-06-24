@@ -114,7 +114,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
   protected class InMemoryCache(storage: Storage) extends VertexStore {
     var maxSize = Long.MaxValue //gets reset if cache ratio is reached
     val messageBus = storage.getMessageBus
-    val cachedVertices = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, ComputeGraph.defaultNumberOfThreadsUsed)
+    val cachedVertices = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, 16) //TODO replace with non-concurrent data structure
 
     def contains(id: Any) = cachedVertices.containsKey(id)
 

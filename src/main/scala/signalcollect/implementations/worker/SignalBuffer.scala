@@ -53,7 +53,7 @@ trait SignalBuffer extends AbstractWorker {
   override protected def collect(vertex: Vertex[_, _]): Boolean = {
 
     if (vertex.scoreCollect > collectThreshold || undeliveredSignals.containsKey(vertex.id)) {
-      stats.collectOperationsExecuted += 1
+      counters.collectOperationsExecuted += 1
       vertex.executeCollectOperation(Some(undeliveredSignals.get(vertex.id)))
       undeliveredSignals.remove(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)

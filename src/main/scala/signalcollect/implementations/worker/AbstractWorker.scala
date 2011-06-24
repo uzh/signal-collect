@@ -23,7 +23,6 @@ import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._
 import signalcollect.interfaces._
-import signalcollect.api.Factory._
 import java.util.concurrent.BlockingQueue
 import java.util.HashSet
 import java.util.HashMap
@@ -35,10 +34,20 @@ import signalcollect.interfaces.ALL
 import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.storage.DefaultSerializer
 
+class WorkerOperationCounters(
+  var messagesReceived: Long = 0l,
+  var collectOperationsExecuted: Long = 0l,
+  var signalOperationsExecuted: Long = 0l,
+  var verticesAdded: Long = 0l,
+  var verticesRemoved: Long = 0l,
+  var outgoingEdgesAdded: Long = 0l,
+  var outgoingEdgesRemoved: Long = 0l,
+  var signalSteps: Long = 0l,
+  var collectSteps: Long = 0l)
+
 abstract class AbstractWorker(
   val workerId: Int,
   val messageBus: MessageBus[Any, Any],
-  messageInboxFactory: QueueFactory,
   storageFactory: StorageFactory)
   extends AbstractMessageRecipient[Any]
   with Worker
@@ -51,8 +60,8 @@ abstract class AbstractWorker(
   def initialize {
     new Thread(this, "Worker" + workerId).start
   }
-
-  protected val stats = new WorkerStats()
+ 
+  protected val counters = new WorkerOperationCounters()
   protected val graphApi = DefaultGraphApi.createInstance(messageBus)
 
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
@@ -64,7 +73,7 @@ abstract class AbstractWorker(
 
   protected def addVertex(vertex: Vertex[_, _]) {
     if (vertexStore.vertices.put(vertex)) {
-      stats.verticesAdded += 1
+      counters.verticesAdded += 1
       vertex.afterInitialization
     }
   }
@@ -78,7 +87,7 @@ abstract class AbstractWorker(
     val key = edge.sourceId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
-      stats.outgoingEdgesAdded += 1
+      counters.outgoingEdgesAdded += 1
       vertex.addOutgoingEdge(edge)
       vertexStore.toCollect.add(vertex.id)
       vertexStore.toSignal.add(vertex.id)
@@ -109,7 +118,7 @@ abstract class AbstractWorker(
     val vertex = vertexStore.vertices.get(edgeId._1)
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
-        stats.outgoingEdgesRemoved += 1
+        counters.outgoingEdgesRemoved += 1
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         log("Outgoing edge not found when trying to remove edge with id " + edgeId)
@@ -128,10 +137,10 @@ abstract class AbstractWorker(
   }
 
   protected def processRemoveVertex(vertex: Vertex[_, _]) {
-    stats.outgoingEdgesRemoved += vertex.outgoingEdgeCount
+    counters.outgoingEdgesRemoved += vertex.outgoingEdgeCount
     val edgesRemoved = vertex.removeAllOutgoingEdges
-    stats.outgoingEdgesRemoved += edgesRemoved
-    stats.verticesRemoved += 1
+    counters.outgoingEdgesRemoved += edgesRemoved
+    counters.verticesRemoved += 1
     vertexStore.vertices.remove(vertex.id)
   }
 
@@ -196,10 +205,12 @@ abstract class AbstractWorker(
   }
 
   def signalStep {
+    counters.signalSteps += 1
     vertexStore.toSignal foreach (signal(_))
   }
 
   def collectStep: Boolean = {
+    counters.collectSteps += 1
     vertexStore.toCollect foreach { vertex =>
       collect(vertex);
       vertexStore.toSignal.add(vertex.id)
@@ -207,8 +218,22 @@ abstract class AbstractWorker(
     vertexStore.toSignal.isEmpty
   }
 
-  def getWorkerStats: WorkerStats = {
-    stats.copy()
+  def getWorkerStatistics: WorkerStatistics = {
+    WorkerStatistics(
+      messagesReceived = counters.messagesReceived,
+      messagesSent = messageBus.messagesSent,
+      collectOperationsExecuted = counters.collectOperationsExecuted,
+      signalOperationsExecuted = counters.signalOperationsExecuted,
+      numberOfVertices = vertexStore.vertices.size,
+      verticesAdded = counters.verticesAdded,
+      verticesRemoved = counters.verticesRemoved,
+      numberOfOutgoingEdges = {
+        var outgoingEdgeCount = 0l
+        foreachVertex(outgoingEdgeCount += _.outgoingEdgeCount)
+        outgoingEdgeCount
+      },
+      outgoingEdgesAdded = counters.outgoingEdgesAdded,
+      outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
 
   def shutdown = shouldShutdown = true
@@ -225,7 +250,7 @@ abstract class AbstractWorker(
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
 
   protected def process(message: Any) {
-    stats.messagesReceived += 1
+    counters.messagesReceived += 1
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case WorkerRequest(command) => command(this)
@@ -233,7 +258,7 @@ abstract class AbstractWorker(
     }
   }
 
-  protected var vertexStore = storageFactory(messageBus)
+  protected var vertexStore = storageFactory.createInstance(messageBus)
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
@@ -243,7 +268,7 @@ abstract class AbstractWorker(
       isIdle = isIdle,
       isPaused = isPaused,
       messagesSent = messageBus.messagesSent,
-      messagesReceived = stats.messagesReceived)
+      messagesReceived = counters.messagesReceived)
   }
 
   protected def sendStatusToCoordinator {
@@ -272,7 +297,7 @@ abstract class AbstractWorker(
 
   protected def collect(vertex: Vertex[_, _]): Boolean = {
     if (vertex.scoreCollect > collectThreshold) {
-      stats.collectOperationsExecuted += 1
+      counters.collectOperationsExecuted += 1
       vertex.executeCollectOperation
       vertexStore.vertices.updateStateOfVertex(vertex)
       true
@@ -283,7 +308,7 @@ abstract class AbstractWorker(
 
   protected def signal(v: Vertex[_, _]): Boolean = {
     if (v.scoreSignal > signalThreshold) {
-      stats.signalOperationsExecuted += 1
+      counters.signalOperationsExecuted += 1
       v.executeSignalOperation
       vertexStore.vertices.updateStateOfVertex(v)
       true
@@ -314,13 +339,13 @@ abstract class AbstractWorker(
   def registerWorker(workerId: Int, worker: MessageRecipient[Any]) {
     messageBus.registerWorker(workerId, worker)
   }
-  
+
   def registerCoordinator(coordinator: MessageRecipient[Any]) {
-    
+    messageBus.registerCoordinator(coordinator)
   }
-  
+
   def registerLogger(logger: MessageRecipient[Any]) {
-    
+    messageBus.registerLogger(logger)
   }
-  
+
 }

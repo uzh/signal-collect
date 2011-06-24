@@ -19,16 +19,13 @@
 
 package signalcollect.interfaces
 
-object ComputeGraph {
-  lazy val defaultNumberOfThreadsUsed: Int = Runtime.getRuntime.availableProcessors
-  lazy val defaultSignalThreshold: Double = 0.01
-  lazy val defaultCollectThreshold: Double = 0
-}
+import signalcollect.api._
 
 trait ComputeGraph extends GraphApi {
 
   /* 
-   * Starts the execution of the computation. The method blocks until the computation has ended.
+   * Starts the execution of the computation using the default execution parameters.
+   * The method blocks until the computation has ended.
    * 
    * There are three reasons why a computation may end:
    *  - All signal/collect scores are below the thresholds
@@ -37,7 +34,15 @@ trait ComputeGraph extends GraphApi {
    *  
    * It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.  
    */
-  def execute: ComputationStatistics
+  def execute: ExecutionInformation
+
+  
+  /* 
+   * Starts the execution of the computation using custom execution parameters. The method blocks until the computation has ended.
+   * 
+   * The computation will 
+   */
+  def execute(parameters: ExecutionParameters): ExecutionInformation
 
   /* 
    * Recalculates the signal/collect scores of all vertices.
@@ -46,7 +51,7 @@ trait ComputeGraph extends GraphApi {
    * will be executed when the computation is executed again.
    */
   def recalculateScores
-  
+
   /* 
    * Recalculates the signal/collect scores of the vertex with the id @vertexId.
    * 
@@ -54,7 +59,7 @@ trait ComputeGraph extends GraphApi {
    * will be executed when the computation is executed again.
    */
   def recalculateScoresForVertexId(vertexId: Any)
-  
+
   /* 
    * Shuts down the compute graph and frees associated resources.
    * 
@@ -70,7 +75,7 @@ trait ComputeGraph extends GraphApi {
    * to objects that are not reachable from the vertex-parameter may not be accessible.
    */
   def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit)
-  
+
   /* 
    * Executes the function @f on all vertices.
    * 
@@ -79,7 +84,6 @@ trait ComputeGraph extends GraphApi {
    * to objects that are not reachable from the vertex-parameter may not be accessible.
    */
   def foreachVertex(f: (Vertex[_, _]) => Unit)
-
 
   /*
    * Returns the number of vertices that are instances of @VertexType.
@@ -153,7 +157,7 @@ trait ComputeGraph extends GraphApi {
     }
     customAggregate(neutralElement, operation, stateExtractor)
   }
-  
+
   /*
    * Returns the aggregate of all states calculated by applying the associative @operation function to
    * the values that have been extracted by the @extractor function from vertex states. The function needs to have a
@@ -161,9 +165,6 @@ trait ComputeGraph extends GraphApi {
    */
   def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
 
-  def setSignalThreshold(t: Double)
-  def setCollectThreshold(t: Double)
-  def setStepsLimit(l: Int)
   def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit)
 }
 

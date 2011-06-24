@@ -38,30 +38,23 @@ import signalcollect.implementations.logging.DefaultLogger
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit {
 
-  val synchronousCg = DefaultSynchronousBuilder
-
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Synchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.Asynchronous).build,
-    (numberOfWorkers: Int) => DefaultSynchronousBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.BufferingSynchronous).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withWorkerFactory(Factory.Worker.BufferingAsynchronous).build
-//    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(AsynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaAsynchronous).build,
-//    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).withExecutionMode(SynchronousExecutionMode).withWorkerFactory(Factory.Worker.AkkaSynchronous).build
-    )
+    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).build,
+    (numberOfWorkers: Int) => DefaultBuilder.withExecutionMode(SynchronousExecutionMode).withNumberOfWorkers(numberOfWorkers).build)
 
-  val testWorkerCounts = List(1)
+  val testWorkerCounts = List(1, 2, 4, 8, 16, 32, 64, 128)
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
-    var computationStatistics = Map[String, List[ComputationStatistics]]()
+    var computationStatistics = Map[String, List[ExecutionInformation]]()
 
     for (workers <- numberOfWorkers) {
       for (graphProvider <- graphProviders) {
         val cg = graphProvider.apply(workers)
         buildGraph(cg)
-        cg.setSignalThreshold(signalThreshold)
-        cg.setCollectThreshold(collectThreshold)
-        val stats = cg.execute
+        //        cg.setSignalThreshold(signalThreshold)
+        //        cg.setCollectThreshold(collectThreshold)
+        val stats = cg.execute(ExecutionParameters(signalThreshold = signalThreshold))
         correct &= cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
         if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)

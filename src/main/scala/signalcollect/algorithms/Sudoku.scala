@@ -22,7 +22,7 @@ package signalcollect.algorithms
 import signalcollect.api._
 import collection.mutable.{ HashMap, SynchronizedMap }
 import collection.mutable.ListMap
-import signalcollect.interfaces.{ ComputationStatistics, ComputeGraph }
+import signalcollect.interfaces._
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine

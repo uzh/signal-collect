@@ -56,8 +56,8 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry[Any] {
   def signalStep
   def collectStep: Boolean
 
-  def getWorkerStats: WorkerStats
-
+  def getWorkerStatistics: WorkerStatistics
+  
   def shutdown
 
 }

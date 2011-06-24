@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,20 +17,18 @@
  *  
  */
 
-package signalcollect.implementations.coordinator
+package signalcollect.api
 
-trait SynchronousExecution {
+import signalcollect.interfaces._
 
-  protected def stepsLimit: Int
-  
-  protected def workerApi: WorkerApi
-  
-  protected def performComputation {
-    var done = false
-    do {
-      workerApi.signalStep
-      done = workerApi.collectStep
-    } while ((workerApi.collectSteps < stepsLimit) && !done)
-  }
-  
-}
+case class ExecutionInformation(
+  computeGraphConfiguration: Configuration,
+  executionParameters: ExecutionParameters,
+  executionStatistics: ExecutionStatistics,
+  aggregatedWorkerStatistics: WorkerStatistics,
+  individualWorkerStatistics: List[WorkerStatistics])
+
+case class ExecutionStatistics(
+  computationTimeInMilliseconds: Long,
+  jvmCpuTimeInMilliseconds: Long,
+  graphLoadingWaitInMilliseconds: Long)

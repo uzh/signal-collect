@@ -43,7 +43,7 @@ object Filter {
       case t: Boolean if filterClass == classOf[Boolean] => Some(t.asInstanceOf[G])
       case t: Unit if filterClass == classOf[Unit] => Some(t.asInstanceOf[G])
       case t: Any if filterClass == classOf[Any] => Some(t.asInstanceOf[G])
-      case ref: AnyRef if filterClass.isAssignableFrom(ref.getClass) => Some(ref.asInstanceOf[G])
+      case reference: AnyRef if filterClass.isAssignableFrom(reference.getClass) => Some(reference.asInstanceOf[G])
       case other => None
     }
   }

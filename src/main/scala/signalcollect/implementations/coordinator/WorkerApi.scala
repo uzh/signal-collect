@@ -28,28 +28,35 @@ import scala.collection.parallel.mutable.ParArray
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConversions._
 import java.util.concurrent.atomic.AtomicLong
+import signalcollect.api.Factory
 
-class WorkerApi(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, workerFactory: WorkerFactory, storageFactory: StorageFactory) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
+class WorkerApi(config: Configuration) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 
+  protected lazy val workerFactory = {
+    config.executionMode match {
+      case AsynchronousExecutionMode => Factory.Worker.Asynchronous
+      case SynchronousExecutionMode => Factory.Worker.Synchronous
+    }
+  }
   protected val workers: Array[Worker] = createWorkers
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
   protected lazy val workerProxyMessageBuses: Array[MessageBus[Any, Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
-  protected lazy val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
-  protected lazy val messageBus = messageBusFactory(numberOfWorkers, mapper)
+  protected lazy val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
+  protected lazy val messageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
   protected lazy val workerStatusMap = new ConcurrentHashMap[Int, WorkerStatus]()
   protected val messagesReceived = new AtomicLong(0l)
   protected val statusMonitor = new Object
 
   var signalSteps = 0
   var collectSteps = 0
-
+ 
   protected def createWorkers: Array[Worker] = {
-    val workers = new Array[Worker](numberOfWorkers)
-    for (workerId <- 0 until numberOfWorkers) {
-      val workerMessageBus = messageBusFactory(numberOfWorkers, mapper)
+    val workers = new Array[Worker](config.numberOfWorkers)
+    for (workerId <- 0 until config.numberOfWorkers) {
+      val workerMessageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       workerMessageBus.registerCoordinator(this)
-      val worker = workerFactory(workerId, workerMessageBus, storageFactory)
+      val worker = workerFactory.createInstance(workerId, workerMessageBus, config.storageFactory)
       worker.initialize
       workers(workerId) = worker
     }
@@ -57,9 +64,9 @@ class WorkerApi(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, work
   }
 
   protected def createWorkerProxyMessageBuses: Array[MessageBus[Any, Any]] = {
-    val workerProxyMessageBuses = new Array[MessageBus[Any, Any]](numberOfWorkers)
-    for (workerId <- 0 until numberOfWorkers) {
-      val proxyMessageBus = messageBusFactory(numberOfWorkers, mapper)
+    val workerProxyMessageBuses = new Array[MessageBus[Any, Any]](config.numberOfWorkers)
+    for (workerId <- 0 until config.numberOfWorkers) {
+      val proxyMessageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       proxyMessageBus.registerCoordinator(this)
       workerProxyMessageBuses(workerId) = proxyMessageBus
     }
@@ -67,8 +74,8 @@ class WorkerApi(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, work
   }
 
   protected def createWorkerProxies: Array[Worker] = {
-    val workerProxies = new Array[Worker](numberOfWorkers)
-    for (workerId <- 0 until numberOfWorkers) {
+    val workerProxies = new Array[Worker](config.numberOfWorkers)
+    for (workerId <- 0 until config.numberOfWorkers) {
       val workerProxy = WorkerProxy.create(workerId, workerProxyMessageBuses(workerId))
       workerProxies(workerId) = workerProxy
     }
@@ -81,20 +88,19 @@ class WorkerApi(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, work
     Thread.currentThread.setName("Coordinator")
     messageBus.registerCoordinator(this)
     workerProxyMessageBuses foreach (_.registerCoordinator(this))
-    for (workerId <- 0 until numberOfWorkers) {
+    for (workerId <- 0 until config.numberOfWorkers) {
       messageBus.registerWorker(workerId, workers(workerId))
       workerProxyMessageBuses foreach (_.registerWorker(workerId, workers(workerId)))
     }
-    for (workerId <- 0 until numberOfWorkers) {
+    for (workerId <- 0 until config.numberOfWorkers) {
       parallelWorkerProxies foreach (_.registerWorker(workerId, workers(workerId)))
     }
   }
 
-  def getWorkerStats: WorkerStats = {
-    parallelWorkerProxies.map(_.getWorkerStats).fold(WorkerStats())(_ + _)
+  def getWorkerStatistics: List[WorkerStatistics] = {
+    parallelWorkerProxies.map(_.getWorkerStatistics).toList
   }
-  def getWorkerStats(workerId: Int): WorkerStats = parallelWorkerProxies(workerId).getWorkerStats
-
+  
   def receive(message: Any) {
     this.synchronized {
       messagesReceived.incrementAndGet
