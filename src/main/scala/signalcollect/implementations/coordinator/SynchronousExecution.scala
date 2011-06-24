@@ -19,18 +19,18 @@
 
 package signalcollect.implementations.coordinator
 
+import signalcollect.api.ExecutionParameters
+
 trait SynchronousExecution {
 
-  protected def stepsLimit: Int
-  
   protected def workerApi: WorkerApi
-  
-  protected def performComputation {
+
+  protected def performComputation(parameters: ExecutionParameters) {
     var done = false
-    do {
+    while (!done && (!parameters.stepsLimit.isDefined || workerApi.collectSteps < parameters.stepsLimit.get)) {
       workerApi.signalStep
       done = workerApi.collectStep
-    } while ((workerApi.collectSteps < stepsLimit) && !done)
+    }
   }
-  
+
 }

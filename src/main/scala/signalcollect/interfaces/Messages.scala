@@ -42,8 +42,6 @@ case class WorkerStatus(
   messagesReceived: Long)
 
 case class WorkerStatistics(
-  signalSteps: Long = 0l,
-  collectSteps: Long = 0l,
   messagesReceived: Long = 0l,
   messagesSent: Long = 0l,
   collectOperationsExecuted: Long = 0l,

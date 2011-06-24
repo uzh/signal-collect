@@ -19,11 +19,13 @@
 
 package signalcollect.implementations.coordinator
 
+import signalcollect.api.ExecutionParameters
+
 trait AsynchronousExecution {
   
   protected def workerApi: WorkerApi
   
-  protected def performComputation {
+  protected def performComputation(parameters: ExecutionParameters) {
 	workerApi.signalStep
 	workerApi.startComputation
 	workerApi.awaitIdle

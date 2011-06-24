@@ -48,8 +48,8 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   protected val messagesReceived = new AtomicLong(0l)
   protected val statusMonitor = new Object
 
-  var signalSteps = 0
-  var collectSteps = 0
+  var signalSteps = 0l
+  var collectSteps = 0l
  
   protected def createWorkers: Array[Worker] = {
     val workers = new Array[Worker](config.numberOfWorkers)
@@ -128,12 +128,6 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
-  //        println("idle? sent: " + totalMessagesSent + " received: " + totalMessagesReceived)
-  //        println("messagesSentByWorkers " + workerStatusMap.values.foldLeft("")(_ + ", " + _.messagesSent)) // the status message that was sent was not yet counted by the worker
-  //        println("messagesSentByWorkerProxies " + workerProxyMessageBuses.foldLeft("")(_ + ", " + _.messagesSent))
-  //        println("messagesSentByCoordinator " + messageBus.messagesSent)
-  //        println("messagesReceivedByWorkers " + workerStatusMap.values.foldLeft("")(_ + ", " + _.messagesReceived))
-  //        println("messagesReceivedByCoordinator " + messagesReceived)
 
   def registerLogger(l: MessageRecipient[Any]) {
     messageBus.registerLogger(l)
@@ -212,10 +206,10 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     aggregateArray.fold(neutralElement)(operation(_, _))
   }
 
+  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
+
   def setSignalThreshold(t: Double) = parallelWorkerProxies foreach (_.setSignalThreshold(t))
 
   def setCollectThreshold(t: Double) = parallelWorkerProxies foreach (_.setCollectThreshold(t))
-
-  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
-
+  
 }

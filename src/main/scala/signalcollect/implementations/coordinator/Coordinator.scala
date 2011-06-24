@@ -38,19 +38,13 @@ class SynchronousCoordinator(workerApi: WorkerApi, config: Configuration)
 
 abstract class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
-  protected var stepsLimit = Int.MaxValue
-
-  def setStepsLimit(l: Int) {
-    stepsLimit = l
-  }
-
   def execute(parameters: ExecutionParameters): ExecutionInformation = {
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
 
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
-
+    
     workerApi.logCoordinatorMessage("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = workerApi.awaitIdle
@@ -60,7 +54,7 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
     val startTime = System.nanoTime
 
     /*******************************/
-    performComputation
+    performComputation(parameters)
     /*******************************/
 
     val stopTime = System.nanoTime
@@ -74,6 +68,8 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
     val aggregatedWorkerStatistics = workerStatistics.fold(WorkerStatistics())(_ + _)
 
     val executionStatistics = ExecutionStatistics(
+      signalSteps = workerApi.signalSteps,
+      collectSteps = workerApi.collectSteps,
       computationTimeInMilliseconds = (totalTime / 1000000.0).toLong,
       jvmCpuTimeInMilliseconds = (totalJvmCpuTime / 1000000.0).toLong,
       graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong)
@@ -86,26 +82,7 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
       workerStatistics)
   }
 
-  //case class ExecutionInformation(
-  //  computeGraphConfiguration: Configuration,
-  //  executionParameters: ExecutionParameters,
-  //  executionStatistics: ExecutionStatistics,
-  //  aggregatedWorkerStatistics: WorkerStatistics,
-  //  individualWorkerStatistics: List[WorkerStatistics])
-  //
-  //case class ExecutionStatistics(
-  //  computationTimeInMilliseconds: Long,
-  //  jvmCpuTimeInMilliseconds: Long,
-  //  graphLoadingWaitInMilliseconds: Long)
-  //
-  //case class ExecutionParameters(
-  //  timeLimit: Long,
-  //  stepsLimit: Long,
-  //  signalThreshold: Double,
-  //  collectThreshold: Double)
-  //  }
-
-  protected def performComputation
+  protected def performComputation(parameters: ExecutionParameters)
 
   def getJVMCpuTime = {
     val bean = ManagementFactory.getOperatingSystemMXBean

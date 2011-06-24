@@ -29,6 +29,8 @@ case class ExecutionInformation(
   individualWorkerStatistics: List[WorkerStatistics])
 
 case class ExecutionStatistics(
+  signalSteps: Long,
+  collectSteps: Long,
   computationTimeInMilliseconds: Long,
   jvmCpuTimeInMilliseconds: Long,
   graphLoadingWaitInMilliseconds: Long)

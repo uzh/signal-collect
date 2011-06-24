@@ -49,8 +49,6 @@ class DefaultComputeGraph(config: Configuration = new DefaultConfiguration()) ex
   
   def execute(parameters: ExecutionParameters): ExecutionInformation = coordinator.execute(parameters)
 
-  def setStepsLimit(l: Int) = coordinator.setStepsLimit(l)
-
   /** WorkerApi */
 
   def recalculateScores = workerApi.recalculateScores
@@ -69,10 +67,6 @@ class DefaultComputeGraph(config: Configuration = new DefaultConfiguration()) ex
     extractor: (Vertex[_, _]) => ValueType): ValueType = {
     workerApi.customAggregate(neutralElement, operation, extractor)
   }
-
-  def setSignalThreshold(t: Double) = workerApi.setSignalThreshold(t)
-
-  def setCollectThreshold(t: Double) = workerApi.setCollectThreshold(t)
 
   def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
