@@ -65,4 +65,12 @@ case class WorkerStatistics(
       outgoingEdgesAdded + other.outgoingEdgesAdded,
       outgoingEdgesRemoved + other.outgoingEdgesRemoved)
   }
+  override def toString: String = {
+    "messages received" + "\t" + messagesReceived + "\n" +
+      "messages sent" + "\t" + messagesSent + "\n" +
+      "# collect operations executed" + "\t" + collectOperationsExecuted + "\n" +
+      "# signal operations executed" + "\t" + signalOperationsExecuted + "\n" +
+      "# vertices (added/removed)" + "\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
+      "# outgoing edges  (added/removed)" + "\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
+  }
 }

@@ -40,7 +40,8 @@ case class ExecutionInformation(
       "\n----------\n" +
       "Statistics\n" +
       "----------\n" +
-    executionStatistics.toString + "\n"
+    executionStatistics.toString + "\n" +
+    aggregatedWorkerStatistics.toString + "\n"
   }
 }
 
