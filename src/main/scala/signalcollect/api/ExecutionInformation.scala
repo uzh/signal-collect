@@ -26,11 +26,36 @@ case class ExecutionInformation(
   executionParameters: ExecutionParameters,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,
-  individualWorkerStatistics: List[WorkerStatistics])
+  individualWorkerStatistics: List[WorkerStatistics]) {
+
+  override def toString: String = {
+    "\n----------\n" +
+    "Configuration\n" +
+      "----------\n" +
+      computeGraphConfiguration.toString +
+      "\n----------\n" +
+    "Parameters\n" +
+      "----------\n" +
+      executionParameters.toString +
+      "\n----------\n" +
+      "Statistics\n" +
+      "----------\n" +
+    executionStatistics.toString + "\n"
+  }
+}
 
 case class ExecutionStatistics(
   signalSteps: Long,
   collectSteps: Long,
   computationTimeInMilliseconds: Long,
   jvmCpuTimeInMilliseconds: Long,
-  graphLoadingWaitInMilliseconds: Long)
+  graphLoadingWaitInMilliseconds: Long) {
+  
+    override def toString: String = {
+      "# signal steps" + "\t" + "\t" + signalSteps  + "\n" + 
+      "# collect steps" + "\t" + "\t" + collectSteps  + "\n" +
+      "computation time (ms)" + "\t" + computationTimeInMilliseconds  + "\n" +
+      "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds  + "\n" +
+      "graph loading time (ms)" + "\t" + graphLoadingWaitInMilliseconds
+    }
+}

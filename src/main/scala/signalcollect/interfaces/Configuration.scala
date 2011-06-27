@@ -25,6 +25,14 @@ trait Configuration {
   def messageBusFactory: MessageBusFactory
   def storageFactory: StorageFactory
   def optionalLogger: Option[MessageRecipient[Any]]
+  
+  override def toString:String = {
+    "execution mode" + "\t" + executionMode + "\n" + 
+    "# workers" + "\t" + numberOfWorkers + "\n" + 
+    "messagebus" + "\t" + messageBusFactory + "\n" + 
+    "storage" + "\t" + "\t" + storageFactory + "\n" + 
+    "logger" + "\t" + "\t" + optionalLogger
+  }
 }
 
 trait Factory extends Serializable {

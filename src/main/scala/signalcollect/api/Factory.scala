@@ -59,25 +59,6 @@ object Factory {
       def createInstance(messageBus: MessageBus[Any, Any]): Storage = new CachedStorage(messageBus)
     }
 
-//    //Mongo DB Storage (requires a running mongoDB installation)
-//    object MongoDB extends StorageFactory {
-//      class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
-//      def createInstance(messageBus: MessageBus[Any, Any]): Storage = new MongoDBStorage(messageBus)
-//    }
-//
-//    //Mongo DB Storage that also stores all toSignal/toCollect lists on disk
-//    object AllOnDiskMongoDB extends StorageFactory {
-//      class MongoDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with MongoDB
-//      class AllOnDiskMongoDBStorage(messageBus: MessageBus[Any, Any]) extends MongoDBStorage(messageBus) with MongoDBToDoList
-//      def createInstance(messageBus: MessageBus[Any, Any]): Storage = new AllOnDiskMongoDBStorage(messageBus)
-//    }
-//
-//    //Orient DB Storage (can be run directly from jar, pure java)
-//    object OrientDB extends StorageFactory {
-//      class OrientDBStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with Orient
-//      def createInstance(messageBus: MessageBus[Any, Any]): Storage = new OrientDBStorage(messageBus)
-//    }
-
   }
 
   object MessageBus {
@@ -110,14 +91,12 @@ object Factory {
           storageFactory) with SynchronousExecution
       def createInstance(workerId: Int, messageBus: MessageBus[Any, Any], storageFactory: StorageFactory): Worker = new SynchronousWorker(workerId, messageBus, storageFactory)
     }
-    
-    
-//    lazy val BufferingSynchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
-//    lazy val BufferingAsynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
-  //    lazy val AkkaSynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
-  //    lazy val AkkaAsynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
 
-    
+    //    lazy val BufferingSynchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
+    //    lazy val BufferingAsynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
+    //    lazy val AkkaSynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaSynchronousWorker", actorOf(new AkkaSynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
+    //    lazy val AkkaAsynchronous: WorkerFactory = { (workerId: Int, mb: MessageBus[Any, Any], sf: StorageFactory) => new ActorRefAdapter("AkkaAsynchronousWorker", actorOf(new AkkaAsynchronousWorker(workerId, mb, Queue.Default, sf)) ) }
+
   }
 
   //  /**

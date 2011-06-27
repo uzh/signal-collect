@@ -25,4 +25,12 @@ case class ExecutionParameters(
   signalThreshold: Double = 0.01,
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,
-  stepsLimit: Option[Long] = None)
+  stepsLimit: Option[Long] = None) {
+
+  override def toString: String = {
+    "signal threshold" + "\t" + signalThreshold + "\n" +
+      "collect threshold" + "\t" + collectThreshold + "\n" +
+      "time limit" + "\t" + "\t" + timeLimit + "\n" +
+      "steps limit" + "\t" + "\t" + stepsLimit
+  }
+}
