@@ -19,11 +19,15 @@
 
 package signalcollect.api
 
+import signalcollect.configuration.bootstrap._
 import signalcollect.interfaces._
+import java.util.HashMap
+import signalcollect.configuration._
 
 case class DefaultConfiguration(
-  executionMode: ExecutionMode = AsynchronousExecutionMode,
   numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-  messageBusFactory: MessageBusFactory = Factory.MessageBus.SharedMemory,
-  storageFactory: StorageFactory = Factory.Storage.InMemory,
-  optionalLogger: Option[MessageRecipient[Any]] = None) extends Configuration
+  optionalLogger: Boolean = false,
+  graphConfiguration: GraphConfiguration = DefaultGraphConfiguration(),
+  bootstrapConfiguration: BootstrapConfiguration = DefaultBootstrapConfiguration(),
+  executionConfiguration: ExecutionConfiguration = ExecutionConfiguration(executionMode = OptimizedAsynchronousExecutionMode),
+  workerConfigurations: HashMap[Int, WorkerConfiguration] = new HashMap[Int, WorkerConfiguration]()) extends Configuration

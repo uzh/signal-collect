@@ -20,6 +20,7 @@
 package signalcollect.algorithms
 
 import signalcollect.api._
+import signalcollect.configuration._
 
 /**
  * Represents an edge in a Single-Source Shortest Path compute graph.
@@ -71,7 +72,7 @@ class Location(id: Any, initialDistance: Option[Int]) extends SignalMapVertex(id
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = new DefaultComputeGraph()
+  val cg = new ComputeGraphBuilder().build
   cg.add(new Location(1, Some(0)))
   cg.add(new Location(2, None))
   cg.add(new Location(3, None))

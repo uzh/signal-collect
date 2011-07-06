@@ -26,7 +26,7 @@ import java.util.{ Map, HashMap }
  * Buffers signals for vertices right at the worker and delivers them with the collect invocation.
  * This helps with the on disk approach to reduce the necessary number of serialzation/deserialization steps.
  */
-trait SignalBuffer extends AbstractWorker {
+trait SignalBuffer extends LocalWorker {
 
   protected val undeliveredSignals: Map[Any, List[Signal[_, _, _]]] = new HashMap[Any, List[Signal[_, _, _]]]() // key: signal target id, value: List of signals for a vertex
 

@@ -28,6 +28,7 @@ import scala.collection.mutable.{ IndexedSeq, ArrayBuffer, ListBuffer }
 import org.specs2.mock.Mockito
 import signalcollect.interfaces.Worker
 import signalcollect.interfaces.MessageRecipient
+import signalcollect.interfaces.Logger
 
 @RunWith(classOf[JUnitRunner])
 class MessageBusSpec extends SpecificationWithJUnit with Mockito {
@@ -36,7 +37,7 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     val mockCoordinator = mock[MessageRecipient[Any]]
     val mockWorker0 = mock[Worker]
     val mockWorker1 = mock[Worker]
-    val mockLogger = mock[MessageRecipient[Any]]
+    val mockLogger = mock[Logger]
     val defaultMessageBus = new DefaultMessageBus[Any, Any](2, new DefaultVertexToWorkerMapper(2))
     defaultMessageBus.registerCoordinator(mockCoordinator)
     defaultMessageBus.registerWorker(0, mockWorker0)

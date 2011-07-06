@@ -17,30 +17,29 @@
  *  
  */
 
-package signalcollect.interfaces
+package signalcollect.util
 
-/*import scala.annotation.elidable
-import scala.annotation.elidable._*/
+/**
+ * Ports and service names used by the distributed system
+ */
+object Constants {
 
-trait Logging {
-  protected def messageBus: MessageBus[_, _]
+  def MANAGER_SERVICE_PORT = 2552
 
-  lazy val className = this.getClass.getSimpleName
-  
-  /**
-   * TODO add logging per method and elidable so that the send gets muted
-   * @param msg
-   * @param level
-   */
-  def log(msg: Any, level: String) = {
+  def MASTER_MANAGER_SERVICE_NAME = "master-service"
+  def ZOMBIE_MANAGER_SERVICE_NAME = "zombie-service"
+
+  // used by only one machine
+  def COORDINATOR_SERVICE_PORT = 2553
+  def COORDINATOR_SERVICE_NAME = "coordinator-service"
+
+/*  def AKKA_MESSAGEBUS_SERVICE_PORT = 2554
+  def AKKA_MESSAGEBUS_SERVICE_NAME = "message-bus"*/
+
+  def LOGGER_SERVICE_NAME = "logger-service"
+  def LOGGER_SERVICE_PORT = 2555
     
-    level match {
-      case "CONFIG" => Config(className + ": " + msg)
-      case "INFO" => Info(className + ": " + msg)
-      case "SEVERE" => Severe(className + ": " + msg)
-      case "DEBUG" => Debug(className + ": " + msg)
-    }
-    messageBus.sendToLogger(className + ": " + msg)
-  }
+  // start of range for workers to listen to
+  def WORKER_PORT_RANGE_START = 2556
 
 }

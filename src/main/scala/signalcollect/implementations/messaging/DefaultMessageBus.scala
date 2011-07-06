@@ -23,6 +23,7 @@ import signalcollect._
 import signalcollect.interfaces._
 import java.util.HashMap
 
+
 class DefaultMessageBus[MessageType, IdType](
   val numberOfWorkers: Int,
   protected val mapper: VertexToWorkerMapper)
@@ -30,7 +31,7 @@ class DefaultMessageBus[MessageType, IdType](
 
   protected val workers = new Array[MessageRecipient[MessageType]](numberOfWorkers)
   protected var coordinator: MessageRecipient[MessageType] = _
-  protected var logger: Option[interfaces.MessageRecipient[Any]] = None
+  protected var logger: Option[Logger] = None
 
   var messagesSent = 0l
 
@@ -42,7 +43,7 @@ class DefaultMessageBus[MessageType, IdType](
     coordinator = c
   }
 
-  def registerLogger(l: MessageRecipient[Any]) {
+  def registerLogger(l: Logger) {
     logger = Some(l)
   }
 

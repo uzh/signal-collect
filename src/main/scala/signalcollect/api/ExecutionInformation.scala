@@ -20,28 +20,34 @@
 package signalcollect.api
 
 import signalcollect.interfaces._
+import signalcollect.configuration._
+import signalcollect.configuration.bootstrap._
 
 case class ExecutionInformation(
-  computeGraphConfiguration: Configuration,
-  executionParameters: ExecutionParameters,
+  config: Configuration,
+  parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,
   individualWorkerStatistics: List[WorkerStatistics]) {
 
   override def toString: String = {
     "\n----------\n" +
-    "Configuration\n" +
+      "Bootstrap\n" +
       "----------\n" +
-      computeGraphConfiguration.toString +
+      config.bootstrapConfiguration.toString +
       "\n----------\n" +
-    "Parameters\n" +
+      "Graph\n" +
       "----------\n" +
-      executionParameters.toString +
+      config.graphConfiguration.toString +
+      "\n----------\n" +
+      "Execution Parameters\n" +
+      "----------\n" +
+      parameters.toString +
       "\n----------\n" +
       "Statistics\n" +
       "----------\n" +
-    executionStatistics.toString + "\n" +
-    aggregatedWorkerStatistics.toString + "\n"
+      executionStatistics.toString + "\n" +
+      aggregatedWorkerStatistics.toString + "\n"
   }
 }
 
@@ -51,12 +57,12 @@ case class ExecutionStatistics(
   computationTimeInMilliseconds: Long,
   jvmCpuTimeInMilliseconds: Long,
   graphLoadingWaitInMilliseconds: Long) {
-  
-    override def toString: String = {
-      "# signal steps" + "\t" + "\t" + signalSteps  + "\n" + 
-      "# collect steps" + "\t" + "\t" + collectSteps  + "\n" +
-      "computation time (ms)" + "\t" + computationTimeInMilliseconds  + "\n" +
-      "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds  + "\n" +
+
+  override def toString: String = {
+    "# signal steps" + "\t" + "\t" + signalSteps + "\n" +
+      "# collect steps" + "\t" + "\t" + collectSteps + "\n" +
+      "computation time (ms)" + "\t" + computationTimeInMilliseconds + "\n" +
+      "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds + "\n" +
       "graph loading time (ms)" + "\t" + graphLoadingWaitInMilliseconds
-    }
+  }
 }

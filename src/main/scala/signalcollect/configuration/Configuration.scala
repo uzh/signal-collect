@@ -1,5 +1,5 @@
 /*
- *  @author Philip Stutz
+ *  @author Francisco de Freitas
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -17,20 +17,25 @@
  *  
  */
 
-package signalcollect.api
+package signalcollect.configuration
 
+import signalcollect.configuration.bootstrap._
 import signalcollect.interfaces._
+import java.util.HashMap
 
-case class ExecutionParameters(
-  signalThreshold: Double = 0.01,
-  collectThreshold: Double = 0.0,
-  timeLimit: Option[Long] = None,
-  stepsLimit: Option[Long] = None) {
+/**
+ * Main configuration for Signal Collect. Used for constructing a [compute graph]
+ */
+trait Configuration {
 
-  override def toString: String = {
-    "signal threshold" + "\t" + signalThreshold + "\n" +
-      "collect threshold" + "\t" + collectThreshold + "\n" +
-      "time limit" + "\t" + "\t" + timeLimit + "\n" +
-      "steps limit" + "\t" + "\t" + stepsLimit
-  }
+  def numberOfWorkers: Int
+
+  def optionalLogger: Boolean
+
+  def graphConfiguration: GraphConfiguration
+  def bootstrapConfiguration: BootstrapConfiguration
+  def executionConfiguration: ExecutionConfiguration
+
+  def workerConfigurations: HashMap[Int, WorkerConfiguration]
+
 }

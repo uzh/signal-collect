@@ -21,6 +21,7 @@ package signalcollect.algorithms
 
 import signalcollect.api._
 import signalcollect.implementations.graph.SumOfOutWeights
+import signalcollect.configuration._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -67,7 +68,7 @@ class Page(id: Any, dampingFactor: Double) extends SignalMapVertex(id, 1 - dampi
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = new DefaultComputeGraph()
+  val cg = new ComputeGraphBuilder().build
   cg.add(new Page(1, 0.85))
   cg.add(new Page(2, 0.85))
   cg.add(new Page(3, 0.85))

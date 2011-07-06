@@ -50,7 +50,7 @@ import akka.actor.ReceiveTimeout
 //
 //  def receive = {
 //
-//    // TODO: FIXME still testing the correct effect of this
+//    // FIXME still testing the correct effect of this
 //    /*case ReceiveTimeout =>
 //      // handleIdling
 //      if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle

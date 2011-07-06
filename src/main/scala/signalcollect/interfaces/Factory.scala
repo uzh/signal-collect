@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,20 +17,22 @@
  *  
  */
 
-package signalcollect.implementations.coordinator
+package signalcollect.interfaces
 
-import signalcollect.api.ExecutionParameters
+import signalcollect.configuration._
 
-trait SynchronousExecution {
+trait Factory extends Serializable {
+  def name: String = this.getClass.getSimpleName
+}
 
-  protected def workerApi: WorkerApi
+trait WorkerFactory extends Factory {
+  def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker
+}
 
-  protected def performComputation(parameters: ExecutionParameters) {
-    var done = false
-    while (!done && (!parameters.stepsLimit.isDefined || workerApi.collectSteps < parameters.stepsLimit.get)) {
-      workerApi.signalStep
-      done = workerApi.collectStep
-    }
-  }
+trait MessageBusFactory extends Factory {
+  def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any, Any]
+}
 
+trait StorageFactory extends Factory {
+  def createInstance(messageBus: MessageBus[Any, Any]): Storage
 }

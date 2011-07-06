@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 package signalcollect.implementations.worker
 
+import signalcollect.configuration._
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import signalcollect.implementations._
@@ -45,20 +46,32 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-abstract class AbstractWorker(
+class LocalWorker(
   val workerId: Int,
-  val messageBus: MessageBus[Any, Any],
-  storageFactory: StorageFactory)
+  workerConfiguration: WorkerConfiguration)
   extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
   with Runnable {
+  
+  val messageBus: MessageBus[Any, Any] = workerConfiguration.messageBus
 
   /**
    * Generalization of worker initialization
    */
   def initialize {
     new Thread(this, "Worker" + workerId).start
+  }
+  
+  def run {
+    while (!shouldShutdown) {
+      handleIdling
+      // While the computation is in progress, alternately check the inbox and collect/signal
+      if (!isPaused) {
+        vertexStore.toSignal.foreach(signal(_))
+        vertexStore.toCollect.foreachWithSnapshot(vertex => { processInbox; if (collect(vertex)) { signal(vertex) } }, () => false)
+      }
+    }
   }
  
   protected val counters = new WorkerOperationCounters()
@@ -70,7 +83,7 @@ abstract class AbstractWorker(
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case WorkerRequest(command) => command(this)
-      case other => log("Could not handle message " + message)
+      case other => log("Could not handle message " + message, "DEBUG")
     }
   }
   
@@ -101,7 +114,7 @@ abstract class AbstractWorker(
       vertexStore.toSignal.add(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
     } else {
-      log("Did not find vertex with id " + edge.sourceId + " when adding edge " + edge)
+      log("Did not find vertex with id " + edge.sourceId + " when adding edge " + edge, "INFO")
     }
   }
 
@@ -118,7 +131,7 @@ abstract class AbstractWorker(
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      log("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+      log("Should remove vertex with id " + vertexId + ": could not find this vertex.", "INFO")
     }
   }
 
@@ -129,10 +142,10 @@ abstract class AbstractWorker(
         counters.outgoingEdgesRemoved += 1
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
-        log("Outgoing edge not found when trying to remove edge with id " + edgeId)
+        log("Outgoing edge not found when trying to remove edge with id " + edgeId, "INFO")
       }
     } else {
-      log("Source vertex not found found when trying to remove edge with id " + edgeId)
+      log("Source vertex not found found when trying to remove edge with id " + edgeId, "INFO")
     }
   }
 
@@ -257,7 +270,7 @@ abstract class AbstractWorker(
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
 
-  protected var vertexStore = storageFactory.createInstance(messageBus)
+  protected var vertexStore = workerConfiguration.storageFactory.createInstance(messageBus)
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
@@ -343,8 +356,31 @@ abstract class AbstractWorker(
     messageBus.registerCoordinator(coordinator)
   }
 
-  def registerLogger(logger: MessageRecipient[Any]) {
+  def registerLogger(logger: Logger) {
     messageBus.registerLogger(logger)
+  }
+  
+  
+  
+  protected def handlePauseAndContinue {
+    if (shouldStart) {
+      shouldStart = false
+      isPaused = false
+      sendStatusToCoordinator
+    } else if (shouldPause) {
+      shouldPause = false
+      isPaused = true
+      sendStatusToCoordinator
+    }
+  }
+
+  protected def handleIdling {
+    handlePauseAndContinue
+    if (isConverged || isPaused) {
+      processInboxOrIdle(idleTimeoutNanoseconds)
+    } else {
+      processInbox
+    }
   }
 
 }

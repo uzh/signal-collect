@@ -17,30 +17,30 @@
  *  
  */
 
-package signalcollect.interfaces
+package signalcollect.configuration.provisioning
 
-/*import scala.annotation.elidable
-import scala.annotation.elidable._*/
+import scala.collection.mutable.HashMap
 
-trait Logging {
-  protected def messageBus: MessageBus[_, _]
+/**
+ * Provisioning for nodes
+ * 
+ * How many workers per node
+ * TODO: vertices per worker
+ * TODO: segments per worker
+ * 
+ */
+trait NodeProvisioning {
 
-  lazy val className = this.getClass.getSimpleName
-  
+  protected def workersPerNode: HashMap[String, Int]
+
+  def workerPorts: HashMap[String, List[Int]]
+
   /**
-   * TODO add logging per method and elidable so that the send gets muted
-   * @param msg
-   * @param level
+   * TODO: doesnt really work if we are using hashes to locate vertices in the workers, however that could change
+   *
+   * def verticesPerWorker: Map[Int, Long]
+   *
+   * def segmentsPerWorker: Map[Int, Int]
    */
-  def log(msg: Any, level: String) = {
-    
-    level match {
-      case "CONFIG" => Config(className + ": " + msg)
-      case "INFO" => Info(className + ": " + msg)
-      case "SEVERE" => Severe(className + ": " + msg)
-      case "DEBUG" => Debug(className + ": " + msg)
-    }
-    messageBus.sendToLogger(className + ": " + msg)
-  }
 
 }

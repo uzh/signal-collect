@@ -1,7 +1,7 @@
 /*
- *  @author Philip Stutz
+ *  @author Francisco de Freitas
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,16 +20,31 @@
 package signalcollect.implementations.logging
 
 import signalcollect.interfaces._
+import signalcollect.interfaces.LogMessage
+import akka.actor.Actor
+import akka.actor.Actor._
+import akka.actor.ActorRef
 
-class DefaultLogger extends MessageRecipient[Any] {
+class DefaultLogger extends Logger {
+  
   def receive(loggingMessage: Any) {
-    synchronized {
-      logMessage(loggingMessage)
+    loggingMessage match {
+      case Config(msg) => config(msg)
+      case Info(msg) => info(msg)
+      case Severe(msg) => severe(msg)
+      case Debug(msg) => Debug(msg)
     }
   }
+}
 
-  def logMessage(message: Any) {
-    println(message)
+class ActorLogger extends Logger with Actor {
+  
+  def receive(message: Any) = sys.error("Receive should not be called.")
+  
+  def receive = {
+    case Config(msg) => config(msg)
+    case Info(msg) => info(msg)
+    case Severe(msg) => severe(msg)
+    case Debug(msg) => Debug(msg)
   }
-
 }

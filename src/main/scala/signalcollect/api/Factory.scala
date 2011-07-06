@@ -21,16 +21,6 @@ package signalcollect.api
 
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import akka.util.Duration
-import akka.dispatch.Dispatchers
-import akka.dispatch.Dispatchers._
-import akka.dispatch.MessageDispatcher
-import akka.dispatch.UnboundedMailbox
-import akka.dispatch.UnboundedMessageQueueSemantics
-import akka.dispatch.ExecutableMailbox
-import akka.dispatch.MessageInvocation
-import akka.actor.Actor
-import akka.actor.Actor._
-import akka.actor.ActorRef
 import signalcollect.implementations.worker.akka._
 import java.util.concurrent.TimeUnit._
 import signalcollect.interfaces._
@@ -38,6 +28,7 @@ import signalcollect.implementations.worker._
 import signalcollect.implementations.messaging._
 import signalcollect.implementations.storage._
 import java.util.concurrent.LinkedBlockingQueue
+import signalcollect.configuration._
 
 object Factory {
 
@@ -72,25 +63,19 @@ object Factory {
   }
 
   object Worker {
-    object Asynchronous extends WorkerFactory {
-      class AsynchronousWorker(workerId: Int,
-        messageBus: MessageBus[Any, Any],
-        storageFactory: StorageFactory)
-        extends AbstractWorker(workerId,
-          messageBus,
-          storageFactory) with AsynchronousExecution
-      def createInstance(workerId: Int, messageBus: MessageBus[Any, Any], storageFactory: StorageFactory): Worker = new AsynchronousWorker(workerId, messageBus, storageFactory)
+    
+    
+    object Local extends WorkerFactory {
+      def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new LocalWorker(workerId, workerConfiguration: WorkerConfiguration)
     }
 
-    object Synchronous extends WorkerFactory {
+    /*object Synchronous extends WorkerFactory {
       class SynchronousWorker(workerId: Int,
-        messageBus: MessageBus[Any, Any],
-        storageFactory: StorageFactory)
+        workerConfiguration: WorkerConfiguration)
         extends AbstractWorker(workerId,
-          messageBus,
-          storageFactory) with SynchronousExecution
-      def createInstance(workerId: Int, messageBus: MessageBus[Any, Any], storageFactory: StorageFactory): Worker = new SynchronousWorker(workerId, messageBus, storageFactory)
-    }
+          workerConfiguration) with SynchronousExecution
+      def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new SynchronousWorker(workerId, workerConfiguration: WorkerConfiguration)
+    }*/
 
     //    lazy val BufferingSynchronous: WorkerFactory = new SynchronousWorker(_, _, Queue.Default, _) with SignalBuffer
     //    lazy val BufferingAsynchronous: WorkerFactory = new AsynchronousWorker(_, _, Queue.Default, _) with SignalBuffer

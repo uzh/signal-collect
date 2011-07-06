@@ -31,6 +31,8 @@ import signalcollect.api.Factory._
 import signalcollect.algorithms._
 import signalcollect.implementations.logging.DefaultLogger
 
+import signalcollect.configuration._
+
 /**
  * Hint: For information on how to run specs see the specs v.1 website
  * http://code.google.com/p/specs/wiki/RunningSpecs
@@ -39,10 +41,10 @@ import signalcollect.implementations.logging.DefaultLogger
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => DefaultBuilder.withNumberOfWorkers(numberOfWorkers).build,
-    (numberOfWorkers: Int) => DefaultBuilder.withExecutionMode(SynchronousExecutionMode).withNumberOfWorkers(numberOfWorkers).build)
+    (numberOfWorkers: Int) => (new ComputeGraphBuilder().withNumberOfWorkers(numberOfWorkers)).build,
+    (numberOfWorkers: Int) => (new ComputeGraphBuilder().withExecutionMode(SynchronousExecutionMode).withNumberOfWorkers(numberOfWorkers).build))
 
-  val testWorkerCounts = List(1, 2, 4, 8, 16, 32, 64, 128)
+  val testWorkerCounts = List(1, 2, 4, 8/*, 16, 32, 64, 128*/)
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
@@ -54,7 +56,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
         buildGraph(cg)
         //        cg.setSignalThreshold(signalThreshold)
         //        cg.setCollectThreshold(collectThreshold)
-        val stats = cg.execute(ExecutionParameters(signalThreshold = signalThreshold))
+        val stats = cg.execute(ExecutionConfiguration(executionMode = cg.config.executionConfiguration.executionMode, signalThreshold = signalThreshold))
         correct &= cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
         if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)

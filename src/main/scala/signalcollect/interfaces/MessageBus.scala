@@ -37,5 +37,5 @@ trait MessageBus[MessageType, IdType] extends MessageRecipientRegistry[MessageTy
 trait MessageRecipientRegistry[MessageType] {
   def registerWorker(workerId: Int, worker: MessageRecipient[MessageType])
   def registerCoordinator(coordinator: MessageRecipient[MessageType])
-  def registerLogger(logger: MessageRecipient[Any])
+  def registerLogger(logger: Logger)
 }

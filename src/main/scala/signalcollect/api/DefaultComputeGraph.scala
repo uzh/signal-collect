@@ -23,31 +23,20 @@ import signalcollect.interfaces._
 import signalcollect.interfaces.MessageRecipient
 import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.coordinator._
-import signalcollect.implementations.messaging.DefaultVertexToWorkerMapper
+import signalcollect.configuration._
 
 /**
  * Default [[signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultComputeGraph(config: Configuration = new DefaultConfiguration()) extends ComputeGraph with GraphApi {
-
-  val workerApi = new WorkerApi(config)
-
-  if (config.optionalLogger.isDefined) {
-    workerApi.registerLogger(config.optionalLogger.get)
-  }
-
-  protected val coordinator = {
-    config.executionMode match {
-      case AsynchronousExecutionMode => new AsynchronousCoordinator(workerApi, config)
-      case SynchronousExecutionMode => new SynchronousCoordinator(workerApi, config)
-    }
-  }
+class DefaultComputeGraph(configuration: Configuration, workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
+  
+  def config: Configuration = configuration
 
   /** GraphApi */
 
-  def execute: ExecutionInformation = execute(ExecutionParameters())
+  def execute: ExecutionInformation = execute(config.executionConfiguration)
   
-  def execute(parameters: ExecutionParameters): ExecutionInformation = coordinator.execute(parameters)
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation = coordinator.execute(parameters)
 
   /** WorkerApi */
 

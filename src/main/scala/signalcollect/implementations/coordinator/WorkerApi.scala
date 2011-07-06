@@ -20,6 +20,7 @@
 package signalcollect.implementations.coordinator
 
 import signalcollect.interfaces._
+import signalcollect.configuration._
 import signalcollect.implementations.messaging._
 import signalcollect.api.Factory._
 import java.lang.reflect.Method
@@ -29,34 +30,69 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConversions._
 import java.util.concurrent.atomic.AtomicLong
 import signalcollect.api.Factory
+import signalcollect.configuration.bootstrap._
 
 class WorkerApi(config: Configuration) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 
   protected lazy val workerFactory = {
-    config.executionMode match {
-      case AsynchronousExecutionMode => Factory.Worker.Asynchronous
-      case SynchronousExecutionMode => Factory.Worker.Synchronous
+    config.bootstrapConfiguration.executionArchitecture match {
+      case LocalExecutionArchitecture => Factory.Worker.Local
+      //case DistributedExecutionArchitecture => Factory.Worker.Remote
     }
   }
-  protected val workers: Array[Worker] = createWorkers
+
+  // initialize workers array
+  protected val workers = new Array[Worker](config.numberOfWorkers)
+
+  /**
+   * Individual worker creation
+   * It creates and initializes the workers whether remote or local
+   *
+   * @param: workerId is the id of the worker
+   */
+  def createWorker(workerId: Int) {
+
+    // create worker message bus from configuration
+    val workerMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+
+    // create the worker configuration for worker instantiation
+    config.workerConfigurations.put(workerId, DefaultWorkerConfiguration(workerMessageBus))
+
+    // register the coordinator
+    workerMessageBus.registerCoordinator(this)
+
+    // create thw worker
+    val worker = workerFactory.createInstance(workerId, config.workerConfigurations(workerId))
+
+    // initialize it
+    worker.initialize
+
+    // put it to the array of workers
+    workers(workerId) = worker
+
+  }
+
+  //protected val workers: Array[Worker] = createWorkers
+
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
   protected lazy val workerProxyMessageBuses: Array[MessageBus[Any, Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
   protected lazy val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
-  protected lazy val messageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+  protected lazy val messageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
   protected lazy val workerStatusMap = new ConcurrentHashMap[Int, WorkerStatus]()
   protected val messagesReceived = new AtomicLong(0l)
   protected val statusMonitor = new Object
 
   var signalSteps = 0l
   var collectSteps = 0l
- 
+
+  @deprecated
   protected def createWorkers: Array[Worker] = {
     val workers = new Array[Worker](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      val workerMessageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+      val workerMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       workerMessageBus.registerCoordinator(this)
-      val worker = workerFactory.createInstance(workerId, workerMessageBus, config.storageFactory)
+      val worker = workerFactory.createInstance(workerId, config.workerConfigurations(workerId))
       worker.initialize
       workers(workerId) = worker
     }
@@ -66,7 +102,7 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   protected def createWorkerProxyMessageBuses: Array[MessageBus[Any, Any]] = {
     val workerProxyMessageBuses = new Array[MessageBus[Any, Any]](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      val proxyMessageBus = config.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+      val proxyMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       proxyMessageBus.registerCoordinator(this)
       workerProxyMessageBuses(workerId) = proxyMessageBus
     }
@@ -82,9 +118,15 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     workerProxies
   }
 
-  initialize
+  // initialize
 
-  protected def initialize {
+  var isInitialized = false
+
+  def initialize {
+
+    if (isInitialized)
+      return
+
     Thread.currentThread.setName("Coordinator")
     messageBus.registerCoordinator(this)
     workerProxyMessageBuses foreach (_.registerCoordinator(this))
@@ -95,12 +137,15 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     for (workerId <- 0 until config.numberOfWorkers) {
       parallelWorkerProxies foreach (_.registerWorker(workerId, workers(workerId)))
     }
+
+    isInitialized = true
+
   }
 
   def getWorkerStatistics: List[WorkerStatistics] = {
     parallelWorkerProxies.map(_.getWorkerStatistics).toList
   }
-  
+
   def receive(message: Any) {
     this.synchronized {
       messagesReceived.incrementAndGet
@@ -129,14 +174,14 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
 
-  def registerLogger(l: MessageRecipient[Any]) {
+  def registerLogger(l: Logger) {
     messageBus.registerLogger(l)
     workerProxyMessageBuses foreach (_.registerLogger(l))
     parallelWorkerProxies foreach (_.registerLogger(l))
   }
-  
-  def logCoordinatorMessage(m: Any) = log(m)
-  
+
+  def logCoordinatorMessage(m: Any) = log(m, "DEBUG")
+
   def awaitIdle: Long = {
     val startTime = System.nanoTime
     statusMonitor.synchronized {
@@ -211,5 +256,5 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   def setSignalThreshold(t: Double) = parallelWorkerProxies foreach (_.setSignalThreshold(t))
 
   def setCollectThreshold(t: Double) = parallelWorkerProxies foreach (_.setCollectThreshold(t))
-  
+
 }

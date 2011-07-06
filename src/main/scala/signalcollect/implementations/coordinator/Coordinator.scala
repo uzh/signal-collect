@@ -19,6 +19,7 @@
 
 package signalcollect.implementations.coordinator
 
+import signalcollect.configuration._
 import signalcollect.implementations.messaging.AbstractMessageRecipient
 import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.api.Factory
@@ -30,21 +31,15 @@ import java.lang.management._
 import com.sun.management.OperatingSystemMXBean
 import signalcollect.api._
 
-class AsynchronousCoordinator(workerApi: WorkerApi, config: Configuration)
-  extends Coordinator(workerApi, config) with AsynchronousExecution
+class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
-class SynchronousCoordinator(workerApi: WorkerApi, config: Configuration)
-  extends Coordinator(workerApi, config) with SynchronousExecution
-
-abstract class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
-
-  def execute(parameters: ExecutionParameters): ExecutionInformation = {
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
 
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
-    
+
     workerApi.logCoordinatorMessage("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = workerApi.awaitIdle
@@ -54,7 +49,13 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
     val startTime = System.nanoTime
 
     /*******************************/
-    performComputation(parameters)
+
+    config.executionConfiguration.executionMode match {
+      case SynchronousExecutionMode => synchronousExecution(config.executionConfiguration.stepsLimit)
+      case OptimizedAsynchronousExecutionMode => optimizedAsynchronousExecution
+      case PureAsynchronousExecutionMode => pureAsynchronousExecution
+    }
+
     /*******************************/
 
     val stopTime = System.nanoTime
@@ -82,7 +83,7 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
       workerStatistics)
   }
 
-  protected def performComputation(parameters: ExecutionParameters)
+  //protected def performComputation(parameters: ExecutionParameters)
 
   def getJVMCpuTime = {
     val bean = ManagementFactory.getOperatingSystemMXBean
@@ -92,4 +93,24 @@ abstract class Coordinator(protected val workerApi: WorkerApi, config: Configura
       (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
     }
   }
+
+  protected def optimizedAsynchronousExecution {
+    workerApi.signalStep
+    pureAsynchronousExecution
+  }
+
+  protected def pureAsynchronousExecution {
+    workerApi.startComputation
+    workerApi.awaitIdle
+    workerApi.pauseComputation
+  }
+
+  protected def synchronousExecution(stepsLimit: Option[Long]) {
+    var done = false
+    while (!done && (!stepsLimit.isDefined || workerApi.collectSteps < stepsLimit.get)) {
+      workerApi.signalStep
+      done = workerApi.collectStep
+    }
+  }
+
 }

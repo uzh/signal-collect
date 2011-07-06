@@ -20,6 +20,7 @@
 package signalcollect.algorithms
 
 import signalcollect.api._
+import signalcollect.configuration._
 
 /**
  *  Regular expression to match links in Html strings
@@ -35,7 +36,7 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = new DefaultComputeGraph()
+  val cg = new ComputeGraphBuilder().build
   cg.add(new Webpage("http://www.ifi.uzh.ch/ddis/", 2, 0.85))
   val stats = cg.execute
   cg.foreachVertex(println(_))

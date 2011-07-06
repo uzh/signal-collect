@@ -76,6 +76,13 @@ class WorkerProxy(workerId: Int, messageBus: MessageBus[Any, Any]) extends Invoc
         worker.messageBus.sendToCoordinator(reply)
       }
       relay(command)
+      
+      /*
+       * Blocking operation, until receive of worker reply by coordinator
+       * The reply will trigger the invoke again with receive method
+       * 
+       * TODO: catch exception for remote worker response time
+       */
       if (workerMessage == null) {
         monitor.synchronized {
           while (workerMessage == null) {

@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,19 +17,21 @@
  *  
  */
 
-package signalcollect.implementations.coordinator
+package signalcollect.configuration
 
-import signalcollect.api.ExecutionParameters
+import signalcollect.api._
+import signalcollect.interfaces._
 
-trait AsynchronousExecution {
-  
-  protected def workerApi: WorkerApi
-  
-  protected def performComputation(parameters: ExecutionParameters) {
-	workerApi.signalStep
-	workerApi.startComputation
-	workerApi.awaitIdle
-	workerApi.pauseComputation
+trait GraphConfiguration {
+  def messageBusFactory: MessageBusFactory
+  def storageFactory: StorageFactory
+
+  override def toString: String = {
+      "messagebus" + "\t" + messageBusFactory + "\n" +
+      "storage" + "\t" + "\t" + storageFactory + "\n"
   }
-
 }
+
+case class DefaultGraphConfiguration(
+  messageBusFactory: MessageBusFactory = Factory.MessageBus.SharedMemory,
+  storageFactory: StorageFactory = Factory.Storage.InMemory ) extends GraphConfiguration

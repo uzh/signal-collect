@@ -20,8 +20,11 @@
 package signalcollect.interfaces
 
 import signalcollect.api._
+import signalcollect.configuration._
 
 trait ComputeGraph extends GraphApi {
+  
+  def config: Configuration
 
   /* 
    * Starts the execution of the computation using the default execution parameters.
@@ -40,9 +43,9 @@ trait ComputeGraph extends GraphApi {
   /* 
    * Starts the execution of the computation using custom execution parameters. The method blocks until the computation has ended.
    * 
-   * The computation will 
+   * The computation will TODO
    */
-  def execute(parameters: ExecutionParameters): ExecutionInformation
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation
 
   /* 
    * Recalculates the signal/collect scores of all vertices.
