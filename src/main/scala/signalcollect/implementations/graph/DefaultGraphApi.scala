@@ -46,12 +46,12 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
     messageBus.sendToWorkers(Signal(sourceId, ALL, signal))
   }
 
-  def add(vertex: Vertex[_, _]) {
+  def addVertex(vertex: Vertex[_, _]) {
     val request = WorkerRequest((_.addVertex(write(vertex))))
     messageBus.sendToWorkerForVertexId(request, vertex.id)
   }
 
-  def add(edge: Edge[_, _]) {
+  def addEdge(edge: Edge[_, _]) {
     val request = WorkerRequest((_.addEdge(write(edge))))
     messageBus.sendToWorkerForVertexId(request, edge.sourceId)
   }

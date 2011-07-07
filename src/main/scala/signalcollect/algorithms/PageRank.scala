@@ -47,7 +47,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
  *  @param id: the identifier of this vertex
  *  @param dampingFactor: @see <a href="http://en.wikipedia.org/wiki/PageRank">PageRank algorithm</a>
  */
-class Page(id: Any, dampingFactor: Double) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights[Any, Double] {
+class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights[Any, Double] {
 
   type UpperSignalTypeBound = Double
 	
@@ -69,13 +69,13 @@ class Page(id: Any, dampingFactor: Double) extends SignalMapVertex(id, 1 - dampi
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
   val cg = new ComputeGraphBuilder().build
-  cg.add(new Page(1, 0.85))
-  cg.add(new Page(2, 0.85))
-  cg.add(new Page(3, 0.85))
-  cg.add(new Link(1, 2))
-  cg.add(new Link(2, 1))
-  cg.add(new Link(2, 3))
-  cg.add(new Link(3, 2))
+  cg.addVertex(new Page(1))
+  cg.addVertex(new Page(2))
+  cg.addVertex(new Page(3))
+  cg.addEdge(new Link(1, 2))
+  cg.addEdge(new Link(2, 1))
+  cg.addEdge(new Link(2, 3))
+  cg.addEdge(new Link(3, 2))
   val stats = cg.execute
   println(stats)
   cg.foreachVertex (println(_))

@@ -67,9 +67,9 @@ class DefaultComputeGraph(configuration: Configuration, workerApi: WorkerApi, co
 
   def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToAllVertices(signal, sourceId)
 
-  def add(vertex: Vertex[_, _]) = workerApi.add(vertex)
+  def addVertex(vertex: Vertex[_, _]) = workerApi.addVertex(vertex)
 
-  def add(edge: Edge[_, _]) = workerApi.add(edge)
+  def addEdge(edge: Edge[_, _]) = workerApi.addEdge(edge)
 
   def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
     workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)

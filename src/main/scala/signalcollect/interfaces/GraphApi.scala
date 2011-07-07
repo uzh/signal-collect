@@ -33,9 +33,9 @@ trait GraphApi {
    */
   def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL)
 
-  def add(vertex: Vertex[_, _])
+  def addVertex(vertex: Vertex[_, _])
 
-  def add(edge: Edge[_, _])
+  def addEdge(edge: Edge[_, _])
 
   def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _])
 

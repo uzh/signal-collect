@@ -71,9 +71,9 @@ class IntegrationSpec extends SpecificationWithJUnit {
   def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId: Int, targetId: Int) =>
-        cg.add(new Page(sourceId, 0.85))
-        cg.add(new Page(targetId, 0.85))
-        cg.add(new Link(sourceId, targetId))
+        cg.addVertex(new Page(sourceId, 0.85))
+        cg.addVertex(new Page(targetId, 0.85))
+        cg.addEdge(new Link(sourceId, targetId))
     }
     cg
   }
@@ -81,9 +81,9 @@ class IntegrationSpec extends SpecificationWithJUnit {
   def buildVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
-        cg.add(new VerifiedColoredVertex(sourceId, numColors))
-        cg.add(new VerifiedColoredVertex(targetId, numColors))
-        cg.add(new StateForwarderEdge(sourceId, targetId))
+        cg.addVertex(new VerifiedColoredVertex(sourceId, numColors))
+        cg.addVertex(new VerifiedColoredVertex(targetId, numColors))
+        cg.addEdge(new StateForwarderEdge(sourceId, targetId))
     }
     cg
   }
@@ -92,16 +92,16 @@ class IntegrationSpec extends SpecificationWithJUnit {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         if (sourceId.equals(pathSourceId)) {
-          cg.add(new Location(sourceId, Some(0)))
+          cg.addVertex(new Location(sourceId, Some(0)))
         } else {
-          cg.add(new Location(sourceId, None))
+          cg.addVertex(new Location(sourceId, None))
         }
         if (targetId.equals(pathSourceId)) {
-          cg.add(new Location(targetId, Some(0)))
+          cg.addVertex(new Location(targetId, Some(0)))
         } else {
-          cg.add(new Location(targetId, None))
+          cg.addVertex(new Location(targetId, None))
         }
-        cg.add(new Path(sourceId, targetId))
+        cg.addEdge(new Path(sourceId, targetId))
     }
     cg
   }

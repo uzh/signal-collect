@@ -38,7 +38,6 @@ trait ComputeGraph extends GraphApi {
    * It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.  
    */
   def execute: ExecutionInformation
-
   
   /* 
    * Starts the execution of the computation using custom execution parameters. The method blocks until the computation has ended.

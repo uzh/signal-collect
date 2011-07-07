@@ -35,7 +35,7 @@ import signalcollect.configuration._
  * @param id: the vertex id
  * @param numColors: the number of colors (labels) used to color the graph
  */
-class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean) extends SignalMapVertex(id, initialColor) { //Random.nextInt(numColors) + 1
+class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean = false) extends SignalMapVertex(id, initialColor) { //Random.nextInt(numColors) + 1
 
   /**
    * Indicates that every signal this vertex receives is
@@ -103,13 +103,13 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  */
 object VertexColoring extends App {
   val cg = new ComputeGraphBuilder().build
-  cg.add(new ColoredVertex(1, 2, 1, false))
-  cg.add(new ColoredVertex(2, 2, 1, false))
-  cg.add(new ColoredVertex(3, 2, 1, false))
-  cg.add(new StateForwarderEdge(1, 2))
-  cg.add(new StateForwarderEdge(2, 1))
-  cg.add(new StateForwarderEdge(2, 3))
-  cg.add(new StateForwarderEdge(3, 2))
+  cg.addVertex(new ColoredVertex(1, 2, 1))
+  cg.addVertex(new ColoredVertex(2, 2, 1))
+  cg.addVertex(new ColoredVertex(3, 2, 1))
+  cg.addEdge(new StateForwarderEdge(1, 2))
+  cg.addEdge(new StateForwarderEdge(2, 1))
+  cg.addEdge(new StateForwarderEdge(2, 3))
+  cg.addEdge(new StateForwarderEdge(3, 2))
   val stats = cg.execute
   println(stats)
   cg.foreachVertex(println(_))
