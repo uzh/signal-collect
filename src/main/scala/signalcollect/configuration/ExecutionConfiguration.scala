@@ -21,6 +21,8 @@ package signalcollect.configuration
 
 import signalcollect.interfaces._
 
+object DefaultExecutionConfiguration extends ExecutionConfiguration()
+
 /**
  * Representss the parameters used by the compute graph related to the execution
  */

@@ -50,8 +50,8 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
     /*******************************/
 
-    config.executionConfiguration.executionMode match {
-      case SynchronousExecutionMode => synchronousExecution(config.executionConfiguration.stepsLimit)
+    parameters.executionMode match {
+      case SynchronousExecutionMode => synchronousExecution(parameters.stepsLimit)
       case OptimizedAsynchronousExecutionMode => optimizedAsynchronousExecution
       case PureAsynchronousExecutionMode => pureAsynchronousExecution
     }

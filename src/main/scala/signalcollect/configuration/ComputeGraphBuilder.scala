@@ -51,7 +51,6 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
   /**
    * Graph configuration
    */
-  def withExecutionMode(newExecutionMode: ExecutionMode) = newBuilder(executionMode = newExecutionMode)
   def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = newBuilder(messageBusFactory = newMessageBusFactory)
   def withStorageFactory(newStorageFactory: StorageFactory) = newBuilder(storageFactory = newStorageFactory)
 
@@ -68,7 +67,6 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
     numberOfWorkers: Int = config.numberOfWorkers,
     optionalLogger: Boolean = config.optionalLogger,
     // graph
-    executionMode: ExecutionMode = config.executionConfiguration.executionMode,
     messageBusFactory: MessageBusFactory = config.graphConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.graphConfiguration.storageFactory,
     // bootstrap
@@ -89,8 +87,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
           numberOfNodes = numberOfNodes,
           nodesAddress = nodesAddress,
           coordinatorAddress = coordinatorAddress,
-          nodeProvisioning = nodeProvisioning),
-        executionConfiguration = ExecutionConfiguration(executionMode = executionMode)))
+          nodeProvisioning = nodeProvisioning)))
   }
 
 }

@@ -34,7 +34,7 @@ class DefaultComputeGraph(configuration: Configuration, workerApi: WorkerApi, co
 
   /** GraphApi */
 
-  def execute: ExecutionInformation = execute(config.executionConfiguration)
+  def execute: ExecutionInformation = execute(DefaultExecutionConfiguration)
   
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = coordinator.execute(parameters)
 

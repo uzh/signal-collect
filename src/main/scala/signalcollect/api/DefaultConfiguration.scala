@@ -29,5 +29,4 @@ case class DefaultConfiguration(
   optionalLogger: Boolean = false,
   graphConfiguration: GraphConfiguration = DefaultGraphConfiguration(),
   bootstrapConfiguration: BootstrapConfiguration = DefaultBootstrapConfiguration(),
-  executionConfiguration: ExecutionConfiguration = ExecutionConfiguration(executionMode = OptimizedAsynchronousExecutionMode),
   workerConfigurations: HashMap[Int, WorkerConfiguration] = new HashMap[Int, WorkerConfiguration]()) extends Configuration

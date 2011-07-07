@@ -41,27 +41,28 @@ import signalcollect.configuration._
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => (new ComputeGraphBuilder().withNumberOfWorkers(numberOfWorkers)).build,
-    (numberOfWorkers: Int) => (new ComputeGraphBuilder().withExecutionMode(SynchronousExecutionMode).withNumberOfWorkers(numberOfWorkers).build))
+    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build)
 
-  val testWorkerCounts = List(1, 2, 4, 8/*, 16, 32, 64, 128*/)
+  val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
+
+  val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
     for (workers <- numberOfWorkers) {
-      for (graphProvider <- graphProviders) {
-        val cg = graphProvider.apply(workers)
-        buildGraph(cg)
-        //        cg.setSignalThreshold(signalThreshold)
-        //        cg.setCollectThreshold(collectThreshold)
-        val stats = cg.execute(ExecutionConfiguration(executionMode = cg.config.executionConfiguration.executionMode, signalThreshold = signalThreshold))
-        correct &= cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
-        if (!correct) {
-          System.err.println("Test failed. Computation stats: " + stats)
+      for (executionMode <- executionModes) {
+        for (graphProvider <- graphProviders) {
+          val cg = graphProvider.apply(workers)
+          buildGraph(cg)
+          val stats = cg.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
+          correct &= cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
+          if (!correct) {
+            System.err.println("Test failed. Computation stats: " + stats)
+          }
+          cg.shutdown
         }
-        cg.shutdown
       }
     }
     correct

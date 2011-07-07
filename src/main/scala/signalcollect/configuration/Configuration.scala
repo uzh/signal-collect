@@ -34,7 +34,6 @@ trait Configuration {
 
   def graphConfiguration: GraphConfiguration
   def bootstrapConfiguration: BootstrapConfiguration
-  def executionConfiguration: ExecutionConfiguration
 
   def workerConfigurations: HashMap[Int, WorkerConfiguration]
 
