@@ -57,7 +57,7 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     val workerMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
 
     // create the worker configuration for worker instantiation
-    config.workerConfigurations.put(workerId, DefaultWorkerConfiguration(workerMessageBus))
+    config.workerConfigurations.put(workerId, DefaultWorkerConfiguration(messageBus = workerMessageBus, storageFactory = config.graphConfiguration.storageFactory))
 
     // register the coordinator
     workerMessageBus.registerCoordinator(this)
