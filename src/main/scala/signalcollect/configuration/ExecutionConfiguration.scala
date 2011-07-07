@@ -25,7 +25,7 @@ import signalcollect.interfaces._
  * Representss the parameters used by the compute graph related to the execution
  */
 case class ExecutionConfiguration(
-  executionMode: ExecutionMode,
+  executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
   signalThreshold: Double = 0.01,
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,
