@@ -47,9 +47,9 @@ class EqualNodeProvisioning(nodesAddress: Vector[String], numberOfWorkers: Int) 
     for (i <- 0 to numberOfNodes) {
       // in case its and odd number of workers and nodes, the first node gets one more worker than the others
       if (i == 0)
-        workersPerNode += nodesAddress(i) -> (Math.ceil(div).asInstanceOf[Int])
+        workersPerNode += nodesAddress(i) -> (math.ceil(div).asInstanceOf[Int])
       else
-        workersPerNode += nodesAddress(i) -> (Math.ceil(div).asInstanceOf[Int])
+        workersPerNode += nodesAddress(i) -> (math.ceil(div).asInstanceOf[Int])
     }
 
     workersPerNode

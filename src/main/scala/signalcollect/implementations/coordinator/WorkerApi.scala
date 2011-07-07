@@ -37,7 +37,8 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   protected lazy val workerFactory = {
     config.bootstrapConfiguration.executionArchitecture match {
       case LocalExecutionArchitecture => Factory.Worker.Local
-      //case DistributedExecutionArchitecture => Factory.Worker.Remote
+      //case DistributedExecutionArchitecture => Factory.Worker.Akka
+      case other => throw new Exception("Currently only local workers supported.")
     }
   }
 
@@ -85,19 +86,6 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
 
   var signalSteps = 0l
   var collectSteps = 0l
-
-  @deprecated
-  protected def createWorkers: Array[Worker] = {
-    val workers = new Array[Worker](config.numberOfWorkers)
-    for (workerId <- 0 until config.numberOfWorkers) {
-      val workerMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
-      workerMessageBus.registerCoordinator(this)
-      val worker = workerFactory.createInstance(workerId, config.workerConfigurations(workerId))
-      worker.initialize
-      workers(workerId) = worker
-    }
-    workers
-  }
 
   protected def createWorkerProxyMessageBuses: Array[MessageBus[Any, Any]] = {
     val workerProxyMessageBuses = new Array[MessageBus[Any, Any]](config.numberOfWorkers)
