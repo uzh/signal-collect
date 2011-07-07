@@ -31,6 +31,11 @@ import signalcollect.configuration.bootstrap._
  */
 object DefaultComputeGraphBuilder extends ComputeGraphBuilder
 
+/**
+ * Builder for the creation of a compute graph needs a configuration object for the creation.
+ * If the user passes a configuration object but then uses a method of this class, the configuration's object
+ * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
+ */
 class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfiguration) extends Serializable {
 
   def build: ComputeGraph = {
@@ -58,10 +63,6 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
   def withNodesAddress(newNodesAddress: Vector[String]) = newBuilder(nodesAddress = newNodesAddress)
   def withCoordinatorAddress(newCoordinatorAddress: String) = newBuilder(coordinatorAddress = newCoordinatorAddress)
   def withNodeProvisioning(newNodeProvisioning: NodeProvisioning) = newBuilder(nodeProvisioning = newNodeProvisioning)
-
-  /**
-   * TODO: add moar
-   */
 
   def newBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
