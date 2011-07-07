@@ -29,7 +29,7 @@ import scala.collection.mutable.HashMap
  * TODO: segments per worker
  * 
  */
-trait NodeProvisioning {
+trait NodeProvisioning extends Serializable {
 
   protected def workersPerNode: HashMap[String, Int]
 
