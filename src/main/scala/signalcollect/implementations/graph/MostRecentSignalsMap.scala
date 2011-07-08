@@ -26,7 +26,7 @@ import signalcollect.util.collections.Filter;
 
 trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
   
-  protected val mostRecentSignalMap: Map[Any, UpperSignalTypeBound] = HashMap[Any, UpperSignalTypeBound]() // key: signal source id, value: signal
+  protected var mostRecentSignalMap: Map[Any, UpperSignalTypeBound] = HashMap[Any, UpperSignalTypeBound]() // key: signal source id, value: signal
 
   protected def mostRecentSignals: Iterable[UpperSignalTypeBound] = mostRecentSignalMap.values
 

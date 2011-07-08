@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package signalcollect.implementations.storage
+package signalcollect.implementations.serialization
 
 import signalcollect.interfaces.{Vertex, Serializer}
 import signalcollect.api.SignalMapVertex
@@ -25,15 +25,6 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, 
 object DefaultSerializer extends DefaultSerializer
 
 trait DefaultSerializer extends Serializer {
-  def getRandomString(prefix: String, length: Int): String = {
-	  val chars = (('a' to 'z') ++ ('A' to 'Z') ++ ('1' to '9')).toList
-	  var res = prefix
-	  for(i <- 0 to length) {
-	 	  res+=chars(scala.util.Random.nextInt(chars.size))
-	  }
-	  res
-  }
-  
   def write[A](inputObject: A): Array[Byte] = {
     val barr = new ByteArrayOutputStream(512)
     val out = new ObjectOutputStream(barr)

@@ -41,14 +41,14 @@ abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
   /**
    * More specific signal function that returns a [[scala.Option]] 
    */
-  def signal: Option[_]
+  def signal(sourceVertex: SourceVertexType): Option[_]
 
   /**
    * Calculates the new signal. If the [[scala.Option]] is defined,
    * then the value is sent. Else nothing is sent.
    */
-  override def executeSignalOperation(mb: MessageBus[Any, Any]) {
-    val optionalSignal = signal
+  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any, Any]) {
+    val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
     if (optionalSignal.isDefined) {
       mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, optionalSignal.get), targetHashCode)
     }

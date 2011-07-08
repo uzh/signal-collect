@@ -40,5 +40,5 @@ object StateForwarderEdge {
  * in general.
  */
 class StateForwarderEdge(sourceId: Any, targetId: Any) extends DefaultEdge(sourceId, targetId) {
-  def signal = source.state
+  def signal(sourceVertex: SourceVertexType) = sourceVertex.state
 }

@@ -45,8 +45,8 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
    *  where this edge starts plus the length of the path represented by this
    *  edge (= the weight of this edge).
    */
-  def signal: Option[Int] = {
-    source.state map (_ + weight.toInt)
+  def signal(sourceVertex: SourceVertexType): Option[Int] = {
+    sourceVertex.state map (_ + weight.toInt)
   }
 }
 

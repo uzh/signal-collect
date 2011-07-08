@@ -30,14 +30,14 @@ import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
-import scala.collection.immutable.HashMap
+import scala.collection.mutable.HashMap
 import scala.collection.immutable.Map
 import java.util.LinkedList
 import scala.collection.GenMap
 
 abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_, _, _]] {
 
-  protected val messageInbox = new LinkedList[Signal[_, _, _]]
+  protected var messageInbox = new LinkedList[Signal[_, _, _]]
 
   def receive(message: Signal[_, _, _]) {
     messageInbox.addLast(message)
@@ -75,7 +75,6 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     val newEdge = e.asInstanceOf[Edge[IdType, _]]
     if (!outgoingEdges.get(newEdge.id).isDefined) {
       outgoingEdgeAddedSinceSignalOperation = true
-      e.setSource(this)
       outgoingEdges += ((newEdge.id, newEdge))
       true
     } else {
@@ -125,7 +124,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   }
 
   def doSignal {
-    outgoingEdges.foreach(_._2.executeSignalOperation(messageBus))
+    outgoingEdges.foreach(_._2.executeSignalOperation(this, messageBus))
   }
 
   /**
@@ -203,4 +202,8 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     this.getClass.getSimpleName + "> Id: " + id + ", State: " + state
   }
 
+  
+    
+  /** to initialize vertices from file */
+  def getStore: Storage = null
 }

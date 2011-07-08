@@ -146,6 +146,6 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
 }
 
 trait LRUCache extends DefaultStorage {
-  def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, getRandomString("/tmp/", 5))
+  def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, "/var/tmp/sc")
   override protected def vertexStoreFactory = new LRUVertexCache(berkeleyDBFactory, this)
 }

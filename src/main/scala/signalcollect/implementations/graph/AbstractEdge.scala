@@ -34,7 +34,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * this function will be called during algorithm execution. It is meant to calculate a signal
    * going from the source vertex of this edge to the target vertex of this edge.
    */
-  def signal: SignalType
+  def signal(sourceVertex: SourceVertexType): SignalType
 
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
   def weight: Double = 1
@@ -59,16 +59,8 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
   /** A textual representation of this {@link Edge}. */
   override def toString = this.getClass.getSimpleName + "(" + sourceId + ", " + targetId + ")"
 
-  /** A reference to the the source {@link Vertex} where this {@link Edge} originates from. 
-   * Edges are always assigned to the same worker as their source vertex. This means that
-   * an edge can directly reference that source vertex, even in a distributed environment.
-   */
-  var source: SourceVertexType = _ // null instead of None (Option) because it simplifies the API and S/C guarantees that for the API user it will never be null
-
-  /** Setter with an unsafe cast. The user is responsible for not setting vertex types that don't match in practice */
-  def setSource(v: Vertex[_, _]) {
-    source = v.asInstanceOf[SourceVertexType]
-  }
+  /** to be called to explicitly initialize the edge */
+  def onAttach(sourceVertex: SourceVertexType) = {}
 
   /**
    * This method will be called by {@link FrameworkVertex#executeSignalOperation}
@@ -77,8 +69,8 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * 
    * @param mb the message bus to use for sending the signal
    */
-  def executeSignalOperation(mb: MessageBus[Any, Any]) {
-      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, signal), targetHashCode)
+  def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any, Any]) {
+      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, signal(sourceVertex.asInstanceOf[SourceVertexType])), targetHashCode)
   }
 
 }

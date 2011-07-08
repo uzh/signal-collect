@@ -39,7 +39,6 @@ import java.util.Map
 import java.util.Set
 import signalcollect.interfaces.ALL
 import signalcollect.implementations.graph.DefaultGraphApi
-import signalcollect.implementations.storage.DefaultSerializer
 
 //abstract class AkkaWorker(
 //  workerId: Int,

@@ -22,6 +22,9 @@ package signalcollect.algorithms
 import signalcollect.api._
 import signalcollect.implementations.graph.SumOfOutWeights
 import signalcollect.configuration._
+import java.io.{ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream}
+import signalcollect.interfaces.{Edge, Signal}
+import java.util.LinkedList
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -37,7 +40,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
    */
-  def signal = source.state * weight / source.sumOfOutWeights
+  def signal(sourceVertex: SourceVertexType) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
 
 }
 
@@ -64,11 +67,24 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
     }
   }
 
+  //Getters & Setters to provide access to protected vars.
+  def getDampingFactor = dampingFactor
+  def getOutgoingEdges = outgoingEdges
+  def getOutgoingEdgesAdded = outgoingEdgeAddedSinceSignalOperation
+  def getLastSignalState = lastSignalState
+  def getMostRecentSignalMap = mostRecentSignalMap
+  def getMessageInbox = messageInbox
+
+  def setOutgoingEdges(edges: scala.collection.mutable.HashMap[(Any, Any, String), Edge[Any, _]]) = outgoingEdges = edges
+  def setOutgoingEdgeAddedSinceSignalOperation(value: Boolean) = outgoingEdgeAddedSinceSignalOperation = value
+  def setLastSignalState(value: Option[Double]) = lastSignalState = value
+  def setMostRecentSignalMap(value: scala.collection.mutable.Map[Any, this.UpperSignalTypeBound]) = mostRecentSignalMap = value
+  def setMessageInbox(inbox: LinkedList[Signal[_, _, _]]) = messageInbox = inbox
 }
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = new ComputeGraphBuilder().build
+  val cg = new ComputeGraphBuilder().withStorageFactory(Factory.Storage.BerkeleyDB).build
   cg.addVertex(new Page(1))
   cg.addVertex(new Page(2))
   cg.addVertex(new Page(3))
@@ -76,7 +92,7 @@ object PageRank extends App {
   cg.addEdge(new Link(2, 1))
   cg.addEdge(new Link(2, 3))
   cg.addEdge(new Link(3, 2))
-  val stats = cg.execute
+  val stats = cg.execute(new ExecutionConfiguration(executionMode=SynchronousExecutionMode))
   println(stats)
   cg.foreachVertex (println(_))
   cg.shutdown

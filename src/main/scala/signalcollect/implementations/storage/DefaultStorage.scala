@@ -2,7 +2,9 @@ package signalcollect.implementations.storage
 
 import java.util.Set
 import signalcollect.interfaces._
+import signalcollect.implementations.serialization._
 import java.util.Set
+
 
  class DefaultStorage(val messageBus: MessageBus[Any, Any]) extends Storage(messageBus) with DefaultSerializer {
   var vertices = vertexStoreFactory

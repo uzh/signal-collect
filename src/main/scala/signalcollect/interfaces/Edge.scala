@@ -32,7 +32,7 @@ trait Edge[+SourceIdType, +TargetIdType] {
    * this function will be called during algorithm execution. It is meant to calculate a signal
    * going from the source vertex of this edge to the target vertex of this edge.
    */
-  def signal: SignalType
+  def signal(sourceVertex: SourceVertexType): SignalType
 
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
   def weight: Double
@@ -51,16 +51,14 @@ trait Edge[+SourceIdType, +TargetIdType] {
   /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
   type SourceVertexType <: Vertex[_, _]
 
-  /** Setter with an unsafe cast. The user is responsible for not setting vertex types that don't match in practice */
-  def setSource(v: Vertex[_, _])
-
   /**
    * This method will be called by {@link FrameworkVertex#executeSignalOperation}
    * of this {@Edge} source vertex. It calculates the signal and sends it over the message bus.
    * {@link OnlySignalOnChangeEdge}.
    * 
    * @param mb the message bus to use for sending the signal
+   * @param souceVertex the source vertex to get the state to assemble the signal
    */
-  def executeSignalOperation(mb: MessageBus[Any, Any])
+  def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any, Any])
 
 }

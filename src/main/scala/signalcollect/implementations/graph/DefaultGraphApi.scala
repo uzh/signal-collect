@@ -20,7 +20,7 @@
 package signalcollect.implementations.graph
 
 import signalcollect.interfaces._
-import signalcollect.implementations.storage.DefaultSerializer
+import signalcollect.implementations.serialization.DefaultSerializer
 
 object DefaultGraphApi {
   protected class InstantiatableGraphApi(val messageBus: MessageBus[Any, Any]) extends DefaultGraphApi

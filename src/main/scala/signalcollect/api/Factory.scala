@@ -68,6 +68,10 @@ object Factory {
     object Local extends WorkerFactory {
       def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new LocalWorker(workerId, workerConfiguration: WorkerConfiguration)
     }
+    
+    object BufferedLocal extends WorkerFactory {
+      def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new LocalWorker(workerId, workerConfiguration: WorkerConfiguration) with SignalBuffer
+    }
 
     /*object Synchronous extends WorkerFactory {
       class SynchronousWorker(workerId: Int,

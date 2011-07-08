@@ -130,4 +130,5 @@ package signalcollect.interfaces
   /** This method gets called by the framework after the vertex has been fully initialized. */
   def afterInitialization
 
+
 }

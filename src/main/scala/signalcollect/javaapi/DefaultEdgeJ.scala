@@ -38,7 +38,7 @@ class DefaultEdgeJ[SourceIdType, TargetIdType](
   val targetId: TargetIdType)
   extends AbstractEdge[SourceIdType, TargetIdType] {
   
-  def signal: Object = null.asInstanceOf[Object]
+  def signal(sourceVertex: SourceVertexType): Object = null.asInstanceOf[Object]
 
 }
 
