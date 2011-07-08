@@ -32,7 +32,7 @@ class DefaultLogger extends Logger {
       case Config(msg) => config(msg)
       case Info(msg) => info(msg)
       case Severe(msg) => severe(msg)
-      case Debug(msg) => Debug(msg)
+      case Debug(msg) => debug(msg)
     }
   }
 }
