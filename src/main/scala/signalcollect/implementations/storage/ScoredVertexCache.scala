@@ -173,7 +173,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
 }
 
 trait ScoredCache extends DefaultStorage {
-  def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, "/var/tmp/sc")
+  def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, ".")
   override protected def vertexStoreFactory = new ScoredVertexCache(berkeleyDBFactory, this, score => score + 1)
 }
 

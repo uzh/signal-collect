@@ -55,7 +55,7 @@ class Vertex2EntityAdapter(idParam: String, vertexParam: Array[Byte]) {
  * @param storage 	provides the messageBus and pointers to the collection that hold the toSignal and toCollect Lists
  * @param envFolder	Make sure this folder actually exists by typing "mkdir /tmp" or set parameter to an existing folder
  */
-class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "/var/tmp/") extends VertexStore with DefaultSerializer {
+class BerkeleyDBStorage(storage: Storage, envFolderPath: String = ".") extends VertexStore with DefaultSerializer {
 
   val messageBus = storage.getMessageBus
   var count = 0l
@@ -139,5 +139,5 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "/var/tmp/") e
  * To allow mixing-in this storage implementation into a more general storage implementation
  */
 trait BerkDBJE extends DefaultStorage with Serializable {
-  override protected def vertexStoreFactory = new BerkeleyDBStorage(this, "/var/tmp/sc")
+  override protected def vertexStoreFactory = new BerkeleyDBStorage(this, "./sc-berkeley")
 }
