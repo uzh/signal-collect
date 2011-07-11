@@ -59,7 +59,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
   /** A textual representation of this {@link Edge}. */
   override def toString = this.getClass.getSimpleName + "(" + sourceId + ", " + targetId + ")"
 
-  /** to be called to explicitly initialize the edge */
+  /** called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertexType) = {}
 
   /**

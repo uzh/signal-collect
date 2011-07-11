@@ -26,7 +26,10 @@ trait Edge[+SourceIdType, +TargetIdType] {
 
   /** The identifier of the {@link Vertex} where this {@link Edge} points to. */
   def targetId: TargetIdType
-
+ 
+  /** called when the edge is attached to a source vertex */
+  def onAttach(sourceVertex: SourceVertexType)
+  
   /**
    * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
    * this function will be called during algorithm execution. It is meant to calculate a signal

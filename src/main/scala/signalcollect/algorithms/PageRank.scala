@@ -40,7 +40,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
    */
-  def signal(sourceVertex: SourceVertexType) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
+  def signal(sourceVertex: Page) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
 
 }
 

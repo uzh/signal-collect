@@ -76,6 +76,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     if (!outgoingEdges.get(newEdge.id).isDefined) {
       outgoingEdgeAddedSinceSignalOperation = true
       outgoingEdges += ((newEdge.id, newEdge))
+      newEdge.onAttach(this.asInstanceOf[newEdge.SourceVertexType])
       true
     } else {
       false

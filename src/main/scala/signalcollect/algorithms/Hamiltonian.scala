@@ -123,7 +123,7 @@ class HamiltonianEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, 
 
   type SourceVertexType = HamiltonianVertex
 
-  def signal(sourceVertex: SourceVertexType): Map[List[String], Int] = {
+  def signal(sourceVertex: HamiltonianVertex): Map[List[String], Int] = {
 
     // signals only paths that do not contain the target vertex id
     ((sourceVertex.state keySet) filterNot { x => x contains (targetId) }).map { k =>

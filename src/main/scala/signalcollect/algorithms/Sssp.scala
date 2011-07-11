@@ -37,7 +37,7 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
    *  This avoids type-checks/-casts, for example when accessing source.state.
    */
   type SourceVertexType = Location
-
+ 
   /**
    * The signal function calculates the distance of the shortest currently
    *  known path from the SSSP source vertex which passes through the source
@@ -45,7 +45,7 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
    *  where this edge starts plus the length of the path represented by this
    *  edge (= the weight of this edge).
    */
-  def signal(sourceVertex: SourceVertexType): Option[Int] = {
+  def signal(sourceVertex: Location): Option[Int] = {
     sourceVertex.state map (_ + weight.toInt)
   }
 }
