@@ -19,16 +19,12 @@
 
 package signalcollect.api
 
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
-import akka.util.Duration
-import signalcollect.implementations.worker.akka._
-import java.util.concurrent.TimeUnit._
+import signalcollect.configuration._
 import signalcollect.interfaces._
 import signalcollect.implementations.worker._
 import signalcollect.implementations.messaging._
 import signalcollect.implementations.storage._
 import java.util.concurrent.LinkedBlockingQueue
-import signalcollect.configuration._
 
 object Factory {
 
