@@ -30,14 +30,14 @@ import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.Set
-import scala.collection.mutable.HashMap
+import scala.collection.immutable.HashMap
 import scala.collection.immutable.Map
 import java.util.LinkedList
 import scala.collection.GenMap
 
 abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_, _, _]] {
 
-  protected var messageInbox = new LinkedList[Signal[_, _, _]]
+  protected val messageInbox = new LinkedList[Signal[_, _, _]]
 
   def receive(message: Signal[_, _, _]) {
     messageInbox.addLast(message)
@@ -202,9 +202,4 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   override def toString: String = {
     this.getClass.getSimpleName + "> Id: " + id + ", State: " + state
   }
-
-  
-    
-  /** to initialize vertices from file */
-  def getStore: Storage = null
 }

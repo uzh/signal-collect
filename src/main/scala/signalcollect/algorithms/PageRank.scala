@@ -66,20 +66,6 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
       case Some(oldState) => (state - oldState).abs
     }
   }
-
-  //Getters & Setters to provide access to protected vars.
-  def getDampingFactor = dampingFactor
-  def getOutgoingEdges = outgoingEdges
-  def getOutgoingEdgesAdded = outgoingEdgeAddedSinceSignalOperation
-  def getLastSignalState = lastSignalState
-  def getMostRecentSignalMap = mostRecentSignalMap
-  def getMessageInbox = messageInbox
-
-  def setOutgoingEdges(edges: scala.collection.mutable.HashMap[(Any, Any, String), Edge[Any, _]]) = outgoingEdges = edges
-  def setOutgoingEdgeAddedSinceSignalOperation(value: Boolean) = outgoingEdgeAddedSinceSignalOperation = value
-  def setLastSignalState(value: Option[Double]) = lastSignalState = value
-  def setMostRecentSignalMap(value: scala.collection.mutable.Map[Any, this.UpperSignalTypeBound]) = mostRecentSignalMap = value
-  def setMessageInbox(inbox: LinkedList[Signal[_, _, _]]) = messageInbox = inbox
 }
 
 /** Builds a PageRank compute graph and executes the computation */
