@@ -57,4 +57,6 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
   }
 
   def size: Long = vertexMap.size
+  
+  def cleanUp = vertexMap.clear
 }

@@ -30,7 +30,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
   storage: Storage,
   var capacity: Int = Int.MaxValue,
   inMemoryRatio: Float = 0.5f) extends VertexStore {
-  
+
   protected val CACHING_THRESHOLD = inMemoryRatio
   protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage)
   protected val cache = new LRUMap[Any, Vertex[_, _]](persistentStore, capacity)
@@ -71,7 +71,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
       persistentStore.remove(id)
     }
   }
-  
+
   def updateStateOfVertex(vertex: Vertex[_, _]) {
     if (!cache.contains(vertex.id)) {
       persistentStore.updateStateOfVertex(vertex)
@@ -85,6 +85,10 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     persistentStore.foreach(f)
   }
 
+  def cleanUp {
+    persistentStore.cleanUp
+    cache.clear
+  }
 }
 
 /**
@@ -143,6 +147,7 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
   def applyFunction[U](f: (Vertex[_, _]) => U) {
     foreachEntry(entry => f(entry.value.asInstanceOf[Vertex[_, _]]))
   }
+
 }
 
 trait LRUCache extends DefaultStorage {

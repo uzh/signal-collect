@@ -257,7 +257,10 @@ class LocalWorker(
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
 
-  def shutdown = shouldShutdown = true
+  def shutdown = {
+    vertexStore.cleanUp
+    shouldShutdown = true
+  }
 
   protected var shouldShutdown = false
   protected var isIdle = false

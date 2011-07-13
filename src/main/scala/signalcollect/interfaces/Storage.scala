@@ -19,25 +19,27 @@
 package signalcollect.interfaces
 
 /**
- * High level interface to abstract all vertex storage related implementations 
+ * High level interface to abstract all vertex storage related implementations
  */
 abstract class Storage(messageBus: MessageBus[Any, Any]) {
   def getMessageBus = messageBus
   def vertices: VertexStore
   def toSignal: VertexIdSet //collection of all vertices that need to signal
   def toCollect: VertexIdSet // collection of all vertices that need to collect
+  def cleanUp
 }
 
 /**
  * Stores vertices and makes them retrievable through their associated id.
  */
-trait VertexStore {  
+trait VertexStore {
   def get(id: Any): Vertex[_, _]
   def put(vertex: Vertex[_, _]): Boolean
   def remove(id: Any)
   def updateStateOfVertex(vertex: Vertex[_, _])
   def size: Long
   def foreach[U](f: (Vertex[_, _]) => U)
+  def cleanUp
 }
 
 /**
@@ -51,6 +53,7 @@ trait VertexIdSet {
   def size: Long
   def foreach[U](f: (Vertex[_, _]) => U)
   def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
+  def cleanUp
 }
 
 /**

@@ -84,4 +84,9 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
 
   }
+  
+  def cleanUp = { 
+    toHandle.clear
+    toHandleSnapshot.clear
+  }
 }

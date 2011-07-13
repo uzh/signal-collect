@@ -66,6 +66,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
       }
       vertex
     }
+
   }
 
   def put(vertex: Vertex[_, _]): Boolean = {
@@ -109,6 +110,11 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
   def foreach[U](f: (Vertex[_, _]) => U) {
     inMemoryCache.foreach(f)
     persistentStore.foreach(f)
+  }
+
+  def cleanUp {
+    persistentStore.cleanUp
+    inMemoryCache.cleanUp
   }
 
   protected class InMemoryCache(storage: Storage) extends VertexStore {
@@ -168,6 +174,9 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
     def size: Long = cachedVertices.size
 
     def isFull = size > maxSize
+
+    def cleanUp = cachedVertices.clear
+
 
   }
 }

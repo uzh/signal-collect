@@ -12,4 +12,9 @@ import java.util.Set
   var toCollect = vertexSetFactory //holds all vertex ids that need to signal
   var toSignal = vertexSetFactory //holds all vertex ids that need to collect
   protected def vertexSetFactory: VertexIdSet = new InMemoryVertexIdSet(this)
+  def cleanUp {
+    vertexStoreFactory.cleanUp
+    toCollect.cleanUp
+    toSignal.cleanUp
+  }
 }
