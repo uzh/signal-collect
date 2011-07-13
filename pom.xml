@@ -49,7 +49,7 @@
 
 	<!-- Dependencies -->
 	<dependencies>
-	
+
 		<!-- AKKA -->
 		<dependency>
 			<groupId>se.scalablesolutions.akka</groupId>
@@ -66,7 +66,7 @@
 			<scope>compile</scope>
 		</dependency>
 		<!-- AKKA -->
-		
+
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
@@ -83,7 +83,7 @@
 		<dependency>
 			<groupId>org.specs2</groupId>
 			<artifactId>specs2_2.9.0-1</artifactId>
-			<version>1.4</version>
+			<version>1.5</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -93,7 +93,7 @@
 		</dependency>
 	</dependencies>
 	<!-- Dependencies -->
-	
+
 	<build>
 		<sourceDirectory>src/main/scala</sourceDirectory>
 		<testSourceDirectory>src/test/scala</testSourceDirectory>
@@ -171,6 +171,12 @@
 							<!-- or "-SNAPSHOT" to get a development version -->
 						</compilerPlugin>
 					</compilerPlugins>
+					<args>
+<!-- 						<arg>-optimise</arg> -->
+<!-- 						<arg>-Xexperimental</arg> -->
+						<arg>-Xelide-below</arg>
+						<arg>900</arg>
+					</args>
 				</configuration>
 				<executions>
 					<execution>

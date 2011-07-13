@@ -24,7 +24,7 @@ import signalcollect.interfaces._
 object DefaultExecutionConfiguration extends ExecutionConfiguration()
 
 /**
- * Representss the parameters used by the compute graph related to the execution
+ * Configuration that specifies the execution parameters
  */
 case class ExecutionConfiguration(
   executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
