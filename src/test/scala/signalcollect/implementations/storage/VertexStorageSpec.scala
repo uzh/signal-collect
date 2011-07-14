@@ -33,7 +33,7 @@ import java.io.File
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   /**
-   * Check for read/write permission on temporary folder
+   * Check for read/write permission on current folder
    */
   def hasReadAndWritePermission(path: String): Boolean = {
     val tempFolder = new File(path)
@@ -107,21 +107,11 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         berkeleyStore.vertices.size must_== vertexList.size - 1
       }
 
-      "create a directory" in {
-        val directoryPath = "/tmp/" + "testdir"
-        trait BerkDBJE2 extends DefaultStorage {
-          override protected def vertexStoreFactory = new BerkeleyDBStorage(this, directoryPath)
-        }
-        class BerkeleyStorage2(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE2
-        val berkeleyStore = new BerkeleyStorage2(defaultMessageBus) // This should create the folder with path directoryPath if not existent.
-        directoryPath must beADirectoryPath
-      }
-      
       "clean up after execution" in {
         berkeleyStore.cleanUp
-        1===1
+        1 === 1
       }
-    } else { //No permission in /temp folder
+    } else { //No permission in current folder
       "fail gracefully because no write permissions for temp folder exist" in {
         1 === 1
       }
@@ -130,7 +120,8 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   "LRU cached Berkeley DB" should {
 
-    if (hasReadAndWritePermission("/tmp/")) {
+    val currentDir = new java.io.File(".")
+    if (hasReadAndWritePermission(currentDir.getCanonicalPath)) {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
@@ -149,17 +140,16 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
       "add all added vertices to the toCollect list" in {
         cachedStore.toCollect.size must_== vertexList.size
       }
-      
+
       "clean up after execution" in {
         cachedStore.cleanUp
-        1===1
+        1 === 1
       }
-    } else { //No permission in /tmp folder
+    } else { //No permission in current folder
       "fail gracefully because no write permissions for temp folder exist" in {
         1 === 1
       }
     }
-    
-    
+
   }
 }
