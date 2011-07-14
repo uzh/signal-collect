@@ -24,8 +24,6 @@ import signalcollect.configuration._
 
 trait ComputeGraph extends GraphApi {
   
-  def config: Configuration
-
   /* 
    * Starts the execution of the computation using the default execution parameters.
    * The method blocks until the computation has ended.
@@ -60,7 +58,7 @@ trait ComputeGraph extends GraphApi {
    * If the scores are above the respective thresholds, the signal/collect operations
    * will be executed when the computation is executed again.
    */
-  def recalculateScoresForVertexId(vertexId: Any)
+  def recalculateScoresForVertexWithId(vertexId: Any)
 
   /* 
    * Shuts down the compute graph and frees associated resources.
@@ -75,8 +73,11 @@ trait ComputeGraph extends GraphApi {
    * The function @f may be executed in another thread, beware of race conditions.
    * In the future this function may also be executed on another machine and references
    * to objects that are not reachable from the vertex-parameter may not be accessible.
+   * 
+   * If the vertex is found, Some(result) of the function is returned, else None is returned.
+   * 
    */
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit)
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
 
   /* 
    * Executes the function @f on all vertices.

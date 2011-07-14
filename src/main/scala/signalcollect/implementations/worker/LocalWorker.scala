@@ -183,7 +183,7 @@ class LocalWorker(
     vertexStore.vertices.foreach(recalculateVertexScores(_))
   }
 
-  def recalculateScoresForVertexId(vertexId: Any) {
+  def recalculateScoresForVertexWithId(vertexId: Any) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       recalculateVertexScores(vertex)
@@ -199,12 +199,14 @@ class LocalWorker(
     }
   }
 
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) {
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+    var result: Option[ResultType] = None
     val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      f(vertex)
+    if (vertex != null && vertex.isInstanceOf[VertexType]) {
+      result = Some(f(vertex.asInstanceOf[VertexType]))
       vertexStore.vertices.updateStateOfVertex(vertex)
     }
+    result
   }
 
   def foreachVertex(f: (Vertex[_, _]) => Unit) {

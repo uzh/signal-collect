@@ -28,10 +28,8 @@ import signalcollect.configuration._
 /**
  * Default [[signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultComputeGraph(configuration: Configuration, workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
+class DefaultComputeGraph(val config: Configuration = DefaultConfiguration(), workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
   
-  def config: Configuration = configuration
-
   /** GraphApi */
 
   def execute: ExecutionInformation = execute(DefaultExecutionConfiguration)
@@ -42,11 +40,13 @@ class DefaultComputeGraph(configuration: Configuration, workerApi: WorkerApi, co
 
   def recalculateScores = workerApi.recalculateScores
 
-  def recalculateScoresForVertexId(vertexId: Any) = workerApi.recalculateScoresForVertexId(vertexId)
+  def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
   def shutdown = workerApi.shutdown
 
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) = workerApi.forVertexWithId(vertexId, f)
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+    workerApi.forVertexWithId(vertexId, f)
+  }
 
   def foreachVertex(f: (Vertex[_, _]) => Unit) = workerApi.foreachVertex(f)
 

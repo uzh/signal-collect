@@ -43,9 +43,9 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry[Any] {
   def setCollectThreshold(collectThreshold: Double)
 
   def recalculateScores
-  def recalculateScoresForVertexId(vertexId: Any)
+  def recalculateScoresForVertexWithId(vertexId: Any)
 
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit)
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
   def foreachVertex(f: (Vertex[_, _]) => Unit)
 
   def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType

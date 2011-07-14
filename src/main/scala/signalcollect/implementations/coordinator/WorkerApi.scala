@@ -223,11 +223,13 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
 
   def recalculateScores = parallelWorkerProxies foreach (_.recalculateScores)
 
-  def recalculateScoresForVertexId(vertexId: Any) = workerProxies(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexId(vertexId)
+  def recalculateScoresForVertexWithId(vertexId: Any) = workerProxies(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
 
   def shutdown = parallelWorkerProxies foreach (_.shutdown)
 
-  def forVertexWithId(vertexId: Any, f: (Vertex[_, _]) => Unit) = workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+    workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
+  }
 
   def foreachVertex(f: (Vertex[_, _]) => Unit) = parallelWorkerProxies foreach (_.foreachVertex(f))
 
