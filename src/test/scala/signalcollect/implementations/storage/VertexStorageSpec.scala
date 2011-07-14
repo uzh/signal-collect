@@ -67,7 +67,8 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "Berkeley DB Vertex Store" should {
-    if (hasReadAndWritePermission("/tmp/")) {
+    val currentDir = new java.io.File(".")
+    if (hasReadAndWritePermission(currentDir.getCanonicalPath)) {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 0.5), new Page(1, 0.5), new Page(2, 0.5))
       class BerkeleyStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
@@ -115,6 +116,11 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         val berkeleyStore = new BerkeleyStorage2(defaultMessageBus) // This should create the folder with path directoryPath if not existent.
         directoryPath must beADirectoryPath
       }
+      
+      "clean up after execution" in {
+        berkeleyStore.cleanUp
+        1===1
+      }
     } else { //No permission in /temp folder
       "fail gracefully because no write permissions for temp folder exist" in {
         1 === 1
@@ -143,10 +149,17 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
       "add all added vertices to the toCollect list" in {
         cachedStore.toCollect.size must_== vertexList.size
       }
+      
+      "clean up after execution" in {
+        cachedStore.cleanUp
+        1===1
+      }
     } else { //No permission in /tmp folder
       "fail gracefully because no write permissions for temp folder exist" in {
         1 === 1
       }
     }
+    
+    
   }
 }
