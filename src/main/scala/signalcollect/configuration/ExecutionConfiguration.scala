@@ -53,3 +53,15 @@ object OptimizedAsynchronousExecutionMode extends ExecutionMode {
 object PureAsynchronousExecutionMode extends ExecutionMode {
   override def toString = "PureAsynchronousExecutionMode"
 }
+
+/**
+ * Defines if the execution should take place locally or distributedly
+ */
+sealed trait ExecutionArchitecture extends Serializable
+
+object LocalExecutionArchitecture extends ExecutionArchitecture {
+  override def toString = "LocalArchitecture"
+}
+object DistributedExecutionArchitecture extends ExecutionArchitecture {
+  override def toString = "DistributedArchitecture"
+}

@@ -20,13 +20,32 @@
 package signalcollect.interfaces
 
 import signalcollect.configuration._
+import signalcollect.implementations.coordinator._
+import akka.actor.ActorRef
 
 trait Factory extends Serializable {
   def name: String = this.getClass.getSimpleName
 }
 
 trait WorkerFactory extends Factory {
-  def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker
+  def createInstance(workerId: Int,
+    config: Configuration,
+    coordinator: WorkerApi,
+    mapper: VertexToWorkerMapper): Any
+}
+
+trait LocalWorkerFactory extends WorkerFactory {
+  override def createInstance(workerId: Int,
+    config: Configuration,
+    coordinator: WorkerApi,
+    mapper: VertexToWorkerMapper): Worker
+}
+
+trait AkkaWorkerFactory extends WorkerFactory {
+  override def createInstance(workerId: Int,
+    config: Configuration,
+    coordinator: WorkerApi,
+    mapper: VertexToWorkerMapper): ActorRef
 }
 
 trait MessageBusFactory extends Factory {

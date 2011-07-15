@@ -34,6 +34,7 @@ import java.util.Set
 import signalcollect.interfaces.ALL
 import signalcollect.implementations.graph.DefaultGraphApi
 import signalcollect.implementations.serialization.DefaultSerializer
+import signalcollect.implementations.coordinator.WorkerApi
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -48,16 +49,29 @@ class WorkerOperationCounters(
 
 class LocalWorker(
   val workerId: Int,
-  workerConfiguration: WorkerConfiguration)
+  config: Configuration,
+  coordinator: WorkerApi,
+  mapper: VertexToWorkerMapper)
   extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
   with Runnable {
-  
-  val messageBus: MessageBus[Any] = workerConfiguration.messageBus
 
   override def toString = "Worker" + workerId
-   
+	
+  /**
+   * ******************
+   * MESSAGE BUS INIT *
+   * ******************
+   */
+  val messageBus: MessageBus[Any] = {
+    config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+  }
+
+  messageBus.registerCoordinator(coordinator)
+
+  /********************/
+
   /**
    * Generalization of worker initialization
    */
@@ -277,7 +291,7 @@ class LocalWorker(
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
-  protected lazy val vertexStore = workerConfiguration.storageFactory.createInstance(messageBus)
+  protected lazy val vertexStore = config.workerConfiguration.storageFactory.createInstance(messageBus)
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
@@ -355,7 +369,7 @@ class LocalWorker(
     vertexStore.vertices.updateStateOfVertex(vertex)
   }
 
-  def registerWorker(workerId: Int, worker: MessageRecipient[Any]) {
+  def registerWorker(workerId: Int, worker: Any) {
     messageBus.registerWorker(workerId, worker)
   }
 

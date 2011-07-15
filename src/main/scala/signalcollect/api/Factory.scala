@@ -24,6 +24,11 @@ import signalcollect.interfaces._
 import signalcollect.implementations.worker._
 import signalcollect.implementations.messaging._
 import signalcollect.implementations.storage._
+import signalcollect.implementations.coordinator.WorkerApi
+
+import akka.actor.Actor._
+import akka.actor.ActorRef
+
 import java.util.concurrent.LinkedBlockingQueue
 
 object Factory {
@@ -52,17 +57,36 @@ object Factory {
     object SharedMemory extends MessageBusFactory {
       def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers, mapper)
     }
+    
+    object AkkaBus extends MessageBusFactory {
+      def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new AkkaMessageBus[Any](numberOfWorkers, mapper)
+    }
+    
   }
 
   object Worker {
 
-    object Local extends WorkerFactory {
-      def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new LocalWorker(workerId, workerConfiguration: WorkerConfiguration)
+    object Local extends LocalWorkerFactory {
+      def createInstance(workerId: Int,
+        config: Configuration,
+        coordinator: WorkerApi,
+        mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, config, coordinator, mapper)
     }
 
-    object BufferedLocal extends WorkerFactory {
-      def createInstance(workerId: Int, workerConfiguration: WorkerConfiguration): Worker = new LocalWorker(workerId, workerConfiguration: WorkerConfiguration) with SignalBuffer
+    object BufferedLocal extends LocalWorkerFactory {
+      def createInstance(workerId: Int,
+        config: Configuration,
+        coordinator: WorkerApi,
+        mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, config, coordinator, mapper) with SignalBuffer
     }
+    
+    object AkkaLocal extends AkkaWorkerFactory {
+      def createInstance(workerId: Int,
+        config: Configuration,
+        coordinator: WorkerApi,
+        mapper: VertexToWorkerMapper): ActorRef = actorOf(new AkkaWorker(workerId, config, coordinator, mapper))
+      }
+    
   }
 
 }

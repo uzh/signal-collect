@@ -19,19 +19,31 @@
 
 package signalcollect.configuration
 
-import signalcollect.configuration.bootstrap._
 import signalcollect.interfaces._
-import java.util.HashMap
 
-object DefaultConfiguration extends Configuration
+import java.util.HashMap
 
 /**
  * Main configuration for Signal Collect. Used for constructing a [compute graph]
+ * Use this for the Local Case
  */
-case class Configuration(
-    numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-    customLogger: Option[MessageRecipient[LogMessage]] = None,
-    graphConfiguration: GraphConfiguration = DefaultGraphConfiguration,
-    bootstrapConfiguration: BootstrapConfiguration = DefaultBootstrapConfiguration,
-    workerConfigurations: HashMap[Int, WorkerConfiguration] = new HashMap[Int, WorkerConfiguration]()
-    )
+trait Configuration {
+
+  def numberOfWorkers: Int
+
+  def customLogger: Option[MessageRecipient[LogMessage]]
+
+  def executionArchitecture: ExecutionArchitecture
+
+  def workerConfiguration: WorkerConfiguration
+
+  def executionConfiguration: ExecutionConfiguration
+
+}
+
+case class DefaultLocalConfiguration(
+  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+  customLogger: Option[MessageRecipient[LogMessage]] = None,
+  executionArchitecture: ExecutionArchitecture = LocalExecutionArchitecture,
+  workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
+  executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

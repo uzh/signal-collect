@@ -21,9 +21,10 @@ package signalcollect.api
 
 import signalcollect.interfaces._
 import signalcollect.configuration._
-import signalcollect.configuration.bootstrap._
 import signalcollect.implementations.coordinator._
 import signalcollect.implementations.logging._
+
+import akka.actor.ActorRef
 
 /**
  * Booting sequence for running Signal Collect locally
@@ -34,8 +35,16 @@ class LocalBootstrap(val config: Configuration) extends Bootstrap {
 
   protected def createWorkers(workerApi: WorkerApi) {
 
-    for (workerId <- 0 until config.numberOfWorkers)
-      workerApi.createWorker(workerId)
+    for (workerId <- 0 until config.numberOfWorkers) {
+      
+      config.workerConfiguration.workerFactory match {
+        case Factory.Worker.Local => workerApi.createWorker(workerId).asInstanceOf[Worker].initialize
+        case Factory.Worker.AkkaLocal => workerApi.createWorker(workerId).asInstanceOf[ActorRef].start
+      }
+      
+      
+    }
+      
   }
 
   protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): DefaultComputeGraph = {

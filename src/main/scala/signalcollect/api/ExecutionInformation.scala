@@ -21,7 +21,6 @@ package signalcollect.api
 
 import signalcollect.interfaces._
 import signalcollect.configuration._
-import signalcollect.configuration.bootstrap._
 
 case class ExecutionInformation(
   config: Configuration,
@@ -32,20 +31,17 @@ case class ExecutionInformation(
 
   override def toString: String = {
     "\n----------\n" +
-      "Bootstrap\n" +
-      "----------\n" +
-      config.bootstrapConfiguration.toString +
-      "\n----------\n" +
-      "Graph\n" +
-      "----------\n" +
-      config.graphConfiguration.toString +
-      "\n----------\n" +
-      "Execution Parameters\n" +
-      "----------\n" +
-      parameters.toString +
-      "\n----------\n" +
-      "Statistics\n" +
-      "----------\n" +
+      "- Worker -\n" +
+      "----------" +
+      "\n# workers \t" + config.numberOfWorkers + "\n" +
+      config.workerConfiguration.toString + "\n" +
+      "\n------------------------\n" +
+      "- Execution Parameters -\n" +
+      "------------------------\n" +
+      parameters.toString + "\n" +
+      "\n--------------\n" +
+      "- Statistics -\n" +
+      "--------------\n" +
       executionStatistics.toString + "\n" +
       aggregatedWorkerStatistics.toString + "\n"
   }

@@ -30,58 +30,41 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConversions._
 import java.util.concurrent.atomic.AtomicLong
 import signalcollect.api.Factory
-import signalcollect.configuration.bootstrap._
 
 class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 
-  protected lazy val workerFactory = {
-    config.bootstrapConfiguration.executionArchitecture match {
-      case LocalExecutionArchitecture => Factory.Worker.Local
-      //case DistributedExecutionArchitecture => Factory.Worker.Akka
-      case other => throw new Exception("Currently only local workers supported.")
-    }
-  }
-
   override def toString = "WorkerApi"
-  
+
   // initialize workers array
-  protected val workers = new Array[Worker](config.numberOfWorkers)
+  protected val workers = new Array[Any](config.numberOfWorkers)
 
   /**
    * Individual worker creation
-   * It creates and initializes the workers whether remote or local
+   * It creates workers based on configuration provided, whether local or distributed
+   * Worker still needs to be initialized before using it
    *
    * @param: workerId is the id of the worker
+   * @return: the worker should be cast to the desired worker (Local or Akka)
    */
-  def createWorker(workerId: Int) {
+  def createWorker(workerId: Int): Any = {
 
-    // create worker message bus from configuration
-    val workerMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+    val workerFactory = config.workerConfiguration.workerFactory
 
-    // create the worker configuration for worker instantiation
-    config.workerConfigurations.put(workerId, DefaultWorkerConfiguration(messageBus = workerMessageBus, storageFactory = config.graphConfiguration.storageFactory))
-
-    // register the coordinator
-    workerMessageBus.registerCoordinator(this)
-
-    // create thw worker
-    val worker = workerFactory.createInstance(workerId, config.workerConfigurations(workerId))
-
-    // initialize it
-    worker.initialize
+    // create the worker
+    val worker = workerFactory.createInstance(workerId, config, this, mapper)
 
     // put it to the array of workers
     workers(workerId) = worker
+    
+    worker
 
   }
-
-  //protected val workers: Array[Worker] = createWorkers
 
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
   protected lazy val workerProxyMessageBuses: Array[MessageBus[Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
   protected lazy val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
-  protected lazy val messageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+  protected lazy val messageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
   protected lazy val workerStatusMap = new ConcurrentHashMap[Int, WorkerStatus]()
   protected val messagesReceived = new AtomicLong(0l)
   protected val statusMonitor = new Object
@@ -92,7 +75,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   protected def createWorkerProxyMessageBuses: Array[MessageBus[Any]] = {
     val workerProxyMessageBuses = new Array[MessageBus[Any]](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      val proxyMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+      val proxyMessageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       proxyMessageBus.registerCoordinator(this)
       workerProxyMessageBuses(workerId) = proxyMessageBus
     }

@@ -33,6 +33,12 @@ trait MessageBus[IdType] extends MessageRecipientRegistry[Any] {
 }
 
 trait MessageRecipientRegistry[MessageType] {
-  def registerWorker(workerId: Int, worker: MessageRecipient[MessageType])
+  /**
+   * Interface now is more generalized to accept any kind of worker (for the Akka case which should be an Actor Ref)
+   * 
+   * @param workerId is the worker id
+   * @param worker is the worker to be registered
+   */
+  def registerWorker(workerId: Int, worker: Any)
   def registerCoordinator(coordinator: MessageRecipient[MessageType])
 }

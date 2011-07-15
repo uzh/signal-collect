@@ -41,7 +41,7 @@ import signalcollect.configuration._
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build)
+    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(Factory.MessageBus.AkkaBus).withWorkerFactory(Factory.Worker.AkkaLocal)).build)
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
