@@ -277,7 +277,7 @@ class LocalWorker(
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
-  protected var vertexStore = workerConfiguration.storageFactory.createInstance(messageBus)
+  protected lazy val vertexStore = workerConfiguration.storageFactory.createInstance(messageBus)
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
