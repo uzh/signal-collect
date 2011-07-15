@@ -28,7 +28,7 @@ import signalcollect.configuration._
 /**
  * Default [[signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultComputeGraph(val config: Configuration = DefaultConfiguration(), workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
+class DefaultComputeGraph(val config: Configuration = DefaultConfiguration, workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
   
   /** GraphApi */
 

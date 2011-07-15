@@ -23,12 +23,12 @@ import signalcollect.interfaces._
 import signalcollect.implementations.serialization.DefaultSerializer
 
 object DefaultGraphApi {
-  protected class InstantiatableGraphApi(val messageBus: MessageBus[Any, Any]) extends DefaultGraphApi
-  def createInstance(messageBus: MessageBus[Any, Any]): GraphApi = new InstantiatableGraphApi(messageBus)
+  protected class InstantiatableGraphApi(val messageBus: MessageBus[Any]) extends DefaultGraphApi
+  def createInstance(messageBus: MessageBus[Any]): GraphApi = new InstantiatableGraphApi(messageBus)
 }
 
 trait DefaultGraphApi extends GraphApi with DefaultSerializer {
-  protected def messageBus: MessageBus[Any, Any]
+  protected def messageBus: MessageBus[Any]
 
   /**
    * Sends a signal to the vertex with vertex.id=targetId.

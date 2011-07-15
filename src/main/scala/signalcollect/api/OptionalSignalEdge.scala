@@ -47,7 +47,7 @@ abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
    * Calculates the new signal. If the [[scala.Option]] is defined,
    * then the value is sent. Else nothing is sent.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any, Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any]) {
     val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
     if (optionalSignal.isDefined) {
       mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, optionalSignal.get), targetHashCode)

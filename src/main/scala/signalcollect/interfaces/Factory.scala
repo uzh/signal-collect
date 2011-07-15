@@ -30,9 +30,9 @@ trait WorkerFactory extends Factory {
 }
 
 trait MessageBusFactory extends Factory {
-  def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any, Any]
+  def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any]
 }
 
 trait StorageFactory extends Factory {
-  def createInstance(messageBus: MessageBus[Any, Any]): Storage
+  def createInstance(messageBus: MessageBus[Any]): Storage
 }

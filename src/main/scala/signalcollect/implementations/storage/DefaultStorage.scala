@@ -6,7 +6,7 @@ import signalcollect.implementations.serialization._
 import java.util.Set
 
 
- class DefaultStorage(val messageBus: MessageBus[Any, Any]) extends Storage(messageBus) with DefaultSerializer {
+ class DefaultStorage(val messageBus: MessageBus[Any]) extends Storage(messageBus) with DefaultSerializer {
   var vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore = new InMemoryStorage(this)
   var toCollect = vertexSetFactory //holds all vertex ids that need to signal

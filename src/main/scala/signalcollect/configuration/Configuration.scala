@@ -23,18 +23,15 @@ import signalcollect.configuration.bootstrap._
 import signalcollect.interfaces._
 import java.util.HashMap
 
+object DefaultConfiguration extends Configuration
+
 /**
  * Main configuration for Signal Collect. Used for constructing a [compute graph]
  */
-trait Configuration {
-
-  def numberOfWorkers: Int
-
-  def optionalLogger: Boolean
-
-  def graphConfiguration: GraphConfiguration
-  def bootstrapConfiguration: BootstrapConfiguration
-
-  def workerConfigurations: HashMap[Int, WorkerConfiguration]
-
-}
+case class Configuration(
+    numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+    customLogger: Option[MessageRecipient[LogMessage]] = None,
+    graphConfiguration: GraphConfiguration = DefaultGraphConfiguration,
+    bootstrapConfiguration: BootstrapConfiguration = DefaultBootstrapConfiguration,
+    workerConfigurations: HashMap[Int, WorkerConfiguration] = new HashMap[Int, WorkerConfiguration]()
+    )

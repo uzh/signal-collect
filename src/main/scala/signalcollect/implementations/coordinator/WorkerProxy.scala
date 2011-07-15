@@ -31,7 +31,7 @@ object WorkerProxy {
 
   protected val workerClass = classOf[Worker]
 
-  def create(workerId: Int, messageBus: MessageBus[Any, Any]): Worker = {
+  def create(workerId: Int, messageBus: MessageBus[Any]): Worker = {
     Proxy.newProxyInstance(
       workerClass.getClassLoader,
       Array[Class[_]](classOf[Worker]), //workerClass.getInterfaces,
@@ -49,7 +49,7 @@ object WorkerProxy {
  * This is mainly an architectural place holder until we find a proper RPC solution to use
  * with our message bus as the transport. 
  */
-class WorkerProxy(workerId: Int, messageBus: MessageBus[Any, Any]) extends InvocationHandler {
+class WorkerProxy(workerId: Int, messageBus: MessageBus[Any]) extends InvocationHandler {
 
   protected def relay(command: Worker => Unit) = messageBus.sendToWorker(workerId, WorkerRequest(command))
 

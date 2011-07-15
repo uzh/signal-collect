@@ -8,7 +8,7 @@ import signalcollect.implementations.messaging.DefaultMessageBus
  * Generalization of worker configuration parameters for the worker constructor
  */
 trait WorkerConfiguration {
-  def messageBus: MessageBus[Any, Any]
+  def messageBus: MessageBus[Any]
   def storageFactory: StorageFactory
 }
 
@@ -18,11 +18,11 @@ trait RemoteWorkerConfiguration extends WorkerConfiguration {
 }
 
 case class DefaultWorkerConfiguration(
-  messageBus: MessageBus[Any, Any],
+  messageBus: MessageBus[Any],
   storageFactory: StorageFactory = Factory.Storage.InMemory) extends WorkerConfiguration
 
 case class DefaultRemoteWorkerConfiguration(
-  messageBus: MessageBus[Any, Any],
+  messageBus: MessageBus[Any],
   storageFactory: StorageFactory = Factory.Storage.InMemory,
   ipAddress: String = "localhost",
   port: Int = 0) extends RemoteWorkerConfiguration

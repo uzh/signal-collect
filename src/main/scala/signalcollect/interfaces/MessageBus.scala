@@ -19,23 +19,20 @@
 
 package signalcollect.interfaces
 
-trait MessageBus[MessageType, IdType] extends MessageRecipientRegistry[MessageType] {
+trait MessageBus[IdType] extends MessageRecipientRegistry[Any] {
   def numberOfWorkers: Int
 	
   def messagesSent: Long
   
-  def sendToWorkerForVertexIdHash(m: MessageType, recipientIdHash: Int)
-  def sendToWorkerForVertexId(m: MessageType, recipientId: IdType)
-  def sendToWorker(workerId: Int, m: MessageType)
-  def sendToWorkers(m: MessageType)
+  def sendToWorkerForVertexIdHash(m: Any, recipientIdHash: Int)
+  def sendToWorkerForVertexId(m: Any, recipientId: IdType)
+  def sendToWorker(workerId: Int, m: Any)
+  def sendToWorkers(m: Any)
   
-  def sendToCoordinator(m: MessageType)
-  
-  def sendToLogger(m: Any)
+  def sendToCoordinator(m: Any)
 }
 
 trait MessageRecipientRegistry[MessageType] {
   def registerWorker(workerId: Int, worker: MessageRecipient[MessageType])
   def registerCoordinator(coordinator: MessageRecipient[MessageType])
-  def registerLogger(logger: Logger)
 }

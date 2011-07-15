@@ -54,13 +54,15 @@ class LocalWorker(
   with Logging
   with Runnable {
   
-  val messageBus: MessageBus[Any, Any] = workerConfiguration.messageBus
+  val messageBus: MessageBus[Any] = workerConfiguration.messageBus
 
+  override def toString = "Worker" + workerId
+   
   /**
    * Generalization of worker initialization
    */
   def initialize {
-    new Thread(this, "Worker" + workerId).start
+    new Thread(this, toString).start
   }
   
   def run {
@@ -83,7 +85,7 @@ class LocalWorker(
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case WorkerRequest(command) => command(this)
-      case other => log("Could not handle message " + message, "DEBUG")
+      case other => warning("Could not handle message " + message)
     }
   }
   
@@ -114,7 +116,7 @@ class LocalWorker(
       vertexStore.toSignal.add(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
     } else {
-      log("Did not find vertex with id " + edge.sourceId + " when adding edge " + edge, "INFO")
+      warning("Did not find vertex with id " + edge.sourceId + " when trying to add edge " + edge)
     }
   }
 
@@ -131,7 +133,7 @@ class LocalWorker(
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      log("Should remove vertex with id " + vertexId + ": could not find this vertex.", "INFO")
+      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
     }
   }
 
@@ -142,10 +144,10 @@ class LocalWorker(
         counters.outgoingEdgesRemoved += 1
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
-        log("Outgoing edge not found when trying to remove edge with id " + edgeId, "INFO")
+        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
     } else {
-      log("Source vertex not found found when trying to remove edge with id " + edgeId, "INFO")
+      warning("Source vertex not found found when trying to remove edge with id " + edgeId)
     }
   }
 
@@ -360,12 +362,6 @@ class LocalWorker(
   def registerCoordinator(coordinator: MessageRecipient[Any]) {
     messageBus.registerCoordinator(coordinator)
   }
-
-  def registerLogger(logger: Logger) {
-    messageBus.registerLogger(logger)
-  }
-  
-  
   
   protected def handlePauseAndContinue {
     if (shouldStart) {

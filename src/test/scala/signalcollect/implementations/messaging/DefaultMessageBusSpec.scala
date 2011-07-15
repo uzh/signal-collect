@@ -26,9 +26,7 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.matcher.Matcher
 import scala.collection.mutable.{ IndexedSeq, ArrayBuffer, ListBuffer }
 import org.specs2.mock.Mockito
-import signalcollect.interfaces.Worker
-import signalcollect.interfaces.MessageRecipient
-import signalcollect.interfaces.Logger
+import signalcollect.interfaces._
 
 @RunWith(classOf[JUnitRunner])
 class MessageBusSpec extends SpecificationWithJUnit with Mockito {
@@ -37,12 +35,11 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     val mockCoordinator = mock[MessageRecipient[Any]]
     val mockWorker0 = mock[Worker]
     val mockWorker1 = mock[Worker]
-    val mockLogger = mock[Logger]
-    val defaultMessageBus = new DefaultMessageBus[Any, Any](2, new DefaultVertexToWorkerMapper(2))
+    val mockLogger = mock[MessageRecipient[LogMessage]]
+    val defaultMessageBus = new DefaultMessageBus[Any](2, new DefaultVertexToWorkerMapper(2))
     defaultMessageBus.registerCoordinator(mockCoordinator)
     defaultMessageBus.registerWorker(0, mockWorker0)
     defaultMessageBus.registerWorker(1, mockWorker1)
-    defaultMessageBus.registerLogger(mockLogger)
 
     "deliver message for id to worker0" in {
       // the id string's hash code mod 2 equals 0
@@ -75,11 +72,6 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     "deliver message to coordinator" in {
       defaultMessageBus.sendToCoordinator("someMessage")
       there was one(mockCoordinator).receive("someMessage")
-    }
-
-    "deliver message to logger" in {
-      defaultMessageBus.sendToLogger("someMessage")
-      there was one(mockLogger).receive("someMessage")
     }
 
   }

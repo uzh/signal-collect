@@ -21,7 +21,7 @@ package signalcollect.interfaces
 
 trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry[Any] {
   def workerId: Int
-  def messageBus: MessageBus[Any, Any]
+  def messageBus: MessageBus[Any]
   
   override def toString = this.getClass.getSimpleName
 

@@ -1,5 +1,6 @@
 /*
  *  @author Francisco de Freitas
+ *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -36,7 +37,7 @@ object DefaultComputeGraphBuilder extends ComputeGraphBuilder
  * If the user passes a configuration object but then uses a method of this class, the configuration's object
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
  */
-class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfiguration) extends Serializable {
+class ComputeGraphBuilder(protected val config: Configuration = DefaultConfiguration) extends Serializable {
 
   def build: ComputeGraph = {
     config.bootstrapConfiguration.executionArchitecture match {
@@ -46,7 +47,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
   }
 
   def withNumberOfWorkers(newNumberOfWorkers: Int) = newBuilder(numberOfWorkers = newNumberOfWorkers)
-  def withLogger(logger: Boolean) = newBuilder(optionalLogger = logger)
+  def withLogger(logger: MessageRecipient[LogMessage]) = newBuilder(customLogger = Some(logger))
 
   /**
    * Graph configuration
@@ -65,7 +66,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
 
   def newBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
-    optionalLogger: Boolean = config.optionalLogger,
+    customLogger: Option[MessageRecipient[LogMessage]] = config.customLogger,
     // graph
     messageBusFactory: MessageBusFactory = config.graphConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.graphConfiguration.storageFactory,
@@ -76,13 +77,13 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultConfi
     coordinatorAddress: String = config.bootstrapConfiguration.coordinatorAddress,
     nodeProvisioning: NodeProvisioning = config.bootstrapConfiguration.nodeProvisioning): ComputeGraphBuilder = {
     new ComputeGraphBuilder(
-      DefaultConfiguration(
+      Configuration(
         numberOfWorkers = numberOfWorkers,
-        optionalLogger = optionalLogger,
-        graphConfiguration = DefaultGraphConfiguration(
+        customLogger = customLogger,
+        graphConfiguration = GraphConfiguration(
           messageBusFactory = messageBusFactory,
           storageFactory = storageFactory),
-        bootstrapConfiguration = DefaultBootstrapConfiguration(
+        bootstrapConfiguration = BootstrapConfiguration(
           executionArchitecture = executionArchitecture,
           numberOfNodes = numberOfNodes,
           nodesAddress = nodesAddress,

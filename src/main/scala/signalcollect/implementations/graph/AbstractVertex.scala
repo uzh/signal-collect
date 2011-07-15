@@ -53,7 +53,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   protected var outgoingEdges: GenMap[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
 
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
-  def setMessageBus(mb: MessageBus[Any, Any]) {
+  def setMessageBus(mb: MessageBus[Any]) {
     messageBus = mb
   }
 
@@ -62,7 +62,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
 
   /** The message bus over which this vertex is communicating with its outgoing edges. */
   @transient
-  protected var messageBus: MessageBus[Any, Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
+  protected var messageBus: MessageBus[Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false

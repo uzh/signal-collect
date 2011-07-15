@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Francisco de Freitas
  *  
  *  Copyright 2010 University of Zurich
  *      
@@ -74,3 +75,14 @@ case class WorkerStatistics(
       "# outgoing edges  (added/removed)" + "\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }
+
+sealed trait LogMessage {
+  def msg: Any
+  def from: Any
+}
+
+case class Debug(msg: Any, from: Any) extends LogMessage
+case class Config(msg: Any, from: Any) extends LogMessage
+case class Info(msg: Any, from: Any) extends LogMessage
+case class Warning(msg: Any, from: Any) extends LogMessage
+case class Severe(msg: Any, from: Any) extends LogMessage

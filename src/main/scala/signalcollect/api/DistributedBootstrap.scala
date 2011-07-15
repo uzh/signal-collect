@@ -39,17 +39,7 @@ class DistributedBootstrap(val config: Configuration) extends Bootstrap {
     // start managers
   }
   
-  protected def createOptionalLogger: Option[Logger] = {
-    
-    var logger: Option[Logger] = None
-    
-    // start logger based on config TODO: add correct one to be instantiated
-    if (config.optionalLogger) {
-      logger = Some(new DefaultLogger())
-    }
-    
-    logger
-  }
+  protected def createLogger: MessageRecipient[LogMessage] = new DefaultLogger
 
   def createWorkers(workerApi: WorkerApi) {
 

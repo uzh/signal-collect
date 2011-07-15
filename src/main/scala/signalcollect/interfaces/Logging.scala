@@ -1,7 +1,7 @@
 /*
- *  @author Francisco de Freitas
+ *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2010 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,28 +19,27 @@
 
 package signalcollect.interfaces
 
-/*import scala.annotation.elidable
-import scala.annotation.elidable._*/
+import scala.annotation.elidable
 
 trait Logging {
-  protected def messageBus: MessageBus[_, _]
-
-  lazy val className = this.getClass.getSimpleName
   
-  /**
-   * TODO add logging per method and elidable so that the send gets muted
-   * @param msg
-   * @param level
-   */
-  def log(msg: Any, level: String) = {
-    
-    level match {
-      case "CONFIG" => Config(className + ": " + msg)
-      case "INFO" => Info(className + ": " + msg)
-      case "SEVERE" => Severe(className + ": " + msg)
-      case "DEBUG" => Debug(className + ": " + msg)
-    }
-    messageBus.sendToLogger(className + ": " + msg)
-  }
+  protected def messageBus: MessageBus[_]
+  
+  lazy val from = this.toString
+  
+  @elidable(scala.annotation.elidable.ALL)
+  def debug(msg: Any) = messageBus.sendToCoordinator(Debug(msg, from))
+
+  @elidable(scala.annotation.elidable.CONFIG)
+  def config(msg: Any) = messageBus.sendToCoordinator(Config(msg, from))
+
+  @elidable(scala.annotation.elidable.INFO)
+  def info(msg: Any) = messageBus.sendToCoordinator(Info(msg, from))
+
+  @elidable(scala.annotation.elidable.WARNING)
+  def warning(msg: Any) = messageBus.sendToCoordinator(Warning(msg, from))
+  
+  @elidable(scala.annotation.elidable.SEVERE)
+  def severe(msg: Any) = messageBus.sendToCoordinator(Severe(msg, from))
 
 }

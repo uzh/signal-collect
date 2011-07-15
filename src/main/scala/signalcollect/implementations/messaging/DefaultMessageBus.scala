@@ -22,58 +22,52 @@ package signalcollect.implementations.messaging
 import signalcollect._
 import signalcollect.interfaces._
 import java.util.HashMap
+import signalcollect.implementations.logging.DefaultLogger
+import signalcollect.interfaces.LogMessage
 
-
-class DefaultMessageBus[MessageType, IdType](
+class DefaultMessageBus[IdType](
   val numberOfWorkers: Int,
   protected val mapper: VertexToWorkerMapper)
-  extends MessageBus[MessageType, IdType] {
+  extends MessageBus[IdType] {
 
-  protected val workers = new Array[MessageRecipient[MessageType]](numberOfWorkers)
-  protected var coordinator: MessageRecipient[MessageType] = _
-  protected var logger: Option[Logger] = None
+  protected val workers = new Array[MessageRecipient[Any]](numberOfWorkers)
+  protected var coordinator: MessageRecipient[Any] = _
 
   var messagesSent = 0l
 
-  def registerWorker(workerId: Int, w: MessageRecipient[MessageType]) {
+  def registerWorker(workerId: Int, w: MessageRecipient[Any]) {
     workers(workerId) = w
   }
 
-  def registerCoordinator(c: MessageRecipient[MessageType]) {
+  def registerCoordinator(c: MessageRecipient[Any]) {
     coordinator = c
   }
 
-  def registerLogger(l: Logger) {
-    logger = Some(l)
-  }
-
-  def sendToCoordinator(message: MessageType) {
-    messagesSent += 1
+  def sendToCoordinator(message: Any) {
+    if (!message.isInstanceOf[LogMessage]) {
+      messagesSent += 1
+    }
     coordinator.receive(message)
   }
 
-  def sendToLogger(message: Any) {
-    logger foreach (_.receive(message))
-  }
-
-  def sendToWorkerForVertexId(message: MessageType, recipientId: IdType) {
+  def sendToWorkerForVertexId(message: Any, recipientId: IdType) {
     val worker = workers(mapper.getWorkerIdForVertexId(recipientId))
     messagesSent += 1
     worker.receive(message)
   }
 
-  def sendToWorkerForVertexIdHash(message: MessageType, recipientIdHash: Int) {
+  def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
     val worker = workers(mapper.getWorkerIdForVertexIdHash(recipientIdHash))
     messagesSent += 1
     worker.receive(message)
   }
 
-  def sendToWorker(workerId: Int, m: MessageType) {
+  def sendToWorker(workerId: Int, m: Any) {
     messagesSent += 1
     workers(workerId).receive(m)
   }
 
-  def sendToWorkers(message: MessageType) {
+  def sendToWorkers(message: Any) {
     messagesSent += numberOfWorkers
     val i = workers.iterator
     while (i.hasNext) {

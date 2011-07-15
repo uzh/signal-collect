@@ -44,7 +44,7 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
    * Calculates the new signal, compares it with the last signal sent and
    * only sends a signal if they are not equal.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any, Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any]) {
     val newSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
       mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)

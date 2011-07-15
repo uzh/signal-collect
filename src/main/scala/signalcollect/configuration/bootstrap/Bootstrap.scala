@@ -32,10 +32,10 @@ import signalcollect.configuration._
 /**
  * Bootstrap generalization for starting Signal Collect infrastructure
  */
-trait Bootstrap extends Logging {
+trait Bootstrap {
 
   // message bus for the bootstrap to send messages to the logger
-  protected val messageBus: MessageBus[Any, Any] = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, null)
+  protected val messageBus: MessageBus[Any] = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, null)
 
   // the compute graph, the heart of signal collect
   protected var computeGraph: ComputeGraph = _
@@ -47,7 +47,7 @@ trait Bootstrap extends Logging {
    * Creates the logger system based on the type of architecture selected.
    * This in turn helps the system to have the right logger for usage.
    */
-  protected def createOptionalLogger: Option[Logger]
+  protected def createLogger: MessageRecipient[LogMessage]
 
   /**
    * The correct execution for the startup of signal collect's infrastructure
@@ -55,35 +55,18 @@ trait Bootstrap extends Logging {
    */
   def boot: ComputeGraph = {
 
-    val workerApi = new WorkerApi(config)
-
     // create optional logger
-    var logger = createOptionalLogger
+    var logger = createLogger
+        
+    val workerApi = new WorkerApi(config, logger)
 
-    // if there is a logger defined
-    if (logger.isDefined) {
-      // registers logger for the bootstrap logging system
-      messageBus.registerLogger(logger.get)
-
-      // registers the logger for everything else
-      workerApi.registerLogger(logger.get)
-    }
-
-    log("Booting...", "INFO")
-
-    log("Creating workers...", "INFO")
     createWorkers(workerApi)
 
-    log("Initializing Workers...", "INFO")
     workerApi.initialize
 
-    log("Getting Coordinator", "INFO")
     val coordinator = new Coordinator(workerApi, config)
 
-    log("Compute Graph initialization...", "INFO")
     computeGraph = createComputeGraph(workerApi, coordinator)
-
-    log("Booting complete!", "INFO")
 
     computeGraph
   }
@@ -99,7 +82,7 @@ trait Bootstrap extends Logging {
   protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): ComputeGraph
 
   /**
-   * FIXME: This start can be replaced by the execute function on compute graph but 
+   * FIXME: This start can be replaced by the execute function on compute graph but
    * I have to see if I need to do anything else on the distributed case.
    */
   def start {
@@ -107,7 +90,7 @@ trait Bootstrap extends Logging {
   }
 
   /**
-   * Shuts down the distributed infrastructure 
+   * Shuts down the distributed infrastructure
    */
   def shutdown
 

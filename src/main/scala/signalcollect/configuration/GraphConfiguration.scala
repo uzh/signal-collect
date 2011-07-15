@@ -22,16 +22,13 @@ package signalcollect.configuration
 import signalcollect.api._
 import signalcollect.interfaces._
 
-trait GraphConfiguration {
-  def messageBusFactory: MessageBusFactory
-  def storageFactory: StorageFactory
+object DefaultGraphConfiguration extends GraphConfiguration
 
+case class GraphConfiguration(
+  messageBusFactory: MessageBusFactory = Factory.MessageBus.SharedMemory,
+  storageFactory: StorageFactory = Factory.Storage.InMemory) {
   override def toString: String = {
-      "messagebus" + "\t" + messageBusFactory + "\n" +
+    "messagebus" + "\t" + messageBusFactory + "\n" +
       "storage" + "\t" + "\t" + storageFactory + "\n"
   }
 }
-
-case class DefaultGraphConfiguration(
-  messageBusFactory: MessageBusFactory = Factory.MessageBus.SharedMemory,
-  storageFactory: StorageFactory = Factory.Storage.InMemory ) extends GraphConfiguration

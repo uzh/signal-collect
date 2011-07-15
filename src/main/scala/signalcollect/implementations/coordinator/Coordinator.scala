@@ -40,11 +40,11 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
 
-    workerApi.logCoordinatorMessage("Waiting for graph loading to finish ...")
+    workerApi.info("Waiting for graph loading to finish ...")
 
     val graphLoadingWait = workerApi.awaitIdle
 
-    workerApi.logCoordinatorMessage("Starting computation ...")
+    workerApi.info("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
 
@@ -63,7 +63,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
     val totalTime: Long = stopTime - startTime
     val totalJvmCpuTime: Long = jvmCpuStopTime - jvmCpuStartTime
 
-    workerApi.logCoordinatorMessage("\t\t\tDONE")
+    workerApi.info("Done.")
 
     val workerStatistics = workerApi.getWorkerStatistics
     val aggregatedWorkerStatistics = workerStatistics.fold(WorkerStatistics())(_ + _)

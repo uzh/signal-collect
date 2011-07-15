@@ -65,7 +65,7 @@ package signalcollect.interfaces
   def collect: StateType
 
   /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
-  def setMessageBus(mb: MessageBus[Any, Any])
+  def setMessageBus(mb: MessageBus[Any])
 
   /**
    * Adds a new outgoing {@link Edge} to this {@link Vertex}.

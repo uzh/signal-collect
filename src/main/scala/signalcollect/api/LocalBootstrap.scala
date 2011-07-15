@@ -30,17 +30,7 @@ import signalcollect.implementations.logging._
  */
 class LocalBootstrap(val config: Configuration) extends Bootstrap {
 
-  protected def createOptionalLogger: Option[Logger] = {
-
-    var logger: Option[Logger] = None
-
-    // start logger based on config
-    if (config.optionalLogger) {
-      logger = Some(new DefaultLogger())
-    }
-
-    logger
-  }
+  protected def createLogger: MessageRecipient[LogMessage] = new DefaultLogger
 
   protected def createWorkers(workerApi: WorkerApi) {
 

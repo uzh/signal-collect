@@ -62,6 +62,6 @@ trait Edge[+SourceIdType, +TargetIdType] {
    * @param mb the message bus to use for sending the signal
    * @param souceVertex the source vertex to get the state to assemble the signal
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any, Any])
+  def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any])
 
 }

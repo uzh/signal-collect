@@ -22,31 +22,22 @@ package signalcollect.configuration.bootstrap
 import signalcollect.configuration._
 import signalcollect.configuration.provisioning._
 
-/**
- * Configuration parameters for bootstrapping
- * Mainly used by the distributed case
- */
-trait BootstrapConfiguration {
-  def executionArchitecture: ExecutionArchitecture
-  def numberOfNodes: Int
-  def nodesAddress: Vector[String]
-  def coordinatorAddress: String
-  def nodeProvisioning: NodeProvisioning
+object DefaultBootstrapConfiguration extends BootstrapConfiguration
 
-  override def toString: String = {
-    "execution architecture" + "\t" + executionArchitecture + "\n" +
-      "# nodes" + "\t" + "\t" + "\t" + numberOfNodes + "\n" +
-      "nodes address" + "\t" + "\t" + nodesAddress + "\n"
-
-  }
-}
-
-case class DefaultBootstrapConfiguration(
+case class BootstrapConfiguration(
   executionArchitecture: ExecutionArchitecture = LocalExecutionArchitecture,
   numberOfNodes: Int = 1,
   nodesAddress: Vector[String] = Vector("localhost"),
   coordinatorAddress: String = "localhost",
-  nodeProvisioning: NodeProvisioning = new EqualNodeProvisioning(Vector("localhost"), Runtime.getRuntime.availableProcessors)) extends BootstrapConfiguration
+  nodeProvisioning: NodeProvisioning = new EqualNodeProvisioning(Vector("localhost"), Runtime.getRuntime.availableProcessors)) {
+  
+  override def toString: String = {
+    "execution architecture" + "\t" + executionArchitecture + "\n" +
+      "# nodes" + "\t" + "\t" + "\t" + numberOfNodes + "\n" +
+      "nodes address" + "\t" + "\t" + nodesAddress + "\n"
+  }
+  
+}
 
 /**
  * Defines if the execution should take place locally or distributedly

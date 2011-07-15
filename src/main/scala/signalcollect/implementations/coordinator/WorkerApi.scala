@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong
 import signalcollect.api.Factory
 import signalcollect.configuration.bootstrap._
 
-class WorkerApi(config: Configuration) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
+class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 
   protected lazy val workerFactory = {
     config.bootstrapConfiguration.executionArchitecture match {
@@ -42,6 +42,8 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     }
   }
 
+  override def toString = "WorkerApi"
+  
   // initialize workers array
   protected val workers = new Array[Worker](config.numberOfWorkers)
 
@@ -76,7 +78,7 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   //protected val workers: Array[Worker] = createWorkers
 
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
-  protected lazy val workerProxyMessageBuses: Array[MessageBus[Any, Any]] = createWorkerProxyMessageBuses
+  protected lazy val workerProxyMessageBuses: Array[MessageBus[Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
   protected lazy val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
   protected lazy val messageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
@@ -87,8 +89,8 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   var signalSteps = 0l
   var collectSteps = 0l
 
-  protected def createWorkerProxyMessageBuses: Array[MessageBus[Any, Any]] = {
-    val workerProxyMessageBuses = new Array[MessageBus[Any, Any]](config.numberOfWorkers)
+  protected def createWorkerProxyMessageBuses: Array[MessageBus[Any]] = {
+    val workerProxyMessageBuses = new Array[MessageBus[Any]](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
       val proxyMessageBus = config.graphConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
       proxyMessageBus.registerCoordinator(this)
@@ -136,7 +138,9 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
 
   def receive(message: Any) {
     this.synchronized {
-      messagesReceived.incrementAndGet
+      if (!message.isInstanceOf[LogMessage]) {
+        messagesReceived.incrementAndGet
+      }
       message match {
         case r: WorkerReply =>
           workerProxies(r.workerId).receive(message)
@@ -145,6 +149,8 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
           statusMonitor.synchronized {
             statusMonitor.notify
           }
+        case l: LogMessage =>
+          logger.receive(l)
         case other => println("Received unknown message: " + other)
       }
     }
@@ -161,14 +167,6 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
-
-  def registerLogger(l: Logger) {
-    messageBus.registerLogger(l)
-    workerProxyMessageBuses foreach (_.registerLogger(l))
-    parallelWorkerProxies foreach (_.registerLogger(l))
-  }
-
-  def logCoordinatorMessage(m: Any) = log(m, "DEBUG")
 
   def awaitIdle: Long = {
     val startTime = System.nanoTime

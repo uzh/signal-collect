@@ -25,26 +25,8 @@ import akka.actor.Actor
 import akka.actor.Actor._
 import akka.actor.ActorRef
 
-class DefaultLogger extends Logger {
+class DefaultLogger extends MessageRecipient[LogMessage] {
   
-  def receive(loggingMessage: Any) {
-    loggingMessage match {
-      case Config(msg) => config(msg)
-      case Info(msg) => info(msg)
-      case Severe(msg) => severe(msg)
-      case Debug(msg) => debug(msg)
-    }
-  }
-}
+  def receive(logMessage: LogMessage) = println(logMessage)
 
-class ActorLogger extends Logger with Actor {
-  
-  def receive(message: Any) = sys.error("Receive should not be called.")
-  
-  def receive = {
-    case Config(msg) => config(msg)
-    case Info(msg) => info(msg)
-    case Severe(msg) => severe(msg)
-    case Debug(msg) => Debug(msg)
-  }
 }

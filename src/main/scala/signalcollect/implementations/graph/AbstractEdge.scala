@@ -69,7 +69,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * 
    * @param mb the message bus to use for sending the signal
    */
-  def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any, Any]) {
+  def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any]) {
       mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, signal(sourceVertex.asInstanceOf[SourceVertexType])), targetHashCode)
   }
 
