@@ -67,8 +67,13 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "Berkeley DB Vertex Store" should {
-    val currentDir = new java.io.File(".")
-    if (hasReadAndWritePermission(currentDir.getCanonicalPath)) {
+
+    val envFolder = new java.io.File("~/temp")
+
+    if (!envFolder.exists)
+      envFolder.mkdir
+
+    if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 0.5), new Page(1, 0.5), new Page(2, 0.5))
       class BerkeleyStorage(messageBus: MessageBus[Any, Any]) extends DefaultStorage(messageBus) with BerkDBJE
@@ -120,8 +125,12 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   "LRU cached Berkeley DB" should {
 
-    val currentDir = new java.io.File(".")
-    if (hasReadAndWritePermission(currentDir.getCanonicalPath)) {
+    val envFolder = new java.io.File("~/temp")
+
+    if (!envFolder.exists)
+      envFolder.mkdir
+
+    if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
