@@ -273,7 +273,7 @@ class LocalWorker(
   protected var signalThreshold = 0.001
   protected var collectThreshold = 0.0
 
-  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 300l //300ms // * 50l //1000000 * 50000 // 50 milliseconds
+  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
   protected var vertexStore = workerConfiguration.storageFactory.createInstance(messageBus)
 
