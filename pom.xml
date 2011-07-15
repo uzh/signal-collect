@@ -172,10 +172,9 @@
 						</compilerPlugin>
 					</compilerPlugins>
 					<args>
-<!-- 						<arg>-optimise</arg> -->
-<!-- 						<arg>-Xexperimental</arg> -->
+						<arg>-optimise</arg>
 						<arg>-Xelide-below</arg>
-						<arg>900</arg>
+						<arg>1000</arg>
 					</args>
 				</configuration>
 				<executions>
