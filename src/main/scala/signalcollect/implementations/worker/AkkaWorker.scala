@@ -58,7 +58,7 @@ class AkkaWorker(workerId: Int,
    * Escape from processing of signals and collects
    * This is a way of making sure messages are processed as soon as they arrive
    */
-  var processedAll = true
+  var processedAllLastTime = true
 
   /**
    * Timeout for akka actor idling (in milliseconds)
@@ -83,7 +83,7 @@ class AkkaWorker(workerId: Int,
 
     case msg =>
       setIdle(false)
-      process(msg)
+      process(msg) // process the message
       handlePauseAndContinue
       performComputation
 
@@ -101,11 +101,12 @@ class AkkaWorker(workerId: Int,
       // alternately check the inbox and collect/signal
       while (mailboxIsEmpty && !isConverged) {
 
-        if (processedAll) {
+        // if nothing was left to be processed from last processing
+        if (processedAllLastTime) {
           vertexStore.toSignal.foreach(vertex => signal(vertex))
-          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
         } else
-          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
 
       } // end while
     } // !isPaused
