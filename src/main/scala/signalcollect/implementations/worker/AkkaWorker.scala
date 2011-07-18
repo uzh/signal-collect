@@ -34,23 +34,46 @@ class AkkaWorker(workerId: Int,
   mapper: VertexToWorkerMapper)
   extends LocalWorker(workerId, config, coordinator, mapper)
   with Actor {
-  
-  override def initialize {    
+
+  /**
+   * Starts the worker (puts it into a ready state for receiving messages)
+   */
+  override def initialize {
     self.start
   }
 
-  self.receiveTimeout = Some(5L)
-  
+  /**
+   * Akka dispatcher. This assigns one exclusive thread per worker (actor)
+   */
   self.dispatcher = Dispatchers.newThreadBasedDispatcher(self)
 
+  /**
+   * Stops the worker execution
+   */
   override def shutdown = {
     self.stop()
   }
 
+  /**
+   * Escape from processing of signals and collects
+   * This is a way of making sure messages are processed as soon as they arrive
+   */
   var processedAll = true
 
+  /**
+   * Timeout for akka actor idling (in milliseconds)
+   */
+  self.receiveTimeout = Some(5L)
+
+  /**
+   * This is method gets executed when the akka actor receives a message.
+   * This method call is internally a "give me the first message from akka mailbox"
+   */
   def receive = {
 
+    /**
+     * ReceiveTimeout message only gets sent after akka actor mailbox has been empty for "receiveTimeout" milliseconds
+     */
     case ReceiveTimeout =>
       // idle handling
       if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
@@ -58,21 +81,18 @@ class AkkaWorker(workerId: Int,
           setIdle(true)
       }
 
-    case x =>
+    case msg =>
       setIdle(false)
-      process(x)
+      process(msg)
       handlePauseAndContinue
-
-      // idle handling
-      /*if (isConverged || isPaused) { // if I have nothing to compute and the mailbox is empty, i'll be idle
-        if (mailboxIsEmpty)
-          setIdle(true)
-      }*/
-
       performComputation
 
   }
 
+  /**
+   * This is where the computation gets done.
+   * Basically, after a message has been processed, the worker will try to "get the job done" (signal and collect operations) 
+   */
   def performComputation = {
 
     // While the computation is in progress (work to do)
@@ -81,11 +101,11 @@ class AkkaWorker(workerId: Int,
       // alternately check the inbox and collect/signal
       while (mailboxIsEmpty && !isConverged) {
 
-        //if (processedAll) {
+        if (processedAll) {
           vertexStore.toSignal.foreach(vertex => signal(vertex))
-          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { false })
-        //} else
-        //  processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+        } else
+          processedAll = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
 
       } // end while
     } // !isPaused
@@ -99,15 +119,9 @@ class AkkaWorker(workerId: Int,
    */
   def mailboxIsEmpty: Boolean = if (self == null) true else self.dispatcher.mailboxIsEmpty(self)
 
+  /**
+   * Just a check. Sending messages to Akka workers it should be done using the bang operator ( ! )
+   */
   override def receive(message: Any) = sys.error("Receive should not be called from Akka Workers. This receive is not the same one from Akka.")
-
-  /* protected def process(message: Any) {
-    counters.messagesReceived += 1
-    message match {
-      case s: Signal[_, _, _] => processSignal(s)
-      case WorkerRequest(command) => command(this)
-      case other => log("Could not handle message " + message, "DEBUG")
-    }
-  }*/
 
 }
