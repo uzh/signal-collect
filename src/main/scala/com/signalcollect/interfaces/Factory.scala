@@ -21,10 +21,11 @@ package com.signalcollect.interfaces
 
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator._
+
 import akka.actor.ActorRef
 
 trait Factory extends Serializable {
-  def name: String = this.getClass.getSimpleName
+  def name: String = this.getClass.getSimpleName.replace("$", "")
 }
 
 trait WorkerFactory extends Factory {

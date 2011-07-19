@@ -22,14 +22,15 @@ package com.signalcollect.implementations.coordinator
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging._
-import com.signalcollect.api.Factory._
-import java.lang.reflect.Method
 import com.signalcollect.implementations.graph.DefaultGraphApi
-import scala.collection.parallel.mutable.ParArray
+import com.signalcollect.api.factory._
+
+import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
-import scala.collection.JavaConversions._
 import java.util.concurrent.atomic.AtomicLong
-import com.signalcollect.api.Factory
+
+import scala.collection.parallel.mutable.ParArray
+import scala.collection.JavaConversions._
 
 class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 

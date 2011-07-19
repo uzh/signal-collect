@@ -20,18 +20,19 @@
 
 package com.signalcollect
 
-import org.specs2.mutable._
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
 import com.signalcollect._
 import com.signalcollect.api._
+import com.signalcollect.api.factory._
+import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
-import com.signalcollect.api.Factory._
 import com.signalcollect.examples._
 import com.signalcollect.implementations.logging.DefaultLogger
 
-import com.signalcollect.configuration._
+
+import org.specs2.mutable._
+import org.junit.runner.RunWith
+import org.specs2.runner.JUnitRunner
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -42,7 +43,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
     (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build,
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(Factory.MessageBus.AkkaBus).withWorkerFactory(Factory.Worker.AkkaLocal)).build)
+    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(messageBus.AkkaBus).withWorkerFactory(worker.AkkaLocal)).build)
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 

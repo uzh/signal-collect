@@ -23,6 +23,7 @@ import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator._
 import com.signalcollect.implementations.logging._
+import com.signalcollect.api.factory._
 
 import akka.actor.ActorRef
 
@@ -38,8 +39,8 @@ class LocalBootstrap(val config: Configuration) extends Bootstrap {
     for (workerId <- 0 until config.numberOfWorkers) {
       
       config.workerConfiguration.workerFactory match {
-        case Factory.Worker.Local => workerApi.createWorker(workerId).asInstanceOf[Worker].initialize
-        case Factory.Worker.AkkaLocal => workerApi.createWorker(workerId).asInstanceOf[ActorRef].start
+        case worker.Local => workerApi.createWorker(workerId).asInstanceOf[Worker].initialize
+        case worker.AkkaLocal => workerApi.createWorker(workerId).asInstanceOf[ActorRef].start
       }
       
       

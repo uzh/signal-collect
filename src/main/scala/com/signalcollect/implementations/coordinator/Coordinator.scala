@@ -22,14 +22,16 @@ package com.signalcollect.implementations.coordinator
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
 import com.signalcollect.implementations.graph.DefaultGraphApi
-import com.signalcollect.api.Factory
+import com.signalcollect.api._
+import com.signalcollect.api.factory._
 import com.signalcollect.interfaces._
+
 import java.util.concurrent.ArrayBlockingQueue
-import com.signalcollect.interfaces.ComputeGraph
 import java.util.concurrent.BlockingQueue
 import java.lang.management._
+
 import com.sun.management.OperatingSystemMXBean
-import com.signalcollect.api._
+
 
 class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 

@@ -31,9 +31,9 @@ import akka.actor.ActorRef
 
 import java.util.concurrent.LinkedBlockingQueue
 
-object Factory {
+package factory {
 
-  object Storage {
+  package storage {
 
     object InMemory extends StorageFactory {
       def createInstance(messageBus: MessageBus[Any]): Storage = new DefaultStorage(messageBus)
@@ -53,7 +53,7 @@ object Factory {
 
   }
 
-  object MessageBus {
+  package messageBus {
     object SharedMemory extends MessageBusFactory {
       def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers, mapper)
     }
@@ -64,7 +64,7 @@ object Factory {
     
   }
 
-  object Worker {
+  package worker {
 
     object Local extends LocalWorkerFactory {
       def createInstance(workerId: Int,
