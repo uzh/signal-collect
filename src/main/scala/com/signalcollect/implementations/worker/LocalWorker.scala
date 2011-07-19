@@ -121,7 +121,7 @@ class LocalWorker(
   }
 
   protected def addEdge(edge: Edge[_, _]) {
-    val key = edge.sourceId
+    val key = edge.id._1
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
       counters.outgoingEdgesAdded += 1
@@ -130,7 +130,7 @@ class LocalWorker(
       vertexStore.toSignal.add(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
     } else {
-      warning("Did not find vertex with id " + edge.sourceId + " when trying to add edge " + edge)
+      warning("Did not find vertex with id " + edge.id._1 + " when trying to add edge " + edge)
     }
   }
 

@@ -35,12 +35,13 @@ import java.util.LinkedList
 class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
 
   type SourceVertexType = Page
-
+  @specialized type SignalType = Double
+  
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
    */
-  def signal(sourceVertex: Page) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
+  override def signal(sourceVertex: Page) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
 
 }
 

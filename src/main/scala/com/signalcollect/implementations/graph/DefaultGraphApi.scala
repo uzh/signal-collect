@@ -53,7 +53,7 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
 
   def addEdge(edge: Edge[_, _]) {
     val request = WorkerRequest((_.addEdge(write(edge))))
-    messageBus.sendToWorkerForVertexId(request, edge.sourceId)
+    messageBus.sendToWorkerForVertexId(request, edge.id._1)
   }
 
   def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {

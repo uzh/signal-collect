@@ -33,9 +33,13 @@ import com.signalcollect.implementations.graph.AbstractEdge
  * in general.
  */
 abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
-  val sourceId: SourceIdType,
-  val targetId: TargetIdType)
-  extends AbstractEdge[SourceIdType, TargetIdType] {
+  sourceId: SourceIdType,
+  targetId: TargetIdType,
+  description: String = getClass.getSimpleName)
+  extends AbstractEdge[SourceIdType, TargetIdType](
+    sourceId,
+    targetId,
+    description) {
 
   /** Last signal sent along this edge */
   var lastSignalSent: Option[SignalType] = None
@@ -44,10 +48,10 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
    * Calculates the new signal, compares it with the last signal sent and
    * only sends a signal if they are not equal.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any]) {
     val newSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, newSignal), targetHashCode)
+      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, newSignal), cachedTargetIdHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

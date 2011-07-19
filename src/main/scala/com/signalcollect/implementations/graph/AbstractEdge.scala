@@ -21,46 +21,23 @@ package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
 
-abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdType, TargetIdType] with Serializable {
+abstract class AbstractEdge[@specialized SourceIdType, @specialized TargetIdType](
+  sourceId: SourceIdType,
+  targetId: TargetIdType,
+  description: String = getClass.getSimpleName
+    )extends Edge[SourceIdType, TargetIdType] {
 
-  /** The identifier of the {@link Vertex} where this {@link Edge} originates from. */
-  val sourceId: SourceIdType
-
-  /** The identifier of the {@link Vertex} where this {@link Edge} points to. */
-  val targetId: TargetIdType
-
+  def id: (SourceIdType, TargetIdType, String) = (sourceId, targetId, description)
+  
   /**
    * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
    * this function will be called during algorithm execution. It is meant to calculate a signal
    * going from the source vertex of this edge to the target vertex of this edge.
    */
   def signal(sourceVertex: SourceVertexType): SignalType
-
-  /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
-  def weight: Double = 1
-
-  /** The identifier of this {@link Edge}. */
-  override val id = (sourceId, targetId, getClass.getSimpleName)
-
-  /** The hash code of this object. */
-  override val hashCode = id.hashCode
-
-  override def equals(other: Any): Boolean = {
-    if (other.isInstanceOf[Edge[_, _]]) {
-      id.equals(other.asInstanceOf[Edge[_, _]].id)
-    } else {
-      false
-    }
-  }
   
   /** The hash code of the target vertex. */
-  override val targetHashCode = targetId.hashCode
-
-  /** A textual representation of this {@link Edge}. */
-  override def toString = this.getClass.getSimpleName + "(" + sourceId + ", " + targetId + ")"
-
-  /** called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: SourceVertexType) = {}
+  lazy val cachedTargetIdHashCode = id._2.hashCode
 
   /**
    * This method will be called by {@link FrameworkVertex#executeSignalOperation}
@@ -70,7 +47,7 @@ abstract class AbstractEdge[SourceIdType, TargetIdType] extends Edge[SourceIdTyp
    * @param mb the message bus to use for sending the signal
    */
   def executeSignalOperation(sourceVertex: Vertex[_,_], mb: MessageBus[Any]) {
-      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, signal(sourceVertex.asInstanceOf[SourceVertexType])), targetHashCode)
+      mb.sendToWorkerForVertexIdHash(Signal(id._1, id._2, signal(sourceVertex.asInstanceOf[SourceVertexType])), cachedTargetIdHashCode)
   }
 
 }

@@ -20,6 +20,7 @@
 package com.signalcollect.api
 
 import com.signalcollect.implementations.graph.AbstractEdge
+import com.signalcollect.interfaces.Vertex
 
 /**
  * Default [[com.signalcollect.interfaces.Edge]] implementation.
@@ -32,7 +33,15 @@ import com.signalcollect.implementations.graph.AbstractEdge
  * The signal function usually uses the state of the source vertex
  * to calculate the signal sent to the target vertex.
  */
-abstract class DefaultEdge[@specialized SourceIdType, @specialized TargetIdType](
-  val sourceId: SourceIdType,
-  val targetId: TargetIdType)
-  extends AbstractEdge[SourceIdType, TargetIdType]
+class DefaultEdge[SourceIdType, TargetIdType](
+  sourceId: SourceIdType,
+  targetId: TargetIdType,
+  description: String = getClass.getSimpleName)
+  extends AbstractEdge[SourceIdType, TargetIdType](
+    sourceId,
+    targetId,
+    description) {
+
+  def signal(sourceVertex: SourceVertexType) = sourceVertex.state.asInstanceOf[SignalType]
+
+}

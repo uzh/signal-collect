@@ -85,7 +85,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
       case (sourceId, targetId) =>
         cg.addVertex(new VerifiedColoredVertex(sourceId, numColors))
         cg.addVertex(new VerifiedColoredVertex(targetId, numColors))
-        cg.addEdge(new StateForwarderEdge(sourceId, targetId))
+        cg.addEdge(new DefaultEdge(sourceId, targetId))
     }
     cg
   }

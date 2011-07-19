@@ -19,16 +19,10 @@
 
 package com.signalcollect.interfaces
 
-trait Edge[+SourceIdType, +TargetIdType] {
-
-  /** The identifier of the {@link Vertex} where this {@link Edge} originates from. */
-  def sourceId: SourceIdType
-
-  /** The identifier of the {@link Vertex} where this {@link Edge} points to. */
-  def targetId: TargetIdType
+trait Edge[@specialized SourceIdType, @specialized TargetIdType] extends Serializable {
  
   /** called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: SourceVertexType)
+  def onAttach(sourceVertex: SourceVertexType) = {}
   
   /**
    * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
@@ -38,19 +32,27 @@ trait Edge[+SourceIdType, +TargetIdType] {
   def signal(sourceVertex: SourceVertexType): SignalType
 
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
-  def weight: Double
+  def weight: Double = 1
 
-  type SignalType = Any
+  type SignalType
 
   /** The identifier of this {@link Edge}. */
-  def id: (SourceIdType, TargetIdType, String) = (sourceId, targetId, getClass.getName)
+  def id: (SourceIdType, TargetIdType, String)
 
+  /** A textual representation of this {@link Edge}. */
+  override def toString = id.toString
+  
   /** The hash code of this object. */
   override def hashCode = id.hashCode
 
-  /** The hash code of the target vertex. */
-  def targetHashCode = targetId.hashCode
-
+  override def equals(other: Any): Boolean = {
+    if (other.isInstanceOf[Edge[_, _]]) {
+      id.equals(other.asInstanceOf[Edge[_, _]].id)
+    } else {
+      false
+    }
+  }
+ 
   /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
   type SourceVertexType <: Vertex[_, _]
 

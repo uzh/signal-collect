@@ -32,7 +32,7 @@ import com.signalcollect.configuration._
  */
 class SudokuAssociation(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
   type SourceVertexType = SudokuCell
-  def signal(sourceVertex: SudokuCell) = sourceVertex.state
+  override def signal(sourceVertex: SudokuCell) = sourceVertex.state
 }
 
 /**
