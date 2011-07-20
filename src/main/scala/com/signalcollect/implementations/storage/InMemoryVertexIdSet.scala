@@ -47,13 +47,12 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
   def isEmpty: Boolean = toHandle.isEmpty && !snapshotIterator.hasNext
 
-  def size: Long = toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot
+  def size: Int = toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot
 
-  def foreach[U](f: (Vertex[_, _]) => U) = {
+  def foreach[U](f: (Any) => U) = {
     val i = toHandle.iterator
     while (i.hasNext) {
-      val vertex = vertexStore.vertices.get(i.next)
-      f(vertex)
+      f(i.next)
     }
     toHandle.clear
   }
@@ -66,7 +65,7 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
    * @param breakConditionReached		determines if the foreach-processing needs to be escaped do do other work
    * 									@see resumeProcessingSnapshot on how to resume an aborted processing.
    */
-  def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean = {
+  def foreachWithSnapshot[U](f: (Any) => U, breakConditionReached: () => Boolean): Boolean = {
     
     if (!snapshotIterator.hasNext) {
     	verticesDoneInSnapshot = 0

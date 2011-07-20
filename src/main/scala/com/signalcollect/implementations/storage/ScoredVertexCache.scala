@@ -138,7 +138,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
       if (!cachedVertices.containsKey(vertex.id)) {
         vertex.setMessageBus(messageBus)
         cachedVertices.put(vertex.id, vertex)
-        storage.toCollect.add(vertex.id)
+        storage.toCollect.addVertex(vertex.id)
         storage.toSignal.add(vertex.id)
         true
       } else

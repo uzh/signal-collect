@@ -25,7 +25,7 @@ abstract class Storage(messageBus: MessageBus[Any]) {
   def getMessageBus = messageBus
   def vertices: VertexStore
   def toSignal: VertexIdSet //collection of all vertices that need to signal
-  def toCollect: VertexIdSet // collection of all vertices that need to collect
+  def toCollect: VertexSignalBuffer // collection of all vertices that need to collect
   def cleanUp
 }
 
@@ -49,10 +49,25 @@ trait VertexIdSet {
   def add(vertexId: Any)
   def remove(vertexId: Any)
   def clear
+  def size: Int
   def isEmpty: Boolean
-  def size: Long
-  def foreach[U](f: (Vertex[_, _]) => U)
-  def foreachWithSnapshot[U](f: (Vertex[_, _]) => U, breakConditionReached: () => Boolean): Boolean
+  def foreach[U](f: Any => U) // vertex id
+  def foreachWithSnapshot[U](f: Any => U, breakConditionReached: () => Boolean): Boolean // vertex id
+  def cleanUp
+}
+
+/**
+ * Allows storing a set of id and iterating through them
+ */
+trait VertexSignalBuffer {
+  def addSignal(signal: Signal[_, _, _])
+  def addVertex(vertexId: Any)
+  def remove(vertexId: Any)
+  def clear
+  def size: Int
+  def isEmpty: Boolean
+  def foreach[U](f: (Any, List[Signal[_, _, _]]) => U) // vertex id, buffered signals for id
+  def foreachWithSnapshot[U](f: (Any, List[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean // vertex id, buffered signals for id
   def cleanUp
 }
 
@@ -63,4 +78,3 @@ trait Serializer {
   def write[A](inputObject: A): Array[Byte]
   def read[A](buffer: Array[Byte]): A
 }
-

@@ -101,7 +101,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   def put(vertex: Vertex[_, _]): Boolean = {
     if (primaryIndex.get(vertex.id.toString) == null) {
       primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, write(vertex)))
-      storage.toCollect.add(vertex.id)
+      storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       count += 1l
 
@@ -148,5 +148,23 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
  * To allow mixing-in this storage implementation into a more general storage implementation
  */
 trait BerkDBJE extends DefaultStorage with Serializable {
-  override protected def vertexStoreFactory = new BerkeleyDBStorage(this, "sc-berkeley")
+  
+  override protected def vertexStoreFactory = {
+    val userName = System.getenv("USER")
+    val jobId = System.getenv("PBS_JOBID")
+    if(userName!=null && jobId!=null) {
+      val torqueTempFolder = new File("/home/torque/tmp/" + userName + "." + jobId)
+      if(torqueTempFolder.exists && torqueTempFolder.isDirectory) {
+    	  val tempFolders=torqueTempFolder.listFiles
+    	  val jobTempFolder = tempFolders.filter(subFolder => subFolder.isDirectory)(0)
+    	  new BerkeleyDBStorage(this, jobTempFolder.getAbsolutePath)
+      }
+      else {
+    	  new BerkeleyDBStorage(this, "sc-berkeley")      
+      }
+    }
+    else {
+    	  new BerkeleyDBStorage(this, "sc-berkeley")      
+    }
+  }
 }

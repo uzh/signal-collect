@@ -34,7 +34,7 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     if (!vertexMap.containsKey(vertex.id)) {
       vertex.setMessageBus(messageBus)
       vertexMap.put(vertex.id, vertex)
-      storage.toCollect.add(vertex.id)
+      storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       true
     } else

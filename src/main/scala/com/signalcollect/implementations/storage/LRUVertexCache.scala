@@ -50,7 +50,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     } else if (cache.size < capacity) {
       vertex.setMessageBus(storage.getMessageBus)
       cache.put(vertex.id, vertex)
-      storage.toCollect.add(vertex.id)
+      storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
       if ((usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD) {
