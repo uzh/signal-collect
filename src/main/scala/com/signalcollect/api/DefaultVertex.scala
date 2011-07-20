@@ -20,6 +20,7 @@
 package com.signalcollect.api
 
 import com.signalcollect.implementations.graph._
+import com.signalcollect.interfaces.MessageBus
 
 /**
  * Default [[com.signalcollect.interfaces.Vertex]] implementation.
@@ -40,6 +41,13 @@ abstract class DefaultVertex[@specialized IdType, @specialized StateType](
   with SumOfOutWeights[IdType, StateType]
   with DefaultGraphApi {
 
+  var messageBus: MessageBus[Any] = _
+  
+  /** This method gets called by the framework after the vertex has been fully initialized. */
+  override def afterInitialization(mb: MessageBus[Any]) {
+    messageBus = mb
+  }
+  
   /** vertex state is initialized to initialState */
   var state = initialState
 

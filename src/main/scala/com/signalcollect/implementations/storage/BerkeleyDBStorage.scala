@@ -90,7 +90,6 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     if (storedObject != null) {
       var vertex: Vertex[_, _] = null
       vertex = read(storedObject.vertex)
-      vertex.setMessageBus(messageBus)
       vertex
     } else {
       null

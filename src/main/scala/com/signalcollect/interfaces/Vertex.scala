@@ -25,7 +25,7 @@ package com.signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
- trait Vertex[IdType, StateType] extends MessageRecipient[Signal[_, _, _]] with Serializable     {
+ trait Vertex[IdType, StateType] extends Serializable     {
 	
   /**
    * By default it is assumed that a vertex can receive signals of any type.
@@ -59,9 +59,6 @@ package com.signalcollect.interfaces
    * based on the {@link Signal}s received by this vertex.
    */
   def collect: StateType
-
-  /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
-  def setMessageBus(mb: MessageBus[Any])
 
   /**
    * Adds a new outgoing {@link Edge} to this {@link Vertex}.

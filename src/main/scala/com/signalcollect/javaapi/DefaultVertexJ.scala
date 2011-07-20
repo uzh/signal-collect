@@ -22,6 +22,7 @@ package com.signalcollect.javaapi
 import com.signalcollect.implementations.graph._
 import scala.collection.JavaConversions._
 import java.lang.Iterable
+import com.signalcollect.interfaces.MessageBus
 
 class DefaultVertexJ[IdType, StateType](
   val id: IdType,
@@ -32,6 +33,12 @@ class DefaultVertexJ[IdType, StateType](
   with SumOfOutWeights[IdType, StateType]
   with DefaultGraphApi {
   
+  var messageBus: MessageBus[Any] = _
+  
+  /** This method gets called by the framework after the vertex has been fully initialized. */
+  override def afterInitialization(mb: MessageBus[Any]) {
+    messageBus = mb
+  } 
 
   /** vertex state is initialized to initialState */
   var state = initialState

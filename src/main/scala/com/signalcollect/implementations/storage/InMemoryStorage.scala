@@ -32,7 +32,6 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
 
   def put(vertex: Vertex[_, _]): Boolean = {
     if (!vertexMap.containsKey(vertex.id)) {
-      vertex.setMessageBus(messageBus)
       vertexMap.put(vertex.id, vertex)
       storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)

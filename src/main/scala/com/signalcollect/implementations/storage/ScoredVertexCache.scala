@@ -136,7 +136,6 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
 
     def put(vertex: Vertex[_, _]): Boolean = {
       if (!cachedVertices.containsKey(vertex.id)) {
-        vertex.setMessageBus(messageBus)
         cachedVertices.put(vertex.id, vertex)
         storage.toCollect.addVertex(vertex.id)
         storage.toSignal.add(vertex.id)

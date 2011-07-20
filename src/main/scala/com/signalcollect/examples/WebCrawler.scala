@@ -21,6 +21,8 @@ package com.signalcollect.examples
 
 import com.signalcollect.api._
 import com.signalcollect.configuration._
+import com.signalcollect.implementations.graph.DefaultGraphApi
+import com.signalcollect.interfaces.MessageBus
 
 /**
  *  Regular expression to match links in Html strings
@@ -47,8 +49,13 @@ object WebCrawler extends App {
 /**
  *  Adds linked webpages as vertices to the graph and connects them with a link edge
  */
-class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends Page(id, dampingFactor) {
-  override def afterInitialization {
+class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends Page(id, dampingFactor) with DefaultGraphApi {
+
+  var messageBus: MessageBus[Any] = _
+
+  /** This method gets called by the framework after the vertex has been fully initialized. */
+  override def afterInitialization(mb: MessageBus[Any]) {
+    messageBus = mb
     if (crawlDepth > 0) {
       try {
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString

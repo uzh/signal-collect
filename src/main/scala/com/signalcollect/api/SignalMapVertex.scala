@@ -37,4 +37,3 @@ abstract class SignalMapVertex[IdType, StateType](
   var state: StateType)
   extends AbstractVertex[IdType, StateType]
   with MostRecentSignalsMap[IdType, StateType]
-  with DefaultGraphApi

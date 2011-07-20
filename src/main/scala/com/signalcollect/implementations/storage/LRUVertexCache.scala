@@ -48,7 +48,6 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     if (cache.contains(vertex.id) || persistentStore.get(vertex.id) != null) {
       false // Vertex already stored
     } else if (cache.size < capacity) {
-      vertex.setMessageBus(storage.getMessageBus)
       cache.put(vertex.id, vertex)
       storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)

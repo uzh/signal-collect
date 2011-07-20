@@ -331,7 +331,7 @@ class LocalWorker(
     }
   }
 
-  override protected def collect(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
+  protected def collect(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
@@ -360,7 +360,7 @@ class LocalWorker(
     hasSignaled
   }
 
-  override protected def processSignal(signal: Signal[_, _, _]) {
+  protected def processSignal(signal: Signal[_, _, _]) {
     vertexStore.toCollect.addSignal(signal)
   }
 
