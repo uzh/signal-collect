@@ -128,7 +128,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     signals.foreach(signal => process(signal))
     state = collect
   }
-
+  
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
