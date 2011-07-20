@@ -23,6 +23,7 @@ import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.Signal
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ListBuffer
+import com.signalcollect.interfaces.MessageBus
 
 trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, StateType] {
 
@@ -56,17 +57,8 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
    */
-  abstract override def executeCollectOperation(signals: Option[List[Signal[_, _, _]]]) {
-	super.executeCollectOperation(signals)
-	uncollectedMessages.clear
-  }
-  
-    /**
-   * Executes the {@link #collect} method on this vertex.
-   * @see #collect
-   */
-  abstract override def executeCollectOperation {
-	super.executeCollectOperation
+  abstract override def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+	super.executeCollectOperation(signals, messageBus)
 	uncollectedMessages.clear
   }
   

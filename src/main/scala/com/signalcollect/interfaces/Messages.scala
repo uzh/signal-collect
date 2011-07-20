@@ -26,9 +26,6 @@ case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdT
 // signal sender id used to indicate that a signal was sent from an external source
 object EXTERNAL { override val toString = "EXTERNAL" }
 
-// signal target id used to indicate that a signal should be delivered to all vertices
-object ALL { override val toString = "ALL" }
-
 // rpc request
 case class WorkerRequest(command: Worker => Unit)
 // rpc reply

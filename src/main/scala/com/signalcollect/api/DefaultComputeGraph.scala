@@ -65,8 +65,6 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
     workerApi.sendSignalToVertex(signal = signal, targetId = targetId, sourceId = sourceId)
   }
 
-  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) = workerApi.sendSignalToAllVertices(signal, sourceId)
-
   def addVertex(vertex: Vertex[_, _]) = workerApi.addVertex(vertex)
 
   def addEdge(edge: Edge[_, _]) = workerApi.addEdge(edge)

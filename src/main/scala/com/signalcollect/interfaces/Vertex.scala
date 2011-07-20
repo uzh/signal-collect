@@ -25,11 +25,7 @@ package com.signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
- trait Vertex[IdType, StateType] extends MessageRecipient[Signal[_, _, _]] with Comparable[Vertex[_, _]] with Serializable     {
-
-  def compareTo(other: Vertex[_, _]): Int = {
-	  scoreCollect.compareTo(other.scoreCollect)
-  }
+ trait Vertex[IdType, StateType] extends MessageRecipient[Signal[_, _, _]] with Serializable     {
 	
   /**
    * By default it is assumed that a vertex can receive signals of any type.
@@ -94,21 +90,15 @@ package com.signalcollect.interfaces
    * @see Worker
    * @see Edge#executeSignalOperation
    */
-  def executeSignalOperation
+  def executeSignalOperation(messageBus: MessageBus[Any])
 
   /**
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
    * @param signals the new signals that have not been transferred to the vertex jet.
    */
-  def executeCollectOperation(signals: Option[List[Signal[_, _, _]]])
+  def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any])
   
-  /**
-   * Executes the {@link #collect} method on this vertex.
-   * @see #collect
-   */
-  def executeCollectOperation
-
   /**
    * This method is used by the framework in order to decide if the vertex' collect operation
    * should be executed.
@@ -116,19 +106,19 @@ package com.signalcollect.interfaces
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
   def scoreCollect: Double
-
+  
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
    * @return the score value. The meaning of this value depends on the thresholds set in {@link ComputeGraph#execute}.
    */
   def scoreSignal: Double
-
+  
   /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int
   
   /** This method gets called by the framework after the vertex has been fully initialized. */
-  def afterInitialization
+  def afterInitialization(messageBus: MessageBus[Any])
 
 
 }

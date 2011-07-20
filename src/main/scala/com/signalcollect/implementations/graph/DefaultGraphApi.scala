@@ -38,14 +38,6 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
     messageBus.sendToWorkerForVertexId(Signal(sourceId, targetId, signal), targetId)
   }
 
-  /**
-   * Sends a signal to all vertices.
-   * The senderId of this signal will be com.signalcollect.interfaces.External
-   */
-  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL) {
-    messageBus.sendToWorkers(Signal(sourceId, ALL, signal))
-  }
-
   def addVertex(vertex: Vertex[_, _]) {
     val request = WorkerRequest((_.addVertex(write(vertex))))
     messageBus.sendToWorkerForVertexId(request, vertex.id)

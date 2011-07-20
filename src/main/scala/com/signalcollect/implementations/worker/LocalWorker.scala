@@ -1,4 +1,5 @@
 /*
+ *  @author Daniel Strebel
  *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
@@ -31,7 +32,6 @@ import java.util.LinkedHashSet
 import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
-import com.signalcollect.interfaces.ALL
 import com.signalcollect.implementations.graph.DefaultGraphApi
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import com.signalcollect.implementations.coordinator.WorkerApi
@@ -58,7 +58,7 @@ class LocalWorker(
   with Runnable {
 
   override def toString = "Worker" + workerId
-	
+
   /**
    * ******************
    * MESSAGE BUS INIT *
@@ -78,18 +78,23 @@ class LocalWorker(
   def initialize {
     new Thread(this, toString).start
   }
-  
+
   def run {
     while (!shouldShutdown) {
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
         vertexStore.toSignal.foreach(signal(_))
-        vertexStore.toCollect.foreachWithSnapshot(vertex => { processInbox; if (collect(vertex)) { signal(vertex) } }, () => false)
+        vertexStore.toCollect.foreach { (vertexId, uncollectedSignalsList) =>
+          processInbox
+          if (collect(vertexId, uncollectedSignalsList)) {
+            signal(vertexId)
+          }
+        }
       }
     }
   }
- 
+
   protected val counters = new WorkerOperationCounters()
   protected val graphApi = DefaultGraphApi.createInstance(messageBus)
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
@@ -102,7 +107,7 @@ class LocalWorker(
       case other => warning("Could not handle message " + message)
     }
   }
-  
+
   def addVertex(serializedVertex: Array[Byte]) {
     val vertex = DefaultSerializer.read[Vertex[_, _]](serializedVertex)
     addVertex(vertex)
@@ -111,7 +116,7 @@ class LocalWorker(
   protected def addVertex(vertex: Vertex[_, _]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
-      vertex.afterInitialization
+      vertex.afterInitialization(messageBus)
     }
   }
 
@@ -126,7 +131,7 @@ class LocalWorker(
     if (vertex != null) {
       counters.outgoingEdgesAdded += 1
       vertex.addOutgoingEdge(edge)
-      vertexStore.toCollect.add(vertex.id)
+      vertexStore.toCollect.addVertex(vertex.id)
       vertexStore.toSignal.add(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
     } else {
@@ -208,7 +213,7 @@ class LocalWorker(
 
   protected def recalculateVertexScores(vertex: Vertex[_, _]) {
     if (vertex.scoreCollect > collectThreshold) {
-      vertexStore.toCollect.add(vertex.id)
+      vertexStore.toCollect.addVertex(vertex.id)
     }
     if (vertex.scoreSignal > signalThreshold) {
       vertexStore.toSignal.add(vertex.id)
@@ -250,9 +255,9 @@ class LocalWorker(
 
   def collectStep: Boolean = {
     counters.collectSteps += 1
-    vertexStore.toCollect foreach { vertex =>
-      collect(vertex);
-      vertexStore.toSignal.add(vertex.id)
+    vertexStore.toCollect foreach { (vertexId, uncollectedSignalsList) =>
+      collect(vertexId, uncollectedSignalsList);
+      vertexStore.toSignal.add(vertexId)
     }
     vertexStore.toSignal.isEmpty
   }
@@ -328,45 +333,37 @@ class LocalWorker(
     }
   }
 
-  protected def collect(vertex: Vertex[_, _]): Boolean = {
-    if (vertex.scoreCollect > collectThreshold) {
+  override protected def collect(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
+    var hasCollected = false
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
       counters.collectOperationsExecuted += 1
-      vertex.executeCollectOperation
+      vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
+      vertexStore.toCollect.remove(vertex.id)
       vertexStore.vertices.updateStateOfVertex(vertex)
-      true
+      hasCollected = true
     } else {
-      false
+      uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphApi))
     }
+    hasCollected
   }
 
-  protected def signal(v: Vertex[_, _]): Boolean = {
-    if (v.scoreSignal > signalThreshold) {
-      counters.signalOperationsExecuted += 1
-      v.executeSignalOperation
-      vertexStore.vertices.updateStateOfVertex(v)
-      true
-    } else {
-      false
-    }
-  }
-
-  protected def processSignal(signal: Signal[_, _, _]) {
-    if (signal.targetId == ALL) {
-      vertexStore.vertices foreach (deliverSignal(signal, _))
-    } else {
-      val vertex = vertexStore.vertices.get(signal.targetId)
-      if (vertex != null) {
-        deliverSignal(signal, vertex)
-      } else {
-        undeliverableSignalHandler(signal, graphApi)
+  protected def signal(vertexId: Any): Boolean = {
+    var hasSignaled = false
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      if (vertex.scoreSignal > signalThreshold) {
+        counters.signalOperationsExecuted += 1
+        vertex.executeSignalOperation(messageBus)
+        vertexStore.vertices.updateStateOfVertex(vertex)
+        hasSignaled = true
       }
     }
+    hasSignaled
   }
 
-  protected def deliverSignal(signal: Signal[_, _, _], vertex: Vertex[_, _]) {
-    vertex.receive(signal)
-    vertexStore.toCollect.add(vertex.id)
-    vertexStore.vertices.updateStateOfVertex(vertex)
+  override protected def processSignal(signal: Signal[_, _, _]) {
+    vertexStore.toCollect.addSignal(signal)
   }
 
   def registerWorker(workerId: Int, worker: Any) {
@@ -376,7 +373,7 @@ class LocalWorker(
   def registerCoordinator(coordinator: MessageRecipient[Any]) {
     messageBus.registerCoordinator(coordinator)
   }
-  
+
   protected def handlePauseAndContinue {
     if (shouldStart) {
       shouldStart = false

@@ -91,7 +91,7 @@ class AkkaWorker(workerId: Int,
 
   /**
    * This is where the computation gets done.
-   * Basically, after a message has been processed, the worker will try to "get the job done" (signal and collect operations) 
+   * Basically, after a message has been processed, the worker will try to "get the job done" (signal and collect operations)
    */
   def performComputation = {
 
@@ -103,11 +103,20 @@ class AkkaWorker(workerId: Int,
 
         // if nothing was left to be processed from last processing
         if (processedAllLastTime) {
-          vertexStore.toSignal.foreach(vertex => signal(vertex))
-          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
+          vertexStore.toSignal.foreach(vertexId => signal(vertexId))
+          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
+            (vertexId, uncollectedSignalsList) =>
+              if (collect(vertexId, uncollectedSignalsList)) {
+                signal(vertexId)
+              },
+            () => !mailboxIsEmpty)
         } else
-          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(vertex => if (collect(vertex)) signal(vertex), () => { !mailboxIsEmpty })
-
+          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
+            (vertexId, uncollectedSignalsList) =>
+              if (collect(vertexId, uncollectedSignalsList)) {
+                signal(vertexId)
+              },
+            () => { !mailboxIsEmpty })
       } // end while
     } // !isPaused
 

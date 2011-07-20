@@ -72,13 +72,6 @@ package factory {
         coordinator: WorkerApi,
         mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, config, coordinator, mapper)
     }
-
-    object BufferedLocal extends LocalWorkerFactory {
-      def createInstance(workerId: Int,
-        config: Configuration,
-        coordinator: WorkerApi,
-        mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, config, coordinator, mapper) with SignalBuffer
-    }
     
     object AkkaLocal extends AkkaWorkerFactory {
       def createInstance(workerId: Int,

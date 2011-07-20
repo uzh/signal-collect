@@ -36,39 +36,24 @@ import scala.collection.GenMap
 
 import java.util.LinkedList
 
-abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] with MessageRecipient[Signal[_, _, _]] {
-
-  protected val messageInbox = new LinkedList[Signal[_, _, _]]
+abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] {
 
   /**
    * hashCode is cached for better performance
    */
   override val hashCode = this.id.hashCode
-  
-  def receive(message: Signal[_, _, _]) {
-    messageInbox.addLast(message)
-  }
 
   protected def process(message: Signal[_, _, _]) = {}
 
-  def afterInitialization = {}
+  def afterInitialization(messageBus: MessageBus[Any]) = {}
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
   protected var outgoingEdges: GenMap[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
 
-  /** Setter for {@link #_messageBus} over which this vertex is communicating with its outgoing edges. */
-  def setMessageBus(mb: MessageBus[Any]) {
-    messageBus = mb
-  }
-
   /** The state of this vertex when it last signaled. */
   protected var lastSignalState: Option[StateType] = None
-
-  /** The message bus over which this vertex is communicating with its outgoing edges. */
-  @transient
-  protected var messageBus: MessageBus[Any] = _ // null instead of None (Option) because it simplifies the API. Framework is required to set this before calling {@link #executeSignalOperation}
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false
@@ -124,58 +109,24 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * @see Worker
    * @see Edge#executeSignalOperation
    */
-  def executeSignalOperation {
+  def executeSignalOperation(messageBus: MessageBus[Any]) {
     outgoingEdgeAddedSinceSignalOperation = false
     lastSignalState = Some(state)
-    doSignal
+    doSignal(messageBus)
   }
 
-  def doSignal {
+  def doSignal(messageBus: MessageBus[Any]) {
     outgoingEdges.foreach(_._2.executeSignalOperation(this, messageBus))
   }
 
-  /**
-   * Executes the {@link #collect} method on this vertex.
-   * @see #collect
-   */
-  def executeCollectOperation {
-    processInbox
-    state = collect
-  }
-  
   /**
    * Adds the buffered signals for that vertex and executes the {@link #collect} method on this vertex.
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: Option[List[Signal[_, _, _]]]) {
-    signals match {
-      case Some(signals) => signals.foreach(signal=>messageInbox.addLast(signal))
-      case None =>
-    }
-    executeCollectOperation
-  }
-
-  protected def processInbox = {
-    val it = messageInbox.iterator
-    while (it.hasNext) {
-      val message = it.next
-      process(message)
-    }
-    messageInbox.clear
-  }
-
-  /**
-   * This method is used by the framework in order to decide if the vertex' collect operation
-   * should be executed.
-   *
-   * @return the score value. The meaning of this value depends on the thresholds set in the framework.
-   */
-  def scoreCollect: Double = {
-    if (messageInbox.isEmpty)
-      0
-    else
-      1
+  def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+    signals.foreach(signal => process(signal))
+    state = collect
   }
 
   /**

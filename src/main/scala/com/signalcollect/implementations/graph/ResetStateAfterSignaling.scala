@@ -19,6 +19,8 @@
 
 package com.signalcollect.implementations.graph
 
+import com.signalcollect.interfaces.MessageBus
+
 trait ResetStateAfterSignaling[IdType, StateType] extends AbstractVertex[IdType, StateType] {
 
   def initialState: StateType
@@ -26,8 +28,8 @@ trait ResetStateAfterSignaling[IdType, StateType] extends AbstractVertex[IdType,
   /**
    * Delegates to superclass and resets the state to the initial state after signaling.
    */
-  abstract override def executeSignalOperation {
-    super.executeSignalOperation
+  abstract override def executeSignalOperation(messageBus: MessageBus[Any]) {
+    super.executeSignalOperation(messageBus)
     state = initialState
   }
 

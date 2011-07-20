@@ -27,12 +27,6 @@ trait GraphApi {
    */
   def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL)
 
-  /**
-   * Sends a signal to all vertices.
-   * The senderId of this signal will be com.signalcollect.interfaces.External
-   */
-  def sendSignalToAllVertices(signal: Any, sourceId: Any = EXTERNAL)
-
   def addVertex(vertex: Vertex[_, _])
 
   def addEdge(edge: Edge[_, _])
