@@ -42,7 +42,7 @@ package com.signalcollect.interfaces
    * Vertices are assigned to worker threads that are each responsible for a part of the graph.
    * We use a hash function on the vertex ids for the mapping of vertices to workers.
    */
-  override val hashCode = this.id.hashCode
+  override def hashCode = this.id.hashCode
 
   override def equals(other: Any): Boolean = {
 	  other match {

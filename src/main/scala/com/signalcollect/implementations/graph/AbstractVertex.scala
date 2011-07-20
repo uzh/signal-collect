@@ -40,6 +40,11 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
 
   protected val messageInbox = new LinkedList[Signal[_, _, _]]
 
+  /**
+   * hashCode is cached for better performance
+   */
+  override val hashCode = this.id.hashCode
+  
   def receive(message: Signal[_, _, _]) {
     messageInbox.addLast(message)
   }
