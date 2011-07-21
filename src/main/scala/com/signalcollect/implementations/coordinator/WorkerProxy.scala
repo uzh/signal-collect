@@ -49,10 +49,12 @@ object WorkerProxy {
  * This is mainly an architectural place holder until we find a proper RPC solution to use
  * with our message bus as the transport. 
  */
-class WorkerProxy(workerId: Int, messageBus: MessageBus[Any]) extends InvocationHandler {
+class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any]) extends InvocationHandler with Logging {
 
   protected def relay(command: Worker => Unit) = messageBus.sendToWorker(workerId, WorkerRequest(command))
 
+  override def toString = "WorkerProxy" + workerId
+  
   var workerMessage: Option[WorkerReply] = null
   val monitor = new Object
 
@@ -70,6 +72,7 @@ class WorkerProxy(workerId: Int, messageBus: MessageBus[Any]) extends Invocation
         monitor.notify
       }
     } else {
+      debug("Executing RPC call to method " + method.getName + " with parameters " + arguments)
       val command = { worker: Worker =>
         val result = method.invoke(worker, arguments: _*)
         val reply = WorkerReply(worker.workerId, result)

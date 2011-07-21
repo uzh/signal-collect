@@ -100,6 +100,7 @@ class LocalWorker(
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
 
   protected def process(message: Any) {
+    debug("process(" + message + ")")
     counters.messagesReceived += 1
     message match {
       case s: Signal[_, _, _] => processSignal(s)
@@ -114,6 +115,7 @@ class LocalWorker(
   }
 
   protected def addVertex(vertex: Vertex[_, _]) {
+    debug("addVertex(" + vertex + ")")
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       vertex.afterInitialization(messageBus)
@@ -126,20 +128,23 @@ class LocalWorker(
   }
 
   protected def addEdge(edge: Edge[_, _]) {
+    debug("addEdge(" + edge + ")")
     val key = edge.id._1
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
-      counters.outgoingEdgesAdded += 1
-      vertex.addOutgoingEdge(edge)
-      vertexStore.toCollect.addVertex(vertex.id)
-      vertexStore.toSignal.add(vertex.id)
-      vertexStore.vertices.updateStateOfVertex(vertex)
+      if (vertex.addOutgoingEdge(edge)) {
+        counters.outgoingEdgesAdded += 1
+        vertexStore.toCollect.addVertex(vertex.id)
+        vertexStore.toSignal.add(vertex.id)
+        vertexStore.vertices.updateStateOfVertex(vertex)
+      }
     } else {
       warning("Did not find vertex with id " + edge.id._1 + " when trying to add edge " + edge)
     }
   }
 
   def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+    debug("addPatternEdge(" + sourceVertexPredicate + ", " + edgeFactory + ")")
     vertexStore.vertices foreach { vertex =>
       if (sourceVertexPredicate(vertex)) {
         addEdge(edgeFactory(vertex))
@@ -148,6 +153,7 @@ class LocalWorker(
   }
 
   def removeVertex(vertexId: Any) {
+    debug("removeVertex(" + vertexId + ")")
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
@@ -157,6 +163,7 @@ class LocalWorker(
   }
 
   def removeOutgoingEdge(edgeId: (Any, Any, String)) {
+    debug("removeOutgoingEdge(" + edgeId + ")")
     val vertex = vertexStore.vertices.get(edgeId._1)
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
@@ -171,6 +178,7 @@ class LocalWorker(
   }
 
   def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+    debug("removeVertices(" + shouldRemove + ")")
     vertexStore.vertices foreach { vertex =>
       if (shouldRemove(vertex)) {
         processRemoveVertex(vertex)
@@ -179,6 +187,7 @@ class LocalWorker(
   }
 
   protected def processRemoveVertex(vertex: Vertex[_, _]) {
+    debug("processRemoveVertex(" + vertex + ")")
     counters.outgoingEdgesRemoved += vertex.outgoingEdgeCount
     val edgesRemoved = vertex.removeAllOutgoingEdges
     counters.outgoingEdgesRemoved += edgesRemoved
@@ -187,24 +196,27 @@ class LocalWorker(
   }
 
   def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) {
+    debug("setUndeliverableSignalHandler(" + h + ")")
     undeliverableSignalHandler = h
   }
 
   def setSignalThreshold(st: Double) {
+    debug("setSignalThreshold(" + st + ")")
     signalThreshold = st
   }
 
   def setCollectThreshold(ct: Double) {
+    debug("setCollectThreshold(" + ct + ")")
     collectThreshold = ct
   }
 
   def recalculateScores {
-    vertexStore.toSignal.clear
-    vertexStore.toCollect.clear
+    debug("recalculateScores")
     vertexStore.vertices.foreach(recalculateVertexScores(_))
   }
 
   def recalculateScoresForVertexWithId(vertexId: Any) {
+    debug("recalculateScoresForVertexWithId(" + vertexId + ")")
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       recalculateVertexScores(vertex)
@@ -212,13 +224,13 @@ class LocalWorker(
   }
 
   protected def recalculateVertexScores(vertex: Vertex[_, _]) {
+    debug("recalculateScoresForVertexWithId(" + vertex + ")")
     vertexStore.toCollect.addVertex(vertex.id)
-    if (vertex.scoreSignal > signalThreshold) {
-      vertexStore.toSignal.add(vertex.id)
-    }
+    vertexStore.toSignal.add(vertex.id)
   }
 
   def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+    debug("forVertexWithId(" + vertexId + ", " + f + ")")
     var result: Option[ResultType] = None
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null && vertex.isInstanceOf[VertexType]) {
@@ -229,29 +241,35 @@ class LocalWorker(
   }
 
   def foreachVertex(f: (Vertex[_, _]) => Unit) {
+    debug("foreachVertex(" + f + ")")
     vertexStore.vertices.foreach(f)
   }
 
   def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    debug("aggregate(" + neutralElement + ", " + aggregator + ", " + extractor + ")")
     var acc = neutralElement
     vertexStore.vertices.foreach { vertex => acc = aggregator(acc, extractor(vertex)) }
     acc
   }
 
   def startComputation {
+    debug("startComputation")
     shouldStart = true
   }
 
   def pauseComputation {
+    debug("pauseComputation")
     shouldPause = true
   }
 
   def signalStep {
+    debug("signalStep")
     counters.signalSteps += 1
     vertexStore.toSignal foreach (signal(_))
   }
 
   def collectStep: Boolean = {
+    debug("collectStep")
     counters.collectSteps += 1
     vertexStore.toCollect foreach { (vertexId, uncollectedSignalsList) =>
       collect(vertexId, uncollectedSignalsList);
@@ -261,6 +279,7 @@ class LocalWorker(
   }
 
   def getWorkerStatistics: WorkerStatistics = {
+    debug("getWorkerStatistics")
     WorkerStatistics(
       messagesReceived = counters.messagesReceived,
       messagesSent = messageBus.messagesSent,
@@ -278,7 +297,8 @@ class LocalWorker(
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
 
-  def shutdown = {
+  def shutdown {
+    debug("shutdown")
     vertexStore.cleanUp
     shouldShutdown = true
   }
@@ -299,6 +319,7 @@ class LocalWorker(
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
   protected def getWorkerStatus: WorkerStatus = {
+    debug("getWorkerStatus")
     WorkerStatus(
       workerId = workerId,
       isIdle = isIdle,
@@ -308,11 +329,13 @@ class LocalWorker(
   }
 
   protected def sendStatusToCoordinator {
+    debug("sendStatusToCoordinator")
     val status = getWorkerStatus
     messageBus.sendToCoordinator(status)
   }
 
   protected def setIdle(newIdleState: Boolean) {
+    debug("setIdle(" + newIdleState + ")")
     if (isIdle != newIdleState) {
       isIdle = newIdleState
       sendStatusToCoordinator
@@ -320,6 +343,7 @@ class LocalWorker(
   }
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
+    debug("processInboxOrIdle(" + idleTimeoutNanoseconds + ")")
     var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
     if (message == null) {
       setIdle(true)
@@ -332,14 +356,17 @@ class LocalWorker(
   }
 
   protected def collect(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
+    debug("collect(" + vertexId + ", " + uncollectedSignalsList + ")")
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
-      counters.collectOperationsExecuted += 1
-      vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
+      if (vertex.scoreCollect(uncollectedSignalsList) > collectThreshold) {
+        counters.collectOperationsExecuted += 1
+        vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
+        vertexStore.vertices.updateStateOfVertex(vertex)
+        hasCollected = true
+      }
       vertexStore.toCollect.remove(vertex.id)
-      vertexStore.vertices.updateStateOfVertex(vertex)
-      hasCollected = true
     } else {
       uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphApi))
     }
@@ -347,6 +374,7 @@ class LocalWorker(
   }
 
   protected def signal(vertexId: Any): Boolean = {
+    debug("signal(" + vertexId + ")")
     var hasSignaled = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
@@ -361,18 +389,22 @@ class LocalWorker(
   }
 
   protected def processSignal(signal: Signal[_, _, _]) {
+    debug("processSignal(" + signal + ")")
     vertexStore.toCollect.addSignal(signal)
   }
 
   def registerWorker(workerId: Int, worker: Any) {
+    debug("registerWorker(" + workerId + ")")
     messageBus.registerWorker(workerId, worker)
   }
 
   def registerCoordinator(coordinator: MessageRecipient[Any]) {
+    debug("registerCoordinator(" + coordinator + ")")
     messageBus.registerCoordinator(coordinator)
   }
 
   protected def handlePauseAndContinue {
+    debug("handlePauseAndContinue")
     if (shouldStart) {
       shouldStart = false
       isPaused = false
@@ -385,6 +417,7 @@ class LocalWorker(
   }
 
   protected def handleIdling {
+    debug("handleIdling")
     handlePauseAndContinue
     if (isConverged || isPaused) {
       processInboxOrIdle(idleTimeoutNanoseconds)

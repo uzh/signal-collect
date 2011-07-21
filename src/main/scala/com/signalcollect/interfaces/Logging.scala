@@ -27,7 +27,7 @@ trait Logging {
   
   lazy val from = this.toString
   
-  @elidable(scala.annotation.elidable.ALL)
+  @elidable(0)
   def debug(msg: Any) = messageBus.sendToCoordinator(Debug(msg, from))
 
   @elidable(scala.annotation.elidable.CONFIG)

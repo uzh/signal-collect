@@ -32,7 +32,6 @@ import java.lang.management._
 
 import com.sun.management.OperatingSystemMXBean
 
-
 class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
@@ -77,12 +76,14 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
       jvmCpuTimeInMilliseconds = (totalJvmCpuTime / 1000000.0).toLong,
       graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong)
 
-    ExecutionInformation(
+    val stats = ExecutionInformation(
       config,
       parameters,
       executionStatistics,
       aggregatedWorkerStatistics,
       workerStatistics)
+    workerApi.info(stats)
+    stats
   }
 
   //protected def performComputation(parameters: ExecutionParameters)

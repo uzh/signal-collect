@@ -25,15 +25,15 @@ package com.signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
- trait Vertex[IdType, StateType] extends Serializable     {
-	
+trait Vertex[IdType, StateType] extends Serializable {
+
   /**
    * By default it is assumed that a vertex can receive signals of any type.
    * This type can be overridden to set an upper bound for the types of signals
    * that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
    */
   type UpperSignalTypeBound
-	
+
   /**
    * Vertices are assigned to worker threads that are each responsible for a part of the graph.
    * We use a hash function on the vertex ids for the mapping of vertices to workers.
@@ -41,12 +41,12 @@ package com.signalcollect.interfaces
   override def hashCode = this.id.hashCode
 
   override def equals(other: Any): Boolean = {
-	  other match {
-	 	  case v: Vertex[_, _] => v.id == id
-	 	  case _ => false
-	  }
+    other match {
+      case v: Vertex[_, _] => v.id == id
+      case _ => false
+    }
   }
- 
+
   /** @return the identifier of this {@link FrameworkVertex}. */
   val id: IdType
 
@@ -77,7 +77,7 @@ package com.signalcollect.interfaces
    * Removes all outgoing {@link Edge}s from this {@link Vertex}, returns the number of edges that were removed.
    */
   def removeAllOutgoingEdges: Int
-   
+
   /**
    * This method tells this {@link FrameworkVertex} to execute the signal operation
    * on all its outgoing {@Edge}s. This method is going to be
@@ -95,19 +95,26 @@ package com.signalcollect.interfaces
    * @param signals the new signals that have not been transferred to the vertex jet.
    */
   def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any])
-  
+
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
    * @return the score value. The meaning of this value depends on the thresholds set in {@link ComputeGraph#execute}.
    */
   def scoreSignal: Double
-  
+
+  /**
+   * This method is used by the framework in order to decide if the vertex' collect operation
+   * should be executed.
+   *
+   * @return the score value. The meaning of this value depends on the thresholds set in the framework.
+   */
+  def scoreCollect(signals: List[Signal[_, _, _]]): Double
+
   /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int
-  
+
   /** This method gets called by the framework after the vertex has been fully initialized. */
   def afterInitialization(messageBus: MessageBus[Any])
-
 
 }
