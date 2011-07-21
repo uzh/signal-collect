@@ -66,14 +66,7 @@ class Location(id: Any, initialDistance: Option[Int] = None) extends SignalMapVe
    *  up to now (= state) or one of the paths that had been advertised via a signal
    *  by a neighbor.
    */
-  def collect: Option[Int] = {
-    if(signals(classOf[Int]).isEmpty && state == None) { //nothing changed
-    None
-    }
-    else {
-      Some(signals(classOf[Int]).foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
-    }
-  }
+  def collect: Option[Int] = Some(signals(classOf[Int]).foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
 
 }
 

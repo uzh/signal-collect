@@ -24,6 +24,9 @@ import com.signalcollect.examples._
 import java.util.LinkedList
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 
+/**
+ * Special serializer that serializes some vertices more efficiently than the default version. 
+ */
 object VertexSerializer extends VertexSerializer
 
 trait VertexSerializer {
