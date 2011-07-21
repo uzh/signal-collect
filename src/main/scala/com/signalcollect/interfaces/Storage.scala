@@ -51,7 +51,9 @@ trait VertexIdSet {
   def clear
   def size: Int
   def isEmpty: Boolean
+  /* This *removes* the ids from the set! */
   def foreach[U](f: Any => U) // vertex id
+  /* This *removes* the ids from the set! */
   def foreachWithSnapshot[U](f: Any => U, breakConditionReached: () => Boolean): Boolean // vertex id
   def cleanUp
 }
@@ -66,7 +68,9 @@ trait VertexSignalBuffer {
   def clear
   def size: Int
   def isEmpty: Boolean
+  /* This does *not* remove the ids from the set! */
   def foreach[U](f: (Any, List[Signal[_, _, _]]) => U) // vertex id, buffered signals for id
+  /* This does *not* remove the ids from the set! */
   def foreachWithSnapshot[U](f: (Any, List[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean // vertex id, buffered signals for id
   def cleanUp
 }

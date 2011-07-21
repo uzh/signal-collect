@@ -84,11 +84,13 @@ class LocalWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        vertexStore.toSignal.foreach(signal(_))
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_))
         vertexStore.toCollect.foreach { (vertexId, uncollectedSignalsList) =>
           processInbox
-          if (collect(vertexId, uncollectedSignalsList)) {
-            signal(vertexId)
+          val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
+          vertexStore.toCollect.remove(vertexId)
+          if (collectExecuted) {
+            executeSignalOperationOfVertex(vertexId)
           }
         }
       }
@@ -265,16 +267,17 @@ class LocalWorker(
   def signalStep {
     debug("signalStep")
     counters.signalSteps += 1
-    vertexStore.toSignal foreach (signal(_))
+    vertexStore.toSignal foreach (executeSignalOperationOfVertex(_))
   }
 
   def collectStep: Boolean = {
     debug("collectStep")
     counters.collectSteps += 1
     vertexStore.toCollect foreach { (vertexId, uncollectedSignalsList) =>
-      collect(vertexId, uncollectedSignalsList);
+      executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
       vertexStore.toSignal.add(vertexId)
     }
+    vertexStore.toCollect.clear
     vertexStore.toSignal.isEmpty
   }
 
@@ -355,8 +358,8 @@ class LocalWorker(
     }
   }
 
-  protected def collect(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
-    debug("collect(" + vertexId + ", " + uncollectedSignalsList + ")")
+  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
+    debug("executeCollectOperationOfVertex(" + vertexId + ", " + uncollectedSignalsList + ")")
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
@@ -366,15 +369,14 @@ class LocalWorker(
         vertexStore.vertices.updateStateOfVertex(vertex)
         hasCollected = true
       }
-      vertexStore.toCollect.remove(vertex.id)
     } else {
       uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphApi))
     }
     hasCollected
   }
 
-  protected def signal(vertexId: Any): Boolean = {
-    debug("signal(" + vertexId + ")")
+  protected def executeSignalOperationOfVertex(vertexId: Any): Boolean = {
+    debug("executeSignalOperationOfVertex(" + vertexId + ")")
     var hasSignaled = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
