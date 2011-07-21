@@ -47,7 +47,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
-  val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
+  val testWorkerCounts = List(1, 2, 4, 8/*, 16, 32, 64, 128*/)
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true

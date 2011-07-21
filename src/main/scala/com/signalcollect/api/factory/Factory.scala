@@ -36,19 +36,19 @@ package factory {
   package storage {
 
     object InMemory extends StorageFactory {
-      def createInstance(messageBus: MessageBus[Any]): Storage = new DefaultStorage(messageBus)
+      def createInstance: Storage = new DefaultStorage
     }
 
     //Berkeley DB Storage (can be run directly from jar)
     object BerkeleyDB extends StorageFactory {
-      class BerkeleyDBStorage(messageBus: MessageBus[Any]) extends DefaultStorage(messageBus) with BerkDBJE
-      def createInstance(messageBus: MessageBus[Any]): Storage = new BerkeleyDBStorage(messageBus)
+      class BerkeleyDBStorage extends DefaultStorage with BerkDBJE
+      def createInstance: Storage = new BerkeleyDBStorage
     }
 
     //Berkeley DB Storage with InMemory caching
     object CachedBerkeleyDB extends StorageFactory {
-      class CachedStorage(messageBus: MessageBus[Any]) extends DefaultStorage(messageBus) with ScoredCache
-      def createInstance(messageBus: MessageBus[Any]): Storage = new CachedStorage(messageBus)
+      class CachedStorage extends DefaultStorage with ScoredCache
+      def createInstance: Storage = new CachedStorage
     }
 
   }

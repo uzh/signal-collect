@@ -23,7 +23,6 @@ import com.signalcollect.interfaces._
 import java.util.HashMap
 
 class InMemoryStorage(storage: Storage) extends VertexStore {
-  val messageBus =  storage.getMessageBus
   protected var vertexMap = new HashMap[Any, Vertex[_, _]]()
 
   def get(id: Any): Vertex[_, _] = {

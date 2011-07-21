@@ -21,8 +21,7 @@ package com.signalcollect.interfaces
 /**
  * High level interface to abstract all vertex storage related implementations
  */
-abstract class Storage(messageBus: MessageBus[Any]) {
-  def getMessageBus = messageBus
+abstract class Storage {
   def vertices: VertexStore
   def toSignal: VertexIdSet //collection of all vertices that need to signal
   def toCollect: VertexSignalBuffer // collection of all vertices that need to collect

@@ -57,7 +57,6 @@ class Vertex2EntityAdapter(idParam: String, vertexParam: Array[Byte]) {
  */
 class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices") extends VertexStore with DefaultSerializer {
 
-  val messageBus = storage.getMessageBus
   var count = 0l
   
   /* Open the JE Environment. */

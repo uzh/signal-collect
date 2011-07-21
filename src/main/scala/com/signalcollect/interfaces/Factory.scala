@@ -54,5 +54,5 @@ trait MessageBusFactory extends Factory {
 }
 
 trait StorageFactory extends Factory {
-  def createInstance(messageBus: MessageBus[Any]): Storage
+  def createInstance: Storage
 }

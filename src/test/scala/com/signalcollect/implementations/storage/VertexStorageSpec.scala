@@ -43,7 +43,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   "InMemory Vertex Store" should {
     val defaultMessageBus = mock[DefaultMessageBus[Any]]
     val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
-    val inMemoryStore = new DefaultStorage(defaultMessageBus)
+    val inMemoryStore = new DefaultStorage
     vertexList.foreach(v => inMemoryStore.vertices.put(v))
 
     "hold all vertices inserted" in {
@@ -59,7 +59,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "remove vertices from the store" in {
-      val inMemoryStore = new DefaultStorage(defaultMessageBus)
+      val inMemoryStore = new DefaultStorage
       vertexList.foreach(v => inMemoryStore.vertices.put(v))
       inMemoryStore.vertices.remove(0)
       inMemoryStore.vertices.size must_== vertexList.size - 1
@@ -76,7 +76,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
     if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
       val defaultMessageBus = mock[DefaultMessageBus[Any]]
       val vertexList = List(new Page(0, 0.5), new Page(1, 0.5), new Page(2, 0.5))
-      class BerkeleyStorage(messageBus: MessageBus[Any]) extends DefaultStorage(messageBus) with BerkDBJE
+      class BerkeleyStorage(messageBus: MessageBus[Any]) extends DefaultStorage with BerkDBJE
       val berkeleyStore = new BerkeleyStorage(defaultMessageBus)
       vertexList.foreach(v => berkeleyStore.vertices.put(v))
 
@@ -134,8 +134,8 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
-      class CachedBerkeley(messageBus: MessageBus[Any]) extends DefaultStorage(messageBus) with LRUCache
-      val cachedStore = new CachedBerkeley(defaultMessageBus)
+      class CachedBerkeley extends DefaultStorage with LRUCache
+      val cachedStore = new CachedBerkeley
       vertexList.foreach(v => cachedStore.vertices.put(v))
 
       "hold all vertices inserted" in {

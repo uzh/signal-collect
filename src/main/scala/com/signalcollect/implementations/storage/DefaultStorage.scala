@@ -8,7 +8,7 @@ import java.util.Set
 /**
  * Default configuration for storing vertices and the toSignal and toCollect collections
  */
-class DefaultStorage(val messageBus: MessageBus[Any]) extends Storage(messageBus) with DefaultSerializer {
+class DefaultStorage extends Storage with DefaultSerializer {
   var vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore = new InMemoryStorage(this)
   var toCollect = new DefaultVertexSignalBuffer //holds all signals that are not collected yet
