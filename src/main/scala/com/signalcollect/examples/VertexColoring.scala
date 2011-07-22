@@ -22,7 +22,6 @@ package com.signalcollect.examples
 import com.signalcollect.api._
 import scala.util.Random
 import com.signalcollect.configuration._
-import com.signalcollect.implementations.graph.VertexDebugging
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
