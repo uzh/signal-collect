@@ -94,7 +94,7 @@ trait Vertex[IdType, StateType] extends Serializable {
    * @see #collect
    * @param signals the new signals that have not been transferred to the vertex jet.
    */
-  def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any])
+  def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any])
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -109,7 +109,7 @@ trait Vertex[IdType, StateType] extends Serializable {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: List[Signal[_, _, _]]): Double
+  def scoreCollect(signals: Iterable[Signal[_, _, _]]): Double
 
   /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int

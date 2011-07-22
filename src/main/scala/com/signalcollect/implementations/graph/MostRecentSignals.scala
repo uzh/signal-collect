@@ -23,6 +23,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import com.signalcollect.interfaces.Signal
 import com.signalcollect.util.collections.Filter;
+import com.signalcollect.interfaces.MessageBus
 
 trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, StateType] {
   
@@ -42,17 +43,16 @@ trait MostRecentSignalsMap[IdType, StateType] extends AbstractVertex[IdType, Sta
   }
 
   /**
-   * This method adds a signal to this {@link Vertex}, which will later be collectible
-   * by the {@link #collect} method. This method is going to be called by the SignalCollect framework
-   * during its execution (i.e. the {@link Worker} implementations).
-   *
-   * @param s the signal to add (deliver).
+   * Executes the {@link #collect} method on this vertex.
    * @see #collect
    */
-  abstract override protected def process(s: Signal[_, _, _]) {
-    super.process(s)
-    val castS = s.asInstanceOf[Signal[_, _, UpperSignalTypeBound]]
-    mostRecentSignalMap.put(castS.sourceId, castS.signal)
+  abstract override def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+    val castS = signals.asInstanceOf[Traversable[Signal[_, _, UpperSignalTypeBound]]]
+    castS foreach { signal =>
+    	mostRecentSignalMap.put(signal.sourceId, signal.signal)      
+    }
+	super.executeCollectOperation(signals, messageBus)
   }
-
+  
+  
 }

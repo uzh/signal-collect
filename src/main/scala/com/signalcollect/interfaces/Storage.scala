@@ -17,6 +17,7 @@
  */
 
 package com.signalcollect.interfaces
+import java.util.LinkedList
 
 /**
  * High level interface to abstract all vertex storage related implementations
@@ -68,9 +69,9 @@ trait VertexSignalBuffer {
   def size: Int
   def isEmpty: Boolean
   /* This does *not* remove the ids from the set! */
-  def foreach[U](f: (Any, List[Signal[_, _, _]]) => U) // vertex id, buffered signals for id
+  def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U) // vertex id, buffered signals for id
   /* This does *not* remove the ids from the set! */
-  def foreachWithSnapshot[U](f: (Any, List[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean // vertex id, buffered signals for id
+  def foreachWithSnapshot[U](f: (Any, Iterable[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean // vertex id, buffered signals for id
   def cleanUp
 }
 

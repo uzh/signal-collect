@@ -19,24 +19,25 @@ package com.signalcollect.implementations.storage
 
 import com.signalcollect.interfaces.{VertexSignalBuffer, Signal, Storage}
 import java.util.concurrent.ConcurrentHashMap
+import scala.collection.mutable.ArrayBuffer
 
 class DefaultVertexSignalBuffer extends VertexSignalBuffer {
   
-  val undeliveredSignals = new ConcurrentHashMap[Any, List[Signal[_, _, _]]]()
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[Signal[_, _, _]]]()
   var iterator = undeliveredSignals.keySet.iterator
   
  def addSignal(signal: Signal[_, _, _]) {
     if (undeliveredSignals.containsKey(signal.targetId)) {
-      undeliveredSignals.put(signal.targetId, undeliveredSignals.get(signal.targetId) ++ List(signal))
+      undeliveredSignals.get(signal.targetId).append(signal)
     } else {
-      val signalsForVertex = List(signal)
+      val signalsForVertex = ArrayBuffer[Signal[_, _, _]](signal)
       undeliveredSignals.put(signal.targetId, signalsForVertex)
     }
   }
   
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
-      undeliveredSignals.put(vertexId, List())
+      undeliveredSignals.put(vertexId, ArrayBuffer[Signal[_, _, _]]())
     }
   }
   
@@ -50,7 +51,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
  
  def size=undeliveredSignals.size
  
- def foreach[U](f: (Any, List[com.signalcollect.interfaces.Signal[_, _, _]]) => U) {
+ def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U) {
    iterator = undeliveredSignals.keySet.iterator
    while(iterator.hasNext) {
      val currentId = iterator.next
@@ -58,7 +59,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
    }
  }
  
- def foreachWithSnapshot[U](f: (Any, List[com.signalcollect.interfaces.Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean = {
+ def foreachWithSnapshot[U](f: (Any, Iterable[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean = {
    if(!iterator.hasNext) {
      iterator = undeliveredSignals.keySet.iterator
    }

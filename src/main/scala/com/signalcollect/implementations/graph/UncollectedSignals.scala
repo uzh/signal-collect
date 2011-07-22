@@ -28,7 +28,7 @@ import com.signalcollect.interfaces.MessageBus
 trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, StateType] {
 
   /** a buffer containing uncollected messages */
-  protected val uncollectedMessages: Buffer[Signal[_, _, UpperSignalTypeBound]] = ListBuffer[Signal[_, _, UpperSignalTypeBound]]()
+  protected var uncollectedMessages: Iterable[Signal[_, _, UpperSignalTypeBound]] = _
   
   /** traversable uncollected signals */  
   protected def uncollectedSignals: Iterable[UpperSignalTypeBound] = {
@@ -41,25 +41,12 @@ trait UncollectedSignalsList[IdType, StateType] extends AbstractVertex[IdType, S
   }
 
   /**
-   * This method adds a signal to this {@link Vertex}, which will later be collectible
-   * by the {@link #collect} method. This method is going to be called by the SignalCollect framework
-   * during its execution (i.e. the {@link Worker} implementations).
-   *
-   * @param s the signal to add (deliver).
-   * @see #collect
-   */
-  abstract override protected def process(s: Signal[_, _, _]) {
-	super.process(s)
-    uncollectedMessages += s.asInstanceOf[Signal[_, _, UpperSignalTypeBound]]
-  }
-
-  /**
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
    */
-  abstract override def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+  abstract override def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+    uncollectedMessages = signals.asInstanceOf[Iterable[Signal[_, _, UpperSignalTypeBound]]]
 	super.executeCollectOperation(signals, messageBus)
-	uncollectedMessages.clear
   }
   
 }

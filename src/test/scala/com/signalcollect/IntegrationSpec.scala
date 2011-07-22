@@ -29,7 +29,6 @@ import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
 import com.signalcollect.implementations.logging.DefaultLogger
 
-
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -42,12 +41,12 @@ import org.specs2.runner.JUnitRunner
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build/*,
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(messageBus.AkkaBus).withWorkerFactory(worker.AkkaLocal)).build*/)
+    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build /*,
+    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(messageBus.AkkaBus).withWorkerFactory(worker.AkkaLocal)).build*/ )
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
-  val testWorkerCounts = List(1, 2, 4, 8/*, 16, 32, 64, 128*/)
+  val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 
   def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
@@ -152,36 +151,33 @@ class IntegrationSpec extends SpecificationWithJUnit {
     }
   }
 
+  def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
+    v match {
+      case v: VerifiedColoredVertex =>
+        val verified = !v.publicMostRecentSignals.iterator.contains(v.state)
+        if (!verified) {
+          println("Vertex Coloring: " + v + " has the same color as one of its neighbors.\n" +
+            "Most recent signals received: " + v.publicMostRecentSignals + "\n" +
+            "Score signal: " + v.scoreSignal)
+        }
+        verified
+      case other =>
+        println("Vertex " + other + " is not of type VerifiedColoredVertex"); false
+    }
+  }
+
   "VertexColoring algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
       val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
-      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
-        v match {
-          case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
-        }
-      }
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) must_== true
     }
 
     "deliver correct results on a symmetric 5-star" in {
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
-        v match {
-          case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
-        }
-      }
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) must_== true
     }
     "deliver correct results on a 2*2 symmetric grid" in {
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
-      def vertexColoringVerifier(v: Vertex[_, _]): Boolean = {
-        v match {
-          case c: VerifiedColoredVertex => !c.publicMostRecentSignals.iterator.contains(c.state)
-          case other => System.out.println("Problematic vertex:  id=" + v.id + ". Color collides with neighboring vertex."); false
-        }
-      }
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) must_== true
     }
   }

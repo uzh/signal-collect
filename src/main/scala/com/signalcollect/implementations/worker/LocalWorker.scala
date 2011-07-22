@@ -85,9 +85,9 @@ class LocalWorker(
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
         vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_))
-        vertexStore.toCollect.foreach { (vertexId, uncollectedSignalsList) =>
+        vertexStore.toCollect.foreach { (vertexId, uncollectedSignals) =>
           processInbox
-          val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
+          val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
           vertexStore.toCollect.remove(vertexId)
           if (collectExecuted) {
             executeSignalOperationOfVertex(vertexId)
@@ -354,7 +354,7 @@ class LocalWorker(
     }
   }
 
-  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: List[Signal[_, _, _]]): Boolean = {
+  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[Signal[_, _, _]]): Boolean = {
     debug("executeCollectOperationOfVertex(" + vertexId + ", " + uncollectedSignalsList + ")")
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
@@ -385,7 +385,11 @@ class LocalWorker(
         vertexStore.vertices.updateStateOfVertex(vertex)
         debug(vertex + " is done signaling")
         hasSignaled = true
+      } else {
+      debug("Signal score " + vertex.scoreSignal + " of vertex " + vertex + " is below threshold.")
       }
+    } else {
+      debug("OOOOOPS, vertex not found")
     }
     hasSignaled
   }

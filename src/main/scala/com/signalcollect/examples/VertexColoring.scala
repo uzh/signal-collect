@@ -81,7 +81,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
         }
       }
     } else {
-      informNeighbors = false
+      informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != state)
       state
     }
   }

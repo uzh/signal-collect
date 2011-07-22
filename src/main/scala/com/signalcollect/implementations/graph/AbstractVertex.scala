@@ -124,7 +124,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: List[Signal[_, _, _]], messageBus: MessageBus[Any]) {
+  def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any]) {
     signals.foreach(signal => process(signal))
     state = collect
   }
@@ -135,7 +135,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: List[Signal[_, _, _]]): Double = signals.size
+  def scoreCollect(signals: Iterable[Signal[_, _, _]]): Double = signals.size
   
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.

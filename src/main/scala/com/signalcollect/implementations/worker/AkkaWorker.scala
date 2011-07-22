@@ -105,9 +105,9 @@ class AkkaWorker(workerId: Int,
         if (processedAllLastTime) {
           vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_))
           processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
-            (vertexId, uncollectedSignalsList) => {
+            (vertexId, uncollectedSignals) => {
 
-              val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
+              val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
               vertexStore.toCollect.remove(vertexId)
               if (collectExecuted) {
                 executeSignalOperationOfVertex(vertexId)
@@ -115,9 +115,9 @@ class AkkaWorker(workerId: Int,
             }, () => !mailboxIsEmpty)
         } else
           processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
-            (vertexId, uncollectedSignalsList) => {
+            (vertexId, uncollectedSignals) => {
 
-              val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
+              val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
               vertexStore.toCollect.remove(vertexId)
               if (collectExecuted) {
                 executeSignalOperationOfVertex(vertexId)
