@@ -162,9 +162,9 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   def outgoingEdgeCount = outgoingEdges.size
 
   /**
-   * Returns "VertexClassName> Id: vertexId, State: vertexState"
+   * Returns "VertexClassName(id=ID, state=STATE)"
    */
   override def toString: String = {
-    this.getClass.getSimpleName + "> Id: " + id + ", State: " + state
+    this.getClass.getSimpleName + "(id=" + id + ", state=" + state + ")"
   }
 }

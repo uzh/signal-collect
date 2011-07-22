@@ -22,6 +22,7 @@ package com.signalcollect.examples
 import com.signalcollect.api._
 import scala.util.Random
 import com.signalcollect.configuration._
+import com.signalcollect.implementations.graph.VertexDebugging
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
@@ -35,7 +36,7 @@ import com.signalcollect.configuration._
  * @param id: the vertex id
  * @param numColors: the number of colors (labels) used to color the graph
  */
-class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean = false) extends SignalMapVertex(id, initialColor) { //Random.nextInt(numColors) + 1
+class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean = false) extends SignalMapVertex(id, initialColor) {
 
   /**
    * Indicates that every signal this vertex receives is

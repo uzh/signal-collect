@@ -27,6 +27,11 @@ import akka.actor.ActorRef
 
 class DefaultLogger extends MessageRecipient[LogMessage] {
   
-  def receive(logMessage: LogMessage) = println(logMessage)
+  def receive(logMessage: LogMessage) = {
+    logMessage match {
+      case Debug(msg, from) => println(from + ": " + msg)
+      case other => println(other)
+    }
+  }
 
 }

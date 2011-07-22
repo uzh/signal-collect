@@ -40,7 +40,7 @@ trait Edge[@specialized SourceIdType, @specialized TargetIdType] extends Seriali
   def id: (SourceIdType, TargetIdType, String)
 
   /** A textual representation of this {@link Edge}. */
-  override def toString = id.toString
+  override def toString = getClass.getSimpleName + "(sourceId=" + id._1 + ", targetId=" + id._2 + ")"
   
   /** The hash code of this object. */
   override def hashCode = id.hashCode

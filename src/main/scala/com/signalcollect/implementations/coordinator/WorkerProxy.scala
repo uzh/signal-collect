@@ -72,7 +72,7 @@ class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any]) extends In
         monitor.notify
       }
     } else {
-      debug("Executing RPC call to method " + method.getName + " with parameters " + arguments)
+      debug("Worker" + workerId + "." + method.getName)
       val command = { worker: Worker =>
         val result = method.invoke(worker, arguments: _*)
         val reply = WorkerReply(worker.workerId, result)

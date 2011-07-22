@@ -102,7 +102,6 @@ class LocalWorker(
   protected var undeliverableSignalHandler: (Signal[_, _, _], GraphApi) => Unit = (s, g) => {}
 
   protected def process(message: Any) {
-    debug("process(" + message + ")")
     counters.messagesReceived += 1
     message match {
       case s: Signal[_, _, _] => processSignal(s)
@@ -282,7 +281,6 @@ class LocalWorker(
   }
 
   def getWorkerStatistics: WorkerStatistics = {
-    debug("getWorkerStatistics")
     WorkerStatistics(
       messagesReceived = counters.messagesReceived,
       messagesSent = messageBus.messagesSent,
@@ -322,7 +320,6 @@ class LocalWorker(
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
   protected def getWorkerStatus: WorkerStatus = {
-    debug("getWorkerStatus")
     WorkerStatus(
       workerId = workerId,
       isIdle = isIdle,
@@ -332,8 +329,8 @@ class LocalWorker(
   }
 
   protected def sendStatusToCoordinator {
-    debug("sendStatusToCoordinator")
     val status = getWorkerStatus
+    debug("sendStatusToCoordinator(" + status + ")")
     messageBus.sendToCoordinator(status)
   }
 
@@ -346,7 +343,6 @@ class LocalWorker(
   }
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
-    debug("processInboxOrIdle(" + idleTimeoutNanoseconds + ")")
     var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
     if (message == null) {
       setIdle(true)
@@ -365,8 +361,10 @@ class LocalWorker(
     if (vertex != null) {
       if (vertex.scoreCollect(uncollectedSignalsList) > collectThreshold) {
         counters.collectOperationsExecuted += 1
+        debug(vertex + " is collecting " + uncollectedSignalsList)
         vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
         vertexStore.vertices.updateStateOfVertex(vertex)
+        debug(vertex + " is done collecting")
         hasCollected = true
       }
     } else {
@@ -382,8 +380,10 @@ class LocalWorker(
     if (vertex != null) {
       if (vertex.scoreSignal > signalThreshold) {
         counters.signalOperationsExecuted += 1
+        debug(vertex + " is signaling")
         vertex.executeSignalOperation(messageBus)
         vertexStore.vertices.updateStateOfVertex(vertex)
+        debug(vertex + " is done signaling")
         hasSignaled = true
       }
     }
@@ -406,7 +406,6 @@ class LocalWorker(
   }
 
   protected def handlePauseAndContinue {
-    debug("handlePauseAndContinue")
     if (shouldStart) {
       shouldStart = false
       isPaused = false
@@ -419,7 +418,6 @@ class LocalWorker(
   }
 
   protected def handleIdling {
-    debug("handleIdling")
     handlePauseAndContinue
     if (isConverged || isPaused) {
       processInboxOrIdle(idleTimeoutNanoseconds)
