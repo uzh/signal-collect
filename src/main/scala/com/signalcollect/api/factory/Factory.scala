@@ -44,6 +44,12 @@ package factory {
       class BerkeleyDBStorage extends DefaultStorage with BerkDBJE
       def createInstance: Storage = new BerkeleyDBStorage
     }
+    
+    //Berkeley DB Storage that uses ZLIB compression functionality to reduce the size of the serialized vertices
+    object CompressedBerkeleyDB extends StorageFactory {
+      class BerkeleyDBStorage extends DefaultStorage with CompressedSerialization with BerkDBJE 
+      def createInstance: Storage = new BerkeleyDBStorage
+    }
 
     //Berkeley DB Storage with InMemory caching
     object CachedBerkeleyDB extends StorageFactory {

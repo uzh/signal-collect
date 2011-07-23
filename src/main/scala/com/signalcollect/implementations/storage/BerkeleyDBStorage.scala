@@ -55,9 +55,10 @@ class Vertex2EntityAdapter(idParam: String, vertexParam: Array[Byte]) {
  * @param storage 	provides the messageBus and pointers to the collection that hold the toSignal and toCollect Lists
  * @param envFolder	Make sure this folder actually exists by typing "mkdir /tmp" or set parameter to an existing folder
  */
-class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices") extends VertexStore with DefaultSerializer {
+class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices") extends VertexStore {
 
   var count = 0l
+  val serializer = storage.serializer
   
   /* Open the JE Environment. */
   val envConfig = new EnvironmentConfig()
@@ -71,7 +72,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     if (!folderCreated) {
       System.err.println("Couldn't create folder: " + envFolder.getAbsolutePath + " for Berkeley DB.");
       System.err.println("Specify another folder or try to create it manually");
-//      System.exit(-1);
+      System.exit(-1);
     }
     envFolder = new File(envFolderPath)
   }
@@ -88,7 +89,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     val storedObject = primaryIndex.get(id.toString)
     if (storedObject != null) {
       var vertex: Vertex[_, _] = null
-      vertex = read(storedObject.vertex)
+      vertex = serializer.read(storedObject.vertex)
       vertex
     } else {
       null
@@ -98,7 +99,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   def put(vertex: Vertex[_, _]): Boolean = {
     if (primaryIndex.get(vertex.id.toString) == null) {
-      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, write(vertex)))
+      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
       storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       count += 1l
@@ -117,7 +118,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   }
 
   def updateStateOfVertex(vertex: Vertex[_, _]) = {
-      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, write(vertex)))
+      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
   }
 
   def size: Long = count
@@ -126,7 +127,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     val cursor = primaryIndex.entities
     var currentElement = cursor.first
     while (currentElement != null) {
-      val vertex = read(currentElement.vertex).asInstanceOf[Vertex[_, _]]
+      val vertex = serializer.read(currentElement.vertex).asInstanceOf[Vertex[_, _]]
       f(vertex)
       updateStateOfVertex(vertex)
       currentElement = cursor.next

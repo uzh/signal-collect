@@ -23,7 +23,7 @@ import com.signalcollect.api.SignalMapVertex
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 /**
- * Compagnion object for DefaultSerializer
+ * Companion object for DefaultSerializer
  */
 object DefaultSerializer extends DefaultSerializer
 

@@ -27,6 +27,7 @@ abstract class Storage {
   def toSignal: VertexIdSet //collection of all vertices that need to signal
   def toCollect: VertexSignalBuffer // collection of all vertices that need to collect
   def cleanUp
+  def serializer: Serializer
 }
 
 /**
