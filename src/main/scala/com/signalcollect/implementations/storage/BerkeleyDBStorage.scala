@@ -69,6 +69,13 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   var envFolder = new File(envFolderPath)
   if (!envFolder.exists) {
     val folderCreated = new File(envFolderPath).mkdir
+    var tryCount = 0
+    var envFolder = new File(envFolderPath)
+    while(tryCount<5 && !envFolder.exists()) {
+      Thread.sleep(50)
+      var envFolder = new File(envFolderPath)
+      tryCount+=1
+    } 
     if (!folderCreated) {
       System.err.println("Couldn't create folder: " + envFolder.getAbsolutePath + " for Berkeley DB.");
       System.err.println("Specify another folder or try to create it manually");
@@ -155,7 +162,7 @@ trait BerkDBJE extends DefaultStorage with Serializable {
     if(userName!=null && jobId!=null) {
       val torqueTempFolder = new File("/home/torque/tmp/" + userName + "." + jobId)
       if(torqueTempFolder.exists && torqueTempFolder.isDirectory) {
-    	  new BerkeleyDBStorage(this, torqueTempFolder.getAbsolutePath)
+    	  new BerkeleyDBStorage(this, torqueTempFolder.getAbsolutePath + "/sc-berkeley")
       }
       else {
     	  new BerkeleyDBStorage(this, "sc-berkeley")      

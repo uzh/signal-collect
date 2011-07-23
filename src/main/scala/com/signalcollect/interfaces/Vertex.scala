@@ -48,7 +48,7 @@ trait Vertex[IdType, StateType] extends Serializable {
   }
 
   /** @return the identifier of this {@link FrameworkVertex}. */
-  val id: IdType
+  def id: IdType
 
   /** @return the object that stores the current state for this {@link Vertex}. */
   var state: StateType
