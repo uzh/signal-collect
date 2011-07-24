@@ -39,8 +39,8 @@ class AkkaMessageBus[IdType](
     workers(workerId) = w
   }
 
-  def registerCoordinator(c: MessageRecipient[Any]) {
-    coordinator = c
+  def registerCoordinator(c: Any) {
+    coordinator = c.asInstanceOf[MessageRecipient[Any]]
   }
 
   def sendToCoordinator(message: Any) {

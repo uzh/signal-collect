@@ -19,7 +19,7 @@
 
 package com.signalcollect.interfaces
 
-trait MessageBus[IdType] extends MessageRecipientRegistry[Any] {
+trait MessageBus[IdType] extends MessageRecipientRegistry {
   def numberOfWorkers: Int
 	
   def messagesSent: Long
@@ -32,7 +32,7 @@ trait MessageBus[IdType] extends MessageRecipientRegistry[Any] {
   def sendToCoordinator(m: Any)
 }
 
-trait MessageRecipientRegistry[MessageType] {
+trait MessageRecipientRegistry {
   /**
    * Interface now is more generalized to accept any kind of worker (for the Akka case which should be an Actor Ref)
    * 
@@ -40,5 +40,11 @@ trait MessageRecipientRegistry[MessageType] {
    * @param worker is the worker to be registered
    */
   def registerWorker(workerId: Int, worker: Any)
-  def registerCoordinator(coordinator: MessageRecipient[MessageType])
+  
+  /**
+   * Generalization of coordinator to accept Akka Forwarders to coordinator
+   * 
+   * @param coordinator is the coordinator to be registered
+   */
+  def registerCoordinator(coordinator: Any)
 }

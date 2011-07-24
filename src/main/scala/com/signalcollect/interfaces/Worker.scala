@@ -19,7 +19,7 @@
 
 package com.signalcollect.interfaces
 
-trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry[Any] {
+trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry {
   def workerId: Int
   def messageBus: MessageBus[Any]
   

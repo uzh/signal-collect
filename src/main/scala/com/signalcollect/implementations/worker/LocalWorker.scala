@@ -404,7 +404,7 @@ class LocalWorker(
     messageBus.registerWorker(workerId, worker)
   }
 
-  def registerCoordinator(coordinator: MessageRecipient[Any]) {
+  def registerCoordinator(coordinator: Any) {
     debug("registerCoordinator(" + coordinator + ")")
     messageBus.registerCoordinator(coordinator)
   }
