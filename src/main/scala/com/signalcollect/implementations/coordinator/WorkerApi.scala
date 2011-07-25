@@ -56,7 +56,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
     // put it to the array of workers
     workers(workerId) = worker
-    
+
     worker
 
   }
@@ -97,23 +97,19 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   var isInitialized = false
 
   def initialize {
-
-    if (isInitialized)
-      return
-
-    Thread.currentThread.setName("Coordinator")
-    messageBus.registerCoordinator(this)
-    workerProxyMessageBuses foreach (_.registerCoordinator(this))
-    for (workerId <- 0 until config.numberOfWorkers) {
-      messageBus.registerWorker(workerId, workers(workerId))
-      workerProxyMessageBuses foreach (_.registerWorker(workerId, workers(workerId)))
+    if (!isInitialized) {
+      Thread.currentThread.setName("Coordinator")
+      messageBus.registerCoordinator(this)
+      workerProxyMessageBuses foreach (_.registerCoordinator(this))
+      for (workerId <- 0 until config.numberOfWorkers) {
+        messageBus.registerWorker(workerId, workers(workerId))
+        workerProxyMessageBuses foreach (_.registerWorker(workerId, workers(workerId)))
+      }
+      for (workerId <- 0 until config.numberOfWorkers) {
+        parallelWorkerProxies foreach (_.registerWorker(workerId, workers(workerId)))
+      }
+      isInitialized = true
     }
-    for (workerId <- 0 until config.numberOfWorkers) {
-      parallelWorkerProxies foreach (_.registerWorker(workerId, workers(workerId)))
-    }
-
-    isInitialized = true
-
   }
 
   def getWorkerStatistics: List[WorkerStatistics] = {
@@ -223,6 +219,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     neutralElement: ValueType,
     operation: (ValueType, ValueType) => ValueType,
     extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    awaitIdle
     val aggregateArray: ParArray[ValueType] = parallelWorkerProxies map (_.aggregate(neutralElement, operation, extractor))
     aggregateArray.fold(neutralElement)(operation(_, _))
   }
