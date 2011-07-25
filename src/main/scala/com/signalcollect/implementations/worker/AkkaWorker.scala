@@ -103,26 +103,23 @@ class AkkaWorker(workerId: Int,
 
         // if nothing was left to be processed from last processing
         if (processedAllLastTime) {
-          vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_))
-          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
+          vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)
+          processedAllLastTime = vertexStore.toCollect.foreach(
             (vertexId, uncollectedSignals) => {
 
               val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
-              vertexStore.toCollect.remove(vertexId)
               if (collectExecuted) {
                 executeSignalOperationOfVertex(vertexId)
               }
-            }, () => !mailboxIsEmpty)
+            }, true, () => !mailboxIsEmpty)
         } else
-          processedAllLastTime = vertexStore.toCollect.foreachWithSnapshot(
+          processedAllLastTime = vertexStore.toCollect.foreach(
             (vertexId, uncollectedSignals) => {
-
               val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
-              vertexStore.toCollect.remove(vertexId)
               if (collectExecuted) {
                 executeSignalOperationOfVertex(vertexId)
               }
-            }, () => !mailboxIsEmpty)
+            }, true, () => !mailboxIsEmpty)
       } // end while
     } // !isPaused
 

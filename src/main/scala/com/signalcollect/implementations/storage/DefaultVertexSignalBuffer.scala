@@ -17,16 +17,27 @@
  */
 package com.signalcollect.implementations.storage
 
-import com.signalcollect.interfaces.{VertexSignalBuffer, Signal, Storage}
+import com.signalcollect.interfaces.{ VertexSignalBuffer, Signal, Storage }
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * Stores Signals that were received by the worker but not collected by the vertices yet
+ */
 class DefaultVertexSignalBuffer extends VertexSignalBuffer {
-  
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[Signal[_, _, _]]]()
+
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[Signal[_, _, _]]]() //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
-  
- def addSignal(signal: Signal[_, _, _]) {
+
+  /**
+   * Adds a new signal for a specific recipient to the buffer
+   * If there are already signals for that recipient the new signal is added to the ones waiting otherwise a new map entry is created
+   * 
+   * Notice: Signals are not checked for valid id when inserted to the buffer.
+   * 
+   * @param signal the signal that should be buffered for further collecting
+   */
+  def addSignal(signal: Signal[_, _, _]) {
     if (undeliveredSignals.containsKey(signal.targetId)) {
       undeliveredSignals.get(signal.targetId).append(signal)
     } else {
@@ -34,41 +45,59 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
       undeliveredSignals.put(signal.targetId, signalsForVertex)
     }
   }
-  
+
+  /**
+   * If the map contains no entry for that id a new entry is created with no signals buffered
+   * This can be useful when a vertex still needs to collect even though no new signals are available
+   * 
+   * @ vertexId the ID of a vertex that should collect regardless of the existence of signals for it
+   */
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
       undeliveredSignals.put(vertexId, ArrayBuffer[Signal[_, _, _]]())
     }
   }
-  
- def remove(vertexId: Any) {
-   undeliveredSignals.remove(vertexId)
- }
- 
- def clear = undeliveredSignals.clear
- 
- def isEmpty: Boolean = undeliveredSignals.isEmpty
- 
- def size=undeliveredSignals.size
- 
- def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U) {
-   iterator = undeliveredSignals.keySet.iterator
-   while(iterator.hasNext) {
-     val currentId = iterator.next
-     f(currentId, undeliveredSignals.get(currentId))
-   }
- }
- 
- def foreachWithSnapshot[U](f: (Any, Iterable[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean = {
-   if(!iterator.hasNext) {
-     iterator = undeliveredSignals.keySet.iterator
-   }
-   while(iterator.hasNext && !breakConditionReached()) {
-     val currentId = iterator.next
-     f(currentId, undeliveredSignals.get(currentId))
-   }
-   !iterator.hasNext
- }
- 
- def cleanUp = clear
+
+  /**
+   * Manually removes the vertexId and its associated signals from the map
+   * Should only be used when a vertex is removed from the map to remove the vertex after successfully collecting use the parameter in the foreach function
+   * 
+   * @param vertexId the ID of the vertex that needs to be removed from the map
+   */
+  def remove(vertexId: Any) {
+    undeliveredSignals.remove(vertexId)
+  }
+
+  def isEmpty: Boolean = undeliveredSignals.isEmpty
+
+  /**
+   * Returns the number of vertices for which the buffer has signals stored.
+   */
+  def size = undeliveredSignals.size
+
+  /**
+   * Iterates through all signals in the buffer and applies the specified function to each entry
+   * Allows the the loop to be escaped and to resume work at the same position
+   *
+   * @param f 				the function to apply to each entry in the map
+   * @param clearWhenDone	determines if the map should be cleared when all entries are processed
+   * @param breakCondition 	determines if the loop should be escaped before it is done
+   */
+  def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U,
+    removeAfterProcessing: Boolean,
+    breakCondition: () => Boolean = () => false): Boolean = {
+
+    iterator = undeliveredSignals.keySet.iterator
+
+    while (iterator.hasNext && !breakCondition()) {
+      val currentId = iterator.next
+      f(currentId, undeliveredSignals.get(currentId))
+      if(removeAfterProcessing) {
+        remove(currentId)
+      }
+    }
+    !iterator.hasNext
+  }
+
+  def cleanUp = undeliveredSignals.clear
 }

@@ -27,11 +27,8 @@ import java.util.HashSet
  */
 class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
-  protected var toHandle: HashSet[Any] = vertexSetFactory
-  protected var toHandleSnapshot: HashSet[Any] = vertexSetFactory
-  protected var verticesDoneInSnapshot = 0
+  protected var toHandle: HashSet[Any] = vertexSetFactory //Stores all the IDs of the vertices that need to be processed
   protected def vertexSetFactory = new HashSet[Any]()
-  protected var snapshotIterator = toHandleSnapshot.iterator
 
   def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)
@@ -41,51 +38,27 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
     toHandle.remove(vertexId)
   }
 
-  def clear {
-    toHandle = vertexSetFactory
-  }
+  def isEmpty: Boolean = toHandle.isEmpty
 
-  def isEmpty: Boolean = toHandle.isEmpty && !snapshotIterator.hasNext
+  def size: Int = toHandle.size
 
-  def size: Int = toHandle.size + toHandleSnapshot.size - verticesDoneInSnapshot
-
-  def foreach[U](f: (Any) => U) = {
+  /**
+   * Applies the specified function to each vertex id and removes the ids if necessary
+   * 
+   * @param f the function to apply to each id
+   * @removeAfterProcessing whether the ids should be deleted after they are covered by the function
+   */
+  def foreach[U](f: (Any) => U, removeAfterProcessing: Boolean) = {
     val i = toHandle.iterator
     while (i.hasNext) {
       f(i.next)
     }
-    toHandle.clear
+    if (removeAfterProcessing) {
+      toHandle.clear
+    }
   }
 
-  /**
-   * Iterates through all stored IDs and applies a function to all vertices associated with these IDs.
-   * The iteration process can also be interrupted via the breakConditionReached function parameter.
-   *
-   * @param f							the function to apply to each vertex who's id is stored in the set
-   * @param breakConditionReached		determines if the foreach-processing needs to be escaped do do other work
-   * 									@see resumeProcessingSnapshot on how to resume an aborted processing.
-   */
-  def foreachWithSnapshot[U](f: (Any) => U, breakConditionReached: () => Boolean): Boolean = {
-    
-    if (!snapshotIterator.hasNext) {
-    	verticesDoneInSnapshot = 0
-    	toHandleSnapshot = toHandle
-    	toHandle = vertexSetFactory
-    	snapshotIterator = toHandleSnapshot.iterator
-    }
-    
-    while (snapshotIterator.hasNext && !breakConditionReached()) {
-    	val currentVertexId = snapshotIterator.next
-    	f(vertexStore.vertices.get(currentVertexId))
-    	verticesDoneInSnapshot += 1
-    }
-    !snapshotIterator.hasNext
-
-
-  }
-  
-  def cleanUp = { 
+  def cleanUp = {
     toHandle.clear
-    toHandleSnapshot.clear
   }
 }

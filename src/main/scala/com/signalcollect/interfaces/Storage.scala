@@ -49,13 +49,9 @@ trait VertexStore {
 trait VertexIdSet {
   def add(vertexId: Any)
   def remove(vertexId: Any)
-  def clear
   def size: Int
   def isEmpty: Boolean
-  /* This *removes* the ids from the set! */
-  def foreach[U](f: Any => U) // vertex id
-  /* This *removes* the ids from the set! */
-  def foreachWithSnapshot[U](f: Any => U, breakConditionReached: () => Boolean): Boolean // vertex id
+  def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
   def cleanUp
 }
 
@@ -66,13 +62,9 @@ trait VertexSignalBuffer {
   def addSignal(signal: Signal[_, _, _])
   def addVertex(vertexId: Any)
   def remove(vertexId: Any)
-  def clear
   def size: Int
   def isEmpty: Boolean
-  /* This does *not* remove the ids from the set! */
-  def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U) // vertex id, buffered signals for id
-  /* This does *not* remove the ids from the set! */
-  def foreachWithSnapshot[U](f: (Any, Iterable[Signal[_, _, _]]) => U, breakConditionReached: () => Boolean): Boolean // vertex id, buffered signals for id
+  def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
   def cleanUp
 }
 

@@ -84,15 +84,14 @@ class LocalWorker(
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_))
-        vertexStore.toCollect.foreach { (vertexId, uncollectedSignals) =>
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)
+        vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
           processInbox
           val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
-          vertexStore.toCollect.remove(vertexId)
           if (collectExecuted) {
             executeSignalOperationOfVertex(vertexId)
           }
-        }
+        }, true)
       }
     }
   }
@@ -266,17 +265,16 @@ class LocalWorker(
   def signalStep {
     debug("signalStep")
     counters.signalSteps += 1
-    vertexStore.toSignal foreach (executeSignalOperationOfVertex(_))
+    vertexStore.toSignal foreach (executeSignalOperationOfVertex(_), true)
   }
 
   def collectStep: Boolean = {
     debug("collectStep")
     counters.collectSteps += 1
-    vertexStore.toCollect foreach { (vertexId, uncollectedSignalsList) =>
+    vertexStore.toCollect foreach( (vertexId, uncollectedSignalsList) => {
       executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
       vertexStore.toSignal.add(vertexId)
-    }
-    vertexStore.toCollect.clear
+    }, true)
     vertexStore.toSignal.isEmpty
   }
 
