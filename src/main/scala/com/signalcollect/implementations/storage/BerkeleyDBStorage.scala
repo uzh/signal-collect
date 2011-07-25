@@ -71,12 +71,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     val folderCreated = new File(envFolderPath).mkdir
     var tryCount = 0
     var envFolder = new File(envFolderPath)
-    while(tryCount<5 && !envFolder.exists()) {
-      Thread.sleep(50)
-      var envFolder = new File(envFolderPath)
-      tryCount+=1
-    } 
-    if (!folderCreated) {
+    if (!envFolder.exists()) {
       System.err.println("Couldn't create folder: " + envFolder.getAbsolutePath + " for Berkeley DB.");
       System.err.println("Specify another folder or try to create it manually");
       System.exit(-1);
