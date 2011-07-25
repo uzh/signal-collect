@@ -60,7 +60,7 @@ trait VertexIdSet {
 }
 
 /**
- * Allows storing a set of id and iterating through them
+ * Allows storing a collection of signals and iterating through them
  */
 trait VertexSignalBuffer {
   def addSignal(signal: Signal[_, _, _])
