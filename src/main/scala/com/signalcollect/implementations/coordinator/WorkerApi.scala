@@ -210,10 +210,14 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   def shutdown = parallelWorkerProxies foreach (_.shutdown)
 
   def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+    awaitIdle
     workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = parallelWorkerProxies foreach (_.foreachVertex(f))
+  def foreachVertex(f: (Vertex[_, _]) => Unit) = {
+    awaitIdle
+    parallelWorkerProxies foreach (_.foreachVertex(f))
+  }
 
   def customAggregate[ValueType](
     neutralElement: ValueType,
