@@ -29,10 +29,11 @@ import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator.WorkerApi
 
 class AkkaWorker(workerId: Int,
-  config: Configuration,
-  coordinator: WorkerApi,
-  mapper: VertexToWorkerMapper)
-  extends LocalWorker(workerId, config, coordinator, mapper)
+                 workerConfig: WorkerConfiguration,
+                 numberOfWorkers: Int,
+                 coordinator: Any,
+                 mapper: VertexToWorkerMapper)
+  extends LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper)
   with Actor {
 
   /**
@@ -63,7 +64,7 @@ class AkkaWorker(workerId: Int,
   /**
    * Timeout for akka actor idling (in milliseconds)
    */
-  self.receiveTimeout = Some( (idleTimeoutNanoseconds / 1000000l) )
+  self.receiveTimeout = Some((idleTimeoutNanoseconds / 1000000l))
 
   /**
    * This is method gets executed when the akka actor receives a message.

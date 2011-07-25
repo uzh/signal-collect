@@ -47,11 +47,11 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-class LocalWorker(
-  val workerId: Int,
-  config: Configuration,
-  coordinator: WorkerApi,
-  mapper: VertexToWorkerMapper)
+class LocalWorker(val workerId: Int,
+                  workerConfig: WorkerConfiguration,
+                  numberOfWorkers: Int,
+                  coordinator: Any,
+                  mapper: VertexToWorkerMapper)
   extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
@@ -65,7 +65,7 @@ class LocalWorker(
    * ******************
    */
   val messageBus: MessageBus[Any] = {
-    config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+    workerConfig.messageBusFactory.createInstance(numberOfWorkers, mapper)
   }
 
   messageBus.registerCoordinator(coordinator)
@@ -313,7 +313,7 @@ class LocalWorker(
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
-  protected lazy val vertexStore = config.workerConfiguration.storageFactory.createInstance
+  protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 

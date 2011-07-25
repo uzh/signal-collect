@@ -41,8 +41,8 @@ import org.specs2.runner.JUnitRunner
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers)).build,
-    (numberOfWorkers: Int) => (DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(messageBus.AkkaBus).withWorkerFactory(worker.AkkaLocal)).build)
+    (numberOfWorkers: Int) => (ComputeGraphBuilder.getBuilder(LocalArchitecture()).withNumberOfWorkers(numberOfWorkers)).build,
+    (numberOfWorkers: Int) => (ComputeGraphBuilder.getBuilder(LocalArchitecture()).withNumberOfWorkers(numberOfWorkers).withMessageBusFactory(messageBus.AkkaBus).withWorkerFactory(worker.AkkaLocal)).build)
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 

@@ -33,17 +33,13 @@ trait Configuration {
 
   def customLogger: Option[MessageRecipient[LogMessage]]
 
-  def executionArchitecture: ExecutionArchitecture
-
   def workerConfiguration: WorkerConfiguration
 
   def executionConfiguration: ExecutionConfiguration
 
 }
 
-case class DefaultLocalConfiguration(
-  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-  customLogger: Option[MessageRecipient[LogMessage]] = None,
-  executionArchitecture: ExecutionArchitecture = LocalExecutionArchitecture,
-  workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
-  executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration
+case class DefaultLocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+                                     customLogger: Option[MessageRecipient[LogMessage]] = None,
+                                     workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
+                                     executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

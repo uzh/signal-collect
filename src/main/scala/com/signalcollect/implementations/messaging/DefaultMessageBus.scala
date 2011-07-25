@@ -40,7 +40,7 @@ class DefaultMessageBus[IdType](
   }
 
   def registerCoordinator(c: Any) {
-    coordinator = c.asInstanceOf[MessageRecipient[Any]]
+    coordinator = c.asInstanceOf[MessageRecipient[Any]] // workerApi
   }
 
   def sendToCoordinator(message: Any) {

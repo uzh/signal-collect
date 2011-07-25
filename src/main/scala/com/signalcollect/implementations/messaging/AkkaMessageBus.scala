@@ -40,7 +40,7 @@ class AkkaMessageBus[IdType](
   }
 
   def registerCoordinator(c: Any) {
-    coordinator = c.asInstanceOf[MessageRecipient[Any]]
+    coordinator = c.asInstanceOf[MessageRecipient[Any]] // workerApi or forwarder
   }
 
   def sendToCoordinator(message: Any) {

@@ -22,76 +22,42 @@ package com.signalcollect.configuration
 import com.signalcollect.api._
 import com.signalcollect.interfaces._
 
+trait ComputeGraphBuilder extends Serializable
+
+object ComputeGraphBuilder {
+  def getBuilder(localArchitecture: LocalArchitecture, config: Configuration = new DefaultLocalConfiguration): LocalComputeGraphBuilder = new LocalComputeGraphBuilder(config)
+}
+
 /**
  * The configuration builder are intended for Java users.
  * These builders make configuring a compute graph with Java almost as simple
  * as when using Scala default parameters.
- */
-object DefaultComputeGraphBuilder extends ComputeGraphBuilder
-
-/**
+ *
  * Builder for the creation of a compute graph needs a configuration object for the creation.
  * If the user passes a configuration object but then uses a method of this class, the configuration's object
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
  */
-class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocalConfiguration) extends Serializable {
+class LocalComputeGraphBuilder(protected val config: Configuration) extends ComputeGraphBuilder {
 
-  def build: ComputeGraph = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => new LocalBootstrap(config).boot
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
+  def build: ComputeGraph = new LocalBootstrap(config).boot
 
   /**
    * Common configuration
    */
-  def withNumberOfWorkers(newNumberOfWorkers: Int) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(numberOfWorkers = newNumberOfWorkers)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
-  def withLogger(logger: MessageRecipient[LogMessage]) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(customLogger = Some(logger))
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
-  def withExecutionArchitecture(newExecutionArchitecture: ExecutionArchitecture) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(executionArchitecture = newExecutionArchitecture)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
-  def withExecutionConfiguration(newExecutionConfiguration: ExecutionConfiguration) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(executionConfiguration = newExecutionConfiguration)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
+  def withNumberOfWorkers(newNumberOfWorkers: Int) = newLocalBuilder(numberOfWorkers = newNumberOfWorkers)
+
+  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(customLogger = Some(logger))
+
+  def withExecutionConfiguration(newExecutionConfiguration: ExecutionConfiguration) = newLocalBuilder(executionConfiguration = newExecutionConfiguration)
 
   /**
    * Worker configuration
    */
-  def withWorkerFactory(newWorkerFactory: WorkerFactory) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(workerFactory = newWorkerFactory)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
-  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(messageBusFactory = newMessageBusFactory)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
-  def withStorageFactory(newStorageFactory: StorageFactory) = {
-    config.executionArchitecture match {
-      case LocalExecutionArchitecture => newLocalBuilder(storageFactory = newStorageFactory)
-      case DistributedExecutionArchitecture => throw new Exception("Wrong Compute Graph Builder. Please use DistributedComputeGraphBuilder for distributed runs")
-    }
-  }
+  def withWorkerFactory(newWorkerFactory: WorkerFactory) = newLocalBuilder(workerFactory = newWorkerFactory)
+
+  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = newLocalBuilder(messageBusFactory = newMessageBusFactory)
+
+  def withStorageFactory(newStorageFactory: StorageFactory) = newLocalBuilder(storageFactory = newStorageFactory)
 
   /**
    * Builds local compute graph
@@ -102,9 +68,8 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.workerConfiguration.storageFactory,
-    executionArchitecture: ExecutionArchitecture = config.executionArchitecture,
-    executionConfiguration: ExecutionConfiguration = config.executionConfiguration): ComputeGraphBuilder = {
-    new ComputeGraphBuilder(
+    executionConfiguration: ExecutionConfiguration = config.executionConfiguration): LocalComputeGraphBuilder = {
+    new LocalComputeGraphBuilder(
       DefaultLocalConfiguration(
         numberOfWorkers = numberOfWorkers,
         customLogger = customLogger,

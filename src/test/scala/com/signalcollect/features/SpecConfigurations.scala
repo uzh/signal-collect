@@ -30,8 +30,8 @@ import com.signalcollect.examples._
 import com.signalcollect.configuration._
 
 trait SpecConfigurations {
-  
-  def computeGraphBuilders = List(DefaultComputeGraphBuilder)
+
+  def computeGraphBuilders = List(ComputeGraphBuilder.getBuilder(LocalArchitecture()))
   def numberOfWorkers = List(1, 2, 4, 8, 16, 32, 64, 128)
   def executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 

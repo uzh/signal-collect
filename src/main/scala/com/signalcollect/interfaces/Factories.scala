@@ -30,23 +30,26 @@ trait Factory extends Serializable {
 
 trait WorkerFactory extends Factory {
   def createInstance(workerId: Int,
-    config: Configuration,
-    coordinator: WorkerApi,
-    mapper: VertexToWorkerMapper): Any
+                     workerConfig: WorkerConfiguration,
+                     numberOfWorkers: Int,
+                     coordinator: WorkerApi,
+                     mapper: VertexToWorkerMapper): Any
 }
 
 trait LocalWorkerFactory extends WorkerFactory {
   override def createInstance(workerId: Int,
-    config: Configuration,
-    coordinator: WorkerApi,
-    mapper: VertexToWorkerMapper): Worker
+                              workerConfig: WorkerConfiguration,
+                              numberOfWorkers: Int,
+                              coordinator: WorkerApi,
+                              mapper: VertexToWorkerMapper): Worker
 }
 
 trait AkkaWorkerFactory extends WorkerFactory {
   override def createInstance(workerId: Int,
-    config: Configuration,
-    coordinator: WorkerApi,
-    mapper: VertexToWorkerMapper): ActorRef
+                              workerConfig: WorkerConfiguration,
+                              numberOfWorkers: Int,
+                              coordinator: WorkerApi,
+                              mapper: VertexToWorkerMapper): ActorRef
 }
 
 trait MessageBusFactory extends Factory {

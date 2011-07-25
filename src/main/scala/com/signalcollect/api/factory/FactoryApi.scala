@@ -44,10 +44,10 @@ package factory {
       class BerkeleyDBStorage extends DefaultStorage with BerkDBJE
       def createInstance: Storage = new BerkeleyDBStorage
     }
-    
+
     //Berkeley DB Storage that uses ZLIB compression functionality to reduce the size of the serialized vertices
     object CompressedBerkeleyDB extends StorageFactory {
-      class BerkeleyDBStorage extends DefaultStorage with CompressedSerialization with BerkDBJE 
+      class BerkeleyDBStorage extends DefaultStorage with CompressedSerialization with BerkDBJE
       def createInstance: Storage = new BerkeleyDBStorage
     }
 
@@ -63,29 +63,31 @@ package factory {
     object SharedMemory extends MessageBusFactory {
       def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers, mapper)
     }
-    
+
     object AkkaBus extends MessageBusFactory {
       def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new AkkaMessageBus[Any](numberOfWorkers, mapper)
     }
-    
+
   }
 
   package worker {
 
     object Local extends LocalWorkerFactory {
       def createInstance(workerId: Int,
-        config: Configuration,
-        coordinator: WorkerApi,
-        mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, config, coordinator, mapper)
+                         workerConfig: WorkerConfiguration,
+                         numberOfWorkers: Int,
+                         coordinator: WorkerApi,
+                         mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper)
     }
-    
+
     object AkkaLocal extends AkkaWorkerFactory {
       def createInstance(workerId: Int,
-        config: Configuration,
-        coordinator: WorkerApi,
-        mapper: VertexToWorkerMapper): ActorRef = actorOf(new AkkaWorker(workerId, config, coordinator, mapper))
-      }
-    
+                         workerConfig: WorkerConfiguration,
+                         numberOfWorkers: Int,
+                         coordinator: WorkerApi,
+                         mapper: VertexToWorkerMapper): ActorRef = actorOf(new AkkaWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper))
+    }
+
   }
 
 }

@@ -199,7 +199,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-    val cg = new ComputeGraphBuilder().build
+    val cg = ComputeGraphBuilder.getBuilder(LocalArchitecture()).build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {

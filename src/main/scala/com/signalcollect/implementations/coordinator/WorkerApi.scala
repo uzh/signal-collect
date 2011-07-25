@@ -52,7 +52,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     val workerFactory = config.workerConfiguration.workerFactory
 
     // create the worker
-    val worker = workerFactory.createInstance(workerId, config, this, mapper)
+    val worker = workerFactory.createInstance(workerId, config.workerConfiguration, config.numberOfWorkers, this, mapper)
 
     // put it to the array of workers
     workers(workerId) = worker

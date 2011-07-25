@@ -26,12 +26,11 @@ object DefaultExecutionConfiguration extends ExecutionConfiguration()
 /**
  * Configuration that specifies the execution parameters
  */
-case class ExecutionConfiguration(
-  executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
-  signalThreshold: Double = 0.01,
-  collectThreshold: Double = 0.0,
-  timeLimit: Option[Long] = None,
-  stepsLimit: Option[Long] = None) {
+case class ExecutionConfiguration(executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
+                                  signalThreshold: Double = 0.01,
+                                  collectThreshold: Double = 0.0,
+                                  timeLimit: Option[Long] = None,
+                                  stepsLimit: Option[Long] = None) {
 
   override def toString: String = {
     "execution mode" + "\t" + "\t" + executionMode + "\n" +
@@ -52,16 +51,4 @@ object OptimizedAsynchronousExecutionMode extends ExecutionMode {
 }
 object PureAsynchronousExecutionMode extends ExecutionMode {
   override def toString = "PureAsynchronousExecutionMode"
-}
-
-/**
- * Defines if the execution should take place locally or distributedly
- */
-sealed trait ExecutionArchitecture extends Serializable
-
-object LocalExecutionArchitecture extends ExecutionArchitecture {
-  override def toString = "LocalArchitecture"
-}
-object DistributedExecutionArchitecture extends ExecutionArchitecture {
-  override def toString = "DistributedArchitecture"
 }
