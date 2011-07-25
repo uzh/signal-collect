@@ -76,7 +76,7 @@ package factory {
       def createInstance(workerId: Int,
                          workerConfig: WorkerConfiguration,
                          numberOfWorkers: Int,
-                         coordinator: WorkerApi,
+                         coordinator: Any,
                          mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper)
     }
 
@@ -84,7 +84,7 @@ package factory {
       def createInstance(workerId: Int,
                          workerConfig: WorkerConfiguration,
                          numberOfWorkers: Int,
-                         coordinator: WorkerApi,
+                         coordinator: Any,
                          mapper: VertexToWorkerMapper): ActorRef = actorOf(new AkkaWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper))
     }
 

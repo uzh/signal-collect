@@ -32,7 +32,7 @@ trait WorkerFactory extends Factory {
   def createInstance(workerId: Int,
                      workerConfig: WorkerConfiguration,
                      numberOfWorkers: Int,
-                     coordinator: WorkerApi,
+                     coordinator: Any,
                      mapper: VertexToWorkerMapper): Any
 }
 
@@ -40,7 +40,7 @@ trait LocalWorkerFactory extends WorkerFactory {
   override def createInstance(workerId: Int,
                               workerConfig: WorkerConfiguration,
                               numberOfWorkers: Int,
-                              coordinator: WorkerApi,
+                              coordinator: Any,
                               mapper: VertexToWorkerMapper): Worker
 }
 
@@ -48,7 +48,7 @@ trait AkkaWorkerFactory extends WorkerFactory {
   override def createInstance(workerId: Int,
                               workerConfig: WorkerConfiguration,
                               numberOfWorkers: Int,
-                              coordinator: WorkerApi,
+                              coordinator: Any,
                               mapper: VertexToWorkerMapper): ActorRef
 }
 
