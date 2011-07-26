@@ -32,9 +32,9 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
   /**
    * Adds a new signal for a specific recipient to the buffer
    * If there are already signals for that recipient the new signal is added to the ones waiting otherwise a new map entry is created
-   * 
+   *
    * Notice: Signals are not checked for valid id when inserted to the buffer.
-   * 
+   *
    * @param signal the signal that should be buffered for further collecting
    */
   def addSignal(signal: Signal[_, _, _]) {
@@ -49,7 +49,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
   /**
    * If the map contains no entry for that id a new entry is created with no signals buffered
    * This can be useful when a vertex still needs to collect even though no new signals are available
-   * 
+   *
    * @ vertexId the ID of a vertex that should collect regardless of the existence of signals for it
    */
   def addVertex(vertexId: Any) {
@@ -61,7 +61,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
   /**
    * Manually removes the vertexId and its associated signals from the map
    * Should only be used when a vertex is removed from the map to remove the vertex after successfully collecting use the parameter in the foreach function
-   * 
+   *
    * @param vertexId the ID of the vertex that needs to be removed from the map
    */
   def remove(vertexId: Any) {
@@ -87,12 +87,14 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 
-    iterator = undeliveredSignals.keySet.iterator
+    if (!iterator.hasNext) {
+      iterator = undeliveredSignals.keySet.iterator
+    }
 
     while (iterator.hasNext && !breakCondition()) {
       val currentId = iterator.next
       f(currentId, undeliveredSignals.get(currentId))
-      if(removeAfterProcessing) {
+      if (removeAfterProcessing) {
         remove(currentId)
       }
     }
