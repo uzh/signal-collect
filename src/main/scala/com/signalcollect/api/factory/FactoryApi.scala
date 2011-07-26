@@ -89,5 +89,10 @@ package factory {
     }
 
   }
+  package builder {
+    object LocalBuilder extends BuilderFactory {
+      def getBuilder(config: Configuration = new DefaultLocalConfiguration): LocalComputeGraphBuilder = new LocalComputeGraphBuilder(config)
+    }
+  }
 
 }

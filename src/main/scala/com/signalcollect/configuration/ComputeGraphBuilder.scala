@@ -24,10 +24,6 @@ import com.signalcollect.interfaces._
 
 trait ComputeGraphBuilder extends Serializable
 
-object ComputeGraphBuilder {
-  def getBuilder(localArchitecture: LocalArchitecture, config: Configuration = new DefaultLocalConfiguration): LocalComputeGraphBuilder = new LocalComputeGraphBuilder(config)
-}
-
 /**
  * The configuration builder are intended for Java users.
  * These builders make configuring a compute graph with Java almost as simple
@@ -81,3 +77,5 @@ class LocalComputeGraphBuilder(protected val config: Configuration) extends Comp
   }
 
 }
+
+

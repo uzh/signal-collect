@@ -24,6 +24,7 @@ import collection.mutable.{ HashMap, SynchronizedMap }
 import collection.mutable.ListMap
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
+import com.signalcollect.api.factory.builder._
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine
@@ -199,7 +200,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-    val cg = ComputeGraphBuilder.getBuilder(LocalArchitecture()).build
+    val cg = LocalBuilder.getBuilder().build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {
@@ -291,7 +292,7 @@ object SudokuHelper {
       for (k <- j to j + 8) {
         data.get(k) match {
           case Some(Some(v)) => print(" " + v + " ")
-          case v => print("   ") //Empty or Error
+          case v             => print("   ") //Empty or Error
         }
         if (k % 3 == 2) {
           print("II")

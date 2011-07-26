@@ -20,13 +20,14 @@
 package com.signalcollect.examples
 
 import com.signalcollect.api._
+import com.signalcollect.api.factory.builder._
 import com.signalcollect.configuration._
 
 /**
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = ComputeGraphBuilder.getBuilder(LocalArchitecture()).build
+  val cg = LocalBuilder.getBuilder().build
 
   /**
    * Still need to test performance on complete and larger graphs
@@ -49,7 +50,7 @@ object Hamiltonian extends App {
 
   val stats = cg.execute
   println(stats)
-  cg.foreachVertex (println(_))
+  cg.foreachVertex(println(_))
   cg.shutdown
 }
 
@@ -57,9 +58,9 @@ object Hamiltonian extends App {
  * The state of a vertex is all the paths currently collected from the graph
  * Each path will be kept such that there will be no "revisiting" of vertices (each path will not have a repeated vertex id)
  * Implementation is rather inefficient since it keeps a map where the value is the weights sum and keys as lists
- * 
+ *
  * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
- * 
+ *
  */
 class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
 
@@ -122,7 +123,7 @@ class HamiltonianEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, 
   override def weight: Double = w
 
   type SourceVertexType = HamiltonianVertex
-  
+
   type SignalType = Map[List[String], Int]
 
   override def signal(sourceVertex: HamiltonianVertex) = {

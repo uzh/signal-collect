@@ -22,8 +22,10 @@ package com.signalcollect.examples
 import com.signalcollect.api._
 import com.signalcollect.implementations.graph.SumOfOutWeights
 import com.signalcollect.configuration._
-import java.io.{ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream}
-import com.signalcollect.interfaces.{Edge, Signal}
+import com.signalcollect.api.factory.builder._
+import com.signalcollect.interfaces.{ Edge, Signal }
+
+import java.io.{ ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream }
 import java.util.LinkedList
 
 /**
@@ -36,7 +38,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
 
   type SourceVertexType = Page
   @specialized type SignalType = Double
-  
+
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
@@ -54,7 +56,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
 class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights[Any, Double] {
 
   type UpperSignalTypeBound = Double
-	
+
   /**
    * The collect function calculates the rank of this vertex based on the rank
    *  received from neighbors and the damping factor.
@@ -63,7 +65,7 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
 
   override def scoreSignal: Double = {
     lastSignalState match {
-      case None => 1
+      case None           => 1
       case Some(oldState) => (state - oldState).abs
     }
   }
@@ -71,7 +73,7 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = ComputeGraphBuilder.getBuilder(LocalArchitecture()).build
+  val cg = LocalBuilder.getBuilder().build
   cg.addVertex(new Page(1))
   cg.addVertex(new Page(2))
   cg.addVertex(new Page(3))
@@ -79,8 +81,8 @@ object PageRank extends App {
   cg.addEdge(new Link(2, 1))
   cg.addEdge(new Link(2, 3))
   cg.addEdge(new Link(3, 2))
-  val stats = cg.execute(new ExecutionConfiguration(executionMode=SynchronousExecutionMode))
+  val stats = cg.execute(new ExecutionConfiguration(executionMode = SynchronousExecutionMode))
   println(stats)
-  cg.foreachVertex (println(_))
+  cg.foreachVertex(println(_))
   cg.shutdown
 }

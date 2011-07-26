@@ -59,3 +59,7 @@ trait MessageBusFactory extends Factory {
 trait StorageFactory extends Factory {
   def createInstance: Storage
 }
+
+trait BuilderFactory extends Factory {
+  def getBuilder(config: Configuration): ComputeGraphBuilder
+}

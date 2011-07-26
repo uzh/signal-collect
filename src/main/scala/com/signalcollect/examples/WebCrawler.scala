@@ -21,6 +21,7 @@ package com.signalcollect.examples
 
 import com.signalcollect.api._
 import com.signalcollect.configuration._
+import com.signalcollect.api.factory.builder._
 import com.signalcollect.implementations.graph.DefaultGraphApi
 import com.signalcollect.interfaces.MessageBus
 
@@ -38,7 +39,7 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = ComputeGraphBuilder.getBuilder(LocalArchitecture()).build
+  val cg = LocalBuilder.getBuilder().build
   cg.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
   val stats = cg.execute
   cg.foreachVertex(println(_))
