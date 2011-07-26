@@ -22,7 +22,6 @@ package com.signalcollect.examples
 import com.signalcollect.api._
 import scala.util.Random
 import com.signalcollect.configuration._
-import com.signalcollect.api.factory.builder._
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
@@ -103,7 +102,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = LocalBuilder.getBuilder().build
+  val cg = new ComputeGraphBuilder().build
   cg.addVertex(new ColoredVertex(1, 2, 1))
   cg.addVertex(new ColoredVertex(2, 2, 1))
   cg.addVertex(new ColoredVertex(3, 2, 1))

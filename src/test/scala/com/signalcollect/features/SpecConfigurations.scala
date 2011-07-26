@@ -24,7 +24,6 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import com.signalcollect._
 import com.signalcollect.api._
-import com.signalcollect.api.factory.builder._
 import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
@@ -32,7 +31,7 @@ import com.signalcollect.configuration._
 
 trait SpecConfigurations {
 
-  def computeGraphBuilders = List(LocalBuilder.getBuilder())
+  def computeGraphBuilders = List(DefaultComputeGraphBuilder)
   def numberOfWorkers = List(1, 2, 4, 8, 16, 32, 64, 128)
   def executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
