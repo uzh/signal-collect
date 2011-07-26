@@ -34,7 +34,7 @@ import com.sun.management.OperatingSystemMXBean
 
 class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
-  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {   
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
 
@@ -45,6 +45,14 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
     val graphLoadingWait = workerApi.awaitIdle
 
+    workerApi.info("Running garbage collection before execution ...")
+    
+    val gcStartTime = System.nanoTime
+    System.gc // collect garbage before execution 
+    val gcEndTime = System.nanoTime
+    val preExecutionGcTime = gcEndTime - gcStartTime
+    
+    
     workerApi.info("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
@@ -74,7 +82,8 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
       collectSteps = workerApi.collectSteps,
       computationTimeInMilliseconds = (totalTime / 1000000.0).toLong,
       jvmCpuTimeInMilliseconds = (totalJvmCpuTime / 1000000.0).toLong,
-      graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong)
+      graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong,
+      preExecutionGcTimeInMilliseconds = (preExecutionGcTime / 1000000.0).toLong)
 
     val stats = ExecutionInformation(
       config,

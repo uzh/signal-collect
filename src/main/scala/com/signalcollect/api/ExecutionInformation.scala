@@ -52,7 +52,8 @@ case class ExecutionStatistics(
   collectSteps: Long,
   computationTimeInMilliseconds: Long,
   jvmCpuTimeInMilliseconds: Long,
-  graphLoadingWaitInMilliseconds: Long) {
+  graphLoadingWaitInMilliseconds: Long,
+  preExecutionGcTimeInMilliseconds: Long) {
 
   override def toString: String = {
     "# signal steps" + "\t" + "\t" + signalSteps + "\n" +
