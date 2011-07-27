@@ -38,6 +38,7 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
+  isOverstrained: Boolean,
   messagesSent: Long,
   messagesReceived: Long)
 

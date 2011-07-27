@@ -107,6 +107,12 @@ class LocalWorker(val workerId: Int,
       case WorkerRequest(command) => command(this)
       case other => warning("Could not handle message " + message)
     }
+    
+    messagesRead+=1
+    if(isOverstrained && (messagesReceived-messagesRead)<=messageInboxMinMax._1) {
+      isOverstrained=false
+      sendStatusToCoordinator
+    }
   }
 
   def addVertex(serializedVertex: Array[Byte]) {
@@ -307,11 +313,16 @@ class LocalWorker(val workerId: Int,
   protected var isPaused = true
   protected var shouldPause = false
   protected var shouldStart = false
+  protected var isOverstrained = false //overstrained if messageInbox is too large
 
   protected var signalThreshold = 0.001
   protected var collectThreshold = 0.0
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
+  
+  protected val messageInboxMinMax = workerConfig.messageInboxLimits.getOrElse((Int.MinValue, Int.MaxValue))
+  protected var messagesReceived = 0
+  protected var messagesRead = 0
 
   protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 
@@ -322,6 +333,7 @@ class LocalWorker(val workerId: Int,
       workerId = workerId,
       isIdle = isIdle,
       isPaused = isPaused,
+      isOverstrained = isOverstrained, 
       messagesSent = messageBus.messagesSent,
       messagesReceived = counters.messagesReceived)
   }
@@ -341,8 +353,10 @@ class LocalWorker(val workerId: Int,
   }
 
   protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
+
     var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
     if (message == null) {
+      isOverstrained = false
       setIdle(true)
       handleMessage
       setIdle(false)
@@ -350,7 +364,17 @@ class LocalWorker(val workerId: Int,
       process(message)
       processInbox
     }
+
   }
+  
+  override protected def processInbox {
+    var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
+    while (message != null) {
+      process(message)
+      message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
+    }
+  }
+ 
 
   protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[Signal[_, _, _]]): Boolean = {
     debug("executeCollectOperationOfVertex(" + vertexId + ", " + uncollectedSignalsList + ")")
@@ -427,5 +451,15 @@ class LocalWorker(val workerId: Int,
       processInbox
     }
   }
-
+  
+  override def receive(message: Any) = {
+    super.receive(message)
+    messagesReceived +=1
+    if(!isOverstrained && (messagesReceived-messagesRead)>=messageInboxMinMax._2) {
+      isPaused = false
+      isOverstrained = true
+      isIdle= false
+      sendStatusToCoordinator
+    }
+  }
 }

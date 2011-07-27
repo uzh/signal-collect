@@ -125,9 +125,12 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
         case r: WorkerReply =>
           workerProxies(r.workerId).receive(message)
         case ws: WorkerStatus =>
-          workerStatusMap.put(ws.workerId, ws)
           statusMonitor.synchronized {
-            statusMonitor.notify
+            if (!workerStatusMap.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent < ws.messagesSent) {
+              workerStatusMap.put(ws.workerId, ws)
+              statusMonitor.notifyAll
+            }
+
           }
         case l: LogMessage =>
           logger.receive(l)
@@ -166,6 +169,39 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
       while (!paused) {
         statusMonitor.wait(10)
       }
+    }
+  }
+
+  def reachedMinInboxSize: Boolean = {
+    workerStatusMap.isEmpty || workerStatusMap.values.forall(!_.isOverstrained)
+  }
+
+  def awaitMessageProcessing {
+    statusMonitor.synchronized {
+      while (!reachedMinInboxSize) {
+        statusMonitor.wait(10)
+      }
+    }
+  }
+
+  override def addEdge(edge: Edge[_, _]) {
+    super.addEdge(edge)
+    if(config.workerConfiguration.messageInboxLimits.isDefined) {
+    	awaitMessageProcessing      
+    }
+  }
+
+  override def addVertex(vertex: Vertex[_, _]) {
+    super.addVertex(vertex)
+    if(config.workerConfiguration.messageInboxLimits.isDefined) {
+    	awaitMessageProcessing      
+    }
+  }
+
+  override def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
+    super.sendSignalToVertex(signal, targetId, sourceId)
+    if(config.workerConfiguration.messageInboxLimits.isDefined) {
+    	awaitMessageProcessing      
     }
   }
 
