@@ -19,12 +19,6 @@
 			<name>nativelibs4java Maven2 Repository</name>
 			<url>http://nativelibs4java.sourceforge.net/maven</url>
 		</repository>
-		<repository>
-			<id>project</id>
-			<name>Project Maven Repository</name>
-			<layout>default</layout>
-			<url>file://${basedir}/lib</url>
-		</repository>
 	</repositories>
 	<!-- Repositories -->
 
@@ -40,24 +34,6 @@
 
 	<!-- Dependencies -->
 	<dependencies>
-
-		<!-- AKKA -->
-		<dependency>
-			<groupId>se.scalablesolutions.akka</groupId>
-			<artifactId>akka-actor</artifactId>
-			<version>1.2-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.scalablesolutions.akka</groupId>
-			<artifactId>akka-remote</artifactId>
-			<version>1.2-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<!-- AKKA -->
-
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>

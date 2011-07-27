@@ -26,9 +26,6 @@ import com.signalcollect.implementations.messaging._
 import com.signalcollect.implementations.storage._
 import com.signalcollect.implementations.coordinator.WorkerApi
 
-import akka.actor.Actor._
-import akka.actor.ActorRef
-
 import java.util.concurrent.LinkedBlockingQueue
 
 package factory {
@@ -64,10 +61,6 @@ package factory {
       def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers, mapper)
     }
 
-    object AkkaBus extends MessageBusFactory {
-      def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new AkkaMessageBus[Any](numberOfWorkers, mapper)
-    }
-
   }
 
   package worker {
@@ -78,14 +71,6 @@ package factory {
                          numberOfWorkers: Int,
                          coordinator: Any,
                          mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper)
-    }
-
-    object AkkaLocal extends AkkaWorkerFactory {
-      def createInstance(workerId: Int,
-                         workerConfig: WorkerConfiguration,
-                         numberOfWorkers: Int,
-                         coordinator: Any,
-                         mapper: VertexToWorkerMapper): ActorRef = actorOf(new AkkaWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper))
     }
 
   }

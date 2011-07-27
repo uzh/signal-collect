@@ -21,9 +21,6 @@ package com.signalcollect.implementations.logging
 
 import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.LogMessage
-import akka.actor.Actor
-import akka.actor.Actor._
-import akka.actor.ActorRef
 
 class DefaultLogger extends MessageRecipient[LogMessage] {
   
