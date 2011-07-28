@@ -36,7 +36,7 @@ object DefaultComputeGraphBuilder extends ComputeGraphBuilder
  */
 class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocalConfiguration) extends Serializable {
 
-  def build: ComputeGraph = new LocalBootstrap(config).boot
+  def build: Option[ComputeGraph] = new LocalBootstrap(config).boot
 
   /**
    * Common configuration

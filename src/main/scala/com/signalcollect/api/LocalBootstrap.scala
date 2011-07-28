@@ -37,7 +37,7 @@ class LocalBootstrap(val config: Configuration) extends Bootstrap {
     for (workerId <- 0 until config.numberOfWorkers) {
 
       config.workerConfiguration.workerFactory match {
-        case worker.Local => workerApi.createWorker(workerId).asInstanceOf[Worker].initialize
+        case worker.Local => workerApi.createWorker(workerId, config.workerConfiguration).asInstanceOf[Worker].initialize
         case _            => throw new Exception("Only local workers supported by this Bootstrap")
       }
     }

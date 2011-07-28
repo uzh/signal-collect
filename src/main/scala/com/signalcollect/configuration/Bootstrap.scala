@@ -48,7 +48,7 @@ trait Bootstrap {
    * The correct execution for the startup of signal collect's infrastructure
    * This method is called to return the right Compute Graph based on the configuration given
    */
-  def boot: ComputeGraph = {
+  def boot: Option[ComputeGraph] = {
 
     // create optional logger
     var logger = createLogger
@@ -63,7 +63,7 @@ trait Bootstrap {
 
     computeGraph = createComputeGraph(workerApi, coordinator)
 
-    computeGraph
+    Some(computeGraph)
   }
 
   /**
@@ -75,14 +75,6 @@ trait Bootstrap {
    * Gets the compute graph instance properly configured
    */
   protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): ComputeGraph
-
-  /**
-   * FIXME: This start can be replaced by the execute function on compute graph but 
-   * I have to see if I need to do anything else on the distributed case.
-   */
-  def start {
-    computeGraph.execute
-  }
 
   /**
    * Shuts down the distributed infrastructure 

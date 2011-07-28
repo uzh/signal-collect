@@ -47,12 +47,12 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
    * @param: workerId is the id of the worker
    * @return: the worker should be cast to the desired worker (Local or Akka)
    */
-  def createWorker(workerId: Int): Any = {
+  def createWorker(workerId: Int, workerConfiguration: WorkerConfiguration): Any = {
 
     val workerFactory = config.workerConfiguration.workerFactory
 
     // create the worker
-    val worker = workerFactory.createInstance(workerId, config.workerConfiguration, config.numberOfWorkers, this, mapper)
+    val worker = workerFactory.createInstance(workerId, workerConfiguration, config.numberOfWorkers, this, mapper)
 
     // put it to the array of workers
     workers(workerId) = worker
@@ -91,8 +91,6 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     }
     workerProxies
   }
-
-  // initialize
 
   var isInitialized = false
 

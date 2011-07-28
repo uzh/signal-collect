@@ -38,7 +38,7 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = new ComputeGraphBuilder().build
+  val cg = new ComputeGraphBuilder().build.get
   cg.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
   val stats = cg.execute
   cg.foreachVertex(println(_))
