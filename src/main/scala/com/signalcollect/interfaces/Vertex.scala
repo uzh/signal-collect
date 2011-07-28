@@ -113,6 +113,11 @@ trait Vertex[IdType, StateType] extends Serializable {
 
   /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int
+  
+  /**
+   * Returns the ids of all vertices to which this vertex has an outgoing edge
+   */
+  def getVertexIdsOfNeighbors: Iterable[Any]
 
   /** This method gets called by the framework after the vertex has been fully initialized. */
   def afterInitialization(messageBus: MessageBus[Any])

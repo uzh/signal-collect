@@ -158,6 +158,11 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
     }
   }
 
+  /**
+   * Returns the ids of all vertices to which this vertex has an outgoing edge 
+   */
+  def getVertexIdsOfNeighbors: Iterable[Any] = outgoingEdges.seq map (_._2.id._2)
+  
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size
 
