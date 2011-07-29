@@ -124,7 +124,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
           workerProxies(r.workerId).receive(message)
         case ws: WorkerStatus =>
           statusMonitor.synchronized {
-            if (!workerStatusMap.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent < ws.messagesSent) {
+            if (!workerStatusMap.keySet.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent < ws.messagesSent) {
               workerStatusMap.put(ws.workerId, ws)
               statusMonitor.notifyAll
             }
@@ -170,9 +170,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     }
   }
 
-  def reachedMinInboxSize: Boolean = {
-    workerStatusMap.isEmpty || workerStatusMap.values.forall(!_.isOverstrained)
-  }
+  def reachedMinInboxSize: Boolean = workerStatusMap.isEmpty || workerStatusMap.values.forall(!_.isOverstrained)
 
   def awaitMessageProcessing {
     statusMonitor.synchronized {
@@ -184,22 +182,22 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
   override def addEdge(edge: Edge[_, _]) {
     super.addEdge(edge)
-    if(config.workerConfiguration.messageInboxLimits.isDefined) {
-    	awaitMessageProcessing      
+    if (config.workerConfiguration.messageInboxLimits.isDefined) {
+      awaitMessageProcessing
     }
   }
 
   override def addVertex(vertex: Vertex[_, _]) {
     super.addVertex(vertex)
-    if(config.workerConfiguration.messageInboxLimits.isDefined) {
-    	awaitMessageProcessing      
+    if (config.workerConfiguration.messageInboxLimits.isDefined) {
+      awaitMessageProcessing
     }
   }
 
   override def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
     super.sendSignalToVertex(signal, targetId, sourceId)
-    if(config.workerConfiguration.messageInboxLimits.isDefined) {
-    	awaitMessageProcessing      
+    if (config.workerConfiguration.messageInboxLimits.isDefined) {
+      awaitMessageProcessing
     }
   }
 
