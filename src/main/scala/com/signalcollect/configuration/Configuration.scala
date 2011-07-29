@@ -42,7 +42,7 @@ trait Configuration {
 }
 
 case class DefaultLocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-									 maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors*5000),
+									 maxInboxSize: Option[Long] = None, //Some(Runtime.getRuntime.availableProcessors*5000),
                                      customLogger: Option[MessageRecipient[LogMessage]] = None,
                                      workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
                                      executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

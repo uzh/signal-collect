@@ -43,4 +43,4 @@ case class DefaultLocalWorkerConfiguration(
   workerFactory: WorkerFactory = worker.Local,
   messageBusFactory: MessageBusFactory = messageBus.SharedMemory,
   storageFactory: StorageFactory = storage.InMemory,
-  statusUpdateIntervallInMillis: Option[Long] = Some(500l)) extends WorkerConfiguration
+  statusUpdateIntervallInMillis: Option[Long] = None /*Some(500l)*/) extends WorkerConfiguration
