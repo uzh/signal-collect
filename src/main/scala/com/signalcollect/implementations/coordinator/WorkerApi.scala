@@ -146,6 +146,10 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByWorkerProxies + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
+  def isOverstrained: Boolean = {
+    if (!config.maxInboxSize.isDefined) { false }
+    else (totalMessagesSent - totalMessagesReceived) > config.maxInboxSize.get
+  }
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
 
@@ -170,10 +174,11 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     }
   }
 
-  def reachedMinInboxSize: Boolean = workerStatusMap.isEmpty || workerStatusMap.values.forall(!_.isOverstrained)
+  def reachedMinInboxSize: Boolean = workerStatusMap.isEmpty || !isOverstrained
 
   def awaitMessageProcessing {
     statusMonitor.synchronized {
+      var overstrained = false
       while (!reachedMinInboxSize) {
         statusMonitor.wait(10)
       }
@@ -182,23 +187,21 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
   override def addEdge(edge: Edge[_, _]) {
     super.addEdge(edge)
-    if (config.workerConfiguration.messageInboxLimits.isDefined) {
+    if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
   override def addVertex(vertex: Vertex[_, _]) {
     super.addVertex(vertex)
-    if (config.workerConfiguration.messageInboxLimits.isDefined) {
+    if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
   override def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
     super.sendSignalToVertex(signal, targetId, sourceId)
-    if (config.workerConfiguration.messageInboxLimits.isDefined) {
-      awaitMessageProcessing
-    }
+    //awaitMessageProcessing
   }
 
   def started: Boolean = workerStatusMap.values.forall(!_.isPaused)

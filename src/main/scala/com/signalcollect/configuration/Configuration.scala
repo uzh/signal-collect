@@ -30,6 +30,8 @@ import java.util.HashMap
 trait Configuration {
 
   def numberOfWorkers: Int
+  
+  def maxInboxSize: Option[Long]
 
   def customLogger: Option[MessageRecipient[LogMessage]]
 
@@ -40,6 +42,7 @@ trait Configuration {
 }
 
 case class DefaultLocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+									 maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors*5000),
                                      customLogger: Option[MessageRecipient[LogMessage]] = None,
                                      workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
                                      executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

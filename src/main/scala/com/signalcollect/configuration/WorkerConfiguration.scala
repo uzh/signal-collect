@@ -28,8 +28,8 @@ import com.signalcollect.interfaces._
 trait WorkerConfiguration {
   def workerFactory: WorkerFactory
   def messageBusFactory: MessageBusFactory
-  def messageInboxLimits: Option[(Int, Int)]
   def storageFactory: StorageFactory
+  def statusUpdateIntervallInMillis: Option[Long]
 
   override def toString: String = {
     "worker factory" + "\t" + workerFactory + "\n" +
@@ -42,5 +42,5 @@ trait WorkerConfiguration {
 case class DefaultLocalWorkerConfiguration(
   workerFactory: WorkerFactory = worker.Local,
   messageBusFactory: MessageBusFactory = messageBus.SharedMemory,
-  messageInboxLimits: Option[(Int, Int)] = None, //Some(50, 1000), 
-  storageFactory: StorageFactory = storage.InMemory) extends WorkerConfiguration
+  storageFactory: StorageFactory = storage.InMemory,
+  statusUpdateIntervallInMillis: Option[Long] = Some(500l)) extends WorkerConfiguration

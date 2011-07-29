@@ -84,7 +84,6 @@ class LocalWorker(val workerId: Int,
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)
         vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
           processInbox
           val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
@@ -102,16 +101,15 @@ class LocalWorker(val workerId: Int,
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
+    val currentTime = System.currentTimeMillis
+    if(currentTime-lastStatusUpdate > statusUpdateIntervallInMillis.getOrElse(Long.MaxValue)) {
+      lastStatusUpdate = currentTime
+      sendStatusToCoordinator
+    }
     message match {
       case s: Signal[_, _, _] => processSignal(s)
       case WorkerRequest(command) => command(this)
       case other => warning("Could not handle message " + message)
-    }
-    
-    messagesRead+=1
-    if(isOverstrained && (messagesReceived-messagesRead)<=messageInboxMinMax._1) {
-      isOverstrained=false
-      sendStatusToCoordinator
     }
   }
 
@@ -313,16 +311,14 @@ class LocalWorker(val workerId: Int,
   protected var isPaused = true
   protected var shouldPause = false
   protected var shouldStart = false
-  protected var isOverstrained = false //overstrained if messageInbox is too large
 
   protected var signalThreshold = 0.001
   protected var collectThreshold = 0.0
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
-  
-  protected val messageInboxMinMax = workerConfig.messageInboxLimits.getOrElse((Int.MinValue, Int.MaxValue))
-  protected var messagesReceived = 0
-  protected var messagesRead = 0
+    
+  protected var lastStatusUpdate = System.currentTimeMillis()
+  protected var statusUpdateIntervallInMillis = workerConfig.statusUpdateIntervallInMillis
 
   protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 
@@ -333,7 +329,6 @@ class LocalWorker(val workerId: Int,
       workerId = workerId,
       isIdle = isIdle,
       isPaused = isPaused,
-      isOverstrained = isOverstrained, 
       messagesSent = messageBus.messagesSent,
       messagesReceived = counters.messagesReceived)
   }
@@ -356,7 +351,6 @@ class LocalWorker(val workerId: Int,
 
     var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
     if (message == null) {
-      isOverstrained = false
       setIdle(true)
       handleMessage
       setIdle(false)
@@ -449,17 +443,6 @@ class LocalWorker(val workerId: Int,
       processInboxOrIdle(idleTimeoutNanoseconds)
     } else {
       processInbox
-    }
-  }
-  
-  override def receive(message: Any) = {
-    super.receive(message)
-    messagesReceived +=1
-    if(!isOverstrained && (messagesReceived-messagesRead)>=messageInboxMinMax._2) {
-      isPaused = false
-      isOverstrained = true
-      isIdle= false
-      sendStatusToCoordinator
     }
   }
 }
