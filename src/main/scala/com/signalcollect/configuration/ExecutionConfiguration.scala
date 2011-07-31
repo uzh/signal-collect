@@ -21,16 +21,28 @@ package com.signalcollect.configuration
 
 import com.signalcollect.interfaces._
 
+/**
+ * This configuration specifies execution parameters for a computation. This object
+ * represents an ExecutionConfiguration that is initialized with the default parameters.
+ */
 object DefaultExecutionConfiguration extends ExecutionConfiguration()
 
 /**
- * Configuration that specifies the execution parameters
+ * This configuration specifies execution parameters for a computation:
+ * 	executionMode:		Determines the way signal/collect operations are scheduled.
+ * 	signalThreshold:	A signal operation only gets executed if the signalScore of
+ * 						a vertex is above this threshold.
+ * 	collectThreshold:	A collect operation only gets executed if the collectScore of
+ * 						a vertex is above this threshold.
+ * 	timeLimit:			The computation duration is bounded by this value.
+ * 	stepsLimit:			The maximum number of computation steps is bounded by this value.
  */
-case class ExecutionConfiguration(executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
-                                  signalThreshold: Double = 0.01,
-                                  collectThreshold: Double = 0.0,
-                                  timeLimit: Option[Long] = None,
-                                  stepsLimit: Option[Long] = None) {
+case class ExecutionConfiguration(
+  executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
+  signalThreshold: Double = 0.01,
+  collectThreshold: Double = 0.0,
+  timeLimit: Option[Long] = None,
+  stepsLimit: Option[Long] = None) {
 
   override def toString: String = {
     "execution mode" + "\t" + "\t" + executionMode + "\n" +
@@ -41,14 +53,56 @@ case class ExecutionConfiguration(executionMode: ExecutionMode = OptimizedAsynch
   }
 }
 
+/**
+ * An execution mode specifies the order in which signal/collect
+ * operations get scheduled. There are currently three supported execution modes:
+ * 	- SynchronousExecutionMode
+ *  - PureAsynchronousExecutionMode
+ *  - OptimizedAsynchronousExecutionMode
+ */
 sealed trait ExecutionMode extends Serializable
 
+/**
+ * In the synchronous execution mode there are computation steps.
+ * Each computation step consists of a signal phase and a collect phase.
+ * During the signal phase the signal function of all vertices that have signal scores
+ * that are above the signal threshold get executed.
+ * During the collect phase the collect function of all vertices that have collect scores
+ * that are above the collect threshold get executed.
+ * 
+ * In this execution mode there is a global synchronization between these phases and
+ * between consecutive computation steps. This ensures that the signal phase and collect phase
+ * of different vertices never overlap. This execution mode is related to the
+ * Bulk Synchronous Parallel (BSP) paradigm and similar to Google Pregel.
+ */
 object SynchronousExecutionMode extends ExecutionMode {
   override def toString = "SynchronousExecutionMode"
 }
-object OptimizedAsynchronousExecutionMode extends ExecutionMode {
-  override def toString = "OptimizedAsynchronousExecutionMode"
-}
+
+/**
+ * In the asynchronous execution mode there are no guarantees at all about the
+ * order in which the signal/collect operations on vertices get executed. In practice
+ * vertices will try to eagerly propagate information as quickly as possible. 
+ * 
+ * Depending on the algorithm, an asynchronous execution schedule may perform better,
+ * because it has the potential to propagate information across the graph faster and
+ * because it is less susceptible to oscillations. 
+ */
 object PureAsynchronousExecutionMode extends ExecutionMode {
   override def toString = "PureAsynchronousExecutionMode"
+}
+
+/**
+ * This is the default execution mode.
+ * 
+ * In optimized asynchronous execution mode there is one synchronous signal operation
+ * before switching to an asynchronous execution schedule.
+ * 
+ * For some algorithms this enhances the performance of an asynchronous execution,
+ * because during a purely asynchronous execution vertices collect before having received
+ * the first signal from all their neighbors. In algorithms like PageRank this hurts
+ * performance and it is avoided by this execution mode.
+ */
+object OptimizedAsynchronousExecutionMode extends ExecutionMode {
+  override def toString = "OptimizedAsynchronousExecutionMode"
 }
