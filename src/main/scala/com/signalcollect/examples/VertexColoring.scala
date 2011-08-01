@@ -41,7 +41,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    * Indicates that every signal this vertex receives is
    * an instance of Int. This avoids type-checks/-casts.
    */
-  override type UpperSignalTypeBound <: Int
+  type Signal = Int
 
   /** The set of available colors */
   val colors: Set[Int] = (1 to numColors).toSet
@@ -61,7 +61,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    *  set to a random color and the neighbors are informed about this vertex'
    *  new color. If no neighbor shares the same color, we stay with the old color.
    */
-  def collect: Int = {
+  def collect(mostRecentSignals: Iterable[Int]): Int = {
     if (mostRecentSignalMap.values.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {
@@ -82,7 +82,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
       }
     } else {
       informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != state)
-      state
+      state.asInstanceOf[Int]
     }
   }
 
@@ -102,14 +102,14 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = new ComputeGraphBuilder().build.get
+  val cg = DefaultComputeGraphBuilder.build
   cg.addVertex(new ColoredVertex(1, 2, 1))
   cg.addVertex(new ColoredVertex(2, 2, 1))
   cg.addVertex(new ColoredVertex(3, 2, 1))
-  cg.addEdge(new DefaultEdge(1, 2))
-  cg.addEdge(new DefaultEdge(2, 1))
-  cg.addEdge(new DefaultEdge(2, 3))
-  cg.addEdge(new DefaultEdge(3, 2))
+  cg.addEdge(new StateForwarderEdge(1, 2))
+  cg.addEdge(new StateForwarderEdge(2, 1))
+  cg.addEdge(new StateForwarderEdge(2, 3))
+  cg.addEdge(new StateForwarderEdge(3, 2))
   val stats = cg.execute
   println(stats)
   cg.foreachVertex(println(_))

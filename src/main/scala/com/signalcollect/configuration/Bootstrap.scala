@@ -48,7 +48,7 @@ trait Bootstrap {
    * The correct execution for the startup of signal collect's infrastructure
    * This method is called to return the right Compute Graph based on the configuration given
    */
-  def boot: Option[ComputeGraph] = {
+  def boot: ComputeGraph = {
 
     // create optional logger
     var logger = createLogger
@@ -63,7 +63,7 @@ trait Bootstrap {
 
     computeGraph = createComputeGraph(workerApi, coordinator)
 
-    Some(computeGraph)
+    computeGraph
   }
 
   /**

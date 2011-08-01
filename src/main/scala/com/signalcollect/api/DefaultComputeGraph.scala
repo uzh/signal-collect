@@ -21,7 +21,6 @@ package com.signalcollect.api
 
 import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.MessageRecipient
-import com.signalcollect.implementations.graph.DefaultGraphApi
 import com.signalcollect.implementations.coordinator._
 import com.signalcollect.configuration._
 
@@ -44,20 +43,20 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
 
   def shutdown = workerApi.shutdown
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = workerApi.foreachVertex(f)
+  def foreachVertex(f: (Vertex) => Unit) = workerApi.foreachVertex(f)
 
   def customAggregate[ValueType](
     neutralElement: ValueType,
     operation: (ValueType, ValueType) => ValueType,
-    extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    extractor: (Vertex) => ValueType): ValueType = {
     workerApi.customAggregate(neutralElement, operation, extractor)
   }
 
-  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
   /** GraphApi */
 
@@ -65,11 +64,11 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
     workerApi.sendSignalToVertex(signal = signal, targetId = targetId, sourceId = sourceId)
   }
 
-  def addVertex(vertex: Vertex[_, _]) = workerApi.addVertex(vertex)
+  def addVertex(vertex: Vertex) = workerApi.addVertex(vertex)
 
-  def addEdge(edge: Edge[_, _]) = workerApi.addEdge(edge)
+  def addEdge(edge: Edge) = workerApi.addEdge(edge)
 
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
     workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
   }
 
@@ -77,6 +76,6 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
 
   def removeEdge(edgeId: (Any, Any, String)) = workerApi.removeEdge(edgeId)
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) = workerApi.removeVertices(shouldRemove)
+  def removeVertices(shouldRemove: Vertex => Boolean) = workerApi.removeVertices(shouldRemove)
 
 }

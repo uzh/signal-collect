@@ -23,8 +23,11 @@ import scala.collection.parallel.immutable.ParHashMap
 import com.signalcollect.interfaces.Edge
 import scala.collection.GenMap
 
-trait ParallelSignaling[IdType, StateType] extends AbstractVertex[IdType, StateType] {
+trait ParallelSignaling {
 
-  outgoingEdges = ParHashMap[(IdType, Any, String), Edge[IdType, _]]()
+  this: AbstractVertex =>
+  
+    
+  outgoingEdges = ParHashMap[(Id, Any, String), Edge]()
 
 }

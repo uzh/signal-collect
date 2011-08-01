@@ -20,6 +20,11 @@
 package com.signalcollect.api
 
 import com.signalcollect.implementations.graph._
+import com.signalcollect.util.collections.Filter
+import com.signalcollect.interfaces.SignalMessage
+import scala.collection.mutable.Buffer
+import scala.collection.mutable.ListBuffer
+import com.signalcollect.interfaces.MessageBus
 
 /**
  * [[com.signalcollect.interfaces.Vertex]] implementation that offers only
@@ -32,9 +37,29 @@ import com.signalcollect.implementations.graph._
  * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
  * in general.
  */
-abstract class UncollectedSignalsVertex[IdType, StateType](
-  val id: IdType,
-  var state: StateType)
-  extends AbstractVertex[IdType, StateType]
-  with UncollectedSignalsList[IdType, StateType]
-  with DefaultGraphApi
+abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
+  val id: IdTypeParameter,
+  var state: StateTypeParameter)
+  extends AbstractVertex {
+
+  type Id = IdTypeParameter
+  type State = StateTypeParameter
+  
+  /** a buffer containing uncollected messages */
+  protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
+  
+  /** traversable uncollected signals */  
+  protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
+    uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
+  }
+
+  /**
+   * Executes the {@link #collect} method on this vertex.
+   * @see #collect
+   */
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+    uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
+	state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
+  }
+  
+}

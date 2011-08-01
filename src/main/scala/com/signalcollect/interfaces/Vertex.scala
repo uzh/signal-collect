@@ -25,14 +25,17 @@ package com.signalcollect.interfaces
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
  */
-trait Vertex[IdType, StateType] extends Serializable {
+trait Vertex extends Serializable {
 
+  type Id
+  type State
+  type Signal
+  
   /**
    * By default it is assumed that a vertex can receive signals of any type.
    * This type can be overridden to set an upper bound for the types of signals
    * that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
    */
-  type UpperSignalTypeBound
 
   /**
    * Vertices are assigned to worker threads that are each responsible for a part of the graph.
@@ -42,29 +45,22 @@ trait Vertex[IdType, StateType] extends Serializable {
 
   override def equals(other: Any): Boolean = {
     other match {
-      case v: Vertex[_, _] => v.id == id
+      case v: Vertex => v.id == id
       case _ => false
     }
   }
 
   /** @return the identifier of this {@link FrameworkVertex}. */
-  def id: IdType
+  def id: Id
 
   /** @return the object that stores the current state for this {@link Vertex}. */
-  var state: StateType
-
-  /**
-   * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
-   * this function will be called during algorithm execution. It is meant to calculate a new vertex state
-   * based on the {@link Signal}s received by this vertex.
-   */
-  def collect: StateType
+  var state: State
 
   /**
    * Adds a new outgoing {@link Edge} to this {@link Vertex}.
    * @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge[_, _]): Boolean
+  def addOutgoingEdge(e: Edge): Boolean
 
   /**
    * Removes an outgoing {@link Edge} from this {@link Vertex}.
@@ -94,7 +90,7 @@ trait Vertex[IdType, StateType] extends Serializable {
    * @see #collect
    * @param signals the new signals that have not been transferred to the vertex jet.
    */
-  def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any])
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any])
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -109,7 +105,7 @@ trait Vertex[IdType, StateType] extends Serializable {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[Signal[_, _, _]]): Double
+  def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double
 
   /** @return the number of outgoing edges of this {@link Vertex} */
   def outgoingEdgeCount: Int

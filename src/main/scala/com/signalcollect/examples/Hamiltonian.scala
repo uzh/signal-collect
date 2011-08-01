@@ -26,7 +26,7 @@ import com.signalcollect.configuration._
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = new ComputeGraphBuilder().build.get
+  val cg = DefaultComputeGraphBuilder.build
 
   /**
    * Still need to test performance on complete and larger graphs
@@ -63,14 +63,12 @@ object Hamiltonian extends App {
  */
 class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
 
-  type UpperSignalTypeBound = Map[List[String], Int]
-
-  type StateType = Map[List[String], Int]
+  override type Signal = Map[List[String], Int]
 
   /*
 	 * The state will contain all paths visited so far, not mattering the size of the path
 	 */
-  def collect: Map[List[String], Int] = {
+  def collect(signals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
 
     val signalsMap = mostRecentSignalMap toMap
 
@@ -121,9 +119,7 @@ class HamiltonianEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, 
 
   override def weight: Double = w
 
-  type SourceVertexType = HamiltonianVertex
-  
-  type SignalType = Map[List[String], Int]
+  type SourceVertex = HamiltonianVertex
 
   override def signal(sourceVertex: HamiltonianVertex) = {
     // signals only paths that do not contain the target vertex id

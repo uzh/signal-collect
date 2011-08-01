@@ -31,8 +31,8 @@ import com.signalcollect.configuration._
  *
  */
 class SudokuAssociation(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
-  type SourceVertexType = SudokuCell
-  override def signal(sourceVertex: SudokuCell) = sourceVertex.state
+  type SourceVertex = SudokuCell
+  def signal(sourceVertex: SudokuCell) = sourceVertex.state
 }
 
 /**
@@ -43,12 +43,12 @@ class SudokuAssociation(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
  */
 class SudokuCell(id: Int, initialState: Option[Int] = None) extends SignalMapVertex(id, initialState) {
 
-  type UpperSignalTypeBound = Int
+  type Signal = Int
 
   var possibleValues = SudokuHelper.legalNumbers
   if (initialState.isDefined) possibleValues = Set(initialState.get)
 
-  def collect: Option[Int] = {
+  def collect(mostRecentSignals: Iterable[Int]): Option[Int] = {
 
     //make a list of all possible values
     possibleValues = possibleValues -- mostRecentSignals.toSet
@@ -199,7 +199,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-    val cg = new ComputeGraphBuilder().build.get
+    val cg = DefaultComputeGraphBuilder.build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {

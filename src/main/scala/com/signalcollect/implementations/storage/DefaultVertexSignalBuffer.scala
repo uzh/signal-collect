@@ -17,7 +17,7 @@
  */
 package com.signalcollect.implementations.storage
 
-import com.signalcollect.interfaces.{ VertexSignalBuffer, Signal, Storage }
+import com.signalcollect.interfaces.{ VertexSignalBuffer, SignalMessage, Storage }
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable.ArrayBuffer
 
@@ -26,7 +26,7 @@ import scala.collection.mutable.ArrayBuffer
  */
 class DefaultVertexSignalBuffer extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[Signal[_, _, _]]]() //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[SignalMessage[_, _, _]]]() //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
 
   /**
@@ -37,11 +37,11 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
    *
    * @param signal the signal that should be buffered for further collecting
    */
-  def addSignal(signal: Signal[_, _, _]) {
+  def addSignal(signal: SignalMessage[_, _, _]) {
     if (undeliveredSignals.containsKey(signal.targetId)) {
       undeliveredSignals.get(signal.targetId).append(signal)
     } else {
-      val signalsForVertex = ArrayBuffer[Signal[_, _, _]](signal)
+      val signalsForVertex = ArrayBuffer[SignalMessage[_, _, _]](signal)
       undeliveredSignals.put(signal.targetId, signalsForVertex)
     }
   }
@@ -54,7 +54,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
    */
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
-      undeliveredSignals.put(vertexId, ArrayBuffer[Signal[_, _, _]]())
+      undeliveredSignals.put(vertexId, ArrayBuffer[SignalMessage[_, _, _]]())
     }
   }
 
@@ -83,7 +83,7 @@ class DefaultVertexSignalBuffer extends VertexSignalBuffer {
    * @param clearWhenDone	determines if the map should be cleared when all entries are processed
    * @param breakCondition 	determines if the loop should be escaped before it is done
    */
-  def foreach[U](f: (Any, Iterable[Signal[_, _, _]]) => U,
+  def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U,
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 

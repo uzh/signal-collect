@@ -87,10 +87,10 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   val primaryIndex = store.getPrimaryIndex(classOf[String], classOf[Vertex2EntityAdapter])
 
-  def get(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex = {
     val storedObject = primaryIndex.get(id.toString)
     if (storedObject != null) {
-      var vertex: Vertex[_, _] = null
+      var vertex: Vertex = null
       vertex = serializer.read(storedObject.vertex)
       vertex
     } else {
@@ -99,7 +99,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   }
 
-  def put(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex): Boolean = {
     if (primaryIndex.get(vertex.id.toString) == null) {
       primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
       storage.toCollect.addVertex(vertex.id)
@@ -119,17 +119,17 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     count -= 1
   }
 
-  def updateStateOfVertex(vertex: Vertex[_, _]) = {
+  def updateStateOfVertex(vertex: Vertex) = {
       primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
   }
 
   def size: Long = count
 
-  def foreach[U](f: (Vertex[_, _]) => U) {
+  def foreach[U](f: (Vertex) => U) {
     val cursor = primaryIndex.entities
     var currentElement = cursor.first
     while (currentElement != null) {
-      val vertex = serializer.read(currentElement.vertex).asInstanceOf[Vertex[_, _]]
+      val vertex = serializer.read(currentElement.vertex).asInstanceOf[Vertex]
       f(vertex)
       updateStateOfVertex(vertex)
       currentElement = cursor.next

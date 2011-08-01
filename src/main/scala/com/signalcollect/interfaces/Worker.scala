@@ -32,12 +32,12 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry {
   
   def addVertex(serializedVertex: Array[Byte])
   def addEdge(serializedEdge: Array[Byte])
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _])
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
   def removeVertex(vertexId: Any)
   def removeOutgoingEdge(edgeId: (Any, Any, String))
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
+  def removeVertices(shouldRemove: Vertex => Boolean)
 
-  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit)
 
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)
@@ -45,10 +45,10 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry {
   def recalculateScores
   def recalculateScoresForVertexWithId(vertexId: Any)
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
-  def foreachVertex(f: (Vertex[_, _]) => Unit)
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
+  def foreachVertex(f: Vertex => Unit)
 
-  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
+  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: Vertex => ValueType): ValueType
 
   def pauseComputation
   def startComputation

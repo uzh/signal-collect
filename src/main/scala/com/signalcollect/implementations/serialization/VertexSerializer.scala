@@ -18,7 +18,7 @@
 
 package com.signalcollect.implementations.serialization
 
-import com.signalcollect.interfaces.{ Vertex, Serializer, Edge, Signal }
+import com.signalcollect.interfaces.{ Vertex, Serializer, Edge, SignalMessage }
 import com.signalcollect.api.SignalMapVertex
 import com.signalcollect.examples._
 import java.util.LinkedList
@@ -44,12 +44,12 @@ trait VertexSerializer {
     barr.toByteArray()
   }
 
-  def read[A](buffer: Array[Byte]): Vertex[_, _] = {
+  def read[A](buffer: Array[Byte]): Vertex = {
     val input = new ObjectInputStream(new ByteArrayInputStream(buffer))
     val storedType = input.readByte
     storedType match {
 //      case 1 => val page = readPage(input); input.close; page
-      case _ => val v = input.readObject; input.close; v.asInstanceOf[Vertex[_, _]]
+      case _ => val v = input.readObject; input.close; v.asInstanceOf[Vertex]
     }
   }
 
@@ -77,7 +77,7 @@ trait VertexSerializer {
 //    page.setOutgoingEdges(edges)
 //    page.setOutgoingEdgeAddedSinceSignalOperation(in.readBoolean)
 //    page.setLastSignalState(in.readObject.asInstanceOf[Option[Double]])
-//    page.setMessageInbox(in.readObject.asInstanceOf[LinkedList[Signal[_, _, _]]])
+//    page.setMessageInbox(in.readObject.asInstanceOf[LinkedList[SignalMessage[_, _, _]]])
 //    page.sumOfOutWeights = in.readDouble
 //    page.setMostRecentSignalMap(in.readObject.asInstanceOf[scala.collection.mutable.Map[Any, Double]])
 //    in.close

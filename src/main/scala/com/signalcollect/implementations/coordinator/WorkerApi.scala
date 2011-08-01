@@ -22,7 +22,6 @@ package com.signalcollect.implementations.coordinator
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging._
-import com.signalcollect.implementations.graph.DefaultGraphApi
 import com.signalcollect.api.factory._
 
 import java.lang.reflect.Method
@@ -185,14 +184,14 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     }
   }
 
-  override def addEdge(edge: Edge[_, _]) {
+  override def addEdge(edge: Edge) {
     super.addEdge(edge)
     if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
-  override def addVertex(vertex: Vertex[_, _]) {
+  override def addVertex(vertex: Vertex) {
     super.addVertex(vertex)
     if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
       awaitMessageProcessing
@@ -240,12 +239,12 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
   def shutdown = parallelWorkerProxies foreach (_.shutdown)
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
     awaitIdle
     workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = {
+  def foreachVertex(f: (Vertex) => Unit) = {
     awaitIdle
     parallelWorkerProxies foreach (_.foreachVertex(f))
   }
@@ -253,13 +252,13 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   def customAggregate[ValueType](
     neutralElement: ValueType,
     operation: (ValueType, ValueType) => ValueType,
-    extractor: (Vertex[_, _]) => ValueType): ValueType = {
+    extractor: (Vertex) => ValueType): ValueType = {
     awaitIdle
     val aggregateArray: ParArray[ValueType] = parallelWorkerProxies map (_.aggregate(neutralElement, operation, extractor))
     aggregateArray.fold(neutralElement)(operation(_, _))
   }
 
-  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
 
   def setSignalThreshold(t: Double) = parallelWorkerProxies foreach (_.setSignalThreshold(t))
 

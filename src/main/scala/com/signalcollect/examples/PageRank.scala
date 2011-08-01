@@ -22,8 +22,8 @@ package com.signalcollect.examples
 import com.signalcollect.api._
 import com.signalcollect.implementations.graph.SumOfOutWeights
 import com.signalcollect.configuration._
-import java.io.{ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream}
-import com.signalcollect.interfaces.{Edge, Signal}
+import java.io.{ ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream }
+import com.signalcollect.interfaces._
 import java.util.LinkedList
 
 /**
@@ -33,9 +33,8 @@ import java.util.LinkedList
  *  @param t: the identifier of the target vertex
  */
 class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
-
-  type SourceVertexType = Page
-  @specialized type SignalType = Double
+  
+  type SourceVertex = Page
   
   /**
    * The signal function calculates how much rank the source vertex
@@ -51,15 +50,15 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
  *  @param id: the identifier of this vertex
  *  @param dampingFactor: @see <a href="http://en.wikipedia.org/wiki/PageRank">PageRank algorithm</a>
  */
-class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights[Any, Double] {
+class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights {
 
-  type UpperSignalTypeBound = Double
-	
+  type Signal = Double
+
   /**
    * The collect function calculates the rank of this vertex based on the rank
    *  received from neighbors and the damping factor.
    */
-  def collect: Double = 1 - dampingFactor + dampingFactor * mostRecentSignals.foldLeft(0.0)(_ + _)
+  def collect(mostRecentSignals: Iterable[Double]): Double = 1 - dampingFactor + dampingFactor * mostRecentSignals.foldLeft(0.0)(_ + _)
 
   override def scoreSignal: Double = {
     lastSignalState match {
@@ -71,7 +70,7 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = new ComputeGraphBuilder().build.get
+  val cg = DefaultComputeGraphBuilder.build
   cg.addVertex(new Page(1))
   cg.addVertex(new Page(2))
   cg.addVertex(new Page(3))
@@ -79,8 +78,8 @@ object PageRank extends App {
   cg.addEdge(new Link(2, 1))
   cg.addEdge(new Link(2, 3))
   cg.addEdge(new Link(3, 2))
-  val stats = cg.execute(new ExecutionConfiguration(executionMode=SynchronousExecutionMode))
+  val stats = cg.execute
   println(stats)
-  cg.foreachVertex (println(_))
+  cg.foreachVertex(println(_))
   cg.shutdown
 }

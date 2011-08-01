@@ -20,7 +20,6 @@
 package com.signalcollect.api
 
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.graph.AbstractEdge
 
 /**
  * [[com.signalcollect.interfaces.Edge]] implementation that only signals
@@ -36,22 +35,19 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
   sourceId: SourceIdType,
   targetId: TargetIdType,
   description: String = getClass.getSimpleName)
-  extends AbstractEdge[SourceIdType, TargetIdType](
-    sourceId,
-    targetId,
-    description) {
+  extends DefaultEdge(sourceId, targetId, description) {
 
   /** Last signal sent along this edge */
-  var lastSignalSent: Option[SignalType] = None
+  var lastSignalSent: Option[Signal] = None
 
   /**
    * Calculates the new signal, compares it with the last signal sent and
    * only sends a signal if they are not equal.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any]) {
-    val newSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
+  override def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
+    val newSignal = signal(sourceVertex.asInstanceOf[SourceVertex])
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, newSignal), cachedTargetIdHashCode)
+      mb.sendToWorkerForVertexIdHash(SignalMessage(sourceId, targetId, newSignal), cachedTargetIdHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

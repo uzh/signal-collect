@@ -31,13 +31,7 @@ import com.signalcollect.configuration._
  *  @param t: the identifier of the target vertex
  */
 class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
-
-  /**
-   * Specifies the type of the source vertex.
-   *  This avoids type-checks/-casts, for example when accessing source.state.
-   */
-  type SourceVertexType = Location
- 
+  type SourceVertex = Location
   /**
    * The signal function calculates the distance of the shortest currently
    *  known path from the SSSP source vertex which passes through the source
@@ -45,7 +39,7 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
    *  where this edge starts plus the length of the path represented by this
    *  edge (= the weight of this edge).
    */
-  def signal(sourceVertex: Location): Option[Int] = {
+  def signal(sourceVertex: Location) = {
     sourceVertex.state map (_ + weight.toInt)
   }
 }
@@ -58,21 +52,21 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
  *  if the distance is Int.MaxValue this means that there is no known path. If the distance is
  *  0 this means that this vertex is the source location.
  */
-class Location(id: Any, initialDistance: Option[Int] = None) extends SignalMapVertex(id, initialDistance) {
-
+class Location(id: Any, initialState: Option[Int] = None) extends SignalMapVertex(id, initialState) {
+  type Signal = Int
   /**
-   * The collect function calculates shortest currently known path
-   *  from the source location. This is obviously either the shortest known path
-   *  up to now (= state) or one of the paths that had been advertised via a signal
-   *  by a neighbor.
+   * The collect function calculates the shortest currently known path
+   * from the source location. This is obviously either the shortest known path
+   * up to now (= state) or one of the paths that had been advertised via a signal
+   * by a neighbor.
    */
-  def collect: Option[Int] = Some(signals(classOf[Int]).foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
+  def collect(mostRecentSignals: Iterable[Int]): Option[Int] = Some(mostRecentSignals.foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
 
 }
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = new ComputeGraphBuilder().build.get
+  val cg = DefaultComputeGraphBuilder.build
   cg.addVertex(new Location(1, Some(0)))
   cg.addVertex(new Location(2))
   cg.addVertex(new Location(3))

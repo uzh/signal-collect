@@ -98,7 +98,7 @@ trait ComputeGraph extends GraphApi {
    *
    * If the vertex is found, Some(result) of the function is returned, else None is returned.
    */
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
 
   /**
    * Executes the function @f on all vertices.
@@ -107,13 +107,13 @@ trait ComputeGraph extends GraphApi {
    * In the future this function may also be executed on other machines and references
    * to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: (Vertex[_, _]) => Unit)
+  def foreachVertex(f: (Vertex) => Unit)
 
   /**
    * Returns the number of vertices that are instances of @VertexType.
    */
-  def countVertices[VertexType <: Vertex[_, _]](implicit m: Manifest[VertexType]): Long = {
-    val matchingTypeCounter: (Vertex[_, _]) => Long = { v: Vertex[_, _] =>
+  def countVertices[VertexType <: Vertex](implicit m: Manifest[VertexType]): Long = {
+    val matchingTypeCounter: Vertex => Long = { v: Vertex =>
       {
         if (m.erasure.isInstance(v)) {
           1l
@@ -145,7 +145,7 @@ trait ComputeGraph extends GraphApi {
    * type.
    */
   def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType] = {
-    val stateExtractor: (Vertex[_, _]) => Option[ValueType] = { v: Vertex[_, _] =>
+    val stateExtractor: Vertex => Option[ValueType] = { v: Vertex =>
       {
         try {
           Some(v.state.asInstanceOf[ValueType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
@@ -170,7 +170,7 @@ trait ComputeGraph extends GraphApi {
    * States that are not instances of @ValueType get mapped to of @neutralElement.
    */
   def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType = {
-    val stateExtractor: (Vertex[_, _]) => ValueType = { v: Vertex[_, _] =>
+    val stateExtractor: Vertex => ValueType = { v: Vertex =>
       {
         try {
           v.state.asInstanceOf[ValueType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
@@ -187,7 +187,7 @@ trait ComputeGraph extends GraphApi {
    * the values that have been extracted by the @extractor function from vertex states. The function needs to have a
    * neutral element @neutralElement.
    */
-  def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: (Vertex[_, _]) => ValueType): ValueType
+  def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: Vertex => ValueType): ValueType
 
   /**
    * Sets the function that handles signals that could not be delivered to a vertex.
@@ -196,7 +196,7 @@ trait ComputeGraph extends GraphApi {
    * receives the signal and a graph api as parameters in order to take some
    * action that handles this case.
    */
-  def setUndeliverableSignalHandler(h: (Signal[_, _, _], GraphApi) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit)
 }
 
 

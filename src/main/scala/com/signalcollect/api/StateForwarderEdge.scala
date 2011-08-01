@@ -19,22 +19,14 @@
 
 package com.signalcollect.api
 
-import com.signalcollect.implementations.graph._
+import com.signalcollect.interfaces._
 
-/**
- * [[com.signalcollect.interfaces.Vertex]] implementation that
- * sets the state to initialState after signaling.
- *
- * @param id unique vertex id
- * @param initialState initial state of this vertex
- *
- * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
- * in general.
- */
-abstract class ParallelSignalVertex[IdType, StateType](
-  id: IdType,
-  initialState: StateType)
-  extends DefaultVertex[IdType, StateType](
-    id,
-    initialState)
-  with ParallelSignaling[IdType, StateType]
+class StateForwarderEdge[SourceIdType, TargetIdType](
+  sourceId: SourceIdType,
+  targetId: TargetIdType,
+  description: String = getClass.getSimpleName)
+  extends DefaultEdge(sourceId, targetId, description) {
+
+  def signal(sourceVertex: SourceVertex) = sourceVertex.state.asInstanceOf[Signal]
+
+}

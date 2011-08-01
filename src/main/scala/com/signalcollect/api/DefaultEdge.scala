@@ -19,29 +19,31 @@
 
 package com.signalcollect.api
 
-import com.signalcollect.implementations.graph.AbstractEdge
-import com.signalcollect.interfaces.Vertex
+import com.signalcollect.interfaces._
 
-/**
- * Default [[com.signalcollect.interfaces.Edge]] implementation.
- *
- * @param sourceId id of this edge's source vertex
- * @param targetId id of this edges's target vertex
- *
- * Edges send signals from the source vertex to the target vertex.
- * The only method that has to be implemented is the abstract signal function.
- * The signal function usually uses the state of the source vertex
- * to calculate the signal sent to the target vertex.
- */
-class DefaultEdge[SourceIdType, TargetIdType](
-  sourceId: SourceIdType,
-  targetId: TargetIdType,
-  description: String = getClass.getSimpleName)
-  extends AbstractEdge[SourceIdType, TargetIdType](
-    sourceId,
-    targetId,
-    description) {
+abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
+  sourceId: SourceIdTypeParameter,
+  targetId: TargetIdTypeParameter,
+  description: String = getClass.getSimpleName) extends Edge {
+  
+  type SourceId = SourceIdTypeParameter
+  type TargetId = TargetIdTypeParameter
+  type Signal = Any
 
-  def signal(sourceVertex: SourceVertexType) = sourceVertex.state.asInstanceOf[SignalType]
+  def id = (sourceId, targetId, description)
+
+  /** The hash code of the target vertex. */
+  val cachedTargetIdHashCode = id._2.hashCode
+
+  /**
+   * This method will be called by {@link FrameworkVertex#executeSignalOperation}
+   * of this {@Edge} source vertex. It calculates the signal and sends it over the message bus.
+   * {@link OnlySignalOnChangeEdge}.
+   *
+   * @param mb the message bus to use for sending the signal
+   */
+  def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
+    mb.sendToWorkerForVertexIdHash(SignalMessage(id._1, id._2, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
+  }
 
 }

@@ -20,13 +20,14 @@
 package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces.Edge
+import com.signalcollect.interfaces.Vertex
 
-trait SumOfOutWeights[IdType, StateType] extends AbstractVertex[IdType, StateType] {
+trait SumOfOutWeights extends AbstractVertex {  
 
   /** @return the sum of the weights of all outgoing edges of this {@link FrameworkVertex}. */
   var sumOfOutWeights: Double = 0
 
-  abstract override def addOutgoingEdge(e: Edge[_, _]): Boolean = {
+  abstract override def addOutgoingEdge(e: Edge): Boolean = {
     val added = super.addOutgoingEdge(e)
     if (added) {
       sumOfOutWeights = sumOfOutWeights + e.weight
@@ -36,7 +37,7 @@ trait SumOfOutWeights[IdType, StateType] extends AbstractVertex[IdType, StateTyp
 
   abstract override def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
     var weightToSubtract = 0.0
-    val castEdgeId = edgeId.asInstanceOf[(IdType, Any, String)]
+    val castEdgeId = edgeId.asInstanceOf[(Id, Any, String)]
     val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
     if (optionalOutgoinEdge.isDefined) {
       weightToSubtract = optionalOutgoinEdge.get.weight

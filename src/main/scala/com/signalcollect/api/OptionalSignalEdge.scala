@@ -20,10 +20,9 @@
 package com.signalcollect.api
 
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.graph.AbstractEdge
 
 /**
- * [[com.signalcollect.interfaces.Edge]] implementation that allows the
+ * [[com.signalcollect.interfaces.Edge]] implementation that requires the
  * signal function to return an instance of [[scala.Option]]. If
  * [[scala.None]] is returned, no signal is sent.
  *
@@ -37,24 +36,16 @@ abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
   sourceId: SourceIdType,
   targetId: TargetIdType,
   description: String = getClass.getSimpleName)
-  extends AbstractEdge[SourceIdType, TargetIdType](
-    sourceId,
-    targetId,
-    description) {
+  extends DefaultEdge(sourceId, targetId, description) {
   
-  /**
-   * Signal function returns a [[scala.Option]], only signals if Some
-   */
-  override type SignalType = Option[_]
-
   /**
    * Calculates the new signal. If the [[scala.Option]] is defined,
    * then the value is sent. Else nothing is sent.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any]) {
-    val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertexType])
+  override def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
+    val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertex]).asInstanceOf[Option[_]]
     if (optionalSignal.isDefined) {
-      mb.sendToWorkerForVertexIdHash(Signal(sourceId, targetId, optionalSignal.get), cachedTargetIdHashCode)
+      mb.sendToWorkerForVertexIdHash(SignalMessage(sourceId, targetId, optionalSignal.get), cachedTargetIdHashCode)
     }
   }
 }

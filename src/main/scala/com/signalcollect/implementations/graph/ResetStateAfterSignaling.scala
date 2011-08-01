@@ -20,10 +20,11 @@
 package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.Vertex
 
-trait ResetStateAfterSignaling[IdType, StateType] extends AbstractVertex[IdType, StateType] {
-
-  def initialState: StateType
+trait ResetStateAfterSignaling extends AbstractVertex {
+  
+  def initialState: State
 
   /**
    * Delegates to superclass and resets the state to the initial state after signaling.

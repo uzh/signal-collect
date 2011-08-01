@@ -21,7 +21,7 @@
 package com.signalcollect.interfaces
 
 // algorithm-specific message
-case class Signal[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType) {
+case class SignalMessage[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType) {
   override def toString = "Signal(sourceId=" + sourceId + ", targetId=" + targetId + ", " + ", signal=" + signal + ")"
 }
 

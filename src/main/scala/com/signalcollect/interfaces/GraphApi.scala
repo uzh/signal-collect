@@ -27,16 +27,16 @@ trait GraphApi {
    */
   def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL)
 
-  def addVertex(vertex: Vertex[_, _])
+  def addVertex(vertex: Vertex)
 
-  def addEdge(edge: Edge[_, _])
+  def addEdge(edge: Edge)
 
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _])
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
 
   def removeVertex(vertexId: Any)
 
   def removeEdge(edgeId: (Any, Any, String))
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
+  def removeVertices(shouldRemove: Vertex => Boolean)
 
 }

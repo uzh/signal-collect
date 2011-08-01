@@ -23,13 +23,13 @@ import com.signalcollect.interfaces._
 import java.util.HashMap
 
 class InMemoryStorage(storage: Storage) extends VertexStore {
-  protected var vertexMap = new HashMap[Any, Vertex[_, _]]()
+  protected var vertexMap = new HashMap[Any, Vertex]()
 
-  def get(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex = {
     vertexMap.get(id)
   }
 
-  def put(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex): Boolean = {
     if (!vertexMap.containsKey(vertex.id)) {
       vertexMap.put(vertex.id, vertex)
       storage.toCollect.addVertex(vertex.id)
@@ -44,9 +44,9 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     storage.toSignal.remove(id)
   }
 
-  def updateStateOfVertex(vertex: Vertex[_, _]) = {} // Not needed for in-memory implementation
+  def updateStateOfVertex(vertex: Vertex) = {} // Not needed for in-memory implementation
 
-  def foreach[U](f: (Vertex[_, _]) => U) {
+  def foreach[U](f: Vertex => U) {
     val it = vertexMap.values.iterator
     while (it.hasNext) {
       val vertex = it.next

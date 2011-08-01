@@ -20,6 +20,11 @@
 package com.signalcollect.api
 
 import com.signalcollect.implementations.graph._
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Map
+import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.util.collections.Filter
+import com.signalcollect.interfaces.MessageBus
 
 /**
  * [[com.signalcollect.interfaces.Vertex]] implementation that offers only
@@ -32,8 +37,37 @@ import com.signalcollect.implementations.graph._
  * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
  * in general.
  */
-abstract class SignalMapVertex[IdType, StateType](
-  val id: IdType,
-  var state: StateType)
-  extends AbstractVertex[IdType, StateType]
-  with MostRecentSignalsMap[IdType, StateType]
+abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
+  val id: IdTypeParameter,
+  var state: StateTypeParameter)
+  extends AbstractVertex {
+
+  type Id = IdTypeParameter
+  type State = StateTypeParameter
+  
+  protected val mostRecentSignalMap: Map[Any, Signal] = HashMap[Any, Signal]() // key: signal source id, value: signal
+
+  protected def signals[G](filterClass: Class[G]): Iterable[G] = {
+    mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
+  }
+
+  protected def mostRecentSignalFrom[G](signalClass: Class[G], id: Any): Option[G] = {
+    mostRecentSignalMap.get(id) match {
+      case Some(x) => Filter.bySuperClass(signalClass, x)
+      case other => None
+    }
+  }
+
+  /**
+   * Executes the {@link #collect} method on this vertex.
+   * @see #collect
+   */
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+    val castS = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
+    castS foreach { signal =>
+      mostRecentSignalMap.put(signal.sourceId, signal.signal)
+    }
+    state = collect(mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
+  }
+
+}

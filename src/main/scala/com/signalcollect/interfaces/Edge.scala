@@ -19,25 +19,29 @@
 
 package com.signalcollect.interfaces
 
-trait Edge[@specialized SourceIdType, @specialized TargetIdType] extends Serializable {
- 
+trait Edge extends Serializable {
+  
+  /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
+  type SourceVertex <: Vertex
+  type SourceId
+  type TargetId
+  type Signal
+  
+  /** The identifier of this {@link Edge}. */
+  def id: (SourceId, TargetId, String)
+  
   /** called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: SourceVertexType) = {}
+  def onAttach(sourceVertex: SourceVertex) = {}
   
   /**
    * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
    * this function will be called during algorithm execution. It is meant to calculate a signal
    * going from the source vertex of this edge to the target vertex of this edge.
    */
-  def signal(sourceVertex: SourceVertexType): SignalType
+  def signal(sourceVertex: SourceVertex): Signal
 
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
   def weight: Double = 1
-
-  type SignalType
-
-  /** The identifier of this {@link Edge}. */
-  def id: (SourceIdType, TargetIdType, String)
 
   /** A textual representation of this {@link Edge}. */
   override def toString = getClass.getSimpleName + "(sourceId=" + id._1 + ", targetId=" + id._2 + ")"
@@ -46,16 +50,13 @@ trait Edge[@specialized SourceIdType, @specialized TargetIdType] extends Seriali
   override def hashCode = id.hashCode
 
   override def equals(other: Any): Boolean = {
-    if (other.isInstanceOf[Edge[_, _]]) {
-      id.equals(other.asInstanceOf[Edge[_, _]].id)
+    if (other.isInstanceOf[Edge]) {
+      id.equals(other.asInstanceOf[Edge].id)
     } else {
       false
     }
   }
  
-  /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
-  type SourceVertexType <: Vertex[_, _]
-
   /**
    * This method will be called by {@link FrameworkVertex#executeSignalOperation}
    * of this {@Edge} source vertex. It calculates the signal and sends it over the message bus.
@@ -64,6 +65,6 @@ trait Edge[@specialized SourceIdType, @specialized TargetIdType] extends Seriali
    * @param mb the message bus to use for sending the signal
    * @param souceVertex the source vertex to get the state to assemble the signal
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], mb: MessageBus[Any])
+  def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any])
 
 }

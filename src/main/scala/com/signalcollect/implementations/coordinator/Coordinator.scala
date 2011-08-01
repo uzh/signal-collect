@@ -21,7 +21,6 @@ package com.signalcollect.implementations.coordinator
 
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-import com.signalcollect.implementations.graph.DefaultGraphApi
 import com.signalcollect.api._
 import com.signalcollect.api.factory._
 import com.signalcollect.interfaces._

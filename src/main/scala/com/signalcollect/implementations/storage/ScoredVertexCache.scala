@@ -45,7 +45,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
   protected val inMemoryCache = new InMemoryCache(storage)
   protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage) // Storage that should be cached
 
-  def get(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex = {
     //Update the cache scores
     val oldCacheScore = cacheScores.get(id)
     val newCacheScore = scoreUpdate(oldCacheScore)
@@ -69,7 +69,7 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   }
 
-  def put(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex): Boolean = {
     cacheScores.put(vertex.id, 0.0)
     if (inMemoryCache.contains(vertex.id) || persistentStore.get(vertex.id) != null) {
       false // Vertex already stored
@@ -100,14 +100,14 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
-  def updateStateOfVertex(vertex: Vertex[_, _]) {
+  def updateStateOfVertex(vertex: Vertex) {
     if (!inMemoryCache.contains(vertex.id)) {
       persistentStore.updateStateOfVertex(vertex)
     }
   }
   def size = cacheScores.size
 
-  def foreach[U](f: (Vertex[_, _]) => U) {
+  def foreach[U](f: (Vertex) => U) {
     inMemoryCache.foreach(f)
     persistentStore.foreach(f)
   }
@@ -119,21 +119,21 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   protected class InMemoryCache(storage: Storage) extends VertexStore {
     var maxSize = Long.MaxValue //gets reset if cache ratio is reached
-    val cachedVertices = new ConcurrentHashMap[Any, Vertex[_, _]](100000, 0.75f, 16) //TODO replace with non-concurrent data structure
+    val cachedVertices = new ConcurrentHashMap[Any, Vertex](100000, 0.75f, 16) //TODO replace with non-concurrent data structure
 
     def contains(id: Any) = cachedVertices.containsKey(id)
 
-    def cache(vertex: Vertex[_, _]) {
+    def cache(vertex: Vertex) {
       if (isFull) {
         consolidateCache
       }
     }
 
-    def get(id: Any): Vertex[_, _] = {
+    def get(id: Any): Vertex = {
       cachedVertices.get(id)
     }
 
-    def put(vertex: Vertex[_, _]): Boolean = {
+    def put(vertex: Vertex): Boolean = {
       if (!cachedVertices.containsKey(vertex.id)) {
         cachedVertices.put(vertex.id, vertex)
         storage.toCollect.addVertex(vertex.id)
@@ -148,9 +148,9 @@ class ScoredVertexCache(persistentStorageFactory: Storage => VertexStore,
       storage.toSignal.remove(id)
     }
 
-    def updateStateOfVertex(vertex: Vertex[_, _]) = {} // Not needed for in-memory implementation
+    def updateStateOfVertex(vertex: Vertex) = {} // Not needed for in-memory implementation
 
-    def foreach[U](f: (Vertex[_, _]) => U) {
+    def foreach[U](f: (Vertex) => U) {
       val it = cachedVertices.values.iterator
       while (it.hasNext) {
         val vertex = it.next

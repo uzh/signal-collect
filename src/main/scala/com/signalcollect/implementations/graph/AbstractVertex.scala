@@ -36,24 +36,24 @@ import scala.collection.GenMap
 
 import java.util.LinkedList
 
-abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateType] {
+abstract class AbstractVertex extends Vertex {
 
   /**
    * hashCode is cached for better performance
    */
   override val hashCode = this.id.hashCode
 
-  protected def process(message: Signal[_, _, _]) = {}
+  protected def process(message: SignalMessage[_, _, _]) = {}
 
   def afterInitialization(messageBus: MessageBus[Any]) = {}
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
-  protected var outgoingEdges: GenMap[(IdType, Any, String), Edge[IdType, _]] = HashMap[(IdType, Any, String), Edge[IdType, _]]()
+  protected var outgoingEdges: GenMap[(Id, Any, String), Edge] = HashMap[(Id, Any, String), Edge]()
 
   /** The state of this vertex when it last signaled. */
-  protected var lastSignalState: Option[StateType] = None
+  protected var lastSignalState: Option[State] = None
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false
@@ -62,12 +62,12 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * Adds a new outgoing {@link Edge} to this {@link FrameworkVertex}.
    * @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge[_, _]): Boolean = {
-    val newEdge = e.asInstanceOf[Edge[IdType, _]]
-    if (!outgoingEdges.get(newEdge.id).isDefined) {
+  def addOutgoingEdge(e: Edge): Boolean = {
+    val edgeId = e.id.asInstanceOf[(Id, Any, String)]
+    if (!outgoingEdges.get(edgeId).isDefined) {
       outgoingEdgeAddedSinceSignalOperation = true
-      outgoingEdges += ((newEdge.id, newEdge))
-      newEdge.onAttach(this.asInstanceOf[newEdge.SourceVertexType])
+      outgoingEdges += ((edgeId, e))
+      e.onAttach(this.asInstanceOf[e.SourceVertex])
       true
     } else {
       false
@@ -79,11 +79,11 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    * @param e the edge to be added.
    */
   def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
-    val castEdgeId = edgeId.asInstanceOf[(IdType, Any, String)]
+    val castEdgeId = edgeId.asInstanceOf[(Id, Any, String)]
     val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
     if (optionalOutgoinEdge.isDefined) {
       val outgoingEdge = optionalOutgoinEdge.get
-      outgoingEdges -= outgoingEdge.id
+      outgoingEdges -= castEdgeId
       true
     } else {
       false
@@ -96,7 +96,7 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
    */
   def removeAllOutgoingEdges: Int = {
     val edgesRemoved = outgoingEdges.size
-    outgoingEdges foreach ((tuple: ((IdType, Any, String), Edge[IdType, _])) => removeOutgoingEdge(tuple._1))
+    outgoingEdges foreach ((tuple: ((Id, Any, String), Edge)) => removeOutgoingEdge(tuple._1))
     edgesRemoved
   }
 
@@ -120,23 +120,27 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   }
 
   /**
+   * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
+   * this function will be called during algorithm execution. It is meant to calculate a new vertex state
+   * based on the {@link Signal}s received by this vertex.
+   */
+  def collect(signals: Iterable[Signal]): State
+
+  /**
    * Adds the buffered signals for that vertex and executes the {@link #collect} method on this vertex.
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: Iterable[Signal[_, _, _]], messageBus: MessageBus[Any]) {
-    signals.foreach(signal => process(signal))
-    state = collect
-  }
-  
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any])
+
   /**
    * This method is used by the framework in order to decide if the vertex' collect operation
    * should be executed.
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[Signal[_, _, _]]): Double = signals.size
-  
+  def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double = signals.size
+
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
@@ -159,10 +163,10 @@ abstract class AbstractVertex[IdType, StateType] extends Vertex[IdType, StateTyp
   }
 
   /**
-   * Returns the ids of all vertices to which this vertex has an outgoing edge 
+   * Returns the ids of all vertices to which this vertex has an outgoing edge
    */
   def getVertexIdsOfNeighbors: Iterable[Any] = outgoingEdges.seq map (_._2.id._2)
-  
+
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size
 

@@ -17,24 +17,18 @@
  *  
  */
 
-package com.signalcollect.api
+package com.signalcollect.implementations.graph
 
-import com.signalcollect.implementations.graph._
+import com.signalcollect.implementations.coordinator.DefaultGraphApi
+import com.signalcollect.interfaces._
 
-/**
- * [[com.signalcollect.interfaces.Vertex]] implementation that
- * sets the state to initialState after signaling.
- *
- * @param id unique vertex id
- * @param initialState initial state of this vertex
- *
- * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
- * in general.
- */
-abstract class ResetStateAfterSignalingVertex[IdType, StateType](
-  id: IdType,
-  initialState: StateType)
-  extends DefaultVertex[IdType, StateType](
-    id,
-    initialState)
-  with ResetStateAfterSignaling[IdType, StateType]
+trait VertexGraphApi extends AbstractVertex{
+  
+  protected var graphApi: GraphApi = _
+  
+  override def afterInitialization(messageBus: MessageBus[Any]) = {
+    graphApi = DefaultGraphApi.createInstance(messageBus)
+    super.afterInitialization(messageBus)
+  }
+
+}

@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect.implementations.graph
+package com.signalcollect.implementations.coordinator
 
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.serialization.DefaultSerializer
@@ -35,20 +35,20 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
    * The senderId of this signal will be com.signalcollect.interfaces.External
    */
   def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    messageBus.sendToWorkerForVertexId(Signal(sourceId, targetId, signal), targetId)
+    messageBus.sendToWorkerForVertexId(SignalMessage(sourceId, targetId, signal), targetId)
   }
 
-  def addVertex(vertex: Vertex[_, _]) {
+  def addVertex(vertex: Vertex) {
     val request = WorkerRequest((_.addVertex(write(vertex))))
     messageBus.sendToWorkerForVertexId(request, vertex.id)
   }
 
-  def addEdge(edge: Edge[_, _]) {
+  def addEdge(edge: Edge) {
     val request = WorkerRequest((_.addEdge(write(edge))))
     messageBus.sendToWorkerForVertexId(request, edge.id._1)
   }
 
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_, _]) {
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
     val request = WorkerRequest(_.addPatternEdge(sourceVertexPredicate, edgeFactory))
     messageBus.sendToWorkers(request)
   }
@@ -63,7 +63,7 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
     messageBus.sendToWorkerForVertexId(request, edgeId._1)
   }
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
+  def removeVertices(shouldRemove: Vertex => Boolean) {
     val request = WorkerRequest(_.removeVertices(shouldRemove))
     messageBus.sendToWorkers(request)
   }

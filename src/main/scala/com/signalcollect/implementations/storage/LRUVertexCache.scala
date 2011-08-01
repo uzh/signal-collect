@@ -33,9 +33,9 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   protected val CACHING_THRESHOLD = inMemoryRatio
   protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage)
-  protected val cache = new LRUMap[Any, Vertex[_, _]](persistentStore, capacity)
+  protected val cache = new LRUMap[Any, Vertex](persistentStore, capacity)
 
-  def get(id: Any): Vertex[_, _] = {
+  def get(id: Any): Vertex = {
     val result = cache.get(id)
     if (result != None) {
       result.get
@@ -44,7 +44,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
-  def put(vertex: Vertex[_, _]) = {
+  def put(vertex: Vertex) = {
     if (cache.contains(vertex.id) || persistentStore.get(vertex.id) != null) {
       false // Vertex already stored
     } else if (cache.size < capacity) {
@@ -71,7 +71,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
-  def updateStateOfVertex(vertex: Vertex[_, _]) {
+  def updateStateOfVertex(vertex: Vertex) {
     if (!cache.contains(vertex.id)) {
       persistentStore.updateStateOfVertex(vertex)
     }
@@ -79,7 +79,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   def size: Long = cache.size + persistentStore.size
 
-  def foreach[U](f: (Vertex[_, _]) => U) {
+  def foreach[U](f: (Vertex) => U) {
     cache.applyFunction(f)
     persistentStore.foreach(f)
   }
@@ -115,7 +115,7 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
 
   def serializeLRU {
     val vertexToSerialize = this.firstEntry.value
-    storage.put(vertexToSerialize.asInstanceOf[Vertex[_, _]]);
+    storage.put(vertexToSerialize.asInstanceOf[Vertex]);
     remove(firstEntry.key)
   }
 
@@ -143,8 +143,8 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
     }
   }
 
-  def applyFunction[U](f: (Vertex[_, _]) => U) {
-    foreachEntry(entry => f(entry.value.asInstanceOf[Vertex[_, _]]))
+  def applyFunction[U](f: (Vertex) => U) {
+    foreachEntry(entry => f(entry.value.asInstanceOf[Vertex]))
   }
 
 }
