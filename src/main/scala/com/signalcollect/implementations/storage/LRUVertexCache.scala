@@ -21,7 +21,7 @@ package com.signalcollect.implementations.storage
 import scala.collection.mutable.LinkedHashMap
 import com.signalcollect.interfaces._
 import scala.collection.mutable.LinkedHashMap
-import scala.concurrent.Lock
+import java.io.File
 
 /**
  *  Caches Vertices in the store according to a least recently used (LRU) policy
@@ -29,7 +29,7 @@ import scala.concurrent.Lock
 class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
   storage: Storage,
   var capacity: Int = Int.MaxValue,
-  inMemoryRatio: Float = 0.5f) extends VertexStore {
+  inMemoryRatio: Option[Float] = None) extends VertexStore {
 
   protected val CACHING_THRESHOLD = inMemoryRatio
   protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage)
@@ -52,7 +52,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
       storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
-      if ((usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD) {
+      if (CACHING_THRESHOLD.isDefined && (usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD.get) {
         capacity = cache.size
       }
       true
@@ -77,7 +77,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
-  def size: Long = cache.size + persistentStore.size
+  def size: Long = persistentStore.size + cache.size
 
   def foreach[U](f: (Vertex) => U) {
     cache.applyFunction(f)
@@ -150,6 +150,18 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
 }
 
 trait LRUCache extends DefaultStorage {
-  def berkeleyDBFactory(storage: Storage) = new BerkeleyDBStorage(storage, ".")
-  override protected def vertexStoreFactory = new LRUVertexCache(berkeleyDBFactory, this)
+
+  def berkeleyDBFactory(storage: Storage) = {
+    var folderPath: String = "sc-berkeley"
+    val userName = System.getenv("USER")
+    val jobId = System.getenv("PBS_JOBID")
+    if (userName != null && jobId != null) {
+      val torqueTempFolder = new File("/home/torque/tmp/" + userName + "." + jobId)
+      if (torqueTempFolder.exists && torqueTempFolder.isDirectory) {
+        folderPath = torqueTempFolder.getAbsolutePath + "/sc-berkeley"
+      }
+    }
+    new BerkeleyDBStorage(storage, folderPath)
+  }
+  override protected def vertexStoreFactory = new LRUVertexCache(berkeleyDBFactory, this, 4)
 }

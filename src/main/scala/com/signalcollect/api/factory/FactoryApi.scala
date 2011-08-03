@@ -50,7 +50,7 @@ package factory {
 
     //Berkeley DB Storage with InMemory caching
     object CachedBerkeleyDB extends StorageFactory {
-      class CachedStorage extends DefaultStorage with ScoredCache
+      class CachedStorage extends DefaultStorage with LRUCache
       def createInstance: Storage = new CachedStorage
     }
 

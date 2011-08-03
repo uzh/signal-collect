@@ -83,6 +83,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   /* Open the DPL Store. */
   val storeConfig = new StoreConfig()
   storeConfig.setAllowCreate(true)
+  storeConfig.setDeferredWrite(true)
   val store = new EntityStore(env, RandomString("sc", 12), storeConfig)
 
   val primaryIndex = store.getPrimaryIndex(classOf[String], classOf[Vertex2EntityAdapter])
