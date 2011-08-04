@@ -167,6 +167,11 @@ abstract class AbstractVertex extends Vertex {
    */
   def getVertexIdsOfNeighbors: Iterable[Any] = outgoingEdges.seq map (_._2.id._2)
 
+  /**
+   * Returns all outgoing edges
+   */
+  override def getOutgoingEdges: Option[Iterable[Edge]] = Some(outgoingEdges.seq map (_._2))
+  
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size
 

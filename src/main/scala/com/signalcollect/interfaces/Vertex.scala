@@ -115,6 +115,11 @@ trait Vertex extends Serializable {
    */
   def getVertexIdsOfNeighbors: Iterable[Any]
 
+  /**
+   * Returns all outgoing edges if this operation is supported by the vertex
+   */
+  def getOutgoingEdges: Option[Iterable[Edge]] = None
+  
   /** This method gets called by the framework after the vertex has been fully initialized. */
   def afterInitialization(messageBus: MessageBus[Any])
 

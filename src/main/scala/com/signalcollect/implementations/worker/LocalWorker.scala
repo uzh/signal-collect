@@ -122,6 +122,7 @@ class LocalWorker(val workerId: Int,
     debug("addVertex(" + vertex + ")")
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
+      counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
       vertex.afterInitialization(messageBus)
     }
   }
