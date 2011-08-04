@@ -59,12 +59,14 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   var count = 0l
   val serializer = storage.serializer
-  
+
   /* Open the JE Environment. */
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
+  //envConfig.setCachePercent(20)
 
+  //
   /* Create folder for environment */
   var envFolder = new File(envFolderPath)
   if (!envFolder.exists) {
@@ -121,7 +123,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   }
 
   def updateStateOfVertex(vertex: Vertex) = {
-      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
+    primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
   }
 
   def size: Long = count
@@ -136,14 +138,16 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
       currentElement = cursor.next
     }
   }
-  
+
   def cleanUp {
     store.close
-    if(envFolder.isDirectory) {
-      val filesInFolder = envFolder.listFiles
-      filesInFolder.foreach(file => file.delete)
+    storage.synchronized {
+      if (envFolder.exists() && envFolder.isDirectory) {
+        val filesInFolder = envFolder.listFiles
+        filesInFolder.foreach(file => file.delete)
+      }
+      envFolder.delete
     }
-    envFolder.delete
   }
 }
 
@@ -151,21 +155,19 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
  * To allow mixing-in this storage implementation into a more general storage implementation
  */
 trait BerkDBJE extends DefaultStorage with Serializable {
-  
+
   override protected def vertexStoreFactory = {
     val userName = System.getenv("USER")
     val jobId = System.getenv("PBS_JOBID")
-    if(userName!=null && jobId!=null) {
+    if (userName != null && jobId != null) {
       val torqueTempFolder = new File("/home/torque/tmp/" + userName + "." + jobId)
-      if(torqueTempFolder.exists && torqueTempFolder.isDirectory) {
-    	  new BerkeleyDBStorage(this, torqueTempFolder.getAbsolutePath + "/sc-berkeley")
+      if (torqueTempFolder.exists && torqueTempFolder.isDirectory) {
+        new BerkeleyDBStorage(this, torqueTempFolder.getAbsolutePath + "/sc-berkeley")
+      } else {
+        new BerkeleyDBStorage(this, "sc-berkeley")
       }
-      else {
-    	  new BerkeleyDBStorage(this, "sc-berkeley")      
-      }
-    }
-    else {
-    	  new BerkeleyDBStorage(this, "sc-berkeley")      
+    } else {
+      new BerkeleyDBStorage(this, "sc-berkeley")
     }
   }
-}
+} 
