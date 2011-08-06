@@ -31,7 +31,8 @@ class DefaultStorage extends Storage {
   var vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore = new InMemoryStorage(this)
   
-  var toCollect = new DefaultVertexSignalBuffer //holds all signals that are not collected yet
+  var toCollect = vertexSignalFactory //holds all signals that are not collected yet
+  protected def vertexSignalFactory: VertexSignalBuffer = new InMemoryVertexSignalBuffer 
   var toSignal = vertexSetFactory //holds all vertex ids that need to signal
   protected def vertexSetFactory: VertexIdSet = new InMemoryVertexIdSet(this)
   

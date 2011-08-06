@@ -27,8 +27,7 @@ import java.util.HashSet
  */
 class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
-  protected var toHandle: HashSet[Any] = vertexSetFactory //Stores all the IDs of the vertices that need to be processed
-  protected def vertexSetFactory = new HashSet[Any]()
+  protected var toHandle: HashSet[Any] = new HashSet[Any]() //Stores all the IDs of the vertices that need to be processed
 
   def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)

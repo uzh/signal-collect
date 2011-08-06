@@ -24,7 +24,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * Stores Signals that were received by the worker but not collected by the vertices yet
  */
-class DefaultVertexSignalBuffer extends VertexSignalBuffer {
+class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
   val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[SignalMessage[_, _, _]]]() //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator

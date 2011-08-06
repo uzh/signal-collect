@@ -64,7 +64,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
-  //envConfig.setCachePercent(20)
+  envConfig.setCachePercent(20)
 
   //
   /* Create folder for environment */
