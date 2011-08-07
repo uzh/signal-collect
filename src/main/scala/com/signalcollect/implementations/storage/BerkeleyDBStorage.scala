@@ -102,17 +102,14 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   }
 
-  def put(vertex: Vertex): Boolean = {
-    if (primaryIndex.get(vertex.id.toString) == null) {
-      primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
+  def put(vertex: Vertex): Boolean = {  
+   val insertSuccessful = primaryIndex.putNoOverwrite(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
+   if(insertSuccessful) {
       storage.toCollect.addVertex(vertex.id)
       storage.toSignal.add(vertex.id)
       count += 1l
-
-      true
-    } else {
-      false
-    }
+   }
+   insertSuccessful
   }
 
   def remove(id: Any) = {
