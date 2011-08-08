@@ -41,15 +41,5 @@ class LocalBootstrap(val config: Configuration) extends Bootstrap {
         case _            => throw new Exception("Only local workers supported by this Bootstrap")
       }
     }
-
   }
-
-  protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): DefaultComputeGraph = {
-    new DefaultComputeGraph(config, workerApi, coordinator)
-  }
-
-  def shutdown {
-    println("shutdown")
-  }
-
 }

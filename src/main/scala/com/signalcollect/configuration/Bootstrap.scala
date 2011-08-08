@@ -74,11 +74,8 @@ trait Bootstrap {
   /**
    * Gets the compute graph instance properly configured
    */
-  protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): ComputeGraph
-
-  /**
-   * Shuts down the distributed infrastructure 
-   */
-  def shutdown
+  protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): ComputeGraph = {
+    new DefaultComputeGraph(config, workerApi, coordinator)
+  }
 
 }
