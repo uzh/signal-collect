@@ -71,7 +71,7 @@ class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {
   
   "DefaultVertexSignalBuffer" should {
     val storage = mock[Storage]
-    val toCollect = new DefaultVertexSignalBuffer
+    val toCollect = new InMemoryVertexSignalBuffer
     val fakeSignal1a = mock[SignalMessage[_,_,_]]
     fakeSignal1a.targetId returns 1
     val fakeSignal1b = mock[SignalMessage[_,_,_]]
