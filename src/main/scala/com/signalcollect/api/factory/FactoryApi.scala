@@ -24,6 +24,7 @@ import com.signalcollect.interfaces._
 import com.signalcollect.implementations.worker._
 import com.signalcollect.implementations.messaging._
 import com.signalcollect.implementations.storage._
+import com.signalcollect.implementations.serialization.CompressedSerialization
 import com.signalcollect.implementations.coordinator.WorkerApi
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -50,8 +51,13 @@ package factory {
 
     //Berkeley DB Storage with InMemory caching
     object CachedBerkeleyDB extends StorageFactory {
-      class CachedStorage extends DefaultStorage with LRUCache
+      class CachedStorage extends DefaultStorage with CachedBerkeley
       def createInstance: Storage = new CachedStorage
+    }
+    
+    object AllOnDiskBerkeley extends StorageFactory {
+      class AllOnDiskBerekey extends DefaultStorage with BerkDBJE with OnDiskSignalBuffer with OnDiskIdSet
+      def createInstance: Storage = new AllOnDiskBerekey
     }
 
   }
