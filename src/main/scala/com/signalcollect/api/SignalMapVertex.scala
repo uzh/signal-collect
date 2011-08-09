@@ -22,7 +22,7 @@ package com.signalcollect.api
 import com.signalcollect.implementations.graph._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
-import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
 
@@ -45,17 +45,14 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
   type Id = IdTypeParameter
   type State = StateTypeParameter
   
-  protected val mostRecentSignalMap: Map[Any, Signal] = HashMap[Any, Signal]() // key: signal source id, value: signal
+  protected val mostRecentSignalMap: Map[EdgeId[Id, _], Signal] = HashMap[EdgeId[Id, _], Signal]() // key: signal source id, value: signal
 
   protected def signals[G](filterClass: Class[G]): Iterable[G] = {
     mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
   }
 
-  protected def mostRecentSignalFrom[G](signalClass: Class[G], id: Any): Option[G] = {
-    mostRecentSignalMap.get(id) match {
-      case Some(x) => Filter.bySuperClass(signalClass, x)
-      case other => None
-    }
+  def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
+    mostRecentSignalMap.get(id.asInstanceOf[EdgeId[Id, _]])
   }
 
   /**
@@ -63,11 +60,15 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
    * @see #collect
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
-    val castS = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
+    val castS = signals.asInstanceOf[Iterable[SignalMessage[Id, Any, Signal]]]
     castS foreach { signal =>
-      mostRecentSignalMap.put(signal.sourceId, signal.signal)
+      mostRecentSignalMap.put(signal.edgeId, signal.signal)
     }
     state = collect(mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
   }
 
+  def getVertexIdsOfPredecessors: Option[Iterable[_]] = {
+    Some(mostRecentSignalMap.keys map (_.sourceId))
+  }
+  
 }

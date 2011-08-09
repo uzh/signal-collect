@@ -50,7 +50,7 @@ abstract class AbstractVertex extends Vertex {
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
-  protected var outgoingEdges: GenMap[(Id, Any, String), Edge] = HashMap[(Id, Any, String), Edge]()
+  protected var outgoingEdges: GenMap[EdgeId[Id, _], Edge] = HashMap[EdgeId[Id, _], Edge]()
 
   /** The state of this vertex when it last signaled. */
   protected var lastSignalState: Option[State] = None
@@ -63,7 +63,7 @@ abstract class AbstractVertex extends Vertex {
    * @param e the edge to be added.
    */
   def addOutgoingEdge(e: Edge): Boolean = {
-    val edgeId = e.id.asInstanceOf[(Id, Any, String)]
+    val edgeId = e.id.asInstanceOf[EdgeId[Id, Any]]
     if (!outgoingEdges.get(edgeId).isDefined) {
       outgoingEdgeAddedSinceSignalOperation = true
       outgoingEdges += ((edgeId, e))
@@ -78,8 +78,8 @@ abstract class AbstractVertex extends Vertex {
    * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
    * @param e the edge to be added.
    */
-  def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean = {
-    val castEdgeId = edgeId.asInstanceOf[(Id, Any, String)]
+  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean = {
+    val castEdgeId = edgeId.asInstanceOf[EdgeId[Id, _]]
     val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
     if (optionalOutgoinEdge.isDefined) {
       val outgoingEdge = optionalOutgoinEdge.get
@@ -96,7 +96,7 @@ abstract class AbstractVertex extends Vertex {
    */
   def removeAllOutgoingEdges: Int = {
     val edgesRemoved = outgoingEdges.size
-    outgoingEdges foreach ((tuple: ((Id, Any, String), Edge)) => removeOutgoingEdge(tuple._1))
+    outgoingEdges foreach ((tuple: (EdgeId[Id, Any], Edge)) => removeOutgoingEdge(tuple._1))
     edgesRemoved
   }
 
@@ -165,8 +165,8 @@ abstract class AbstractVertex extends Vertex {
   /**
    * Returns the ids of all vertices to which this vertex has an outgoing edge
    */
-  def getVertexIdsOfNeighbors: Iterable[Any] = outgoingEdges.seq map (_._2.id._2)
-
+  def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.seq map (_._2.id.targetId)
+  
   /**
    * Returns all outgoing edges
    */

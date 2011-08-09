@@ -198,11 +198,6 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     }
   }
 
-  override def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    super.sendSignalToVertex(signal, targetId, sourceId)
-    //awaitMessageProcessing
-  }
-
   def started: Boolean = workerStatusMap.values.forall(!_.isPaused)
 
   def awaitStarted {

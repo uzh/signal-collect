@@ -20,7 +20,7 @@
 package com.signalcollect.implementations.graph
 
 import scala.collection.parallel.immutable.ParHashMap
-import com.signalcollect.interfaces.Edge
+import com.signalcollect.interfaces._
 import scala.collection.GenMap
 
 trait ParallelSignaling {
@@ -28,6 +28,6 @@ trait ParallelSignaling {
   this: AbstractVertex =>
   
     
-  outgoingEdges = ParHashMap[(Id, Any, String), Edge]()
+  outgoingEdges = ParHashMap[EdgeId[Id, Any], Edge]()
 
 }

@@ -21,8 +21,8 @@
 package com.signalcollect.interfaces
 
 // algorithm-specific message
-case class SignalMessage[+SourceIdType, +TargetIdType, +SignalType](sourceId: SourceIdType, targetId: TargetIdType, signal: SignalType) {
-  override def toString = "Signal(sourceId=" + sourceId + ", targetId=" + targetId + ", " + ", signal=" + signal + ")"
+case class SignalMessage[+SourceId, +TargetId, +SignalType](edgeId: EdgeId[SourceId, TargetId], signal: SignalType) {
+  override def toString = "Signal(edgeId=" + edgeId + ", " +  "signal=" + signal + ")"
 }
 
 // signal sender id used to indicate that a signal was sent from an external source

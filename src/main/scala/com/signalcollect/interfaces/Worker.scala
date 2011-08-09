@@ -34,7 +34,7 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry {
   def addEdge(serializedEdge: Array[Byte])
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
   def removeVertex(vertexId: Any)
-  def removeOutgoingEdge(edgeId: (Any, Any, String))
+  def removeOutgoingEdge(edgeId: EdgeId[Any, Any])
   def removeVertices(shouldRemove: Vertex => Boolean)
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit)

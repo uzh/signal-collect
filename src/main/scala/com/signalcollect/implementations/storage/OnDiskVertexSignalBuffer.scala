@@ -72,7 +72,7 @@ class OnDiskVertexSignalBuffer(envFolderPath: String = "sc_toCollect") extends V
    *  @param signal the signal to add to the signal buffer for a recipient.
    */
   def addSignal(signal: SignalMessage[_, _, _]) {
-    val key = new DatabaseEntry(DefaultSerializer.write(signal.targetId))
+    val key = new DatabaseEntry(DefaultSerializer.write(signal.edgeId.targetId))
     var value = new DatabaseEntry()
     var signals = new ArrayBuffer[SignalMessage[_, _, _]]()
     if (db.get(null, key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {

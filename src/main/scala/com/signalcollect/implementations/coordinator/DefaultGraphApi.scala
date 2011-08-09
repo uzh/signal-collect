@@ -31,11 +31,10 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
   protected def messageBus: MessageBus[Any]
 
   /**
-   * Sends a signal to the vertex with vertex.id=targetId.
-   * The senderId of this signal will be com.signalcollect.interfaces.External
+   * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    messageBus.sendToWorkerForVertexId(SignalMessage(sourceId, targetId, signal), targetId)
+  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any) {
+    messageBus.sendToWorkerForVertexId(SignalMessage(edgeId, signal), edgeId.targetId)
   }
 
   def addVertex(vertex: Vertex) {
@@ -47,7 +46,7 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
   def addEdge(edge: Edge) {
     val e = write(edge)
     val request = WorkerRequest((_.addEdge(e)))
-    messageBus.sendToWorkerForVertexId(request, edge.id._1)
+    messageBus.sendToWorkerForVertexId(request, edge.id.sourceId)
   }
 
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
@@ -60,9 +59,9 @@ trait DefaultGraphApi extends GraphApi with DefaultSerializer {
     messageBus.sendToWorkerForVertexId(request, vertexId)
   }
 
-  def removeEdge(edgeId: (Any, Any, String)) {
-    val request = WorkerRequest((_.removeOutgoingEdge(edgeId: (Any, Any, String))))
-    messageBus.sendToWorkerForVertexId(request, edgeId._1)
+  def removeEdge(edgeId: EdgeId[Any, Any]) {
+    val request = WorkerRequest((_.removeOutgoingEdge(edgeId)))
+    messageBus.sendToWorkerForVertexId(request, edgeId.sourceId)
   }
 
   def removeVertices(shouldRemove: Vertex => Boolean) {

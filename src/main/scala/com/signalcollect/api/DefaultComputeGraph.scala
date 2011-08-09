@@ -60,8 +60,11 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
 
   /** GraphApi */
 
-  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL) {
-    workerApi.sendSignalToVertex(signal = signal, targetId = targetId, sourceId = sourceId)
+  /**
+   * Sends a signal to the vertex with vertex.id=edgeId.targetId
+   */
+  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any) {
+    workerApi.sendSignalToVertex(edgeId, signal)
   }
 
   def addVertex(vertex: Vertex) = workerApi.addVertex(vertex)
@@ -74,7 +77,7 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
 
   def removeVertex(vertexId: Any) = workerApi.removeVertex(vertexId)
 
-  def removeEdge(edgeId: (Any, Any, String)) = workerApi.removeEdge(edgeId)
+  def removeEdge(edgeId: EdgeId[Any, Any]) = workerApi.removeEdge(edgeId)
 
   def removeVertices(shouldRemove: Vertex => Boolean) = workerApi.removeVertices(shouldRemove)
 

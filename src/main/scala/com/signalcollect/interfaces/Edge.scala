@@ -19,6 +19,14 @@
 
 package com.signalcollect.interfaces
 
+case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId] 
+
+trait EdgeId[+SourceId, +TargetId] extends Serializable {
+  def sourceId: SourceId
+  def targetId: TargetId
+  def description: String
+}
+
 trait Edge extends Serializable {
   
   /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
@@ -28,7 +36,7 @@ trait Edge extends Serializable {
   type Signal
   
   /** The identifier of this {@link Edge}. */
-  def id: (SourceId, TargetId, String)
+  def id: EdgeId[SourceId, TargetId]
   
   /** called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertex) = {}
@@ -44,7 +52,7 @@ trait Edge extends Serializable {
   def weight: Double = 1
 
   /** A textual representation of this {@link Edge}. */
-  override def toString = getClass.getSimpleName + "(sourceId=" + id._1 + ", targetId=" + id._2 + ")"
+  override def toString = getClass.getSimpleName + "(sourceId=" + id.sourceId + ", targetId=" + id.targetId + ")"
   
   /** The hash code of this object. */
   override def hashCode = id.hashCode

@@ -134,7 +134,7 @@ class LocalWorker(val workerId: Int,
 
   protected def addEdge(edge: Edge) {
     debug("addEdge(" + edge + ")")
-    val key = edge.id._1
+    val key = edge.id.sourceId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
       if (vertex.addOutgoingEdge(edge)) {
@@ -144,7 +144,7 @@ class LocalWorker(val workerId: Int,
         vertexStore.vertices.updateStateOfVertex(vertex)
       }
     } else {
-      warning("Did not find vertex with id " + edge.id._1 + " when trying to add edge " + edge)
+      warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add edge " + edge)
     }
   }
 
@@ -167,9 +167,9 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  def removeOutgoingEdge(edgeId: (Any, Any, String)) {
+  def removeOutgoingEdge(edgeId: EdgeId[Any, Any]) {
     debug("removeOutgoingEdge(" + edgeId + ")")
-    val vertex = vertexStore.vertices.get(edgeId._1)
+    val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
         counters.outgoingEdgesRemoved += 1

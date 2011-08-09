@@ -24,7 +24,7 @@ import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.SignalMessage
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ListBuffer
-import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces._
 
 /**
  * [[com.signalcollect.interfaces.Vertex]] implementation that offers only
@@ -44,14 +44,16 @@ abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
 
   type Id = IdTypeParameter
   type State = StateTypeParameter
-  
+
   /** a buffer containing uncollected messages */
   protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
-  
-  /** traversable uncollected signals */  
+
+  /** traversable uncollected signals */
   protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
     uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
   }
+
+  def getVertexIdsOfPredecessors: Option[Iterable[_]] = None
 
   /**
    * Executes the {@link #collect} method on this vertex.
@@ -59,7 +61,9 @@ abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
     uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
-	state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
+    state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
   }
-  
+
+  def getMostRecentSignal(id: EdgeId[_, _]): Option[Any] = None
+
 }

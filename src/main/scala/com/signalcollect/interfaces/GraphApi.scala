@@ -22,10 +22,9 @@ package com.signalcollect.interfaces
 trait GraphApi {
 
   /**
-   * Sends a signal to the vertex with vertex.id=targetId.
-   * The senderId of this signal will be com.signalcollect.interfaces.External
+   * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalToVertex(signal: Any, targetId: Any, sourceId: Any = EXTERNAL)
+  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any)
 
   def addVertex(vertex: Vertex)
 
@@ -35,7 +34,7 @@ trait GraphApi {
 
   def removeVertex(vertexId: Any)
 
-  def removeEdge(edgeId: (Any, Any, String))
+  def removeEdge(edgeId: EdgeId[Any, Any])
 
   def removeVertices(shouldRemove: Vertex => Boolean)
 

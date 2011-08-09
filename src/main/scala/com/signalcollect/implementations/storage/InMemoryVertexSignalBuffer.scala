@@ -38,11 +38,11 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    * @param signal the signal that should be buffered for further collecting
    */
   def addSignal(signal: SignalMessage[_, _, _]) {
-    if (undeliveredSignals.containsKey(signal.targetId)) {
-      undeliveredSignals.get(signal.targetId).append(signal)
+    if (undeliveredSignals.containsKey(signal.edgeId.targetId)) {
+      undeliveredSignals.get(signal.edgeId.targetId).append(signal)
     } else {
       val signalsForVertex = ArrayBuffer[SignalMessage[_, _, _]](signal)
-      undeliveredSignals.put(signal.targetId, signalsForVertex)
+      undeliveredSignals.put(signal.edgeId.targetId, signalsForVertex)
     }
   }
 

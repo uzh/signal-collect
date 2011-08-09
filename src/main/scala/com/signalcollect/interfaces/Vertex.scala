@@ -67,7 +67,7 @@ trait Vertex extends Serializable {
    * @param e the edge to be added..
    * @return returns if an edge was removed
    */
-  def removeOutgoingEdge(edgeId: (Any, Any, String)): Boolean
+  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean
 
   /**
    * Removes all outgoing {@link Edge}s from this {@link Vertex}, returns the number of edges that were removed.
@@ -113,8 +113,19 @@ trait Vertex extends Serializable {
   /**
    * Returns the ids of all vertices to which this vertex has an outgoing edge
    */
-  def getVertexIdsOfNeighbors: Iterable[Any]
+  def getVertexIdsOfSuccessors: Iterable[_]
 
+  /**
+   * Returns the ids of all vertices from which this vertex has an incoming edge, optional.
+   */
+  def getVertexIdsOfPredecessors: Option[Iterable[_]]
+
+  /**
+   * Returns the most recent signal sent via the edge with the id @edgeId. None if this function is not
+   * supported or if there is no such signal.
+   */
+  def getMostRecentSignal(id: EdgeId[_, _]): Option[_]
+  
   /**
    * Returns all outgoing edges if this operation is supported by the vertex
    */

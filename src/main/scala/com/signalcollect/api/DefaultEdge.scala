@@ -24,16 +24,16 @@ import com.signalcollect.interfaces._
 abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
   sourceId: SourceIdTypeParameter,
   targetId: TargetIdTypeParameter,
-  description: String = getClass.getSimpleName) extends Edge {
+  description: String = "") extends Edge {
   
   type SourceId = SourceIdTypeParameter
   type TargetId = TargetIdTypeParameter
   type Signal = Any
 
-  def id = (sourceId, targetId, description)
+  val id = DefaultEdgeId(sourceId, targetId, description)
 
   /** The hash code of the target vertex. */
-  val cachedTargetIdHashCode = id._2.hashCode
+  val cachedTargetIdHashCode = id.targetId.hashCode
 
   /**
    * This method will be called by {@link FrameworkVertex#executeSignalOperation}
@@ -43,7 +43,7 @@ abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
    * @param mb the message bus to use for sending the signal
    */
   def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
-    mb.sendToWorkerForVertexIdHash(SignalMessage(id._1, id._2, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
+    mb.sendToWorkerForVertexIdHash(SignalMessage(id, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
   }
 
 }
