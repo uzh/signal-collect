@@ -18,21 +18,30 @@
 
 package com.signalcollect.implementations.storage
 
-import scala.collection.mutable.Set
 import com.signalcollect.interfaces._
 import java.util.HashSet
 
 /**
- * Stores a set of vertex IDs in main memory.
+ * Stores a set of vertex IDs in main memory and allows iterating through them via a custom foreach function for processing the entries.
  */
 class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
 
   protected var toHandle: HashSet[Any] = new HashSet[Any]() //Stores all the IDs of the vertices that need to be processed
 
+  /**
+   * Adds a new ID to the collection
+   * 
+   * @param vetexId the ID of the vertex that should be added to the collection.
+   */
   def add(vertexId: Any): Unit = {
     toHandle.add(vertexId)
   }
 
+  /**
+   * Removes an ID from the collection
+   * 
+   * @param vertexId the ID of the vertex that should be removed
+   */
   def remove(vertexId: Any): Unit = {
     toHandle.remove(vertexId)
   }
@@ -57,6 +66,9 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
     }
   }
 
+  /**
+   * Removes all entries from the collection.
+   */
   def cleanUp = {
     toHandle.clear
   }

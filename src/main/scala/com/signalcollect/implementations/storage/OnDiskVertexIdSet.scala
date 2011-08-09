@@ -22,18 +22,26 @@ import java.io.File
 import com.signalcollect.implementations.serialization._
 import com.signalcollect.interfaces.VertexIdSet
 
-
+/**
+ * On-disk version of the collection that holds a set of vertex ids for processing them.
+ * This implementation uses Berkeley DB to hold the IDs.
+ *
+ * Since this implementation has to store all the ids on disk and serialize them using this class instead of the
+ * in-memory version will slow down computation considerably and therefore the usage of this collection should be
+ * avoided if ever possible.
+ *
+ * @param envFolderPath the path where the database environment should be stored.
+ */
 class OnDiskVertexIdSet(envFolderPath: String = "sc_toSignal") extends VertexIdSet {
-  
- var count = 0 //counts the number of vertices for which signals are buffered
 
-  /* Open the JE Environment. */
+  var count = 0 //counts the number of vertices for which signals are buffered
+
+  /* Create the environment */
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
   envConfig.setCachePercent(10)
 
-  /* Create folder for environment */
   var envFolder = new File(envFolderPath)
   if (!envFolder.exists) {
     val folderCreated = new File(envFolderPath).mkdir
@@ -47,34 +55,45 @@ class OnDiskVertexIdSet(envFolderPath: String = "sc_toSignal") extends VertexIdS
     envFolder = new File(envFolderPath)
   }
   val env = new Environment(envFolder, envConfig)
+
+  /* Create the database */
   val dataBaseConfig = new DatabaseConfig
   dataBaseConfig.setAllowCreate(true)
   dataBaseConfig.setTransactional(false)
   val db = env.openDatabase(null, RandomString("toCollect", 4), dataBaseConfig)
   var cursor: Cursor = db.openCursor(null, CursorConfig.DEFAULT)
- 
 
+  /**
+   * Adds a new ID to the data base
+   *
+   * @param vetexId the ID of the vertex that should be added to the collection.
+   */
   def add(vertexId: Any): Unit = {
     val key = new DatabaseEntry(DefaultSerializer.write(vertexId))
-    var value = new DatabaseEntry(new Array[Byte](0))
-    if(!(db.putNoOverwrite(null, key, value)==OperationStatus.KEYEXIST)) {
-      count+=1
+    var value = new DatabaseEntry()
+    if (!(db.putNoOverwrite(null, key, value) == OperationStatus.KEYEXIST)) {
+      count += 1
     }
   }
 
+  /**
+   * Removes an ID from the data base
+   *
+   * @param vertexId the ID of the vertex that should be removed
+   */
   def remove(vertexId: Any): Unit = {
     val key = new DatabaseEntry(DefaultSerializer.write(vertexId))
     db.delete(null, key)
-    
+
   }
 
-  def isEmpty: Boolean = count ==0
+  def isEmpty: Boolean = count == 0
 
   def size: Int = count
 
   /**
    * Applies the specified function to each vertex id and removes the ids if necessary
-   * 
+   *
    * @param f the function to apply to each id
    * @removeAfterProcessing whether the ids should be deleted after they are covered by the function
    */
@@ -82,27 +101,37 @@ class OnDiskVertexIdSet(envFolderPath: String = "sc_toSignal") extends VertexIdS
     val cursor = db.openCursor(null, CursorConfig.DEFAULT)
     var key = new DatabaseEntry()
     var value = new DatabaseEntry()
-    if(cursor.getFirst(key,value,LockMode.DEFAULT)==OperationStatus.SUCCESS) {
+    if (cursor.getFirst(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
       f(DefaultSerializer.read(key.getData()))
-      if(removeAfterProcessing) {
+      if (removeAfterProcessing) {
         cursor.delete
-        count-=1
+        count -= 1
       }
     }
-    while(cursor.getNext(key,value,LockMode.DEFAULT)==OperationStatus.SUCCESS) {
+    while (cursor.getNext(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
       f(DefaultSerializer.read(key.getData()))
-      if(removeAfterProcessing) {
+      if (removeAfterProcessing) {
         cursor.delete
-        count-=1
+        count -= 1
       }
     }
     cursor.close
   }
 
   def cleanUp = {
+    db.close
+    if (envFolder.exists() && envFolder.isDirectory) {
+      val filesInFolder = envFolder.listFiles
+      filesInFolder.foreach(file => file.delete)
+    }
+    envFolder.delete
   }
 }
 
+/**
+ * Allows overriding the default VertexIdSet of a storage implementation.
+ * For performance reasons, only override the in-memory VertexIdSet if really necessary 
+ */
 trait OnDiskIdSet extends DefaultStorage {
   override protected def vertexSetFactory = {
     val userName = System.getenv("USER")
@@ -110,12 +139,12 @@ trait OnDiskIdSet extends DefaultStorage {
     if (userName != null && jobId != null) {
       val torqueTempFolder = new File("/home/torque/tmp/" + userName + "." + jobId)
       if (torqueTempFolder.exists && torqueTempFolder.isDirectory) {
-        new OnDiskVertexIdSet(torqueTempFolder.getAbsolutePath + "/sc-berkeley")
+        new OnDiskVertexIdSet(torqueTempFolder.getAbsolutePath + "/sc_toSignal")
       } else {
-        new OnDiskVertexIdSet("sc-berkeley")
+        new OnDiskVertexIdSet("sc_toSignal")
       }
     } else {
-      new OnDiskVertexIdSet("sc-berkeley")
+      new OnDiskVertexIdSet("sc_toSignal")
     }
   }
 }

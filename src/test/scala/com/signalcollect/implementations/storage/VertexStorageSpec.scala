@@ -134,8 +134,8 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any]]
       val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
-      class CachedBerkeley extends DefaultStorage with LRUCache
-      val cachedStore = new CachedBerkeley
+      class CachedBerkeleyStorage extends DefaultStorage with CachedBerkeley
+      val cachedStore = new CachedBerkeleyStorage
       vertexList.foreach(v => cachedStore.vertices.put(v))
 
       "hold all vertices inserted" in {

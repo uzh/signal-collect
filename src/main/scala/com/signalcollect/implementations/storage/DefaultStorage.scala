@@ -25,6 +25,7 @@ import java.util.Set
 
 /**
  * Default configuration for storing vertices and the toSignal and toCollect collections
+ * Uses in-memory implementations for all collections.
  */
 class DefaultStorage extends Storage {
   

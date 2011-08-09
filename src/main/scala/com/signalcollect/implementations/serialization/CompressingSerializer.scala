@@ -20,6 +20,7 @@ package com.signalcollect.implementations.serialization
 
 import com.signalcollect.interfaces.{ Vertex, Serializer }
 import com.signalcollect.api.SignalMapVertex
+import com.signalcollect.implementations.storage.DefaultStorage
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 import java.util.zip.{ Deflater, Inflater, DeflaterOutputStream, InflaterInputStream }
 
@@ -91,4 +92,11 @@ trait CompressingSerializer extends DefaultSerializer {
     result.copyToArray(trimmedResult, 0)
     trimmedResult
   }
+}
+
+/**
+ * Allows mixing the compressed serializer to override the default serializer of a storage 
+ */
+trait CompressedSerialization extends DefaultStorage {
+  override def serializer = CompressingSerializer
 }

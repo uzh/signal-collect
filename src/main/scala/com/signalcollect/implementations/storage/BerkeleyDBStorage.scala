@@ -64,14 +64,12 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
-  envConfig.setCachePercent(20)
+  //envConfig.setCachePercent(20)
 
-  //
   /* Create folder for environment */
   var envFolder = new File(envFolderPath)
   if (!envFolder.exists) {
     val folderCreated = new File(envFolderPath).mkdir
-    var tryCount = 0
     var envFolder = new File(envFolderPath)
     if (!envFolder.exists()) {
       System.err.println("Couldn't create folder: " + envFolder.getAbsolutePath + " for Berkeley DB.");
@@ -82,14 +80,19 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   }
   val env = new Environment(envFolder, envConfig)
 
-  /* Open the DPL Store. */
+  /* Open the DPL Entity Store and open an index for it */
   val storeConfig = new StoreConfig()
   storeConfig.setAllowCreate(true)
-  storeConfig.setDeferredWrite(true)
+  //storeConfig.setDeferredWrite(true) //Use this to not write the entries persistently to disk e.g. at load time
   val store = new EntityStore(env, RandomString("sc", 12), storeConfig)
-
   val primaryIndex = store.getPrimaryIndex(classOf[String], classOf[Vertex2EntityAdapter])
 
+  /**
+   * Returns a vertex from the store that has the specified id.
+   * 
+   * @param id the ID of the vertex to retrieve
+   * @return the vertex object or null if the vertex is not contained in the store
+   */
   def get(id: Any): Vertex = {
     val storedObject = primaryIndex.get(id.toString)
     if (storedObject != null) {
@@ -102,6 +105,12 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
   }
 
+  /**
+   * Adds a vertex to the store if the store does not contain already a vertex with the same id
+   * 
+   * @param the vertex that needs to be added to the storage.
+   * @return true if the vertex was successfully inserted to the storage or false if the storage already contains a vertex with the same id.
+   */
   def put(vertex: Vertex): Boolean = {  
    val insertSuccessful = primaryIndex.putNoOverwrite(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
    if(insertSuccessful) {
@@ -112,6 +121,11 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
    insertSuccessful
   }
 
+  /**
+   * Removes a vertex from the storage and deletes its entries in the responsible to signal and to handle collections.
+   * 
+   * @param the id of the vertex to remove
+   */
   def remove(id: Any) = {
     storage.toCollect.remove(id)
     storage.toSignal.remove(id)
@@ -119,12 +133,30 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     count -= 1
   }
 
+  /**
+   * Persistently writes the current state of the vertex to the storage so that changes will be reflected when
+   * it is retrieved for the next time.
+   * 
+   * @param vertex the vertex that has to be written back to the storage
+   */
   def updateStateOfVertex(vertex: Vertex) = {
     primaryIndex.put(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
   }
 
+  /**
+   * Number of vertices in the storage
+   * 
+   * @return number of vertices
+   */
   def size: Long = count
 
+  /**
+   * Applies the specified function to each vertex in the storage.
+   * This involves reading a vertex from disk, deserialization, serialization and retaining its changed state and is therefore
+   * a rather expensive operation especially if a large number of vertices is contained in the store. 
+   * 
+   * @param f the function that should be applied to each function in the storage
+   */
   def foreach[U](f: (Vertex) => U) {
     val cursor = primaryIndex.entities
     var currentElement = cursor.first
@@ -136,6 +168,9 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     }
   }
 
+  /**
+   * Closes the EntityStore add removes all the data files from the folder on disk. 
+   */
   def cleanUp {
     store.close
     storage.synchronized {
@@ -150,6 +185,8 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
 
 /**
  * To allow mixing-in this storage implementation into a more general storage implementation
+ * If the execution takes place on a torque cluster machine, then the temporary folder of that torque job "/home/torque/tmp/$USER.$PBS_JOBID" is used.
+ * Else the environment is created in the current directory of that programs execution.
  */
 trait BerkDBJE extends DefaultStorage with Serializable {
 

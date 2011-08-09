@@ -25,6 +25,12 @@ import java.io.File
 
 /**
  *  Caches Vertices in the store according to a least recently used (LRU) policy
+ *  It allows to cache any storage back end with a in-memory buffer.
+ *  
+ *  @param persistentStorageFactory function that creates the storage that should be buffered
+ *  @param storage the storage object that also contains the toSignal and toCollect collections.
+ *  @param capacity optionally limits the number of entries that may be cached
+ *  @param inMemoryRatio the percentage of main memory that is allowed to be used.
  */
 class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
   storage: Storage,
@@ -35,6 +41,11 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
   protected lazy val persistentStore: VertexStore = persistentStorageFactory(storage)
   protected val cache = new LRUMap[Any, Vertex](persistentStore, capacity)
 
+  /**
+   * Returns the vertex with the specified Id from the storage
+   * 
+   * @return the vertex with that id or null if the store does not contain a vertex with this id.
+   */
   def get(id: Any): Vertex = {
     val result = cache.get(id)
     if (result != None) {
@@ -44,7 +55,12 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
-  def put(vertex: Vertex) = {
+  /**
+   * Adds a vertex to the cache if the cache is not exhausted or else adds it to the persistent storage.
+   * 
+   * @return true if the insertion was successful or false if the storage already contains a vertex with this id.
+   */
+  def put(vertex: Vertex): Boolean = {
     if (cache.contains(vertex.id) || persistentStore.get(vertex.id) != null) {
       false // Vertex already stored
     } else if (cache.size < capacity) {
@@ -54,6 +70,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
       var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
       if (CACHING_THRESHOLD.isDefined && (usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD.get) {
         capacity = cache.size
+        cache.setCapacity(capacity)
       }
       true
     } else {
@@ -61,6 +78,11 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
+  /**
+   * Removes the vertex with the specified id from the storage
+   * 
+   * @param the id of the vertex that should be removed.
+   */
   def remove(id: Any) {
     if (cache.contains(id)) {
       cache.remove(id)
@@ -71,6 +93,10 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     }
   }
 
+  /**
+   * Updates the state of the vertex if the vertex is not contained in the cache.
+   * If the vertex is contained in the cache it does not have to be retained since it is held in memory.
+   */
   def updateStateOfVertex(vertex: Vertex) {
     if (!cache.contains(vertex.id)) {
       persistentStore.updateStateOfVertex(vertex)
@@ -79,11 +105,19 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   def size: Long = persistentStore.size + cache.size
 
+  /**
+   * Applies the function to each vertex in the cache and in the cached storage.
+   * 
+   * @param f the function to apply
+   */
   def foreach[U](f: (Vertex) => U) {
     cache.applyFunction(f)
     persistentStore.foreach(f)
   }
 
+  /**
+   * removes all entries from the cache as well as from the cached storage
+   */
   def cleanUp {
     persistentStore.cleanUp
     cache.clear
@@ -91,11 +125,13 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 }
 
 /**
- * Least Recently Used Map
- *
- * Keeps entries in the order of the last access (insertions also count as an access)
+ * Least Recently Used Map data structure that, keeps entries in the order of the last access (insertions also count as an access)
+ * when the maximum capacity is exceeded the supernumerous entries are stored to the other storage entity.
+ * 
+ * @param storage the vertex storage to hold all the vertices that do not fit into the storage any more.
+ * @maxCapcity = the maximum capacity of the storage
  */
-class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap[A, B] {
+class LRUMap[A, B](storage: VertexStore, var maxCapacity: Int) extends LinkedHashMap[A, B] {
 
   override def put(key: A, value: B): Option[B] = {
     val res = super.put(key, value)
@@ -113,13 +149,19 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
     res
   }
 
-  def serializeLRU {
+  /**
+   * Removes an entry from the cache and stores it in the larger storage.
+   */
+  protected def serializeLRU {
     val vertexToSerialize = this.firstEntry.value
     storage.put(vertexToSerialize.asInstanceOf[Vertex]);
     remove(firstEntry.key)
   }
 
-  def updateUsage(key: A) {
+  /**
+   * Corrects the order of the linked list on update
+   */
+  protected def updateUsage(key: A) {
     val entry = this.findEntry(key)
     if (entry == this.lastEntry) {
       //No need to move it back
@@ -146,10 +188,25 @@ class LRUMap[A, B](storage: VertexStore, maxCapacity: Int) extends LinkedHashMap
   def applyFunction[U](f: (Vertex) => U) {
     foreachEntry(entry => f(entry.value.asInstanceOf[Vertex]))
   }
+  
+  /**
+   * Resets the capacity of the cache and removes supernumerous entries from the cache
+   */
+  def setCapacity(capacity: Int) {
+    while(maxCapacity>capacity) {
+      serializeLRU
+      maxCapacity-=1
+    }
+    maxCapacity=capacity //in case the capacity increased
+  }
 
 }
 
-trait LRUCache extends DefaultStorage {
+/**
+ * Allows the Default storage to use the a cached version of Berkeley DB as its storage back end. 
+ * However Berkeley DB has its own caching strategy that is more efficient in most scenarios.
+ */
+trait CachedBerkeley extends DefaultStorage {
 
   def berkeleyDBFactory(storage: Storage) = {
     var folderPath: String = "sc-berkeley"
