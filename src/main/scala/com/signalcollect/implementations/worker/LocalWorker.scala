@@ -84,6 +84,7 @@ class LocalWorker(val workerId: Int,
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)	
         vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
           processInbox
           val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, false)
