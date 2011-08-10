@@ -48,10 +48,10 @@ class WorkerOperationCounters(
   var collectSteps: Long = 0l)
 
 class LocalWorker(val workerId: Int,
-                  workerConfig: WorkerConfiguration,
-                  numberOfWorkers: Int,
-                  coordinator: Any,
-                  mapper: VertexToWorkerMapper)
+  workerConfig: WorkerConfiguration,
+  numberOfWorkers: Int,
+  coordinator: Any,
+  mapper: VertexToWorkerMapper)
   extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
@@ -86,7 +86,7 @@ class LocalWorker(val workerId: Int,
       if (!isPaused) {
         vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
           processInbox
-          val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals)
+          val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, false)
           if (collectExecuted) {
             executeSignalOperationOfVertex(vertexId)
           }
@@ -102,7 +102,7 @@ class LocalWorker(val workerId: Int,
   protected def process(message: Any) {
     counters.messagesReceived += 1
     val currentTime = System.currentTimeMillis
-    if(currentTime-lastStatusUpdate > statusUpdateIntervallInMillis.getOrElse(Long.MaxValue)) {
+    if (currentTime - lastStatusUpdate > statusUpdateIntervallInMillis.getOrElse(Long.MaxValue)) {
       lastStatusUpdate = currentTime
       sendStatusToCoordinator
     }
@@ -124,6 +124,9 @@ class LocalWorker(val workerId: Int,
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
       vertex.afterInitialization(messageBus)
+      if(vertex.scoreSignal>signalThreshold) {
+        vertexStore.toSignal.add(vertex.id)
+      }
     }
   }
 
@@ -276,9 +279,8 @@ class LocalWorker(val workerId: Int,
   def collectStep: Boolean = {
     debug("collectStep")
     counters.collectSteps += 1
-    vertexStore.toCollect foreach( (vertexId, uncollectedSignalsList) => {
+    vertexStore.toCollect foreach ((vertexId, uncollectedSignalsList) => {
       executeCollectOperationOfVertex(vertexId, uncollectedSignalsList)
-      vertexStore.toSignal.add(vertexId)
     }, true)
     vertexStore.toSignal.isEmpty
   }
@@ -292,11 +294,7 @@ class LocalWorker(val workerId: Int,
       numberOfVertices = vertexStore.vertices.size,
       verticesAdded = counters.verticesAdded,
       verticesRemoved = counters.verticesRemoved,
-      numberOfOutgoingEdges = {
-        var outgoingEdgeCount = 0l
-        foreachVertex(outgoingEdgeCount += _.outgoingEdgeCount)
-        outgoingEdgeCount
-      },
+      numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
       outgoingEdgesAdded = counters.outgoingEdgesAdded,
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
@@ -317,7 +315,7 @@ class LocalWorker(val workerId: Int,
   protected var collectThreshold = 0.0
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
-    
+
   protected var lastStatusUpdate = System.currentTimeMillis()
   protected var statusUpdateIntervallInMillis = workerConfig.statusUpdateIntervallInMillis
 
@@ -361,7 +359,7 @@ class LocalWorker(val workerId: Int,
     }
 
   }
-  
+
   override protected def processInbox {
     var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
     while (message != null) {
@@ -369,9 +367,8 @@ class LocalWorker(val workerId: Int,
       message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
     }
   }
- 
 
-  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[SignalMessage[_, _, _]]): Boolean = {
+  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[SignalMessage[_, _, _]], addToSignal:Boolean = true): Boolean = {
     debug("executeCollectOperationOfVertex(" + vertexId + ", " + uncollectedSignalsList + ")")
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
@@ -383,6 +380,9 @@ class LocalWorker(val workerId: Int,
         vertexStore.vertices.updateStateOfVertex(vertex)
         debug(vertex + " is done collecting")
         hasCollected = true
+        if(addToSignal && vertex.scoreSignal>signalThreshold) {
+          vertexStore.toSignal.add(vertex.id)
+        }
       }
     } else {
       uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphApi))
@@ -403,7 +403,7 @@ class LocalWorker(val workerId: Int,
         debug(vertex + " is done signaling")
         hasSignaled = true
       } else {
-      debug("Signal score " + vertex.scoreSignal + " of vertex " + vertex + " is below threshold.")
+        debug("Signal score " + vertex.scoreSignal + " of vertex " + vertex + " is below threshold.")
       }
     } else {
       debug("OOOOOPS, vertex not found")

@@ -63,7 +63,6 @@ class OnDiskVertexSignalBuffer(envFolderPath: String = "sc_toCollect") extends V
   dataBaseConfig.setAllowCreate(true)
   dataBaseConfig.setTransactional(false)
   val db = env.openDatabase(null, RandomString("toCollect", 4), dataBaseConfig)
-  var cursor: Cursor = db.openCursor(null, CursorConfig.DEFAULT)
 
   /**
    * Adds a new entry for the recipient of that signal to the database if the recipient is not already stored. That entry contains the signal that is provided.
@@ -130,7 +129,7 @@ class OnDiskVertexSignalBuffer(envFolderPath: String = "sc_toCollect") extends V
    * @return Iteration over all entries was completed.
    */
   def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean = {
-    cursor = db.openCursor(null, CursorConfig.DEFAULT)
+    val cursor = db.openCursor(null, CursorConfig.DEFAULT)
     var key = new DatabaseEntry()
     var value = new DatabaseEntry()
     if (cursor.getFirst(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {

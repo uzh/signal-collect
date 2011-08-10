@@ -61,7 +61,6 @@ class OnDiskVertexIdSet(envFolderPath: String = "sc_toSignal") extends VertexIdS
   dataBaseConfig.setAllowCreate(true)
   dataBaseConfig.setTransactional(false)
   val db = env.openDatabase(null, RandomString("toCollect", 4), dataBaseConfig)
-  var cursor: Cursor = db.openCursor(null, CursorConfig.DEFAULT)
 
   /**
    * Adds a new ID to the data base
@@ -70,7 +69,7 @@ class OnDiskVertexIdSet(envFolderPath: String = "sc_toSignal") extends VertexIdS
    */
   def add(vertexId: Any): Unit = {
     val key = new DatabaseEntry(DefaultSerializer.write(vertexId))
-    var value = new DatabaseEntry()
+    var value = new DatabaseEntry(new Array[Byte](0))
     if (!(db.putNoOverwrite(null, key, value) == OperationStatus.KEYEXIST)) {
       count += 1
     }

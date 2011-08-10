@@ -65,8 +65,6 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
       false // Vertex already stored
     } else if (cache.size < capacity) {
       cache.put(vertex.id, vertex)
-      storage.toCollect.addVertex(vertex.id)
-      storage.toSignal.add(vertex.id)
       var usedMemory = Runtime.getRuntime().totalMemory.asInstanceOf[Float] - Runtime.getRuntime().freeMemory
       if (CACHING_THRESHOLD.isDefined && (usedMemory / Runtime.getRuntime().maxMemory) > CACHING_THRESHOLD.get) {
         capacity = cache.size

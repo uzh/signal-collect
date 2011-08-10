@@ -64,7 +64,7 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   val envConfig = new EnvironmentConfig()
   envConfig.setAllowCreate(true)
   envConfig.setLocking(false)
-  //envConfig.setCachePercent(20)
+  envConfig.setCachePercent(1)
 
   /* Create folder for environment */
   var envFolder = new File(envFolderPath)
@@ -114,8 +114,6 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
   def put(vertex: Vertex): Boolean = {  
    val insertSuccessful = primaryIndex.putNoOverwrite(new Vertex2EntityAdapter(vertex.id.toString, serializer.write(vertex)))
    if(insertSuccessful) {
-      storage.toCollect.addVertex(vertex.id)
-      storage.toSignal.add(vertex.id)
       count += 1l
    }
    insertSuccessful
