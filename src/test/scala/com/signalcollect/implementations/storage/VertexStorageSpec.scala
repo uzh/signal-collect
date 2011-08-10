@@ -50,12 +50,12 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
       inMemoryStore.vertices.size must_== vertexList.size
     }
 
-    "add all added vertices to the toSignal list" in {
-      inMemoryStore.toSignal.size must_== vertexList.size
+    "don't add vertices automatically to the toSignal list" in {
+      inMemoryStore.toSignal.size must_== 0
     }
 
-    "add all added vertices to the toCollect list" in {
-      inMemoryStore.toCollect.size must_== vertexList.size
+    "don't add vertices automatically to the toCollect list" in {
+      inMemoryStore.toCollect.size must_== 0
     }
 
     "remove vertices from the store" in {
@@ -84,12 +84,12 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         berkeleyStore.vertices.size must_== vertexList.size
       }
 
-      "add all added vertices to the toSignal list" in {
-        berkeleyStore.toSignal.size must_== vertexList.size
+      "don't add vertices automatically to the toSignal list" in {
+        berkeleyStore.toSignal.size must_== 0
       }
 
-      "add all added vertices to the toCollect list" in {
-        berkeleyStore.toCollect.size must_== vertexList.size
+      "don't add vertices automatically to the toCollect list" in {
+        berkeleyStore.toCollect.size must_== 0
       }
 
       "reflect changes on a vertex" in {
@@ -142,12 +142,12 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
         cachedStore.vertices.size must_== vertexList.size
       }
 
-      "add all added vertices to the toSignal list" in {
-        cachedStore.toSignal.size must_== vertexList.size
+      "don't add vertices automatically to the toSignal list" in {
+        cachedStore.toSignal.size must_== 0
       }
 
-      "add all added vertices to the toCollect list" in {
-        cachedStore.toCollect.size must_== vertexList.size
+      "don't add vertices automatically to the toCollect list" in {
+        cachedStore.toCollect.size must_== 0
       }
 
       "clean up after execution" in {
