@@ -53,8 +53,6 @@ abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
     uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
   }
 
-  def getVertexIdsOfPredecessors: Option[Iterable[_]] = None
-
   /**
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
@@ -63,7 +61,5 @@ abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
     uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
     state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
   }
-
-  def getMostRecentSignal(id: EdgeId[_, _]): Option[Any] = None
 
 }

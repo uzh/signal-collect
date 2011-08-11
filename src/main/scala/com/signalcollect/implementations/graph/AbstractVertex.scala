@@ -39,6 +39,17 @@ import java.util.LinkedList
 abstract class AbstractVertex extends Vertex {
 
   /**
+   * Returns the ids of all vertices from which this vertex has an incoming edge, optional.
+   */
+  def getVertexIdsOfPredecessors: Option[Iterable[_]] = None
+
+  /**
+   * Returns the most recent signal sent via the edge with the id @edgeId. None if this function is not
+   * supported or if there is no such signal.
+   */
+  def getMostRecentSignal(id: EdgeId[_, _]): Option[Any] = None
+  
+  /**
    * hashCode is cached for better performance
    */
   override val hashCode = this.id.hashCode

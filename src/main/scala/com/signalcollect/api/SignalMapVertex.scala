@@ -51,7 +51,7 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
     mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
   }
 
-  def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
+  override def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
     mostRecentSignalMap.get(id.asInstanceOf[EdgeId[Id, _]])
   }
 
@@ -67,7 +67,7 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
     state = collect(mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
   }
 
-  def getVertexIdsOfPredecessors: Option[Iterable[_]] = {
+  override def getVertexIdsOfPredecessors: Option[Iterable[_]] = {
     Some(mostRecentSignalMap.keys map (_.sourceId))
   }
   
