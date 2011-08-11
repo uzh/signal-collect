@@ -20,8 +20,8 @@
 package com.signalcollect.configuration
 
 import com.signalcollect.interfaces._
-
 import java.util.HashMap
+import com.signalcollect.implementations.logging.LoggingLevel
 
 /**
  * Main configuration for Signal Collect. Used for constructing a [compute graph]
@@ -33,6 +33,8 @@ trait Configuration {
   
   def maxInboxSize: Option[Long]
 
+  def loggingLevel: Int
+  
   def customLogger: Option[MessageRecipient[LogMessage]]
 
   def workerConfiguration: WorkerConfiguration
@@ -43,6 +45,7 @@ trait Configuration {
 
 case class DefaultLocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
 									 maxInboxSize: Option[Long] = None, //Some(Runtime.getRuntime.availableProcessors*5000),
+									 loggingLevel: Int = LoggingLevel.Warning,
                                      customLogger: Option[MessageRecipient[LogMessage]] = None,
                                      workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
                                      executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

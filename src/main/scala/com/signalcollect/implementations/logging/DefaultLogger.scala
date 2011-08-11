@@ -19,8 +19,8 @@
 
 package com.signalcollect.implementations.logging
 
-import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.MessageRecipient
 
 class DefaultLogger extends MessageRecipient[LogMessage] {
   

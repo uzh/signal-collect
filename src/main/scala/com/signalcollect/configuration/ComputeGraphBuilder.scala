@@ -21,6 +21,7 @@ package com.signalcollect.configuration
 
 import com.signalcollect.api._
 import com.signalcollect.interfaces._
+import com.signalcollect.implementations.logging.LoggingLevel
 
 /**
  * The configuration builder are intended for Java users.
@@ -43,6 +44,8 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
    */
   def withNumberOfWorkers(newNumberOfWorkers: Int) = newLocalBuilder(numberOfWorkers = newNumberOfWorkers)
 
+  def withLoggingLevel(newLoggingLevel: Int) = newLocalBuilder(loggingLevel = newLoggingLevel)
+  
   def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(customLogger = Some(logger))
 
   def withExecutionConfiguration(newExecutionConfiguration: ExecutionConfiguration) = newLocalBuilder(executionConfiguration = newExecutionConfiguration)
@@ -61,6 +64,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
    */
   def newLocalBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
+    loggingLevel: Int = LoggingLevel.Warning,
     customLogger: Option[MessageRecipient[LogMessage]] = config.customLogger,
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
@@ -69,6 +73,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
     new ComputeGraphBuilder(
       DefaultLocalConfiguration(
         numberOfWorkers = numberOfWorkers,
+        loggingLevel = loggingLevel,
         customLogger = customLogger,
         workerConfiguration = DefaultLocalWorkerConfiguration(
           workerFactory = workerFactory,

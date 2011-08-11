@@ -23,16 +23,17 @@ import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging._
 import com.signalcollect.api.factory._
-
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-
 import scala.collection.parallel.mutable.ParArray
 import scala.collection.JavaConversions._
+import com.signalcollect.implementations.logging.Logging
 
 class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 
+  protected val loggingLevel = config.loggingLevel
+  
   override def toString = "WorkerApi"
 
   // initialize workers array
@@ -51,7 +52,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     val workerFactory = config.workerConfiguration.workerFactory
 
     // create the worker
-    val worker = workerFactory.createInstance(workerId, workerConfiguration, config.numberOfWorkers, this, mapper)
+    val worker = workerFactory.createInstance(workerId, workerConfiguration, config.numberOfWorkers, this, mapper, config.loggingLevel)
 
     // put it to the array of workers
     workers(workerId) = worker
@@ -85,7 +86,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   protected def createWorkerProxies: Array[Worker] = {
     val workerProxies = new Array[Worker](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      val workerProxy = WorkerProxy.create(workerId, workerProxyMessageBuses(workerId))
+      val workerProxy = WorkerProxy.create(workerId, workerProxyMessageBuses(workerId), config.loggingLevel)
       workerProxies(workerId) = workerProxy
     }
     workerProxies

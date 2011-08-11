@@ -76,7 +76,8 @@ package factory {
                          workerConfig: WorkerConfiguration,
                          numberOfWorkers: Int,
                          coordinator: Any,
-                         mapper: VertexToWorkerMapper): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper)
+                         mapper: VertexToWorkerMapper,
+                         loggingLevel: Int): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper, loggingLevel)
     }
 
   }

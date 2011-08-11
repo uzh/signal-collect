@@ -35,6 +35,7 @@ import java.util.Set
 import com.signalcollect.implementations.coordinator.DefaultGraphApi
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import com.signalcollect.implementations.coordinator.WorkerApi
+import com.signalcollect.implementations.logging.Logging
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -51,7 +52,8 @@ class LocalWorker(val workerId: Int,
   workerConfig: WorkerConfiguration,
   numberOfWorkers: Int,
   coordinator: Any,
-  mapper: VertexToWorkerMapper)
+  mapper: VertexToWorkerMapper,
+  val loggingLevel: Int)
   extends AbstractMessageRecipient[Any]
   with Worker
   with Logging
