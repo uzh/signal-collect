@@ -26,7 +26,6 @@ import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
 import com.signalcollect.api._
 import java.lang.reflect.Method
-import com.signalcollect.implementations.logging.Logging
 
 object WorkerProxy {
 
@@ -73,8 +72,8 @@ class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any], val loggin
         monitor.notify
       }
     } else {
-      debug("Worker" + workerId + "." + method.getName)
       val command = { worker: Worker =>
+        worker.debug(method, arguments: _*)
         val result = method.invoke(worker, arguments: _*)
         val reply = WorkerReply(worker.workerId, result)
         worker.messageBus.sendToCoordinator(reply)

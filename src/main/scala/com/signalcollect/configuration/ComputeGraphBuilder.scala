@@ -21,7 +21,6 @@ package com.signalcollect.configuration
 
 import com.signalcollect.api._
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.logging.LoggingLevel
 
 /**
  * The configuration builder are intended for Java users.

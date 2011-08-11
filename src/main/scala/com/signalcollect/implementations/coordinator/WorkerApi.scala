@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.parallel.mutable.ParArray
 import scala.collection.JavaConversions._
-import com.signalcollect.implementations.logging.Logging
 
 class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
 

@@ -21,7 +21,6 @@ package com.signalcollect.configuration
 
 import com.signalcollect.interfaces._
 import java.util.HashMap
-import com.signalcollect.implementations.logging.LoggingLevel
 
 /**
  * Main configuration for Signal Collect. Used for constructing a [compute graph]
