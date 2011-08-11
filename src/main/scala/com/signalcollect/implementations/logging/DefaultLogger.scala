@@ -22,7 +22,7 @@ package com.signalcollect.implementations.logging
 import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageRecipient
 
-class DefaultLogger extends MessageRecipient[LogMessage] {
+class DefaultLogger extends MessageRecipient[LogMessage] with Serializable {
   
   def receive(logMessage: LogMessage) = {
 	  println(logMessage.from + ": " + logMessage.msg)
