@@ -63,7 +63,7 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
    */
   def newLocalBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
-    loggingLevel: Int = LoggingLevel.Warning,
+    loggingLevel: Int = config.loggingLevel,
     customLogger: Option[MessageRecipient[LogMessage]] = config.customLogger,
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
