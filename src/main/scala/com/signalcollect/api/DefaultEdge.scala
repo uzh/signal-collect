@@ -32,6 +32,13 @@ abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
 
   val id = DefaultEdgeId(sourceId, targetId, description)
 
+  /**
+   * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
+   * this function will be called during algorithm execution. It is meant to calculate a signal
+   * going from the source vertex of this edge to the target vertex of this edge.
+   */
+  def signal(sourceVertex: SourceVertex): Signal
+  
   /** The hash code of the target vertex. */
   val cachedTargetIdHashCode = id.targetId.hashCode
 
@@ -45,5 +52,5 @@ abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
   def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
     mb.sendToWorkerForVertexIdHash(SignalMessage(id, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
   }
-
+  
 }

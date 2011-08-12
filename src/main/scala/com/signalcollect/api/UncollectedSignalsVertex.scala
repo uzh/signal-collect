@@ -45,6 +45,13 @@ abstract class UncollectedSignalsVertex[IdTypeParameter, StateTypeParameter](
   type Id = IdTypeParameter
   type State = StateTypeParameter
 
+  /**
+   * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
+   * this function will be called during algorithm execution. It is meant to calculate a new vertex state
+   * based on the {@link Signal}s received by this vertex.
+   */
+  def collect(signals: Iterable[Signal]): State
+  
   /** a buffer containing uncollected messages */
   protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
 

@@ -21,11 +21,12 @@ package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.Vertex
+import scala.reflect.BeanProperty
 
 trait SumOfOutWeights extends AbstractVertex {  
 
   /** @return the sum of the weights of all outgoing edges of this {@link FrameworkVertex}. */
-  var sumOfOutWeights: Double = 0
+  @BeanProperty var sumOfOutWeights: Double = 0
 
   abstract override def addOutgoingEdge(e: Edge): Boolean = {
     val added = super.addOutgoingEdge(e)

@@ -104,9 +104,9 @@ trait ComputeGraph extends GraphApi {
   def recalculateScoresForVertexWithId(vertexId: Any)
 
   /**
-   * Shuts down the compute graph and frees associated resources.
+   *  Shuts down the compute graph and frees associated resources.
    *
-   * @note If methods on a ComputeGraph instance get called after having called `shutdown`, then the behavior is not specified.
+   *  @note If methods on a ComputeGraph instance get called after having called `shutdown`, then the behavior is not specified.
    */
   def shutdown
 

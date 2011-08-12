@@ -41,13 +41,6 @@ trait Edge extends Serializable {
   /** called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertex) = {}
   
-  /**
-   * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
-   * this function will be called during algorithm execution. It is meant to calculate a signal
-   * going from the source vertex of this edge to the target vertex of this edge.
-   */
-  def signal(sourceVertex: SourceVertex): Signal
-
   /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
   def weight: Double = 1
 

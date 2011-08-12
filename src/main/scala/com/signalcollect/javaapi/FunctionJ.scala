@@ -19,17 +19,15 @@
 
 package com.signalcollect.javaapi
 
-import com.signalcollect.interfaces.Vertex
+import com.signalcollect.implementations.graph._
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Map
+import com.signalcollect.interfaces._
+import com.signalcollect.util.collections.Filter
+import com.signalcollect.interfaces.MessageBus
+import scala.reflect.BeanProperty
 
-abstract class VertexFunction extends Function1[Vertex, Object] {
-  def apply(v: Vertex) = f(v)
-  
-  def f(v: Vertex): Object
-}
- 
-class PrintVertexJ extends VertexFunction {
-   def f(v: Vertex) = {
-     println(v)
-     null
-   }
+abstract class FunctionJ[ReturnValueType] extends Function1[Vertex, ReturnValueType] {
+  def apply(v: Vertex): ReturnValueType = f(v)
+  def f(v: Vertex): ReturnValueType
 }
