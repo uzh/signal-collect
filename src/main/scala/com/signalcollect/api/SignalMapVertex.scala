@@ -45,14 +45,21 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
   type Id = IdTypeParameter
   type State = StateTypeParameter
   
-  protected val mostRecentSignalMap: Map[EdgeId[Id, _], Signal] = HashMap[EdgeId[Id, _], Signal]() // key: signal source id, value: signal
+  /**
+   * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
+   * this function will be called during algorithm execution. It is meant to calculate a new vertex state
+   * based on the {@link Signal}s received by this vertex.
+   */
+  def collect(signals: Iterable[Signal]): State
+  
+  protected val mostRecentSignalMap: Map[EdgeId[_, Id], Signal] = HashMap[EdgeId[_, Id], Signal]() // key: signal source id, value: signal
 
   protected def signals[G](filterClass: Class[G]): Iterable[G] = {
     mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
   }
 
   override def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
-    mostRecentSignalMap.get(id.asInstanceOf[EdgeId[Id, _]])
+    mostRecentSignalMap.get(id.asInstanceOf[EdgeId[_, Id]])
   }
 
   /**
@@ -60,7 +67,7 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
    * @see #collect
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
-    val castS = signals.asInstanceOf[Iterable[SignalMessage[Id, Any, Signal]]]
+    val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
     castS foreach { signal =>
       mostRecentSignalMap.put(signal.edgeId, signal.signal)
     }
