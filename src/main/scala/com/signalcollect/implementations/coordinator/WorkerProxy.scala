@@ -83,8 +83,6 @@ class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any], val loggin
       /*
        * Blocking operation, until receive of worker reply by coordinator
        * The reply will trigger the invoke again with receive method
-       * 
-       * TODO: catch exception for remote worker response time
        */
       if (workerMessage == null) {
         monitor.synchronized {

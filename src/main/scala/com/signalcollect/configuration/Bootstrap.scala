@@ -22,6 +22,7 @@ package com.signalcollect.configuration
 import com.signalcollect.api._
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.coordinator._
+import com.signalcollect.implementations.logging._
 import com.signalcollect.configuration._
 
 /**
@@ -39,10 +40,10 @@ trait Bootstrap {
   def config: Configuration
 
   /**
-   * Creates the logger system based on the type of architecture selected.
+   * Creates the logger system
    * This in turn helps the system to have the right logger for usage.
    */
-  protected def createLogger: MessageRecipient[LogMessage]
+  protected def createLogger: MessageRecipient[LogMessage] = new DefaultLogger
 
   /**
    * The correct execution for the startup of signal collect's infrastructure
@@ -51,7 +52,10 @@ trait Bootstrap {
   def boot: ComputeGraph = {
 
     // create optional logger
-    var logger = createLogger
+    var logger = if (config.customLogger.isDefined)
+      config.customLogger.get
+    else
+      createLogger
 
     val workerApi = new WorkerApi(config, logger)
 

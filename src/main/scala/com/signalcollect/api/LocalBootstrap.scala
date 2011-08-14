@@ -22,15 +22,12 @@ package com.signalcollect.api
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator._
-import com.signalcollect.implementations.logging._
 import com.signalcollect.api.factory._
 
 /**
  * Booting sequence for running Signal Collect locally
  */
 class LocalBootstrap(val config: Configuration) extends Bootstrap {
-
-  protected def createLogger: MessageRecipient[LogMessage] = new DefaultLogger
 
   protected def createWorkers(workerApi: WorkerApi) {
 
