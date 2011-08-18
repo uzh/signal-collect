@@ -20,13 +20,16 @@
 package com.signalcollect.javaapi;
 
 import com.signalcollect.interfaces.*;
+
 import scala.collection.JavaConversions;
+import com.signalcollect.*;
+
 import java.util.HashMap;
 
 @SuppressWarnings("serial")
-public abstract class SignalMapVertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> extends VertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> {
+public abstract class DataGraphVertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> extends VertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> {
 
-	public SignalMapVertexJ(IdTypeParameter vertexId, StateTypeParameter initialState) {
+	public DataGraphVertexJ(IdTypeParameter vertexId, StateTypeParameter initialState) {
 		super(vertexId, initialState);
 	}
 	

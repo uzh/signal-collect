@@ -17,7 +17,9 @@
  *  
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect
+
+import com.signalcollect.interfaces.MessageBus
 
 case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId] 
 

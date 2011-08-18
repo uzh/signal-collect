@@ -1,10 +1,7 @@
 package com.signalcollect.javaapi.examples;
 
-import com.signalcollect.interfaces.Vertex;
-import com.signalcollect.interfaces.ComputeGraph;
-import com.signalcollect.api.*;
+import com.signalcollect.*;
 import com.signalcollect.javaapi.*;
-import com.signalcollect.configuration.*;
 
 public class PageRankJ {
 
@@ -14,7 +11,7 @@ public class PageRankJ {
 	}
 
 	public void executePageRank() {
-		ComputeGraph cg = DefaultComputeGraphBuilder.build();
+		Graph cg = Builder.build();
 		cg.addVertex(new PageJ(1, 0.15));
 		cg.addVertex(new PageJ(2, 0.15));
 		cg.addVertex(new PageJ(3, 0.15));

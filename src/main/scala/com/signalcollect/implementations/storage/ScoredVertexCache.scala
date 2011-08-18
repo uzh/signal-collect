@@ -22,6 +22,7 @@ import com.signalcollect.interfaces._
 import scala.concurrent.Lock
 import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
+import com.signalcollect._
 
 /**
  * Can be used to cache vertices based on some scoring function.

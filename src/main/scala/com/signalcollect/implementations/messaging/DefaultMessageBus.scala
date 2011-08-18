@@ -19,7 +19,6 @@
 
 package com.signalcollect.implementations.messaging
 
-import com.signalcollect._
 import com.signalcollect.interfaces._
 import java.util.HashMap
 import com.signalcollect.implementations.logging.DefaultLogger

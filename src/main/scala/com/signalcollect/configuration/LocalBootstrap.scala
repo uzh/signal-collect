@@ -17,12 +17,13 @@
  *  
  */
 
-package com.signalcollect.api
+package com.signalcollect.configuration
 
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator._
-import com.signalcollect.api.factory._
+import com.signalcollect.factory._
+import com.signalcollect.factory.worker._
 
 /**
  * Booting sequence for running Signal Collect locally

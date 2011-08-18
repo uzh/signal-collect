@@ -23,6 +23,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.parallel.immutable.ParHashMap
 import com.signalcollect.interfaces._
 import scala.collection.GenMap
+import com.signalcollect.EdgeId
 
 trait VertexDebugging extends AbstractVertex { 
     

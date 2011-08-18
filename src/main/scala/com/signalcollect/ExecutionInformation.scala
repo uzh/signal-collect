@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect.api
+package com.signalcollect
 
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._

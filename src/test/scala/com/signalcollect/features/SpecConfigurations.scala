@@ -23,7 +23,6 @@ import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import com.signalcollect._
-import com.signalcollect.api._
 import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
@@ -31,12 +30,12 @@ import com.signalcollect.configuration._
 
 trait SpecConfigurations {
 
-  def computeGraphBuilders = List(DefaultComputeGraphBuilder)
+  def computeGraphBuilders = List(Builder)
   def numberOfWorkers = List(1, 2, 4, 8, 16, 32, 64, 128)
   def executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
-  def computeGraphs: Seq[ComputeGraph] = {
-    var computeGraphs = Seq[ComputeGraph]()
+  def computeGraphs: Seq[Graph] = {
+    var computeGraphs = Seq[Graph]()
     for (workers <- numberOfWorkers) {
       for (computeGraphBuilder <- computeGraphBuilders) {
         computeGraphs = computeGraphBuilder.withNumberOfWorkers(workers).build +: computeGraphs

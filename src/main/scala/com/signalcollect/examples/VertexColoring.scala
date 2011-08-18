@@ -19,9 +19,8 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
+import com.signalcollect._
 import scala.util.Random
-import com.signalcollect.configuration._
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
@@ -35,7 +34,7 @@ import com.signalcollect.configuration._
  * @param id: the vertex id
  * @param numColors: the number of colors (labels) used to color the graph
  */
-class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean = false) extends SignalMapVertex(id, initialColor) {
+class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean = false) extends DataGraphVertex(id, initialColor) {
 
   /**
    * Indicates that every signal this vertex receives is
@@ -102,7 +101,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = DefaultComputeGraphBuilder.build
+  val cg = Builder.build
   cg.addVertex(new ColoredVertex(1, 2, 1))
   cg.addVertex(new ColoredVertex(2, 2, 1))
   cg.addVertex(new ColoredVertex(3, 2, 1))

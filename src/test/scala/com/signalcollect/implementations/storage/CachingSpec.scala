@@ -27,7 +27,7 @@ import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import com.signalcollect.examples.Page
 import java.util.Map.Entry
-import com.signalcollect.api.SignalMapVertex
+import com.signalcollect.Vertex
 
 @RunWith(classOf[JUnitRunner])
 class CachingSpec extends SpecificationWithJUnit with Mockito {

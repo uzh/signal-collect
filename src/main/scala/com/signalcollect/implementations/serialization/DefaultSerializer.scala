@@ -18,9 +18,8 @@
 
 package com.signalcollect.implementations.serialization
 
-import com.signalcollect.interfaces.{Vertex, Serializer}
-import com.signalcollect.api.SignalMapVertex
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
+import com.signalcollect.interfaces.Serializer
 
 /**
  * Companion object for DefaultSerializer

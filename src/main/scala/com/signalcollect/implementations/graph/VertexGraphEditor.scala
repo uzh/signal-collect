@@ -17,25 +17,19 @@
  *  
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect.implementations.graph
 
-trait GraphApi {
+import com.signalcollect.interfaces._
+import com.signalcollect.GraphEditor
+import com.signalcollect.implementations.coordinator.DefaultGraphEditor
 
-  /**
-   * Sends a signal to the vertex with vertex.id=edgeId.targetId
-   */
-  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any)
-
-  def addVertex(vertex: Vertex)
-
-  def addEdge(edge: Edge)
-
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
-
-  def removeVertex(vertexId: Any)
-
-  def removeEdge(edgeId: EdgeId[Any, Any])
-
-  def removeVertices(shouldRemove: Vertex => Boolean)
+trait VertexGraphEditor extends AbstractVertex{
+  
+  protected var graphEditor: GraphEditor = _
+  
+  override def afterInitialization(messageBus: MessageBus[Any]) = {
+    graphEditor = DefaultGraphEditor.createInstance(messageBus)
+    super.afterInitialization(messageBus)
+  }
 
 }

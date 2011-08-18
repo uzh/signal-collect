@@ -19,14 +19,13 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
-import com.signalcollect.configuration._
+import com.signalcollect._
 
 /**
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = DefaultComputeGraphBuilder.build
+  val cg = Builder.build
 
   /**
    * Still need to test performance on complete and larger graphs
@@ -61,22 +60,16 @@ object Hamiltonian extends App {
  * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
  * 
  */
-class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends SignalMapVertex(id, initialState) {
+class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends DataGraphVertex(id, initialState) {
 
   override type Signal = Map[List[String], Int]
 
   /*
 	 * The state will contain all paths visited so far, not mattering the size of the path
 	 */
-  def collect(signals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
-
-    val signalsMap = mostRecentSignalMap toMap
-
-    // so that I can get the maps
-    val signals = (signalsMap keySet) map { x => signalsMap.get(x).get }
-
+  def collect(mostRecentSignals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
     // consolidate the maps into one map
-    val pathMap = signals reduceLeft (_ ++ _)
+    val pathMap = mostRecentSignals reduceLeft (_ ++ _)
 
     // add signal maps to state as a one map
     state = List(pathMap, state) reduceLeft (_ ++ _)

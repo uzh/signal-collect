@@ -19,10 +19,8 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
-import com.signalcollect.configuration._
+import com.signalcollect._
 import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.implementations.graph.VertexGraphApi
 
 /**
  *  Regular expression to match links in Html strings
@@ -38,7 +36,7 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = DefaultComputeGraphBuilder.build
+  val cg = Builder.build
   cg.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
   val stats = cg.execute
   cg.foreachVertex(println(_))
@@ -49,19 +47,17 @@ object WebCrawler extends App {
 /**
  *  Adds linked webpages as vertices to the graph and connects them with a link edge
  */
-class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends Page(id, dampingFactor) with VertexGraphApi {
-
-  var messageBus: MessageBus[Any] = _
+class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends Page(id, dampingFactor) {
 
   /** This method gets called by the framework after the vertex has been fully initialized. */
   override def afterInitialization(mb: MessageBus[Any]) {
-    messageBus = mb
+    super.afterInitialization(mb)
     if (crawlDepth > 0) {
       try {
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString
         Regex.hyperlink.findAllIn(webpage).matchData map (_.group(1)) foreach { linked =>
-          graphApi.addVertex(new Webpage(linked, crawlDepth - 1))
-          graphApi.addEdge(new Link(id, linked))
+          graphEditor.addVertex(new Webpage(linked, crawlDepth - 1))
+          graphEditor.addEdge(new Link(id, linked))
         }
       } catch {
         case _ =>

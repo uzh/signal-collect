@@ -19,12 +19,7 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
-import com.signalcollect.implementations.graph.SumOfOutWeights
-import com.signalcollect.configuration._
-import java.io.{ ByteArrayOutputStream, ByteArrayInputStream, ObjectOutputStream, ObjectInputStream }
-import com.signalcollect.interfaces._
-import java.util.LinkedList
+import com.signalcollect._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -50,7 +45,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
  *  @param id: the identifier of this vertex
  *  @param dampingFactor: @see <a href="http://en.wikipedia.org/wiki/PageRank">PageRank algorithm</a>
  */
-class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 - dampingFactor) with SumOfOutWeights {
+class Page(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
 
   type Signal = Double
 
@@ -70,7 +65,7 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends SignalMapVertex(id, 1 
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = DefaultComputeGraphBuilder.build
+  val cg = Builder.build
   cg.addVertex(new Page(1))
   cg.addVertex(new Page(2))
   cg.addVertex(new Page(3))

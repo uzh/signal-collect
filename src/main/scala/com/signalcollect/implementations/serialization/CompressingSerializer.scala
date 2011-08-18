@@ -18,8 +18,6 @@
 
 package com.signalcollect.implementations.serialization
 
-import com.signalcollect.interfaces.{ Vertex, Serializer }
-import com.signalcollect.api.SignalMapVertex
 import com.signalcollect.implementations.storage.DefaultStorage
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 import java.util.zip.{ Deflater, Inflater, DeflaterOutputStream, InflaterInputStream }

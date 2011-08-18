@@ -21,30 +21,11 @@ package com.signalcollect.configuration
 
 import com.signalcollect.interfaces._
 import java.util.HashMap
+import com.signalcollect._
 
-/**
- * Main configuration for Signal Collect. Used for constructing a [compute graph]
- * Use this for the Local Case
- */
-trait Configuration {
-
-  def numberOfWorkers: Int
-  
-  def maxInboxSize: Option[Long]
-
-  def loggingLevel: Int
-  
-  def customLogger: Option[MessageRecipient[LogMessage]]
-
-  def workerConfiguration: WorkerConfiguration
-
-  def executionConfiguration: ExecutionConfiguration
-
-}
-
-case class DefaultLocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+case class LocalConfiguration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
 									 maxInboxSize: Option[Long] = None, //Some(Runtime.getRuntime.availableProcessors*5000),
 									 loggingLevel: Int = LoggingLevel.Warning,
                                      customLogger: Option[MessageRecipient[LogMessage]] = None,
-                                     workerConfiguration: WorkerConfiguration = DefaultLocalWorkerConfiguration(),
+                                     workerConfiguration: WorkerConfiguration = LocalWorkerConfiguration(),
                                      executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration) extends Configuration

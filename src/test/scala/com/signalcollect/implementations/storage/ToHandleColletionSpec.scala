@@ -28,6 +28,7 @@ import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.DefaultMessageBus
 import com.signalcollect.examples.Page
 import java.io.File
+import com.signalcollect.EdgeId
 
 @RunWith(classOf[JUnitRunner])
 class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {

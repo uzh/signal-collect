@@ -19,28 +19,12 @@
 
 package com.signalcollect.configuration
 
-import com.signalcollect.api.factory._
+import com.signalcollect._
+import com.signalcollect.factory._
 import com.signalcollect.interfaces._
 
-/**
- * Generalization of worker configuration parameters for the worker constructor
- */
-trait WorkerConfiguration {
-  def workerFactory: WorkerFactory
-  def messageBusFactory: MessageBusFactory
-  def storageFactory: StorageFactory
-  def statusUpdateIntervallInMillis: Option[Long]
-
-  override def toString: String = {
-    "worker factory" + "\t" + workerFactory + "\n" +
-      "messagebus" + "\t" + messageBusFactory + "\n" +
-      "storage" + "\t" + "\t" + storageFactory
-  }
-
-}
-
-case class DefaultLocalWorkerConfiguration(
+case class LocalWorkerConfiguration(
   workerFactory: WorkerFactory = worker.Local,
   messageBusFactory: MessageBusFactory = messageBus.SharedMemory,
   storageFactory: StorageFactory = storage.InMemory,
-  statusUpdateIntervallInMillis: Option[Long] = None /*Some(500l)*/) extends WorkerConfiguration
+  statusUpdateIntervalInMillis: Option[Long] = None /*Some(500l)*/) extends WorkerConfiguration

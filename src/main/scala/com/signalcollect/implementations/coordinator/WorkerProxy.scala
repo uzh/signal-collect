@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-import com.signalcollect.api._
 import java.lang.reflect.Method
 
 object WorkerProxy {

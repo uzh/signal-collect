@@ -19,13 +19,15 @@
 
 package com.signalcollect.javaapi
 
-import com.signalcollect.implementations.graph._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
 import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
 import scala.reflect.BeanProperty
+import com.signalcollect.implementations.graph.AbstractVertex
+import com.signalcollect.implementations.graph.SumOfOutWeights
+import com.signalcollect.implementations.graph.VertexGraphEditor
 
 /**
  *  A version of the abstract vertex that serves as the foundation for the Java API vertices.
@@ -40,7 +42,7 @@ import scala.reflect.BeanProperty
 class VertexJ[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   @BeanProperty val id: IdTypeParameter,
   @BeanProperty var state: StateTypeParameter)
-  extends AbstractVertex with SumOfOutWeights {
+  extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {
 
   type Id = IdTypeParameter
   type State = StateTypeParameter

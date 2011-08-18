@@ -19,11 +19,12 @@
 
 package com.signalcollect.configuration
 
-import com.signalcollect.api._
+import com.signalcollect._
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.coordinator._
 import com.signalcollect.implementations.logging._
 import com.signalcollect.configuration._
+import com.signalcollect.implementations.graph.DefaultGraph
 
 /**
  * Bootstrap generalization for starting Signal Collect infrastructure
@@ -34,7 +35,7 @@ trait Bootstrap {
   protected val messageBus: MessageBus[Any] = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, null)
 
   // the compute graph, the heart of signal collect
-  protected var computeGraph: ComputeGraph = _
+  protected var computeGraph: Graph = _
 
   // the configuration for the system
   def config: Configuration
@@ -49,7 +50,7 @@ trait Bootstrap {
    * The correct execution for the startup of signal collect's infrastructure
    * This method is called to return the right Compute Graph based on the configuration given
    */
-  def boot: ComputeGraph = {
+  def boot: Graph = {
 
     // create optional logger
     var logger = if (config.customLogger.isDefined)
@@ -65,7 +66,7 @@ trait Bootstrap {
 
     val coordinator = new Coordinator(workerApi, config)
 
-    computeGraph = createComputeGraph(workerApi, coordinator)
+    computeGraph = createGraph(workerApi, coordinator)
 
     computeGraph
   }
@@ -78,8 +79,8 @@ trait Bootstrap {
   /**
    * Gets the compute graph instance properly configured
    */
-  protected def createComputeGraph(workerApi: WorkerApi, coordinator: Coordinator): ComputeGraph = {
-    new DefaultComputeGraph(config, workerApi, coordinator)
+  protected def createGraph(workerApi: WorkerApi, coordinator: Coordinator): Graph = {
+    new DefaultGraph(config, workerApi, coordinator)
   }
 
 }

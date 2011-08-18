@@ -19,6 +19,8 @@
 
 package com.signalcollect.interfaces
 
+import com.signalcollect._
+
 trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Logging {
   def workerId: Int
   def messageBus: MessageBus[Any]
@@ -37,7 +39,7 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any])
   def removeVertices(shouldRemove: Vertex => Boolean)
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
 
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)

@@ -21,8 +21,6 @@
 package com.signalcollect
 
 import com.signalcollect._
-import com.signalcollect.api._
-import com.signalcollect.api.factory._
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
@@ -40,14 +38,14 @@ import org.specs2.runner.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit {
 
-  val computeGraphFactories: List[Int => ComputeGraph] = List(
-    (numberOfWorkers: Int) => DefaultComputeGraphBuilder.withNumberOfWorkers(numberOfWorkers).build)
+  val computeGraphFactories: List[Int => Graph] = List(
+    (numberOfWorkers: Int) => Builder.withNumberOfWorkers(numberOfWorkers).build)
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 
   val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 
-  def test(graphProviders: List[Int => ComputeGraph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: ComputeGraph => Unit = (cg: ComputeGraph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
+  def test(graphProviders: List[Int => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (cg: Graph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
@@ -68,7 +66,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     correct
   }
 
-  def buildPageRankGraph(cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
+  def buildPageRankGraph(cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId: Int, targetId: Int) =>
         cg.addVertex(new Page(sourceId, 0.85))
@@ -78,7 +76,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     cg
   }
 
-  def buildVertexColoringGraph(numColors: Int, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
+  def buildVertexColoringGraph(numColors: Int, cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         cg.addVertex(new VerifiedColoredVertex(sourceId, numColors))
@@ -88,7 +86,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     cg
   }
 
-  def buildSsspGraph(pathSourceId: Any, cg: ComputeGraph, edgeTuples: Traversable[Tuple2[Int, Int]]): ComputeGraph = {
+  def buildSsspGraph(pathSourceId: Any, cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         if (sourceId.equals(pathSourceId)) {

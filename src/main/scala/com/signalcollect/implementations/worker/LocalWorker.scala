@@ -32,9 +32,10 @@ import java.util.LinkedHashSet
 import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
-import com.signalcollect.implementations.coordinator.DefaultGraphApi
+import com.signalcollect._
+import com.signalcollect.implementations.coordinator.DefaultGraphEditor
 import com.signalcollect.implementations.serialization.DefaultSerializer
-import com.signalcollect.implementations.coordinator.WorkerApi
+import com.signalcollect.implementations.coordinator.DefaultGraphEditor
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -98,8 +99,8 @@ class LocalWorker(val workerId: Int,
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphApi = DefaultGraphApi.createInstance(messageBus)
-  protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphApi) => Unit = (s, g) => {}
+  protected val graphApi: GraphEditor = DefaultGraphEditor.createInstance(messageBus)
+  protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
@@ -203,7 +204,7 @@ class LocalWorker(val workerId: Int,
     vertexStore.vertices.remove(vertex.id)
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit) {
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) {
     undeliverableSignalHandler = h
   }
 
@@ -303,7 +304,7 @@ class LocalWorker(val workerId: Int,
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
   protected var lastStatusUpdate = System.currentTimeMillis()
-  protected var statusUpdateIntervallInMillis = workerConfig.statusUpdateIntervallInMillis
+  protected var statusUpdateIntervallInMillis = workerConfig.statusUpdateIntervalInMillis
 
   protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 

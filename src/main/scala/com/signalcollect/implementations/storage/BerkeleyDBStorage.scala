@@ -27,6 +27,7 @@ import com.sleepycat.je.{ Environment, EnvironmentConfig }
 import com.sleepycat.persist.{ EntityCursor, EntityStore, StoreConfig }
 import scala.concurrent.Lock
 import com.signalcollect.implementations.serialization._
+import com.signalcollect._
 
 /**
  * Wrapper for vertices to be compatible with Berkeley DB JE

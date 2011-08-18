@@ -17,14 +17,14 @@
  *  
  */
 
-package com.signalcollect.api
+package com.signalcollect
 
 import com.signalcollect.implementations.graph._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Map
-import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
-import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.SignalMessage
+import scala.collection.mutable.Buffer
+import scala.collection.mutable.ListBuffer
+import com.signalcollect.interfaces._
 
 /**
  * [[com.signalcollect.interfaces.Vertex]] implementation that offers only
@@ -37,29 +37,27 @@ import com.signalcollect.interfaces.MessageBus
  * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
  * in general.
  */
-abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
+abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
   val id: IdTypeParameter,
   var state: StateTypeParameter)
-  extends AbstractVertex {
+  extends AbstractVertex with ResetStateAfterSignaling with VertexGraphEditor {
 
   type Id = IdTypeParameter
   type State = StateTypeParameter
-  
+
   /**
    * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
    * this function will be called during algorithm execution. It is meant to calculate a new vertex state
    * based on the {@link Signal}s received by this vertex.
    */
-  def collect(signals: Iterable[Signal]): State
+  def collect(uncollectedSignals: Iterable[Signal]): State
   
-  protected val mostRecentSignalMap: Map[EdgeId[_, Id], Signal] = HashMap[EdgeId[_, Id], Signal]() // key: signal source id, value: signal
+  /** a buffer containing uncollected messages */
+  protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
 
-  protected def signals[G](filterClass: Class[G]): Iterable[G] = {
-    mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
-  }
-
-  override def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
-    mostRecentSignalMap.get(id.asInstanceOf[EdgeId[_, Id]])
+  /** traversable uncollected signals */
+  protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
+    uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
   }
 
   /**
@@ -67,15 +65,8 @@ abstract class SignalMapVertex[IdTypeParameter, StateTypeParameter](
    * @see #collect
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
-    val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
-    castS foreach { signal =>
-      mostRecentSignalMap.put(signal.edgeId, signal.signal)
-    }
-    state = collect(mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
+    uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
+    state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
   }
 
-  override def getVertexIdsOfPredecessors: Option[Iterable[_]] = {
-    Some(mostRecentSignalMap.keys map (_.sourceId))
-  }
-  
 }

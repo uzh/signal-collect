@@ -17,7 +17,9 @@
  *  
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  * This class represents the framework's view of a vertex.

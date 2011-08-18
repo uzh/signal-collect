@@ -22,6 +22,7 @@ import scala.collection.mutable.LinkedHashMap
 import com.signalcollect.interfaces._
 import scala.collection.mutable.LinkedHashMap
 import java.io.File
+import com.signalcollect._
 
 /**
  *  Caches Vertices in the store according to a least recently used (LRU) policy

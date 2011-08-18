@@ -21,15 +21,15 @@ package com.signalcollect.implementations.coordinator
 
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-import com.signalcollect.api._
-import com.signalcollect.api.factory._
 import com.signalcollect.interfaces._
-
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
-import java.lang.management._
-
 import com.sun.management.OperatingSystemMXBean
+import java.lang.management.ManagementFactory
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.ExecutionInformation
+import com.signalcollect.SynchronousExecutionMode
+import com.signalcollect.OptimizedAsynchronousExecutionMode
+import com.signalcollect.PureAsynchronousExecutionMode
+import com.signalcollect.ExecutionStatistics
 
 class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 

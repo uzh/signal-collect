@@ -19,11 +19,8 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
-import collection.mutable.{ HashMap, SynchronizedMap }
-import collection.mutable.ListMap
-import com.signalcollect.interfaces._
-import com.signalcollect.configuration._
+import com.signalcollect._
+import collection.mutable.{ ListMap, HashMap, SynchronizedMap }
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine
@@ -41,7 +38,7 @@ class SudokuAssociation(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
  * @param id ID of the cell, where top left cell has id=0 top right has id of 8 and bottom right has id 80
  *
  */
-class SudokuCell(id: Int, initialState: Option[Int] = None) extends SignalMapVertex(id, initialState) {
+class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVertex(id, initialState) {
 
   type Signal = Int
 
@@ -147,7 +144,7 @@ object Sudoku extends App {
   /**
    * Check if all cells have a value assigned to it
    */
-  def isDone(cg: ComputeGraph): Boolean = {
+  def isDone(cg: Graph): Boolean = {
     var isDone = true
     cg.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
@@ -156,7 +153,7 @@ object Sudoku extends App {
   /**
    * Recursive depth first search for possible values
    */
-  def tryPossibilities(cg: ComputeGraph): ComputeGraph = {
+  def tryPossibilities(cg: Graph): Graph = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
     cg.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
@@ -198,8 +195,8 @@ object Sudoku extends App {
     null
   }
 
-  def computeGraphFactory(seed: Map[Int, Int]): ComputeGraph = {
-    val cg = DefaultComputeGraphBuilder.build
+  def computeGraphFactory(seed: Map[Int, Int]): Graph = {
+    val cg = Builder.build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {

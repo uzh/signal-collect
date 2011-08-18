@@ -17,17 +17,18 @@
  *  
  */
 
-package com.signalcollect.api
+package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.MessageRecipient
 import com.signalcollect.implementations.coordinator._
 import com.signalcollect.configuration._
+import com.signalcollect._
 
 /**
  * Default [[com.signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(), workerApi: WorkerApi, coordinator: Coordinator) extends ComputeGraph with GraphApi {
+class DefaultGraph(val config: Configuration = LocalConfiguration(), workerApi: WorkerApi, coordinator: Coordinator) extends Graph {
   
   /** GraphApi */
 
@@ -56,7 +57,7 @@ class DefaultComputeGraph(val config: Configuration = DefaultLocalConfiguration(
     workerApi.customAggregate(neutralElement, operation, extractor)
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
   /** GraphApi */
 

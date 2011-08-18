@@ -20,7 +20,7 @@
 package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
-import com.signalcollect.interfaces.Vertex
+import com.signalcollect._
 import scala.reflect.BeanProperty
 
 trait SumOfOutWeights extends AbstractVertex {  

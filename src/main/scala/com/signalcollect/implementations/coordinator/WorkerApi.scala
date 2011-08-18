@@ -22,14 +22,16 @@ package com.signalcollect.implementations.coordinator
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.messaging._
-import com.signalcollect.api.factory._
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.parallel.mutable.ParArray
 import scala.collection.JavaConversions._
+import com.signalcollect.Edge
+import com.signalcollect.Vertex
+import com.signalcollect.GraphEditor
 
-class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphApi with Logging {
+class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphEditor with Logging {
 
   protected val loggingLevel = config.loggingLevel
   
@@ -186,14 +188,14 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
   override def addEdge(edge: Edge) {
     super.addEdge(edge)
-    if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
   override def addVertex(vertex: Vertex) {
     super.addVertex(vertex)
-    if (config.workerConfiguration.statusUpdateIntervallInMillis.isDefined) {
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
@@ -253,7 +255,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
     aggregateArray.fold(neutralElement)(operation(_, _))
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))
 
   def setSignalThreshold(t: Double) = parallelWorkerProxies foreach (_.setSignalThreshold(t))
 

@@ -20,7 +20,6 @@
 package com.signalcollect.implementations.messaging
 
 import com.signalcollect.interfaces._
-import com.signalcollect._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.BlockingQueue
 import scala.concurrent.forkjoin.LinkedTransferQueue

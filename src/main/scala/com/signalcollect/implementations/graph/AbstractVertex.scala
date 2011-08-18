@@ -20,10 +20,9 @@
 package com.signalcollect.implementations.graph
 
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-import com.signalcollect.api.factory._
+import com.signalcollect._
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.LinkedHashMap
@@ -33,8 +32,7 @@ import scala.collection.mutable.Set
 import scala.collection.immutable.HashMap
 import scala.collection.immutable.Map
 import scala.collection.GenMap
-
-import java.util.LinkedList
+import com.signalcollect._
 
 abstract class AbstractVertex extends Vertex {
 

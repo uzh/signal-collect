@@ -21,6 +21,7 @@ package com.signalcollect.implementations.storage
 import java.util.Set
 import com.signalcollect.interfaces._
 import java.util.HashMap
+import com.signalcollect._
 
 /**
  * Stores all vertices in a in-memory HashMap data structure.

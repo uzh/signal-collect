@@ -1,8 +1,9 @@
 package com.signalcollect.implementations.storage
 
-import com.signalcollect.interfaces.{ VertexSignalBuffer, SignalMessage, Storage, DefaultEdgeId }
+import com.signalcollect.interfaces._
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable.ArrayBuffer
+import com.signalcollect._
 
 /**
  * Buffer for incoming signals that keeps only the relevant information by reducing the signals at arrival

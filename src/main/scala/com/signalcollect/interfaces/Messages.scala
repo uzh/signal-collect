@@ -20,6 +20,8 @@
 
 package com.signalcollect.interfaces
 
+import com.signalcollect._
+
 // algorithm-specific message
 case class SignalMessage[+SourceId, +TargetId, +SignalType](edgeId: EdgeId[SourceId, TargetId], signal: SignalType) {
   override def toString = "Signal(edgeId=" + edgeId + ", " +  "signal=" + signal + ")"

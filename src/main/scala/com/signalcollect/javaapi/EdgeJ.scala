@@ -19,13 +19,13 @@
 
 package com.signalcollect.javaapi
 
-import com.signalcollect.implementations.graph._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Map
-import com.signalcollect.interfaces._
-import com.signalcollect.util.collections.Filter
-import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.Edge
+import com.signalcollect.Vertex
+import com.signalcollect.DefaultEdgeId
+import com.signalcollect.EdgeId
+import com.signalcollect.interfaces.SignalMessage
 import scala.reflect.BeanProperty
+import com.signalcollect.interfaces.MessageBus
 
 /**
  *  A version of edge that serves as the foundation for the Java API edges.

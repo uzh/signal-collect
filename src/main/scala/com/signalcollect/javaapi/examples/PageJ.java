@@ -3,7 +3,7 @@ package com.signalcollect.javaapi.examples;
 import com.signalcollect.javaapi.*;
 
 @SuppressWarnings("serial")
-public class PageJ extends SignalMapVertexJ<Integer, Double, Double> {
+public class PageJ extends DataGraphVertexJ<Integer, Double, Double> {
 
 	Double baseRank;
 	Double dampingFactor;

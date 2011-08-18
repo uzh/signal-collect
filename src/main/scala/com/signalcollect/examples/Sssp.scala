@@ -19,8 +19,7 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.api._
-import com.signalcollect.configuration._
+import com.signalcollect._
 
 /**
  * Represents an edge in a Single-Source Shortest Path compute graph.
@@ -52,7 +51,7 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
  *  if the distance is Int.MaxValue this means that there is no known path. If the distance is
  *  0 this means that this vertex is the source location.
  */
-class Location(id: Any, initialState: Option[Int] = None) extends SignalMapVertex(id, initialState) {
+class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVertex(id, initialState) {
   type Signal = Int
   /**
    * The collect function calculates the shortest currently known path
@@ -66,7 +65,7 @@ class Location(id: Any, initialState: Option[Int] = None) extends SignalMapVerte
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = DefaultComputeGraphBuilder.build
+  val cg = Builder.build
   cg.addVertex(new Location(1, Some(0)))
   cg.addVertex(new Location(2))
   cg.addVertex(new Location(3))

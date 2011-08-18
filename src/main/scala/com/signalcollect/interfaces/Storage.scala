@@ -17,7 +17,8 @@
  */
 
 package com.signalcollect.interfaces
-import java.util.LinkedList
+
+import com.signalcollect._
 
 /**
  * High level interface to abstract all vertex storage related implementations

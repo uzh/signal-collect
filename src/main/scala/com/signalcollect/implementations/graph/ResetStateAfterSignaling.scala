@@ -19,8 +19,8 @@
 
 package com.signalcollect.implementations.graph
 
+import com.signalcollect._
 import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.Vertex
 
 trait ResetStateAfterSignaling extends AbstractVertex {
   

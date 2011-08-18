@@ -22,6 +22,7 @@ package com.signalcollect.implementations.graph
 import scala.collection.parallel.immutable.ParHashMap
 import com.signalcollect.interfaces._
 import scala.collection.GenMap
+import com.signalcollect._
 
 trait ParallelSignaling extends AbstractVertex { 
     

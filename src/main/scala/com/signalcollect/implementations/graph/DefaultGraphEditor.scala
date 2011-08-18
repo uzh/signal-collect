@@ -20,14 +20,15 @@
 package com.signalcollect.implementations.coordinator
 
 import com.signalcollect.interfaces._
+import com.signalcollect._
 import com.signalcollect.implementations.serialization.DefaultSerializer
 
-object DefaultGraphApi {
-  protected class InstantiatableGraphApi(val messageBus: MessageBus[Any]) extends DefaultGraphApi
-  def createInstance(messageBus: MessageBus[Any]): GraphApi = new InstantiatableGraphApi(messageBus)
+object DefaultGraphEditor {
+  protected class InstantiatableGraphApi(val messageBus: MessageBus[Any]) extends DefaultGraphEditor
+  def createInstance(messageBus: MessageBus[Any]): GraphEditor = new InstantiatableGraphApi(messageBus)
 }
 
-trait DefaultGraphApi extends GraphApi with DefaultSerializer {
+trait DefaultGraphEditor extends GraphEditor with DefaultSerializer {
   protected def messageBus: MessageBus[Any]
 
   /**

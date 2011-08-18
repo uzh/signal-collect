@@ -17,19 +17,18 @@
  *  
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect
 
-import com.signalcollect.api._
-import com.signalcollect.configuration._
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  *  A ComputeGraph represents the entire Signal/Collect graph with its vertices and edges.
  *  It offers functions to execute computations and aggregation operations on this graph.
- *  Additionally it extends GraphApi, which means that it offers functions to manipulate the graph.
+ *  Additionally it extends GraphModificationApi, which means that it offers functions to manipulate the graph.
  *
- *  @note This class is usually instantiated using the `ComputeGraphBuilder`
+ *  @note This class is usually instantiated using the `GraphBuilder`
  *
- *  @see ComputeGraphBuilder, DefaultComputeGraph
+ *  @see GraphBuilder, DefaultComputeGraph
  *
  *  @example `val computeGraph = ComputeGraphBuilder.build`
  *
@@ -37,7 +36,7 @@ import com.signalcollect.configuration._
  *  @version 1.0
  *  @since 1.0
  */
-trait ComputeGraph extends GraphApi {
+trait Graph extends GraphEditor {
 
   /**
    *  Starts the execution of the computation using the default execution parameters and
@@ -277,7 +276,7 @@ trait ComputeGraph extends GraphApi {
    *  		receives the signal and an instance of GraphApi as parameters in order to take some
    *  		action that handles this case.
    */
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphApi) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
 }
 
 

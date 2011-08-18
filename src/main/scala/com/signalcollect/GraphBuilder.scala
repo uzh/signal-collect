@@ -17,9 +17,9 @@
  *  
  */
 
-package com.signalcollect.configuration
+package com.signalcollect
 
-import com.signalcollect.api._
+import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 
 /**
@@ -27,16 +27,16 @@ import com.signalcollect.interfaces._
  * These builders make configuring a compute graph with Java almost as simple
  * as when using Scala default parameters.
  */
-object DefaultComputeGraphBuilder extends ComputeGraphBuilder
+object Builder extends GraphBuilder(LocalConfiguration())
 
 /**
  * Builder for the creation of a compute graph needs a configuration object for the creation.
  * If the user passes a configuration object but then uses a method of this class, the configuration's object
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
  */
-class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocalConfiguration) extends Serializable {
+class GraphBuilder(protected val config: Configuration = LocalConfiguration()) extends Serializable {
 
-  def build: ComputeGraph = new LocalBootstrap(config).boot
+  def build: Graph = new LocalBootstrap(config).boot
 
   /**
    * Common configuration
@@ -68,13 +68,13 @@ class ComputeGraphBuilder(protected val config: Configuration = new DefaultLocal
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.workerConfiguration.storageFactory,
-    executionConfiguration: ExecutionConfiguration = config.executionConfiguration): ComputeGraphBuilder = {
-    new ComputeGraphBuilder(
-      DefaultLocalConfiguration(
+    executionConfiguration: ExecutionConfiguration = config.executionConfiguration): GraphBuilder = {
+    new GraphBuilder(
+      LocalConfiguration(
         numberOfWorkers = numberOfWorkers,
         loggingLevel = loggingLevel,
         customLogger = customLogger,
-        workerConfiguration = DefaultLocalWorkerConfiguration(
+        workerConfiguration = LocalWorkerConfiguration(
           workerFactory = workerFactory,
           messageBusFactory = messageBusFactory,
           storageFactory = storageFactory),
