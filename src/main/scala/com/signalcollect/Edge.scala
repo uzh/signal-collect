@@ -18,11 +18,24 @@
  */
 
 package com.signalcollect
-
 import com.signalcollect.interfaces.MessageBus
 
-case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId] 
+/**
+ *  A DefaultEdgeId uniquely identifies an edge in the graph.
+ *
+ *  @param sourceId source vertex id
+ *  @param targetId target vertex id
+ *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
+ *  
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
+ */
+case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId]
 
+/**
+ *  An edge id uniquely identifies an edge in the graph.
+ */
 trait EdgeId[+SourceId, +TargetId] extends Serializable {
   def sourceId: SourceId
   def targetId: TargetId
@@ -30,28 +43,35 @@ trait EdgeId[+SourceId, +TargetId] extends Serializable {
 }
 
 trait Edge extends Serializable {
-  
+
   /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
   type SourceVertex <: Vertex
+
+  /** The type of the source vertex id. */
   type SourceId
+
+  /** The type of the target vertex id. */
   type TargetId
+
+  /** The type of signals that are sent along this edge. */
   type Signal
-  
-  /** The identifier of this {@link Edge}. */
+
+  /** An edge id uniquely identifies an edge in the graph. */
   def id: EdgeId[SourceId, TargetId]
-  
-  /** called when the edge is attached to a source vertex */
+
+  /** Called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertex) = {}
-  
-  /** The weight of this {@link Edge}. By default an {@link Edge} has a weight of <code>1</code>. */
+
+  /** The weight of this edge: 1.0 by default, can be overridden. */
   def weight: Double = 1
 
-  /** A textual representation of this {@link Edge}. */
-  override def toString = getClass.getSimpleName + "(sourceId=" + id.sourceId + ", targetId=" + id.targetId + ")"
-  
-  /** The hash code of this object. */
+  /** EdgeClassName(id=`edge id`) */
+  override def toString = getClass.getSimpleName + "(id=" + id + ")"
+
+  /** The edge hashCode is the hashCode of the id */
   override def hashCode = id.hashCode
 
+  /** Two edges are equal if their ids are equal */
   override def equals(other: Any): Boolean = {
     if (other.isInstanceOf[Edge]) {
       id.equals(other.asInstanceOf[Edge].id)
@@ -59,15 +79,14 @@ trait Edge extends Serializable {
       false
     }
   }
- 
+
   /**
-   * This method will be called by {@link FrameworkVertex#executeSignalOperation}
-   * of this {@Edge} source vertex. It calculates the signal and sends it over the message bus.
-   * {@link OnlySignalOnChangeEdge}.
-   * 
-   * @param mb the message bus to use for sending the signal
-   * @param souceVertex the source vertex to get the state to assemble the signal
+   *  Function that gets called by the source vertex whenever this edge is supposed to send a signal.
+   *
+   *  @param sourceVertex The source vertex of this edge.
+   *
+   *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any])
+  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any])
 
 }

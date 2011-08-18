@@ -26,6 +26,10 @@ import com.signalcollect.interfaces.SignalMessage
  *
  * This trait requires to always be extended by something that implements {@link Vertex}
  * which gives us access to methods and fields in {@link Vertex}.
+ * 
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
  */
 trait Vertex extends Serializable {
 
@@ -113,12 +117,12 @@ trait Vertex extends Serializable {
   def outgoingEdgeCount: Int
   
   /**
-   * Returns the ids of all vertices to which this vertex has an outgoing edge
+   * Returns the ids of all vertices to which this vertex currently has an outgoing edge
    */
   def getVertexIdsOfSuccessors: Iterable[_]
 
   /**
-   * Returns the ids of all vertices from which this vertex has an incoming edge, optional.
+   * Returns ids of vertices that are known to be or have been predecessors at some point in time.
    */
   def getVertexIdsOfPredecessors: Option[Iterable[_]]
 

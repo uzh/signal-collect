@@ -165,7 +165,7 @@ abstract class AbstractVertex extends Vertex {
   }
 
   /**
-   * Returns the ids of all vertices to which this vertex has an outgoing edge
+   * Returns the ids of all vertices to which this vertex currently has an outgoing edge
    */
   def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.seq map (_._2.id.targetId)
   

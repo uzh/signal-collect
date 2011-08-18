@@ -22,6 +22,20 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 
+/**
+ *  An instance of ExecutionInformation reports information such as execution statistics
+ *  and configuration parameters related to an execution of a computation on a graph.
+ *  
+ *  @param config The graph configuration of the graph that executed a computation.
+ *  @param parameters The execution configuration for this particular execution.
+ *  @param executionStatistics Statistics about this execution, such as the computation time,
+ *  @param aggregatedWorkerStatistics Aggregated statistics over all the workers.
+ *  @param individualWorkerStatistics A list of statistics for all workers individually.
+ *  
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
+ */
 case class ExecutionInformation(
   config: Configuration,
   parameters: ExecutionConfiguration,

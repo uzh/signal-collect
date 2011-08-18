@@ -22,13 +22,13 @@ package com.signalcollect
 import com.signalcollect.interfaces.SignalMessage
 
 /**
- *  A ComputeGraph represents the entire Signal/Collect graph with its vertices and edges.
+ *  Graph represents the entire Signal/Collect graph with its vertices and edges.
  *  It offers functions to execute computations and aggregation operations on this graph.
- *  Additionally it extends GraphModificationApi, which means that it offers functions to manipulate the graph.
+ *  Additionally it extends GraphEditor, which means that it offers functions to manipulate the graph.
  *
  *  @note This class is usually instantiated using the `GraphBuilder`
  *
- *  @see GraphBuilder, DefaultComputeGraph
+ *  @see GraphBuilder, DefaultGraph
  *
  *  @example `val computeGraph = ComputeGraphBuilder.build`
  *

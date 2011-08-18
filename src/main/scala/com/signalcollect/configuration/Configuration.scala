@@ -28,8 +28,7 @@ case class Configuration(numberOfWorkers: Int = Runtime.getRuntime.availableProc
   maxInboxSize: Option[Long] = None, //Some(Runtime.getRuntime.availableProcessors*5000),
   loggingLevel: Int = LoggingLevel.Warning,
   logger: MessageRecipient[LogMessage] = new DefaultLogger,
-  workerConfiguration: WorkerConfiguration = WorkerConfiguration(),
-  executionConfiguration: ExecutionConfiguration = DefaultExecutionConfiguration)
+  workerConfiguration: WorkerConfiguration = WorkerConfiguration())
 
 case class WorkerConfiguration(
   workerFactory: WorkerFactory = factory.worker.Local,

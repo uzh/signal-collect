@@ -21,36 +21,61 @@ package com.signalcollect
 
 import com.signalcollect.interfaces._
 
+/**
+ *  Edge that connects a source vertex with a target vertex.
+ *  Users of the framework extend this class to implement a specific algorithm by defining a `signal` function.
+ *
+ *  @param sourceId source vertex id
+ *  @param targetId target vertex id
+ *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
+ *
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
+ */
 abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
   sourceId: SourceIdTypeParameter,
   targetId: TargetIdTypeParameter,
   description: String = "") extends Edge {
-  
+
+  /** The type of the source vertex id. */
   type SourceId = SourceIdTypeParameter
+
+  /** The type of the target vertex id. */
   type TargetId = TargetIdTypeParameter
+
+  /** The type of signals that are sent along this edge. */
   type Signal = Any
 
+  /**
+   *  An edge id uniquely identifies an edge in the graph.
+   */
   val id = DefaultEdgeId(sourceId, targetId, description)
 
   /**
-   * The abstract "signal" function is algorithm specific and has to be implemented by a user of the API
-   * this function will be called during algorithm execution. It is meant to calculate a signal
-   * going from the source vertex of this edge to the target vertex of this edge.
+   *  The abstract `signal` function is algorithm specific and is implemented by a user of the framework.
+   *  It calculates the signal that is sent from the source vertex to the target vertex.
+   *
+   *  @param sourceVertex The source vertex to which this edge is currently attached as an outgoing edge.
+   *
+   *  @return The signal that will be sent along this edge.
    */
   def signal(sourceVertex: SourceVertex): Signal
-  
-  /** The hash code of the target vertex. */
+
+  /**
+   *  The hash code of the target vertex id is cached to speed up signaling.
+   */
   val cachedTargetIdHashCode = id.targetId.hashCode
 
   /**
-   * This method will be called by {@link FrameworkVertex#executeSignalOperation}
-   * of this {@Edge} source vertex. It calculates the signal and sends it over the message bus.
-   * {@link OnlySignalOnChangeEdge}.
+   *  Function that gets called by the source vertex whenever this edge is supposed to send a signal.
    *
-   * @param mb the message bus to use for sending the signal
+   *  @param sourceVertex The source vertex of this edge.
+   *
+   *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
-    mb.sendToWorkerForVertexIdHash(SignalMessage(id, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
+  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any]) {
+    messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
   }
-  
+
 }

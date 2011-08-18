@@ -27,15 +27,19 @@ import scala.collection.mutable.ListBuffer
 import com.signalcollect.interfaces._
 
 /**
- * [[com.signalcollect.interfaces.Vertex]] implementation that offers only
- * a subset of the [[com.signalcollect.api.DefaultVertex]] functionality
- * to save memory.
+ *  Vertex implementation that collects all the signals that have arrived since the last
+ *  time this vertex has collected. Users of the framework extend this class to implement
+ *  a specific algorithm by defining a `collect` function.
  *
- * @param id unique vertex id
- * @param initialState initial state of this vertex
+ *  @note The `collect` function receives all signals that arrived at this vertex but have not
+ *  been collected yet as a parameter.
  *
- * See [[com.signalcollect.api.DefaultVertex]] for more information about vertices
- * in general.
+ *  @param id unique vertex id.
+ *  @param state the initial state of the vertex.
+ *
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
  */
 abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
   val id: IdTypeParameter,
@@ -46,23 +50,32 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
   type State = StateTypeParameter
 
   /**
-   * The abstract "collect" function is algorithm specific and has to be implemented by a user of the API
-   * this function will be called during algorithm execution. It is meant to calculate a new vertex state
-   * based on the {@link Signal}s received by this vertex.
+   *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
+   *
+   *  @param uncollectedSignals all signals received by this vertex since the last time this function was executed
+   *
+   *  @return The new vertex state.
    */
   def collect(uncollectedSignals: Iterable[Signal]): State
-  
-  /** a buffer containing uncollected messages */
+
+  /**
+   *  All uncollected signal messages, not just the signals.
+   */
   protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
 
-  /** traversable uncollected signals */
+  /**
+   *  Utility function to filter out only certain signals of interest.
+   */
   protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
     uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
   }
 
   /**
-   * Executes the {@link #collect} method on this vertex.
-   * @see #collect
+   *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
+   *
+   *  @param signals new signals that have arrived since the last time this vertex collected
+   *
+   *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
     uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]

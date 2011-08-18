@@ -24,9 +24,9 @@ import com.signalcollect.interfaces._
 import com.signalcollect.implementations.graph.DefaultGraph
 
 /**
- * The configuration builder are intended for Java users.
- * These builders make configuring a compute graph with Java almost as simple
- * as when using Scala default parameters.
+ *  A graph builder holds a configuration with parameters for building a graph,
+ *  functions to modify this configuration and a build function to instantiate a graph
+ *  with the defined configuration. This object represents a graph builder that is initialized with the default configuration.
  */
 object GraphBuilder extends GraphBuilder(Configuration())
 
@@ -34,42 +34,78 @@ object GraphBuilder extends GraphBuilder(Configuration())
  * Builder for the creation of a compute graph needs a configuration object for the creation.
  * If the user passes a configuration object but then uses a method of this class, the configuration's object
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
+ *
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
  */
 class GraphBuilder(protected val config: Configuration = Configuration()) extends Serializable {
 
+  /**
+   *  Creates a graph with the specified configuration.
+   */
   def build: Graph = new DefaultGraph(config)
 
   /**
-   * Common configuration
+   *  Configures the number of workers.
+   *
+   *  @param newNumberOfWorkers The number of worker threads used by the graph.
    */
   def withNumberOfWorkers(newNumberOfWorkers: Int) = newLocalBuilder(numberOfWorkers = newNumberOfWorkers)
 
+  /**
+   *  Configures the logging level.
+   *
+   *  @note Logging levels available:
+   *    Debug = 0
+   *    Config = 100
+   *    Info = 200
+   *    Warning = 300
+   *    Severe = 400
+   *
+   *  @param newLoggingLevel The logging level used by the graph.
+   */
   def withLoggingLevel(newLoggingLevel: Int) = newLocalBuilder(loggingLevel = newLoggingLevel)
-  
-  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(logger = logger)
-
-  def withExecutionConfiguration(newExecutionConfiguration: ExecutionConfiguration) = newLocalBuilder(executionConfiguration = newExecutionConfiguration)
 
   /**
-   * Worker configuration
+   *  Configures the logger used by the graph.
+   *
+   *  @param logger The logger used by the graph.
+   */
+  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(logger = logger)
+
+  /**
+   *  Configures the worker factory used by the graph to instantiate workers.
+   *
+   *  @param newWorkerFactory The worker factory used to instantiate workers.
    */
   def withWorkerFactory(newWorkerFactory: WorkerFactory) = newLocalBuilder(workerFactory = newWorkerFactory)
 
+  /**
+   *  Configures the message bus factory used by the graph to instantiate message buses.
+   *
+   *  @param newMessageBusFactory The message bus factory used to instantiate message buses.
+   */
   def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) = newLocalBuilder(messageBusFactory = newMessageBusFactory)
 
+  /**
+   *  Configures the storage factory used by the workers to instantiate vertex stores.
+   *
+   *  @param newStorageFactory The storage factory used to instantiate vertex stores.
+   */
   def withStorageFactory(newStorageFactory: StorageFactory) = newLocalBuilder(storageFactory = newStorageFactory)
 
   /**
-   * Builds local compute graph
+   *  Internal function to create a new builder instance that has a configuration which defaults
+   *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
-  def newLocalBuilder(
+  protected def newLocalBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
     loggingLevel: Int = config.loggingLevel,
     logger: MessageRecipient[LogMessage] = config.logger,
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
-    storageFactory: StorageFactory = config.workerConfiguration.storageFactory,
-    executionConfiguration: ExecutionConfiguration = config.executionConfiguration): GraphBuilder = {
+    storageFactory: StorageFactory = config.workerConfiguration.storageFactory): GraphBuilder = {
     new GraphBuilder(
       Configuration(
         numberOfWorkers = numberOfWorkers,
@@ -78,8 +114,7 @@ class GraphBuilder(protected val config: Configuration = Configuration()) extend
         workerConfiguration = WorkerConfiguration(
           workerFactory = workerFactory,
           messageBusFactory = messageBusFactory,
-          storageFactory = storageFactory),
-        executionConfiguration = executionConfiguration))
+          storageFactory = storageFactory)))
   }
 
 }

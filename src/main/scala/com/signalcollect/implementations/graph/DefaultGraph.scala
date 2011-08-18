@@ -37,7 +37,7 @@ class DefaultGraph(val config: Configuration = Configuration()) extends Graph {
 
   /** GraphApi */
 
-  def execute: ExecutionInformation = execute(DefaultExecutionConfiguration)
+  def execute: ExecutionInformation = execute(ExecutionConfiguration)
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = coordinator.execute(parameters)
 
