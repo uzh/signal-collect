@@ -11,7 +11,7 @@ public class PageRankJ {
 	}
 
 	public void executePageRank() {
-		Graph cg = Builder.build();
+		Graph cg = GraphBuilderJ.build();
 		cg.addVertex(new PageJ(1, 0.15));
 		cg.addVertex(new PageJ(2, 0.15));
 		cg.addVertex(new PageJ(3, 0.15));

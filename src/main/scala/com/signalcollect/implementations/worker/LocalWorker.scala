@@ -33,9 +33,8 @@ import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
 import com.signalcollect._
-import com.signalcollect.implementations.coordinator.DefaultGraphEditor
 import com.signalcollect.implementations.serialization.DefaultSerializer
-import com.signalcollect.implementations.coordinator.DefaultGraphEditor
+import com.signalcollect.implementations.graph.DefaultGraphEditor
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -52,7 +51,6 @@ class LocalWorker(val workerId: Int,
   workerConfig: WorkerConfiguration,
   numberOfWorkers: Int,
   coordinator: Any,
-  mapper: VertexToWorkerMapper,
   val loggingLevel: Int)
   extends AbstractMessageRecipient[Any]
   with Worker
@@ -67,7 +65,7 @@ class LocalWorker(val workerId: Int,
    * ******************
    */
   val messageBus: MessageBus[Any] = {
-    workerConfig.messageBusFactory.createInstance(numberOfWorkers, mapper)
+    workerConfig.messageBusFactory.createInstance(numberOfWorkers)
   }
 
   messageBus.registerCoordinator(coordinator)

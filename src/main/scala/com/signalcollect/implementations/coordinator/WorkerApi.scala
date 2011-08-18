@@ -30,11 +30,12 @@ import scala.collection.JavaConversions._
 import com.signalcollect.Edge
 import com.signalcollect.Vertex
 import com.signalcollect.GraphEditor
+import com.signalcollect.implementations.graph.DefaultGraphEditor
 
-class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) extends MessageRecipient[Any] with DefaultGraphEditor with Logging {
+class WorkerApi(config: Configuration) extends MessageRecipient[Any] with DefaultGraphEditor with Logging {
 
   protected val loggingLevel = config.loggingLevel
-  
+
   override def toString = "WorkerApi"
 
   // initialize workers array
@@ -48,25 +49,21 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
    * @param: workerId is the id of the worker
    * @return: the worker should be cast to the desired worker (Local or Akka)
    */
-  def createWorker(workerId: Int, workerConfiguration: WorkerConfiguration): Any = {
-
+  def createWorker(workerId: Int, workerConfiguration: WorkerConfiguration) {
     val workerFactory = config.workerConfiguration.workerFactory
-
     // create the worker
-    val worker = workerFactory.createInstance(workerId, workerConfiguration, config.numberOfWorkers, this, mapper, config.loggingLevel)
-
+    val worker = workerFactory.createInstance(workerId, workerConfiguration, config.numberOfWorkers, this, config.loggingLevel)
+    worker.initialize
     // put it to the array of workers
     workers(workerId) = worker
-
-    worker
-
   }
-
+  
+  
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
   protected lazy val workerProxyMessageBuses: Array[MessageBus[Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
   protected lazy val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
-  protected lazy val messageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+  protected lazy val messageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers)
   protected lazy val workerStatusMap = new ConcurrentHashMap[Int, WorkerStatus]()
   protected val messagesReceived = new AtomicLong(0l)
   protected val statusMonitor = new Object
@@ -77,7 +74,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   protected def createWorkerProxyMessageBuses: Array[MessageBus[Any]] = {
     val workerProxyMessageBuses = new Array[MessageBus[Any]](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      val proxyMessageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers, mapper)
+      val proxyMessageBus = config.workerConfiguration.messageBusFactory.createInstance(config.numberOfWorkers)
       proxyMessageBus.registerCoordinator(this)
       workerProxyMessageBuses(workerId) = proxyMessageBus
     }
@@ -98,6 +95,9 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
   def initialize {
     if (!isInitialized) {
       Thread.currentThread.setName("Coordinator")
+      for (workerId <- 0 until config.numberOfWorkers) {
+        createWorker(workerId, config.workerConfiguration)
+      }
       messageBus.registerCoordinator(this)
       workerProxyMessageBuses foreach (_.registerCoordinator(this))
       for (workerId <- 0 until config.numberOfWorkers) {
@@ -132,7 +132,7 @@ class WorkerApi(config: Configuration, logger: MessageRecipient[LogMessage]) ext
 
           }
         case l: LogMessage =>
-          logger.receive(l)
+          config.logger.receive(l)
         case other => println("Received unknown message: " + other)
       }
     }

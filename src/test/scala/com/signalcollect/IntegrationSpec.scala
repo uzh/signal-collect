@@ -39,7 +39,7 @@ import org.specs2.runner.JUnitRunner
 class IntegrationSpec extends SpecificationWithJUnit {
 
   val computeGraphFactories: List[Int => Graph] = List(
-    (numberOfWorkers: Int) => Builder.withNumberOfWorkers(numberOfWorkers).build)
+    (numberOfWorkers: Int) => GraphBuilder.withNumberOfWorkers(numberOfWorkers).build)
 
   val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
 

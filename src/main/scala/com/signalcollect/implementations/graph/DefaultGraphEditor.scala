@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect.implementations.coordinator
+package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
 import com.signalcollect._

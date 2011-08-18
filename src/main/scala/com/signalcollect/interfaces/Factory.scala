@@ -31,21 +31,11 @@ trait WorkerFactory extends Factory {
                      workerConfig: WorkerConfiguration,
                      numberOfWorkers: Int,
                      coordinator: Any,
-                     mapper: VertexToWorkerMapper,
-                     loggingLevel: Int): Any
-}
-
-trait LocalWorkerFactory extends WorkerFactory {
-  def createInstance(workerId: Int,
-                              workerConfig: WorkerConfiguration,
-                              numberOfWorkers: Int,
-                              coordinator: Any,
-                              mapper: VertexToWorkerMapper,
-                              loggingLevel: Int): Worker
+                     loggingLevel: Int): Worker
 }
 
 trait MessageBusFactory extends Factory {
-  def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any]
+  def createInstance(numberOfWorkers: Int): MessageBus[Any]
 }
 
 trait StorageFactory extends Factory {

@@ -25,7 +25,7 @@ import com.signalcollect._
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = Builder.build
+  val cg = GraphBuilder.build
 
   /**
    * Still need to test performance on complete and larger graphs

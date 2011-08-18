@@ -28,12 +28,17 @@ import com.signalcollect._
 /**
  * Default [[com.signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultGraph(val config: Configuration = LocalConfiguration(), workerApi: WorkerApi, coordinator: Coordinator) extends Graph {
-  
+class DefaultGraph(val config: Configuration = Configuration()) extends Graph {
+
+  workerApi.initialize
+
+  lazy val workerApi = new WorkerApi(config)
+  lazy val coordinator = new Coordinator(workerApi, config)
+
   /** GraphApi */
 
   def execute: ExecutionInformation = execute(DefaultExecutionConfiguration)
-  
+
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = coordinator.execute(parameters)
 
   /** WorkerApi */

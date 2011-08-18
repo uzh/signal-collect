@@ -36,7 +36,7 @@ class MessageBusSpec extends SpecificationWithJUnit with Mockito {
     val mockWorker0 = mock[Worker]
     val mockWorker1 = mock[Worker]
     val mockLogger = mock[MessageRecipient[LogMessage]]
-    val defaultMessageBus = new DefaultMessageBus[Any](2, new DefaultVertexToWorkerMapper(2))
+    val defaultMessageBus = new DefaultMessageBus[Any](2)
     defaultMessageBus.registerCoordinator(mockCoordinator)
     defaultMessageBus.registerWorker(0, mockWorker0)
     defaultMessageBus.registerWorker(1, mockWorker1)

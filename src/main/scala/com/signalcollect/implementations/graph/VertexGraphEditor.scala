@@ -21,7 +21,6 @@ package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
 import com.signalcollect.GraphEditor
-import com.signalcollect.implementations.coordinator.DefaultGraphEditor
 
 trait VertexGraphEditor extends AbstractVertex{
   

@@ -65,7 +65,7 @@ class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVerte
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = Builder.build
+  val cg = GraphBuilder.build
   cg.addVertex(new Location(1, Some(0)))
   cg.addVertex(new Location(2))
   cg.addVertex(new Location(3))

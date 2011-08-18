@@ -101,7 +101,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = Builder.build
+  val cg = GraphBuilder.build
   cg.addVertex(new ColoredVertex(1, 2, 1))
   cg.addVertex(new ColoredVertex(2, 2, 1))
   cg.addVertex(new ColoredVertex(3, 2, 1))

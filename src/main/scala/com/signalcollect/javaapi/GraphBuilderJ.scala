@@ -1,5 +1,5 @@
 /*
- *  @author Francisco de Freitas
+ *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -17,14 +17,9 @@
  *  
  */
 
-package com.signalcollect.configuration
+package com.signalcollect.javaapi
 
 import com.signalcollect._
-import com.signalcollect.factory._
-import com.signalcollect.interfaces._
+import com.signalcollect.configuration._
 
-case class LocalWorkerConfiguration(
-  workerFactory: WorkerFactory = worker.Local,
-  messageBusFactory: MessageBusFactory = messageBus.SharedMemory,
-  storageFactory: StorageFactory = storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = None /*Some(500l)*/) extends WorkerConfiguration
+object GraphBuilderJ extends GraphBuilder(Configuration())

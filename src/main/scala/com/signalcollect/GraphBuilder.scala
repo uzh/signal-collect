@@ -1,5 +1,5 @@
 /*
- *  @author Francisco de Freitas
+ *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -21,22 +21,23 @@ package com.signalcollect
 
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
+import com.signalcollect.implementations.graph.DefaultGraph
 
 /**
  * The configuration builder are intended for Java users.
  * These builders make configuring a compute graph with Java almost as simple
  * as when using Scala default parameters.
  */
-object Builder extends GraphBuilder(LocalConfiguration())
+object GraphBuilder extends GraphBuilder(Configuration())
 
 /**
  * Builder for the creation of a compute graph needs a configuration object for the creation.
  * If the user passes a configuration object but then uses a method of this class, the configuration's object
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
  */
-class GraphBuilder(protected val config: Configuration = LocalConfiguration()) extends Serializable {
+class GraphBuilder(protected val config: Configuration = Configuration()) extends Serializable {
 
-  def build: Graph = new LocalBootstrap(config).boot
+  def build: Graph = new DefaultGraph(config)
 
   /**
    * Common configuration
@@ -45,7 +46,7 @@ class GraphBuilder(protected val config: Configuration = LocalConfiguration()) e
 
   def withLoggingLevel(newLoggingLevel: Int) = newLocalBuilder(loggingLevel = newLoggingLevel)
   
-  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(customLogger = Some(logger))
+  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(logger = logger)
 
   def withExecutionConfiguration(newExecutionConfiguration: ExecutionConfiguration) = newLocalBuilder(executionConfiguration = newExecutionConfiguration)
 
@@ -64,17 +65,17 @@ class GraphBuilder(protected val config: Configuration = LocalConfiguration()) e
   def newLocalBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
     loggingLevel: Int = config.loggingLevel,
-    customLogger: Option[MessageRecipient[LogMessage]] = config.customLogger,
+    logger: MessageRecipient[LogMessage] = config.logger,
     workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.workerConfiguration.storageFactory,
     executionConfiguration: ExecutionConfiguration = config.executionConfiguration): GraphBuilder = {
     new GraphBuilder(
-      LocalConfiguration(
+      Configuration(
         numberOfWorkers = numberOfWorkers,
         loggingLevel = loggingLevel,
-        customLogger = customLogger,
-        workerConfiguration = LocalWorkerConfiguration(
+        logger = logger,
+        workerConfiguration = WorkerConfiguration(
           workerFactory = workerFactory,
           messageBusFactory = messageBusFactory,
           storageFactory = storageFactory),

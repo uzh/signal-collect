@@ -60,20 +60,19 @@ package storage {
 
 package messageBus {
   object SharedMemory extends MessageBusFactory {
-    def createInstance(numberOfWorkers: Int, mapper: VertexToWorkerMapper): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers, mapper)
+    def createInstance(numberOfWorkers: Int): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers)
   }
 
 }
 
 package worker {
 
-  object Local extends LocalWorkerFactory {
+  object Local extends WorkerFactory {
     def createInstance(workerId: Int,
       workerConfig: WorkerConfiguration,
       numberOfWorkers: Int,
       coordinator: Any,
-      mapper: VertexToWorkerMapper,
-      loggingLevel: Int): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, mapper, loggingLevel)
+      loggingLevel: Int): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, loggingLevel)
   }
 
 }

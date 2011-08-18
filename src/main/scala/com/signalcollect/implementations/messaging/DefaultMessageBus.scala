@@ -25,9 +25,10 @@ import com.signalcollect.implementations.logging.DefaultLogger
 import com.signalcollect.interfaces.LogMessage
 
 class DefaultMessageBus[IdType](
-  val numberOfWorkers: Int,
-  protected val mapper: VertexToWorkerMapper)
+  val numberOfWorkers: Int)
   extends MessageBus[IdType] {
+
+  protected val mapper: VertexToWorkerMapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   protected val workers = new Array[Any](numberOfWorkers)
   protected var coordinator: MessageRecipient[Any] = _

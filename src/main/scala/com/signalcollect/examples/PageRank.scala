@@ -65,7 +65,7 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = Builder.build
+  val cg = GraphBuilder.build
   cg.addVertex(new Page(1))
   cg.addVertex(new Page(2))
   cg.addVertex(new Page(3))
