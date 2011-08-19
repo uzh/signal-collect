@@ -33,9 +33,13 @@ import com.signalcollect.interfaces._
  *
  *  @note The `collect` function receives all signals that arrived at this vertex but have not
  *  been collected yet as a parameter.
+ *  
+ *  @note The `collect` function receives all signals that arrived at this vertex but have not
+ *  been collected yet as a parameter.
  *
- *  @param id unique vertex id.
- *  @param state the initial state of the vertex.
+ *  @param id Unique vertex id.
+ *  @param state The initial state of the vertex.
+ *  @param resetState The state will be set to `resetState` after signaling.
  *
  *  @author Philip Stutz
  *  @version 1.0
@@ -43,12 +47,13 @@ import com.signalcollect.interfaces._
  */
 abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
   val id: IdTypeParameter,
-  var state: StateTypeParameter)
+  var state: StateTypeParameter,
+  val resetState: StateTypeParameter)
   extends AbstractVertex with ResetStateAfterSignaling with VertexGraphEditor {
 
   type Id = IdTypeParameter
   type State = StateTypeParameter
-
+  
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *

@@ -28,10 +28,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 @SuppressWarnings("serial")
-public abstract class DataFlowVertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> extends VertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> {
+public abstract class DataFlowVertexJ<IdTypeParameter, StateTypeParameter, SignalTypeParameter> extends VertexJWithResetStateAfterSignaling<IdTypeParameter, StateTypeParameter, SignalTypeParameter> {
 
-	public DataFlowVertexJ(IdTypeParameter vertexId, StateTypeParameter initialState) {
-		super(vertexId, initialState);
+	public DataFlowVertexJ(IdTypeParameter vertexId, StateTypeParameter initialState, StateTypeParameter resetState) {
+		super(vertexId, initialState, resetState);
 	}
 	
 	protected HashMap<EdgeId<?, IdTypeParameter>, SignalTypeParameter> mostRecentSignalMap = new HashMap<EdgeId<?, IdTypeParameter>, SignalTypeParameter>();

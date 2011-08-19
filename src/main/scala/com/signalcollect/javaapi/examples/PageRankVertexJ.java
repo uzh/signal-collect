@@ -3,12 +3,12 @@ package com.signalcollect.javaapi.examples;
 import com.signalcollect.javaapi.*;
 
 @SuppressWarnings("serial")
-public class PageJ extends DataGraphVertexJ<Integer, Double, Double> {
+public class PageRankVertexJ extends DataGraphVertexJ<Integer, Double, Double> {
 
 	Double baseRank;
 	Double dampingFactor;
 
-	public PageJ(Integer vertexId, Double baseRank) {
+	public PageRankVertexJ(Integer vertexId, Double baseRank) {
 		super(vertexId, baseRank);
 		this.baseRank = baseRank;
 		this.dampingFactor = 1 - baseRank;

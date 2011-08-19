@@ -28,6 +28,7 @@ import scala.reflect.BeanProperty
 import com.signalcollect.implementations.graph.AbstractVertex
 import com.signalcollect.implementations.graph.SumOfOutWeights
 import com.signalcollect.implementations.graph.VertexGraphEditor
+import com.signalcollect.implementations.graph.ResetStateAfterSignaling
 
 /**
  *  A version of the abstract vertex that serves as the foundation for the Java API vertices.
@@ -52,3 +53,5 @@ class VertexJ[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   }
 
 }
+
+class VertexJWithResetStateAfterSignaling[IdTypeParameter, StateTypeParameter, SignalTypeParameter](id: IdTypeParameter, initialState: StateTypeParameter, val resetState: StateTypeParameter) extends VertexJ[IdTypeParameter, StateTypeParameter, SignalTypeParameter](id, initialState) with ResetStateAfterSignaling
