@@ -20,10 +20,8 @@
 package com.signalcollect.javaapi
 
 import com.signalcollect._
-import com.signalcollect.configuration._
 
-/**
- *  An execution configuration specifies execution parameters for a computation. This object
- *  represents an ExecutionConfiguration that is initialized with the default parameters.
- */
-object ExecutionConfigurationJ extends ExecutionConfiguration(OptimizedAsynchronousExecutionMode, 0.01, 0.0, None, None)
+abstract class Command extends Function1[Vertex, Unit] {
+  def apply(v: Vertex) = f(v); Unit
+  def f(v: Vertex)
+}

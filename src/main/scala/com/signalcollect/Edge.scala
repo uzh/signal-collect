@@ -62,8 +62,8 @@ trait Edge extends Serializable {
   /** Called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertex) = {}
 
-  /** The weight of this edge: 1.0 by default, can be overridden. */
-  def weight: Double = 1
+  /** The weight of this edge. */
+  def weight: Double
 
   /** EdgeClassName(id=`edge id`) */
   override def toString = getClass.getSimpleName + "(id=" + id + ")"

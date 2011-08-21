@@ -32,12 +32,12 @@ import com.signalcollect.interfaces.MessageBus
  *  It translates type parameters to Scala type members, which are unavailable in Java.
  *
  *  @note The bean property annotation tells the compiler to generate getters and setters, which makes fields
- *  accessible from Java.
+ *  more easily accessible from Java.
  */
-class EdgeJ[SourceVertexTypeParameter <: Vertex](
+class DefaultEdge[SourceVertexTypeParameter <: Vertex](
   sourceId: Object,
   targetId: Object,
-  override val weight: Double) extends Edge {
+  @BeanProperty val weight: Double) extends Edge {
 
   def this(sourceId: Object, targetId: Object) = this(sourceId, targetId, 1.0)
 

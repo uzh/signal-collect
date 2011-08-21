@@ -20,8 +20,10 @@
 package com.signalcollect.javaapi
 
 import com.signalcollect._
+import com.signalcollect.configuration._
 
-abstract class FunctionJ[ReturnValueType] extends Function1[Vertex, ReturnValueType] {
-  def apply(v: Vertex): ReturnValueType = f(v)
-  def f(v: Vertex): ReturnValueType
-}
+/**
+ *  An execution configuration specifies execution parameters for a computation. This object
+ *  represents an ExecutionConfiguration that is initialized with the default parameters.
+ */
+object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchronousExecutionMode, 0.01, 0.0, None, None)

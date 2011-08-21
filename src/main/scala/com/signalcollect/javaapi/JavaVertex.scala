@@ -21,7 +21,6 @@ package com.signalcollect.javaapi
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Map
-import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
 import scala.reflect.BeanProperty
@@ -29,6 +28,7 @@ import com.signalcollect.implementations.graph.AbstractVertex
 import com.signalcollect.implementations.graph.SumOfOutWeights
 import com.signalcollect.implementations.graph.VertexGraphEditor
 import com.signalcollect.implementations.graph.ResetStateAfterSignaling
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  *  A version of the abstract vertex that serves as the foundation for the Java API vertices.
@@ -40,7 +40,7 @@ import com.signalcollect.implementations.graph.ResetStateAfterSignaling
  *  @note The bean property annotation tells the compiler to generate getters and setters, which makes fields
  *  accessible from Java.
  */
-class VertexJ[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
+protected class VertexJ[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   @BeanProperty val id: IdTypeParameter,
   @BeanProperty var state: StateTypeParameter)
   extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {

@@ -20,8 +20,6 @@
 package com.signalcollect.javaapi
 
 import com.signalcollect._
+import com.signalcollect.configuration._
 
-abstract class CommandJ extends Function1[Vertex, Unit] {
-  def apply(v: Vertex) = f(v); Unit
-  def f(v: Vertex)
-}
+object GraphBuilder extends GraphBuilder(Configuration())

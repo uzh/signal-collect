@@ -20,6 +20,8 @@
 package com.signalcollect.javaapi
 
 import com.signalcollect._
-import com.signalcollect.configuration._
 
-object GraphBuilderJ extends GraphBuilder(Configuration())
+abstract class Function[ReturnValueType] extends Function1[Vertex, ReturnValueType] {
+  def apply(v: Vertex): ReturnValueType = f(v)
+  def f(v: Vertex): ReturnValueType
+}

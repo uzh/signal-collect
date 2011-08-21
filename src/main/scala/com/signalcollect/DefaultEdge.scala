@@ -52,6 +52,9 @@ abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
    */
   val id = DefaultEdgeId(sourceId, targetId, description)
 
+  /** The weight of this edge: 1.0 by default, can be overridden. */
+  def weight: Double = 1
+  
   /**
    *  The abstract `signal` function is algorithm specific and is implemented by a user of the framework.
    *  It calculates the signal that is sent from the source vertex to the target vertex.

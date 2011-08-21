@@ -27,6 +27,8 @@ class StateForwarderEdge[SourceIdType, TargetIdType](
   description: String = getClass.getSimpleName)
   extends DefaultEdge(sourceId, targetId, description) {
 
+  def this(sourceId: SourceIdType, targetId: TargetIdType) = this(sourceId, targetId, "")
+  
   def signal(sourceVertex: SourceVertex) = sourceVertex.state.asInstanceOf[Signal]
 
 }
