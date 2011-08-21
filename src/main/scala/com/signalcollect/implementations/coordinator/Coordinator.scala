@@ -30,6 +30,7 @@ import com.signalcollect.SynchronousExecutionMode
 import com.signalcollect.OptimizedAsynchronousExecutionMode
 import com.signalcollect.PureAsynchronousExecutionMode
 import com.signalcollect.ExecutionStatistics
+import com.signalcollect.ContinuousAsynchronousExecution
 
 class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
 
@@ -62,6 +63,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
       case SynchronousExecutionMode => synchronousExecution(parameters.stepsLimit)
       case OptimizedAsynchronousExecutionMode => optimizedAsynchronousExecution
       case PureAsynchronousExecutionMode => pureAsynchronousExecution
+      case ContinuousAsynchronousExecution => continuousAsynchronousExecution
     }
 
     /*******************************/
@@ -116,6 +118,10 @@ class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
     workerApi.pauseComputation
   }
 
+  protected def continuousAsynchronousExecution {
+    workerApi.startComputation
+  }
+  
   protected def synchronousExecution(stepsLimit: Option[Long]) {
     var done = false
     while (!done && (!stepsLimit.isDefined || workerApi.collectSteps < stepsLimit.get)) {

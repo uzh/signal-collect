@@ -157,6 +157,14 @@ object PureAsynchronousExecutionMode extends ExecutionMode {
 }
 
 /**
+ *  Same as asynchronous but keeps on running even when the computation has stalled.
+ *  Can be used for use cases such as continuous querying.
+ */
+object ContinuousAsynchronousExecution extends ExecutionMode {
+  override def toString = "ContinuousAsynchronousExecutionMode"
+}
+
+/**
  *  This is the default execution mode.
  *
  *  In optimized asynchronous execution mode there is one synchronous signal operation
