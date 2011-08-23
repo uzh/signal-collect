@@ -37,9 +37,11 @@ import com.signalcollect.interfaces.MessageBus
 class DefaultEdge[SourceVertexTypeParameter <: Vertex](
   sourceId: Object,
   targetId: Object,
+  description: String,
   @BeanProperty val weight: Double) extends Edge {
 
-  def this(sourceId: Object, targetId: Object) = this(sourceId, targetId, 1.0)
+  def this(sourceId: Object, targetId: Object, description: String) = this(sourceId, targetId, description, 1.0)
+  def this(sourceId: Object, targetId: Object) = this(sourceId, targetId, "", 1.0)
 
   type SourceId = Object
   type TargetId = Object
