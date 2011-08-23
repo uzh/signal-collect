@@ -25,7 +25,7 @@ import com.signalcollect._
 import com.signalcollect.implementations.logging.DefaultLogger
 
 case class Configuration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-  maxInboxSize: Option[Long] = None, //Some(Runtime.getRuntime.availableProcessors*5000),
+  maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors*5000), //None
   loggingLevel: Int = LoggingLevel.Warning,
   logger: MessageRecipient[LogMessage] = new DefaultLogger,
   workerConfiguration: WorkerConfiguration = WorkerConfiguration())
@@ -34,4 +34,4 @@ case class WorkerConfiguration(
   workerFactory: WorkerFactory = factory.worker.Local,
   messageBusFactory: MessageBusFactory = factory.messageBus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = None /*Some(500l)*/ )
+  statusUpdateIntervalInMillis: Option[Long] = Some(500l) /*None*/ )

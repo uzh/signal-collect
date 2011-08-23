@@ -31,9 +31,12 @@ import com.signalcollect.Edge
 import com.signalcollect.Vertex
 import com.signalcollect.GraphEditor
 import com.signalcollect.implementations.graph.DefaultGraphEditor
+import com.signalcollect.EdgeId
 
-class WorkerApi(config: Configuration) extends MessageRecipient[Any] with DefaultGraphEditor with Logging {
+class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Logging with GraphEditor {
 
+  val graphEditor = DefaultGraphEditor.createInstance(messageBus)
+  
   protected val loggingLevel = config.loggingLevel
 
   override def toString = "WorkerApi"
@@ -186,20 +189,58 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
     }
   }
 
-  override def addEdge(edge: Edge) {
-    super.addEdge(edge)
+  def addEdge(edge: Edge) {
+    graphEditor.addEdge(edge)
     if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
-  override def addVertex(vertex: Vertex) {
-    super.addVertex(vertex)
+  def addVertex(vertex: Vertex) {
+    graphEditor.addVertex(vertex)
     if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
       awaitMessageProcessing
     }
   }
 
+  /**
+   * Sends a signal to the vertex with vertex.id=edgeId.targetId
+   */
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any]) {
+    graphEditor.sendSignalAlongEdge(signal, edgeId)
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
+      awaitMessageProcessing
+    }
+  }
+
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
+    graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory)
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
+      awaitMessageProcessing
+    }
+  }
+
+  def removeVertex(vertexId: Any) {
+    graphEditor.removeVertex(vertexId)
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
+      awaitMessageProcessing
+    }
+  }
+
+  def removeEdge(edgeId: EdgeId[Any, Any]) {
+    graphEditor.removeEdge(edgeId)
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
+      awaitMessageProcessing
+    }
+  }
+
+  def removeVertices(shouldRemove: Vertex => Boolean) {
+    graphEditor.removeVertices(shouldRemove)
+    if (config.workerConfiguration.statusUpdateIntervalInMillis.isDefined) {
+      awaitMessageProcessing
+    }
+  }
+  
   def started: Boolean = workerStatusMap.values.forall(!_.isPaused)
 
   def awaitStarted {
@@ -234,7 +275,10 @@ class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Defaul
 
   def recalculateScoresForVertexWithId(vertexId: Any) = workerProxies(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
 
-  def shutdown = parallelWorkerProxies foreach (_.shutdown)
+  def shutdown = {
+    awaitIdle
+    parallelWorkerProxies foreach (_.shutdown)
+  }
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
     awaitIdle

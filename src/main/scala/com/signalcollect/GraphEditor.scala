@@ -26,8 +26,15 @@ trait GraphEditor {
   /**
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any)
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any])
 
+  /**
+   * Sends a signal to the vertex with vertex.id=targetId
+   */
+  def sendSignalToVertex(signal: Any, targetId: Any) {
+    sendSignalAlongEdge(signal, new DefaultEdgeId("Coordinator", targetId))
+  }
+  
   def addVertex(vertex: Vertex)
 
   def addEdge(edge: Edge)

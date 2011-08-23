@@ -47,6 +47,8 @@ class DefaultGraph(val config: Configuration = Configuration()) extends Graph {
 
   def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
+  def awaitIdle = workerApi.awaitIdle
+  
   def shutdown = workerApi.shutdown
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
@@ -69,8 +71,8 @@ class DefaultGraph(val config: Configuration = Configuration()) extends Graph {
   /**
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any) {
-    workerApi.sendSignalToVertex(edgeId, signal)
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any]) {
+    workerApi.sendSignalAlongEdge(signal, edgeId)
   }
 
   def addVertex(vertex: Vertex) = workerApi.addVertex(vertex)

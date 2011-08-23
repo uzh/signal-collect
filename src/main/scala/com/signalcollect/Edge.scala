@@ -31,7 +31,9 @@ import com.signalcollect.interfaces.MessageBus
  *  @version 1.0
  *  @since 1.0
  */
-case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId]
+case class DefaultEdgeId[SourceId, TargetId](sourceId: SourceId, targetId: TargetId, description: String = "") extends EdgeId[SourceId, TargetId] {
+  def this(sourceId: SourceId, targetId: TargetId) = this(sourceId, targetId, "")
+}
 
 /**
  *  An edge id uniquely identifies an edge in the graph.

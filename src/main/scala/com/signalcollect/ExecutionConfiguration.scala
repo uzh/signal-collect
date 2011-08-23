@@ -138,7 +138,7 @@ sealed trait ExecutionMode extends Serializable
  *  of different vertices never overlap. This execution mode is related to the
  *  Bulk Synchronous Parallel (BSP) paradigm and similar to Google Pregel.
  */
-object SynchronousExecutionMode extends ExecutionMode {
+case object SynchronousExecutionMode extends ExecutionMode {
   def self = this
   override def toString = "SynchronousExecutionMode"
 }
@@ -152,7 +152,7 @@ object SynchronousExecutionMode extends ExecutionMode {
  *  because it has the potential to propagate information across the graph faster and
  *  because it is less susceptible to oscillations.
  */
-object PureAsynchronousExecutionMode extends ExecutionMode {
+case object PureAsynchronousExecutionMode extends ExecutionMode {
   override def toString = "PureAsynchronousExecutionMode"
 }
 
@@ -160,7 +160,7 @@ object PureAsynchronousExecutionMode extends ExecutionMode {
  *  Same as asynchronous but keeps on running even when the computation has stalled.
  *  Can be used for use cases such as continuous querying.
  */
-object ContinuousAsynchronousExecution extends ExecutionMode {
+case object ContinuousAsynchronousExecution extends ExecutionMode {
   override def toString = "ContinuousAsynchronousExecutionMode"
 }
 
@@ -175,6 +175,6 @@ object ContinuousAsynchronousExecution extends ExecutionMode {
  *  the first signal from all their neighbors. In algorithms like PageRank this hurts
  *  performance and it is avoided by this execution mode.
  */
-object OptimizedAsynchronousExecutionMode extends ExecutionMode {
+case object OptimizedAsynchronousExecutionMode extends ExecutionMode {
   override def toString = "OptimizedAsynchronousExecutionMode"
 }

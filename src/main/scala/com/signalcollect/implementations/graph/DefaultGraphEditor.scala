@@ -34,7 +34,7 @@ trait DefaultGraphEditor extends GraphEditor with DefaultSerializer {
   /**
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalToVertex(edgeId: EdgeId[Any, Any], signal: Any) {
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any]) {
     messageBus.sendToWorkerForVertexId(SignalMessage(edgeId, signal), edgeId.targetId)
   }
 

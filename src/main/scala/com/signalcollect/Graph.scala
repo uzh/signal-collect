@@ -103,6 +103,13 @@ trait Graph extends GraphEditor {
   def recalculateScoresForVertexWithId(vertexId: Any)
 
   /**
+   *  Waits until all processing has finished.
+   *
+   *  @note Only used with continuous asynchronous execution.
+   */
+  def awaitIdle
+  
+  /**
    *  Shuts down the compute graph and frees associated resources.
    *
    *  @note If methods on a ComputeGraph instance get called after having called `shutdown`, then the behavior is not specified.
