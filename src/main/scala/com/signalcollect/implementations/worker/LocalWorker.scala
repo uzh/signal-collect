@@ -84,7 +84,7 @@ class LocalWorker(val workerId: Int,
       handleIdling
       // While the computation is in progress, alternately check the inbox and collect/signal
       if (!isPaused) {
-        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)	
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)
         vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
           processInbox
           val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, false)
@@ -129,7 +129,7 @@ class LocalWorker(val workerId: Int,
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
       vertex.afterInitialization(messageBus)
-      if(vertex.scoreSignal>signalThreshold) {
+      if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.add(vertex.id)
       }
     }
@@ -351,17 +351,21 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[SignalMessage[_, _, _]], addToSignal:Boolean = true): Boolean = {
+  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[SignalMessage[_, _, _]], addToSignal: Boolean = true): Boolean = {
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       if (vertex.scoreCollect(uncollectedSignalsList) > collectThreshold) {
-        counters.collectOperationsExecuted += 1
-        vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
-        vertexStore.vertices.updateStateOfVertex(vertex)
-        hasCollected = true
-        if(addToSignal && vertex.scoreSignal>signalThreshold) {
-          vertexStore.toSignal.add(vertex.id)
+        try {
+          counters.collectOperationsExecuted += 1
+          vertex.executeCollectOperation(uncollectedSignalsList, messageBus)
+          vertexStore.vertices.updateStateOfVertex(vertex)
+          hasCollected = true
+          if (addToSignal && vertex.scoreSignal > signalThreshold) {
+            vertexStore.toSignal.add(vertex.id)
+          }
+        } catch {
+          case t: Throwable => severe(t)
         }
       }
     } else {
@@ -375,10 +379,14 @@ class LocalWorker(val workerId: Int,
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       if (vertex.scoreSignal > signalThreshold) {
-        counters.signalOperationsExecuted += 1
-        vertex.executeSignalOperation(messageBus)
-        vertexStore.vertices.updateStateOfVertex(vertex)
-        hasSignaled = true
+        try {
+          vertex.executeSignalOperation(messageBus)
+          counters.signalOperationsExecuted += 1
+          vertexStore.vertices.updateStateOfVertex(vertex)
+          hasSignaled = true
+        } catch {
+          case t: Throwable => severe(t)
+        }
       }
     }
     hasSignaled
