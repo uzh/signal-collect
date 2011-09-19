@@ -22,14 +22,15 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 
 /**
- * [[com.signalcollect.interfaces.Edge]] implementation that only signals
- * when the signal has changed compared to the last signal sent.
+ *  OnlySignalOnChangeEdge is an edge implementation that only signals
+ *  when the signal has changed compared to the last signal sent.
+ *  For some algorithms this can reduce the number of messages sent.
  *
- * @param sourceId id of this edge's source vertex
- * @param targetId id of this edges's target vertex
+ *  @param sourceId id of this edge's source vertex
+ *  @param targetId id of this edges's target vertex
+ *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  *
- * See [[com.signalcollect.api.DefaultEdge]] for more information about edges
- * in general.
+ *  @note Beware of modifying and signaling a referenced object, change detection fails in this case.
  */
 abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
   sourceId: SourceIdType,
@@ -41,13 +42,18 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
   var lastSignalSent: Option[Signal] = None
 
   /**
-   * Calculates the new signal, compares it with the last signal sent and
-   * only sends a signal if they are not equal.
+   *  Function that gets called by the source vertex whenever this edge is supposed to send a signal.
+   *  Compared to the default implementation there is an additional check if the signal has changed
+   *  and no signal is sent if the signal has not changed.
+   *
+   *  @param sourceVertex The source vertex of this edge.
+   *
+   *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex, mb: MessageBus[Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any]) {
     val newSignal = signal(sourceVertex.asInstanceOf[SourceVertex])
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      mb.sendToWorkerForVertexIdHash(SignalMessage(id, newSignal), cachedTargetIdHashCode)
+      messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, newSignal), cachedTargetIdHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

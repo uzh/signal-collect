@@ -55,6 +55,9 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *  @param mostRecentSignals An iterable that returns the most recently received signal for each edge that has sent at least one signals already.
    *
    *  @return The new vertex state.
+   *  
+   *  @note Beware of modifying and returning a referenced object,
+   *  default signal scoring and termination detection fail in this case.
    */
   def collect(mostRecentSignals: Iterable[Signal]): State
 

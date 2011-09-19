@@ -33,7 +33,7 @@ import com.signalcollect.interfaces._
  *
  *  @note The `collect` function receives all signals that arrived at this vertex but have not
  *  been collected yet as a parameter.
- *  
+ *
  *  @note The `collect` function receives all signals that arrived at this vertex but have not
  *  been collected yet as a parameter.
  *
@@ -53,13 +53,16 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
 
   type Id = IdTypeParameter
   type State = StateTypeParameter
-  
+
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
    *  @param uncollectedSignals all signals received by this vertex since the last time this function was executed
    *
    *  @return The new vertex state.
+   *
+   *  @note Beware of modifying and returning a referenced object,
+   *  default signal scoring and termination detection fail in this case.
    */
   def collect(uncollectedSignals: Iterable[Signal]): State
 

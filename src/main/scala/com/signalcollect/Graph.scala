@@ -280,7 +280,7 @@ trait Graph extends GraphEditor {
    *  Sets the function that handles signals that could not be delivered to a vertex.
    *
    *  @note By default nothing happens when a signal is not deliverable. The handler function
-   *  		receives the signal and an instance of GraphApi as parameters in order to take some
+   *  		receives the signal and an instance of GraphEditor as parameters in order to take some
    *  		action that handles this case.
    */
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
