@@ -34,9 +34,6 @@ import com.signalcollect.interfaces._
  *  @note The `collect` function receives all signals that arrived at this vertex but have not
  *  been collected yet as a parameter.
  *
- *  @note The `collect` function receives all signals that arrived at this vertex but have not
- *  been collected yet as a parameter.
- *
  *  @param id Unique vertex id.
  *  @param state The initial state of the vertex.
  *  @param resetState The state will be set to `resetState` after signaling.
