@@ -21,12 +21,12 @@ package com.signalcollect
 import com.signalcollect.interfaces.MessageBus
 
 /**
- *  A DefaultEdgeId uniquely identifies an edge in the graph.
+ *  DefaultEdgeId uniquely identifies an edge in the graph.
  *
  *  @param sourceId source vertex id
  *  @param targetId target vertex id
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
- *  
+ *
  *  @author Philip Stutz
  *  @version 1.0
  *  @since 1.0
@@ -44,6 +44,13 @@ trait EdgeId[+SourceId, +TargetId] extends Serializable {
   def description: String
 }
 
+/**
+ * This trait represents the framework's view of an edge.
+ *
+ *  @author Philip Stutz
+ *  @version 1.0
+ *  @since 1.0
+ */
 trait Edge extends Serializable {
 
   /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */

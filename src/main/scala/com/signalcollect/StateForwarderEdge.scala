@@ -21,6 +21,14 @@ package com.signalcollect
 
 import com.signalcollect.interfaces._
 
+/**
+ *  StateForwarderEdge is an edge implementation that signals
+ *  the state of its source vertex.
+ *
+ *  @param sourceId id of this edge's source vertex
+ *  @param targetId id of this edges's target vertex
+ *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
+ */
 class StateForwarderEdge[SourceIdType, TargetIdType](
   sourceId: SourceIdType,
   targetId: TargetIdType,

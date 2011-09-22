@@ -22,10 +22,7 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
 
 /**
- * This class represents the framework's view of a vertex.
- *
- * This trait requires to always be extended by something that implements {@link Vertex}
- * which gives us access to methods and fields in {@link Vertex}.
+ * This trait represents the framework's view of a vertex.
  * 
  *  @author Philip Stutz
  *  @version 1.0
