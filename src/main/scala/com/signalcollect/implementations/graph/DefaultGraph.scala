@@ -28,7 +28,7 @@ import com.signalcollect._
 /**
  * Default [[com.signalcollect.interfaces.ComputeGraph]] implementation.
  */
-class DefaultGraph(val config: Configuration = Configuration()) extends Graph {
+class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
   workerApi.initialize
 

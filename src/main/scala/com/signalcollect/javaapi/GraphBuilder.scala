@@ -22,4 +22,4 @@ package com.signalcollect.javaapi
 import com.signalcollect._
 import com.signalcollect.configuration._
 
-object GraphBuilder extends GraphBuilder(Configuration())
+object GraphBuilder extends GraphBuilder(GraphConfiguration())

@@ -32,7 +32,7 @@ import com.signalcollect.PureAsynchronousExecutionMode
 import com.signalcollect.ExecutionStatistics
 import com.signalcollect.ContinuousAsynchronousExecution
 
-class Coordinator(protected val workerApi: WorkerApi, config: Configuration) {
+class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration) {
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {   
     workerApi.signalSteps = 0

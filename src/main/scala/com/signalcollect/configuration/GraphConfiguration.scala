@@ -24,8 +24,9 @@ import java.util.HashMap
 import com.signalcollect._
 import com.signalcollect.implementations.logging.DefaultLogger
 
-case class Configuration(numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
-  maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors*5000), //None
+case class GraphConfiguration(
+  numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
+  maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors * 5000), //None
   loggingLevel: Int = LoggingLevel.Warning,
   logger: MessageRecipient[LogMessage] = new DefaultLogger,
   workerConfiguration: WorkerConfiguration = WorkerConfiguration())

@@ -37,7 +37,7 @@ import com.signalcollect.configuration._
  *  @since 1.0
  */
 case class ExecutionInformation(
-  config: Configuration,
+  config: GraphConfiguration,
   parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,

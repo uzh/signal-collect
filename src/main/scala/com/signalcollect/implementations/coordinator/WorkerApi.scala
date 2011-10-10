@@ -33,7 +33,7 @@ import com.signalcollect.GraphEditor
 import com.signalcollect.implementations.graph.DefaultGraphEditor
 import com.signalcollect.EdgeId
 
-class WorkerApi(config: Configuration) extends MessageRecipient[Any] with Logging with GraphEditor {
+class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with Logging with GraphEditor {
 
   val graphEditor = DefaultGraphEditor.createInstance(messageBus)
   

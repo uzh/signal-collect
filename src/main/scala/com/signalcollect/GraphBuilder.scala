@@ -28,7 +28,7 @@ import com.signalcollect.implementations.graph.DefaultGraph
  *  functions to modify this configuration and a build function to instantiate a graph
  *  with the defined configuration. This object represents a graph builder that is initialized with the default configuration.
  */
-object GraphBuilder extends GraphBuilder(Configuration())
+object GraphBuilder extends GraphBuilder(GraphConfiguration())
 
 /**
  * Builder for the creation of a compute graph needs a configuration object for the creation.
@@ -39,7 +39,7 @@ object GraphBuilder extends GraphBuilder(Configuration())
  *  @version 1.0
  *  @since 1.0
  */
-class GraphBuilder(protected val config: Configuration = Configuration()) extends Serializable {
+class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
 
   /**
    *  Creates a graph with the specified configuration.
@@ -107,7 +107,7 @@ class GraphBuilder(protected val config: Configuration = Configuration()) extend
     messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
     storageFactory: StorageFactory = config.workerConfiguration.storageFactory): GraphBuilder = {
     new GraphBuilder(
-      Configuration(
+      GraphConfiguration(
         numberOfWorkers = numberOfWorkers,
         loggingLevel = loggingLevel,
         logger = logger,
