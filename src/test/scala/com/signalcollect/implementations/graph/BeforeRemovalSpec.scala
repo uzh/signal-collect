@@ -39,17 +39,17 @@ class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
     g.removeVertex(1)
 
     "call the onRemoval function of a vertex before removing it" in {
-      RemovalDetector.onRemovalWorked must_== true
+      RemovalDetector.beforeRemovalWorked must_== true
     }
   }
 
 }
 
 object RemovalDetector {
-  var onRemovalWorked = false
+  var beforeRemovalWorked = false
 }
 
 class BeforeRemovalVertex extends DataGraphVertex(1, 0) {
   def collect(mostRecentSignals: Iterable[Signal]): Int = 0
-  override def beforeRemoval(mb: MessageBus[Any]) = RemovalDetector.onRemovalWorked = true
+  override def beforeRemoval(mb: MessageBus[Any]) = RemovalDetector.beforeRemovalWorked = true
 }
