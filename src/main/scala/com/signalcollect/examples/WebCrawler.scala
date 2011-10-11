@@ -36,12 +36,12 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val cg = GraphBuilder.build
-  cg.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
-  val stats = cg.execute
-  cg.foreachVertex(println(_))
+  val graph = GraphBuilder.build
+  graph.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
+  val stats = graph.execute
+  graph.foreachVertex(println(_))
   println(stats)
-  cg.shutdown
+  graph.shutdown
 }
 
 /**

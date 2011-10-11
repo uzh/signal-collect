@@ -61,7 +61,7 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(uncollectedSignals: Iterable[Signal]): State
+  def collect(oldState: State, uncollectedSignals: Iterable[Signal]): State
 
   /**
    *  All uncollected signal messages, not just the signals.
@@ -84,7 +84,7 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
     uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
-    state = collect((uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
+    state = collect(state, (uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
   }
 
 }

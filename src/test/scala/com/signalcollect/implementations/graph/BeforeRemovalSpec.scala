@@ -50,6 +50,6 @@ object RemovalDetector {
 }
 
 class BeforeRemovalVertex extends DataGraphVertex(1, 0) {
-  def collect(mostRecentSignals: Iterable[Signal]): Int = 0
+  def collect(oldState: Int, mostRecentSignals: Iterable[Signal]): Int = 0
   override def beforeRemoval(mb: MessageBus[Any]) = RemovalDetector.beforeRemovalWorked = true
 }

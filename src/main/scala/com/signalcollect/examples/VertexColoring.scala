@@ -60,7 +60,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    *  set to a random color and the neighbors are informed about this vertex'
    *  new color. If no neighbor shares the same color, we stay with the old color.
    */
-  def collect(mostRecentSignals: Iterable[Int]): Int = {
+  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
     if (mostRecentSignalMap.values.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {
@@ -80,8 +80,8 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
         }
       }
     } else {
-      informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != state)
-      state.asInstanceOf[Int]
+      informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != oldState)
+      oldState
     }
   }
 
@@ -101,16 +101,16 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val cg = GraphBuilder.build
-  cg.addVertex(new ColoredVertex(1, 2, 1))
-  cg.addVertex(new ColoredVertex(2, 2, 1))
-  cg.addVertex(new ColoredVertex(3, 2, 1))
-  cg.addEdge(new StateForwarderEdge(1, 2))
-  cg.addEdge(new StateForwarderEdge(2, 1))
-  cg.addEdge(new StateForwarderEdge(2, 3))
-  cg.addEdge(new StateForwarderEdge(3, 2))
-  val stats = cg.execute
+  val graph = GraphBuilder.build
+  graph.addVertex(new ColoredVertex(1, 2, 1))
+  graph.addVertex(new ColoredVertex(2, 2, 1))
+  graph.addVertex(new ColoredVertex(3, 2, 1))
+  graph.addEdge(new StateForwarderEdge(1, 2))
+  graph.addEdge(new StateForwarderEdge(2, 1))
+  graph.addEdge(new StateForwarderEdge(2, 3))
+  graph.addEdge(new StateForwarderEdge(3, 2))
+  val stats = graph.execute
   println(stats)
-  cg.foreachVertex(println(_))
-  cg.shutdown
+  graph.foreachVertex(println(_))
+  graph.shutdown
 }

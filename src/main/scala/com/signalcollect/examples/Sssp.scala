@@ -59,27 +59,30 @@ class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVerte
    * up to now (= state) or one of the paths that had been advertised via a signal
    * by a neighbor.
    */
-  def collect(mostRecentSignals: Iterable[Int]): Option[Int] = Some(mostRecentSignals.foldLeft(state.getOrElse(Int.MaxValue))(math.min(_, _)))
+  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Option[Int] = {
+    val currentShortestPath = oldState.getOrElse(Int.MaxValue)
+    Some(mostRecentSignals.foldLeft(currentShortestPath)(math.min(_, _)))
+  }
 
 }
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val cg = GraphBuilder.build
-  cg.addVertex(new Location(1, Some(0)))
-  cg.addVertex(new Location(2))
-  cg.addVertex(new Location(3))
-  cg.addVertex(new Location(4))
-  cg.addVertex(new Location(5))
-  cg.addVertex(new Location(6))
-  cg.addEdge(new Path(1, 2))
-  cg.addEdge(new Path(2, 3))
-  cg.addEdge(new Path(3, 4))
-  cg.addEdge(new Path(1, 5))
-  cg.addEdge(new Path(4, 6))
-  cg.addEdge(new Path(5, 6))
-  val stats = cg.execute
+  val graph = GraphBuilder.build
+  graph.addVertex(new Location(1, Some(0)))
+  graph.addVertex(new Location(2))
+  graph.addVertex(new Location(3))
+  graph.addVertex(new Location(4))
+  graph.addVertex(new Location(5))
+  graph.addVertex(new Location(6))
+  graph.addEdge(new Path(1, 2))
+  graph.addEdge(new Path(2, 3))
+  graph.addEdge(new Path(3, 4))
+  graph.addEdge(new Path(1, 5))
+  graph.addEdge(new Path(4, 6))
+  graph.addEdge(new Path(5, 6))
+  val stats = graph.execute
   println(stats)
-  cg.foreachVertex(println(_))
-  cg.shutdown
+  graph.foreachVertex(println(_))
+  graph.shutdown
 }

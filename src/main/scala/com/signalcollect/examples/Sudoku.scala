@@ -45,7 +45,7 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVer
   var possibleValues = SudokuHelper.legalNumbers
   if (initialState.isDefined) possibleValues = Set(initialState.get)
 
-  def collect(mostRecentSignals: Iterable[Int]): Option[Int] = {
+  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Option[Int] = {
 
     //make a list of all possible values
     possibleValues = possibleValues -- mostRecentSignals.toSet
@@ -54,7 +54,7 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVer
     if (possibleValues.size == 1) {
       Some(possibleValues.head)
     } else
-      state
+      oldState
   }
 }
 
@@ -115,20 +115,20 @@ object Sudoku extends App {
   //select a sudoku puzzle
   val initialSeed = sudoku1
 
-  var cg = computeGraphFactory(initialSeed)
+  var graph = computeGraphFactory(initialSeed)
 
   //print initial Sudoku
   var seed = new HashMap[Int, Option[Int]]()
-  cg.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
-  val stats = cg.execute
+  val stats = graph.execute
   println(stats)
 
   //If simple constraint propagation did not solve the problem apply a depth first search algorithm to find a suitable solution
-  if (!isDone(cg)) {
-    cg = tryPossibilities(cg)
-    if (cg == null) {
+  if (!isDone(graph)) {
+    graph = tryPossibilities(graph)
+    if (graph == null) {
       println()
       println("Sorry this Sudoku is not solvable")
       sys.exit(5)
@@ -137,27 +137,27 @@ object Sudoku extends App {
   println()
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-  cg.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
-  cg.shutdown
+  graph.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.shutdown
   SudokuHelper.printSudoku(result)
 
   /**
    * Check if all cells have a value assigned to it
    */
-  def isDone(cg: Graph): Boolean = {
+  def isDone(graph: Graph): Boolean = {
     var isDone = true
-    cg.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
+    graph.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
   }
 
   /**
    * Recursive depth first search for possible values
    */
-  def tryPossibilities(cg: Graph): Graph = {
+  def tryPossibilities(graph: Graph): Graph = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
-    cg.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
-    cg.shutdown
+    graph.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
+    graph.shutdown
 
     var solutionFound = false
 
@@ -179,13 +179,13 @@ object Sudoku extends App {
       while (iterator.hasNext && !solutionFound) {
         var determinedValues = possibleValues.filter(_._2.size == 1).map(x => (x._1, x._2.head)).toMap[Int, Int]
         determinedValues += (candidate.get._1 -> iterator.next)
-        var cgTry = computeGraphFactory(determinedValues)
-        cgTry.execute
-        if (isDone(cgTry)) {
+        var graphTry = computeGraphFactory(determinedValues)
+        graphTry.execute
+        if (isDone(graphTry)) {
           solutionFound = true
-          return cgTry
+          return graphTry
         } else {
-          val nextTryResult = tryPossibilities(cgTry)
+          val nextTryResult = tryPossibilities(graphTry)
           if (nextTryResult != null) {
             return nextTryResult
           }
@@ -196,21 +196,21 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): Graph = {
-    val cg = GraphBuilder.build
+    val graph = GraphBuilder.build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {
       val seedValue = seed.get(index)
-      cg.addVertex(new SudokuCell(index, seedValue))
+      graph.addVertex(new SudokuCell(index, seedValue))
     }
 
     //Determine neighboring cells for each cell and draw the edges between them
     for (index <- 0 to 80) {
       SudokuHelper.cellsToConsider(index).foreach({ i =>
-        cg.addEdge(new SudokuAssociation(i, index))
+        graph.addEdge(new SudokuAssociation(i, index))
       })
     }
-    cg
+    graph
   }
 
 }

@@ -25,31 +25,31 @@ import com.signalcollect._
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val cg = GraphBuilder.build
+  val graph = GraphBuilder.build
 
   /**
    * Still need to test performance on complete and larger graphs
    */
 
-  cg.addVertex(new HamiltonianVertex("a", Map(List("a") -> 0)))
-  cg.addVertex(new HamiltonianVertex("b", Map(List("b") -> 0)))
-  cg.addVertex(new HamiltonianVertex("c", Map(List("c") -> 0)))
-  cg.addVertex(new HamiltonianVertex("d", Map(List("d") -> 0)))
-  cg.addVertex(new HamiltonianVertex("e", Map(List("e") -> 0)))
+  graph.addVertex(new HamiltonianVertex("a", Map(List("a") -> 0)))
+  graph.addVertex(new HamiltonianVertex("b", Map(List("b") -> 0)))
+  graph.addVertex(new HamiltonianVertex("c", Map(List("c") -> 0)))
+  graph.addVertex(new HamiltonianVertex("d", Map(List("d") -> 0)))
+  graph.addVertex(new HamiltonianVertex("e", Map(List("e") -> 0)))
 
-  cg.addEdge(new HamiltonianEdge("a", "d", 3)); cg.addEdge(new HamiltonianEdge("d", "a", 3))
-  cg.addEdge(new HamiltonianEdge("a", "b", 1)); cg.addEdge(new HamiltonianEdge("b", "a", 1))
-  cg.addEdge(new HamiltonianEdge("d", "b", 2)); cg.addEdge(new HamiltonianEdge("b", "d", 2))
-  cg.addEdge(new HamiltonianEdge("d", "c", 1)); cg.addEdge(new HamiltonianEdge("c", "d", 1))
-  cg.addEdge(new HamiltonianEdge("b", "c", 1)); cg.addEdge(new HamiltonianEdge("c", "b", 1))
+  graph.addEdge(new HamiltonianEdge("a", "d", 3)); graph.addEdge(new HamiltonianEdge("d", "a", 3))
+  graph.addEdge(new HamiltonianEdge("a", "b", 1)); graph.addEdge(new HamiltonianEdge("b", "a", 1))
+  graph.addEdge(new HamiltonianEdge("d", "b", 2)); graph.addEdge(new HamiltonianEdge("b", "d", 2))
+  graph.addEdge(new HamiltonianEdge("d", "c", 1)); graph.addEdge(new HamiltonianEdge("c", "d", 1))
+  graph.addEdge(new HamiltonianEdge("b", "c", 1)); graph.addEdge(new HamiltonianEdge("c", "b", 1))
 
   // a problem with isolated vertices is that it is not able to find hamiltonian paths depending on the starting vertex
-  cg.addEdge(new HamiltonianEdge("e", "a", 1)); cg.addEdge(new HamiltonianEdge("a", "e", 1))
+  graph.addEdge(new HamiltonianEdge("e", "a", 1)); graph.addEdge(new HamiltonianEdge("a", "e", 1))
 
-  val stats = cg.execute
+  val stats = graph.execute
   println(stats)
-  cg.foreachVertex (println(_))
-  cg.shutdown
+  graph.foreachVertex (println(_))
+  graph.shutdown
 }
 
 /**
@@ -67,15 +67,14 @@ class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extend
   /*
 	 * The state will contain all paths visited so far, not mattering the size of the path
 	 */
-  def collect(mostRecentSignals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
+  def collect(oldState: State, mostRecentSignals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
     // consolidate the maps into one map
     val pathMap = mostRecentSignals reduceLeft (_ ++ _)
 
     // add signal maps to state as a one map
-    state = List(pathMap, state) reduceLeft (_ ++ _)
+    val newState = List(pathMap, state) reduceLeft (_ ++ _)
 
-    state
-
+    newState
   }
 
   /*

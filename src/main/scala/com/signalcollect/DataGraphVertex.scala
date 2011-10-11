@@ -59,7 +59,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(mostRecentSignals: Iterable[Signal]): State
+  def collect(oldState: State, mostRecentSignals: Iterable[Signal]): State
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
@@ -94,7 +94,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
     castS foreach { signal =>
       mostRecentSignalMap.put(signal.edgeId, signal.signal)
     }
-    state = collect(mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
+    state = collect(state, mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
   }
 
   /**
