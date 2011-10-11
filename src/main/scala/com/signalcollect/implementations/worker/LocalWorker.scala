@@ -207,6 +207,7 @@ class LocalWorker(val workerId: Int,
     val edgesRemoved = vertex.removeAllOutgoingEdges
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
+    vertex.beforeRemoval(messageBus)
     vertexStore.vertices.remove(vertex.id)
   }
 

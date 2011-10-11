@@ -46,7 +46,7 @@ abstract class AbstractVertex extends Vertex {
    * supported or if there is no such signal.
    */
   def getMostRecentSignal(id: EdgeId[_, _]): Option[Any] = None
-  
+
   /**
    * hashCode is cached for better performance
    */
@@ -168,12 +168,12 @@ abstract class AbstractVertex extends Vertex {
    * Returns the ids of all vertices to which this vertex currently has an outgoing edge
    */
   def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.seq map (_._2.id.targetId)
-  
+
   /**
    * Returns all outgoing edges
    */
   override def getOutgoingEdges: Option[Iterable[Edge]] = Some(outgoingEdges.seq map (_._2))
-  
+
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size
 
@@ -182,5 +182,18 @@ abstract class AbstractVertex extends Vertex {
    */
   override def toString: String = {
     this.getClass.getSimpleName + "(id=" + id + ", state=" + state + ")"
+  }
+
+  /**
+   *  This method gets called by the framework before the vertex gets removed.
+   */
+  def beforeRemoval(messageBus: MessageBus[Any]) = {}
+
+  /**
+   *  Adds a new incoming `Edge` to this `Vertex`.
+   *  @param e the edge to be added.
+   */
+  def addIncomingEdge(e: Edge): Boolean = {
+    true
   }
 }
