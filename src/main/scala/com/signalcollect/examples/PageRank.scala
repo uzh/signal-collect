@@ -19,6 +19,8 @@
 
 package com.signalcollect.examples
 
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.factory.storage._
 import com.signalcollect._
 
 /**
@@ -27,15 +29,15 @@ import com.signalcollect._
  *  @param s: the identifier of the source vertex
  *  @param t: the identifier of the target vertex
  */
-class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
+class PageRankEdge(s: Any, t: Any) extends DefaultEdge(s, t) {
   
-  type SourceVertex = Page
+  type SourceVertex = PageRankVertex
   
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
    */
-  override def signal(sourceVertex: Page) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
+  override def signal(sourceVertex: PageRankVertex) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
 
 }
 
@@ -45,7 +47,7 @@ class Link(s: Any, t: Any) extends DefaultEdge(s, t) {
  *  @param id: the identifier of this vertex
  *  @param dampingFactor: @see <a href="http://en.wikipedia.org/wiki/PageRank">PageRank algorithm</a>
  */
-class Page(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
+class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
 
   type Signal = Double
 
@@ -61,23 +63,25 @@ class Page(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 
       case Some(oldState) => (state - oldState).abs
     }
   }
+  
 }
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val cg = GraphBuilder.build
-  cg.addVertex(new Page(1))
-  cg.addVertex(new Page(2))
-  cg.addVertex(new Page(3))
-  cg.addEdge(new Link(1, 2))
-  cg.addEdge(new Link(2, 1))
-  cg.addEdge(new Link(2, 3))
-  cg.addEdge(new Link(3, 2))
+  val graph = GraphBuilder.build
+  graph.addVertex(new PageRankVertex(1))
+  graph.addVertex(new PageRankVertex(2))
+  graph.addVertex(new PageRankVertex(3))
+  graph.addEdge(new PageRankEdge(1, 2))
+  graph.addEdge(new PageRankEdge(2, 1))
+  graph.addEdge(new PageRankEdge(2, 3))
+  graph.addEdge(new PageRankEdge(3, 2))
   
-  cg.sendSignalToVertex(1, 100.0)
+  val stats = graph.execute
   
-  val stats = cg.execute
+  graph.removeVertex(3)
+  
   println(stats)
-  cg.foreachVertex(println(_))
-  cg.shutdown
+  graph.foreachVertex(println(_))
+  graph.shutdown
 }

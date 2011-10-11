@@ -47,7 +47,7 @@ object WebCrawler extends App {
 /**
  *  Adds linked webpages as vertices to the graph and connects them with a link edge
  */
-class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends Page(id, dampingFactor) {
+class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends PageRankVertex(id, dampingFactor) {
 
   /** This method gets called by the framework after the vertex has been fully initialized. */
   override def afterInitialization(mb: MessageBus[Any]) {
@@ -57,7 +57,7 @@ class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString
         Regex.hyperlink.findAllIn(webpage).matchData map (_.group(1)) foreach { linked =>
           graphEditor.addVertex(new Webpage(linked, crawlDepth - 1))
-          graphEditor.addEdge(new Link(id, linked))
+          graphEditor.addEdge(new PageRankEdge(id, linked))
         }
       } catch {
         case _ =>

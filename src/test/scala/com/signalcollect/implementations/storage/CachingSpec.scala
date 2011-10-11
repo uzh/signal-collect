@@ -25,7 +25,7 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
-import com.signalcollect.examples.Page
+import com.signalcollect.examples.PageRankVertex
 import java.util.Map.Entry
 import com.signalcollect.Vertex
 
@@ -34,11 +34,11 @@ class CachingSpec extends SpecificationWithJUnit with Mockito {
   "LRU caching" should {
     val storage = mock[VertexStore]
   
-    val v0 = new Page(0, 0.85)
-    val v1 = new Page(1, 0.85)
-    val v2 = new Page(2, 0.85)
-    val v3 = new Page(3, 0.85)
-    val v4 = new Page(4, 0.85)
+    val v0 = new PageRankVertex(0, 0.85)
+    val v1 = new PageRankVertex(1, 0.85)
+    val v2 = new PageRankVertex(2, 0.85)
+    val v3 = new PageRankVertex(3, 0.85)
+    val v4 = new PageRankVertex(4, 0.85)
     
     val vertexList = List(v0, v1, v2, v3, v4)
     

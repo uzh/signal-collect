@@ -26,7 +26,7 @@ import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.DefaultMessageBus
-import com.signalcollect.examples.Page
+import com.signalcollect.examples.PageRankVertex
 import java.io.File
 
 @RunWith(classOf[JUnitRunner])
@@ -42,7 +42,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   "InMemory Vertex Store" should {
     val defaultMessageBus = mock[DefaultMessageBus[Any]]
-    val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
     val inMemoryStore = new DefaultStorage
     vertexList.foreach(v => inMemoryStore.vertices.put(v))
 
@@ -75,7 +75,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
     if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
       val defaultMessageBus = mock[DefaultMessageBus[Any]]
-      val vertexList = List(new Page(0, 0.5), new Page(1, 0.5), new Page(2, 0.5))
+      val vertexList = List(new PageRankVertex(0, 0.5), new PageRankVertex(1, 0.5), new PageRankVertex(2, 0.5))
       class BerkeleyStorage(messageBus: MessageBus[Any]) extends DefaultStorage with BerkDBJE
       val berkeleyStore = new BerkeleyStorage(defaultMessageBus)
       vertexList.foreach(v => berkeleyStore.vertices.put(v))
@@ -94,12 +94,12 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
       "reflect changes on a vertex" in {
         val berkeleyStore = new BerkeleyStorage(defaultMessageBus)
-        val vertex0 = new Page(0, 0)
+        val vertex0 = new PageRankVertex(0, 0)
         val state0 = vertex0.state
         berkeleyStore.vertices.put(vertex0)
         val vertex1 = berkeleyStore.vertices.get(0)
         val state1 = vertex1.state
-        berkeleyStore.vertices.updateStateOfVertex(new Page(0, 1)) //simulates an update of the vertex since the id (1st parameter) remains unchanged.
+        berkeleyStore.vertices.updateStateOfVertex(new PageRankVertex(0, 1)) //simulates an update of the vertex since the id (1st parameter) remains unchanged.
         val state2 = berkeleyStore.vertices.get(0).state
         state0 must_== state1
         state1 must_!= state2
@@ -133,7 +133,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
     if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
 
       val defaultMessageBus = mock[DefaultMessageBus[Any]]
-      val vertexList = List(new Page(0, 1), new Page(1, 1), new Page(2, 1))
+      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
       class CachedBerkeleyStorage extends DefaultStorage with CachedBerkeley
       val cachedStore = new CachedBerkeleyStorage
       vertexList.foreach(v => cachedStore.vertices.put(v))

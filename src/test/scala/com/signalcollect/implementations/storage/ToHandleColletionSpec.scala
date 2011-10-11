@@ -26,7 +26,6 @@ import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.messaging.DefaultMessageBus
-import com.signalcollect.examples.Page
 import java.io.File
 import com.signalcollect.EdgeId
 

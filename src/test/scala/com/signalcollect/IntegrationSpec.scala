@@ -69,9 +69,9 @@ class IntegrationSpec extends SpecificationWithJUnit {
   def buildPageRankGraph(cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId: Int, targetId: Int) =>
-        cg.addVertex(new Page(sourceId, 0.85))
-        cg.addVertex(new Page(targetId, 0.85))
-        cg.addEdge(new Link(sourceId, targetId))
+        cg.addVertex(new PageRankVertex(sourceId, 0.85))
+        cg.addVertex(new PageRankVertex(targetId, 0.85))
+        cg.addEdge(new PageRankEdge(sourceId, targetId))
     }
     cg
   }
