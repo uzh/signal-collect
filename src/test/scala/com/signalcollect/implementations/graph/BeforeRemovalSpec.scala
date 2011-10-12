@@ -38,7 +38,7 @@ class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
     g.addVertex(new BeforeRemovalVertex)
     g.removeVertex(1)
 
-    "call the onRemoval function of a vertex before removing it" in {
+    "call the beforeRemoval function of a vertex before removing it" in {
       RemovalDetector.beforeRemovalWorked must_== true
     }
   }
