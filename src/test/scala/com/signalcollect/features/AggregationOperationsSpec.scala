@@ -68,12 +68,13 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
     val graph = GraphBuilder.build
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
+    graph.addVertex(new PageRankVertex(3))
     graph.addVertex(new SudokuCell(1, None))
     graph.removeVertex(1)
 
     "count the number of PageRank vertices correctly" in {
       val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex])
-      (numberOfPRVertices - 1.0) <= 0.0001
+      (numberOfPRVertices - 2.0) <= 0.0001
     }
     
     "count the number of SudokuCell vertices correctly" in {
