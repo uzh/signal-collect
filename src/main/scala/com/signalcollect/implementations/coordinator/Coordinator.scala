@@ -31,12 +31,15 @@ import com.signalcollect.OptimizedAsynchronousExecutionMode
 import com.signalcollect.PureAsynchronousExecutionMode
 import com.signalcollect.ExecutionStatistics
 import com.signalcollect.ContinuousAsynchronousExecution
+import com.signalcollect.TerminationReason
+import com.signalcollect.Converged
 
 class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration) {
 
-  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {   
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
+    var terminationReason = Converged // default reason
 
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
@@ -46,13 +49,12 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
     val graphLoadingWait = workerApi.awaitIdle
 
     workerApi.info("Running garbage collection before execution ...")
-    
+
     val gcStartTime = System.nanoTime
     System.gc // collect garbage before execution 
     val gcEndTime = System.nanoTime
     val preExecutionGcTime = gcEndTime - gcStartTime
-    
-    
+
     workerApi.info("Starting computation ...")
     val jvmCpuStartTime = getJVMCpuTime
     val startTime = System.nanoTime
@@ -84,7 +86,8 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
       computationTimeInMilliseconds = (totalTime / 1000000.0).toLong,
       jvmCpuTimeInMilliseconds = (totalJvmCpuTime / 1000000.0).toLong,
       graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong,
-      preExecutionGcTimeInMilliseconds = (preExecutionGcTime / 1000000.0).toLong)
+      preExecutionGcTimeInMilliseconds = (preExecutionGcTime / 1000000.0).toLong,
+      terminationReason = terminationReason)
 
     val stats = ExecutionInformation(
       config,
@@ -121,7 +124,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
   protected def continuousAsynchronousExecution {
     workerApi.startComputation
   }
-  
+
   protected def synchronousExecution(stepsLimit: Option[Long]) {
     var done = false
     while (!done && (!stepsLimit.isDefined || workerApi.collectSteps < stepsLimit.get)) {

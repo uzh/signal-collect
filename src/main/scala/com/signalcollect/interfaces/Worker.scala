@@ -50,7 +50,7 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
   def foreachVertex(f: Vertex => Unit)
 
-  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: Vertex => ValueType): ValueType
+  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 
   def pauseComputation
   def startComputation

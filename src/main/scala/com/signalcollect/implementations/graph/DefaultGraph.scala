@@ -48,7 +48,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
   def awaitIdle = workerApi.awaitIdle
-  
+
   def shutdown = workerApi.shutdown
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
@@ -57,11 +57,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def foreachVertex(f: (Vertex) => Unit) = workerApi.foreachVertex(f)
 
-  def customAggregate[ValueType](
-    neutralElement: ValueType,
-    operation: (ValueType, ValueType) => ValueType,
-    extractor: (Vertex) => ValueType): ValueType = {
-    workerApi.customAggregate(neutralElement, operation, extractor)
+  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
+    workerApi.aggregate(aggregationOperation)
   }
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)

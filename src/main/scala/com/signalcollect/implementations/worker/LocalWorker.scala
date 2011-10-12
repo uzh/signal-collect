@@ -253,9 +253,9 @@ class LocalWorker(val workerId: Int,
     vertexStore.vertices.foreach(f)
   }
 
-  def aggregate[ValueType](neutralElement: ValueType, aggregator: (ValueType, ValueType) => ValueType, extractor: Vertex => ValueType): ValueType = {
-    var acc = neutralElement
-    vertexStore.vertices.foreach { vertex => acc = aggregator(acc, extractor(vertex)) }
+  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
+    var acc = aggregationOperation.neutralElement
+    vertexStore.vertices.foreach { vertex => acc = aggregationOperation.aggregate(acc, aggregationOperation.extract(vertex)) }
     acc
   }
 

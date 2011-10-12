@@ -20,6 +20,8 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -30,7 +32,7 @@ import com.signalcollect.interfaces.SignalMessage
  *
  *  @see GraphBuilder, DefaultGraph
  *
- *  @example `val computeGraph = ComputeGraphBuilder.build`
+ *  @example `val graph = GraphBuilder.build`
  *
  *  @author Philip Stutz
  *  @version 1.0
@@ -145,136 +147,17 @@ trait Graph extends GraphEditor {
   def foreachVertex(f: Vertex => Unit)
 
   /**
-   *  Counts the number of vertices in this compute graph that have type `VertexType`.
+   *  Applies an aggregation operation to the graph and returns the result.
    *
-   *  @return The number of vertices in this compute graph that have type `VertexType`.
+   *  @param aggregationOperation The aggregation operation that will get executed on the graph
    *
-   *  @example `val numberOfPageVertices = computeGraph.countVertices[Page]`
-   *
-   *  @usecase def countVertices[Page]: Long
-   */
-  def countVertices[VertexType <: Vertex](implicit m: Manifest[VertexType]): Long = {
-    val matchingTypeCounter: Vertex => Long = { v: Vertex =>
-      {
-        if (m.erasure.isInstance(v)) {
-          1l
-        } else {
-          0l
-        }
-      }
-    }
-    customAggregate(0l, { (aggrValue: Long, vertexIncrement: Long) => aggrValue + vertexIncrement }, matchingTypeCounter)
-  }
-
-  /**
-   *  Returns the sum of all vertex states that have type `N`.
-   *
-   *  @return The sum of all vertex states that have type `N`.
-   *
-   *  @note An instance of type class `Numeric[N]` needs to be implicitly available.
-   *
-   *  @example `val sumOfVertexStatesThatAreOfTypeDouble = computeGraph.sum[Double]`
-   *
-   *  @usecase def sum[Double]
-   */
-  def sum[N](implicit numeric: Numeric[N]): N = {
-    aggregateStates(numeric.zero, { (x: N, y: N) => numeric.plus(x, y) })
-  }
-
-  /**
-   *  Returns the product of all vertex states that have type `N`.
-   *
-   *  @return The product of all vertex states that have type `N`.
-   *
-   *  @note An instance of type class `Numeric[N]` needs to be implicitly available.
-   *
-   *  @example `val productOfVertexStatesThatAreOfTypeDouble = computeGraph.product[Double]`
-   *
-   *  @usecase def product[Double]
-   */
-  def product[N](implicit numeric: Numeric[N]): N = {
-    aggregateStates(numeric.one, { (x: N, y: N) => numeric.times(x, y) })
-  }
-
-  /**
-   *  Calculates the aggregate of all vertex states of type `ValueType` using the associative function `operation`.
-   *
-   *  @param operation An associative function that aggregates two instances of type `ValueType`
-   *
-   *  @return `Some` aggregate of all vertex states of type `ValueType` if at least one such instance can be found, `None` otherwise.
-   *
-   *  @example `val productOfVertexStatesThatAreOfTypeInt = computeGraph.reduce[Int](operation = (_ * _))`
-   *
-   *  @usecase def reduce[Int](operation: (Int, Int) => Int)
-   */
-  def reduce[ValueType](operation: (ValueType, ValueType) => ValueType): Option[ValueType] = {
-    val stateExtractor: Vertex => Option[ValueType] = { v: Vertex =>
-      {
-        try {
-          Some(v.state.asInstanceOf[ValueType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
-        } catch {
-          case _ => None
-        }
-      }
-    }
-    val optionOperation: (Option[ValueType], Option[ValueType]) => Option[ValueType] = { (a, b) =>
-      (a, b) match {
-        case (Some(x), Some(y)) => Some(operation(x, y))
-        case (Some(x), None) => Some(x)
-        case (None, Some(y)) => Some(y)
-        case (None, None) => None
-      }
-    }
-    customAggregate[Option[ValueType]](None, optionOperation, stateExtractor)
-  }
-
-  /**
-   *  Calculates an aggregate of all vertex states of type `ValueType` and neutral elements that take the place of vertex states with incompatible types.
-   *
-   *  @param neutralElement The neutral element of the aggregation operation: `operation(x, neutralElement) == x`
-   *
-   *  @param operation The aggregation operation that is executed on the vertex states.
-   *
-   *  @return The aggregate of all vertex states.
+   *  @return The result of the aggregation operation.
    *
    *  @note There is no guarantee about the order in which the aggregation operations get executed on the vertices.
    *
-   *  @example `val sumOfVertexStatesThatAreOfTypeInt = computeGraph.aggregateStates[Int](0, (_ + _))
-   *
-   *  @usecase def aggregateStates(neutralElement: Int, operation: (Int, Int) => Int)
+   *  @example See concrete implementations of other aggregation operations, i.e. `SumOperation`.
    */
-  def aggregateStates[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType): ValueType = {
-    val stateExtractor: Vertex => ValueType = { v: Vertex =>
-      {
-        try {
-          v.state.asInstanceOf[ValueType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
-        } catch {
-          case _ => neutralElement
-        }
-      }
-    }
-    customAggregate(neutralElement, operation, stateExtractor)
-  }
-
-  /**
-   *  Calculates the aggregate of values that are extracted from vertices.
-   *
-   *  @param neutralElement The neutral element of the aggregation operation: `operation(x, neutralElement) == x`
-   *
-   *  @param operation The aggregation operation that is executed on the values that have been extracted from vertices by the `extractor` function.
-   *
-   *  @param extractor The function that extracts values of type `ValueType` from vertices.
-   *
-   *  @return The aggregate of all values that have been extracted from vertices and potentially some neutral elements.
-   *
-   *  @note There is no guarantee about the order in which the aggregation operations get executed on the vertices.
-   *
-   *  @note This is the most powerful and low-level aggregation function. All other aggregation functions get rewritten
-   *  		to more specific executions of this function.
-   *
-   *  @example See implementations of other aggregation functions.
-   */
-  def customAggregate[ValueType](neutralElement: ValueType, operation: (ValueType, ValueType) => ValueType, extractor: Vertex => ValueType): ValueType
+  def aggregate[G](aggregationOperation: AggregationOperation[G]): G
 
   /**
    *  Sets the function that handles signals that could not be delivered to a vertex.

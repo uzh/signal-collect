@@ -45,63 +45,67 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 
-  def test(graphProviders: List[Int => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (cg: Graph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
+  def test(graphProviders: List[Int => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (graph: Graph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
     for (workers <- numberOfWorkers) {
       for (executionMode <- executionModes) {
         for (graphProvider <- graphProviders) {
-          val cg = graphProvider.apply(workers)
-          buildGraph(cg)
-          val stats = cg.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-          correct &= cg.customAggregate(true, (a: Boolean, b: Boolean) => (a && b), verify)
+          val graph = graphProvider.apply(workers)
+          buildGraph(graph)
+          val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
+          correct &= graph.aggregate(new AggregationOperation[Boolean] {
+            val neutralElement = true
+            def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+            def extract(v: Vertex): Boolean = verify(v)
+          })
           if (!correct) {
             System.err.println("Test failed. Computation stats: " + stats)
           }
-          cg.shutdown
+          graph.shutdown
         }
       }
     }
     correct
   }
 
-  def buildPageRankGraph(cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildPageRankGraph(graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId: Int, targetId: Int) =>
-        cg.addVertex(new PageRankVertex(sourceId, 0.85))
-        cg.addVertex(new PageRankVertex(targetId, 0.85))
-        cg.addEdge(new PageRankEdge(sourceId, targetId))
+        graph.addVertex(new PageRankVertex(sourceId, 0.85))
+        graph.addVertex(new PageRankVertex(targetId, 0.85))
+        graph.addEdge(new PageRankEdge(sourceId, targetId))
     }
-    cg
+    graph
   }
 
-  def buildVertexColoringGraph(numColors: Int, cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildVertexColoringGraph(numColors: Int, graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
-        cg.addVertex(new VerifiedColoredVertex(sourceId, numColors))
-        cg.addVertex(new VerifiedColoredVertex(targetId, numColors))
-        cg.addEdge(new StateForwarderEdge(sourceId, targetId))
+        graph.addVertex(new VerifiedColoredVertex(sourceId, numColors))
+        graph.addVertex(new VerifiedColoredVertex(targetId, numColors))
+        graph.addEdge(new StateForwarderEdge(sourceId, targetId))
     }
-    cg
+    graph
   }
 
-  def buildSsspGraph(pathSourceId: Any, cg: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildSsspGraph(pathSourceId: Any, graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         if (sourceId.equals(pathSourceId)) {
-          cg.addVertex(new Location(sourceId, Some(0)))
+          graph.addVertex(new Location(sourceId, Some(0)))
         } else {
-          cg.addVertex(new Location(sourceId, None))
+          graph.addVertex(new Location(sourceId, None))
         }
         if (targetId.equals(pathSourceId)) {
-          cg.addVertex(new Location(targetId, Some(0)))
+          graph.addVertex(new Location(targetId, Some(0)))
         } else {
-          cg.addVertex(new Location(targetId, None))
+          graph.addVertex(new Location(targetId, None))
         }
-        cg.addEdge(new Path(sourceId, targetId))
+        graph.addEdge(new Path(sourceId, targetId))
     }
-    cg
+    graph
   }
 
   "PageRank algorithm" should {

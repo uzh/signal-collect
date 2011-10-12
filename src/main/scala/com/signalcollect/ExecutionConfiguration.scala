@@ -29,7 +29,7 @@ object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchrono
 
 /**
  *  This configuration specifies execution parameters for a computation.
- *  
+ *
  * 	@param executionMode Determines the way signal/collect operations are scheduled.
  * 	@param signalThreshold	A signal operation only gets executed if the signalScore of
  * 						a vertex is above this threshold.
@@ -37,7 +37,7 @@ object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchrono
  * 						a vertex is above this threshold.
  * 	@param timeLimit The computation duration is bounded by this value.
  * 	@param stepsLimit The maximum number of computation steps is bounded by this value.
- * 
+ *
  *  @author Philip Stutz
  *  @version 1.0
  *  @since 1.0
@@ -55,29 +55,29 @@ case class ExecutionConfiguration(
    *  @param executionMode The execution mode used in a computation.
    */
   def withExecutionMode(executionMode: ExecutionMode) = newExecutionConfiguration(executionMode = executionMode)
-  
+
   /**
    *  Configures the signal threshold used in a computation.
-   *  
-   *  @note If the signal score of a vertex is above the signal threshold, then the vertex will execute the `signal` operation in its edges. 
+   *
+   *  @note If the signal score of a vertex is above the signal threshold, then the vertex will execute the `signal` operation in its edges.
    *
    *  @param signalThreshold The signal threshold used in a computation.
    */
   def withSignalThreshold(signalThreshold: Double) = newExecutionConfiguration(signalThreshold = signalThreshold)
-  
+
   /**
    *  Configures the collect threshold used in a computation.
-   *  
-   *  @note If the collect score of a vertex is above the collect threshold, then its `collect` operation will get executed. 
+   *
+   *  @note If the collect score of a vertex is above the collect threshold, then its `collect` operation will get executed.
    *
    *  @param collectThreshold The collect threshold used in a computation.
    */
   def withCollectThreshold(collectThreshold: Double) = newExecutionConfiguration(collectThreshold = collectThreshold)
-  
+
   /**
    *  Configures the time limit used in a computation. !!!CURRENTLY NOT IMPLEMENTED!!!
-   *  
-   *  @note !!!CURRENTLY NOT IMPLEMENTED!!! 
+   *
+   *  @note !!!CURRENTLY NOT IMPLEMENTED!!!
    *
    *  @param timeLimit The time limit used for a computation.
    */
@@ -85,10 +85,10 @@ case class ExecutionConfiguration(
     throw new UnsupportedOperationException("The time limit parameter is not supported yet.")
     //newExecutionConfiguration(timeLimit = timeLimit)
   }
-  
+
   /**
    *  Configures the maximum number of computation steps executed in a computation.
-   *  
+   *
    *  @note Only relevant for synchronous computations.
    *
    *  @param stepsLimit The maximum number of computation steps executed in a computation.

@@ -36,7 +36,7 @@ import com.signalcollect.EdgeId
 class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with Logging with GraphEditor {
 
   val graphEditor = DefaultGraphEditor.createInstance(messageBus)
-  
+
   protected val loggingLevel = config.loggingLevel
 
   override def toString = "WorkerApi"
@@ -60,8 +60,7 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
     // put it to the array of workers
     workers(workerId) = worker
   }
-  
-  
+
   protected lazy val workerProxies: Array[Worker] = createWorkerProxies
   protected lazy val workerProxyMessageBuses: Array[MessageBus[Any]] = createWorkerProxyMessageBuses
   protected lazy val parallelWorkerProxies = workerProxies.par
@@ -240,7 +239,7 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
       awaitMessageProcessing
     }
   }
-  
+
   def started: Boolean = workerStatusMap.values.forall(!_.isPaused)
 
   def awaitStarted {
@@ -290,13 +289,10 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
     parallelWorkerProxies foreach (_.foreachVertex(f))
   }
 
-  def customAggregate[ValueType](
-    neutralElement: ValueType,
-    operation: (ValueType, ValueType) => ValueType,
-    extractor: (Vertex) => ValueType): ValueType = {
+  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
     awaitIdle
-    val aggregateArray: ParArray[ValueType] = parallelWorkerProxies map (_.aggregate(neutralElement, operation, extractor))
-    aggregateArray.fold(neutralElement)(operation(_, _))
+    val aggregateArray: ParArray[ValueType] = parallelWorkerProxies map (_.aggregate(aggregationOperation))
+    aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
   }
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = parallelWorkerProxies foreach (_.setUndeliverableSignalHandler(h))

@@ -25,13 +25,13 @@ import com.signalcollect.configuration._
 /**
  *  An instance of ExecutionInformation reports information such as execution statistics
  *  and configuration parameters related to an execution of a computation on a graph.
- *  
+ *
  *  @param config The graph configuration of the graph that executed a computation.
  *  @param parameters The execution configuration for this particular execution.
  *  @param executionStatistics Statistics about this execution, such as the computation time,
  *  @param aggregatedWorkerStatistics Aggregated statistics over all the workers.
  *  @param individualWorkerStatistics A list of statistics for all workers individually.
- *  
+ *
  *  @author Philip Stutz
  *  @version 1.0
  *  @since 1.0
@@ -67,13 +67,35 @@ case class ExecutionStatistics(
   computationTimeInMilliseconds: Long,
   jvmCpuTimeInMilliseconds: Long,
   graphLoadingWaitInMilliseconds: Long,
-  preExecutionGcTimeInMilliseconds: Long) {
+  preExecutionGcTimeInMilliseconds: Long,
+  terminationReason: TerminationReason) {
 
   override def toString: String = {
     "# signal steps" + "\t" + "\t" + signalSteps + "\n" +
       "# collect steps" + "\t" + "\t" + collectSteps + "\n" +
       "computation time (ms)" + "\t" + computationTimeInMilliseconds + "\n" +
       "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds + "\n" +
-      "graph loading time (ms)" + "\t" + graphLoadingWaitInMilliseconds
+      "graph loading time (ms)" + "\t" + graphLoadingWaitInMilliseconds + "\n" +
+      "termination reason" + "\t" + terminationReason
   }
+
 }
+
+sealed trait TerminationReason
+
+object TimeLimitReached extends TerminationReason {
+  override def toString = "time limit reached"
+}
+
+object Converged extends TerminationReason {
+  override def toString = "converged"
+}
+
+object GlobalConstraintMet extends TerminationReason {
+  override def toString = "global constraint met"
+}
+
+object ComputationStepLimitReached extends TerminationReason {
+  override def toString = "computation step limit reached"
+}
+
