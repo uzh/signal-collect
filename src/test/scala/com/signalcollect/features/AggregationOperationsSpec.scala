@@ -29,6 +29,7 @@ import java.util.Map.Entry
 import com.signalcollect._
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.SudokuCell
 
 @RunWith(classOf[JUnitRunner])
 class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
@@ -37,14 +38,50 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
     val graph = GraphBuilder.build
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
+    graph.addVertex(new SudokuCell(1, None))
     graph.addEdge(new PageRankEdge(1, 2))
     graph.addEdge(new PageRankEdge(2, 1))
-    graph.execute(ExecutionConfiguration.withSignalThreshold(0.00001))
+    graph.execute(ExecutionConfiguration.withSignalThreshold(0))
 
     "sum all states correctly" in {
       val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
-      (sumOfStates - 2.0) <= 0.01
+      (sumOfStates - 2.0) <= 0.0001
+    }
+  }
+  
+  "ProductOfStates" should {
+    val graph = GraphBuilder.build
+    graph.addVertex(new PageRankVertex(1))
+    graph.addVertex(new PageRankVertex(2))
+    graph.addVertex(new SudokuCell(1, None))
+    graph.addEdge(new PageRankEdge(1, 2))
+    graph.addEdge(new PageRankEdge(2, 1))
+    graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+
+    "multiply all states correctly" in {
+      val productOfStates = graph.aggregate(new ProductOfStates[Double]).getOrElse(0.0)
+      (productOfStates - 1.0) <= 0.0001
     }
   }
 
+  "CountVertices" should {
+    val graph = GraphBuilder.build
+    graph.addVertex(new PageRankVertex(1))
+    graph.addVertex(new PageRankVertex(2))
+    graph.addVertex(new SudokuCell(1, None))
+    graph.removeVertex(1)
+
+    "count the number of PageRank vertices correctly" in {
+      val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex])
+      (numberOfPRVertices - 1.0) <= 0.0001
+    }
+    
+    "count the number of SudokuCell vertices correctly" in {
+      val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
+      (numberOfSCVertices - 1.0) <= 0.0001
+    }
+  }
+  
+
+  
 }
