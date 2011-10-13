@@ -141,9 +141,10 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
         }
       case (None, Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
-        val interval = globalCondition.aggregationInterval * 1000000000l
+        val interval = globalCondition.aggregationInterval * 1000000l
         var converged = false
         var globalTermination = false
+        println(interval)
         while (!converged && !globalTermination) {
           converged = workerApi.awaitIdle(interval)
           if (!converged) {
@@ -154,7 +155,10 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
           terminationReason = GlobalConstraintMet
         }
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          workerApi.startComputation
+          println(globalAggregateValue)
           gtc.shouldTerminate(globalAggregateValue)
         }
       case (Some(limit), Some(globalCondition)) =>
@@ -180,7 +184,9 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
         }
         def intervalHasPassed = remainingIntervalTime <= 0
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          workerApi.startComputation
           gtc.shouldTerminate(globalAggregateValue)
         }
         def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
@@ -224,6 +230,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
     }
     def shouldCheckGlobalCondition = interval > 0 && workerApi.collectSteps % interval == 0
     def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+
       val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
       gtc.shouldTerminate(globalAggregateValue)
     }

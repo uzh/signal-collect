@@ -204,6 +204,6 @@ case object OptimizedAsynchronousExecutionMode extends ExecutionMode {
  */
 abstract class GlobalTerminationCondition[ValueType](
   val aggregationOperation: AggregationOperation[ValueType],
-  val aggregationInterval: Long) {
+  val aggregationInterval: Long = 1000l) {
   def shouldTerminate(value: ValueType): Boolean
 }
