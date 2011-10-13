@@ -47,7 +47,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
-  def awaitIdle = workerApi.awaitIdle
+  def awaitIdle = workerApi.awaitIdle()
 
   def shutdown = workerApi.shutdown
 

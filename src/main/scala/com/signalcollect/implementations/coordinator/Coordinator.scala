@@ -33,20 +33,25 @@ import com.signalcollect.ExecutionStatistics
 import com.signalcollect.ContinuousAsynchronousExecution
 import com.signalcollect.TerminationReason
 import com.signalcollect.Converged
+import com.signalcollect.GlobalTerminationCondition
+import com.signalcollect.TimeLimitReached
+import com.signalcollect.GlobalConstraintMet
+import com.signalcollect.ComputationStepLimitReached
 
 class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration) {
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
-    var terminationReason = Converged // default reason
 
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
 
     workerApi.info("Waiting for graph loading to finish ...")
 
-    val graphLoadingWait = workerApi.awaitIdle
+    val graphLoadingWaitStart = System.nanoTime
+    val loadingDone = workerApi.awaitIdle()
+    val graphLoadingWait = System.nanoTime - graphLoadingWaitStart
 
     workerApi.info("Running garbage collection before execution ...")
 
@@ -61,10 +66,12 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
 
     /*******************************/
 
+    var terminationReason: TerminationReason = Converged // default reason
+
     parameters.executionMode match {
-      case SynchronousExecutionMode => synchronousExecution(parameters.stepsLimit)
-      case OptimizedAsynchronousExecutionMode => optimizedAsynchronousExecution
-      case PureAsynchronousExecutionMode => pureAsynchronousExecution
+      case SynchronousExecutionMode => terminationReason = synchronousExecution(parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
+      case OptimizedAsynchronousExecutionMode => terminationReason = optimizedAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
+      case PureAsynchronousExecutionMode => terminationReason = pureAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
       case ContinuousAsynchronousExecution => continuousAsynchronousExecution
     }
 
@@ -99,8 +106,6 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
     stats
   }
 
-  //protected def performComputation(parameters: ExecutionParameters)
-
   def getJVMCpuTime = {
     val bean = ManagementFactory.getOperatingSystemMXBean
     if (!bean.isInstanceOf[OperatingSystemMXBean]) {
@@ -110,27 +115,123 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
     }
   }
 
-  protected def optimizedAsynchronousExecution {
+  protected def optimizedAsynchronousExecution(timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
+    val startTime = System.nanoTime
     workerApi.signalStep
-    pureAsynchronousExecution
+    val millisecondsSpentAlready = ((System.nanoTime - startTime) / 1000000).toLong
+    var adjustedTimeLimit: Option[Long] = None
+    if (timeLimit.isDefined) {
+      adjustedTimeLimit = Some(timeLimit.get - millisecondsSpentAlready)
+    }
+    pureAsynchronousExecution(adjustedTimeLimit, globalTerminationCondition)
   }
 
-  protected def pureAsynchronousExecution {
+  protected def pureAsynchronousExecution(timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
     workerApi.startComputation
-    workerApi.awaitIdle
+    var terminationReason: TerminationReason = Converged
+    (timeLimit, globalTerminationCondition) match {
+      case (None, None) =>
+        workerApi.awaitIdle()
+      case (Some(limit), None) =>
+        val converged = workerApi.awaitIdle(limit * 1000000l)
+        if (!converged) {
+          terminationReason = TimeLimitReached
+        }
+      case (None, Some(globalCondition)) =>
+        val aggregationOperation = globalCondition.aggregationOperation
+        val interval = globalCondition.aggregationInterval * 1000000000l
+        var converged = false
+        var globalTermination = false
+        while (!converged && !globalTermination) {
+          converged = workerApi.awaitIdle(interval)
+          if (!converged) {
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+        }
+        if (!converged) {
+          terminationReason = GlobalConstraintMet
+        }
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          gtc.shouldTerminate(globalAggregateValue)
+        }
+      case (Some(limit), Some(globalCondition)) =>
+        val aggregationOperation = globalCondition.aggregationOperation
+        val nanosecondLimit = limit * 1000000l
+        val interval = globalCondition.aggregationInterval * 1000000l
+        val startTime = System.nanoTime
+        var lastAggregationOperationTime = System.nanoTime - interval
+        var converged = false
+        var globalTermination = false
+        var timeLimitReached = false
+        while (!converged && !globalTermination && !isTimeLimitReached) {
+          if (intervalHasPassed) {
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+          // waits for whichever remaining time interval/limit is shorter
+          converged = workerApi.awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
+        }
+        if (timeLimitReached) {
+          terminationReason = TimeLimitReached
+        } else if (globalTermination) {
+          terminationReason = GlobalConstraintMet
+        }
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          gtc.shouldTerminate(globalAggregateValue)
+        }
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
+        def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+        def isTimeLimitReached = remainingTimeLimit <= 0
+    }
     workerApi.pauseComputation
+    terminationReason
   }
 
   protected def continuousAsynchronousExecution {
     workerApi.startComputation
   }
 
-  protected def synchronousExecution(stepsLimit: Option[Long]) {
-    var done = false
-    while (!done && (!stepsLimit.isDefined || workerApi.collectSteps < stepsLimit.get)) {
-      workerApi.signalStep
-      done = workerApi.collectStep
+  protected def synchronousExecution(
+    timeLimit: Option[Long],
+    stepsLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
+    var terminationReason: TerminationReason = Converged
+    var converged = false
+    var globalTermination = false
+    var interval = 0l
+    if (globalTerminationCondition.isDefined) {
+      interval = globalTerminationCondition.get.aggregationInterval
     }
+    val startTime = System.nanoTime
+    val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
+    while (!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+      workerApi.signalStep
+      converged = workerApi.collectStep
+      if (shouldCheckGlobalCondition) {
+        globalTermination = isGlobalTerminationConditionMet(globalTerminationCondition.get)
+      }
+    }
+    if (isTimeLimitReached) {
+      terminationReason = TimeLimitReached
+    } else if (isStepsLimitReached) {
+      terminationReason = ComputationStepLimitReached
+    } else if (globalTermination) {
+      terminationReason = GlobalConstraintMet
+    }
+    def shouldCheckGlobalCondition = interval > 0 && workerApi.collectSteps % interval == 0
+    def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+      val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+      gtc.shouldTerminate(globalAggregateValue)
+    }
+    def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+    def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
+    def isStepsLimitReached = stepsLimit.isDefined && workerApi.collectSteps >= stepsLimit.get
+
+    terminationReason
   }
 
 }

@@ -22,6 +22,7 @@ package com.signalcollect.javaapi
 import com.signalcollect._
 
 abstract class VertexCommand extends Function1[Vertex, Unit] {
-  def apply(v: Vertex) = f(v); Unit
+  def apply(v: Vertex) = f(v)
+  
   def f(v: Vertex)
 }

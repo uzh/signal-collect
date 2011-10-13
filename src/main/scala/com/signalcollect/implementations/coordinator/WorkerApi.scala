@@ -156,15 +156,23 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
 
-  def awaitIdle: Long = {
+  /**
+   *  Waits for the graph to become idle or until the maximal wait time is reached.
+   * 
+   *  @param maxWaitNanotime The maximum amount of time this function waits for the graph to become idle (in nanoseconds)
+   *  
+   *  @return If the graph is idle (true)  
+   */
+  def awaitIdle(maxWaitNanotime: Long = Long.MaxValue): Boolean = {
     val startTime = System.nanoTime
+    var waitTime = System.nanoTime - startTime
     statusMonitor.synchronized {
-      while (!idle) {
+      while (!idle && waitTime < maxWaitNanotime) {
         statusMonitor.wait(10)
+        waitTime = System.nanoTime - startTime
       }
     }
-    val stopTime = System.nanoTime
-    stopTime - startTime
+    idle
   }
 
   def paused: Boolean = workerStatusMap.values.forall(_.isPaused)
@@ -275,22 +283,22 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
   def recalculateScoresForVertexWithId(vertexId: Any) = workerProxies(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
 
   def shutdown = {
-    awaitIdle
+    awaitIdle()
     parallelWorkerProxies foreach (_.shutdown)
   }
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
-    awaitIdle
+    awaitIdle()
     workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
   def foreachVertex(f: (Vertex) => Unit) = {
-    awaitIdle
+    awaitIdle()
     parallelWorkerProxies foreach (_.foreachVertex(f))
   }
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
-    awaitIdle
+    awaitIdle()
     val aggregateArray: ParArray[ValueType] = parallelWorkerProxies map (_.aggregate(aggregationOperation))
     aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
   }
