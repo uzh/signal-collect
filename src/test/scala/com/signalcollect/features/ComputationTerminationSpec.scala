@@ -52,10 +52,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val graph = createGraph(100)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
-        .withTimeLimit(30)
+        .withTimeLimit(20)
       graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
-      state > 0.16 && state < 0.999999
+      state > 0.16 && state < 0.999999999
     }
 
     "work for synchronous computations" in {
@@ -66,7 +66,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withExecutionMode(SynchronousExecutionMode)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
-      state > 0.16 && state < 0.999999 && info.executionStatistics.terminationReason == TimeLimitReached
+      state > 0.16 && state < 0.999999999 && info.executionStatistics.terminationReason == TimeLimitReached
     }
   }
 
