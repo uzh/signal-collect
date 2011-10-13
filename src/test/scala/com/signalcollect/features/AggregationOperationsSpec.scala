@@ -48,7 +48,7 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       (sumOfStates - 2.0) <= 0.0001
     }
   }
-  
+
   "ProductOfStates" should {
     val graph = GraphBuilder.build
     graph.addVertex(new PageRankVertex(1))
@@ -76,13 +76,34 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex])
       (numberOfPRVertices - 2.0) <= 0.0001
     }
-    
+
     "count the number of SudokuCell vertices correctly" in {
       val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
       (numberOfSCVertices - 1.0) <= 0.0001
     }
   }
-  
 
-  
+  "SampleVertexIds" should {
+    val graph = GraphBuilder.build
+    val idSet = (1 to 1000).toSet
+    for (id <- idSet) {
+      graph.addVertex(new PageRankVertex(id))
+    }
+
+    "sample 0 vertex ids correctly" in {
+      val vertexSample = graph.aggregate(new SampleVertexIds(0))
+      vertexSample.size == 0
+    }
+
+    "sample 50 vertex ids correclty" in {
+      val vertexSample = graph.aggregate(new SampleVertexIds(50))
+      vertexSample.size == 50 && vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+    }
+    
+    "sample 50 vertex ids correclty" in {
+      val vertexSample = graph.aggregate(new SampleVertexIds(1000))
+      vertexSample.size == 1000 && vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+    }
+  }
+
 }

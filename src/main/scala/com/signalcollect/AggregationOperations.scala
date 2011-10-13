@@ -21,30 +21,53 @@ package com.signalcollect
 
 import com.signalcollect.interfaces.AggregationOperation
 
+/**
+ *  Aggregation operation that sums up all the vertex states that have numeric type `N`.
+ */
 class SumOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
 
   val numeric = implicitly[Numeric[N]]
 
   /**
-   * Sums up the values
+   *  Sums up the values
    */
   def operation(a: N, b: N): N = numeric.plus(a, b)
 
 }
 
+/**
+ *  Aggregation operation that multiplies all the vertex states that have numeric type `N`.
+ */
 class ProductOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
 
   val numeric = implicitly[Numeric[N]]
 
   /**
-   * Multiplies the values
+   *  Multiplies the values
    */
   def operation(a: N, b: N): N = numeric.times(a, b)
 
 }
 
 /**
- *  Counts the number of vertices in this compute graph that have type `VertexType`.
+ *  Aggregation operation that returns a sample of all vertex ids.
+ */
+class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
+
+  val neutralElement = List[Any]()
+
+  def aggregate(a: List[Any], b: List[Any]): List[Any] = {
+    val combinedList = a ++ b
+    combinedList.slice(0, math.min(sampleSize, combinedList.size))
+  }
+
+  def extract(v: Vertex): List[Any] = {
+    List(v.id)
+  }
+}
+
+/**
+ *  Aggregation operation that counts the number of vertices in this graph that have type `VertexType`.
  *
  *  @example `val numberOfPageRankVertices = graph.aggregate(new CountVertices[PageRankVertex])`
  *
@@ -56,12 +79,12 @@ class CountVertices[VertexType <: Vertex: Manifest] extends AggregationOperation
   val neutralElement: Long = 0l
 
   /**
-   * Multiplies the values
+   *  Sums up the number of vertices of type `VertexType` that were found.
    */
   def aggregate(a: Long, b: Long): Long = a + b
 
   /**
-   * Counts only vertices that match `VertexType`
+   *  Returns 1 for vertices that match `VertexType`, 0 for other types
    */
   def extract(v: Vertex): Long = {
     if (m.erasure.isInstance(v)) {
@@ -114,7 +137,7 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
 abstract class StateAggregator[StateType] extends AggregationOperation[StateType] {
 
   /**
-   * Extracts the state from v if it matches `StateType`
+   *  Extracts the state from v if it matches `StateType`
    */
   def extract(v: Vertex): StateType = {
     try {
