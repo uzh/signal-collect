@@ -134,6 +134,9 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
 
 }
 
+/**
+ *  Implements an extractor for aggregation operations that will operate on states of type `StateType`.
+ */
 abstract class StateAggregator[StateType] extends AggregationOperation[StateType] {
 
   /**

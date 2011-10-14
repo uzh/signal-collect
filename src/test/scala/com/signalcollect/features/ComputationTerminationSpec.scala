@@ -49,13 +49,14 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Time limit" should {
 
     "work for asynchronous computations" in {
-      val graph = createGraph(100)
+      val graph = createGraph(1000)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
-        .withTimeLimit(20)
+        .withTimeLimit(15)
       graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
-      state > 0.16 && state < 0.999999999
+      println(state)
+      state > 0.16 && state < 0.99999999
     }
 
     "work for synchronous computations" in {
