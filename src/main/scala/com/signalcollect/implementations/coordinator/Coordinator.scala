@@ -144,7 +144,6 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
         val interval = globalCondition.aggregationInterval * 1000000l
         var converged = false
         var globalTermination = false
-        println(interval)
         while (!converged && !globalTermination) {
           converged = workerApi.awaitIdle(interval)
           if (!converged) {
@@ -158,7 +157,6 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
           workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
           workerApi.startComputation
-          println(globalAggregateValue)
           gtc.shouldTerminate(globalAggregateValue)
         }
       case (Some(limit), Some(globalCondition)) =>
