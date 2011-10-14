@@ -35,7 +35,7 @@ import scala.collection.GenMap
 import com.signalcollect._
 
 abstract class AbstractVertex extends Vertex {
-
+  
   /**
    * Returns the ids of all vertices from which this vertex has an incoming edge, optional.
    */
@@ -71,6 +71,8 @@ abstract class AbstractVertex extends Vertex {
 
   /** Keeps track if edges get added so this vertex remembers to signal for those */
   protected var outgoingEdgeAddedSinceSignalOperation = false
+
+  var incomingEdgeCount = 0
 
   /**
    * Adds a new outgoing `Edge`
@@ -200,6 +202,16 @@ abstract class AbstractVertex extends Vertex {
    *  @param e the edge to be added.
    */
   def addIncomingEdge(e: Edge): Boolean = {
+    incomingEdgeCount += 1
+    true
+  }
+
+  /**
+   *  Removes incoming `Edge` from this `Vertex`.
+   *  @param edgeId of the edge to be removed.
+   */
+  def removeIncomingEdge(edgeId: EdgeId[_, _]): Boolean = {
+    incomingEdgeCount -= 1
     true
   }
 }

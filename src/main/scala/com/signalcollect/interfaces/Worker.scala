@@ -33,10 +33,12 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
   def initialize
   
   def addVertex(serializedVertex: Array[Byte])
-  def addEdge(serializedEdge: Array[Byte])
+  def addOutgoingEdge(serializedEdge: Array[Byte])
+  def addIncomingEdge(serializedEdge: Array[Byte])
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
   def removeVertex(vertexId: Any)
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any])
+  def removeIncomingEdge(edgeId: EdgeId[Any, Any])
   def removeVertices(shouldRemove: Vertex => Boolean)
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)

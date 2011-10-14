@@ -44,6 +44,8 @@ class WorkerOperationCounters(
   var verticesRemoved: Long = 0l,
   var outgoingEdgesAdded: Long = 0l,
   var outgoingEdgesRemoved: Long = 0l,
+  var incomingEdgesAdded: Long = 0l,
+  var incomingEdgesRemoved: Long = 0l,
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
@@ -143,12 +145,12 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  def addEdge(serializedEdge: Array[Byte]) {
+  def addOutgoingEdge(serializedEdge: Array[Byte]) {
     val edge = DefaultSerializer.read[Edge](serializedEdge)
-    addEdge(edge)
+    addOutgoingEdge(edge)
   }
 
-  protected def addEdge(edge: Edge) {
+  protected def addOutgoingEdge(edge: Edge) {
     val key = edge.id.sourceId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
@@ -157,16 +159,36 @@ class LocalWorker(val workerId: Int,
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
+        val request = WorkerRequest((_.addIncomingEdge(DefaultSerializer.write(edge))))
+        messageBus.sendToWorkerForVertexId(request, edge.id.targetId)
       }
     } else {
-      warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add edge " + edge)
+      warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add outgoing edge " + edge)
+    }
+  }
+
+  def addIncomingEdge(serializedEdge: Array[Byte]) {
+    val edge = DefaultSerializer.read[Edge](serializedEdge)
+    addIncomingEdge(edge)
+  }
+
+  def addIncomingEdge(edge: Edge) {
+    val key = edge.id.targetId
+    val vertex = vertexStore.vertices.get(key)
+    if (vertex != null) {
+      if (vertex.addIncomingEdge(edge)) {
+        counters.incomingEdgesAdded += 1
+        vertexStore.vertices.updateStateOfVertex(vertex)
+      }
+    } else {
+      warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add incoming edge " + edge)
     }
   }
 
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
     vertexStore.vertices foreach { vertex =>
       if (sourceVertexPredicate(vertex)) {
-        addEdge(edgeFactory(vertex))
+        addOutgoingEdge(edgeFactory(vertex))
       }
     }
   }
@@ -186,11 +208,27 @@ class LocalWorker(val workerId: Int,
       if (vertex.removeOutgoingEdge(edgeId)) {
         counters.outgoingEdgesRemoved += 1
         vertexStore.vertices.updateStateOfVertex(vertex)
+        val request = WorkerRequest((_.removeIncomingEdge(edgeId)))
+        messageBus.sendToWorkerForVertexId(request, edgeId.targetId)
       } else {
         warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
     } else {
-      warning("Source vertex not found found when trying to remove edge with id " + edgeId)
+      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
+    }
+  }
+
+  def removeIncomingEdge(edgeId: EdgeId[Any, Any]) {
+    val vertex = vertexStore.vertices.get(edgeId.targetId)
+    if (vertex != null) {
+      if (vertex.removeIncomingEdge(edgeId)) {
+        counters.incomingEdgesRemoved += 1
+        vertexStore.vertices.updateStateOfVertex(vertex)
+      } else {
+        warning("Incoming edge not found when trying to remove edge with id " + edgeId)
+      }
+    } else {
+      warning("Source vertex not found found when trying to remove incoming edge with id " + edgeId)
     }
   }
 

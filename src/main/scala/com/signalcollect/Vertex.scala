@@ -69,18 +69,24 @@ trait Vertex extends Serializable {
   def addOutgoingEdge(e: Edge): Boolean
 
   /**
+   *  Removes an outgoing `Edge` from this `Vertex`.
+   *  @param edgeId the edge id to be removed
+   *  @return returns if an edge was removed
+   */
+  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean
+
+  /**
    *  Adds a new incoming `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
   def addIncomingEdge(e: Edge): Boolean
 
   /**
-   *  Removes an outgoing `Edge` from this `Vertex`.
-   *  @param e the edge to be added
-   *  @return returns if an edge was removed
+   *  Removes incoming `Edge` from this `Vertex`.
+   *  @param edgeId of the edge to be removed.
    */
-  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean
-
+  def removeIncomingEdge(edgeId: EdgeId[_, _]): Boolean
+  
   /**
    *  Removes all outgoing `Edge`s from this `Vertex`, returns the number of edges that were removed.
    */
