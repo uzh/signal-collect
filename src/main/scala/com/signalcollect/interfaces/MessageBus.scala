@@ -19,32 +19,36 @@
 
 package com.signalcollect.interfaces
 
+/**
+ *  A message bus is responsible for sending messages.
+ *  It has to guarantee per-sender FIFO when delivering messages.
+ */
 trait MessageBus[IdType] extends MessageRecipientRegistry {
   def numberOfWorkers: Int
-	
+
   def messagesSent: Long
-  
+
   def sendToWorkerForVertexIdHash(m: Any, recipientIdHash: Int)
   def sendToWorkerForVertexId(m: Any, recipientId: IdType)
   def sendToWorker(workerId: Int, m: Any)
   def sendToWorkers(m: Any)
-  
+
   def sendToCoordinator(m: Any)
 }
 
 trait MessageRecipientRegistry {
   /**
-   * Interface now is more generalized to accept any kind of worker (for the Akka case which should be an Actor Ref)
-   * 
-   * @param workerId is the worker id
-   * @param worker is the worker to be registered
+   *  Interface now is more generalized to accept any kind of worker (for the Akka case which should be an Actor Ref)
+   *
+   *  @param workerId is the worker id
+   *  @param worker is the worker to be registered
    */
   def registerWorker(workerId: Int, worker: Any)
-  
+
   /**
-   * Generalization of coordinator to accept Akka Forwarders to coordinator
-   * 
-   * @param coordinator is the coordinator to be registered
+   *  Generalization of coordinator to accept Akka Forwarders to coordinator
+   *
+   *  @param coordinator is the coordinator to be registered
    */
   def registerCoordinator(coordinator: Any)
 }

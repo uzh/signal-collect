@@ -107,7 +107,7 @@ class LocalWorker(val workerId: Int,
   protected def process(message: Any) {
     counters.messagesReceived += 1
     val currentTime = System.currentTimeMillis
-    if (currentTime - lastStatusUpdate > statusUpdateIntervallInMillis.getOrElse(Long.MaxValue)) {
+    if (currentTime - lastStatusUpdate > statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)) {
       lastStatusUpdate = currentTime
       sendStatusToCoordinator
     }
@@ -311,7 +311,7 @@ class LocalWorker(val workerId: Int,
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
   protected var lastStatusUpdate = System.currentTimeMillis()
-  protected var statusUpdateIntervallInMillis = workerConfig.statusUpdateIntervalInMillis
+  protected var statusUpdateIntervalInMillis = workerConfig.statusUpdateIntervalInMillis
 
   protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 

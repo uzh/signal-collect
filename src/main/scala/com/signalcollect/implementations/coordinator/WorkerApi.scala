@@ -127,11 +127,11 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
           workerProxies(r.workerId).receive(message)
         case ws: WorkerStatus =>
           statusMonitor.synchronized {
+            // only update worker status if no status received so far or if the current status is newer
             if (!workerStatusMap.keySet.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent < ws.messagesSent) {
               workerStatusMap.put(ws.workerId, ws)
               statusMonitor.notifyAll
             }
-
           }
         case l: LogMessage =>
           config.logger.receive(l)
@@ -150,18 +150,21 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByWorkerProxies + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
   def isOverstrained: Boolean = {
-    if (!config.maxInboxSize.isDefined) { false }
-    else (totalMessagesSent - totalMessagesReceived) > config.maxInboxSize.get
+    if (!config.maxInboxSize.isDefined) {
+      false
+    } else {
+      totalMessagesSent - totalMessagesReceived > config.maxInboxSize.get
+    }
   }
 
   def idle: Boolean = workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
 
   /**
    *  Waits for the graph to become idle or until the maximal wait time is reached.
-   * 
+   *
    *  @param maxWaitNanotime The maximum amount of time this function waits for the graph to become idle (in nanoseconds)
-   *  
-   *  @return If the graph is idle (true)  
+   *
+   *  @return If the graph is idle (true)
    */
   def awaitIdle(maxWaitNanotime: Long = Long.MaxValue): Boolean = {
     val startTime = System.nanoTime

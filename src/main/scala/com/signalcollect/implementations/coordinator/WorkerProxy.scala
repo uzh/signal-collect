@@ -34,33 +34,30 @@ object WorkerProxy {
     Proxy.newProxyInstance(
       workerClass.getClassLoader,
       Array[Class[_]](classOf[Worker]), //workerClass.getInterfaces,
-      new WorkerProxy(workerId, messageBus, loggingLevel)).asInstanceOf[Worker]
+      new WorkerProxy(workerId, messageBus)).asInstanceOf[Worker]
   }
 
 }
 
-/*
- * Synchronous proxy for worker functions.
- * 
- * Only works when there is at most 1 client thread calling an instance of this class.
- * Only works if the transport used is reliable and if workers never fail.
- * 
- * This is mainly an architectural place holder until we find a proper RPC solution to use
- * with our message bus as the transport. 
+/**
+ *  Proxy for worker functions.
+ *
+ *  Only works when there is at most 1 client thread calling an instance of this class.
+ *  Only works if the transport used is reliable and if workers never fail.
  */
-class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any], val loggingLevel: Int) extends InvocationHandler with Logging {
+class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any]) extends InvocationHandler {
 
   protected def relay(command: Worker => Unit) = messageBus.sendToWorker(workerId, WorkerRequest(command))
 
   override def toString = "WorkerProxy" + workerId
-  
+
   var workerMessage: Option[WorkerReply] = null
   val monitor = new Object
 
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
     var returnValue: Object = null
+    // intercept method named "receive"
     if ("receive".equals(method.getName)) {
-      // intercept method named "receive"
       val message = arguments(0).asInstanceOf[WorkerReply]
       if (message != null) {
         workerMessage = Some(message)
@@ -78,10 +75,10 @@ class WorkerProxy(val workerId: Int, val messageBus: MessageBus[Any], val loggin
         worker.messageBus.sendToCoordinator(reply)
       }
       relay(command)
-      
-      /*
-       * Blocking operation, until receive of worker reply by coordinator
-       * The reply will trigger the invoke again with receive method
+
+      /**
+       *  Blocking operation, until receive of worker reply by coordinator
+       *  The reply will trigger the invoke again with receive method
        */
       if (workerMessage == null) {
         monitor.synchronized {
