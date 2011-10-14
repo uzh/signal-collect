@@ -59,7 +59,12 @@ abstract class AbstractVertex extends Vertex {
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
-  protected var outgoingEdges: GenMap[EdgeId[Id, _], Edge] = HashMap[EdgeId[Id, _], Edge]()
+  protected var outgoingEdges: Map[EdgeId[Id, _], Edge] = HashMap[EdgeId[Id, _], Edge]()
+
+  /**
+   *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementations
+   */
+  def getOutgoingEdgeMap: Option[Map[EdgeId[Id, _], Edge]] = Some(outgoingEdges)
 
   /** The state of this vertex when it last signaled. */
   protected var lastSignalState: Option[State] = None
@@ -68,7 +73,8 @@ abstract class AbstractVertex extends Vertex {
   protected var outgoingEdgeAddedSinceSignalOperation = false
 
   /**
-   * Adds a new outgoing {@link Edge} to this {@link FrameworkVertex}.
+   * Adds a new outgoing `Edge`
+   *
    * @param e the edge to be added.
    */
   def addOutgoingEdge(e: Edge): Boolean = {
@@ -105,7 +111,7 @@ abstract class AbstractVertex extends Vertex {
    */
   def removeAllOutgoingEdges: Int = {
     val edgesRemoved = outgoingEdges.size
-    outgoingEdges foreach ((tuple: (EdgeId[Id, Any], Edge)) => removeOutgoingEdge(tuple._1))
+    outgoingEdges.keys foreach (removeOutgoingEdge(_))
     edgesRemoved
   }
 
@@ -125,7 +131,7 @@ abstract class AbstractVertex extends Vertex {
   }
 
   def doSignal(messageBus: MessageBus[Any]) {
-    outgoingEdges.foreach(_._2.executeSignalOperation(this, messageBus))
+    outgoingEdges.values.foreach(_.executeSignalOperation(this, messageBus))
   }
 
   /**
@@ -167,12 +173,12 @@ abstract class AbstractVertex extends Vertex {
   /**
    * Returns the ids of all vertices to which this vertex currently has an outgoing edge
    */
-  def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.seq map (_._2.id.targetId)
+  def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.values map (_.id.targetId)
 
   /**
    * Returns all outgoing edges
    */
-  override def getOutgoingEdges: Option[Iterable[Edge]] = Some(outgoingEdges.seq map (_._2))
+  override def getOutgoingEdges: Option[Iterable[Edge]] = Some(outgoingEdges.values)
 
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
   def outgoingEdgeCount = outgoingEdges.size

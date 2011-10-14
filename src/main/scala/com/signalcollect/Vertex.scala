@@ -143,7 +143,12 @@ trait Vertex extends Serializable {
    *  @return all outgoing edges if this operation is supported by the vertex, `None` if this operation is not
    *  supported or if there is no such signal.
    */
-  def getOutgoingEdges: Option[Iterable[Edge]] = None
+  def getOutgoingEdges: Option[Iterable[Edge]]
+
+  /**
+   *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementations
+   */
+  def getOutgoingEdgeMap: Option[Map[EdgeId[Id, _], Edge]]
 
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
