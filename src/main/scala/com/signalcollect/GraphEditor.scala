@@ -43,7 +43,7 @@ trait GraphEditor {
    *  Sends `signal` to the vertex with `vertex.id=targetId` along a virtual edge with source id `"Coordinator"`.
    */
   def sendSignalToVertex(signal: Any, targetId: Any) {
-    sendSignalAlongEdge(signal, new DefaultEdgeId("Coordinator", targetId))
+    sendSignalAlongEdge(signal, new DefaultEdgeId("External", targetId))
   }
   
   /**
