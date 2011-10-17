@@ -1,0 +1,1 @@
+For information about Signal/Collect please visit http://www.signalcollect.com
