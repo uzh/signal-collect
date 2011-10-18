@@ -35,4 +35,4 @@ case class WorkerConfiguration(
   workerFactory: WorkerFactory = factory.worker.Local,
   messageBusFactory: MessageBusFactory = factory.messageBus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = Some(500l) /*None*/ )
+  statusUpdateIntervalInMillis: Option[Long] = None)
