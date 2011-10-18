@@ -101,7 +101,7 @@ case class ExecutionConfiguration(
    *  @param stepsLimit The maximum number of computation steps executed in a computation.
    */
   def withGlobalTerminationCondition(globalTerminationCondition: GlobalTerminationCondition[_]) = newExecutionConfiguration(globalTerminationCondition = Some(globalTerminationCondition))
-  
+
   /**
    *  Internal function to create a new configuration instance that defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
@@ -195,7 +195,7 @@ case object OptimizedAsynchronousExecutionMode extends ExecutionMode {
 }
 
 /**
- *  GloablTerminationCondition defines a termination condition that depends on the global state of the graph.
+ *  GlobalTerminationCondition defines a termination condition that depends on the global state of the graph.
  *  This class is abstract because the should terminate predicate on the aggregated value is not implemented.
  *
  *  @param aggregationOperation The aggregation operation used to compute the globally aggregated value
@@ -205,5 +205,12 @@ case object OptimizedAsynchronousExecutionMode extends ExecutionMode {
 abstract class GlobalTerminationCondition[ValueType](
   val aggregationOperation: AggregationOperation[ValueType],
   val aggregationInterval: Long = 1000l) {
+
+  /**
+   *  Determines if the computation should terminate when the aggregated value is `value`.
+   *
+   *   @param value The current value computed by `aggregationOperation`
+   *   @return If the computation should terminate
+   */
   def shouldTerminate(value: ValueType): Boolean
 }

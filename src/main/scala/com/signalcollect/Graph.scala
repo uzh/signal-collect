@@ -155,9 +155,9 @@ trait Graph extends GraphEditor {
    *
    *  @note There is no guarantee about the order in which the aggregation operations get executed on the vertices.
    *
-   *  @example See concrete implementations of other aggregation operations, i.e. `SumOperation`.
+   *  @example See concrete implementations of other aggregation operations, i.e. `SumOfStates`.
    */
-  def aggregate[G](aggregationOperation: AggregationOperation[G]): G
+  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 
   /**
    *  Sets the function that handles signals that could not be delivered to a vertex.

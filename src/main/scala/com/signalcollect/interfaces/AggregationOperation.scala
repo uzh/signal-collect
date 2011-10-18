@@ -24,22 +24,26 @@ import com.signalcollect.Vertex
 /**
  *  An aggregation operation aggregates some value of type `ValueType` over all the vertices in a graph.
  *
- *  @param neutralElement The neutral element of the aggregation operation: `operation(x, neutralElement) == x`
- *
- *  @param operation The aggregation operation that is executed on the values that have been extracted from vertices by the `extractor` function.
- *
- *  @param extractor The function that extracts values of type `ValueType` from vertices.
- *
- *  @note There is no guarantee about the order in which the aggregation operations get executed on the vertices.
- *
- *  @note This is the most powerful and low-level aggregation operation. All other aggregation operations are specializations of this trait. 
- *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
+ *  @version 1.0.0
+ *  @since 1.0.0
  */
 trait AggregationOperation[ValueType] {
-  val neutralElement: ValueType
-  def aggregate(a: ValueType, b: ValueType): ValueType
+  /**
+   *  Extracts values of type `ValueType` from vertices.
+   */
   def extract(v: Vertex): ValueType
+
+  /**
+   *  Aggregates all the values extracted by the `extract` function.
+   *
+   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
+   */
+  def aggregate(a: ValueType, b: ValueType): ValueType
+
+  /**
+   *  Neutral element of the `aggregate` function:
+   *  `aggregate(x, neutralElement) == x`
+   */
+  val neutralElement: ValueType
 }
