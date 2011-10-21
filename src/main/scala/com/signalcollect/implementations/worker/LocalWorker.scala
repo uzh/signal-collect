@@ -84,6 +84,14 @@ class LocalWorker(val workerId: Int,
   def run {
     try {
       while (!shouldShutdown) {
+
+        // if necessary send status update to coordinator
+        val currentTime = System.currentTimeMillis
+        if (currentTime - lastStatusUpdate > updateInterval) {
+          lastStatusUpdate = currentTime
+          sendStatusToCoordinator
+        }
+
         handleIdling
         // While the computation is in progress, alternately check the inbox and collect/signal
         if (!isPaused) {
@@ -106,13 +114,10 @@ class LocalWorker(val workerId: Int,
   protected val graphApi: GraphEditor = DefaultGraphEditor.createInstance(messageBus)
   protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
+  protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
+
   protected def process(message: Any) {
     counters.messagesReceived += 1
-    val currentTime = System.currentTimeMillis
-    if (currentTime - lastStatusUpdate > statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)) {
-      lastStatusUpdate = currentTime
-      sendStatusToCoordinator
-    }
     message match {
       case s: SignalMessage[_, _, _] => {
         debug(s)

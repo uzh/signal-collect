@@ -26,7 +26,7 @@ import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
 import com.signalcollect.implementations.logging.DefaultLogger
-
+import collection.JavaConversions._
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -217,5 +217,5 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
 class VerifiedColoredVertex(id: Int, numColors: Int) extends ColoredVertex(id, numColors, 0, false) {
   // only necessary to allow access to vertex internals
-  def publicMostRecentSignals: Iterable[Int] = mostRecentSignalMap.values.asInstanceOf[Iterable[Int]]
+  def publicMostRecentSignals: Iterable[Int] = mostRecentSignalMap.values
 }

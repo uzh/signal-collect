@@ -39,9 +39,9 @@ trait SumOfOutWeights extends AbstractVertex {
   abstract override def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean = {
     var weightToSubtract = 0.0
     val castEdgeId = edgeId.asInstanceOf[EdgeId[Id, _]]
-    val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
-    if (optionalOutgoinEdge.isDefined) {
-      weightToSubtract = optionalOutgoinEdge.get.weight
+    val outgoinEdge = outgoingEdges.get(castEdgeId)
+    if (outgoinEdge != null) {
+      weightToSubtract = outgoinEdge.weight
     }
     val removed = super.removeOutgoingEdge(edgeId)
     if (removed) {

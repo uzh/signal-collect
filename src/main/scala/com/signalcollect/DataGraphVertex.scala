@@ -20,11 +20,11 @@
 package com.signalcollect
 
 import com.signalcollect.implementations.graph._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.Map
 import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
+import collection.JavaConversions._
+import java.util.HashMap
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -55,7 +55,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *  @param mostRecentSignals An iterable that returns the most recently received signal for each edge that has sent at least one signals already.
    *
    *  @return The new vertex state.
-   *  
+   *
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
@@ -64,7 +64,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
    */
-  protected val mostRecentSignalMap: Map[EdgeId[_, Id], Signal] = HashMap[EdgeId[_, Id], Signal]()
+  protected val mostRecentSignalMap = new HashMap[EdgeId[_, Id], Signal]()
 
   /**
    *  Utility function to filter out only certain signals of interest.
@@ -79,7 +79,11 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *  @param id The edge id of the edge for which we would like to retrieve the most recent signal that was sent along it.
    */
   override def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
-    mostRecentSignalMap.get(id.asInstanceOf[EdgeId[_, Id]])
+    val signal = mostRecentSignalMap.get(id.asInstanceOf[EdgeId[_, Id]])
+    signal match {
+      case null => None
+      case s => Some(s)
+    }
   }
 
   /**
@@ -91,10 +95,13 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    */
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
     val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
-    castS foreach { signal =>
-      mostRecentSignalMap.put(signal.edgeId, signal.signal)
+    // faster than scala foreach
+    val i = castS.iterator
+    while (i.hasNext) {
+      val signalMessage = i.next
+      mostRecentSignalMap.put(signalMessage.edgeId, signalMessage.signal)
     }
-    state = collect(state, mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]])
+    state = collect(state, mostRecentSignalMap.values)
   }
 
   /**

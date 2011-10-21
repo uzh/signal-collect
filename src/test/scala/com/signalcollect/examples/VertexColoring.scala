@@ -61,7 +61,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    *  new color. If no neighbor shares the same color, we stay with the old color.
    */
   def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
-    if (mostRecentSignalMap.values.iterator.contains(state)) {
+    if (mostRecentSignals.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {
         initialColor

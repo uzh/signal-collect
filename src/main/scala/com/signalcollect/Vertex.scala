@@ -18,8 +18,11 @@
  */
 
 package com.signalcollect
+
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
+import collection.immutable.Map
+import collection.Iterable
 
 /**
  *  This trait represents the framework's view of a vertex.

@@ -19,14 +19,15 @@ package com.signalcollect.implementations.storage
 
 import com.signalcollect.interfaces.{ VertexSignalBuffer, SignalMessage, Storage }
 import java.util.concurrent.ConcurrentHashMap
-import scala.collection.mutable.ArrayBuffer
+import java.util.ArrayList
+import collection.JavaConversions._
 
 /**
  * Stores Signals that were received by the worker but not collected by the vertices yet
  */
 class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[SignalMessage[_, _, _]]]() //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_, _, _]]]() //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
 
   /**
@@ -39,9 +40,10 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    */
   def addSignal(signal: SignalMessage[_, _, _]) {
     if (undeliveredSignals.containsKey(signal.edgeId.targetId)) {
-      undeliveredSignals.get(signal.edgeId.targetId).append(signal)
+      undeliveredSignals.get(signal.edgeId.targetId).add(signal)
     } else {
-      val signalsForVertex = ArrayBuffer[SignalMessage[_, _, _]](signal)
+      val signalsForVertex = new ArrayList[SignalMessage[_, _, _]]()
+      signalsForVertex.add(signal)
       undeliveredSignals.put(signal.edgeId.targetId, signalsForVertex)
     }
   }
@@ -54,7 +56,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    */
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
-      undeliveredSignals.put(vertexId, ArrayBuffer[SignalMessage[_, _, _]]())
+      undeliveredSignals.put(vertexId, new ArrayList[SignalMessage[_, _, _]]())
     }
   }
 

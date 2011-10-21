@@ -23,5 +23,14 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 
 class DefaultVertexToWorkerMapper(numberOfWorkers: Int) extends VertexToWorkerMapper {
   def getWorkerIdForVertexId(vertexId: Any): Int = getWorkerIdForVertexIdHash(vertexId.hashCode)
-  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = (vertexIdHash % numberOfWorkers).abs
+
+  //  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = (vertexIdHash % numberOfWorkers).abs (BAD PERFORMANCE!)
+  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = {
+    val workerId = vertexIdHash % numberOfWorkers
+    if (workerId >= 0) {
+      workerId
+    } else {
+      -workerId
+    }
+  }
 }

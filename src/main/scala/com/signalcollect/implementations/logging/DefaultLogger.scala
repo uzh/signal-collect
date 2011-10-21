@@ -23,9 +23,16 @@ import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageRecipient
 
 class DefaultLogger extends MessageRecipient[LogMessage] with Serializable {
-  
+
   def receive(logMessage: LogMessage) = {
-	  println(logMessage.from + ": " + logMessage.msg)
+    logMessage.msg match {
+      case e: Exception =>
+        println(logMessage.from + ": " + e.getMessage)
+        e.printStackTrace
+      case other =>
+        println(logMessage.from + ": " + logMessage.msg)
+    }
+
   }
 
 }

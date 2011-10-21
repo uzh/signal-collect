@@ -22,17 +22,10 @@ package com.signalcollect.implementations.graph
 import com.signalcollect.implementations.messaging.AbstractMessageRecipient
 import com.signalcollect._
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.messaging.AbstractMessageRecipient
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.Buffer
-import scala.collection.mutable.LinkedHashMap
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.Set
-import scala.collection.immutable.HashMap
-import scala.collection.immutable.Map
-import scala.collection.GenMap
 import com.signalcollect._
+import java.util.HashMap
+import collection.mutable.Map
+import collection.JavaConversions._
 
 abstract class AbstractVertex extends Vertex {
   
@@ -59,12 +52,12 @@ abstract class AbstractVertex extends Vertex {
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
    */
-  protected var outgoingEdges: Map[EdgeId[Id, _], Edge] = HashMap[EdgeId[Id, _], Edge]()
+  protected var outgoingEdges = new HashMap[EdgeId[Id, _], Edge]()
 
   /**
    *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementations
    */
-  def getOutgoingEdgeMap: Option[Map[EdgeId[Id, _], Edge]] = Some(outgoingEdges)
+  def getOutgoingEdgeMap: Option[collection.immutable.Map[EdgeId[Id, _], Edge]] = Some(outgoingEdges.toMap[EdgeId[Id, _], Edge])
 
   /** The state of this vertex when it last signaled. */
   protected var lastSignalState: Option[State] = None
@@ -81,9 +74,9 @@ abstract class AbstractVertex extends Vertex {
    */
   def addOutgoingEdge(e: Edge): Boolean = {
     val edgeId = e.id.asInstanceOf[EdgeId[Id, Any]]
-    if (!outgoingEdges.get(edgeId).isDefined) {
+    if (outgoingEdges.get(edgeId) == null) {
       outgoingEdgeAddedSinceSignalOperation = true
-      outgoingEdges += ((edgeId, e))
+      outgoingEdges.put(edgeId, e)
       e.onAttach(this.asInstanceOf[e.SourceVertex])
       true
     } else {
@@ -97,10 +90,9 @@ abstract class AbstractVertex extends Vertex {
    */
   def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean = {
     val castEdgeId = edgeId.asInstanceOf[EdgeId[Id, _]]
-    val optionalOutgoinEdge = outgoingEdges.get(castEdgeId)
-    if (optionalOutgoinEdge.isDefined) {
-      val outgoingEdge = optionalOutgoinEdge.get
-      outgoingEdges -= castEdgeId
+    val outgoingEdge = outgoingEdges.get(castEdgeId)
+    if (outgoingEdge != null) {
+      outgoingEdges.remove(castEdgeId)
       true
     } else {
       false
@@ -133,7 +125,12 @@ abstract class AbstractVertex extends Vertex {
   }
 
   def doSignal(messageBus: MessageBus[Any]) {
-    outgoingEdges.values.foreach(_.executeSignalOperation(this, messageBus))
+    // faster than scala foreach
+	var i = outgoingEdges.values.iterator
+	while (i.hasNext) {
+	  val outgoingEdge = i.next
+	  outgoingEdge.executeSignalOperation(this, messageBus)
+	}
   }
 
   /**
