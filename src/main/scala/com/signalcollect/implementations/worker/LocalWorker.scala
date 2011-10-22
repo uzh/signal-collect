@@ -114,7 +114,7 @@ class LocalWorker(val workerId: Int,
   protected val graphApi: GraphEditor = DefaultGraphEditor.createInstance(messageBus)
   protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
-  protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
+  protected val updateInterval: Long = workerConfig.statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
@@ -353,8 +353,7 @@ class LocalWorker(val workerId: Int,
 
   protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
 
-  protected var lastStatusUpdate = System.currentTimeMillis()
-  protected var statusUpdateIntervalInMillis = workerConfig.statusUpdateIntervalInMillis
+  protected var lastStatusUpdate = System.currentTimeMillis
 
   protected lazy val vertexStore = workerConfig.storageFactory.createInstance
 
