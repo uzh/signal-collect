@@ -1,5 +1,5 @@
 /*
- *  @author Daniel Strebel
+ *  @author Philip Stutz
  *
  *  Copyright 2011 University of Zurich
  *      
@@ -61,13 +61,14 @@ trait CompressingSerializer extends DefaultSerializer {
    * @param input the array to compress
    * @param compressionLevel determines tradeoff between speed and compression
    */
-  def compress(input: Array[Byte], compressionLevel: Int = Deflater.DEFAULT_COMPRESSION): Array[Byte] = {
-    val output = new Array[Byte](2048)
+  def compress(input: Array[Byte], compressionLevel: Int = Deflater.DEFAULT_COMPRESSION, intermediateArraySize: Option[Int] = None): Array[Byte] = {
+    val output = new Array[Byte](intermediateArraySize.getOrElse(2048 + input.size))
     val compresser = new Deflater(compressionLevel)
     compresser.setInput(input)
-    compresser.finish()
+    compresser.finish
     val compressedDataLength = compresser.deflate(output)
     val trimmedResult = new Array[Byte](compressedDataLength)
+    trimmedResult.clone
     output.copyToArray(trimmedResult, 0)
     trimmedResult
   }
@@ -80,12 +81,12 @@ trait CompressingSerializer extends DefaultSerializer {
    * @param the compressed byte array
    * @result the uncompressed version
    */
-  def decompress(input: Array[Byte]): Array[Byte] = {
-    val decompresser = new Inflater()
+  def decompress(input: Array[Byte], intermediateArraySize: Option[Int] = None): Array[Byte] = {
+    val decompresser = new Inflater
     decompresser.setInput(input)
-    val result = new Array[Byte](2048)
+    val result = new Array[Byte](intermediateArraySize.getOrElse(2048 + input.size * 10))
     val resultLength = decompresser.inflate(result)
-    decompresser.end()
+    decompresser.end
     val trimmedResult = new Array[Byte](resultLength)
     result.copyToArray(trimmedResult, 0)
     trimmedResult

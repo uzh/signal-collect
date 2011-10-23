@@ -1,5 +1,5 @@
 /*
- *  @author Daniel Strebel
+ *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
  *      
