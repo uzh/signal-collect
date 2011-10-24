@@ -28,7 +28,7 @@ import collection.mutable.Map
 import collection.JavaConversions._
 
 abstract class AbstractVertex extends Vertex {
-  
+
   /**
    * Returns the ids of all vertices from which this vertex has an incoming edge, optional.
    */
@@ -126,11 +126,11 @@ abstract class AbstractVertex extends Vertex {
 
   def doSignal(messageBus: MessageBus[Any]) {
     // faster than scala foreach
-	var i = outgoingEdges.values.iterator
-	while (i.hasNext) {
-	  val outgoingEdge = i.next
-	  outgoingEdge.executeSignalOperation(this, messageBus)
-	}
+    var i = outgoingEdges.values.iterator
+    while (i.hasNext) {
+      val outgoingEdge = i.next
+      outgoingEdge.executeSignalOperation(this, messageBus)
+    }
   }
 
   /**
@@ -158,13 +158,8 @@ abstract class AbstractVertex extends Vertex {
       1
     } else {
       lastSignalState match {
-        case None => 1
-        case Some(oldState) => {
-          if (oldState.equals(state))
-            0
-          else
-            1
-        }
+        case Some(oldState) if oldState == state => 0
+        case noStateOrStateChanged => 1
       }
     }
   }
