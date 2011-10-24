@@ -107,7 +107,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val graph = createGraph(1000)
       val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {
         def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 700.0
+          sum.isDefined && sum.get > 200.0
         }
       }
       val execConfig = ExecutionConfiguration
@@ -116,7 +116,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      aggregate > 700.0 && aggregate < 999.9999
+      aggregate > 200.0 && aggregate < 999.999999
     }
   }
 
