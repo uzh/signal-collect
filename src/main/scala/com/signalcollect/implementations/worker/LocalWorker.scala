@@ -212,9 +212,11 @@ class LocalWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
         counters.outgoingEdgesRemoved += 1
-        vertexStore.vertices.updateStateOfVertex(vertex)
         val request = WorkerRequest((_.removeIncomingEdge(edgeId)))
         messageBus.sendToWorkerForVertexId(request, edgeId.targetId)
+        vertexStore.toCollect.addVertex(vertex.id)
+        vertexStore.toSignal.add(vertex.id)
+        vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
