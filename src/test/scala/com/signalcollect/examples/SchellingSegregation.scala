@@ -60,14 +60,17 @@ object SchellingSegregation extends App {
   val graph = GraphBuilder.build
 
   //Dimensions of the grid
-  val columns = 40
-  val rows = 20
+  val columns = 80
+  val rows = 600
 
+  
+  println("Adding vertices ...")
   //Create all agents
   for (column <- 0 to columns; row <- 0 to rows) {
     graph.addVertex(new SegregationAgent((column, row), (Math.random * 2.0).floor.toInt, 0.4f))
   }
 
+  println("Adding edges ...")
   // Grid construction: To construct the actual grid we need to connect the neighboring cells.
   for (column <- 0 to columns; row <- 0 to rows) {
     for (neighbor <- neighbors(column, row)) {
@@ -105,8 +108,7 @@ object SchellingSegregation extends App {
 
   println("Grid before:\n" + stringRepresentationOfGraph)
 
-  //Time limit is used to guarantee that the algorithm will terminate
-  val stats = graph.execute(ExecutionConfiguration.withTimeLimit(5000))
+  val stats = graph.execute
 
   //Print general computation statistics
   println(stats)

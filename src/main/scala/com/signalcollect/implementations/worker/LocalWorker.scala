@@ -130,12 +130,7 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  def addVertex(serializedVertex: Array[Byte]) {
-    val vertex = DefaultSerializer.read[Vertex](serializedVertex)
-    addVertex(vertex)
-  }
-
-  protected def addVertex(vertex: Vertex) {
+  def addVertex(vertex: Vertex) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
@@ -150,12 +145,7 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  def addOutgoingEdge(serializedEdge: Array[Byte]) {
-    val edge = DefaultSerializer.read[Edge](serializedEdge)
-    addOutgoingEdge(edge)
-  }
-
-  protected def addOutgoingEdge(edge: Edge) {
+  def addOutgoingEdge(edge: Edge) {
     val key = edge.id.sourceId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
@@ -164,7 +154,7 @@ class LocalWorker(val workerId: Int,
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
-        val request = WorkerRequest((_.addIncomingEdge(DefaultSerializer.write(edge))))
+        val request = WorkerRequest((_.addIncomingEdge(edge)))
         messageBus.sendToWorkerForVertexId(request, edge.id.targetId)
       }
     } else {

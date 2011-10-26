@@ -39,14 +39,12 @@ trait DefaultGraphEditor extends GraphEditor with DefaultSerializer {
   }
 
   def addVertex(vertex: Vertex) {
-    val v = write(vertex)
-    val request = WorkerRequest((_.addVertex(v)))
+    val request = WorkerRequest((_.addVertex(vertex)))
     messageBus.sendToWorkerForVertexId(request, vertex.id)
   }
 
   def addEdge(edge: Edge) {
-    val e = write(edge)
-    val request = WorkerRequest((_.addOutgoingEdge(e)))
+    val request = WorkerRequest((_.addOutgoingEdge(edge)))
     messageBus.sendToWorkerForVertexId(request, edge.id.sourceId)
   }
 

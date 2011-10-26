@@ -32,9 +32,9 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
    */
   def initialize
   
-  def addVertex(serializedVertex: Array[Byte])
-  def addOutgoingEdge(serializedEdge: Array[Byte])
-  def addIncomingEdge(serializedEdge: Array[Byte])
+  def addVertex(vertex: Vertex)
+  def addOutgoingEdge(edge: Edge)
+  def addIncomingEdge(edge: Edge)
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
   def removeVertex(vertexId: Any)
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any])

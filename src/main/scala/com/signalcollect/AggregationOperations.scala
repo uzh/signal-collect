@@ -22,6 +22,21 @@ package com.signalcollect
 import com.signalcollect.interfaces.AggregationOperation
 
 /**
+ *  Builds a map with the vertex ids as keys and the vertex states as values.
+ *
+ *   Only works on graphs where this information fits into memory.
+ */
+class IdStateMapAggregator[IdType, StateType] extends AggregationOperation[Map[IdType, StateType]] {
+  val neutralElement = Map[IdType, StateType]()
+  def extract(v: Vertex): Map[IdType, StateType] = {
+    try {
+      Map[IdType, StateType]((v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType]))
+    }
+  }
+  def aggregate(a: Map[IdType, StateType], b: Map[IdType, StateType]): Map[IdType, StateType] = a ++ b
+}
+
+/**
  *  Aggregation operation that sums up all the vertex states that have numeric type `N`.
  */
 class SumOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
