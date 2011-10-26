@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  Represents an agent in a Schelling-Segregation simulation
@@ -91,10 +92,11 @@ object SchellingSegregation extends App {
 
   // creates a string representation of the graph
   def stringRepresentationOfGraph: String = {
+    val stateMap = graph.aggregate(new IdStateMapAggregator[(Int, Int), Int])
     val stringBuilder = new StringBuilder
     for (row <- 0 to rows) {
       for (column <- 0 to columns) {
-        stringBuilder.append(graph.forVertexWithId((column, row), (v: SegregationAgent) => v.state).get)
+        stringBuilder.append(stateMap((column, row)))
       }
       stringBuilder.append("\n")
     }
