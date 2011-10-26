@@ -34,14 +34,8 @@ class SegregationAgent(id: Any, initialState: Int, equalityThreshold: Float) ext
   var changedState: Boolean = false
 
   def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
-    //val equalCount = mostRecentSignalMap.values.foldLeft(0)((b, otherState) => if (otherState == this.state) b + 1 else b)
-    var equalCount = 0
-    for (otherState <- mostRecentSignalMap.values) {
-      if (otherState == this.state) {
-        equalCount += 1
-      }
-    }
-    val totalNeighbors = mostRecentSignalMap.size
+	val equalCount = mostRecentSignals.filter((_ == this.state)).size
+    val totalNeighbors = mostRecentSignals.size
     if (equalCount.toFloat / totalNeighbors >= equalityThreshold) {
       changedState = false
       this.state
@@ -61,7 +55,7 @@ object SchellingSegregation extends App {
 
   //Dimensions of the grid
   val columns = 80
-  val rows = 600
+  val rows = 80
 
   
   println("Adding vertices ...")
@@ -107,13 +101,8 @@ object SchellingSegregation extends App {
   }
 
   println("Grid before:\n" + stringRepresentationOfGraph)
-
   val stats = graph.execute
-
-  //Print general computation statistics
-  println(stats)
-
+  println(stats) //Print computation statistics
   println("Grid after:\n" + stringRepresentationOfGraph)
-
   graph.shutdown
 }
