@@ -24,7 +24,7 @@ import com.signalcollect.interfaces._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
 import collection.JavaConversions._
-import java.util.HashMap
+import scala.collection.mutable.HashMap
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -36,8 +36,8 @@ import java.util.HashMap
  *  @param state the initial state of the vertex.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
+ *  @version 1.0.0
+ *  @since 1.0.0
  */
 abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   val id: IdTypeParameter,
