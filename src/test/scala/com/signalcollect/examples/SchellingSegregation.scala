@@ -59,70 +59,49 @@ object SchellingSegregation extends App {
   val graph = GraphBuilder.build
 
   //Dimensions of the grid
-  val m = 40
-  val n = 20
+  val columns = 40
+  val rows = 20
 
   //Create all agents
-  for (i <- 0 until (m * n)) {
-    graph.addVertex(new SegregationAgent(i, (Math.random * 2.0).floor.toInt, 0.4f))
+  for (column <- 0 to columns; row <- 0 to rows) {
+    graph.addVertex(new SegregationAgent((column, row), (Math.random * 2.0).floor.toInt, 0.4f))
   }
 
-  /* 
-   * Grid construction
-   * 
-   * To construct the actual grid we need to connect the neighboring cells.
-   * The following sketch shows all the neighboring 
-   * cells that a cell "XX" needs to be connected to:
-   * 
-   * N1 | N2 | N3
-   * ------------
-   * N4 | XX | N5
-   * ------------
-   * N6 | N7 | N8
-   * 
-   * The names N1..N8 can also be found in the code to show the connection
-   * that is currently drawn.
-   * 
-   * We further need to make sure that cells only link to cells within the grid
-   */
-  for (i <- 0 until m) {
-    for (j <- 0 until n) {
-      if ((i - 1) >= 0) { //Make sure all neighbors left of the cell are within the grid
-        graph.addEdge(new StateForwarderEdge(j * m + i, j * m + i - 1)) //N4
-        if ((j - 1) >= 0) {
-          graph.addEdge(new StateForwarderEdge(j * m + i, (j - 1) * m + i - 1)) //N1
-        }
-        if ((j + 1) < n) {
-          graph.addEdge(new StateForwarderEdge(j * m + i, (j + 1) * m + i - 1)) //N6
-        }
-      }
-      if ((i + 1) < m) { //Make sure all neighbors right of the cell are within the grid
-        graph.addEdge(new StateForwarderEdge(j * m + i, j * m + i + 1)) //N5
-        if ((j - 1) >= 0) {
-          graph.addEdge(new StateForwarderEdge(j * m + i, (j - 1) * m + i + 1)) //N3
-        }
-        if ((j + 1) < n) {
-          graph.addEdge(new StateForwarderEdge(j * m + i, (j + 1) * m + i + 1)) //N8
-        }
-      }
-      if ((j - 1) >= 0) { // Top neighbor
-        graph.addEdge(new StateForwarderEdge(j * m + i, (j - 1) * m + i)) //N2
-      }
-      if ((j + 1) < n) { // Bottom neighbor
-        graph.addEdge(new StateForwarderEdge(j * m + i, (j + 1) * m + i)) //N7
+  // Grid construction: To construct the actual grid we need to connect the neighboring cells.
+  for (column <- 0 to columns; row <- 0 to rows) {
+    for (neighbor <- neighbors(column, row)) {
+      if (inGrid(neighbor._1, neighbor._2)) {
+        graph.addEdge(new StateForwarderEdge((column, row), (neighbor._1, neighbor._2)))
       }
     }
   }
 
-  //Print the start grid
-  println("Grid before:")
-  for (i <- 0 until (m * n)) {
-    if (i % m == 0) {
-      print("\n")
-    }
-    val status: Option[Int] = graph.forVertexWithId(i, (v: SegregationAgent) => v.state)
-    print(status.get)
+  // returns all the neighboring cells of the cell with the given row/column
+  def neighbors(column: Int, row: Int): List[(Int, Int)] = {
+    List(
+      (column - 1, row - 1), (column, row - 1), (column + 1, row - 1),
+      (column - 1, row), (column + 1, row),
+      (column - 1, row + 1), (column, row + 1), (column + 1, row + 1))
   }
+
+  // tests if a cell is within the grid boundaries
+  def inGrid(column: Int, row: Int): Boolean = {
+    column >= 0 && row >= 0 && column <= columns && row <= rows
+  }
+
+  // creates a string representation of the graph
+  def stringRepresentationOfGraph: String = {
+    val stringBuilder = new StringBuilder
+    for (row <- 0 to rows) {
+      for (column <- 0 to columns) {
+        stringBuilder.append(graph.forVertexWithId((column, row), (v: SegregationAgent) => v.state).get)
+      }
+      stringBuilder.append("\n")
+    }
+    stringBuilder.toString
+  }
+
+  println("Grid before:\n" + stringRepresentationOfGraph)
 
   //Time limit is used to guarantee that the algorithm will terminate
   val stats = graph.execute(ExecutionConfiguration.withTimeLimit(5000))
@@ -130,15 +109,7 @@ object SchellingSegregation extends App {
   //Print general computation statistics
   println(stats)
 
-  //Print the resulting grid
-  println("Grid after:")
-  for (i <- 0 until (m * n)) {
-    if (i % m == 0) {
-      print("\n")
-    }
-    val status: Option[Int] = graph.forVertexWithId(i, (v: SegregationAgent) => v.state)
-    print(status.get)
-  }
+  println("Grid after:\n" + stringRepresentationOfGraph)
 
   graph.shutdown
 }

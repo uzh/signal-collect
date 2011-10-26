@@ -75,7 +75,7 @@ case class ExecutionStatistics(
       "# collect steps" + "\t" + "\t" + collectSteps + "\n" +
       "computation time (ms)" + "\t" + computationTimeInMilliseconds + "\n" +
       "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds + "\n" +
-      "graph loading time (ms)" + "\t" + graphLoadingWaitInMilliseconds + "\n" +
+      "graph loading wait (ms)" + "\t" + graphLoadingWaitInMilliseconds + "\n" +
       "termination reason" + "\t" + terminationReason
   }
 
