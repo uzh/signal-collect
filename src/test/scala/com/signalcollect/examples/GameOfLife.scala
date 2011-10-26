@@ -103,7 +103,7 @@ object GameOfLife extends App {
         val state = stateMap((column, row))
         val symbol = state match {
           case 0 => " "
-          case other => "☺"
+          case other => "x"
         }
         stringBuilder.append(symbol)
       }
