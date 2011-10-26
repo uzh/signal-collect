@@ -1,4 +1,5 @@
 /*
+ *  @author Philip Stutz
  *  @author Daniel Strebel
  *  
  *  Copyright 2011 University of Zurich
@@ -23,38 +24,42 @@ import com.signalcollect._
 import com.signalcollect.interfaces.AggregationOperation
 
 /**
- *  Represents an agent in a Schelling-Segregation simulation
+ *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
  *
  *  @param id: the identifier of this vertex
  *  @param initialState: initial state of the agent
- *  @param equalityThreshold: minimum required percentage of neighbors with equal state as float value from 0 to 1.
  */
-class SegregationAgent(id: Any, initialState: Int, equalityThreshold: Float) extends DataGraphVertex(id, initialState) {
+class GameOfLifeCell(id: Any, initialState: Int) extends DataGraphVertex(id, initialState) {
   type Signal = Int
 
   def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
-    val equalNeighborsCount = (mostRecentSignals filter (_ equals this.state)).size
-    val totalNeighborsCount = mostRecentSignals.size
-    if (equalNeighborsCount.toFloat / totalNeighborsCount >= equalityThreshold) {
-      this.state
-    } else {
-      (this.state + 1) % 2
+    val numberOfAliveNeighbors = mostRecentSignals.sum
+    numberOfAliveNeighbors match {
+      case 0 => 0 // dies of loneliness
+      case 1 => 0 // dies of loneliness
+      case 2 => state // same as before
+      case 3 => 1 // becomes alive if dead
+      case higher => 0 // dies of overcrowding
     }
   }
 
 }
 
-/**Builds a Schelling-Segregation simulation on a random grid and executes it**/
-object SchellingSegregation extends App {
+/**
+ * Builds a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life)
+ * simulation on a random grid and executes it
+ */
+object GameOfLife extends App {
   val graph = GraphBuilder.build
 
   //Dimensions of the grid
-  val columns = 140
-  val rows = 40
+  val columns = 100
+  val rows = 100
+  val generations = 20
 
   println("Adding vertices ...") //Create all cells.
   for (column <- 0 to columns; row <- 0 to rows) {
-    graph.addVertex(new SegregationAgent((column, row), (Math.random * 2.0).floor.toInt, 0.3f))
+    graph.addVertex(new GameOfLifeCell((column, row), (Math.random * 2.0).floor.toInt))
   }
 
   println("Adding edges ...") // Connect the neighboring cells.
@@ -66,10 +71,14 @@ object SchellingSegregation extends App {
     }
   }
 
-  println("Grid before:\n" + stringRepresentationOfGraph)
-  val stats = graph.execute
-  println(stats) //Print computation statistics
-  println("Grid after:\n" + stringRepresentationOfGraph)
+  val execConfig = ExecutionConfiguration.withExecutionMode(SynchronousExecutionMode).withStepsLimit(1)
+
+  for (i <- 0 to generations) {
+    println(stringRepresentationOfGraph)
+    val stats = graph.execute(execConfig)
+  }
+  println(stringRepresentationOfGraph)
+
   graph.shutdown
 
   // Returns all the neighboring cells of the cell with the given row/column
@@ -91,7 +100,12 @@ object SchellingSegregation extends App {
     val stringBuilder = new StringBuilder
     for (row <- 0 to rows) {
       for (column <- 0 to columns) {
-        stringBuilder.append(stateMap((column, row)))
+        val state = stateMap((column, row))
+        val symbol = state match {
+          case 0 => " "
+          case other => "☺"
+        }
+        stringBuilder.append(symbol)
       }
       stringBuilder.append("\n")
     }
