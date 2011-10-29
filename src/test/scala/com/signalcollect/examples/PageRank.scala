@@ -56,7 +56,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
    *  received from neighbors and the damping factor.
    */
   def collect(oldState: State, mostRecentSignals: Iterable[Double]): Double = {
-    1 - dampingFactor + dampingFactor * mostRecentSignals.foldLeft(0.0)(_ + _)
+    1 - dampingFactor + dampingFactor * mostRecentSignals.sum
   }
 
   override def scoreSignal: Double = {

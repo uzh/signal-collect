@@ -27,7 +27,7 @@ import com.signalcollect.interfaces.AggregationOperation
  *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
  *
  *  @param id: the identifier of this vertex
- *  @param initialState: initial state of the agent
+ *  @param initialState: initial state of the agent: 0 = dead, 1 = alive
  */
 class GameOfLifeCell(id: Any, initialState: Int) extends DataGraphVertex(id, initialState) {
   type Signal = Int
@@ -37,7 +37,7 @@ class GameOfLifeCell(id: Any, initialState: Int) extends DataGraphVertex(id, ini
     numberOfAliveNeighbors match {
       case 0 => 0 // dies of loneliness
       case 1 => 0 // dies of loneliness
-      case 2 => state // same as before
+      case 2 => oldState // same as before
       case 3 => 1 // becomes alive if dead
       case higher => 0 // dies of overcrowding
     }
@@ -55,7 +55,7 @@ object GameOfLife extends App {
   //Dimensions of the grid
   val columns = 100
   val rows = 100
-  val generations = 20
+  val generations = 10000
 
   println("Adding vertices ...") //Create all cells.
   for (column <- 0 to columns; row <- 0 to rows) {
@@ -74,10 +74,10 @@ object GameOfLife extends App {
   val execConfig = ExecutionConfiguration.withExecutionMode(SynchronousExecutionMode).withStepsLimit(1)
 
   for (i <- 0 to generations) {
-    println(stringRepresentationOfGraph)
+//    println(stringRepresentationOfGraph)
     val stats = graph.execute(execConfig)
   }
-  println(stringRepresentationOfGraph)
+//  println(stringRepresentationOfGraph)
 
   graph.shutdown
 
