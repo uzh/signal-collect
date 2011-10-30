@@ -62,7 +62,7 @@ trait CompressingSerializer extends DefaultSerializer {
    * @param compressionLevel determines tradeoff between speed and compression
    */
   def compress(input: Array[Byte], compressionLevel: Int = Deflater.DEFAULT_COMPRESSION, intermediateArraySize: Option[Int] = None): Array[Byte] = {
-    val output = new Array[Byte](intermediateArraySize.getOrElse(2048 + input.size))
+    val output = new Array[Byte](intermediateArraySize.getOrElse(8192 + input.size))
     val compresser = new Deflater(compressionLevel)
     compresser.setInput(input)
     compresser.finish
@@ -84,7 +84,7 @@ trait CompressingSerializer extends DefaultSerializer {
   def decompress(input: Array[Byte], intermediateArraySize: Option[Int] = None): Array[Byte] = {
     val decompresser = new Inflater
     decompresser.setInput(input)
-    val result = new Array[Byte](intermediateArraySize.getOrElse(2048 + input.size * 10))
+    val result = new Array[Byte](intermediateArraySize.getOrElse(8192 + input.size * 10))
     val resultLength = decompresser.inflate(result)
     decompresser.end
     val trimmedResult = new Array[Byte](resultLength)
