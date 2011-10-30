@@ -130,6 +130,21 @@ class LocalWorker(val workerId: Int,
     }
   }
 
+  def addVertex(serializedVertex: Array[Byte]) {
+    val vertex = DefaultSerializer.read[Vertex](serializedVertex)
+    addVertex(vertex)
+  }
+
+  def addOutgoingEdge(serializedEdge: Array[Byte]) {
+    val edge = DefaultSerializer.read[Edge](serializedEdge)
+    addOutgoingEdge(edge)
+  }
+
+  def addIncomingEdge(serializedEdge: Array[Byte]) {
+    val edge = DefaultSerializer.read[Edge](serializedEdge)
+    addIncomingEdge(edge)
+  }
+
   def addVertex(vertex: Vertex) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
@@ -160,11 +175,6 @@ class LocalWorker(val workerId: Int,
     } else {
       warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add outgoing edge " + edge)
     }
-  }
-
-  def addIncomingEdge(serializedEdge: Array[Byte]) {
-    val edge = DefaultSerializer.read[Edge](serializedEdge)
-    addIncomingEdge(edge)
   }
 
   def addIncomingEdge(edge: Edge) {

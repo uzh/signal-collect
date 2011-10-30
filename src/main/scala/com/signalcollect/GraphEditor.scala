@@ -51,8 +51,8 @@ trait GraphEditor {
    * 
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex)
-
+  def addVertex(vertex: Vertex)  
+  
   /**
    *  Adds `edge` to the graph.
    * 

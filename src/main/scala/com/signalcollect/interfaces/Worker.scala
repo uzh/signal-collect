@@ -32,6 +32,9 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
    */
   def initialize
   
+  def addVertex(serializedVertex: Array[Byte]) // object should be created in the heap of the thread which uses its
+  def addOutgoingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
+  def addIncomingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
   def addVertex(vertex: Vertex)
   def addOutgoingEdge(edge: Edge)
   def addIncomingEdge(edge: Edge)
