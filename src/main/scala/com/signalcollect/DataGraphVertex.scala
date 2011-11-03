@@ -52,7 +52,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *
    *  @note If the edge along which a signal was sent is relevant, then mostRecentSignalMap can be used to access the edge id of a signal.
    *
-   *  @param mostRecentSignals An iterable that returns the most recently received signal for each edge that has sent at least one signals already.
+   *  @param mostRecentSignals An iterable that returns the most recently received signal for each edge that has sent at least one signal already.
    *
    *  @return The new vertex state.
    *
@@ -74,7 +74,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   }
 
   /**
-   *  Returns the most recent signals received along edge id `id`.
+   *  Returns the most recent signal received along edge with id `id`.
    *
    *  @param id The edge id of the edge for which we would like to retrieve the most recent signal that was sent along it.
    */

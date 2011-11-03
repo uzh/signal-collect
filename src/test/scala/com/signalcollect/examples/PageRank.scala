@@ -19,8 +19,6 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.factory.storage._
 import com.signalcollect._
 
 /**
