@@ -54,7 +54,7 @@ object SchellingSegregation extends App {
 
   println("Adding vertices ...") //Create all cells.
   for (column <- 0 to columns; row <- 0 to rows) {
-    graph.addVertex(new SegregationAgent((column, row), (Math.random * 2.0).floor.toInt, 0.45f))
+    graph.addVertex(new SegregationAgent((column, row), (math.random * 2.0).floor.toInt, 0.45f))
   }
 
   println("Adding edges ...") // Connect the neighboring cells.

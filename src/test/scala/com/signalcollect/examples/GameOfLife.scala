@@ -59,7 +59,7 @@ object GameOfLife extends App {
 
   println("Adding vertices ...") //Create all cells.
   for (column <- 0 to columns; row <- 0 to rows) {
-    graph.addVertex(new GameOfLifeCell((column, row), (Math.random * 2.0).floor.toInt))
+    graph.addVertex(new GameOfLifeCell((column, row), (math.random * 2.0).floor.toInt))
   }
 
   println("Adding edges ...") // Connect the neighboring cells.
