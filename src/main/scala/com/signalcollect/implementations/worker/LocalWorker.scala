@@ -85,11 +85,13 @@ class LocalWorker(val workerId: Int,
     try {
       while (!shouldShutdown) {
 
-        // if necessary send status update to coordinator
-        val currentTime = System.currentTimeMillis
-        if (currentTime - lastStatusUpdate > updateInterval) {
-          lastStatusUpdate = currentTime
-          sendStatusToCoordinator
+        if (workerConfig.statusUpdateIntervalInMillis.isDefined) {
+          // if necessary send status update to coordinator
+          val currentTime = System.currentTimeMillis
+          if (currentTime - lastStatusUpdate > updateInterval) {
+            lastStatusUpdate = currentTime
+            sendStatusToCoordinator
+          }
         }
 
         handleIdling
@@ -287,9 +289,11 @@ class LocalWorker(val workerId: Int,
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
     var result: Option[ResultType] = None
     val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null && vertex.isInstanceOf[VertexType]) {
-      result = Some(f(vertex.asInstanceOf[VertexType]))
-      vertexStore.vertices.updateStateOfVertex(vertex)
+    if (vertex != null) {
+      try {
+        result = Some(f(vertex.asInstanceOf[VertexType]))
+        vertexStore.vertices.updateStateOfVertex(vertex)
+      }
     }
     result
   }
