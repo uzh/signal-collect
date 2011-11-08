@@ -23,7 +23,7 @@ package com.signalcollect.interfaces
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-trait MessageBus[IdType] extends MessageRecipientRegistry {
+trait MessageBus[@specialized IdType] extends MessageRecipientRegistry {
   def numberOfWorkers: Int
 
   def messagesSent: Long
