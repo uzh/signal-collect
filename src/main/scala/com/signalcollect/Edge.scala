@@ -23,7 +23,7 @@ import com.signalcollect.interfaces.MessageBus
 /**
  *  An edge id uniquely identifies an edge in the graph.
  */
-trait EdgeId[@specialized +SourceId, @specialized +TargetId] extends Serializable {
+trait EdgeId[@specialized SourceId, @specialized TargetId] extends Serializable {
   def sourceId: SourceId
   def targetId: TargetId
   def description: String

@@ -28,7 +28,7 @@ import com.signalcollect.interfaces._
  *  @param targetId target vertex id
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  */
-class DefaultEdgeId[SourceId, TargetId](
+class DefaultEdgeId[@specialized SourceId, @specialized TargetId](
   val sourceId: SourceId,
   val targetId: TargetId,
   val description: String = "") extends EdgeId[SourceId, TargetId] {

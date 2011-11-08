@@ -72,25 +72,25 @@ class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {
   "DefaultVertexSignalBuffer" should {
     val storage = mock[Storage]
     val toCollect = new InMemoryVertexSignalBuffer
-    val fakeSignal1a = mock[SignalMessage[_,_,_]]
+    val fakeSignal1a = mock[SignalMessage[Int,Int,Int]]
     		
-    val fakeEdgeId1a = mock[EdgeId[_,_]]
+    val fakeEdgeId1a = mock[EdgeId[Int,Int]]
     fakeSignal1a.edgeId returns fakeEdgeId1a
     fakeEdgeId1a.targetId returns 1
     
-    val fakeSignal1b = mock[SignalMessage[_,_,_]]
-    val fakeEdgeId1b = mock[EdgeId[_,_]]
+    val fakeSignal1b = mock[SignalMessage[Int,Int,Int]]
+    val fakeEdgeId1b = mock[EdgeId[Int,Int]]
     fakeSignal1b.edgeId returns fakeEdgeId1b
     fakeEdgeId1b.targetId returns 1
     
     
-    val fakeSignal2 = mock[SignalMessage[_,_,_]]
-    val fakeEdgeId2 = mock[EdgeId[_,_]]
+    val fakeSignal2 = mock[SignalMessage[Int,Int,Int]]
+    val fakeEdgeId2 = mock[EdgeId[Int,Int]]
     fakeSignal2.edgeId returns fakeEdgeId2
     fakeEdgeId2.targetId returns 2
     
-    val fakeSignal3 = mock[SignalMessage[_,_,_]]
-    val fakeEdgeId3 = mock[EdgeId[_,_]]
+    val fakeSignal3 = mock[SignalMessage[Int,Int,Int]]
+    val fakeEdgeId3 = mock[EdgeId[Int,Int]]
     fakeSignal3.edgeId returns fakeEdgeId3
     fakeEdgeId3.targetId returns 3
     
