@@ -23,6 +23,7 @@ import com.signalcollect.interfaces._
 import java.util.HashMap
 import com.signalcollect.implementations.logging.DefaultLogger
 import com.signalcollect.interfaces.LogMessage
+import java.util.concurrent.atomic.AtomicInteger
 
 class DefaultMessageBus[IdType](
   val numberOfWorkers: Int)
@@ -31,9 +32,12 @@ class DefaultMessageBus[IdType](
   protected val mapper: VertexToWorkerMapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   protected val workers = new Array[Any](numberOfWorkers)
+  lazy val parallelWorkers = workers.par
   protected var coordinator: MessageRecipient[Any] = _
 
-  var messagesSent = 0l
+  val messageCounter = new AtomicInteger
+
+  def messagesSent = messageCounter.get
 
   def registerWorker(workerId: Int, w: Any) {
     workers(workerId) = w
@@ -45,34 +49,32 @@ class DefaultMessageBus[IdType](
 
   def sendToCoordinator(message: Any) {
     if (!message.isInstanceOf[LogMessage]) {
-      messagesSent += 1
+      messageCounter.incrementAndGet
     }
     coordinator.receive(message)
   }
 
   def sendToWorkerForVertexId(message: Any, recipientId: IdType) {
     val worker = workers(mapper.getWorkerIdForVertexId(recipientId)).asInstanceOf[MessageRecipient[Any]]
-    messagesSent += 1
+    messageCounter.incrementAndGet
     worker.receive(message)
   }
 
   def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
     val worker = workers(mapper.getWorkerIdForVertexIdHash(recipientIdHash)).asInstanceOf[MessageRecipient[Any]]
-    messagesSent += 1
+    messageCounter.incrementAndGet
     worker.receive(message)
   }
 
   def sendToWorker(workerId: Int, m: Any) {
-    messagesSent += 1
+    messageCounter.incrementAndGet
     (workers(workerId).asInstanceOf[MessageRecipient[Any]]).receive(m)
   }
 
   def sendToWorkers(message: Any) {
-    messagesSent += numberOfWorkers
-    val i = workers.iterator
-    while (i.hasNext) {
-      val worker = (i.next).asInstanceOf[MessageRecipient[Any]]
-      worker.receive(message)
+    for (worker <- parallelWorkers) {
+      messageCounter.incrementAndGet
+      worker.asInstanceOf[MessageRecipient[Any]].receive(message)
     }
   }
 }
