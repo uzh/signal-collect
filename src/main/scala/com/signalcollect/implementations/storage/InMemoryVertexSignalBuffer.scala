@@ -27,7 +27,7 @@ import collection.JavaConversions._
  */
 class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_, _, _]]]() //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_, _, _]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
 
   /**

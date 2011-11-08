@@ -19,9 +19,9 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
     mapper: (AggregatedValueType, Any) => SignalMessage[_, _, _],
     neutralValue: AggregatedValueType) extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, AggregatedValueType]() //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, AggregatedValueType](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
-
+  
   /**
    * Adds a new signal for a specific recipient to the buffer
    * The reducer checks the content field of the signal and determines if it can aggregate the new signals with the one already stored or discard the new signal.
