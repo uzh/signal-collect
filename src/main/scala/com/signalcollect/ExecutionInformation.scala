@@ -65,8 +65,9 @@ case class ExecutionStatistics(
   signalSteps: Long,
   collectSteps: Long,
   computationTimeInMilliseconds: Long,
+  totalExecutionTimeInMilliseconds: Long, // should approximately equal computation time + idle waiting + garbage collection
   jvmCpuTimeInMilliseconds: Long,
-  graphLoadingWaitInMilliseconds: Long,
+  graphIdleWaitingTimeInMilliseconds: Long,
   preExecutionGcTimeInMilliseconds: Long,
   terminationReason: TerminationReason) {
 
@@ -75,7 +76,7 @@ case class ExecutionStatistics(
       "# collect steps" + "\t" + "\t" + collectSteps + "\n" +
       "computation time (ms)" + "\t" + computationTimeInMilliseconds + "\n" +
       "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds + "\n" +
-      "graph loading wait (ms)" + "\t" + graphLoadingWaitInMilliseconds + "\n" +
+      "idle waiting (ms) (graph loading)" + "\t" + graphIdleWaitingTimeInMilliseconds + "\n" +
       "termination reason" + "\t" + terminationReason
   }
 

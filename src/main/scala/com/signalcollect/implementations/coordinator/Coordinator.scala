@@ -41,6 +41,10 @@ import com.signalcollect.ComputationStepLimitReached
 class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration) {
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+    val executionStartTime = System.nanoTime
+
+    val graphIdleWaitingStart = System.nanoTime
+    
     workerApi.signalSteps = 0
     workerApi.collectSteps = 0
 
@@ -49,12 +53,13 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
 
     workerApi.info("Waiting for graph loading to finish ...")
 
-    val graphLoadingWaitStart = System.nanoTime
     val loadingDone = workerApi.awaitIdle()
-    val graphLoadingWait = System.nanoTime - graphLoadingWaitStart
+    
+    val graphIdleWaitingStop = System.nanoTime
+    val graphIdleWaitingTime = graphIdleWaitingStop - graphIdleWaitingStart
 
     workerApi.info("Running garbage collection before execution ...")
-
+    
     val gcStartTime = System.nanoTime
     System.gc // collect garbage before execution 
     val gcEndTime = System.nanoTime
@@ -79,21 +84,25 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
 
     val stopTime = System.nanoTime
     val jvmCpuStopTime = getJVMCpuTime
-    val totalTime: Long = stopTime - startTime
-    val totalJvmCpuTime: Long = jvmCpuStopTime - jvmCpuStartTime
+    val totalTime = stopTime - startTime
+    val totalJvmCpuTime = jvmCpuStopTime - jvmCpuStartTime
 
     workerApi.info("Done.")
 
     val workerStatistics = workerApi.getWorkerStatistics
     val aggregatedWorkerStatistics = workerStatistics.fold(WorkerStatistics())(_ + _)
 
+    val executionFinishTime = System.nanoTime
+    val totalExecutionTime = executionFinishTime - executionStartTime
+    
     val executionStatistics = ExecutionStatistics(
       signalSteps = workerApi.signalSteps,
       collectSteps = workerApi.collectSteps,
-      computationTimeInMilliseconds = (totalTime / 1000000.0).toLong,
-      jvmCpuTimeInMilliseconds = (totalJvmCpuTime / 1000000.0).toLong,
-      graphLoadingWaitInMilliseconds = (graphLoadingWait / 1000000.0).toLong,
-      preExecutionGcTimeInMilliseconds = (preExecutionGcTime / 1000000.0).toLong,
+      computationTimeInMilliseconds = totalTime / 1000000l,
+      totalExecutionTimeInMilliseconds = totalExecutionTime / 1000000l,
+      jvmCpuTimeInMilliseconds = totalJvmCpuTime / 1000000l,
+      graphIdleWaitingTimeInMilliseconds = graphIdleWaitingTime / 1000000l,
+      preExecutionGcTimeInMilliseconds = preExecutionGcTime / 1000000l,
       terminationReason = terminationReason)
 
     val stats = ExecutionInformation(
@@ -103,6 +112,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
       aggregatedWorkerStatistics,
       workerStatistics)
     workerApi.info(stats)
+    
     stats
   }
 
@@ -119,7 +129,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
     globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
     val startTime = System.nanoTime
     workerApi.signalStep
-    val millisecondsSpentAlready = ((System.nanoTime - startTime) / 1000000).toLong
+    val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
     var adjustedTimeLimit: Option[Long] = None
     if (timeLimit.isDefined) {
       adjustedTimeLimit = Some(timeLimit.get - millisecondsSpentAlready)
