@@ -291,7 +291,6 @@ class WorkerApi(config: GraphConfiguration) extends MessageRecipient[Any] with L
   }
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
-    awaitIdle()
     workerProxies(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
