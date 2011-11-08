@@ -78,6 +78,9 @@
 					</jvmArgs>
 					<args>
 						<arg>-optimise</arg>
+						<arg>-unchecked</arg>
+						<arg>-deprecation</arg>
+						<arg>-explaintypes</arg>
 					</args>
 				</configuration>
 				<executions>
