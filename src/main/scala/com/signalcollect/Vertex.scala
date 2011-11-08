@@ -38,9 +38,9 @@ trait Vertex extends Serializable {
    *  This type can be overridden to set an upper bound for the types of signals
    *  that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
    */
-  type Signal
-  type Id
-  type State
+  @specialized type Signal
+  @specialized type Id
+  @specialized type State
 
   /**
    *  Vertices are assigned to worker threads that are each responsible for a part of the graph.

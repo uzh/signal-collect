@@ -42,14 +42,14 @@ import com.signalcollect.interfaces._
  *  @version 1.0
  *  @since 1.0
  */
-abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
+abstract class DataFlowVertex[@specialized IdTypeParameter, @specialized StateTypeParameter](
   val id: IdTypeParameter,
   var state: StateTypeParameter,
   val resetState: StateTypeParameter)
   extends AbstractVertex with ResetStateAfterSignaling with VertexGraphEditor {
 
-  type Id = IdTypeParameter
-  type State = StateTypeParameter
+  @specialized type Id = IdTypeParameter
+  @specialized type State = StateTypeParameter
 
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.

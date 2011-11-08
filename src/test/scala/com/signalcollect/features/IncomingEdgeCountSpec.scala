@@ -55,7 +55,7 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "handle edge removals correctly" in {
-      graph.removeEdge(DefaultEdgeId(1, 2, ""))
+      graph.removeEdge(new DefaultEdgeId(1, 2, ""))
       val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
       incomingEdgeCount2 == 1
     }

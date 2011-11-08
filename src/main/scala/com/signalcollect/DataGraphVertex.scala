@@ -39,13 +39,13 @@ import scala.collection.mutable.HashMap
  *  @version 1.0.0
  *  @since 1.0.0
  */
-abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
+abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateTypeParameter](
   val id: IdTypeParameter,
   var state: StateTypeParameter)
   extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {
 
-  type Id = IdTypeParameter
-  type State = StateTypeParameter
+  @specialized type Id = IdTypeParameter
+  @specialized type State = StateTypeParameter
 
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.

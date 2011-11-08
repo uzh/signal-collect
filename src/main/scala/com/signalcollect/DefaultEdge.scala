@@ -22,39 +22,60 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 
 /**
+ *  DefaultEdgeId uniquely identifies an edge in the graph.
+ *
+ *  @param sourceId source vertex id
+ *  @param targetId target vertex id
+ *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
+ */
+class DefaultEdgeId[SourceId, TargetId](
+  val sourceId: SourceId,
+  val targetId: TargetId,
+  val description: String = "") extends EdgeId[SourceId, TargetId] {
+  def this(sourceId: SourceId, targetId: TargetId) = this(sourceId, targetId, "")
+  override def equals(x: Any): Boolean = {
+    x match {
+      case otherId: EdgeId[_, _] =>
+        this.sourceId.equals(otherId.sourceId) &&
+          this.targetId.equals(otherId.targetId) &&
+          this.description.equals(otherId.description)
+      case other =>
+        false
+    }
+  }
+  override val hashCode = (sourceId, targetId, description).hashCode
+}
+
+/**
  *  Edge that connects a source vertex with a target vertex.
  *  Users of the framework extend this class to implement a specific algorithm by defining a `signal` function.
  *
  *  @param sourceId source vertex id
  *  @param targetId target vertex id
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
- *
- *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
-abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
+abstract class DefaultEdge[@specialized SourceIdTypeParameter, @specialized TargetIdTypeParameter](
   sourceId: SourceIdTypeParameter,
   targetId: TargetIdTypeParameter,
   description: String = "") extends Edge {
 
   /** The type of the source vertex id. */
-  type SourceId = SourceIdTypeParameter
+  @specialized type SourceId = SourceIdTypeParameter
 
   /** The type of the target vertex id. */
-  type TargetId = TargetIdTypeParameter
+  @specialized type TargetId = TargetIdTypeParameter
 
   /** The type of signals that are sent along this edge. */
-  type Signal = Any
+  @specialized type Signal = Any
 
   /**
    *  An edge id uniquely identifies an edge in the graph.
    */
-  val id = DefaultEdgeId(sourceId, targetId, description)
+  val id = new DefaultEdgeId(sourceId, targetId, description)
 
   /** The weight of this edge: 1.0 by default, can be overridden. */
   def weight: Double = 1
-  
+
   /**
    *  The abstract `signal` function is algorithm specific and is implemented by a user of the framework.
    *  It calculates the signal that is sent from the source vertex to the target vertex.

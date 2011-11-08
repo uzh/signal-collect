@@ -48,7 +48,7 @@ class DefaultEdge[SourceVertexTypeParameter <: Vertex](
   type SourceVertex = SourceVertexTypeParameter
   type Signal = Object
 
-  @BeanProperty val id: EdgeId[Object, Object] = DefaultEdgeId[Object, Object](sourceId, targetId, "")
+  @BeanProperty val id: EdgeId[Object, Object] = new DefaultEdgeId[Object, Object](sourceId, targetId, "")
 
   val cachedTargetIdHashCode = id.targetId.hashCode
 
