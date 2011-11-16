@@ -40,7 +40,7 @@ import com.signalcollect.interfaces.SignalMessage
  *  @note The bean property annotation tells the compiler to generate getters and setters, which makes fields
  *  accessible from Java.
  */
-protected class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
+class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   @BeanProperty val id: IdTypeParameter,
   @BeanProperty var state: StateTypeParameter)
   extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {
@@ -54,4 +54,10 @@ protected class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParame
 
 }
 
-class JavaVertexWithResetStateAfterSignaling[IdTypeParameter, StateTypeParameter, SignalTypeParameter](id: IdTypeParameter, initialState: StateTypeParameter, val resetState: StateTypeParameter) extends JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](id, initialState) with ResetStateAfterSignaling
+class JavaVertexWithResetStateAfterSignaling[@specialized IdTypeParameter, @specialized StateTypeParameter, @specialized SignalTypeParameter](
+  id: IdTypeParameter, initialState: StateTypeParameter,
+  val resetState: StateTypeParameter)
+  extends JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
+    id,
+    initialState)
+  with ResetStateAfterSignaling

@@ -38,7 +38,7 @@ abstract class AbstractVertex extends Vertex {
    * Returns the most recent signal sent via the edge with the id @edgeId. None if this function is not
    * supported or if there is no such signal.
    */
-  def getMostRecentSignal(id: EdgeId[_, _]): Option[Any] = None
+  def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = None
 
   /**
    * hashCode is cached for better performance
