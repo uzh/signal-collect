@@ -36,15 +36,15 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    *
    * Notice: Signals are not checked for valid id when inserted to the buffer.
    *
-   * @param signal the signal that should be buffered for further collecting
+   * @param signalMessage the signal message that should be buffered before collection
    */
-  def addSignal(signal: SignalMessage[_, _, _]) {
-    if (undeliveredSignals.containsKey(signal.edgeId.targetId)) {
-      undeliveredSignals.get(signal.edgeId.targetId).add(signal)
+  def addSignal(signalMessage: SignalMessage[_, _, _]) {
+    if (undeliveredSignals.containsKey(signalMessage.edgeId.targetId)) {
+      undeliveredSignals.get(signalMessage.edgeId.targetId).add(signalMessage)
     } else {
       val signalsForVertex = new ArrayList[SignalMessage[_, _, _]]()
-      signalsForVertex.add(signal)
-      undeliveredSignals.put(signal.edgeId.targetId, signalsForVertex)
+      signalsForVertex.add(signalMessage)
+      undeliveredSignals.put(signalMessage.edgeId.targetId, signalsForVertex)
     }
   }
 

@@ -50,13 +50,16 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
 
     "count two edges correctly" in {
       graph.addEdge(new PageRankEdge(3, 2))
+      graph.awaitIdle
       val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
       incomingEdgeCount2 == 2
     }
 
     "handle edge removals correctly" in {
       graph.removeEdge(new DefaultEdgeId(1, 2, ""))
+      graph.awaitIdle
       val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
+      println(incomingEdgeCount2)
       incomingEdgeCount2 == 1
     }
   }
