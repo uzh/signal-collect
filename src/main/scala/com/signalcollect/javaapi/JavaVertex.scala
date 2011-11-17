@@ -24,6 +24,7 @@ import scala.collection.mutable.Map
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.MessageBus
 import scala.reflect.BeanProperty
+import scala.collection.JavaConversions
 import com.signalcollect.implementations.graph.AbstractVertex
 import com.signalcollect.implementations.graph.SumOfOutWeights
 import com.signalcollect.implementations.graph.VertexGraphEditor
@@ -40,6 +41,7 @@ import com.signalcollect.interfaces.SignalMessage
  *  @note The bean property annotation tells the compiler to generate getters and setters, which makes fields
  *  accessible from Java.
  */
+
 class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   @BeanProperty val id: IdTypeParameter,
   @BeanProperty var state: StateTypeParameter)
@@ -50,6 +52,12 @@ class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   type Signal = SignalTypeParameter
 
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+    val converted = JavaConversions.asJavaIterable(signals.asInstanceOf[Iterable[SignalMessage[IdTypeParameter, IdTypeParameter, SignalTypeParameter]]])
+    executeCollect(converted, messageBus)
+  }
+
+  def executeCollect(signals: java.lang.Iterable[SignalMessage[IdTypeParameter, IdTypeParameter, SignalTypeParameter]], messageBus: MessageBus[Any]) {
+
   }
 
 }
