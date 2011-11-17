@@ -33,6 +33,6 @@ case class GraphConfiguration(
 
 case class WorkerConfiguration(
   workerFactory: WorkerFactory = factory.worker.Local,
-  messageBusFactory: MessageBusFactory = factory.messageBus.SharedMemory,
+  messageBusFactory: MessageBusFactory = factory.messagebus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
   statusUpdateIntervalInMillis: Option[Long] = None)
