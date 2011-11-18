@@ -39,8 +39,6 @@ import com.signalcollect.interfaces._
  *  @param resetState The state will be set to `resetState` after signaling.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 abstract class DataFlowVertex[@specialized IdTypeParameter, @specialized StateTypeParameter](
   val id: IdTypeParameter,

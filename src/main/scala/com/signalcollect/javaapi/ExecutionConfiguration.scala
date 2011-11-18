@@ -20,6 +20,7 @@
 package com.signalcollect.javaapi
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration._
 
 /**

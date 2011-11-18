@@ -41,7 +41,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
   val computeGraphFactories: List[Int => Graph] = List(
     (numberOfWorkers: Int) => GraphBuilder.withNumberOfWorkers(numberOfWorkers).build)
 
-  val executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
+  val executionModes = List(ExecutionMode.OptimizedAsynchronous, ExecutionMode.Synchronous)
 
   val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 

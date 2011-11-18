@@ -22,6 +22,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
@@ -71,7 +72,7 @@ object GameOfLife extends App {
     }
   }
 
-  val execConfig = ExecutionConfiguration.withExecutionMode(SynchronousExecutionMode).withStepsLimit(1)
+  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withStepsLimit(1)
 
   for (i <- 0 to generations) {
 //    println(stringRepresentationOfGraph)

@@ -33,8 +33,6 @@ trait EdgeId[@specialized SourceId, @specialized TargetId] extends Serializable 
  * This trait represents the framework's view of an edge.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 trait Edge extends Serializable {
 

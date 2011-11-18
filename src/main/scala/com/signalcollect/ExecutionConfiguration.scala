@@ -20,12 +20,13 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object
  *  represents an ExecutionConfiguration that is initialized with the default parameters.
  */
-object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchronousExecutionMode, 0.01, 0.0, None, None, None)
+object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.OptimizedAsynchronous, 0.01, 0.0, None, None, None)
 
 /**
  *  This configuration specifies execution parameters for a computation.
@@ -39,11 +40,9 @@ object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchrono
  * 	@param stepsLimit The maximum number of computation steps is bounded by this value.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 case class ExecutionConfiguration(
-  executionMode: ExecutionMode = OptimizedAsynchronousExecutionMode,
+  executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
   signalThreshold: Double = 0.01,
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,
@@ -55,7 +54,7 @@ case class ExecutionConfiguration(
    *
    *  @param executionMode The execution mode used in a computation.
    */
-  def withExecutionMode(executionMode: ExecutionMode) = newExecutionConfiguration(executionMode = executionMode)
+  def withExecutionMode(executionMode: ExecutionMode.Value) = newExecutionConfiguration(executionMode = executionMode)
 
   /**
    *  Configures the signal threshold used in a computation.
@@ -107,7 +106,7 @@ case class ExecutionConfiguration(
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
   protected def newExecutionConfiguration(
-    executionMode: ExecutionMode = executionMode,
+    executionMode: ExecutionMode.Value = executionMode,
     signalThreshold: Double = signalThreshold,
     collectThreshold: Double = collectThreshold,
     timeLimit: Option[Long] = timeLimit,
@@ -129,69 +128,6 @@ case class ExecutionConfiguration(
       "time limit" + "\t" + "\t" + timeLimit + "\n" +
       "steps limit" + "\t" + "\t" + stepsLimit
   }
-}
-
-/**
- *  An execution mode specifies the order in which signal/collect
- *  operations get scheduled. There are currently three supported execution modes:
- * 		- SynchronousExecutionMode
- *  	- PureAsynchronousExecutionMode
- *  	- OptimizedAsynchronousExecutionMode
- */
-sealed trait ExecutionMode extends Serializable
-
-/**
- *  In the synchronous execution mode there are computation steps.
- *  Each computation step consists of a signal phase and a collect phase.
- *  During the signal phase the signal function of all vertices that have signal scores
- *  that are above the signal threshold get executed.
- *  During the collect phase the collect function of all vertices that have collect scores
- *  that are above the collect threshold get executed.
- *
- *  In this execution mode there is a global synchronization between these phases and
- *  between consecutive computation steps. This ensures that the signal phase and collect phase
- *  of different vertices never overlap. This execution mode is related to the
- *  Bulk Synchronous Parallel (BSP) paradigm and similar to Google Pregel.
- */
-case object SynchronousExecutionMode extends ExecutionMode {
-  def self = this
-  override def toString = "SynchronousExecutionMode"
-}
-
-/**
- *  In the asynchronous execution mode there are no guarantees at all about the
- *  order in which the signal/collect operations on vertices get executed. In practice
- *  vertices will try to eagerly propagate information as quickly as possible.
- *
- *  Depending on the algorithm, an asynchronous execution schedule may perform better,
- *  because it has the potential to propagate information across the graph faster and
- *  because it is less susceptible to oscillations.
- */
-case object PureAsynchronousExecutionMode extends ExecutionMode {
-  override def toString = "PureAsynchronousExecutionMode"
-}
-
-/**
- *  Same as asynchronous but keeps on running even when the computation has stalled.
- *  Can be used for use cases such as continuous querying.
- */
-case object ContinuousAsynchronousExecution extends ExecutionMode {
-  override def toString = "ContinuousAsynchronousExecutionMode"
-}
-
-/**
- *  This is the default execution mode.
- *
- *  In optimized asynchronous execution mode there is one synchronous signal operation
- *  before switching to an asynchronous execution schedule.
- *
- *  For some algorithms this enhances the performance of an asynchronous execution,
- *  because during a purely asynchronous execution vertices collect before having received
- *  the first signal from all their neighbors. In algorithms like PageRank this hurts
- *  performance and it is avoided by this execution mode.
- */
-case object OptimizedAsynchronousExecutionMode extends ExecutionMode {
-  override def toString = "OptimizedAsynchronousExecutionMode"
 }
 
 /**

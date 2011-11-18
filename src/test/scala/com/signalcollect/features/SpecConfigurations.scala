@@ -32,7 +32,7 @@ trait SpecConfigurations {
 
   def computeGraphBuilders = List(GraphBuilder)
   def numberOfWorkers = List(1, 2, 4, 8, 16, 32, 64, 128)
-  def executionModes = List(OptimizedAsynchronousExecutionMode, SynchronousExecutionMode)
+  def executionModes = List(ExecutionMode.OptimizedAsynchronous, ExecutionMode.Synchronous)
 
   def computeGraphs: Seq[Graph] = {
     var computeGraphs = Seq[Graph]()

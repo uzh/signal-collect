@@ -28,8 +28,6 @@ import collection.Iterable
  *  This trait represents the framework's view of a vertex.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 trait Vertex extends Serializable {
 

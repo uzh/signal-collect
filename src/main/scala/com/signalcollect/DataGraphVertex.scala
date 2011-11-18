@@ -36,8 +36,6 @@ import scala.collection.mutable.HashMap
  *  @param state the initial state of the vertex.
  *
  *  @author Philip Stutz
- *  @version 1.0.0
- *  @since 1.0.0
  */
 abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateTypeParameter](
   val id: IdTypeParameter,

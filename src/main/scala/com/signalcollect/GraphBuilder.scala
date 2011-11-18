@@ -36,8 +36,6 @@ object GraphBuilder extends GraphBuilder(GraphConfiguration())
  * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
 

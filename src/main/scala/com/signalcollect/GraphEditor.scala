@@ -29,8 +29,6 @@ import com.signalcollect._
  *  @example `graphEditor.removeVertex(1)`
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 trait GraphEditor {
 

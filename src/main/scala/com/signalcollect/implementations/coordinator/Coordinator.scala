@@ -26,17 +26,9 @@ import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.ExecutionInformation
-import com.signalcollect.SynchronousExecutionMode
-import com.signalcollect.OptimizedAsynchronousExecutionMode
-import com.signalcollect.PureAsynchronousExecutionMode
 import com.signalcollect.ExecutionStatistics
-import com.signalcollect.ContinuousAsynchronousExecution
-import com.signalcollect.TerminationReason
-import com.signalcollect.Converged
 import com.signalcollect.GlobalTerminationCondition
-import com.signalcollect.TimeLimitReached
-import com.signalcollect.GlobalConstraintMet
-import com.signalcollect.ComputationStepLimitReached
+import com.signalcollect.configuration.TerminationReason
 
 class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration) {
 
@@ -71,13 +63,13 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
 
     /*******************************/
 
-    var terminationReason: TerminationReason = Converged // default reason
+    var terminationReason: TerminationReason.Value = TerminationReason.Converged // default reason
 
     parameters.executionMode match {
-      case SynchronousExecutionMode => terminationReason = synchronousExecution(parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
-      case OptimizedAsynchronousExecutionMode => terminationReason = optimizedAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
-      case PureAsynchronousExecutionMode => terminationReason = pureAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
-      case ContinuousAsynchronousExecution => continuousAsynchronousExecution
+      case ExecutionMode.Synchronous => terminationReason = synchronousExecution(parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
+      case ExecutionMode.OptimizedAsynchronous => terminationReason = optimizedAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
+      case ExecutionMode.PureAsynchronous => terminationReason = pureAsynchronousExecution(parameters.timeLimit, parameters.globalTerminationCondition)
+      case ExecutionMode.ContinuousAsynchronous => continuousAsynchronousExecution
     }
 
     /*******************************/
@@ -126,7 +118,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
   }
 
   protected def optimizedAsynchronousExecution(timeLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason.Value = {
     val startTime = System.nanoTime
     workerApi.signalStep
     val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
@@ -138,16 +130,16 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
   }
 
   protected def pureAsynchronousExecution(timeLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason.Value = {
     workerApi.startComputation
-    var terminationReason: TerminationReason = Converged
+    var terminationReason: TerminationReason.Value = TerminationReason.Converged
     (timeLimit, globalTerminationCondition) match {
       case (None, None) =>
         workerApi.awaitIdle()
       case (Some(limit), None) =>
         val converged = workerApi.awaitIdle(limit * 1000000l)
         if (!converged) {
-          terminationReason = TimeLimitReached
+          terminationReason = TerminationReason.TimeLimitReached
         }
       case (None, Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
@@ -161,7 +153,7 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
           }
         }
         if (!converged) {
-          terminationReason = GlobalConstraintMet
+          terminationReason = TerminationReason.GlobalConstraintMet
         }
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
           workerApi.pauseComputation
@@ -186,9 +178,9 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
           converged = workerApi.awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
         }
         if (timeLimitReached) {
-          terminationReason = TimeLimitReached
+          terminationReason = TerminationReason.TimeLimitReached
         } else if (globalTermination) {
-          terminationReason = GlobalConstraintMet
+          terminationReason = TerminationReason.GlobalConstraintMet
         }
         def intervalHasPassed = remainingIntervalTime <= 0
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
@@ -207,13 +199,14 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
 
   protected def continuousAsynchronousExecution {
     workerApi.startComputation
+    TerminationReason.Ongoing
   }
 
   protected def synchronousExecution(
     timeLimit: Option[Long],
     stepsLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason = {
-    var terminationReason: TerminationReason = Converged
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]): TerminationReason.Value = {
+    var terminationReason: TerminationReason.Value = TerminationReason.Converged
     var converged = false
     var globalTermination = false
     var interval = 0l
@@ -230,11 +223,11 @@ class Coordinator(protected val workerApi: WorkerApi, config: GraphConfiguration
       }
     }
     if (isTimeLimitReached) {
-      terminationReason = TimeLimitReached
+      terminationReason = TerminationReason.TimeLimitReached
     } else if (isStepsLimitReached) {
-      terminationReason = ComputationStepLimitReached
+      terminationReason = TerminationReason.ComputationStepLimitReached
     } else if (globalTermination) {
-      terminationReason = GlobalConstraintMet
+      terminationReason = TerminationReason.GlobalConstraintMet
     }
     def shouldCheckGlobalCondition = interval > 0 && workerApi.collectSteps % interval == 0
     def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {

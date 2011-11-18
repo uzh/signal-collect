@@ -30,22 +30,24 @@ import com.signalcollect._
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.SudokuCell
+import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.configuration.TerminationReason
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
   def createGraph(vertices: Int): Graph = {
-      val graph = GraphBuilder.build
-      val idSet = (1 to vertices).toSet
-      for (id <- idSet) {
-    	  graph.addVertex(new PageRankVertex(id)) 
-      }
-      for (id <- idSet) {
-    	  graph.addEdge(new PageRankEdge(id, (id % vertices) + 1)) 
-      }
-      graph
+    val graph = GraphBuilder.build
+    val idSet = (1 to vertices).toSet
+    for (id <- idSet) {
+      graph.addVertex(new PageRankVertex(id))
+    }
+    for (id <- idSet) {
+      graph.addEdge(new PageRankEdge(id, (id % vertices) + 1))
+    }
+    graph
   }
-  
+
   "Time limit" should {
 
     "work for asynchronous computations" in {
@@ -63,10 +65,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withTimeLimit(30)
-        .withExecutionMode(SynchronousExecutionMode)
+        .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
-      state > 0.16 && state < 0.99999999999 && info.executionStatistics.terminationReason == TimeLimitReached
+      state > 0.16 && state < 0.99999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
     }
   }
 
@@ -77,10 +79,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withStepsLimit(1)
-        .withExecutionMode(SynchronousExecutionMode)
+        .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
-      state == 0.2775 && info.executionStatistics.terminationReason == ComputationStepLimitReached
+      state == 0.2775 && info.executionStatistics.terminationReason == TerminationReason.ComputationStepLimitReached
     }
   }
 
@@ -96,13 +98,13 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
-        .withExecutionMode(SynchronousExecutionMode)
+        .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       aggregate > 20.0 && aggregate < 29.0
     }
-    
+
     "work for asynchronous computations" in {
       val graph = createGraph(1000)
       val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {

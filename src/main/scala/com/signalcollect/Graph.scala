@@ -35,8 +35,6 @@ import com.signalcollect.interfaces.AggregationOperation
  *  @example `val graph = GraphBuilder.build`
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 trait Graph extends GraphEditor {
 

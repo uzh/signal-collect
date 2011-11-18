@@ -21,6 +21,7 @@ package com.signalcollect
 
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
+import com.signalcollect.configuration.TerminationReason
 
 /**
  *  An instance of ExecutionInformation reports information such as execution statistics
@@ -33,8 +34,6 @@ import com.signalcollect.configuration._
  *  @param individualWorkerStatistics A list of statistics for all workers individually.
  *
  *  @author Philip Stutz
- *  @version 1.0
- *  @since 1.0
  */
 case class ExecutionInformation(
   config: GraphConfiguration,
@@ -69,7 +68,7 @@ case class ExecutionStatistics(
   jvmCpuTimeInMilliseconds: Long,
   graphIdleWaitingTimeInMilliseconds: Long,
   preExecutionGcTimeInMilliseconds: Long,
-  terminationReason: TerminationReason) {
+  terminationReason: TerminationReason.Value) {
 
   override def toString: String = {
     "# signal steps" + "\t" + "\t" + signalSteps + "\n" +
@@ -80,23 +79,5 @@ case class ExecutionStatistics(
       "termination reason" + "\t" + terminationReason
   }
 
-}
-
-sealed trait TerminationReason
-
-object TimeLimitReached extends TerminationReason {
-  override def toString = "time limit reached"
-}
-
-object Converged extends TerminationReason {
-  override def toString = "converged"
-}
-
-object GlobalConstraintMet extends TerminationReason {
-  override def toString = "global constraint met"
-}
-
-object ComputationStepLimitReached extends TerminationReason {
-  override def toString = "computation step limit reached"
 }
 
