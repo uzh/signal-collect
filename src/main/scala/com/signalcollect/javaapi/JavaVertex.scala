@@ -52,12 +52,6 @@ class JavaVertex[IdTypeParameter, StateTypeParameter, SignalTypeParameter](
   type Signal = SignalTypeParameter
 
   def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
-    val converted = JavaConversions.asJavaIterable(signals.asInstanceOf[Iterable[SignalMessage[IdTypeParameter, IdTypeParameter, SignalTypeParameter]]])
-    executeCollect(converted, messageBus)
-  }
-
-  def executeCollect(signals: java.lang.Iterable[SignalMessage[IdTypeParameter, IdTypeParameter, SignalTypeParameter]], messageBus: MessageBus[Any]) {
-
   }
 
 }
