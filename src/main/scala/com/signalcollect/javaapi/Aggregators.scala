@@ -23,16 +23,16 @@ package com.signalcollect.javaapi
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.Vertex
 import java.util.Map
-import java.util.WeakHashMap
+import java.util.HashMap
 
 /**
  * Aggregates all the ids and states and returns them as a java compatible map.
  */
 class IdStateJavaAggregator[IdType, StateType] extends AggregationOperation[Map[IdType, StateType]] {
-  val neutralElement = new WeakHashMap[IdType, StateType]()
+  val neutralElement = new HashMap[IdType, StateType]()
   def extract(v: Vertex): Map[IdType, StateType] = {
     try {
-      val map = new WeakHashMap[IdType, StateType]()
+      val map = new HashMap[IdType, StateType]()
       map.put(v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType])
       map
     }
