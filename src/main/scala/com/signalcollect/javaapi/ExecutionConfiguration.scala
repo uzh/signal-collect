@@ -26,10 +26,4 @@ import com.signalcollect.configuration._
  *  An execution configuration specifies execution parameters for a computation. This object
  *  represents an ExecutionConfiguration that is initialized with the default parameters.
  */
-object ExecutionConfiguration extends ExecutionConfiguration(OptimizedAsynchronousExecutionMode, 0.01, 0.0, None, None)
-
-/**
- *  This execution configuration lets the algorithm run in synchronous mode and lets the user specify
- *  a maximal number of steps that should be performed.
- */
-case class SynchronousExecutionConfiguration(maxSteps :Int) extends ExecutionConfiguration(SynchronousExecutionMode, 0.01, 0.0, None, Some(maxSteps))
+object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.OptimizedAsynchronous, 0.01, 0.0, None, None)
