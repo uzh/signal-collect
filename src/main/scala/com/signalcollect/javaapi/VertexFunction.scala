@@ -21,7 +21,6 @@ package com.signalcollect.javaapi
 
 import com.signalcollect._
 
-abstract class VertexFunction[ReturnValueType] extends Function1[Vertex, ReturnValueType] {
-  def apply(v: Vertex): ReturnValueType = f(v)
+abstract class VertexFunction[ReturnValueType] {
   def f(v: Vertex): ReturnValueType
 }

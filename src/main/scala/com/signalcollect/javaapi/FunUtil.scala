@@ -21,6 +21,12 @@ package com.signalcollect.javaapi
 
 import com.signalcollect._
 
-abstract class VertexCommand {  
-  def f(v: Vertex)
+object FunUtil {
+	def convert(c: VertexCommand): Function1[Vertex, Unit] = {
+		v: Vertex => c.f(v)
+	}
+
+	def convert[ReturnValue](f: VertexFunction[ReturnValue]): Function1[Vertex, ReturnValue] = {
+		v: Vertex => f.f(v)
+	}
 }
