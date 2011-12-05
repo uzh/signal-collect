@@ -105,7 +105,7 @@ abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateT
   /**
    *  Returns ids of vertices that are known to be or have been predecessors at some point in time.
    */
-  override def getVertexIdsOfPredecessors: Option[Iterable[_]] = {
+  override def getVertexIdsOfPredecessors: Option[Iterable[Any]] = {
     Some(mostRecentSignalMap.keys map (_.sourceId))
   }
 

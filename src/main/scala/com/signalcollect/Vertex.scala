@@ -138,7 +138,7 @@ trait Vertex extends Serializable {
    *  @return ids of vertices that currently have an outgoing edge to to this vertex. `None` if this operation is not
    *  supported.
    */
-  def getVertexIdsOfPredecessors: Option[Iterable[_]]
+  def getVertexIdsOfPredecessors: Option[Iterable[Any]]
 
   /**
    *  @return the most recent signal sent via the edge with the id `edgeId`. `None` if this operation is not
