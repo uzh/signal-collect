@@ -29,7 +29,7 @@ trait ResetStateAfterSignaling extends AbstractVertex {
   /**
    * Delegates to superclass and resets the state to the initial state after signaling.
    */
-  abstract override def executeSignalOperation(messageBus: MessageBus[Any]) {
+  abstract override def executeSignalOperation(messageBus: MessageBus) {
     super.executeSignalOperation(messageBus)
     state = resetState
   }

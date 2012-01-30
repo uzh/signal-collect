@@ -33,7 +33,7 @@ trait VertexDebugging extends AbstractVertex {
    * Executes the {@link #collect} method on this vertex.
    * @see #collect
    */
-  abstract override def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+  abstract override def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
     val castS = signals.asInstanceOf[Iterable[SignalMessage[_, _, Any]]]
     castS foreach { signalMessage =>
       signalSourceDebuggingMap.put(signalMessage.edgeId, signalMessage.signal)

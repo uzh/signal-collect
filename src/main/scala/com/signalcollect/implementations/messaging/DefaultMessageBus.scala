@@ -24,57 +24,185 @@ import java.util.HashMap
 import com.signalcollect.implementations.logging.DefaultLogger
 import com.signalcollect.interfaces.LogMessage
 import java.util.concurrent.atomic.AtomicInteger
+import akka.actor.ActorRef
+import com.signalcollect.implementations.coordinator.WorkerApi
+import com.signalcollect.GraphEditor
+import com.signalcollect.EdgeId
+import com.signalcollect.Vertex
+import com.signalcollect.Edge
+import com.signalcollect.implementations.serialization.DefaultSerializer
 
-class DefaultMessageBus[IdType](
+class DefaultMessageBus(
   val numberOfWorkers: Int)
-  extends MessageBus[IdType] {
+  extends MessageBus with GraphEditor with DefaultSerializer {
+
+  protected var registrations = new AtomicInteger()
+
+  def isInitialized = registrations.get == numberOfWorkers + 2
 
   protected val mapper: VertexToWorkerMapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
-  protected val workers = new Array[Any](numberOfWorkers)
+  protected val workers = new Array[ActorRef](numberOfWorkers)
+
   lazy val parallelWorkers = workers.par
-  protected var coordinator: MessageRecipient[Any] = _
 
-  val messageCounter = new AtomicInteger
+  lazy val workerProxies = workers map (AkkaProxy.newInstance[Worker](_, sentMessagesCounter, receivedMessagesCounter))
 
-  def messagesSent = messageCounter.get
+  lazy val workerApi = new WorkerApi(workerProxies, mapper)
 
-  def registerWorker(workerId: Int, w: Any) {
-    workers(workerId) = w
+  protected var logger: ActorRef = _
+
+  protected var coordinator: ActorRef = _
+
+  protected val sentMessagesCounter = new AtomicInteger(0)
+  def getSentMessagesCounter: AtomicInteger = sentMessagesCounter
+  protected val receivedMessagesCounter = new AtomicInteger(0)
+  def getReceivedMessagesCounter: AtomicInteger = receivedMessagesCounter
+
+  def messagesSent = sentMessagesCounter.get
+  def messagesReceived = receivedMessagesCounter.get
+
+  //--------------------MessageRecipientRegistry--------------------
+
+  def registerWorker(workerId: Int, worker: ActorRef) {
+    workers(workerId) = worker
+    registrations.incrementAndGet
   }
 
-  def registerCoordinator(c: Any) {
-    coordinator = c.asInstanceOf[MessageRecipient[Any]] // workerApi
+  def registerCoordinator(c: ActorRef) {
+    coordinator = c
+    registrations.incrementAndGet
   }
+
+  def registerLogger(l: ActorRef) {
+    logger = l
+    registrations.incrementAndGet
+  }
+
+  //--------------------MessageBus--------------------
 
   def sendToCoordinator(message: Any) {
-    if (!message.isInstanceOf[LogMessage]) {
-      messageCounter.incrementAndGet
-    }
-    coordinator.receive(message)
+    sentMessagesCounter.incrementAndGet
+    coordinator ! message
   }
 
-  def sendToWorkerForVertexId(message: Any, recipientId: IdType) {
-    val worker = workers(mapper.getWorkerIdForVertexId(recipientId)).asInstanceOf[MessageRecipient[Any]]
-    messageCounter.incrementAndGet
-    worker.receive(message)
+  def sendToLogger(message: LogMessage) {
+    logger ! message
+  }
+
+  def sendToWorkerForVertexId(message: Any, recipientId: Any) {
+    val worker = workers(mapper.getWorkerIdForVertexId(recipientId))
+    sentMessagesCounter.incrementAndGet
+    worker ! message
   }
 
   def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
-    val worker = workers(mapper.getWorkerIdForVertexIdHash(recipientIdHash)).asInstanceOf[MessageRecipient[Any]]
-    messageCounter.incrementAndGet
-    worker.receive(message)
+    val worker = workers(mapper.getWorkerIdForVertexIdHash(recipientIdHash))
+    sentMessagesCounter.incrementAndGet
+    worker ! message
   }
 
-  def sendToWorker(workerId: Int, m: Any) {
-    messageCounter.incrementAndGet
-    (workers(workerId).asInstanceOf[MessageRecipient[Any]]).receive(m)
+  def sendToWorker(workerId: Int, message: Any) {
+    sentMessagesCounter.incrementAndGet
+    workers(workerId) ! message
   }
 
   def sendToWorkers(message: Any) {
+    sentMessagesCounter.addAndGet(numberOfWorkers)
     for (worker <- parallelWorkers) {
-      messageCounter.incrementAndGet
-      worker.asInstanceOf[MessageRecipient[Any]].receive(message)
+      worker ! message
     }
   }
+
+  //--------------------GraphEditor--------------------
+
+  /**
+   * Sends a signal to the vertex with vertex.id=edgeId.targetId
+   */
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.sendSignalAlongEdge(signal, edgeId)
+    } else {
+      // manually send a fire & forget request
+      sendToWorkerForVertexId(SignalMessage(edgeId, signal), edgeId.targetId)
+    }
+  }
+
+  def addVertex(vertex: Vertex, blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.addVertex(vertex)
+    } else {
+      // manually send a fire & forget request
+      val v = write(vertex) // thread that uses an object should instantiate it (performance)
+      val request = Request[Worker]((_.addVertex(v)), returnResult = false)
+      sendToWorkerForVertexId(request, vertex.id)
+    }
+  }
+
+  def addEdge(edge: Edge, blocking: Boolean = false) {
+    // thread that uses an object should instantiate it (performance)
+    if (blocking == true) {
+      // use proxy
+      workerApi.addEdge(edge)
+    } else {
+      // manually send a fire & forget request
+      val e = write(edge)
+      val request = Request[Worker]((_.addOutgoingEdge(e)), returnResult = false)
+      sendToWorkerForVertexId(request, edge.id.sourceId)
+    }
+  }
+
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
+    } else {
+      // manually send a fire & forget request
+      val request = Request[Worker](_.addPatternEdge(sourceVertexPredicate, edgeFactory), returnResult = false)
+      sendToWorkers(request)
+    }
+  }
+
+  def removeVertex(vertexId: Any, blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.removeVertex(vertexId)
+    } else {
+      // manually send a fire & forget request
+      val request = Request[Worker]((_.removeVertex(vertexId)), returnResult = false)
+      sendToWorkerForVertexId(request, vertexId)
+    }
+  }
+
+  def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.removeEdge(edgeId)
+    } else {
+      // manually send a fire & forget request
+      val request = Request[Worker]((_.removeOutgoingEdge(edgeId)), returnResult = false)
+      sendToWorkerForVertexId(request, edgeId.sourceId)
+    }
+  }
+
+  def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
+    if (blocking == true) {
+      // use proxy
+      workerApi.removeVertices(shouldRemove)
+    } else {
+      // manually send a fire & forget request
+      val request = Request[Worker](_.removeVertices(shouldRemove), returnResult = false)
+      sendToWorkers(request)
+    }
+  }
+
+  //--------------------Access to high-level messaging constructs--------------------
+
+  def getGraphEditor: GraphEditor = this
+
+  def getWorkerApi: WorkerApi = workerApi
+
+  def getWorkerProxies: Array[Worker] = workerProxies
 }

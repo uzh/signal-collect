@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,16 +17,23 @@
  *  
  */
 
-package com.signalcollect.javaapi
+package com.signalcollect.interfaces
 
 import com.signalcollect._
+import akka.actor.Actor
+import com.signalcollect.implementations.coordinator.WorkerApi
 
-object FunUtil {
-	def convert(c: VertexCommand): Function1[Vertex, Unit] = {
-		v: Vertex => c.f(v)
-	}
+/**
+ * Just required because a Java Dynamic Proxy can only work with interfaces
+ */
+trait Coordinator extends Actor with MessageRecipientRegistry with Logging {
 
-	def convert[ReturnValue](f: VertexFunction[ReturnValue]): Function1[Vertex, ReturnValue] = {
-		v: Vertex => f.f(v)
-	}
+  override def toString = this.getClass.getSimpleName
+
+  def isIdle: Boolean
+
+  def getWorkerApi: WorkerApi
+  
+  def getGraphEditor: GraphEditor
+  
 }

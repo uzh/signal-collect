@@ -21,6 +21,7 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect._
+import akka.actor.ActorRef
 
 // algorithm-specific message
 case class SignalMessage[@specialized SourceId, @specialized TargetId, @specialized SignalType](edgeId: EdgeId[SourceId, TargetId], signal: SignalType) {
@@ -31,9 +32,7 @@ case class SignalMessage[@specialized SourceId, @specialized TargetId, @speciali
 object EXTERNAL { override val toString = "EXTERNAL" }
 
 // rpc request
-case class WorkerRequest(command: Worker => Unit)
-// rpc reply
-case class WorkerReply(workerId: Int, result: Any)
+case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
 
 // stalling detection
 case class WorkerStatus(
@@ -70,9 +69,9 @@ case class WorkerStatistics(
   override def toString: String = {
     "messages received" + "\t" + messagesReceived + "\n" +
       "messages sent" + "\t" + messagesSent + "\n" +
-      "# collect operations executed" + "\t" + collectOperationsExecuted + "\n" +
-      "# signal operations executed" + "\t" + signalOperationsExecuted + "\n" +
-      "# vertices (added/removed)" + "\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
+      "# collect operations executed" + "\t\t" + collectOperationsExecuted + "\n" +
+      "# signal operations executed" + "\t\t" + signalOperationsExecuted + "\n" +
+      "# vertices (added/removed)" + "\t\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
       "# outgoing edges  (added/removed)" + "\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }

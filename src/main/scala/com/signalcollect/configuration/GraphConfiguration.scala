@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Francisco de Freitas
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -23,6 +24,7 @@ import com.signalcollect.interfaces._
 import java.util.HashMap
 import com.signalcollect._
 import com.signalcollect.implementations.logging.DefaultLogger
+import akka.actor.ActorRef
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -31,14 +33,8 @@ case class GraphConfiguration(
   numberOfWorkers: Int = Runtime.getRuntime.availableProcessors,
   maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors * 5000), //None
   loggingLevel: Int = LoggingLevel.Warning,
-  logger: MessageRecipient[LogMessage] = new DefaultLogger,
-  workerConfiguration: WorkerConfiguration = WorkerConfiguration())
-
-/**
- * All the worker configuration parameters with their defaults.
- */
-case class WorkerConfiguration(
-  workerFactory: WorkerFactory = factory.worker.Local,
+  logger: LogMessage => Unit = DefaultLogger.log,
+  workerFactory: WorkerFactory = factory.worker.Akka,
   messageBusFactory: MessageBusFactory = factory.messagebus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
   statusUpdateIntervalInMillis: Option[Long] = None)

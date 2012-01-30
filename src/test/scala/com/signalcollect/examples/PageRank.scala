@@ -20,6 +20,8 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration._
+import com.signalcollect.interfaces.LoggingLevel
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -28,9 +30,9 @@ import com.signalcollect._
  *  @param t: the identifier of the target vertex
  */
 class PageRankEdge(s: Any, t: Any) extends DefaultEdge(s, t) {
-  
+
   type SourceVertex = PageRankVertex
-  
+
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
@@ -63,12 +65,21 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
       case Some(oldState) => (state - oldState).abs
     }
   }
-  
+
 }
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).withNumberOfWorkers(10).build
+  //    val graph = GraphBuilder.withNumberOfWorkers(1).build
+  println("From client: Graph built")
+  //    graph.addVertex(new PageRankVertex(1), true)
+  //    graph.addVertex(new PageRankVertex(2), true)
+  //    graph.addVertex(new PageRankVertex(3), true)
+  //    graph.addEdge(new PageRankEdge(1, 2), true)
+  //    graph.addEdge(new PageRankEdge(2, 1), true)
+  //    graph.addEdge(new PageRankEdge(2, 3), true)
+  //    graph.addEdge(new PageRankEdge(3, 2), true)
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
   graph.addVertex(new PageRankVertex(3))
@@ -76,7 +87,11 @@ object PageRank extends App {
   graph.addEdge(new PageRankEdge(2, 1))
   graph.addEdge(new PageRankEdge(2, 3))
   graph.addEdge(new PageRankEdge(3, 2))
-  val stats = graph.execute
+
+  //  val stats = graph.execute //(ExecutionConfiguration())
+  val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.ContinuousAsynchronous))
+  graph.awaitIdle
+  //  val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.Synchronous))
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown

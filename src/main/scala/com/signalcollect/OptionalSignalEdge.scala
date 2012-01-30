@@ -44,7 +44,7 @@ abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus) {
     val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertex]).asInstanceOf[Option[_]]
     if (optionalSignal.isDefined) {
       messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, optionalSignal.get), cachedTargetIdHashCode)

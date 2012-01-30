@@ -44,6 +44,14 @@ class DefaultEdgeId[SourceId, TargetId](
     }
   }
   override val hashCode = (sourceId, targetId, description).hashCode
+  override def toString = {
+    if (description.length > 0) {
+      sourceId + " " + description + " " + targetId
+    } else {
+      sourceId + "->" + targetId
+    }
+
+  }
 }
 
 /**
@@ -98,7 +106,7 @@ abstract class DefaultEdge[@specialized SourceIdTypeParameter, @specialized Targ
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any]) {
+  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus) {
     messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, signal(sourceVertex.asInstanceOf[SourceVertex])), cachedTargetIdHashCode)
   }
 

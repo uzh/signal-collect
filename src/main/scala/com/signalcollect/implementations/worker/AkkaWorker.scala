@@ -1,8 +1,10 @@
 /*
- *  @author Daniel Strebel
  *  @author Philip Stutz
+ *  @author Francisco de Freitas
+ *  @author Daniel Strebel
  *  
- *  Copyright 2011 University of Zurich
+ *  
+ *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,7 +23,6 @@
 package com.signalcollect.implementations.worker
 
 import com.signalcollect.configuration._
-import com.signalcollect.implementations.messaging.AbstractMessageRecipient
 import java.util.concurrent.TimeUnit
 import com.signalcollect.implementations._
 import com.signalcollect.interfaces._
@@ -34,7 +35,13 @@ import java.util.Map
 import java.util.Set
 import com.signalcollect._
 import com.signalcollect.implementations.serialization.DefaultSerializer
-import com.signalcollect.implementations.graph.DefaultGraphEditor
+import akka.util.duration._
+import akka.util.Timer
+import akka.actor.PoisonPill
+import akka.actor.ReceiveTimeout
+import akka.actor.ActorRef
+import akka.actor.ActorLogging
+import akka.event.LoggingReceive
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -49,84 +56,109 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-class LocalWorker(val workerId: Int,
-  workerConfig: WorkerConfiguration,
-  numberOfWorkers: Int,
-  coordinator: Any,
-  val loggingLevel: Int)
-  extends AbstractMessageRecipient[Any]
-  with Worker
-  with Logging
-  with Runnable {
+class AkkaWorker(val workerId: Int,
+  config: GraphConfiguration)
+  extends Worker with ActorLogging {
 
   override def toString = "Worker" + workerId
 
-  /**
-   * ******************
-   * MESSAGE BUS INIT *
-   * ******************
-   */
-  val messageBus: MessageBus[Any] = {
-    workerConfig.messageBusFactory.createInstance(numberOfWorkers)
+  val loggingLevel = config.loggingLevel
+
+  val messageBus: MessageBus = {
+    config.messageBusFactory.createInstance(config.numberOfWorkers)
   }
 
-  messageBus.registerCoordinator(coordinator)
+  /**
+   * Timeout for Akka actor idling
+   */
+  context.setReceiveTimeout(5 milliseconds)
 
-  /********************/
+  def isInitialized = messageBus.isInitialized
 
   /**
-   * Generalization of worker initialization
+   * This method gets executed when the Akka actor receives a message.
    */
-  def initialize {
-    new Thread(this, toString).start
+  def receive = LoggingReceive(this) {
+    
+    case PoisonPill =>
+      shutdown
+
+    /**
+     * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
+     */
+    case ReceiveTimeout =>
+      if (isConverged || isPaused) { // if the actor has nothing to compute and the mailbox is empty, then it is idle
+        setIdle(true)
+      } else {
+        handlePauseAndContinue
+        performComputations
+      }
+
+    case msg =>
+      setIdle(false)
+      process(msg) // process the message
+      handlePauseAndContinue
+      performComputations
+  }(context.system)
+
+  //  /**
+  //   * Tests if the actor mailbox is empty
+  //   */
+  //  def isMailboxEmpty: Boolean = {
+  //    !AkkaMailbox.mailboxes.get(context).hasMessages
+  //  }
+
+  val mailbox = context.asInstanceOf[{ def mailbox: { def canBeScheduledForExecution(a: Boolean, b: Boolean): Boolean } }].mailbox
+
+  /**
+   * Tests if the actor mailbox is empty
+   */
+  def isMailboxEmpty: Boolean = {
+    // See http://groups.google.com/group/akka-user/browse_thread/thread/6e645ee0c242c95b/c082f33e917db656 last post by Viktor Klang
+    !mailbox.canBeScheduledForExecution(false, false)
   }
 
-  def run {
-    try {
-      while (!shouldShutdown) {
-
-        if (workerConfig.statusUpdateIntervalInMillis.isDefined) {
-          // if necessary send status update to coordinator
-          val currentTime = System.currentTimeMillis
-          if (currentTime - lastStatusUpdate > updateInterval) {
-            lastStatusUpdate = currentTime
-            sendStatusToCoordinator
-          }
-        }
-
-        handleIdling
-        // While the computation is in progress, alternately check the inbox and collect/signal
-        if (!isPaused) {
-          vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), true)
-          vertexStore.toCollect.foreach((vertexId, uncollectedSignals) => {
-            processInbox
-            val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, false)
+  def performComputations {
+    if (config.statusUpdateIntervalInMillis.isDefined) {
+      val currentTime = System.currentTimeMillis
+      if (currentTime - lastStatusUpdate > updateInterval) {
+        lastStatusUpdate = currentTime
+        sendStatusToCoordinator
+      }
+    }
+    if (!isPaused) {
+      while (isMailboxEmpty && !isConverged) {
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), removeAfterProcessing = true)
+        vertexStore.toCollect.foreach(
+          (vertexId, uncollectedSignals) => {
+            val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, addToSignal = false)
             if (collectExecuted) {
               executeSignalOperationOfVertex(vertexId)
             }
-          }, true)
-        }
+          }, removeAfterProcessing = true, breakCondition = () => !isMailboxEmpty)
       }
-    } catch {
-      case t: Throwable => severe(t)
     }
+
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphApi: GraphEditor = DefaultGraphEditor.createInstance(messageBus)
+  protected val graphEditor: GraphEditor = messageBus.getGraphEditor
   protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
-  protected val updateInterval: Long = workerConfig.statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
+  protected val updateInterval: Long = config.statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[_, _, _] => {
-        debug(s)
         processSignal(s)
       }
-      case WorkerRequest(command) => {
-        command(this)
+      case Request(command, reply) => {
+        val result = command(this)
+        if (reply) {
+          messageBus.getSentMessagesCounter.incrementAndGet
+          sender ! result
+        }
       }
       case other => warning("Could not handle message " + message)
     }
@@ -171,7 +203,7 @@ class LocalWorker(val workerId: Int,
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
-        val request = WorkerRequest((_.addIncomingEdge(edge)))
+        val request = Request[Worker]((_.addIncomingEdge(edge)), returnResult = false)
         messageBus.sendToWorkerForVertexId(request, edge.id.targetId)
       }
     } else {
@@ -214,7 +246,7 @@ class LocalWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId)) {
         counters.outgoingEdgesRemoved += 1
-        val request = WorkerRequest((_.removeIncomingEdge(edgeId)))
+        val request = Request[Worker]((_.removeIncomingEdge(edgeId)))
         messageBus.sendToWorkerForVertexId(request, edgeId.targetId)
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
@@ -308,11 +340,11 @@ class LocalWorker(val workerId: Int,
     acc
   }
 
-  def startComputation {
+  def startAsynchronousComputation {
     shouldStart = true
   }
 
-  def pauseComputation {
+  def pauseAsynchronousComputation {
     shouldPause = true
   }
 
@@ -345,7 +377,6 @@ class LocalWorker(val workerId: Int,
 
   def shutdown {
     vertexStore.cleanUp
-    shouldShutdown = true
   }
 
   protected var shouldShutdown = false
@@ -357,11 +388,9 @@ class LocalWorker(val workerId: Int,
   protected var signalThreshold = 0.001
   protected var collectThreshold = 0.0
 
-  protected val idleTimeoutNanoseconds: Long = 1000l * 1000l * 5l // 5ms timeout
-
   protected var lastStatusUpdate = System.currentTimeMillis
 
-  protected lazy val vertexStore = workerConfig.storageFactory.createInstance
+  protected val vertexStore = config.storageFactory.createInstance
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
@@ -381,30 +410,10 @@ class LocalWorker(val workerId: Int,
 
   protected def setIdle(newIdleState: Boolean) {
     if (isIdle != newIdleState) {
-      isIdle = newIdleState
-      sendStatusToCoordinator
-    }
-  }
-
-  protected def processInboxOrIdle(idleTimeoutNanoseconds: Long) {
-
-    var message: Any = messageInbox.poll(idleTimeoutNanoseconds, TimeUnit.NANOSECONDS)
-    if (message == null) {
-      setIdle(true)
-      handleMessage
-      setIdle(false)
-    } else {
-      process(message)
-      processInbox
-    }
-
-  }
-
-  override protected def processInbox {
-    var message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
-    while (message != null) {
-      process(message)
-      message = messageInbox.poll(0, TimeUnit.NANOSECONDS)
+      if (isInitialized) {
+        isIdle = newIdleState
+        sendStatusToCoordinator
+      }
     }
   }
 
@@ -426,7 +435,7 @@ class LocalWorker(val workerId: Int,
         }
       }
     } else {
-      uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphApi))
+      uncollectedSignalsList.foreach(undeliverableSignalHandler(_, graphEditor))
     }
     hasCollected
   }
@@ -449,16 +458,21 @@ class LocalWorker(val workerId: Int,
     hasSignaled
   }
 
-  protected def processSignal(signal: SignalMessage[_, _, _]) {
+  def processSignal(signal: SignalMessage[_, _, _]) {
+    debug(signal)
     vertexStore.toCollect.addSignal(signal)
   }
 
-  def registerWorker(workerId: Int, worker: Any) {
+  def registerWorker(workerId: Int, worker: ActorRef) {
     messageBus.registerWorker(workerId, worker)
   }
 
-  def registerCoordinator(coordinator: Any) {
+  def registerCoordinator(coordinator: ActorRef) {
     messageBus.registerCoordinator(coordinator)
+  }
+
+  def registerLogger(logger: ActorRef) {
+    messageBus.registerLogger(logger)
   }
 
   protected def handlePauseAndContinue {
@@ -473,12 +487,4 @@ class LocalWorker(val workerId: Int,
     }
   }
 
-  protected def handleIdling {
-    handlePauseAndContinue
-    if (isConverged || isPaused) {
-      processInboxOrIdle(idleTimeoutNanoseconds)
-    } else {
-      processInbox
-    }
-  }
 }

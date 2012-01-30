@@ -79,6 +79,6 @@ trait Edge extends Serializable {
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus[Any])
+  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus)
 
 }

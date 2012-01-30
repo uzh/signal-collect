@@ -28,5 +28,5 @@ import com.signalcollect.implementations.messaging.DefaultMessageBus
  *  Only works locally.
  */
 object SharedMemory extends MessageBusFactory {
-  def createInstance(numberOfWorkers: Int): MessageBus[Any] = new DefaultMessageBus[Any](numberOfWorkers)
+  def createInstance(numberOfWorkers: Int): MessageBus = new DefaultMessageBus(numberOfWorkers)
 }

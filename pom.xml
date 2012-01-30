@@ -2,24 +2,26 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.signalcollect</groupId>
-	<artifactId>core</artifactId>
-	<version>1.1.2-SNAPSHOT</version>
+	<artifactId>signal-collect-core</artifactId>
+	<version>2.0.0-SNAPSHOT</version>
 	<name>Signal/Collect Core</name>
 	<modules>
 	</modules>
 
-	<!-- Repositories -->
 	<repositories>
 		<repository>
-			<id>scala-tools.org</id>
-			<name>Scala Tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-releases</url>
+			<id>typesafe</id>
+			<name>Typesafe Repository</name>
+			<url>http://repo.typesafe.com/typesafe/releases/</url>
 		</repository>
 	</repositories>
-	<!-- Repositories -->
 
-	<!-- Dependencies -->
 	<dependencies>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor</artifactId>
+			<version>2.0-M3</version>
+		</dependency>
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
@@ -44,8 +46,12 @@
 			<version>1.5</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.google.api.client</groupId>
+			<artifactId>google-api-client-googleapis</artifactId>
+			<version>1.4.1-beta</version>
+		</dependency>
 	</dependencies>
-	<!-- Dependencies -->
 
 	<build>
 		<sourceDirectory>src/main/scala</sourceDirectory>

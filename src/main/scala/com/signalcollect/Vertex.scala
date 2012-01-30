@@ -98,14 +98,14 @@ trait Vertex extends Serializable {
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
    *  `Worker` implementations).
    */
-  def executeSignalOperation(messageBus: MessageBus[Any])
+  def executeSignalOperation(messageBus: MessageBus)
 
   /**
    *  Tells this vertex to execute the `collect` method.
    *
    *  @param signals the new signals that this vertex has received since the `executeCollectOperation` method was called last.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any])
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus)
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -160,11 +160,11 @@ trait Vertex extends Serializable {
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
    */
-  def afterInitialization(messageBus: MessageBus[Any])
+  def afterInitialization(messageBus: MessageBus)
 
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(messageBus: MessageBus[Any])
+  def beforeRemoval(messageBus: MessageBus)
 
 }

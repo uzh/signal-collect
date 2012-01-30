@@ -21,21 +21,18 @@ package com.signalcollect.interfaces
 
 import com.signalcollect.configuration._
 import com.signalcollect.implementations.coordinator._
+import akka.actor.ActorRef
 
 trait Factory extends Serializable {
   def name: String = this.getClass.getSimpleName.replace("$", "")
 }
 
 trait WorkerFactory extends Factory {
-  def createInstance(workerId: Int,
-                     workerConfig: WorkerConfiguration,
-                     numberOfWorkers: Int,
-                     coordinator: Any,
-                     loggingLevel: Int): Worker
+  def createInstance(workerId: Int, config: GraphConfiguration): Worker
 }
 
 trait MessageBusFactory extends Factory {
-  def createInstance(numberOfWorkers: Int): MessageBus[Any]
+  def createInstance(numberOfWorkers: Int): MessageBus
 }
 
 trait StorageFactory extends Factory {

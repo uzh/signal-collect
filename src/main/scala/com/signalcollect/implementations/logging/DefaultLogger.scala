@@ -1,5 +1,5 @@
 /*
- *  @author Francisco de Freitas
+ *  @author Philip Stutz
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -20,11 +20,10 @@
 package com.signalcollect.implementations.logging
 
 import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.interfaces.MessageRecipient
+import akka.actor.Actor
 
-class DefaultLogger extends MessageRecipient[LogMessage] with Serializable {
-
-  def receive(logMessage: LogMessage) = {
+object DefaultLogger {
+  def log(logMessage: LogMessage) {
     logMessage.msg match {
       case e: Exception =>
         println(logMessage.from + ": " + e.getMessage)
@@ -32,7 +31,14 @@ class DefaultLogger extends MessageRecipient[LogMessage] with Serializable {
       case other =>
         println(logMessage.from + ": " + logMessage.msg)
     }
+  }
+}
 
+class DefaultLogger(loggingFunction: LogMessage => Unit = DefaultLogger.log) extends Actor {
+
+  def receive = {
+    case logMessage: LogMessage =>
+      loggingFunction(logMessage)
   }
 
 }

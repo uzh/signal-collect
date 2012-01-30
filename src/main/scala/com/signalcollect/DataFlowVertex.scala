@@ -80,7 +80,7 @@ abstract class DataFlowVertex[@specialized IdTypeParameter, @specialized StateTy
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
     uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
     state = collect(state, (uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
   }

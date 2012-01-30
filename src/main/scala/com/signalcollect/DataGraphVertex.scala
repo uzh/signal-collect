@@ -91,7 +91,7 @@ abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateT
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any]) {
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
     val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
     // faster than scala foreach
     val i = castS.iterator

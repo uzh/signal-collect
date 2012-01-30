@@ -23,11 +23,7 @@ import com.signalcollect.Vertex
 
 /**
  *  An aggregation operation aggregates some value of type `ValueType` over all the vertices in a graph.
- *
- *  @author Philip Stutz
- *  @version 1.0.0
- *  @since 1.0.0
- */
+  */
 trait AggregationOperation[ValueType] {
   /**
    *  Extracts values of type `ValueType` from vertices.

@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,17 +23,14 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.implementations.messaging.DefaultMessageBus
 import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.configuration.WorkerConfiguration
-import com.signalcollect.implementations.worker.LocalWorker
 import com.signalcollect.interfaces.Worker
+import com.signalcollect.implementations.worker.AkkaWorker
+import com.signalcollect.configuration.GraphConfiguration
+import akka.actor.ActorRef
 
 /**
  *  The local worker factory creates worker instances that work in the local-machine scenario.
  */
-object Local extends WorkerFactory {
-  def createInstance(workerId: Int,
-    workerConfig: WorkerConfiguration,
-    numberOfWorkers: Int,
-    coordinator: Any,
-    loggingLevel: Int): Worker = new LocalWorker(workerId, workerConfig, numberOfWorkers, coordinator, loggingLevel)
+object Akka extends WorkerFactory {
+  def createInstance(workerId: Int, config: GraphConfiguration): Worker = new AkkaWorker(workerId, config)
 }

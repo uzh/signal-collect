@@ -41,7 +41,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "InMemory Vertex Store" should {
-    val defaultMessageBus = mock[DefaultMessageBus[Any]]
+    val defaultMessageBus = mock[DefaultMessageBus]
     val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
     val inMemoryStore = new DefaultStorage
     vertexList.foreach(v => inMemoryStore.vertices.put(v))
@@ -74,9 +74,9 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
       envFolder.mkdir
 
     if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
-      val defaultMessageBus = mock[DefaultMessageBus[Any]]
+      val defaultMessageBus = mock[DefaultMessageBus]
       val vertexList = List(new PageRankVertex(0, 0.5), new PageRankVertex(1, 0.5), new PageRankVertex(2, 0.5))
-      class BerkeleyStorage(messageBus: MessageBus[Any]) extends DefaultStorage with BerkDBJE
+      class BerkeleyStorage(messageBus: MessageBus) extends DefaultStorage with BerkDBJE
       val berkeleyStore = new BerkeleyStorage(defaultMessageBus)
       vertexList.foreach(v => berkeleyStore.vertices.put(v))
 
@@ -132,7 +132,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
     if (hasReadAndWritePermission(envFolder.getCanonicalPath)) {
 
-      val defaultMessageBus = mock[DefaultMessageBus[Any]]
+      val defaultMessageBus = mock[DefaultMessageBus]
       val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
       class CachedBerkeleyStorage extends DefaultStorage with CachedBerkeley
       val cachedStore = new CachedBerkeleyStorage

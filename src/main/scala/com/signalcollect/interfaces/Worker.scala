@@ -20,18 +20,16 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect._
+import akka.actor.Actor
 
-trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Logging {
-  def workerId: Int
-  def messageBus: MessageBus[Any]
-  
+trait Worker extends Actor with MessageRecipientRegistry with Logging {
+//  def workerId: Int
+//  def messageBus: MessageBus
+
   override def toString = this.getClass.getSimpleName
 
-  /**
-   * initialization method for the worker (to start thread/actor)
-   */
-  def initialize
-  
+  def processSignal(signal: SignalMessage[_, _, _])
+
   def addVertex(serializedVertex: Array[Byte]) // object should be created in the heap of the thread which uses its
   def addOutgoingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
   def addIncomingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
@@ -57,14 +55,14 @@ trait Worker extends MessageRecipient[Any] with MessageRecipientRegistry with Lo
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 
-  def pauseComputation
-  def startComputation
+  def pauseAsynchronousComputation
+  def startAsynchronousComputation
 
   def signalStep
   def collectStep: Boolean
 
   def getWorkerStatistics: WorkerStatistics
-  
+
   def shutdown
 
 }

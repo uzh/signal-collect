@@ -29,7 +29,7 @@ object LoggingLevel {
 
 trait Logging {
 
-  protected def messageBus: MessageBus[_]
+  protected def messageBus: MessageBus
   protected val loggingLevel: Int // = LoggingLevel.Warning
 
   lazy val from = this.toString
@@ -37,9 +37,9 @@ trait Logging {
   def debug(msg: Any, msgs: Any*) = {
     if (loggingLevel <= LoggingLevel.Debug) {
       if (msgs != null && !msgs.isEmpty) {
-        messageBus.sendToCoordinator(Debug(msg :: msgs.toList, from))
+        messageBus.sendToLogger(Debug(msg :: msgs.toList, from))
       } else {
-        messageBus.sendToCoordinator(Debug(msg, from))
+        messageBus.sendToLogger(Debug(msg, from))
       }
     }
   }
@@ -47,9 +47,9 @@ trait Logging {
   def config(msg: Any, msgs: Any*) = {
     if (loggingLevel <= LoggingLevel.Config) {
       if (msgs != null && !msgs.isEmpty) {
-        messageBus.sendToCoordinator(Config(msg :: msgs.toList, from))
+        messageBus.sendToLogger(Config(msg :: msgs.toList, from))
       } else {
-        messageBus.sendToCoordinator(Config(msg, from))
+        messageBus.sendToLogger(Config(msg, from))
       }
     }
   }
@@ -57,9 +57,9 @@ trait Logging {
   def info(msg: Any, msgs: Any*) = {
     if (loggingLevel <= LoggingLevel.Info) {
       if (msgs != null && !msgs.isEmpty) {
-        messageBus.sendToCoordinator(Info(msg :: msgs.toList, from))
+        messageBus.sendToLogger(Info(msg :: msgs.toList, from))
       } else {
-        messageBus.sendToCoordinator(Info(msg, from))
+        messageBus.sendToLogger(Info(msg, from))
       }
     }
   }
@@ -67,9 +67,9 @@ trait Logging {
   def warning(msg: Any, msgs: Any*) = {
     if (loggingLevel <= LoggingLevel.Warning) {
       if (msgs != null && !msgs.isEmpty) {
-        messageBus.sendToCoordinator(Warning(msg :: msgs.toList, from))
+        messageBus.sendToLogger(Warning(msg :: msgs.toList, from))
       } else {
-        messageBus.sendToCoordinator(Warning(msg, from))
+        messageBus.sendToLogger(Warning(msg, from))
       }
     }
   }
@@ -77,9 +77,9 @@ trait Logging {
   def severe(msg: Any, msgs: Any*) = {
     if (loggingLevel <= LoggingLevel.Severe) {
       if (msgs != null && !msgs.isEmpty) {
-        messageBus.sendToCoordinator(Severe(msg :: msgs.toList, from))
+        messageBus.sendToLogger(Severe(msg :: msgs.toList, from))
       } else {
-        messageBus.sendToCoordinator(Severe(msg, from))
+        messageBus.sendToLogger(Severe(msg, from))
       }
     }
   }

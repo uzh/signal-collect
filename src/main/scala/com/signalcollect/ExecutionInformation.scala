@@ -22,6 +22,9 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.configuration.TerminationReason
+import akka.util.duration._
+import akka.util.Duration
+import java.util.concurrent.TimeUnit
 
 /**
  *  An instance of ExecutionInformation reports information such as execution statistics
@@ -47,7 +50,7 @@ case class ExecutionInformation(
       "- Worker -\n" +
       "----------" +
       "\n# workers \t" + config.numberOfWorkers + "\n" +
-      config.workerConfiguration.toString + "\n" +
+      config.toString + "\n" +
       "\n------------------------\n" +
       "- Execution Parameters -\n" +
       "------------------------\n" +
@@ -61,21 +64,20 @@ case class ExecutionInformation(
 }
 
 case class ExecutionStatistics(
-  signalSteps: Long,
-  collectSteps: Long,
-  computationTimeInMilliseconds: Long,
-  totalExecutionTimeInMilliseconds: Long, // should approximately equal computation time + idle waiting + garbage collection
-  jvmCpuTimeInMilliseconds: Long,
-  graphIdleWaitingTimeInMilliseconds: Long,
-  preExecutionGcTimeInMilliseconds: Long,
-  terminationReason: TerminationReason.Value) {
+  var signalSteps: Long = 0,
+  var collectSteps: Long = 0,
+  var computationTime: Duration = 0 milliseconds,
+  var totalExecutionTime: Duration = 0 milliseconds, // should approximately equal computation time + idle waiting + garbage collection
+  var jvmCpuTime: Duration = 0 milliseconds,
+  var graphIdleWaitingTime: Duration = 0 milliseconds,
+  var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
 
   override def toString: String = {
     "# signal steps" + "\t" + "\t" + signalSteps + "\n" +
       "# collect steps" + "\t" + "\t" + collectSteps + "\n" +
-      "computation time (ms)" + "\t" + computationTimeInMilliseconds + "\n" +
-      "JVM CPU time (ms)" + "\t" + jvmCpuTimeInMilliseconds + "\n" +
-      "idle waiting (ms) (graph loading)" + "\t" + graphIdleWaitingTimeInMilliseconds + "\n" +
+      "computation time" + "\t" + computationTime.toUnit(TimeUnit.MILLISECONDS) + " milliseconds\n" +
+      "JVM CPU time" + "\t" + jvmCpuTime.toUnit(TimeUnit.MILLISECONDS) + " milliseconds\n" +
+      "idle waiting (graph loading)" + "\t" + graphIdleWaitingTime.toUnit(TimeUnit.MILLISECONDS) + "\n" +
       "termination reason" + "\t" + terminationReason
   }
 

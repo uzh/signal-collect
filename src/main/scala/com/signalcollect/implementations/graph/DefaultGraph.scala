@@ -20,26 +20,292 @@
 package com.signalcollect.implementations.graph
 
 import com.signalcollect.interfaces._
-import com.signalcollect.interfaces.MessageRecipient
 import com.signalcollect.implementations.coordinator._
 import com.signalcollect.configuration._
 import com.signalcollect._
+import akka.actor.ActorRef
+import com.signalcollect.implementations.messaging.DefaultVertexToWorkerMapper
+import akka.actor.ActorSystem
+import com.signalcollect.implementations.logging.DefaultLogger
+import akka.actor.Props
+import com.signalcollect.implementations.worker.AkkaWorker
+import com.signalcollect.implementations.messaging.AkkaProxy
+import akka.actor.ReceiveTimeout
+import java.util.concurrent.TimeUnit
+import akka.util.duration._
+import akka.util.Timer
+import akka.util.Duration
+import akka.util.FiniteDuration
+import configuration.TerminationReason
+import com.sun.management.OperatingSystemMXBean
+import java.lang.management.ManagementFactory
+import java.util.concurrent.TimeUnit
+import akka.util.duration._
+import akka.util.Timer
+import akka.dispatch.Await
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+import akka.pattern.AskTimeoutException
+import akka.pattern.ask
 
 /**
- * Default [[com.signalcollect.interfaces.ComputeGraph]] implementation.
+ * Default graph implementation.
+ *
+ * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
-  workerApi.initialize
+  val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
+  
+//      val customConf = ConfigFactory.parseString("""
+//		  akka {
+//		    loglevel = DEBUG
+//		    debug {
+//		      receive = on
+//		    }
+//		    actor {
+//		      debug {
+//		        receive = on
+//		      }
+//		    }
+//          }
+//      """)
+  
+//  val system = ActorSystem("SignalCollect", customConf)
+  
+  val system = ActorSystem("SignalCollect")
 
-  lazy val workerApi = new WorkerApi(config)
-  lazy val coordinator = new Coordinator(workerApi, config)
+  val workerActors: Array[ActorRef] = {
+    val actors = new Array[ActorRef](config.numberOfWorkers)
+    for (workerId <- 0 until config.numberOfWorkers) {
+      actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)), "Worker" + workerId)
+    }
+    actors
+  }
+
+  val coordinatorActor: ActorRef = {
+    val numberOfRegistries = config.numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
+    val registrationMessagesPerRegistry = config.numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
+    val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
+    system.actorOf(Props(new DefaultCoordinator(config)), "Coordinator")
+  }
+
+  val loggerActor: ActorRef = {
+    system.actorOf(Props(new DefaultLogger(config.logger)), name = "Logger")
+  }
+
+  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor)
+
+  initializeMessageBuses
+    
+  awaitIdle
+
+  def initializeMessageBuses {
+    // the MessageBus registries
+    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: workerProxies.toList
+    for (registry <- registries.par) {
+      try {
+        registry.registerCoordinator(coordinatorActor)
+      } catch {
+        case e: Exception => println(e.getCause())
+      }
+      for (workerId <- (0 until config.numberOfWorkers).par) {
+        registry.registerWorker(workerId, workerActors(workerId))
+      }
+      registry.registerLogger(loggerActor)
+    }
+  }
+
+  lazy val workerApi = coordinatorProxy.getWorkerApi
+  lazy val graphEditor = coordinatorProxy.getGraphEditor
 
   /** GraphApi */
 
   def execute: ExecutionInformation = execute(ExecutionConfiguration)
 
-  def execute(parameters: ExecutionConfiguration): ExecutionInformation = coordinator.execute(parameters)
+  /**
+   * Returns the time it took to execute `operation`
+   *
+   * @note Only works if operation is blocking
+   */
+  def measureTime(operation: () => Unit): Duration = {
+    val startTime = System.nanoTime
+    operation()
+    val stopTime = System.nanoTime
+    new FiniteDuration(stopTime - startTime, TimeUnit.NANOSECONDS)
+  }
+
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+    workerApi.setSignalThreshold(parameters.signalThreshold)
+    workerApi.setCollectThreshold(parameters.collectThreshold)
+    val stats = ExecutionStatistics()
+    stats.graphIdleWaitingTime = measureTime(awaitIdle _)
+    val jvmCpuStartTime = getJVMCpuTime
+    parameters.executionMode match {
+      case ExecutionMode.Synchronous =>
+        stats.computationTime = measureTime(() => synchronousExecution(stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition))
+      case ExecutionMode.OptimizedAsynchronous =>
+        stats.computationTime = measureTime(() => optimizedAsynchronousExecution(stats, parameters.timeLimit, parameters.globalTerminationCondition))
+      case ExecutionMode.PureAsynchronous =>
+        stats.computationTime = measureTime(() => pureAsynchronousExecution(stats, parameters.timeLimit, parameters.globalTerminationCondition))
+      case ExecutionMode.ContinuousAsynchronous =>
+            workerApi.startComputation
+            stats.terminationReason = TerminationReason.Ongoing
+    }
+    stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
+    val workerStatistics = workerApi.getIndividualWorkerStatistics
+    ExecutionInformation(config, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
+  }
+  
+  protected def synchronousExecution(
+    stats: ExecutionStatistics,
+    timeLimit: Option[Long],
+    stepsLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) {
+    var converged = false
+    var globalTermination = false
+    var interval = 0l
+    if (globalTerminationCondition.isDefined) {
+      interval = globalTerminationCondition.get.aggregationInterval
+    }
+    val startTime = System.nanoTime
+    val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
+    while (!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+      workerApi.signalStep
+      stats.signalSteps += 1
+      converged = workerApi.collectStep
+      stats.collectSteps += 1
+      if (shouldCheckGlobalCondition) {
+        globalTermination = isGlobalTerminationConditionMet(globalTerminationCondition.get)
+      }
+    }
+    if (isTimeLimitReached) {
+      stats.terminationReason = TerminationReason.TimeLimitReached
+    } else if (isStepsLimitReached) {
+      stats.terminationReason = TerminationReason.ComputationStepLimitReached
+    } else if (globalTermination) {
+      stats.terminationReason = TerminationReason.GlobalConstraintMet
+    }
+    def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
+    def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+      val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+      gtc.shouldTerminate(globalAggregateValue)
+    }
+    def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+    def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
+    def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
+  }
+
+  protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,
+      timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
+    val startTime = System.nanoTime
+    workerApi.signalStep
+    val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
+    var adjustedTimeLimit: Option[Long] = None
+    if (timeLimit.isDefined) {
+      adjustedTimeLimit = Some(timeLimit.get - millisecondsSpentAlready)
+    }
+    pureAsynchronousExecution(stats, adjustedTimeLimit, globalTerminationCondition)
+  }
+  
+  protected def pureAsynchronousExecution(
+         stats: ExecutionStatistics,
+      timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) {
+    workerApi.startComputation
+    stats.terminationReason = TerminationReason.Converged
+    (timeLimit, globalTerminationCondition) match {
+      case (None, None) =>
+        awaitIdle
+      case (Some(limit), None) =>
+        val converged = awaitIdle(limit * 1000000l)
+        if (!converged) {
+          stats.terminationReason = TerminationReason.TimeLimitReached
+        }
+      case (None, Some(globalCondition)) =>
+        val aggregationOperation = globalCondition.aggregationOperation
+        val interval = globalCondition.aggregationInterval * 1000000l
+        var converged = false
+        var globalTermination = false
+        while (!converged && !globalTermination) {
+          converged = awaitIdle(interval)
+          if (!converged) {
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+        }
+        if (!converged) {
+          stats.terminationReason = TerminationReason.GlobalConstraintMet
+        }
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          workerApi.pauseComputation
+          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          workerApi.startComputation
+          gtc.shouldTerminate(globalAggregateValue)
+        }
+      case (Some(limit), Some(globalCondition)) =>
+        val aggregationOperation = globalCondition.aggregationOperation
+        val nanosecondLimit = limit * 1000000l
+        val interval = globalCondition.aggregationInterval * 1000000l
+        val startTime = System.nanoTime
+        var lastAggregationOperationTime = System.nanoTime - interval
+        var converged = false
+        var globalTermination = false
+        var timeLimitReached = false
+        while (!converged && !globalTermination && !isTimeLimitReached) {
+          if (intervalHasPassed) {
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+          // waits for whichever remaining time interval/limit is shorter
+          converged = awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
+        }
+        if (timeLimitReached) {
+          stats.terminationReason = TerminationReason.TimeLimitReached
+        } else if (globalTermination) {
+          stats.terminationReason = TerminationReason.GlobalConstraintMet
+        }
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          workerApi.pauseComputation
+          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          workerApi.startComputation
+          gtc.shouldTerminate(globalAggregateValue)
+        }
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
+        def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+        def isTimeLimitReached = remainingTimeLimit <= 0
+    }
+    workerApi.pauseComputation
+  }  
+
+  def awaitIdle {
+    implicit val timeout = Timeout(1000 days)
+    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
+    try {
+      val result = Await.result(resultFuture, timeout.duration)
+    }
+  }
+  
+  def awaitIdle(timeoutNanoseconds: Long): Boolean = {
+    implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
+    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
+    try {
+      val result = Await.result(resultFuture, timeout.duration + { 10 seconds })
+      true
+    } catch {
+      case e: AskTimeoutException => false
+    }
+  }
+
+  def getJVMCpuTime = {
+    val bean = ManagementFactory.getOperatingSystemMXBean
+    if (!bean.isInstanceOf[OperatingSystemMXBean]) {
+      0
+    } else {
+      (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
+    }
+  }
 
   /** WorkerApi */
 
@@ -47,9 +313,12 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
-  def awaitIdle = workerApi.awaitIdle()
+  def isIdle = coordinatorProxy.isIdle
 
-  def shutdown = workerApi.shutdown
+  def shutdown = {
+    workerApi.shutdown
+    system.shutdown
+  }
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
     workerApi.forVertexWithId(vertexId, f)
@@ -63,27 +332,66 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
-  /** GraphApi */
+  //------------------GraphApi------------------
 
   /**
-   * Sends a signal to the vertex with vertex.id=edgeId.targetId
+   *  Sends `signal` along the edge with id `edgeId`.
    */
-  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any]) {
-    workerApi.sendSignalAlongEdge(signal, edgeId)
+  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    graphEditor.sendSignalAlongEdge(signal, edgeId, blocking)
   }
 
-  def addVertex(vertex: Vertex) = workerApi.addVertex(vertex)
-
-  def addEdge(edge: Edge) = workerApi.addEdge(edge)
-
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
-    workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
+  /**
+   *  Adds `vertex` to the graph.
+   *
+   *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
+   */
+  def addVertex(vertex: Vertex, blocking: Boolean = false) {
+    graphEditor.addVertex(vertex, blocking)
   }
 
-  def removeVertex(vertexId: Any) = workerApi.removeVertex(vertexId)
+  /**
+   *  Adds `edge` to the graph.
+   *
+   *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
+   *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
+   */
+  def addEdge(edge: Edge, blocking: Boolean = false) {
+    graphEditor.addEdge(edge, blocking)
+  }
 
-  def removeEdge(edgeId: EdgeId[Any, Any]) = workerApi.removeEdge(edgeId)
+  /**
+   *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
+   *  which will receive the respective vertex as a parameter.
+   */
+  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) {
+    graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
+  }
 
-  def removeVertices(shouldRemove: Vertex => Boolean) = workerApi.removeVertices(shouldRemove)
+  /**
+   *  Removes the vertex with id `vertexId` from the graph.
+   *
+   *  @note If no vertex with this id is found, then the operation is ignored and a warning is logged.
+   */
+  def removeVertex(vertexId: Any, blocking: Boolean = false) {
+    graphEditor.removeVertex(vertexId, blocking)
+  }
+
+  /**
+   *  Removes the edge with id `edgeId` from the graph.
+   *
+   *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
+   *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
+   */
+  def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    graphEditor.removeEdge(edgeId, blocking)
+  }
+
+  /**
+   *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
+   */
+  def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
+    graphEditor.removeVertices(shouldRemove, blocking)
+  }
 
 }

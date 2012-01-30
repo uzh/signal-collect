@@ -26,8 +26,8 @@ trait VertexGraphEditor extends AbstractVertex{
   
   protected var graphEditor: GraphEditor = _
   
-  override def afterInitialization(messageBus: MessageBus[Any]) = {
-    graphEditor = DefaultGraphEditor.createInstance(messageBus)
+  override def afterInitialization(messageBus: MessageBus) = {
+    graphEditor = messageBus.getGraphEditor
     super.afterInitialization(messageBus)
   }
 

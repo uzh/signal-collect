@@ -70,7 +70,7 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
    *
    *  @param logger The logger used by the graph.
    */
-  def withLogger(logger: MessageRecipient[LogMessage]) = newLocalBuilder(logger = logger)
+  def withLogger(logger: LogMessage => Unit) = newLocalBuilder(logger = logger)
 
   /**
    *  Configures the worker factory used by the graph to instantiate workers.
@@ -100,19 +100,18 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
   protected def newLocalBuilder(
     numberOfWorkers: Int = config.numberOfWorkers,
     loggingLevel: Int = config.loggingLevel,
-    logger: MessageRecipient[LogMessage] = config.logger,
-    workerFactory: WorkerFactory = config.workerConfiguration.workerFactory,
-    messageBusFactory: MessageBusFactory = config.workerConfiguration.messageBusFactory,
-    storageFactory: StorageFactory = config.workerConfiguration.storageFactory): GraphBuilder = {
+    logger: LogMessage => Unit = config.logger,
+    workerFactory: WorkerFactory = config.workerFactory,
+    messageBusFactory: MessageBusFactory = config.messageBusFactory,
+    storageFactory: StorageFactory = config.storageFactory): GraphBuilder = {
     new GraphBuilder(
       GraphConfiguration(
         numberOfWorkers = numberOfWorkers,
         loggingLevel = loggingLevel,
         logger = logger,
-        workerConfiguration = WorkerConfiguration(
-          workerFactory = workerFactory,
-          messageBusFactory = messageBusFactory,
-          storageFactory = storageFactory)))
+        workerFactory = workerFactory,
+        messageBusFactory = messageBusFactory,
+        storageFactory = storageFactory))
   }
 
 }

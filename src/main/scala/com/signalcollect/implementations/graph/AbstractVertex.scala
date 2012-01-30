@@ -19,7 +19,6 @@
 
 package com.signalcollect.implementations.graph
 
-import com.signalcollect.implementations.messaging.AbstractMessageRecipient
 import com.signalcollect._
 import com.signalcollect.interfaces._
 import com.signalcollect._
@@ -47,7 +46,7 @@ abstract class AbstractVertex extends Vertex {
 
   protected def process(message: SignalMessage[_, _, _]) = {}
 
-  def afterInitialization(messageBus: MessageBus[Any]) = {}
+  def afterInitialization(messageBus: MessageBus) = {}
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
@@ -118,13 +117,13 @@ abstract class AbstractVertex extends Vertex {
    * @see Worker
    * @see Edge#executeSignalOperation
    */
-  def executeSignalOperation(messageBus: MessageBus[Any]) {
+  def executeSignalOperation(messageBus: MessageBus) {
     outgoingEdgeAddedSinceSignalOperation = false
     lastSignalState = Some(state)
     doSignal(messageBus)
   }
 
-  def doSignal(messageBus: MessageBus[Any]) {
+  def doSignal(messageBus: MessageBus) {
     // faster than scala foreach
     var i = outgoingEdges.values.iterator
     while (i.hasNext) {
@@ -138,7 +137,7 @@ abstract class AbstractVertex extends Vertex {
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus[Any])
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus)
 
   /**
    * This method is used by the framework in order to decide if the vertex' collect operation
@@ -187,7 +186,7 @@ abstract class AbstractVertex extends Vertex {
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(messageBus: MessageBus[Any]) = {}
+  def beforeRemoval(messageBus: MessageBus) = {}
 
   /**
    *  Adds a new incoming `Edge` to this `Vertex`.
