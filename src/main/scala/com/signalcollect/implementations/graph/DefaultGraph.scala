@@ -137,6 +137,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+    val executionStartTime = System.nanoTime
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
     val stats = ExecutionStatistics()
@@ -154,6 +155,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
             stats.terminationReason = TerminationReason.Ongoing
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
+    val executionStopTime = System.nanoTime
+    stats.totalExecutionTime = new FiniteDuration(executionStartTime - executionStopTime, TimeUnit.NANOSECONDS)
     val workerStatistics = workerApi.getIndividualWorkerStatistics
     ExecutionInformation(config, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
