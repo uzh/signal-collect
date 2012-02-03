@@ -156,7 +156,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
-    stats.totalExecutionTime = new FiniteDuration(executionStartTime - executionStopTime, TimeUnit.NANOSECONDS)
+    stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
     val workerStatistics = workerApi.getIndividualWorkerStatistics
     ExecutionInformation(config, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
