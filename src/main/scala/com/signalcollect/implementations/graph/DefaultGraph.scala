@@ -47,6 +47,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import akka.pattern.AskTimeoutException
 import akka.pattern.ask
+import com.signalcollect.interfaces.LogMessage
 
 /**
  * Default graph implementation.
@@ -94,8 +95,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     system.actorOf(Props(new DefaultLogger(config.logger)), name = "Logger")
   }
 
-  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor)
+  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_, loggerActor))
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor, loggerActor)
 
   initializeMessageBuses
     
@@ -108,7 +109,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
       try {
         registry.registerCoordinator(coordinatorActor)
       } catch {
-        case e: Exception => println(e.getCause())
+        case e: Exception => loggerActor ! Severe("Exception in `initializeMessageBuses`:" + e.getCause + "\n" + e, this.toString)
       }
       for (workerId <- (0 until config.numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
@@ -138,10 +139,10 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
     val executionStartTime = System.nanoTime
-    workerApi.setSignalThreshold(parameters.signalThreshold)
-    workerApi.setCollectThreshold(parameters.collectThreshold)
     val stats = ExecutionStatistics()
     stats.graphIdleWaitingTime = measureTime(awaitIdle _)
+    workerApi.setSignalThreshold(parameters.signalThreshold)
+    workerApi.setCollectThreshold(parameters.collectThreshold)
     val jvmCpuStartTime = getJVMCpuTime
     parameters.executionMode match {
       case ExecutionMode.Synchronous =>
@@ -205,6 +206,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
     val startTime = System.nanoTime
     workerApi.signalStep
+    awaitIdle
     val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
     var adjustedTimeLimit: Option[Long] = None
     if (timeLimit.isDefined) {

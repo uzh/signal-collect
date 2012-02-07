@@ -35,18 +35,19 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
 import com.signalcollect.interfaces.Request
 import akka.pattern.ask
+import com.signalcollect.interfaces.LogMessage
 
 /**
  * Used to create proxies
  */
 object AkkaProxy {
 
-  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(10000 milliseconds)): T = {
+  def newInstance[T <: Any: Manifest](actor: ActorRef, loggerActor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(10000 milliseconds)): T = {
     val c = manifest[T].erasure
     Proxy.newProxyInstance(
       c.getClassLoader,
       Array[Class[_]](c),
-      new AkkaProxy(actor, sentMessagesCounter, receivedMessagesCounter, timeout)).asInstanceOf[T]
+      new AkkaProxy(actor, loggerActor: ActorRef, sentMessagesCounter, receivedMessagesCounter, timeout)).asInstanceOf[T]
   }
 
 }
@@ -54,26 +55,28 @@ object AkkaProxy {
 /**
  *  Proxy that does RPC over Akka
  */
-class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler {
+class AkkaProxy[ProxiedClass](actor: ActorRef, loggerActor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler {
 
   override def toString = "ProxyFor" + actor.toString
 
   implicit val t = timeout
 
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
-//    val command = {
-//      proxiedClass: ProxiedClass =>
-//        method.invoke(proxiedClass, arguments: _*)
-//    }
     val command = new Function1[ProxiedClass, AnyRef] {
       def apply(proxiedClass: ProxiedClass) = method.invoke(proxiedClass, arguments: _*)
-      override def toString: String = method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + _) + ")" } else { "" } } 
+      override def toString: String = method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + _) + ")" } else { "" } }
     }
-    val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
-    sentMessagesCounter.incrementAndGet
-    val result = Await.result(resultFuture, timeout.duration)
-    receivedMessagesCounter.incrementAndGet
-    result.asInstanceOf[AnyRef]
+    try {
+      val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
+      sentMessagesCounter.incrementAndGet
+      val result = Await.result(resultFuture, timeout.duration)
+      receivedMessagesCounter.incrementAndGet
+      result.asInstanceOf[AnyRef]
+    } catch {
+      case t: Throwable =>
+        println("Exception in proxy, responsible method call: " + method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + _) + ")" } else { "" } } + " Exception:\n" + t.getCause + "\n" + t)
+        throw t
+    }
   }
 
 }
