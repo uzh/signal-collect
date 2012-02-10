@@ -33,7 +33,6 @@ import com.signalcollect.implementations.messaging.AkkaProxy
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
 import akka.util.duration._
-import akka.util.Timer
 import akka.util.Duration
 import akka.util.FiniteDuration
 import configuration.TerminationReason
@@ -41,7 +40,6 @@ import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 import akka.util.duration._
-import akka.util.Timer
 import akka.dispatch.Await
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -56,30 +54,37 @@ import com.signalcollect.interfaces.LogMessage
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
-  val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)
+  val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)  
   
-//      val customConf = ConfigFactory.parseString("""
-//		  akka {
-//		    loglevel = DEBUG
-//		    debug {
-//		      receive = on
-//		    }
-//		    actor {
-//		      debug {
-//		        receive = on
-//		      }
-//		    }
-//          }
-//      """)
+  val pinnedConfig = """
+akka {
+  #logConfigOnStart=on
+  actor {
+  	pinned-dispatcher {
+	  type = PinnedDispatcher
+	  executor = "thread-pool-executor"
+  	}
+  }
+}
+"""
   
-//  val system = ActorSystem("SignalCollect", customConf)
-  
-  val system = ActorSystem("SignalCollect")
+//  val system = { config.akkaDispatcher match {
+//        case EventBased => ActorSystem("SignalCollect")
+//        case Pinned => ActorSystem("SignalCollect", ConfigFactory.parseString(pinnedConfig))
+//      }
+//  }
+     
+  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(pinnedConfig))
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](config.numberOfWorkers)
     for (workerId <- 0 until config.numberOfWorkers) {
-      actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)), "Worker" + workerId)
+      val workerName = "Worker" + workerId
+      config.akkaDispatcher match {
+        case EventBased => actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)), name = workerName)
+//        case Pinned => actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)).withDispatcher("pinned-dispatcher"), name = workerName)
+        case Pinned => actors(workerId) = system.actorOf(Props().withCreator(config.workerFactory.createInstance(workerId, config)).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+      }
     }
     actors
   }
@@ -88,7 +93,10 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     val numberOfRegistries = config.numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
     val registrationMessagesPerRegistry = config.numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
     val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
-    system.actorOf(Props(new DefaultCoordinator(config)), "Coordinator")
+    config.akkaDispatcher match {
+        case EventBased => system.actorOf(Props(new DefaultCoordinator(config)), name = "Coordinator")
+        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config)).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+    }
   }
 
   val loggerActor: ActorRef = {

@@ -36,7 +36,6 @@ import java.util.Set
 import com.signalcollect._
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import akka.util.duration._
-import akka.util.Timer
 import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
 import akka.actor.ActorRef
@@ -78,7 +77,7 @@ class AkkaWorker(val workerId: Int,
   /**
    * This method gets executed when the Akka actor receives a message.
    */
-  def receive = LoggingReceive(this) {
+  def receive = {
     
     case PoisonPill =>
       shutdown
@@ -99,7 +98,7 @@ class AkkaWorker(val workerId: Int,
       process(msg) // process the message
       handlePauseAndContinue
       performComputations
-  }(context.system)
+  }
 
   //  /**
   //   * Tests if the actor mailbox is empty

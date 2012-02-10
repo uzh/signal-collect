@@ -150,6 +150,20 @@ class IntegrationSpec extends SpecificationWithJUnit {
       }
       test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges)) must_== true
     }
+    
+    "deliver correct results on a 100*100 torus" in {
+      val symmetricTorusEdges = new Torus(20, 20)
+      def pageRankTorusVerifier(v: Vertex): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val expectedState = 1.0
+        val correct = (state - expectedState).abs < 0.00001
+        if (!correct) {
+          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        }
+        correct
+      }
+      test(verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges)) must_== true
+    }
   }
 
   def vertexColoringVerifier(v: Vertex): Boolean = {

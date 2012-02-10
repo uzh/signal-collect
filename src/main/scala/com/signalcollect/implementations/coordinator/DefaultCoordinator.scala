@@ -37,7 +37,6 @@ import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
 import akka.util.duration._
-import akka.util.Timer
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 
@@ -57,7 +56,7 @@ class DefaultCoordinator(config: GraphConfiguration) extends Actor with MessageR
 
   protected val workerStatusMap = new HashMap[Int, WorkerStatus]()
 
-  def receive = LoggingReceive(this) {
+  def receive = {
     case ws: WorkerStatus =>
       messageBus.getReceivedMessagesCounter.addAndGet(1)
       updateWorkerStatusMap(ws)
@@ -76,7 +75,7 @@ class DefaultCoordinator(config: GraphConfiguration) extends Actor with MessageR
       if (reply) {
         sender ! result
       }
-  }(context.system)
+  }
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
     // only update worker status if no status received so far or if the current status is newer

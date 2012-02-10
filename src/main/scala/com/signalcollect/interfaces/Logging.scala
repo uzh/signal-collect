@@ -19,13 +19,7 @@
 
 package com.signalcollect.interfaces
 
-object LoggingLevel {
-  val Debug = 0
-  val Config = 100
-  val Info = 200
-  val Warning = 300
-  val Severe = 400
-}
+import com.signalcollect.configuration.LoggingLevel
 
 trait Logging {
 

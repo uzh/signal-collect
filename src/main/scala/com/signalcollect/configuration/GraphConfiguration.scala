@@ -37,4 +37,17 @@ case class GraphConfiguration(
   workerFactory: WorkerFactory = factory.worker.Akka,
   messageBusFactory: MessageBusFactory = factory.messagebus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = None)
+  statusUpdateIntervalInMillis: Option[Long] = None,
+  akkaDispatcher: AkkaDispatcher = Pinned)
+ 
+object LoggingLevel {
+  val Debug = 0
+  val Config = 100
+  val Info = 200
+  val Warning = 300
+  val Severe = 400
+}
+  
+sealed trait AkkaDispatcher
+case object EventBased extends AkkaDispatcher
+case object Pinned extends AkkaDispatcher

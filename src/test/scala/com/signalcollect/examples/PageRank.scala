@@ -21,7 +21,6 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration._
-import com.signalcollect.interfaces.LoggingLevel
 
 /**
  * Represents an edge in a PageRank compute graph
