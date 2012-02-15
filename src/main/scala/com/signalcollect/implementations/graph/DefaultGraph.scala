@@ -46,6 +46,7 @@ import com.typesafe.config.ConfigFactory
 import akka.pattern.AskTimeoutException
 import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
+import scala.util.Random
 
 /**
  * Default graph implementation.
@@ -56,25 +57,30 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)  
   
-  val pinnedConfig = """
+  val akkaConfig = """
 akka {
   #logConfigOnStart=on
   actor {
+    provider = "akka.remote.RemoteActorRefProvider"
   	pinned-dispatcher {
 	  type = PinnedDispatcher
 	  executor = "thread-pool-executor"
   	}
   }
+  remote {
+    transport = "akka.remote.netty.NettyRemoteTransport"
+    server {
+      hostname = """" + java.net.InetAddress.getLocalHost.getHostAddress + """"
+      port = 0
+    }
+    "netty" : {
+      "port" : 0
+    }
+  }
 }
 """
-  
-//  val system = { config.akkaDispatcher match {
-//        case EventBased => ActorSystem("SignalCollect")
-//        case Pinned => ActorSystem("SignalCollect", ConfigFactory.parseString(pinnedConfig))
-//      }
-//  }
-     
-  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(pinnedConfig))
+
+  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(akkaConfig))
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](config.numberOfWorkers)
@@ -95,7 +101,7 @@ akka {
     val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
     config.akkaDispatcher match {
         case EventBased => system.actorOf(Props(new DefaultCoordinator(config)), name = "Coordinator")
-        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config)).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config)), name = "Coordinator") //.withDispatcher("akka.actor.pinned-dispatcher")
     }
   }
 
