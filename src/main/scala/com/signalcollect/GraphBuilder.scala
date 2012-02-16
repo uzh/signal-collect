@@ -50,7 +50,7 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
    *
    *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
    */
-  def withNodeProvider(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
+  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
 
   /**
    *  Configures the logging level.
