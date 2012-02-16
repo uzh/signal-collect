@@ -31,6 +31,7 @@ import com.signalcollect.EdgeId
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
 import com.signalcollect.implementations.serialization.DefaultSerializer
+import java.util.Random
 
 class DefaultMessageBus(
   val numberOfWorkers: Int)
@@ -197,6 +198,24 @@ class DefaultMessageBus(
       sendToWorkers(request)
     }
   }
+  
+   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
+     if (blocking == true) {
+       workerApi.loadGraph(vertexIdHint, graphLoader)
+     }
+     else {
+       val request = Request[Worker]((_.loadGraph(graphLoader)), returnResult = false)
+       if(vertexIdHint.isDefined) {
+         val workerId = vertexIdHint.get.hashCode % workers.length
+         sendToWorker(workerId, request)
+       }
+       else {
+         val rand = new Random
+         sendToWorker(rand.nextInt(workers.length), request)
+       }
+     }
+     
+   }
 
   //--------------------Access to high-level messaging constructs--------------------
 

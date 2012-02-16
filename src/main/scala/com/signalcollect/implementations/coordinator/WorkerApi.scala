@@ -37,6 +37,7 @@ import scala.collection.mutable.ArrayBuffer
 import akka.actor.ActorSystem
 import akka.actor.Props
 import com.signalcollect.implementations.serialization.DefaultSerializer
+import scala.util.Random
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -148,4 +149,17 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
     workers map (_.removeVertices(shouldRemove))
   }
 
+  /**
+   * Runs a graph loading function on a worker
+   */
+  def loadGraph(vertexIdHint: Option[Any], graphLoader: GraphEditor => Unit) {
+    if (vertexIdHint.isDefined) {
+      val workerId = vertexIdHint.get.hashCode % workers.length
+      workers(workerId).loadGraph(graphLoader)
+    } else {
+      val rand = new Random
+      val randomWorkerId = rand.nextInt(workers.length)
+      workers(randomWorkerId).loadGraph(graphLoader)
+    }
+  }
 }

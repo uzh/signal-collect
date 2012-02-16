@@ -84,5 +84,11 @@ trait GraphEditor {
    *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
    */
   def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false)
-
+  
+  /**
+   * Loads a graph using the provided graphLoader function
+   * 
+   * @note the vertexIDHint can be used to exploit locality at load time.
+   */
+  def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false)
 }

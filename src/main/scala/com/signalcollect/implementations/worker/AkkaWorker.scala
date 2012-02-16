@@ -288,6 +288,10 @@ class AkkaWorker(val workerId: Int,
     vertex.beforeRemoval(messageBus)
     vertexStore.vertices.remove(vertex.id)
   }
+  
+  def loadGraph(graphLoader: GraphEditor => Unit) {
+    graphLoader(graphEditor)
+  }
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) {
     undeliverableSignalHandler = h

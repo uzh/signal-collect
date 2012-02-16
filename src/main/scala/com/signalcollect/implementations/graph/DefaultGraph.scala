@@ -412,5 +412,9 @@ akka {
   def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
     graphEditor.removeVertices(shouldRemove, blocking)
   }
+  
+  def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
+    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  }
 
 }

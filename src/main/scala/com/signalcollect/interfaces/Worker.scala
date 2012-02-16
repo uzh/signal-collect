@@ -41,6 +41,7 @@ trait Worker extends Actor with MessageRecipientRegistry with Logging {
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any])
   def removeIncomingEdge(edgeId: EdgeId[Any, Any])
   def removeVertices(shouldRemove: Vertex => Boolean)
+  def loadGraph(graphLoader: GraphEditor => Unit)
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
 
