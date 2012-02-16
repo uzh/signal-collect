@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit
  */
 case class ExecutionInformation(
   config: GraphConfiguration,
+  numberOfWorkers: Int,
+  nodeDescriptions: List[String],
   parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,
@@ -49,7 +51,7 @@ case class ExecutionInformation(
     "\n----------\n" +
       "- Worker -\n" +
       "----------" +
-      "\n# workers \t" + config.numberOfWorkers + "\n" +
+      "\n# workers \t" + numberOfWorkers + "\n" +
       config.toString + "\n" +
       "\n------------------------\n" +
       "- Execution Parameters -\n" +

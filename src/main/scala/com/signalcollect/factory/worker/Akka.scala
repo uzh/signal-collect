@@ -32,5 +32,5 @@ import akka.actor.ActorRef
  *  The local worker factory creates worker instances that work in the local-machine scenario.
  */
 object Akka extends WorkerFactory {
-  def createInstance(workerId: Int, config: GraphConfiguration): Worker = new AkkaWorker(workerId, config)
+  def createInstance(workerId: Int, numberOfWorkers: Int, config: GraphConfiguration): Worker = new AkkaWorker(workerId, numberOfWorkers, config)
 }

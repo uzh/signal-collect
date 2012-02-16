@@ -38,33 +38,30 @@ import org.specs2.runner.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit {
 
-  val computeGraphFactories: List[Int => Graph] = List(
-    (numberOfWorkers: Int) => GraphBuilder.withNumberOfWorkers(numberOfWorkers).build)
+  val computeGraphFactories: List[() => Graph] = List(() => GraphBuilder.build)
 
   val executionModes = List(ExecutionMode.OptimizedAsynchronous, ExecutionMode.Synchronous)
 
   val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
 
-  def test(graphProviders: List[Int => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (graph: Graph) => (), numberOfWorkers: Traversable[Int] = testWorkerCounts, signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
+  def test(graphProviders: List[() => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (graph: Graph) => (), signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
-    for (workers <- numberOfWorkers) {
-      for (executionMode <- executionModes) {
-        for (graphProvider <- graphProviders) {
-          val graph = graphProvider.apply(workers)
-          buildGraph(graph)
-          val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-          correct &= graph.aggregate(new AggregationOperation[Boolean] {
-            val neutralElement = true
-            def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-            def extract(v: Vertex): Boolean = verify(v)
-          })
-          if (!correct) {
-            System.err.println("Test failed. Computation stats: " + stats)
-          }
-          graph.shutdown
+    for (executionMode <- executionModes) {
+      for (graphProvider <- graphProviders) {
+        val graph = graphProvider()
+        buildGraph(graph)
+        val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
+        correct &= graph.aggregate(new AggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex): Boolean = verify(v)
+        })
+        if (!correct) {
+          System.err.println("Test failed. Computation stats: " + stats)
         }
+        graph.shutdown
       }
     }
     correct
@@ -150,7 +147,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
       }
       test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges)) must_== true
     }
-    
+
     "deliver correct results on a 100*100 torus" in {
       val symmetricTorusEdges = new Torus(20, 20)
       def pageRankTorusVerifier(v: Vertex): Boolean = {

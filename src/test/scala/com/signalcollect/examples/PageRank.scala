@@ -69,7 +69,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).withNumberOfWorkers(2).build
+  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
   //    val graph = GraphBuilder.withNumberOfWorkers(1).build
   
   println("From client: Graph built")

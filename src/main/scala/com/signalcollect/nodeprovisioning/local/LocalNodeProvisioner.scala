@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,24 +17,15 @@
  *  
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect.nodeprovisioning.local
 
-import com.signalcollect.configuration._
-import com.signalcollect.implementations.coordinator._
 import akka.actor.ActorRef
+import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.signalcollect.nodeprovisioning.Node
 
-trait Factory extends Serializable {
-  def name: String = this.getClass.getSimpleName.replace("$", "")
-}
-
-trait WorkerFactory extends Factory {
-  def createInstance(workerId: Int, numberOfWorkers: Int, config: GraphConfiguration): Worker
-}
-
-trait MessageBusFactory extends Factory {
-  def createInstance(numberOfWorkers: Int): MessageBus
-}
-
-trait StorageFactory extends Factory {
-  def createInstance: Storage
+class LocalNodeProvisioner extends NodeProvisioner {
+  def getNodes: List[Node] = {
+    List(new LocalNode())
+  }
 }

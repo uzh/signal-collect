@@ -38,7 +38,7 @@ trait SpecConfigurations {
     var computeGraphs = Seq[Graph]()
     for (workers <- numberOfWorkers) {
       for (computeGraphBuilder <- computeGraphBuilders) {
-        computeGraphs = computeGraphBuilder.withNumberOfWorkers(workers).build +: computeGraphs
+        computeGraphs = computeGraphBuilder.build +: computeGraphs
       }
     }
     computeGraphs

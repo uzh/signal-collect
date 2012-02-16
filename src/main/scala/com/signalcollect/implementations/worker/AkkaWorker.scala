@@ -55,7 +55,7 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-class AkkaWorker(val workerId: Int,
+class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
   config: GraphConfiguration)
   extends Worker with ActorLogging {
 
@@ -64,7 +64,7 @@ class AkkaWorker(val workerId: Int,
   val loggingLevel = config.loggingLevel
 
   val messageBus: MessageBus = {
-    config.messageBusFactory.createInstance(config.numberOfWorkers)
+    config.messageBusFactory.createInstance(numberOfWorkers)
   }
 
   /**
@@ -78,7 +78,7 @@ class AkkaWorker(val workerId: Int,
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
-    
+
     case PoisonPill =>
       shutdown
 
@@ -288,7 +288,7 @@ class AkkaWorker(val workerId: Int,
     vertex.beforeRemoval(messageBus)
     vertexStore.vertices.remove(vertex.id)
   }
-  
+
   def loadGraph(graphLoader: GraphEditor => Unit) {
     graphLoader(graphEditor)
   }

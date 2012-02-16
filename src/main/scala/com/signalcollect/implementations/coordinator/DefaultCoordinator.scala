@@ -46,12 +46,12 @@ case class OnIdle(action: (DefaultCoordinator, ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator(config: GraphConfiguration) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
+class DefaultCoordinator(config: GraphConfiguration, numberOfWorkers: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
 
   val loggingLevel = config.loggingLevel
 
   val messageBus: MessageBus = {
-    config.messageBusFactory.createInstance(config.numberOfWorkers)
+    config.messageBusFactory.createInstance(numberOfWorkers)
   }
 
   protected val workerStatusMap = new HashMap[Int, WorkerStatus]()
@@ -106,7 +106,7 @@ class DefaultCoordinator(config: GraphConfiguration) extends Actor with MessageR
    *
    * Initialization messages sent to the workers do not have to be taken into account, because they are balanced by replies from the workers that do not get counted when they are received.
    */
-  def messagesSentByWorkers = workerStatusMap.values.foldLeft(0l)(_ + _.messagesSent) + config.numberOfWorkers // 
+  def messagesSentByWorkers = workerStatusMap.values.foldLeft(0l)(_ + _.messagesSent) + numberOfWorkers // 
   def messagesSentByCoordinator = messageBus.messagesSent
 
   def messagesReceivedByWorkers = workerStatusMap.values.foldLeft(0l)(_ + _.messagesReceived)

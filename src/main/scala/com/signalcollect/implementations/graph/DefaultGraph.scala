@@ -55,30 +55,33 @@ import scala.util.Random
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
-  val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)  
+  val nodes = config.nodeProvisioner.getNodes
+  
+  val numberOfWorkers = nodes.par map(_.numberOfCores) sum
+  
+  val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)  
   
   val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
-
+  
   val workerActors: Array[ActorRef] = {
-    val actors = new Array[ActorRef](config.numberOfWorkers)
-    for (workerId <- 0 until config.numberOfWorkers) {
-      val workerName = "Worker" + workerId
-      config.akkaDispatcher match {
-        case EventBased => actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)), name = workerName)
-//        case Pinned => actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)).withDispatcher("pinned-dispatcher"), name = workerName)
-        case Pinned => actors(workerId) = system.actorOf(Props().withCreator(config.workerFactory.createInstance(workerId, config)).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+    val actors = new Array[ActorRef](numberOfWorkers)
+    var workerId = 0
+    for (node <- nodes) {
+      for (core <- 0 until node.numberOfCores) {
+         actors(workerId) = node.createWorker(workerId, numberOfWorkers, config)
+         workerId += 1 
       }
     }
     actors
   }
 
   val coordinatorActor: ActorRef = {
-    val numberOfRegistries = config.numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
-    val registrationMessagesPerRegistry = config.numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
+    val numberOfRegistries = numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
+    val registrationMessagesPerRegistry = numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
     val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
     config.akkaDispatcher match {
-        case EventBased => system.actorOf(Props(new DefaultCoordinator(config)), name = "Coordinator")
-        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config)), name = "Coordinator") //.withDispatcher("akka.actor.pinned-dispatcher")
+        case EventBased => system.actorOf(Props(new DefaultCoordinator(config, numberOfWorkers)), name = "Coordinator")
+        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config, numberOfWorkers)), name = "Coordinator") //.withDispatcher("akka.actor.pinned-dispatcher")
     }
   }
 
@@ -102,7 +105,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
       } catch {
         case e: Exception => loggerActor ! Severe("Exception in `initializeMessageBuses`:" + e.getCause + "\n" + e, this.toString)
       }
-      for (workerId <- (0 until config.numberOfWorkers).par) {
+      for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
       registry.registerLogger(loggerActor)
@@ -150,7 +153,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     val executionStopTime = System.nanoTime
     stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
     val workerStatistics = workerApi.getIndividualWorkerStatistics
-    ExecutionInformation(config, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
+    ExecutionInformation(config, numberOfWorkers, nodes map (_.numberOfCores.toString), parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
   
   protected def synchronousExecution(

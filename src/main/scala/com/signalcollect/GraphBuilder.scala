@@ -22,6 +22,7 @@ package com.signalcollect
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 import com.signalcollect.implementations.graph.DefaultGraph
+import com.signalcollect.nodeprovisioning.NodeProvisioner
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -45,11 +46,11 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
   def build: Graph = new DefaultGraph(config)
 
   /**
-   *  Configures the number of workers.
+   *  Configures the node provider.
    *
-   *  @param newNumberOfWorkers The number of worker threads used by the graph.
+   *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
    */
-  def withNumberOfWorkers(newNumberOfWorkers: Int) = newLocalBuilder(numberOfWorkers = newNumberOfWorkers)
+  def withNodeProvider(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
 
   /**
    *  Configures the logging level.
@@ -98,20 +99,20 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
   protected def newLocalBuilder(
-    numberOfWorkers: Int = config.numberOfWorkers,
     loggingLevel: Int = config.loggingLevel,
     logger: LogMessage => Unit = config.logger,
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
-    storageFactory: StorageFactory = config.storageFactory): GraphBuilder = {
+    storageFactory: StorageFactory = config.storageFactory,
+    nodeProvisioner: NodeProvisioner = config.nodeProvisioner): GraphBuilder = {
     new GraphBuilder(
       GraphConfiguration(
-        numberOfWorkers = numberOfWorkers,
         loggingLevel = loggingLevel,
         logger = logger,
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
-        storageFactory = storageFactory))
+        storageFactory = storageFactory,
+        nodeProvisioner = nodeProvisioner))
   }
 
 }

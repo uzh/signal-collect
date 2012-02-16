@@ -20,6 +20,6 @@
 package com.signalcollect.nodeprovisioning
 
 trait NodeProvisioner {
-	def getNodes(numberOfNodes: Int): List[Node]
+	def getNodes: List[Node]
 }
 

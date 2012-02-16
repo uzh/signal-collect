@@ -20,8 +20,10 @@
 package com.signalcollect.nodeprovisioning
 
 import akka.actor.ActorRef
+import com.signalcollect.configuration.GraphConfiguration
 
 trait Node {
-	def createWorker: ActorRef
+	def createWorker(workerId: Int,  numberOfWorkers: Int, config: GraphConfiguration): ActorRef
+	def numberOfCores: Int
 }
 
