@@ -1,0 +1,3 @@
+#Thu Feb 16 13:58:33 CET 2012
+PLUGINS_NOT_ACTIVATED_ON_STARTUP=org.eclipse.m2e.discovery;
+eclipse.preferences.version=1
