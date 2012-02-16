@@ -57,30 +57,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   val mapper = new DefaultVertexToWorkerMapper(config.numberOfWorkers)  
   
-  val akkaConfig = """
-akka {
-  #logConfigOnStart=on
-  actor {
-    provider = "akka.remote.RemoteActorRefProvider"
-  	pinned-dispatcher {
-	  type = PinnedDispatcher
-	  executor = "thread-pool-executor"
-  	}
-  }
-  remote {
-    transport = "akka.remote.netty.NettyRemoteTransport"
-    server {
-      hostname = """" + java.net.InetAddress.getLocalHost.getHostAddress + """"
-      port = 0
-    }
-    "netty" : {
-      "port" : 0
-    }
-  }
-}
-"""
-
-  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(akkaConfig))
+  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](config.numberOfWorkers)
