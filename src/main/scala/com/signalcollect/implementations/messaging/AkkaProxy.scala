@@ -36,18 +36,20 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.signalcollect.interfaces.Request
 import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.Request
+import com.signalcollect.implementations.serialization.DefaultSerializer
 
 /**
  * Used to create proxies
  */
 object AkkaProxy {
 
-  def newInstance[T <: Any: Manifest](actor: ActorRef, loggerActor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(10000 milliseconds)): T = {
+  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(10000 milliseconds)): T = {
     val c = manifest[T].erasure
     Proxy.newProxyInstance(
       c.getClassLoader,
       Array[Class[_]](c),
-      new AkkaProxy(actor, loggerActor: ActorRef, sentMessagesCounter, receivedMessagesCounter, timeout)).asInstanceOf[T]
+      new AkkaProxy(actor, sentMessagesCounter, receivedMessagesCounter, timeout)).asInstanceOf[T]
   }
 
 }
@@ -55,17 +57,14 @@ object AkkaProxy {
 /**
  *  Proxy that does RPC over Akka
  */
-class AkkaProxy[ProxiedClass](actor: ActorRef, loggerActor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler {
+class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler {
 
   override def toString = "ProxyFor" + actor.toString
 
   implicit val t = timeout
 
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
-    val command = new Function1[ProxiedClass, AnyRef] {
-      def apply(proxiedClass: ProxiedClass) = method.invoke(proxiedClass, arguments: _*)
-      override def toString: String = method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + _) + ")" } else { "" } }
-    }
+    val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.getName, method.getParameterTypes(), arguments)
     try {
       val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
       sentMessagesCounter.incrementAndGet
@@ -79,4 +78,18 @@ class AkkaProxy[ProxiedClass](actor: ActorRef, loggerActor: ActorRef, sentMessag
     }
   }
 
+}
+
+case class Command[ParameterType](className: String, methodName: String, parameterTypes: Array[Class[_]], arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
+  def apply(proxiedClass: ParameterType) = {
+    val clazz = Class.forName(className)
+    val method = clazz.getMethod(methodName, parameterTypes: _*)
+    method.invoke(proxiedClass, arguments: _*)
+  }
+
+  override def toString: String = {
+    val clazz = Class.forName(className)
+    val method = clazz.getMethod(methodName, parameterTypes: _*)
+    method.getName + { if (arguments != null) { "(" + arguments.foldLeft("")(_ + _) + ")" } else { "" } }
+  }
 }

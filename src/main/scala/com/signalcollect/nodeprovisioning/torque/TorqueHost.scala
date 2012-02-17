@@ -27,7 +27,7 @@ import org.apache.commons.codec.binary.Base64
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import java.io.FileOutputStream
 
-class TorqueHost(
+case class TorqueHost(
   val torqueUsername: String = System.getProperty("user.name"),
   val torqueMailAddress: String = "",
   val torqueHostname: String = "kraken.ifi.uzh.ch",

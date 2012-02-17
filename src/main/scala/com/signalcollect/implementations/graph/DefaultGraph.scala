@@ -89,8 +89,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     system.actorOf(Props(new DefaultLogger(config.logger)), name = "Logger")
   }
 
-  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_, loggerActor))
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor, loggerActor)
+  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor)
 
   initializeMessageBuses
     

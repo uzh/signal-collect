@@ -21,6 +21,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration._
+import com.signalcollect.nodeprovisioning.torque._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -69,7 +70,9 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
+  val kraken = new TorqueHost()
+  val krakenNodeProvisioner = new TorqueNodeProvisioner(kraken, 1)
+  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).withNodeProvisioner(krakenNodeProvisioner).build
   //    val graph = GraphBuilder.withNumberOfWorkers(1).build
   
   println("From client: Graph built")

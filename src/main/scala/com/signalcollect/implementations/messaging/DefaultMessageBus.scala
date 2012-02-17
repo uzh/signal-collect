@@ -47,7 +47,7 @@ class DefaultMessageBus(
 
   lazy val parallelWorkers = workers.par
 
-  lazy val workerProxies = workers map (AkkaProxy.newInstance[Worker](_, logger, sentMessagesCounter, receivedMessagesCounter))
+  lazy val workerProxies = workers map (AkkaProxy.newInstance[Worker](_, sentMessagesCounter, receivedMessagesCounter))
 
   lazy val workerApi = new WorkerApi(workerProxies, mapper)
 

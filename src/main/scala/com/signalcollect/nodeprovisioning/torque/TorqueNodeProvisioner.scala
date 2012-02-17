@@ -49,69 +49,42 @@ import akka.dispatch.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
+import com.signalcollect.implementations.messaging.AkkaProxy
+import akka.serialization.SerializationExtension
+import akka.serialization.JavaSerializer
+import akka.actor.Address
+import akka.actor.ExtendedActorSystem
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends NodeProvisioner {
   def getNodes: List[Node] = {
-    val system = ActorSystem("SignalCollect")
+    val system: ActorSystem = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
     val nodeProvisioner = system.actorOf(Props().withCreator(new NodeProvisionerActor(numberOfNodes)), name = "NodeProvisioner")
+    val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
+    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
+    val nodeProvisionerAddress = nodeProvisioner.path.toStringWithAddress(akkaSystemAddress.get)
+    println("NodeProvisioner address: " + nodeProvisionerAddress)
+
     var jobs = List[TorqueJob]()
-    for (jobId <- 0 to numberOfNodes) {
+    implicit val timeout = new Timeout(1800 seconds)
+    for (jobId <- 0 until numberOfNodes) {
       val function: () => Map[String, String] = {
         () =>
+          println("Creating actor system")
           val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
-          val nodeController = system.actorOf(Props().withCreator(new NodeControllerActor(jobId, nodeProvisioner.path.toString)), name = "NodeController" + jobId.toString)
+          println("Creating node controller actor")
+          val nodeController = system.actorOf(Props().withCreator(new NodeControllerActor(jobId, nodeProvisionerAddress)), name = "NodeController" + jobId.toString)
+          println("Reporting results")
           Map[String, String]()
       }
       jobs = new TorqueJob(jobId, function) :: jobs
     }
     torqueHost.executeJobs(jobs)
-    implicit val timeout = new Timeout(10 seconds)
+    println("Requesting nodes from node provisioner")
     val nodesFuture = nodeProvisioner ? "GetNodes"
+    println("Awaiting result")
     val result = Await.result(nodesFuture, timeout.duration)
-    result.asInstanceOf[List[Node]]
-  }
-}
-
-class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
-
-  var nodeListRequestor: ActorRef = _
-
-  var nodeControllers = List[ActorRef]()
-
-  override def preStart() = {
-    println("NodeProvisioner running")
-  }
-
-  def receive = {
-    case "GetNodes" =>
-      println("Received message `GetNodes` from " + sender)
-      nodeListRequestor = sender
-      sendNodesIfReady
-    case "NodeReady" =>
-      println("Received message `NodeReady` from " + sender)
-      nodeControllers = sender :: nodeControllers
-      sendNodesIfReady
-  }
-
-  def sendNodesIfReady {
-    if (nodeControllers.size == numberOfNodes) {
-      nodeListRequestor ! nodeControllers
-      self ! PoisonPill
-    }
-  }
-}
-
-class NodeControllerActor(nodeId: Int, coordinatorAddress: String) extends Actor {
-
-  var coordinator: ActorRef = _
-
-  override def preStart() = {
-    println("Job running: " + nodeId)
-    coordinator = context.actorFor(coordinatorAddress)
-    coordinator ! ("NodeReady", java.net.InetAddress.getLocalHost.getHostAddress)
-  }
-
-  def receive = {
-    case any => println("moo: " + any)
+    println("Creating node proxies and returning them to the framework")
+    val nodes: List[Node] = result.asInstanceOf[List[ActorRef]] map (AkkaProxy.newInstance[Node](_))
+    nodes
   }
 }
