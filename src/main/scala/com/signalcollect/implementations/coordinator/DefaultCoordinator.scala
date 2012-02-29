@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit
 import akka.util.duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
+import com.signalcollect.implementations.messaging.Request
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator, ActorRef) => Unit)
@@ -46,12 +47,10 @@ case class OnIdle(action: (DefaultCoordinator, ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator(config: GraphConfiguration, numberOfWorkers: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
-
-  val loggingLevel = config.loggingLevel
+class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, maxInboxSize: Option[Long], val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
 
   val messageBus: MessageBus = {
-    config.messageBusFactory.createInstance(numberOfWorkers)
+    messageBusFactory.createInstance(numberOfWorkers)
   }
 
   protected val workerStatusMap = new HashMap[Int, WorkerStatus]()
@@ -70,10 +69,15 @@ class DefaultCoordinator(config: GraphConfiguration, numberOfWorkers: Int) exten
         onIdle
       }
     case Request(command, reply) =>
-      // not counting these messages, because they only come from the local graph
-      val result = command(this)
-      if (reply) {
-        sender ! result
+      try {
+        val result = command(this)
+        if (reply) {
+          sender ! result
+        }
+      } catch {
+        case e: Exception =>
+          severe(e)
+          throw e
       }
   }
 
@@ -115,10 +119,10 @@ class DefaultCoordinator(config: GraphConfiguration, numberOfWorkers: Int) exten
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
   def isOverstrained: Boolean = {
-    if (!config.maxInboxSize.isDefined) {
+    if (!maxInboxSize.isDefined) {
       false
     } else {
-      totalMessagesSent - totalMessagesReceived > config.maxInboxSize.get
+      totalMessagesSent - totalMessagesReceived > maxInboxSize.get
     }
   }
 

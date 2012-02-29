@@ -21,9 +21,23 @@ package com.signalcollect.nodeprovisioning
 
 import akka.actor.ActorRef
 import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.interfaces.Worker
+import akka.actor.ActorSystem
+import akka.actor.Address
+import akka.actor.ExtendedActorSystem
 
 trait Node {
-	def createWorker(workerId: Int,  numberOfWorkers: Int, config: GraphConfiguration): ActorRef
-	def numberOfCores: Int
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String // string = remote actor address
+  def numberOfCores: Int
+  def shutdown
 }
 
+object AkkaHelper {
+  def getRemoteAddress(actorRef: ActorRef, system: ActorSystem): String = {
+    val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
+    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
+    val nodeProvisionerAddress = actorRef.path.toStringWithAddress(akkaSystemAddress.get)
+    nodeProvisionerAddress.toString
+  }
+}

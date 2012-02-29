@@ -19,8 +19,8 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-class TorqueJob(
-  val jobId: Int,
-  val execute: () => Map[String, String],
-  val submittedByUser: String = "",
-  val jobDescription: String = "") extends Serializable
+case class TorqueJob(
+  jobId: Int,
+  execute: () => Map[String, String],
+  submittedByUser: String = "",
+  jobDescription: String = "")

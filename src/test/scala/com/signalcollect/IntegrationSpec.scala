@@ -36,22 +36,22 @@ import org.specs2.runner.JUnitRunner
  * http://code.google.com/p/specs/wiki/RunningSpecs
  */
 @RunWith(classOf[JUnitRunner])
-class IntegrationSpec extends SpecificationWithJUnit {
+class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   val computeGraphFactories: List[() => Graph] = List(() => GraphBuilder.build)
 
-  val executionModes = List(ExecutionMode.OptimizedAsynchronous, ExecutionMode.Synchronous)
-
-  val testWorkerCounts = List(1, 2, 4, 8 /*, 16, 32, 64, 128*/ )
+  val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 
   def test(graphProviders: List[() => Graph] = computeGraphFactories, verify: Vertex => Boolean, buildGraph: Graph => Unit = (graph: Graph) => (), signalThreshold: Double = 0, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
     for (executionMode <- executionModes) {
+      println("ExecutionMode: " + executionMode)
       for (graphProvider <- graphProviders) {
         val graph = graphProvider()
         buildGraph(graph)
+        println("Graph has been built.")
         val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
         correct &= graph.aggregate(new AggregationOperation[Boolean] {
           val neutralElement = true
@@ -61,7 +61,9 @@ class IntegrationSpec extends SpecificationWithJUnit {
         if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)
         }
+        println("Test completed, shutting down...")
         graph.shutdown
+        println("Shutdown completed.")
       }
     }
     correct
@@ -107,6 +109,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   "PageRank algorithm" should {
     "deliver correct results on a 5-cycle graph" in {
+      println("PageRank algorithm on a 5-cycle graph")
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
       def pageRankFiveCycleVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Double]
@@ -121,6 +124,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     }
 
     "deliver correct results on a 5-star graph" in {
+      println("PageRank algorithm on a 5-star graph")
       val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
       def pageRankFiveStarVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Double]
@@ -135,6 +139,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     }
 
     "deliver correct results on a 2*2 symmetric grid" in {
+      println("PageRank algorithm on a 2*2 symmetric grid")
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       def pageRankTwoOnTwoGridVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Double]
@@ -149,6 +154,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     }
 
     "deliver correct results on a 100*100 torus" in {
+      println("PageRank algorithm on a 100*100 torus")
       val symmetricTorusEdges = new Torus(20, 20)
       def pageRankTorusVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Double]
@@ -180,15 +186,18 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   "VertexColoring algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
+      println("VertexColoring algorithm on a symmetric 4-cycle")
       val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) must_== true
     }
 
     "deliver correct results on a symmetric 5-star" in {
+      println("VertexColoring algorithm on a symmetric 5-star")
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) must_== true
     }
     "deliver correct results on a 2*2 symmetric grid" in {
+      println("VertexColoring algorithm on a 2*2 symmetric grid")
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) must_== true
     }
@@ -196,6 +205,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
 
   "SSSP algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
+      println("SSSP algorithm on a symmetric 4-cycle")
       val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
       def ssspSymmetricsFourCycleVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Option[Int]].get
@@ -210,6 +220,7 @@ class IntegrationSpec extends SpecificationWithJUnit {
     }
 
     "deliver correct results on a symmetric 5-star" in {
+      println("SSSP algorithm on a symmetric 5-star")
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       def ssspSymmetricFiveStarVerifier(v: Vertex): Boolean = {
         val state = v.state.asInstanceOf[Option[Int]].get

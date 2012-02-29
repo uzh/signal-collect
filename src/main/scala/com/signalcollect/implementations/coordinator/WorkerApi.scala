@@ -38,6 +38,7 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import scala.util.Random
+import akka.dispatch.Future
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -70,7 +71,7 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
 
   def shutdown = parallelWorkers foreach (_.shutdown)
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 

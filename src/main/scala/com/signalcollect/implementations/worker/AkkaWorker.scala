@@ -41,6 +41,10 @@ import akka.actor.ReceiveTimeout
 import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
+import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.implementations.messaging.Request
+import akka.dispatch.Future
+import akka.dispatch.Promise
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -55,16 +59,13 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
-  config: GraphConfiguration)
+class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFactory: MessageBusFactory, val storageFactory: StorageFactory, val statusUpdateIntervalInMillis: Option[Long], val loggingLevel: Int)
   extends Worker with ActorLogging {
 
   override def toString = "Worker" + workerId
 
-  val loggingLevel = config.loggingLevel
-
   val messageBus: MessageBus = {
-    config.messageBusFactory.createInstance(numberOfWorkers)
+    messageBusFactory.createInstance(numberOfWorkers)
   }
 
   /**
@@ -100,13 +101,6 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
       performComputations
   }
 
-  //  /**
-  //   * Tests if the actor mailbox is empty
-  //   */
-  //  def isMailboxEmpty: Boolean = {
-  //    !AkkaMailbox.mailboxes.get(context).hasMessages
-  //  }
-
   val mailbox = context.asInstanceOf[{ def mailbox: { def canBeScheduledForExecution(a: Boolean, b: Boolean): Boolean } }].mailbox
 
   /**
@@ -118,7 +112,7 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
   }
 
   def performComputations {
-    if (config.statusUpdateIntervalInMillis.isDefined) {
+    if (statusUpdateIntervalInMillis.isDefined) {
       val currentTime = System.currentTimeMillis
       if (currentTime - lastStatusUpdate > updateInterval) {
         lastStatusUpdate = currentTime
@@ -144,7 +138,7 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
   protected val graphEditor: GraphEditor = messageBus.getGraphEditor
   protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
-  protected val updateInterval: Long = config.statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
+  protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
@@ -153,10 +147,20 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
         processSignal(s)
       }
       case Request(command, reply) => {
-        val result = command(this)
-        if (reply) {
-          messageBus.getSentMessagesCounter.incrementAndGet
-          sender ! result
+        try {
+          val result = command(this)
+          if (reply) {
+            messageBus.getSentMessagesCounter.incrementAndGet
+            if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
+              sender ! None
+            } else {
+              sender ! result
+            }
+          }
+        } catch {
+          case e: Exception =>
+            severe(e)
+            throw e
         }
       }
       case other => warning("Could not handle message " + message)
@@ -321,16 +325,15 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
     vertexStore.toSignal.add(vertex.id)
   }
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
-    var result: Option[ResultType] = None
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
-      try {
-        result = Some(f(vertex.asInstanceOf[VertexType]))
-        vertexStore.vertices.updateStateOfVertex(vertex)
-      }
+      val result = f(vertex.asInstanceOf[VertexType])
+      vertexStore.vertices.updateStateOfVertex(vertex)
+      result
+    } else {
+      throw new Exception("Vertex with id " + vertexId + " not found.")
     }
-    result
   }
 
   def foreachVertex(f: Vertex => Unit) {
@@ -393,7 +396,7 @@ class AkkaWorker(val workerId: Int, numberOfWorkers: Int,
 
   protected var lastStatusUpdate = System.currentTimeMillis
 
-  protected val vertexStore = config.storageFactory.createInstance
+  protected val vertexStore = storageFactory.createInstance
 
   protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 

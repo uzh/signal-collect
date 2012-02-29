@@ -26,44 +26,43 @@ import scala.sys.process._
 import org.apache.commons.codec.binary.Base64
 import com.signalcollect.implementations.serialization.DefaultSerializer
 import java.io.FileOutputStream
+import java.net.URI
 
 case class TorqueHost(
-  val torqueUsername: String = System.getProperty("user.name"),
-  val torqueMailAddress: String = "",
-  val torqueHostname: String = "kraken.ifi.uzh.ch",
-  val jvmParameters: String = "",
-  val recompileCore: Boolean = true,
-  val jarDescription: String = Random.nextInt.abs.toString,
-  val mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
-  val jarName: String = "signal-collect-core-2.0.0-SNAPSHOT",
-  val priority: String = TorquePriority.superfast) extends TorqueJobSubmitter(torqueUsername, torqueMailAddress, torqueHostname) with ExecutionHost {
+  torqueHostname: String,
+  localJarPath: String,
+  torqueUsername: String = System.getProperty("user.name"),
+  torqueMailAddress: String = "",
+  jvmParameters: String = "",
+  jarDescription: String = (Random.nextInt.abs % 1000).toString,
+  mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
+  priority: String = TorquePriority.superfast,
+  privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa") extends ExecutionHost {
 
-  lazy val jarSuffix = "-jar-with-dependencies.jar"
-  lazy val fileSpearator = System.getProperty("file.separator")
-  lazy val localhostJarname = jarName + jarSuffix
-  lazy val krakenJarname = jarName + "-" + jarDescription + jarSuffix
-  lazy val localJarpath = "." + fileSpearator + "target" + fileSpearator + localhostJarname
+  val fileSeparator = System.getProperty("file.separator")
+  val jobSubmitter = new TorqueJobSubmitter(torqueUsername, torqueMailAddress, torqueHostname, privateKeyFilePath)
+  val jarName = localJarPath.substring(localJarPath.lastIndexOf(fileSeparator) + 1, localJarPath.size)
 
-  def executeJobs(jobs: List[TorqueJob]) = {
-    /** PACKAGE EVAL CODE AS JAR */
-    val commandPackage = "mvn -Dmaven.test.skip=true clean package"
-    println(commandPackage)
-    println(commandPackage !!)
+  def executeJobs(jobs: List[TorqueJob]) = executeJobs(jobs, false)
 
+  def executeJobs(jobs: List[TorqueJob], copyExecutable: Boolean = false) = {
     /** COPY EVAL JAR TO TORQUE HOME DIRECTORY */
-    copyFileToCluster(localJarpath, krakenJarname)
+    if (copyExecutable) {
+      jobSubmitter.copyFileToCluster(localJarPath + jarName, jarName)
+    }
 
     /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
     for (job <- jobs) {
       val config = DefaultSerializer.write((job, resultHandlers))
-      val out = new FileOutputStream(job.jobId + ".config")
+      val configPath = "." + fileSeparator + "config-tmp" + fileSeparator + job.jobId + ".config"
+      val out = new FileOutputStream(configPath)
       out.write(config)
       out.close
-      copyFileToCluster(job.jobId + ".config")
-      val deleteConfig = "rm " + job.jobId + ".config"
+      jobSubmitter.copyFileToCluster(configPath)
+      val deleteConfig = "rm " + configPath
       deleteConfig !!
-      
-      runOnClusterNode(job.jobId.toString, krakenJarname, mainClass, priority, jvmParameters)
+
+      jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, jvmParameters)
     }
   }
 }

@@ -44,21 +44,21 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
     graph.execute(ExecutionConfiguration.withSignalThreshold(0))
 
     "count one edge correctly" in {
-      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
+      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
       incomingEdgeCount2 == 1
     }
 
     "count two edges correctly" in {
       graph.addEdge(new PageRankEdge(3, 2))
       graph.awaitIdle
-      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
+      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
       incomingEdgeCount2 == 2
     }
 
     "handle edge removals correctly" in {
       graph.removeEdge(new DefaultEdgeId(1, 2, ""))
       graph.awaitIdle
-      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount).get
+      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
       incomingEdgeCount2 == 1
     }
   }

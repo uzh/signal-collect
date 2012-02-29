@@ -35,17 +35,18 @@ object TorquePriority {
   val slow = "#PBS -l walltime=200:59:59,mem=50gb"
 }
 
-class TorqueJobSubmitter(
-  val username: String,
-  val mailAddress: String,
-  val hostname: String,
-  val port: Int = 22,
-  val privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa") {
+case class TorqueJobSubmitter(
+  username: String,
+  mailAddress: String,
+  hostname: String,
+  privateKeyFilePath: String,
+  port: Int = 22) {
 
   def copyFileToCluster(localPath: String, targetPath: String = "") {
     val commandCopy = "scp -v " + localPath + " " + username + "@" + hostname + ":" + targetPath
     println(commandCopy)
     println(commandCopy !!)
+    Thread.sleep(1000) // wait a second to give NFS time to update and make the copied file visible
   }
 
   def executeCommandOnClusterManager(command: String): String = {

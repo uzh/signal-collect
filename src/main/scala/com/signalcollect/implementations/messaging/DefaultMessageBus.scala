@@ -88,7 +88,11 @@ class DefaultMessageBus(
   }
 
   def sendToLogger(message: LogMessage) {
-    logger ! message
+    if (logger != null) {
+      logger ! message
+    } else {
+      println("Could not log message: " + message)
+    }
   }
 
   def sendToWorkerForVertexId(message: Any, recipientId: Any) {
@@ -198,24 +202,22 @@ class DefaultMessageBus(
       sendToWorkers(request)
     }
   }
-  
-   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
-     if (blocking == true) {
-       workerApi.loadGraph(vertexIdHint, graphLoader)
-     }
-     else {
-       val request = Request[Worker]((_.loadGraph(graphLoader)), returnResult = false)
-       if(vertexIdHint.isDefined) {
-         val workerId = vertexIdHint.get.hashCode % workers.length
-         sendToWorker(workerId, request)
-       }
-       else {
-         val rand = new Random
-         sendToWorker(rand.nextInt(workers.length), request)
-       }
-     }
-     
-   }
+
+  def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
+    if (blocking == true) {
+      workerApi.loadGraph(vertexIdHint, graphLoader)
+    } else {
+      val request = Request[Worker]((_.loadGraph(graphLoader)), returnResult = false)
+      if (vertexIdHint.isDefined) {
+        val workerId = vertexIdHint.get.hashCode % workers.length
+        sendToWorker(workerId, request)
+      } else {
+        val rand = new Random
+        sendToWorker(rand.nextInt(workers.length), request)
+      }
+    }
+
+  }
 
   //--------------------Access to high-level messaging constructs--------------------
 

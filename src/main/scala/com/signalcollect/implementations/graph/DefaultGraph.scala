@@ -28,8 +28,6 @@ import com.signalcollect.implementations.messaging.DefaultVertexToWorkerMapper
 import akka.actor.ActorSystem
 import com.signalcollect.implementations.logging.DefaultLogger
 import akka.actor.Props
-import com.signalcollect.implementations.worker.AkkaWorker
-import com.signalcollect.implementations.messaging.AkkaProxy
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
 import akka.util.duration._
@@ -47,6 +45,31 @@ import akka.pattern.AskTimeoutException
 import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
 import scala.util.Random
+import akka.japi.Creator
+import com.signalcollect.implementations.messaging.AkkaProxy
+import akka.dispatch.Future
+
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
+ */
+case class WorkerCreator(workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, messageBusFactory: MessageBusFactory, storageFactory: StorageFactory, statusUpdateIntervalInMillis: Option[Long], loggingLevel: Int) extends Creator[Worker] {
+  def create: Worker = workerFactory.createInstance(workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
+}
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
+ */
+case class CoordinatorCreator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, maxInboxSize: Option[Long], val loggingLevel: Int) extends Creator[DefaultCoordinator] {
+  def create: DefaultCoordinator = new DefaultCoordinator(numberOfWorkers, messageBusFactory, maxInboxSize, loggingLevel)
+}
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
+ */
+case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[DefaultLogger] {
+  def create: DefaultLogger = new DefaultLogger(loggingFunction)
+}
 
 /**
  * Default graph implementation.
@@ -62,31 +85,35 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)  
   
   val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
-  
+    
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
     var workerId = 0
     for (node <- nodes) {
       for (core <- 0 until node.numberOfCores) {
-         actors(workerId) = node.createWorker(workerId, numberOfWorkers, config)
-         workerId += 1 
+    	 val workerCreator = WorkerCreator(workerId, config.workerFactory, numberOfWorkers, config.messageBusFactory, config.storageFactory, config.statusUpdateIntervalInMillis, config.loggingLevel)
+         val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
+         actors(workerId) = system.actorFor(workerName)
+         workerId += 1
       }
     }
     actors
   }
-
+  
   val coordinatorActor: ActorRef = {
     val numberOfRegistries = numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
     val registrationMessagesPerRegistry = numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
     val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
+    val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.maxInboxSize, config.loggingLevel)
     config.akkaDispatcher match {
-        case EventBased => system.actorOf(Props(new DefaultCoordinator(config, numberOfWorkers)), name = "Coordinator")
-        case Pinned => system.actorOf(Props().withCreator(new DefaultCoordinator(config, numberOfWorkers)), name = "Coordinator") //.withDispatcher("akka.actor.pinned-dispatcher")
+        case EventBased => system.actorOf(Props().withCreator(coordinatorCreator.create), name = "Coordinator")
+        case Pinned => system.actorOf(Props().withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
-
+  
   val loggerActor: ActorRef = {
-    system.actorOf(Props(new DefaultLogger(config.logger)), name = "Logger")
+    val loggerCreator = LoggerCreator(config.logger)
+    system.actorOf(Props().withCreator(loggerCreator.create()), name = "Logger")
   }
 
   val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
@@ -315,11 +342,16 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def isIdle = coordinatorProxy.isIdle
 
   def shutdown = {
+    loggerActor ! Info("workerApi.shutdown ...", this.toString)
     workerApi.shutdown
+    loggerActor ! Info("nodes.par.foreach(_.shutdown) ...", this.toString)
+    nodes.par.foreach(_.shutdown)
+    loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
+    loggerActor ! Info("Shutdown done.", this.toString)
   }
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType] = {
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 

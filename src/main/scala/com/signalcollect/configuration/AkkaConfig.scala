@@ -4,13 +4,47 @@ object AkkaConfig {
   def getConfig = """
 akka {
   #logConfigOnStart=on
+  #loglevel = DEBUG
   actor {
+    #serialize-messages = on
     provider = "akka.remote.RemoteActorRefProvider"
+    
   	pinned-dispatcher {
 	  type = PinnedDispatcher
 	  executor = "thread-pool-executor"
   	}
+
+    serializers {
+      java = "akka.serialization.JavaSerializer"
+    }
+
+    deployment {
+
+      default {
+
+        # if this is set to a valid remote address, the named actor will be deployed
+        # at that node e.g. "akka://sys@host:port"
+        remote = ""
+
+        target {
+
+          # A list of hostnames and ports for instantiating the children of a
+          # non-direct router
+          #   The format should be on "akka://sys@host:port", where:
+          #    - sys is the remote actor system name
+          #    - hostname can be either hostname or IP address the remote actor
+          #      should connect to
+          #    - port should be the port for the remote server on the other node
+          # The number of actor instances to be spawned is still taken from the
+          # nr-of-instances setting as for local routers; the instances will be
+          # distributed round-robin among the given nodes.
+          nodes = []
+
+        }
+      }
+    }
   }
+
   remote {
 
     # Which implementation of akka.remote.RemoteTransport to use
@@ -55,11 +89,15 @@ akka {
 
       # (I) The hostname or ip to bind the remoting to,
       # InetAddress.getLocalHost.getHostAddress is used if empty
-      hostname = """" + java.net.InetAddress.getLocalHost.getHostAddress + """"
+      hostname = ""
 
       # (I) The default remote server port clients should connect to.
       # Default is 2552 (AKKA), use 0 if you want a random available port
       port = 0
+
+      # (O) The address of a local network interface (IP Address) to bind to when creating
+      # outbound connections. Set to "" or "auto" for automatic selection of local address.
+      outbound-local-address = "auto"
 
       # (I&O) Increase this if you want to be able to send messages with large payloads
       message-frame-size = 1 MiB
@@ -108,6 +146,7 @@ akka {
 
     # The dispatcher used for the system actor "network-event-sender"
     network-event-sender-dispatcher {
+      executor = thread-pool-executor
       type = PinnedDispatcher
     }
   }

@@ -56,7 +56,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withSignalThreshold(0)
         .withTimeLimit(30)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached 
     }
 
@@ -67,7 +67,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withTimeLimit(30)
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
     }
   }
@@ -81,7 +81,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withStepsLimit(1)
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       state == 0.2775 && info.executionStatistics.terminationReason == TerminationReason.ComputationStepLimitReached
     }
   }
@@ -100,7 +100,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withGlobalTerminationCondition(terminationCondition)
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
@@ -116,7 +116,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state).get
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       aggregate > 200.0 && aggregate < 999.999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }

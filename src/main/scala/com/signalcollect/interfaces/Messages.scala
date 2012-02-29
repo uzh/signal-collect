@@ -31,9 +31,6 @@ case class SignalMessage[@specialized SourceId, @specialized TargetId, @speciali
 // signal sender id used to indicate that a signal was sent from an external source
 object EXTERNAL { override val toString = "EXTERNAL" }
 
-// rpc request
-case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
-
 // stalling detection
 case class WorkerStatus(
   workerId: Int,

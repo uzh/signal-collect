@@ -33,11 +33,11 @@ import java.util.concurrent.TimeUnit
 import akka.dispatch.Future
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
-import com.signalcollect.interfaces.Request
 import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.interfaces.Request
 import com.signalcollect.implementations.serialization.DefaultSerializer
+
+case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
 
 /**
  * Used to create proxies
@@ -57,14 +57,14 @@ object AkkaProxy {
 /**
  *  Proxy that does RPC over Akka
  */
-class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler {
+class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler with Serializable {
 
   override def toString = "ProxyFor" + actor.toString
 
   implicit val t = timeout
 
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
-    val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.getName, method.getParameterTypes(), arguments)
+    val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.toString, arguments)
     try {
       val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
       sentMessagesCounter.incrementAndGet
@@ -72,24 +72,25 @@ class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicIntege
       receivedMessagesCounter.incrementAndGet
       result.asInstanceOf[AnyRef]
     } catch {
-      case t: Throwable =>
-        println("Exception in proxy, responsible method call: " + method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + _) + ")" } else { "" } } + " Exception:\n" + t.getCause + "\n" + t)
-        throw t
+      case e: Exception =>
+        println("Exception in proxy method `" + method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + ", " + _) + ")`: " } else { "`: " } } + e + " from " + actor + " " + e.printStackTrace)
+        throw e
     }
   }
 
 }
 
-case class Command[ParameterType](className: String, methodName: String, parameterTypes: Array[Class[_]], arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
+case class Command[ParameterType](className: String, methodDescription: String, arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
   def apply(proxiedClass: ParameterType) = {
     val clazz = Class.forName(className)
-    val method = clazz.getMethod(methodName, parameterTypes: _*)
-    method.invoke(proxiedClass, arguments: _*)
+    val methods = clazz.getMethods map (method => (method.toString, method)) toMap
+    val method = methods(methodDescription)
+    val result = method.invoke(proxiedClass, arguments: _*)
+    result
   }
 
   override def toString: String = {
-    val clazz = Class.forName(className)
-    val method = clazz.getMethod(methodName, parameterTypes: _*)
-    method.getName + { if (arguments != null) { "(" + arguments.foldLeft("")(_ + _) + ")" } else { "" } }
+    className + "." + methodDescription + { if (arguments != null) { "(" + arguments.toList.mkString("(", ", ", ")") } else { "" } }
   }
+
 }

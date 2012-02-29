@@ -28,7 +28,13 @@ trait Factory extends Serializable {
 }
 
 trait WorkerFactory extends Factory {
-  def createInstance(workerId: Int, numberOfWorkers: Int, config: GraphConfiguration): Worker
+  def createInstance(
+    workerId: Int,
+    numberOfWorkers: Int,
+    messageBusFactory: MessageBusFactory,
+    storageFactory: StorageFactory,
+    statusUpdateIntervalInMillis: Option[Long],
+    loggingLevel: Int): Worker
 }
 
 trait MessageBusFactory extends Factory {

@@ -21,10 +21,9 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 import akka.actor.Actor
+import akka.dispatch.Future
 
 trait Worker extends Actor with MessageRecipientRegistry with Logging {
-//  def workerId: Int
-//  def messageBus: MessageBus
 
   override def toString = this.getClass.getSimpleName
 
@@ -51,7 +50,7 @@ trait Worker extends Actor with MessageRecipientRegistry with Logging {
   def recalculateScores
   def recalculateScoresForVertexWithId(vertexId: Any)
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
   def foreachVertex(f: Vertex => Unit)
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType

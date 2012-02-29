@@ -28,17 +28,29 @@ import com.typesafe.config.ConfigFactory
 import com.signalcollect.configuration.AkkaConfig
 import akka.actor.Props
 import com.signalcollect.configuration.Pinned
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.nodeprovisioning.AkkaHelper
 
 class LocalNode extends Node {
-  def createWorker(workerId: Int,  numberOfWorkers: Int, config: GraphConfiguration): ActorRef = {
+
+  val system = ActorSystem("NodeProvisioner", ConfigFactory.parseString(AkkaConfig.getConfig))
+  
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String = {
     val workerName = "Worker" + workerId
-    val system = ActorSystem("SignalCollect")
-    config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props(config.workerFactory.createInstance(workerId, numberOfWorkers, config)), name = workerName)
-      //        case Pinned => actors(workerId) = system.actorOf(Props(config.workerFactory.createInstance(workerId, config)).withDispatcher("pinned-dispatcher"), name = workerName)
-      case Pinned => system.actorOf(Props().withCreator(config.workerFactory.createInstance(workerId, numberOfWorkers, config)).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+    dispatcher match {
+      case EventBased =>
+        val worker = system.actorOf(Props().withCreator(creator()), name = workerName)
+        AkkaHelper.getRemoteAddress(worker, system)
+      case Pinned =>
+        val worker = system.actorOf(Props().withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        AkkaHelper.getRemoteAddress(worker, system)
     }
   }
+  
+  def shutdown = system.shutdown
 
   def numberOfCores = Runtime.getRuntime.availableProcessors
 }

@@ -49,19 +49,34 @@ import akka.dispatch.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
-import com.signalcollect.implementations.messaging.AkkaProxy
 import akka.serialization.SerializationExtension
 import akka.serialization.JavaSerializer
 import akka.actor.Address
 import akka.actor.ExtendedActorSystem
+import com.signalcollect.implementations.messaging.AkkaProxy
+import akka.japi.Creator
+import com.signalcollect.nodeprovisioning.AkkaHelper
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
+ */
+case class NodeControllerCreator(jobId: Int, nodeProvisionerAddress: String) extends Creator[NodeControllerActor] {
+  def create: NodeControllerActor = new NodeControllerActor(jobId, nodeProvisionerAddress)
+}
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
+ */
+case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvisionerActor] {
+  def create: NodeProvisionerActor = new NodeProvisionerActor(numberOfNodes)
+}
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends NodeProvisioner {
   def getNodes: List[Node] = {
-    val system: ActorSystem = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
-    val nodeProvisioner = system.actorOf(Props().withCreator(new NodeProvisionerActor(numberOfNodes)), name = "NodeProvisioner")
-    val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
-    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
-    val nodeProvisionerAddress = nodeProvisioner.path.toStringWithAddress(akkaSystemAddress.get)
+    val system: ActorSystem = ActorSystem("NodeProvisioner", ConfigFactory.parseString(AkkaConfig.getConfig))
+    val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
+    val nodeProvisioner = system.actorOf(Props().withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
+    val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
     println("NodeProvisioner address: " + nodeProvisionerAddress)
 
     var jobs = List[TorqueJob]()
@@ -72,7 +87,8 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends 
           println("Creating actor system")
           val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
           println("Creating node controller actor")
-          val nodeController = system.actorOf(Props().withCreator(new NodeControllerActor(jobId, nodeProvisionerAddress)), name = "NodeController" + jobId.toString)
+          val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
+          val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           println("Reporting results")
           Map[String, String]()
       }

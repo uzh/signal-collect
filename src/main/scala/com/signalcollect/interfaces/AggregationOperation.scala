@@ -24,7 +24,7 @@ import com.signalcollect.Vertex
 /**
  *  An aggregation operation aggregates some value of type `ValueType` over all the vertices in a graph.
   */
-trait AggregationOperation[ValueType] {
+trait AggregationOperation[ValueType] extends Serializable {
   /**
    *  Extracts values of type `ValueType` from vertices.
    */

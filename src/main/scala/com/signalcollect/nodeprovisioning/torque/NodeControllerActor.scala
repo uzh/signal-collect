@@ -49,22 +49,30 @@ import akka.dispatch.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
-import com.signalcollect.interfaces.Request
 import com.signalcollect.configuration.EventBased
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
+import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.implementations.messaging.Request
+import com.signalcollect.nodeprovisioning.AkkaHelper
 
 class NodeControllerActor(nodeId: Int, nodeProvisionerAddress: String) extends Actor with Node {
 
   var nodeProvisioner: ActorRef = _
 
-  def createWorker(workerId: Int, numberOfWorkers: Int, config: GraphConfiguration): ActorRef = {
+  def shutdown = context.system.shutdown
+  
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String = {
     println("Received create worker request for worker with id: " + workerId)
     val workerName = "Worker" + workerId
-    val system = ActorSystem("SignalCollect")
-    config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props(config.workerFactory.createInstance(workerId, numberOfWorkers, config)), name = workerName)
-      case Pinned => system.actorOf(Props().withCreator(config.workerFactory.createInstance(workerId, numberOfWorkers, config)).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+    dispatcher match {
+      case EventBased => 
+        val worker = context.system.actorOf(Props().withCreator(creator()), name = workerName)
+        AkkaHelper.getRemoteAddress(worker, context.system)
+      case Pinned =>
+        val worker = context.system.actorOf(Props().withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        AkkaHelper.getRemoteAddress(worker, context.system)
     }
   }
 
@@ -84,7 +92,11 @@ class NodeControllerActor(nodeId: Int, nodeProvisionerAddress: String) extends A
       println("Received command: " + command)
       val result = command(this)
       if (reply) {
-        sender ! result
+        if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
+          sender ! None
+        } else {
+          sender ! result
+        }
       }
     case other =>
       println("Received unexpected message from " + sender + ": " + other)

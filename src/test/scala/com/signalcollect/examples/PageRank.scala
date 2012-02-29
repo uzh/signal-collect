@@ -22,6 +22,8 @@ package com.signalcollect.examples
 import com.signalcollect._
 import com.signalcollect.configuration._
 import com.signalcollect.nodeprovisioning.torque._
+import com.signalcollect.nodeprovisioning.local._
+import com.signalcollect.nodeprovisioning._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -70,48 +72,56 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val kraken = new TorqueHost()
-  val krakenNodeProvisioner = new TorqueNodeProvisioner(kraken, 1)
-  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).withNodeProvisioner(krakenNodeProvisioner).build
-  //    val graph = GraphBuilder.withNumberOfWorkers(1).build
-  
+  //  val kraken = new TorqueHost(torqueHostname = "kraken.ifi.uzh.ch", jarPath = "./target/signal-collect-evaluation-2.0.0-SNAPSHOT-jar-with-dependencies.jar")
+  //  val krakenNodeProvisioner = new TorqueNodeProvisioner(kraken, 1)
+  //  val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).withLoggingLevel(LoggingLevel.Debug).build
+  //    val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).build //withLoggingLevel(LoggingLevel.Debug).
+  //    val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
+  val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
+    override def getNodes: List[Node] = {
+      List(new LocalNode {
+        override def numberOfCores = 1
+      })
+    }
+  }).withLoggingLevel(LoggingLevel.Debug).build
+
   println("From client: Graph built")
-  
+
   // Loading Method 1: Blocking loading
-  
-//      graph.addVertex(new PageRankVertex(1), true)
-//      graph.addVertex(new PageRankVertex(2), true)
-//      graph.addVertex(new PageRankVertex(3), true)
-//      graph.addEdge(new PageRankEdge(1, 2), true)
-//      graph.addEdge(new PageRankEdge(2, 1), true)
-//      graph.addEdge(new PageRankEdge(2, 3), true)
-//      graph.addEdge(new PageRankEdge(3, 2), true)
+
+  //      graph.addVertex(new PageRankVertex(1), true)
+  //      graph.addVertex(new PageRankVertex(2), true)
+  //      graph.addVertex(new PageRankVertex(3), true)
+  //      graph.addEdge(new PageRankEdge(1, 2), true)
+  //      graph.addEdge(new PageRankEdge(2, 1), true)
+  //      graph.addEdge(new PageRankEdge(2, 3), true)
+  //      graph.addEdge(new PageRankEdge(3, 2), true)
 
   // Loading Method 2: Non blocking loading
-  
-    graph.addVertex(new PageRankVertex(1))
-    graph.addVertex(new PageRankVertex(2))
-    graph.addVertex(new PageRankVertex(3))
-    graph.addEdge(new PageRankEdge(1, 2))
-    graph.addEdge(new PageRankEdge(2, 1))
-    graph.addEdge(new PageRankEdge(2, 3))
-    graph.addEdge(new PageRankEdge(3, 2))
+
+  graph.addVertex(new PageRankVertex(1))
+  graph.addVertex(new PageRankVertex(2))
+  graph.addVertex(new PageRankVertex(3))
+  graph.addEdge(new PageRankEdge(1, 2))
+  graph.addEdge(new PageRankEdge(2, 1))
+  graph.addEdge(new PageRankEdge(2, 3))
+  graph.addEdge(new PageRankEdge(3, 2))
 
   // Loading Method 3: Distributed Lading
-    
-//  graph.loadGraph(Some(1), graph =>
-//    {
-//      graph.addVertex(new PageRankVertex(1))
-//      graph.addVertex(new PageRankVertex(3))
-//      graph.addEdge(new PageRankEdge(1, 2))
-//      graph.addEdge(new PageRankEdge(3, 2))
-//    })
-//
-//  graph.loadGraph(Some(2), graph => {
-//    graph.addVertex(new PageRankVertex(2))
-//    graph.addEdge(new PageRankEdge(2, 1))
-//    graph.addEdge(new PageRankEdge(2, 3))
-//  })
+
+  //  graph.loadGraph(Some(1), graph =>
+  //    {
+  //      graph.addVertex(new PageRankVertex(1))
+  //      graph.addVertex(new PageRankVertex(3))
+  //      graph.addEdge(new PageRankEdge(1, 2))
+  //      graph.addEdge(new PageRankEdge(3, 2))
+  //    })
+  //
+  //  graph.loadGraph(Some(2), graph => {
+  //    graph.addVertex(new PageRankVertex(2))
+  //    graph.addEdge(new PageRankEdge(2, 1))
+  //    graph.addEdge(new PageRankEdge(2, 3))
+  //  })
 
   //  val stats = graph.execute //(ExecutionConfiguration())
   val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.ContinuousAsynchronous))

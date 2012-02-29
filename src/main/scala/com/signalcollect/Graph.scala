@@ -130,9 +130,9 @@ trait Graph extends GraphEditor {
    *
    *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex => v.state })`
    *
-   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex => String): Option[String]
+   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex => String): String
    */
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): Option[ResultType]
+  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
 
   /**
    *  Executes the function `f` on all vertices.

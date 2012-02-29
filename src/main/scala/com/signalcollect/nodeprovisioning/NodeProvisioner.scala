@@ -19,7 +19,7 @@
 
 package com.signalcollect.nodeprovisioning
 
-trait NodeProvisioner extends Serializable{
+trait NodeProvisioner extends Serializable {
 	def getNodes: List[Node]
 }
 

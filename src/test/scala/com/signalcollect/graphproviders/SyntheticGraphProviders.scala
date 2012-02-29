@@ -7,7 +7,7 @@ package com.signalcollect.graphproviders
  * 		| |
  * 		3-4
  */
-class Grid(val width: Int, height: Int) extends Traversable[(Int, Int)] {
+class Grid(val width: Int, height: Int) extends Traversable[(Int, Int)] with Serializable {
 
   def foreach[U](f: ((Int, Int)) => U) = {
     val max = width * height
@@ -25,7 +25,7 @@ class Grid(val width: Int, height: Int) extends Traversable[(Int, Int)] {
 }
 
 
-class Torus(val width: Int, height: Int) extends Traversable[(Int, Int)] {
+class Torus(val width: Int, height: Int) extends Traversable[(Int, Int)] with Serializable {
 
   def foreach[U](f: ((Int, Int)) => U) = {
     val max = width * height
