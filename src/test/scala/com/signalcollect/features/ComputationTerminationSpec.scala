@@ -57,7 +57,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withTimeLimit(30)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached 
+      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
     }
 
     "work for synchronous computations" in {
@@ -106,7 +106,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "work for asynchronous computations" in {
-      val graph = createGraph(1000)
+      val graph = createGraph(5000)
       val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {
         def shouldTerminate(sum: Option[Double]): Boolean = {
           sum.isDefined && sum.get > 200.0
