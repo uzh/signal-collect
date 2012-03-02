@@ -272,13 +272,12 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
         }
       case (Some(limit), Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
-        val nanosecondLimit = limit * 1000000l
+        val timeLimitNanoseconds = limit * 1000000l
         val interval = globalCondition.aggregationInterval * 1000000l
         val startTime = System.nanoTime
         var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
         var globalTermination = false
-        var timeLimitReached = false
         while (!converged && !globalTermination && !isTimeLimitReached) {
           if (intervalHasPassed) {
             globalTermination = isGlobalTerminationConditionMet(globalCondition)
@@ -286,7 +285,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
           // waits for whichever remaining time interval/limit is shorter
           converged = awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
         }
-        if (timeLimitReached) {
+        if (isTimeLimitReached) {
           stats.terminationReason = TerminationReason.TimeLimitReached
         } else if (globalTermination) {
           stats.terminationReason = TerminationReason.GlobalConstraintMet
@@ -299,7 +298,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
           gtc.shouldTerminate(globalAggregateValue)
         }
         def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
-        def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+        def elapsedTimeNanoseconds = System.nanoTime - startTime
+        def remainingTimeLimit = timeLimitNanoseconds - elapsedTimeNanoseconds
         def isTimeLimitReached = remainingTimeLimit <= 0
     }
     workerApi.pauseComputation
