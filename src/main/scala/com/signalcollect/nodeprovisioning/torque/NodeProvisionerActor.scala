@@ -56,21 +56,13 @@ class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
 
   var nodeControllers = List[ActorRef]()
 
-  override def preStart() = {
-    println("NodeProvisioner running")
-  }
-
   def receive = {
     case "GetNodes" =>
-      println("Received message `GetNodes` from " + sender)
       nodeListRequestor = sender
       sendNodesIfReady
     case "NodeReady" =>
-      println("Received message `NodeReady` from " + sender)
       nodeControllers = sender :: nodeControllers
       sendNodesIfReady
-    case other =>
-      println("Received unexpected message from " + sender + ": " + other)
   }
 
   def sendNodesIfReady {
