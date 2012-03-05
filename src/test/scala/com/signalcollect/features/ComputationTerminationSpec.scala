@@ -121,13 +121,14 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       if (aggregate <= 200.0) {
         println("Computation ended before global condition was met.")
       }
-      if (aggregate > 999) {
+      if (aggregate > 999.0) {
         println("Computation converged completely instead of ending when the global constraint was met.")
       }
       if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
-      aggregate > 200.0 && aggregate < 999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
+      println("Aggregation async global condition: (200.0 < shouldBe < 999.0) " + aggregate)
+      aggregate > 200.0 && aggregate < 999.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
   }
 
