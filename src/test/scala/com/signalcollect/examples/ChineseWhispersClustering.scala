@@ -34,7 +34,7 @@ class CWVertex(id: Any, selfPreference: Double = 1.0) extends DataGraphVertex(id
 
     def collect(oldState: State, mostRecentSignals: Iterable[(Any, Double)]): Any = {
       //group most recent signals by clustering label
-      val grouped = (((state, selfPreference))::mostRecentSignals.toList).asInstanceOf[List[(Any,Double)]].groupBy(_._1)
+      val grouped = (((state, selfPreference))::mostRecentSignals.toList).groupBy(_._1)
       //sort the grouped list by the sum of all clustering label weights
       val sorted = grouped.toList sortBy {_._2.foldLeft(0.0)((sum, elem) => sum+elem._2) }      
       //return the most popular label as new state
