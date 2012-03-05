@@ -254,12 +254,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
         val aggregationOperation = globalCondition.aggregationOperation
         val interval = globalCondition.aggregationInterval * 1000000l
         var converged = false
-        var globalTermination = false
-        while (!converged && !globalTermination) {
+        while (!converged && !isGlobalTerminationConditionMet(globalCondition)) {
           converged = awaitIdle(interval)
-          if (!converged) {
-            globalTermination = isGlobalTerminationConditionMet(globalCondition)
-          }
         }
         if (!converged) {
           stats.terminationReason = TerminationReason.GlobalConstraintMet
@@ -317,7 +313,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
     val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
     try {
-      val result = Await.result(resultFuture, timeout.duration + { 10 seconds })
+      val result = Await.result(resultFuture, timeout.duration)
       true
     } catch {
       case e: AskTimeoutException => false

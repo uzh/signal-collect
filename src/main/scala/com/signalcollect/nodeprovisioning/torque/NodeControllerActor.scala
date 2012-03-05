@@ -64,7 +64,6 @@ class NodeControllerActor(nodeId: Int, nodeProvisionerAddress: String) extends A
   def shutdown = context.system.shutdown
   
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String = {
-    println("Received create worker request for worker with id: " + workerId)
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased => 
@@ -79,12 +78,8 @@ class NodeControllerActor(nodeId: Int, nodeProvisionerAddress: String) extends A
   def numberOfCores = Runtime.getRuntime.availableProcessors
 
   override def preStart() = {
-    println("NodeControllerActor running: " + nodeId)
-    println("Finding NodeProvisioner.")
     nodeProvisioner = context.actorFor(nodeProvisionerAddress)
-    println("Sending message to NodeProvisioner.")
     nodeProvisioner ! "NodeReady"
-    println("Sent.")
   }
 
   def receive = {
