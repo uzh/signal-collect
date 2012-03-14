@@ -119,6 +119,10 @@ class DefaultMessageBus(
     }
   }
 
+  def getWorkerIdForVertexId(vertexId: Any): Int = mapper.getWorkerIdForVertexId(vertexId)
+  
+  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)
+
   //--------------------GraphEditor--------------------
 
   /**

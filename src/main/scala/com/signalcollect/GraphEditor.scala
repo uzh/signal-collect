@@ -86,9 +86,11 @@ trait GraphEditor {
   def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false)
   
   /**
-   * Loads a graph using the provided graphLoader function
+   * Loads a graph using the provided graphLoader function.
    * 
-   * @note the vertexIDHint can be used to exploit locality at load time.
+   * @note the vertexIDHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   * the loading function will be able to exploit locality.
+   * @note for distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
    */
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false)
 }

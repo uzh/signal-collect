@@ -26,7 +26,8 @@ import akka.dispatch.Future
 trait Worker extends Actor with MessageRecipientRegistry with Logging {
 
   override def toString = this.getClass.getSimpleName
-
+  def workerId: Int
+  
   def processSignal(signal: SignalMessage[_, _, _])
 
   def addVertex(serializedVertex: Array[Byte]) // object should be created in the heap of the thread which uses its

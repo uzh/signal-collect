@@ -36,4 +36,5 @@ trait Coordinator extends Actor with MessageRecipientRegistry with Logging {
   
   def getGraphEditor: GraphEditor
   
+  def globalInboxSize: Long
 }

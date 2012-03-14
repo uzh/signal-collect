@@ -294,7 +294,8 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   def loadGraph(graphLoader: GraphEditor => Unit) {
-    graphLoader(graphEditor)
+    val optimizedLoader = new WorkerGraphEditor(this, messageBus)
+    graphLoader(optimizedLoader)
   }
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) {

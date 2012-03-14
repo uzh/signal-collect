@@ -48,6 +48,7 @@ import scala.util.Random
 import akka.japi.Creator
 import com.signalcollect.implementations.messaging.AkkaProxy
 import akka.dispatch.Future
+import com.signalcollect.util.akka.ActorSystemRegistry
 
 
 /**
@@ -78,13 +79,15 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
+    val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
+  ActorSystemRegistry.register(system)
+  
   val nodes = config.nodeProvisioner.getNodes
   
   val numberOfWorkers = nodes.par map(_.numberOfCores) sum
   
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)  
-  
-  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
+
     
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
@@ -227,6 +230,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
     val startTime = System.nanoTime
     workerApi.signalStep
+    stats.signalSteps += 1
     awaitIdle
     val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
     var adjustedTimeLimit: Option[Long] = None
@@ -300,7 +304,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     }
     workerApi.pauseComputation
   }  
-
+  
   def awaitIdle {
     implicit val timeout = Timeout(1000 days)
     val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))

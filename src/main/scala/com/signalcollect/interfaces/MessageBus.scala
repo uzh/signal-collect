@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-trait MessageBus extends MessageRecipientRegistry {
+trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   def isInitialized: Boolean
   
   def numberOfWorkers: Int

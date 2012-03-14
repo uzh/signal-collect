@@ -1,5 +1,5 @@
 /*
- *  @author Philip Stutz
+ *  @author Daniel Strebel
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -17,19 +17,23 @@
  *  
  */
 
-package com.signalcollect.nodeprovisioning.local
+package com.signalcollect.util.akka
 
-import akka.actor.ActorRef
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.nodeprovisioning.Node
 import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
-import com.signalcollect.configuration.AkkaConfig
 
-class LocalNodeProvisioner extends NodeProvisioner {
-  
-  def getNodes: List[Node] = {
-    List(new LocalNode())
+object ActorSystemRegistry {
+
+  var systems = Map[String, ActorSystem]()
+
+  def register(system: ActorSystem) {
+    synchronized {
+      systems += ((system.name, system))
+    }
+  }
+
+  def retrieve(name: String): Option[ActorSystem] = {
+    synchronized {
+      systems.get(name)
+    }
   }
 }

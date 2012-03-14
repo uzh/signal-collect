@@ -118,11 +118,13 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
 
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
+  def globalInboxSize: Long = totalMessagesSent - totalMessagesReceived
+  
   def isOverstrained: Boolean = {
     if (!maxInboxSize.isDefined) {
       false
     } else {
-      totalMessagesSent - totalMessagesReceived > maxInboxSize.get
+      globalInboxSize > maxInboxSize.get
     }
   }
 
