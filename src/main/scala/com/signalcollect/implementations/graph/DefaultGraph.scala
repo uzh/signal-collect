@@ -49,6 +49,7 @@ import akka.japi.Creator
 import com.signalcollect.implementations.messaging.AkkaProxy
 import akka.dispatch.Future
 import com.signalcollect.util.akka.ActorSystemRegistry
+import java.util.concurrent.TimeoutException
 
 
 /**
@@ -320,7 +321,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
       val result = Await.result(resultFuture, timeout.duration)
       true
     } catch {
-      case e: AskTimeoutException => false
+      case timeout: TimeoutException => false
     }
   }
 
