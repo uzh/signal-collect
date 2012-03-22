@@ -57,12 +57,14 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
    * @removeAfterProcessing whether the ids should be deleted after they are covered by the function
    */
   def foreach[U](f: (Any) => U, removeAfterProcessing: Boolean) = {
-    val i = toHandle.iterator
-    while (i.hasNext) {
-      f(i.next)
-    }
-    if (removeAfterProcessing) {
-      toHandle.clear
+    if (!toHandle.isEmpty()) {
+      val i = toHandle.iterator
+      while (i.hasNext) {
+        f(i.next)
+      }
+      if (removeAfterProcessing) {
+        cleanUp
+      }
     }
   }
 
@@ -70,6 +72,7 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
    * Removes all entries from the collection.
    */
   def cleanUp = {
-    toHandle.clear
+    toHandle = null
+    toHandle = new HashSet[Any]()
   }
 }
