@@ -57,7 +57,7 @@ import com.signalcollect.interfaces.Worker
 import com.signalcollect.implementations.messaging.Request
 import com.signalcollect.nodeprovisioning.AkkaHelper
 
-class NodeControllerActor(nodeId: Int, nodeProvisionerAddress: String) extends Actor with Node {
+class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends Actor with Node {
 
   var nodeProvisioner: ActorRef = _
 

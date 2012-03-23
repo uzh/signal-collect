@@ -60,7 +60,7 @@ import com.signalcollect.nodeprovisioning.AkkaHelper
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
-case class NodeControllerCreator(jobId: Int, nodeProvisionerAddress: String) extends Creator[NodeControllerActor] {
+case class NodeControllerCreator(jobId: Any, nodeProvisionerAddress: String) extends Creator[NodeControllerActor] {
   def create: NodeControllerActor = new NodeControllerActor(jobId, nodeProvisionerAddress)
 }
 
