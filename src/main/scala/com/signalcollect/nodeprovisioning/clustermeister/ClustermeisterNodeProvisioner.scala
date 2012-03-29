@@ -81,6 +81,7 @@ case class NodeControllerBootstrap(nodeId: String, nodeProvisionerAddress: Strin
     val system = ActorSystem("SignalCollect", akkaConfig)
     val nodeControllerCreator = NodeControllerCreator(nodeId, nodeProvisionerAddress)
     val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + nodeId)
-    nodeController.toString + " is terminated: " + nodeController.isTerminated
+//    system.awaitTermination
+    "Done"
   }
 }

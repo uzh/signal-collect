@@ -126,8 +126,8 @@ object PageRank extends App {
   //    graph.addEdge(new PageRankEdge(2, 3))
   //  })
 
-  //  val stats = graph.execute //(ExecutionConfiguration())
-  val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.ContinuousAsynchronous))
+  val stats = graph.execute //(ExecutionConfiguration())
+  //  val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.ContinuousAsynchronous))
   graph.awaitIdle
   //  val stats = graph.execute(ExecutionConfiguration().withExecutionMode(ExecutionMode.Synchronous))
   println(stats)
