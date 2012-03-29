@@ -40,6 +40,7 @@ import com.signalcollect.nodeprovisioning.torque.NodeControllerCreator
 import akka.dispatch.Await
 import com.signalcollect.implementations.messaging.AkkaProxy
 import java.util.concurrent.Callable
+import com.typesafe.config.Config
 
 class ClustermeisterNodeProvisioner extends NodeProvisioner {
 
@@ -47,16 +48,18 @@ class ClustermeisterNodeProvisioner extends NodeProvisioner {
 
   def getNodes: List[Node] = {
     try {
+      val akkaConfig = ConfigFactory.parseString(AkkaConfig.getConfig).withFallback(ConfigFactory.load)
       cm = Some(ClustermeisterFactory.create)
       if (cm.isDefined) {
         val numberOfNodes = cm.get.getAllNodes.size
-        val system: ActorSystem = ActorSystem("NodeProvisioner", ConfigFactory.parseString(AkkaConfig.getConfig))
+        val system: ActorSystem = ActorSystem("NodeProvisioner", akkaConfig)
         val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
         val nodeProvisioner = system.actorOf(Props().withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
         val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
         implicit val timeout = new Timeout(1800 seconds)
         for (node <- cm.get.getAllNodes) {
-          node.execute(NodeControllerBootstrap(node.getID, nodeProvisionerAddress))
+          val actorNameFuture = node.execute(NodeControllerBootstrap(node.getID, nodeProvisionerAddress, akkaConfig))
+          println("Started node controller: " + actorNameFuture.get)
         }
         val nodesFuture = nodeProvisioner ? "GetNodes"
         val result = Await.result(nodesFuture, timeout.duration)
@@ -74,11 +77,11 @@ class ClustermeisterNodeProvisioner extends NodeProvisioner {
 
 }
 
-case class NodeControllerBootstrap(nodeId: String, nodeProvisionerAddress: String) extends Callable[Int] {
-  def call = {
-    val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
+case class NodeControllerBootstrap(nodeId: String, nodeProvisionerAddress: String, akkaConfig: Config) extends Callable[String] {
+  def call: String = {
+    val system = ActorSystem("SignalCollect", akkaConfig)
     val nodeControllerCreator = NodeControllerCreator(nodeId, nodeProvisionerAddress)
     val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + nodeId)
-    0
+    nodeController.toString + " is terminated: " + nodeController.isTerminated
   }
 }
