@@ -38,6 +38,7 @@ trait VertexStore {
   def get(id: Any): Vertex
   def put(vertex: Vertex): Boolean
   def remove(id: Any)
+  def remove(removeCondition: Vertex => Boolean)
   def updateStateOfVertex(vertex: Vertex)
   def size: Long
   def foreach[U](f: Vertex => U)

@@ -27,7 +27,7 @@ import com.signalcollect._
 /**
  *  Caches Vertices in the store according to a least recently used (LRU) policy
  *  It allows to cache any storage back end with a in-memory buffer.
- *  
+ *
  *  @param persistentStorageFactory function that creates the storage that should be buffered
  *  @param storage the storage object that also contains the toSignal and toCollect collections.
  *  @param capacity optionally limits the number of entries that may be cached
@@ -44,7 +44,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   /**
    * Returns the vertex with the specified Id from the storage
-   * 
+   *
    * @return the vertex with that id or null if the store does not contain a vertex with this id.
    */
   def get(id: Any): Vertex = {
@@ -58,7 +58,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   /**
    * Adds a vertex to the cache if the cache is not exhausted or else adds it to the persistent storage.
-   * 
+   *
    * @return true if the insertion was successful or false if the storage already contains a vertex with this id.
    */
   def put(vertex: Vertex): Boolean = {
@@ -79,7 +79,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   /**
    * Removes the vertex with the specified id from the storage
-   * 
+   *
    * @param the id of the vertex that should be removed.
    */
   def remove(id: Any) {
@@ -90,6 +90,22 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
     } else {
       persistentStore.remove(id)
     }
+  }
+
+  /**
+   * Removes all vertices that satisfy the removal condition.
+   *
+   * @param removeCondition condition to check if a vertex should be removed.
+   */
+  def remove(removeCondition: Vertex => Boolean) {
+    val it = cache.iterator
+    while (it.hasNext) {
+      val vertex = it.next
+      if (removeCondition(vertex._2)) {
+        remove(vertex._1)
+      }
+    }
+    persistentStore.remove(removeCondition)
   }
 
   /**
@@ -106,7 +122,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 
   /**
    * Applies the function to each vertex in the cache and in the cached storage.
-   * 
+   *
    * @param f the function to apply
    */
   def foreach[U](f: (Vertex) => U) {
@@ -126,7 +142,7 @@ class LRUVertexCache(persistentStorageFactory: Storage => VertexStore,
 /**
  * Least Recently Used Map data structure that, keeps entries in the order of the last access (insertions also count as an access)
  * when the maximum capacity is exceeded the supernumerous entries are stored to the other storage entity.
- * 
+ *
  * @param storage the vertex storage to hold all the vertices that do not fit into the storage any more.
  * @maxCapcity = the maximum capacity of the storage
  */
@@ -187,22 +203,22 @@ class LRUMap[A, B](storage: VertexStore, var maxCapacity: Int) extends LinkedHas
   def applyFunction[U](f: (Vertex) => U) {
     foreachEntry(entry => f(entry.value.asInstanceOf[Vertex]))
   }
-  
+
   /**
    * Resets the capacity of the cache and removes supernumerous entries from the cache
    */
   def setCapacity(capacity: Int) {
-    while(maxCapacity>capacity) {
+    while (maxCapacity > capacity) {
       serializeLRU
-      maxCapacity-=1
+      maxCapacity -= 1
     }
-    maxCapacity=capacity //in case the capacity increased
+    maxCapacity = capacity //in case the capacity increased
   }
 
 }
 
 /**
- * Allows the Default storage to use the a cached version of Berkeley DB as its storage back end. 
+ * Allows the Default storage to use the a cached version of Berkeley DB as its storage back end.
  * However Berkeley DB has its own caching strategy that is more efficient in most scenarios.
  */
 trait CachedBerkeley extends DefaultStorage {

@@ -63,6 +63,21 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     storage.toCollect.remove(id)
     storage.toSignal.remove(id)
   }
+  
+    /**
+   * Removes all vertices that satisfy the removal condition.
+   * 
+   * @param removeCondition condition to check if a vertex should be removed.
+   */
+  def remove(removeCondition: Vertex => Boolean) {
+    val it = vertexMap.values.iterator
+    while (it.hasNext) {
+      val vertex = it.next
+      if(removeCondition(vertex)) {
+        it.remove()
+      }
+    }
+  }
 
   /**
    * Is not needed for this implementation because the state does not need to be retained, since the objects are passed by reference and changes

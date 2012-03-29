@@ -277,11 +277,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   def removeVertices(shouldRemove: Vertex => Boolean) {
-    vertexStore.vertices foreach { vertex =>
-      if (shouldRemove(vertex)) {
-        processRemoveVertex(vertex)
-      }
-    }
+    vertexStore.vertices.remove(shouldRemove)
   }
 
   protected def processRemoveVertex(vertex: Vertex) {

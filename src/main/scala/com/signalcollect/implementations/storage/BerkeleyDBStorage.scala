@@ -131,6 +131,23 @@ class BerkeleyDBStorage(storage: Storage, envFolderPath: String = "sc_vertices")
     primaryIndex.delete(id.toString)
     count -= 1
   }
+  
+    /**
+   * Removes all vertices that satisfy the removal condition.
+   *
+   * @param removeCondition condition to check if a vertex should be removed.
+   */
+  def remove(removeCondition: Vertex => Boolean) {
+    val cursor = primaryIndex.entities
+    var currentElement = cursor.first
+    while (currentElement != null) {
+      val vertex = serializer.read(currentElement.vertex).asInstanceOf[Vertex]
+      if (removeCondition(vertex)) {
+        cursor.delete()
+      }
+      currentElement = cursor.next
+    }
+  }
 
   /**
    * Persistently writes the current state of the vertex to the storage so that changes will be reflected when
