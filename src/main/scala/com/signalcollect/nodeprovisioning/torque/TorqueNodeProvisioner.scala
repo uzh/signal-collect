@@ -73,7 +73,7 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends NodeProvisioner {
   def getNodes: List[Node] = {
-    val system: ActorSystem = ActorSystem("NodeProvisioner", ConfigFactory.parseString(AkkaConfig.getConfig))
+    val system: ActorSystem = ActorSystem("NodeProvisioner", AkkaConfig.get)
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
     val nodeProvisioner = system.actorOf(Props().withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
@@ -82,7 +82,7 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends 
     for (jobId <- 0 until numberOfNodes) {
       val function: () => Map[String, String] = {
         () =>
-          val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig))
+          val system = ActorSystem("SignalCollect", AkkaConfig.get)
           val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
           val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()

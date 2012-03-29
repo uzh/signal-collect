@@ -1,7 +1,10 @@
 package com.signalcollect.configuration
 
+import com.typesafe.config._
+
 object AkkaConfig {
-  def getConfig = """
+  lazy val get = ConfigFactory.parseString(distributedConfig).withFallback(ConfigFactory.parseString(atmosConfig)).withFallback(ConfigFactory.load)
+  val distributedConfig = """
 akka {
   #logConfigOnStart=on
   #loglevel = DEBUG
@@ -148,6 +151,53 @@ akka {
     network-event-sender-dispatcher {
       executor = thread-pool-executor
       type = PinnedDispatcher
+    }
+  }
+}
+"""
+
+  val atmosConfig = """
+akka {
+  loglevel = INFO
+  event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
+
+  atmos {
+    mode = mongo
+
+    trace {
+      mongo {
+        # Name of the Mongo database
+        db-name = "atmos-monitoring"
+
+         # Connection URI to MongoDB
+        db-connection-uri = "mongodb://localhost"
+      }
+    }
+
+    analytics {
+      mongo {
+        # Name of the Mongo database
+        db-name = ${akka.atmos.trace.mongo.db-name}
+
+         # Connection URI to MongoDB
+        db-connection-uri = ${akka.atmos.trace.mongo.db-connection-uri}
+      }
+
+      jmx {
+        # URL for the host and port of the REST API.
+        base-url = "http://127.0.0.1:9898"
+
+        # Time filter of the queries, such as rolling=2hours
+        # "" means all time
+        time-filter = ""
+      }
+    }
+
+    collect {
+      remote {
+        hostname = "127.0.0.1"
+        port = 2553
+      }
     }
   }
 }

@@ -48,17 +48,16 @@ class ClustermeisterNodeProvisioner extends NodeProvisioner {
 
   def getNodes: List[Node] = {
     try {
-      val akkaConfig = ConfigFactory.parseString(AkkaConfig.getConfig).withFallback(ConfigFactory.load)
       cm = Some(ClustermeisterFactory.create)
       if (cm.isDefined) {
         val numberOfNodes = cm.get.getAllNodes.size
-        val system: ActorSystem = ActorSystem("NodeProvisioner", akkaConfig)
+        val system: ActorSystem = ActorSystem("NodeProvisioner", AkkaConfig.get)
         val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
         val nodeProvisioner = system.actorOf(Props().withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
         val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
         implicit val timeout = new Timeout(1800 seconds)
         for (node <- cm.get.getAllNodes) {
-          val actorNameFuture = node.execute(NodeControllerBootstrap(node.getID, nodeProvisionerAddress, akkaConfig))
+          val actorNameFuture = node.execute(NodeControllerBootstrap(node.getID, nodeProvisionerAddress, AkkaConfig.get))
           println("Started node controller: " + actorNameFuture.get)
         }
         val nodesFuture = nodeProvisioner ? "GetNodes"

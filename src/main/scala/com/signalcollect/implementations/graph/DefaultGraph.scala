@@ -80,7 +80,7 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
-  val system = ActorSystem("SignalCollect", ConfigFactory.parseString(AkkaConfig.getConfig).withFallback(ConfigFactory.load))
+  val system = ActorSystem("SignalCollect", AkkaConfig.get)
   ActorSystemRegistry.register(system)
   
   val nodes = config.nodeProvisioner.getNodes
