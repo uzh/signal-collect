@@ -160,11 +160,11 @@ trait Vertex extends Serializable {
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
    */
-  def afterInitialization(messageBus: MessageBus)
+  def afterInitialization(graphEditor: GraphEditor)
 
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(messageBus: MessageBus)
+  def beforeRemoval(graphEditor: GraphEditor)
 
 }

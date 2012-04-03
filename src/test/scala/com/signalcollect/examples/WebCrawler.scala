@@ -50,8 +50,8 @@ object WebCrawler extends App {
 class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends PageRankVertex(id, dampingFactor) {
 
   /** This method gets called by the framework after the vertex has been fully initialized. */
-  override def afterInitialization(mb: MessageBus) {
-    super.afterInitialization(mb)
+  override def afterInitialization(graphEditor: GraphEditor) {
+    super.afterInitialization(graphEditor)
     if (crawlDepth > 0) {
       try {
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString

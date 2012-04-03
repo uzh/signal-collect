@@ -29,6 +29,7 @@ import java.util.Map.Entry
 import com.signalcollect.Vertex
 import com.signalcollect.GraphBuilder
 import com.signalcollect.DataGraphVertex
+import com.signalcollect.GraphEditor
 
 @RunWith(classOf[JUnitRunner])
 class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
@@ -53,5 +54,5 @@ object RemovalDetector {
 
 class BeforeRemovalVertex extends DataGraphVertex(1, 0) {
   def collect(oldState: Int, mostRecentSignals: Iterable[Signal]): Int = 0
-  override def beforeRemoval(mb: MessageBus) = RemovalDetector.beforeRemovalWorked = true
+  override def beforeRemoval(ge: GraphEditor) = RemovalDetector.beforeRemovalWorked = true
 }

@@ -46,7 +46,7 @@ abstract class AbstractVertex extends Vertex {
 
   protected def process(message: SignalMessage[_, _, _]) = {}
 
-  def afterInitialization(messageBus: MessageBus) = {}
+  def afterInitialization(graphEditor: GraphEditor) = {}
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations
@@ -186,7 +186,7 @@ abstract class AbstractVertex extends Vertex {
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(messageBus: MessageBus) = {}
+  def beforeRemoval(graphEditor: GraphEditor) = {}
 
   /**
    *  Adds a new incoming `Edge` to this `Vertex`.
