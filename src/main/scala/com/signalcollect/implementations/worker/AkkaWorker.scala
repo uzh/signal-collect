@@ -138,7 +138,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphEditor: GraphEditor = messageBus.getGraphEditor
+  protected val graphEditor: GraphEditor = new WorkerGraphEditor(this, messageBus)
   protected var undeliverableSignalHandler: (SignalMessage[_, _, _], GraphEditor) => Unit = (s, g) => {}
 
   protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
@@ -190,7 +190,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
       try {
-        vertex.afterInitialization(messageBus)
+        vertex.afterInitialization(graphEditor)
       } catch {
         case t: Throwable => severe(t)
       }
@@ -288,13 +288,12 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
     val edgesRemoved = vertex.removeAllOutgoingEdges
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
-    vertex.beforeRemoval(messageBus)
+    vertex.beforeRemoval(graphEditor)
     vertexStore.vertices.remove(vertex.id)
   }
 
   def loadGraph(graphLoader: GraphEditor => Unit) {
-    val optimizedLoader = new WorkerGraphEditor(this, messageBus)
-    graphLoader(optimizedLoader)
+    graphLoader(graphEditor)
   }
 
   def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) {

@@ -22,13 +22,13 @@ package com.signalcollect.implementations.graph
 import com.signalcollect.interfaces._
 import com.signalcollect.GraphEditor
 
-trait VertexGraphEditor extends AbstractVertex{
-  
+trait VertexGraphEditor extends AbstractVertex {
+
   protected var graphEditor: GraphEditor = _
-  
-  override def afterInitialization(messageBus: MessageBus) = {
-    graphEditor = messageBus.getGraphEditor
-    super.afterInitialization(messageBus)
+
+  override def afterInitialization(graphEditor: GraphEditor) = {
+    this.graphEditor = graphEditor
+    super.afterInitialization(graphEditor)
   }
 
 }
