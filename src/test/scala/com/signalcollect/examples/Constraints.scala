@@ -2,7 +2,7 @@ package com.signalcollect.examples
 
 import scala.collection.mutable._
 
-object ConstraintTest extends App {
+object ConstraintExample extends App {
   
   //  import Expression._
 //  val fC: Constraint = Variable("Id3")*4+2==10
