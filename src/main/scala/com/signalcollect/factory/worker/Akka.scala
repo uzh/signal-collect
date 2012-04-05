@@ -28,6 +28,7 @@ import com.signalcollect.implementations.worker.AkkaWorker
 import com.signalcollect.configuration.GraphConfiguration
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.implementations.worker.ImmediateCollectScheduler
 
 /**
  *  The local worker factory creates worker instances that work in the local-machine scenario.
@@ -42,5 +43,16 @@ object Akka extends WorkerFactory {
     loggingLevel: Int): Worker = {
     new AkkaWorker(workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
   }
+}
 
+object CollectFirstAkka extends WorkerFactory {
+  def createInstance(
+    workerId: Int,
+    numberOfWorkers: Int,
+    messageBusFactory: MessageBusFactory,
+    storageFactory: StorageFactory,
+    statusUpdateIntervalInMillis: Option[Long],
+    loggingLevel: Int): Worker = {
+    new AkkaWorker(workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel) with ImmediateCollectScheduler
+  }
 }
