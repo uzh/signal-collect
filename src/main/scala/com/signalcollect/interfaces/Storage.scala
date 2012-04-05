@@ -54,6 +54,7 @@ trait VertexIdSet {
   def size: Int
   def isEmpty: Boolean
   def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
+  def applyToNext[U](f: (Any) => U, removeAfterProcessing: Boolean)
   def cleanUp
 }
 

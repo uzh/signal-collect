@@ -121,17 +121,20 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
     }
     if (!isPaused) {
       while (isMailboxEmpty && !isConverged) {
-        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), removeAfterProcessing = true)
-        vertexStore.toCollect.foreach(
-          (vertexId, uncollectedSignals) => {
-            val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, addToSignal = false)
-            if (collectExecuted) {
-              executeSignalOperationOfVertex(vertexId)
-            }
-          }, removeAfterProcessing = true, breakCondition = () => !isMailboxEmpty)
+    	  scheduleOperations
       }
     }
+  }
 
+  def scheduleOperations {
+    vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), removeAfterProcessing = true)
+    vertexStore.toCollect.foreach(
+      (vertexId, uncollectedSignals) => {
+        val collectExecuted = executeCollectOperationOfVertex(vertexId, uncollectedSignals, addToSignal = false)
+        if (collectExecuted) {
+          executeSignalOperationOfVertex(vertexId)
+        }
+      }, removeAfterProcessing = true, breakCondition = () => !isMailboxEmpty)
   }
 
   protected val counters = new WorkerOperationCounters()

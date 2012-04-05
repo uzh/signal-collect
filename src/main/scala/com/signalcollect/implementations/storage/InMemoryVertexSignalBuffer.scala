@@ -21,6 +21,7 @@ import com.signalcollect.interfaces.{ VertexSignalBuffer, SignalMessage, Storage
 import java.util.concurrent.ConcurrentHashMap
 import java.util.ArrayList
 import collection.JavaConversions._
+import java.util.Iterator
 
 /**
  * Stores Signals that were received by the worker but not collected by the vertices yet
@@ -28,7 +29,7 @@ import collection.JavaConversions._
 class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
   val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_, _, _]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
-  var iterator = undeliveredSignals.keySet.iterator
+  var iterator: Iterator[Any] = null
 
   /**
    * Adds a new signal for a specific recipient to the buffer
@@ -89,10 +90,8 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 
-    if (!iterator.hasNext) {
-      iterator = undeliveredSignals.keySet.iterator
-    }
-
+    iterator = undeliveredSignals.keySet.iterator
+    
     while (iterator.hasNext && !breakCondition()) {
       val currentId = iterator.next
       f(currentId, undeliveredSignals.get(currentId))

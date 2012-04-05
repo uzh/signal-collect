@@ -105,3 +105,9 @@ trait MinimalPath extends DefaultStorage {
       (bufferedSignal: Int, id: Any) => new SignalMessage(new DefaultEdgeId(id, -1), bufferedSignal), 
       Int.MaxValue)
 }
+
+trait SumSignals extends DefaultStorage {
+	override protected def vertexSignalFactory = new ReducingVertexSignalBuffer((oldAggregatedValue: Option[Float], signal: SignalMessage[_,_,_]) => oldAggregatedValue.getOrElse(0.0f)+signal.signal.asInstanceOf[Float],
+      (bufferedSignal: Float, id: Any) => new SignalMessage(new DefaultEdgeId(id, -1), bufferedSignal), 
+      0.0f)
+}
