@@ -14,18 +14,8 @@
 			<name>Typesafe Repository</name>
 			<url>http://repo.typesafe.com/typesafe/releases/</url>
 		</repository>
-		<repository>
-			<id>public</id>
-			<name>ifi Public Repositories</name>
-			<url>https://maven.ifi.uzh.ch/maven2/content/groups/public/</url>
-		</repository>
 	</repositories>
 	<dependencies>
-		<dependency>
-			<groupId>com.github.nethad.clustermeister</groupId>
-			<artifactId>api</artifactId>
-			<version>0.1-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-actor</artifactId>

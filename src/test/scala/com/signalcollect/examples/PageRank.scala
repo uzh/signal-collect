@@ -24,7 +24,6 @@ import com.signalcollect.configuration._
 import com.signalcollect.nodeprovisioning.torque._
 import com.signalcollect.nodeprovisioning.local._
 import com.signalcollect.nodeprovisioning._
-import com.signalcollect.nodeprovisioning.clustermeister._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -78,15 +77,13 @@ object PageRank extends App {
   //  val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).withLoggingLevel(LoggingLevel.Debug).build
   //    val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).build //withLoggingLevel(LoggingLevel.Debug).
   //    val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
-  //  val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-  //    override def getNodes: List[Node] = {
-  //      List(new LocalNode {
-  //        override def numberOfCores = 1
-  //      })
-  //    }
-  //  }).withLoggingLevel(LoggingLevel.Debug).build
-
-  val graph = GraphBuilder.withNodeProvisioner(new ClustermeisterNodeProvisioner()).build
+    val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
+      override def getNodes: List[Node] = {
+        List(new LocalNode {
+          override def numberOfCores = 1
+        })
+      }
+    }).withLoggingLevel(LoggingLevel.Debug).build
 
   println("From client: Graph built")
 
