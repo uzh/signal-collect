@@ -38,7 +38,7 @@ case class GraphConfiguration(
   workerFactory: WorkerFactory = factory.worker.Akka,
   messageBusFactory: MessageBusFactory = factory.messagebus.SharedMemory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = None,
+  statusUpdateIntervalInMillis: Option[Long] = Some(500l),
   akkaDispatcher: AkkaDispatcher = Pinned,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner)
 

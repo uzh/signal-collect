@@ -84,6 +84,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    * @param f 				the function to apply to each entry in the map
    * @param clearWhenDone	determines if the map should be cleared when all entries are processed
    * @param breakCondition 	determines if the loop should be escaped before it is done
+   * @return 				has the execution handled all elements in the list i.e. has it not been interrupted by the break condition
    */
   def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U,
     removeAfterProcessing: Boolean,

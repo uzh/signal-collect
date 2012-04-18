@@ -88,7 +88,7 @@ akka {
       require-cookie = off
 
       # (I) Reuse inbound connections for outbound messages
-      use-passive-connections = on
+      use-passive-connections = off
 
       # (I) The hostname or ip to bind the remoting to,
       # InetAddress.getLocalHost.getHostAddress is used if empty
@@ -109,7 +109,7 @@ akka {
       connection-timeout = 120s
 
       # (I) Sets the size of the connection backlog
-      backlog = 4096
+      backlog = 8192
 
       # (I) Length in akka.time-unit how long core threads will be kept alive if idling
       execution-pool-keepalive = 60s
