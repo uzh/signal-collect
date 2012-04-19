@@ -36,12 +36,12 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-  messagesSent: Long,
+  messagesSent: Map[Int, Long],
   messagesReceived: Long)
 
 case class WorkerStatistics(
   messagesReceived: Long = 0l,
-  messagesSent: Long = 0l,
+  messagesSent: Map[Int, Long] = Map(),
   collectOperationsExecuted: Long = 0l,
   signalOperationsExecuted: Long = 0l,
   numberOfVertices: Long = 0l,
@@ -53,7 +53,7 @@ case class WorkerStatistics(
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       messagesReceived + other.messagesReceived,
-      messagesSent + other.messagesSent,
+      messagesSent ++ other.messagesSent.map{ case (k,v) => k -> (v + messagesSent.getOrElse(k,0l)) }, //merges the sent messages statistics
       collectOperationsExecuted + other.collectOperationsExecuted,
       signalOperationsExecuted + other.signalOperationsExecuted,
       numberOfVertices + other.numberOfVertices,

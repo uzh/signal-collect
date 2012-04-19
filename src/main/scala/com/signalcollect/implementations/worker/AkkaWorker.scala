@@ -121,7 +121,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
     }
     if (!isPaused) {
       while (isMailboxEmpty && !isConverged) {
-    	  scheduleOperations
+        scheduleOperations
       }
     }
   }
@@ -153,11 +153,10 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
         try {
           val result = command(this)
           if (reply) {
-            messageBus.getSentMessagesCounter.incrementAndGet
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
-              sender ! None
+              messageBus.sendToActor(sender, None)
             } else {
-              sender ! result
+              messageBus.sendToActor(sender, result)
             }
           }
         } catch {

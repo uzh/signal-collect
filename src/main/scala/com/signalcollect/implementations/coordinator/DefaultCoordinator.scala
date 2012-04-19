@@ -32,7 +32,7 @@ import akka.actor.Actor
 import java.util.concurrent.atomic.AtomicLong
 import com.signalcollect.GraphEditor
 import akka.actor.ActorRef
-import java.util.HashMap
+import java.util.{HashMap, Map}
 import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
@@ -57,7 +57,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
 
   def receive = {
     case ws: WorkerStatus =>
-      messageBus.getReceivedMessagesCounter.addAndGet(1)
+      messageBus.getReceivedMessagesCounter.incrementAndGet
       updateWorkerStatusMap(ws)
       if (isIdle) {
         onIdle
@@ -83,7 +83,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
     // only update worker status if no status received so far or if the current status is newer
-    if (!workerStatusMap.keySet.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent < ws.messagesSent) {
+    if (!workerStatusMap.keySet.contains(ws.workerId) || workerStatusMap.get(ws.workerId).messagesSent.values.sum < ws.messagesSent.values.sum) {
       workerStatusMap.put(ws.workerId, ws)
     }
   }
@@ -110,8 +110,15 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
    *
    * Initialization messages sent to the workers do not have to be taken into account, because they are balanced by replies from the workers that do not get counted when they are received.
    */
-  def messagesSentByWorkers = workerStatusMap.values.foldLeft(0l)(_ + _.messagesSent) + numberOfWorkers // 
-  def messagesSentByCoordinator = messageBus.messagesSent
+  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers //
+ 
+  def messagesSentPerWorker: Map[Int, Long] = {
+        val messagesPerWorker = new HashMap[Int, Long]()
+        workerStatusMap.values.foreach(_.messagesSent.foreach(workerStat => messagesPerWorker.put(workerStat._1, workerStat._2 + messagesPerWorker.getOrElse(workerStat._1, 0l))))
+        messagesPerWorker
+  }
+  
+  def messagesSentByCoordinator = messageBus.messagesSent.values.foldLeft(0l)(_ + _)
 
   def messagesReceivedByWorkers = workerStatusMap.values.foldLeft(0l)(_ + _.messagesReceived)
   def messagesReceivedByCoordinator = messageBus.messagesReceived
@@ -133,7 +140,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
         Is idle stats:
     		Workers that are not idle yet: """ + workerStatusMap.values.filter(!_.isIdle).foldLeft("")(_ + _) + """
     		totalMessagesSent: """ + totalMessagesSent + """ totalMessagesReceived: """ + totalMessagesReceived + """
-    		coordinatorMessagesSent: """ + messageBus.getSentMessagesCounter.get + """ coordinatorMessagesReceived: """ + messageBus.getReceivedMessagesCounter.get + """
+    		coordinatorMessagesSent: """ + messagesSentByCoordinator + """ coordinatorMessagesReceived: """ + messagesReceivedByCoordinator + """
     		workerStatusMaps: """ + workerStatusMap.values)
     workerStatusMap.values.forall(_.isIdle) && totalMessagesSent == totalMessagesReceived
   }

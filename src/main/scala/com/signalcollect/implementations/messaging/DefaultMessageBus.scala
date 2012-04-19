@@ -45,22 +45,45 @@ class DefaultMessageBus(
 
   protected val workers = new Array[ActorRef](numberOfWorkers)
 
-  lazy val parallelWorkers = workers.par
-
-  lazy val workerProxies = workers map (AkkaProxy.newInstance[Worker](_, sentMessagesCounter, receivedMessagesCounter))
-
-  lazy val workerApi = new WorkerApi(workerProxies, mapper)
+  protected val workerIds = (0 until numberOfWorkers).toList
 
   protected var logger: ActorRef = _
 
   protected var coordinator: ActorRef = _
 
-  protected val sentMessagesCounter = new AtomicInteger(0)
-  def getSentMessagesCounter: AtomicInteger = sentMessagesCounter
+  //Map with Int as key and atomic Int as values. Meaning of Ints positive => worker id, -1 => coordinator, -2 => otherRecipients
+  val coordinatorId = -1
+  val otherRecipients = -2
+
+  protected var sentMessagesCounters: Map[Int, AtomicInteger] = {
+    val mapKeys = coordinatorId :: otherRecipients :: workerIds
+    Map[Int, AtomicInteger]() ++ mapKeys.map((_, new AtomicInteger(0)))
+  }
+
   protected val receivedMessagesCounter = new AtomicInteger(0)
   def getReceivedMessagesCounter: AtomicInteger = receivedMessagesCounter
 
-  def messagesSent = sentMessagesCounter.get
+  lazy val parallelWorkers = workers.par
+
+  lazy val workerProxies: Array[Worker] = {
+    val result = new Array[Worker](numberOfWorkers)
+    for (workerId <- workerIds) {
+      result(workerId) = AkkaProxy.newInstance[Worker](workers(workerId), sentMessagesCounters(workerId), receivedMessagesCounter)
+    }
+    result
+  }
+
+  lazy val workerApi = new WorkerApi(workerProxies, mapper)
+
+  /**
+   * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
+   */
+  def messagesSent = sentMessagesCounters.map(element => {
+    element match {
+      case (id, count) => (id, count.get.toLong)
+    }
+  })
+
   def messagesReceived = receivedMessagesCounter.get
 
   //--------------------MessageRecipientRegistry--------------------
@@ -82,8 +105,13 @@ class DefaultMessageBus(
 
   //--------------------MessageBus--------------------
 
+  def sendToActor(actor: ActorRef, message: Any) {
+    sentMessagesCounters(otherRecipients).incrementAndGet()
+    actor ! message
+  }
+
   def sendToCoordinator(message: Any) {
-    sentMessagesCounter.incrementAndGet
+    sentMessagesCounters(coordinatorId).incrementAndGet
     coordinator ! message
   }
 
@@ -96,31 +124,29 @@ class DefaultMessageBus(
   }
 
   def sendToWorkerForVertexId(message: Any, recipientId: Any) {
-    val worker = workers(mapper.getWorkerIdForVertexId(recipientId))
-    sentMessagesCounter.incrementAndGet
-    worker ! message
+    val workerId = mapper.getWorkerIdForVertexId(recipientId)
+    sendToWorker(workerId, message)
   }
 
   def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
-    val worker = workers(mapper.getWorkerIdForVertexIdHash(recipientIdHash))
-    sentMessagesCounter.incrementAndGet
-    worker ! message
+    val workerId = mapper.getWorkerIdForVertexIdHash(recipientIdHash)
+    sendToWorker(workerId, message)
   }
 
   def sendToWorker(workerId: Int, message: Any) {
-    sentMessagesCounter.incrementAndGet
+    sentMessagesCounters(workerId).incrementAndGet
     workers(workerId) ! message
   }
 
   def sendToWorkers(message: Any) {
-    sentMessagesCounter.addAndGet(numberOfWorkers)
+    workerIds.foreach(sentMessagesCounters(_).incrementAndGet)
     for (worker <- parallelWorkers) {
       worker ! message
     }
   }
 
   def getWorkerIdForVertexId(vertexId: Any): Int = mapper.getWorkerIdForVertexId(vertexId)
-  
+
   def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)
 
   //--------------------GraphEditor--------------------

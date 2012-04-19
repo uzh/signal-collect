@@ -34,9 +34,13 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   
   def numberOfWorkers: Int
 
-  def messagesSent: Long
+  def messagesSent: Map[Int, Long]
   def messagesReceived: Long
 
+  def getReceivedMessagesCounter: AtomicInteger
+
+  def sendToActor(actor: ActorRef, m: Any) 
+  
   def sendToLogger(m: LogMessage)
 
   def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
@@ -48,9 +52,6 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   def sendToWorkers(m: Any)
 
   def sendToCoordinator(m: Any)
-  
-  def getSentMessagesCounter: AtomicInteger
-  def getReceivedMessagesCounter: AtomicInteger
 
   def getWorkerApi: WorkerApi // returns an api that treats all workers as if there were only one
 

@@ -120,7 +120,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     system.actorOf(Props().withCreator(loggerCreator.create()), name = "Logger")
   }
 
-  val workerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor)
 
   initializeMessageBuses
@@ -129,7 +129,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def initializeMessageBuses {
     // the MessageBus registries
-    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: workerProxies.toList
+    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
     for (registry <- registries.par) {
       try {
         registry.registerCoordinator(coordinatorActor)
