@@ -45,6 +45,7 @@ import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.implementations.messaging.Request
 import akka.dispatch.Future
 import akka.dispatch.Promise
+import akka.dispatch.MessageQueue
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -101,15 +102,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
       performComputations
   }
 
-  val mailbox = context.asInstanceOf[{ def mailbox: { def canBeScheduledForExecution(a: Boolean, b: Boolean): Boolean } }].mailbox
-
-  /**
-   * Tests if the actor mailbox is empty
-   */
-  def isMailboxEmpty: Boolean = {
-    // See http://groups.google.com/group/akka-user/browse_thread/thread/6e645ee0c242c95b/c082f33e917db656 last post by Viktor Klang
-    !mailbox.canBeScheduledForExecution(false, false)
-  }
+  val messageQueue: MessageQueue = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue
 
   def performComputations {
     if (statusUpdateIntervalInMillis.isDefined) {
@@ -120,7 +113,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
       }
     }
     if (!isPaused) {
-      while (isMailboxEmpty && !isConverged) {
+      while (!messageQueue.hasMessages && !isConverged) {
         scheduleOperations
       }
     }
@@ -134,7 +127,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
         if (collectExecuted) {
           executeSignalOperationOfVertex(vertexId)
         }
-      }, removeAfterProcessing = true, breakCondition = () => !isMailboxEmpty)
+      }, removeAfterProcessing = true, breakCondition = () => messageQueue.hasMessages)
   }
 
   protected val counters = new WorkerOperationCounters()
