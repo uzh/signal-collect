@@ -71,7 +71,7 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
   def create: NodeProvisionerActor = new NodeProvisionerActor(numberOfNodes)
 }
 
-class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends NodeProvisioner {
+class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParameters: String) extends NodeProvisioner {
   def getNodes: List[Node] = {
     val system: ActorSystem = ActorSystem("NodeProvisioner", AkkaConfig.get)
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
@@ -87,7 +87,7 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int) extends 
           val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()
       }
-      jobs = new TorqueJob(jobId, function) :: jobs
+      jobs = new TorqueJob(jobId=jobId, execute=function, jvmParameters=jvmParameters) :: jobs
     }
     torqueHost.executeJobs(jobs)
     val nodesFuture = nodeProvisioner ? "GetNodes"

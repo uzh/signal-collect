@@ -107,11 +107,14 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner): GraphBuilder = {
     new GraphBuilder(
       GraphConfiguration(
+        maxInboxSize = config.maxInboxSize, 
         loggingLevel = loggingLevel,
         logger = logger,
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
         storageFactory = storageFactory,
+        statusUpdateIntervalInMillis = config.statusUpdateIntervalInMillis,
+        akkaDispatcher = config.akkaDispatcher,
         nodeProvisioner = nodeProvisioner))
   }
 
