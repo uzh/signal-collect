@@ -22,6 +22,7 @@ package com.signalcollect.implementations.worker
 
 import com.signalcollect._
 import com.signalcollect.interfaces._
+import com.signalcollect.implementations.serialization.DefaultSerializer
 
 /**
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
@@ -46,6 +47,22 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
       worker.addOutgoingEdge(edge)
     } else {
       graphEditor.addEdge(edge, blocking)
+    }
+  }
+
+  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) = {
+    if (blocking && shouldHandleLocally(edge.id.targetId)) {
+      worker.addIncomingEdge(edge)
+    } else {
+      graphEditor.addIncomingEdge(edge, blocking)
+    }
+  }
+
+  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) = {
+    if (blocking && shouldHandleLocally(edgeId.targetId)) {
+      worker.removeIncomingEdge(edgeId)
+    } else {
+      graphEditor.removeIncomingEdge(edgeId, blocking)
     }
   }
 

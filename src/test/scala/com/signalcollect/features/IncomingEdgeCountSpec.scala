@@ -61,6 +61,21 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
       val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
       incomingEdgeCount2 == 1
     }
+
+    "handle vertex removals correctly" in {
+      graph.removeVertex(1)
+      graph.removeVertex(3)
+      graph.awaitIdle
+      val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
+      incomingEdgeCount2 == 0
+    }
+
+    "have the correct PageRank after removal" in {
+      graph.execute
+      val state = graph.forVertexWithId(2, (v: PageRankVertex) => v.state)
+      (state - 0.15) < 0.00000000001
+    }
+
   }
 
 }

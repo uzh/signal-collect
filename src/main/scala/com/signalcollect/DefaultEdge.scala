@@ -76,6 +76,9 @@ abstract class DefaultEdge[@specialized SourceIdTypeParameter, @specialized Targ
   /** The type of signals that are sent along this edge. */
   @specialized type Signal = Any
 
+  /** Called when the edge is attached to a source vertex */
+  def onAttach(sourceVertex: SourceVertex, graphEditor: GraphEditor) = {}
+  
   /**
    *  An edge id uniquely identifies an edge in the graph.
    */

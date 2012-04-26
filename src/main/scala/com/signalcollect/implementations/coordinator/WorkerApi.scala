@@ -88,7 +88,7 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
 
   def setCollectThreshold(t: Double) = parallelWorkers foreach (_.setCollectThreshold(t))
 
-  //----------------GraphApi, BLOCKING variant-------------------------
+  //----------------GraphEditor, BLOCKING variant-------------------------
 
   /**
    *  Sends `signal` along the edge with id `edgeId`.
@@ -113,7 +113,13 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
   def addEdge(edge: Edge) {
-    workers(mapper.getWorkerIdForVertexId(edge.id.sourceId)).addOutgoingEdge(DefaultSerializer.write(edge))
+    val serializedEdge = DefaultSerializer.write(edge)
+    workers(mapper.getWorkerIdForVertexId(edge.id.sourceId)).addOutgoingEdge(serializedEdge)
+  }
+
+  def addIncomingEdge(edge: Edge) {
+    val serializedEdge = DefaultSerializer.write(edge)
+    workers(mapper.getWorkerIdForVertexId(edge.id.targetId)).addIncomingEdge(serializedEdge)
   }
 
   /**
@@ -141,6 +147,10 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    */
   def removeEdge(edgeId: EdgeId[Any, Any]) {
     workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeOutgoingEdge(edgeId)
+  }
+
+  def removeIncomingEdge(edgeId: EdgeId[Any, Any]) {
+    workers(mapper.getWorkerIdForVertexId(edgeId.targetId)).removeIncomingEdge(edgeId)
   }
 
   /**

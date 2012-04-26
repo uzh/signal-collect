@@ -196,13 +196,11 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
     val key = edge.id.sourceId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
-      if (vertex.addOutgoingEdge(edge)) {
+      if (vertex.addOutgoingEdge(edge, graphEditor)) {
         counters.outgoingEdgesAdded += 1
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
-        val request = Request[Worker]((_.addIncomingEdge(edge)), returnResult = false)
-        messageBus.sendToWorkerForVertexId(request, edge.id.targetId)
       }
     } else {
       warning("Did not find vertex with id " + edge.id.sourceId + " when trying to add outgoing edge " + edge)
@@ -213,8 +211,10 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
     val key = edge.id.targetId
     val vertex = vertexStore.vertices.get(key)
     if (vertex != null) {
-      if (vertex.addIncomingEdge(edge)) {
+      if (vertex.addIncomingEdge(edge, graphEditor)) {
         counters.incomingEdgesAdded += 1
+        vertexStore.toCollect.addVertex(vertex.id)
+        vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
       }
     } else {
@@ -223,9 +223,9 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
-    vertexStore.vertices foreach { vertex =>
+    for (vertex <- vertexStore.vertices) {
       if (sourceVertexPredicate(vertex)) {
-        addOutgoingEdge(edgeFactory(vertex))
+        graphEditor.addEdge(edgeFactory(vertex))
       }
     }
   }
@@ -242,10 +242,8 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
-      if (vertex.removeOutgoingEdge(edgeId)) {
+      if (vertex.removeOutgoingEdge(edgeId, graphEditor)) {
         counters.outgoingEdgesRemoved += 1
-        val request = Request[Worker]((_.removeIncomingEdge(edgeId)))
-        messageBus.sendToWorkerForVertexId(request, edgeId.targetId)
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
@@ -260,8 +258,10 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   def removeIncomingEdge(edgeId: EdgeId[Any, Any]) {
     val vertex = vertexStore.vertices.get(edgeId.targetId)
     if (vertex != null) {
-      if (vertex.removeIncomingEdge(edgeId)) {
+      if (vertex.removeIncomingEdge(edgeId, graphEditor)) {
         counters.incomingEdgesRemoved += 1
+        vertexStore.toCollect.addVertex(vertex.id)
+        vertexStore.toSignal.add(vertex.id)
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         warning("Incoming edge not found when trying to remove edge with id " + edgeId)
@@ -277,7 +277,7 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
 
   protected def processRemoveVertex(vertex: Vertex) {
     counters.outgoingEdgesRemoved += vertex.outgoingEdgeCount
-    val edgesRemoved = vertex.removeAllOutgoingEdges
+    val edgesRemoved = vertex.removeAllOutgoingEdges(graphEditor)
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
     vertex.beforeRemoval(graphEditor)
@@ -332,9 +332,11 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
-    var acc = aggregationOperation.neutralElement
-    vertexStore.vertices.foreach { vertex => acc = aggregationOperation.aggregate(acc, aggregationOperation.extract(vertex)) }
-    acc
+    var accumulator = aggregationOperation.neutralElement
+    for (vertex <- vertexStore.vertices) {
+      accumulator = aggregationOperation.aggregate(accumulator, aggregationOperation.extract(vertex))
+    }
+    accumulator
   }
 
   def startAsynchronousComputation {

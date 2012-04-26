@@ -391,6 +391,10 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def addEdge(edge: Edge, blocking: Boolean = false) {
     graphEditor.addEdge(edge, blocking)
   }
+    
+  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) {
+    graphEditor.addIncomingEdge(edge, blocking)
+  }
 
   /**
    *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
@@ -418,7 +422,11 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
     graphEditor.removeEdge(edgeId, blocking)
   }
-
+  
+  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    graphEditor.removeIncomingEdge(edgeId, blocking)
+  }
+  
   /**
    *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
    */

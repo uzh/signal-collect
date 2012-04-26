@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  * Represents an edge in a Single-Source Shortest Path compute graph.
@@ -63,6 +64,8 @@ class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVerte
     val currentShortestPath = oldState.getOrElse(Int.MaxValue)
     Some(mostRecentSignals.foldLeft(currentShortestPath)(math.min(_, _)))
   }
+
+  override def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double = signals.size // changed so it only gets called once signals were received
 
 }
 

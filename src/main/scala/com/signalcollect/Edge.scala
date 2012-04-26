@@ -23,7 +23,7 @@ import com.signalcollect.interfaces.MessageBus
 /**
  *  An edge id uniquely identifies an edge in the graph.
  */
-trait EdgeId[@specialized SourceId, @specialized TargetId] extends Serializable {
+trait EdgeId[@specialized +SourceId, @specialized +TargetId] extends Serializable {
   def sourceId: SourceId
   def targetId: TargetId
   def description: String
@@ -52,7 +52,7 @@ trait Edge extends Serializable {
   def id: EdgeId[SourceId, TargetId]
 
   /** Called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: SourceVertex) = {}
+  def onAttach(sourceVertex: SourceVertex, graphEditor: GraphEditor)
 
   /** The weight of this edge. */
   def weight: Double

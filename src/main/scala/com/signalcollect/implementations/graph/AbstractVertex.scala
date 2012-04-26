@@ -61,8 +61,11 @@ abstract class AbstractVertex extends Vertex {
   /** The state of this vertex when it last signaled. */
   protected var lastSignalState: Option[State] = None
 
-  /** Keeps track if edges get added so this vertex remembers to signal for those */
-  protected var outgoingEdgeAddedSinceSignalOperation = false
+  /** Keeps track if edges get modified so we know we should signal again */
+  protected var edgesModifiedSinceSignalOperation = false
+
+  /** Keeps track if edges get modified so we know we should collect again */
+  protected var edgesModifiedSinceCollectOperation = false
 
   var incomingEdgeCount = 0
 
@@ -71,12 +74,14 @@ abstract class AbstractVertex extends Vertex {
    *
    * @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge): Boolean = {
-    val edgeId = e.id.asInstanceOf[EdgeId[Id, Any]]
+  def addOutgoingEdge(edge: Edge, graphEditor: GraphEditor): Boolean = {
+    val edgeId = edge.id.asInstanceOf[EdgeId[Id, Any]]
     if (outgoingEdges.get(edgeId) == null) {
-      outgoingEdgeAddedSinceSignalOperation = true
-      outgoingEdges.put(edgeId, e)
-      e.onAttach(this.asInstanceOf[e.SourceVertex])
+      edgesModifiedSinceSignalOperation = true
+      edgesModifiedSinceCollectOperation = true
+      outgoingEdges.put(edgeId, edge)
+      edge.onAttach(this.asInstanceOf[edge.SourceVertex], graphEditor: GraphEditor)
+      graphEditor.addIncomingEdge(edge, blocking = false) // has to be non-blocking, otherwise deadlock is possible
       true
     } else {
       false
@@ -87,11 +92,14 @@ abstract class AbstractVertex extends Vertex {
    * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
    * @param e the edge to be added.
    */
-  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean = {
+  def removeOutgoingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean = {
     val castEdgeId = edgeId.asInstanceOf[EdgeId[Id, _]]
     val outgoingEdge = outgoingEdges.get(castEdgeId)
     if (outgoingEdge != null) {
+      edgesModifiedSinceSignalOperation = true
+      edgesModifiedSinceCollectOperation = true
       outgoingEdges.remove(castEdgeId)
+      graphEditor.removeIncomingEdge(edgeId, blocking = false) // has to be non-blocking, otherwise deadlock is possible
       true
     } else {
       false
@@ -102,23 +110,25 @@ abstract class AbstractVertex extends Vertex {
    * Removes all outgoing {@link Edge}s from this {@link Vertex}.
    * @return returns the number of {@link Edge}s that were removed.
    */
-  def removeAllOutgoingEdges: Int = {
+  def removeAllOutgoingEdges(graphEditor: GraphEditor): Int = {
     val edgesRemoved = outgoingEdges.size
-    outgoingEdges.keys foreach (removeOutgoingEdge(_))
+    for (outgoingEdge <- outgoingEdges.keys) {
+      removeOutgoingEdge(outgoingEdge, graphEditor)
+    }
     edgesRemoved
   }
 
   /**
-   * This method tells this {@link FrameworkVertex} to execute the signal operation
-   * on all its outgoing {@Edge}s. This method is going to be
-   * called by the SignalCollect framework during its execution (i.e. the
-   * {@link Worker} implementations).
+   * This method tells this Vertex to execute the signal operation
+   * on all its outgoing edges. This method is going to be
+   * called by the Signal/Collect framework during its execution (i.e. the
+   * {Worker implementation.
    *
    * @see Worker
    * @see Edge#executeSignalOperation
    */
   def executeSignalOperation(messageBus: MessageBus) {
-    outgoingEdgeAddedSinceSignalOperation = false
+    edgesModifiedSinceSignalOperation = false
     lastSignalState = Some(state)
     doSignal(messageBus)
   }
@@ -137,7 +147,9 @@ abstract class AbstractVertex extends Vertex {
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus)
+  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
+    edgesModifiedSinceCollectOperation = false
+  }
 
   /**
    * This method is used by the framework in order to decide if the vertex' collect operation
@@ -145,7 +157,15 @@ abstract class AbstractVertex extends Vertex {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double = signals.size
+  def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double = {
+    if (signals.size > 0) {
+      signals.size
+    } else if (edgesModifiedSinceCollectOperation) {
+      1
+    } else {
+      0
+    }
+  }
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -153,7 +173,7 @@ abstract class AbstractVertex extends Vertex {
    * @return the score value. The meaning of this value depends on the thresholds set in {@link ComputeGraph#execute}.
    */
   def scoreSignal: Double = {
-    if (outgoingEdgeAddedSinceSignalOperation) {
+    if (edgesModifiedSinceSignalOperation) {
       1
     } else {
       lastSignalState match {
@@ -192,8 +212,10 @@ abstract class AbstractVertex extends Vertex {
    *  Adds a new incoming `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addIncomingEdge(e: Edge): Boolean = {
+  def addIncomingEdge(e: Edge, graphEditor: GraphEditor): Boolean = {
     incomingEdgeCount += 1
+    edgesModifiedSinceCollectOperation = true
+    edgesModifiedSinceSignalOperation = true
     true
   }
 
@@ -201,8 +223,10 @@ abstract class AbstractVertex extends Vertex {
    *  Removes incoming `Edge` from this `Vertex`.
    *  @param edgeId of the edge to be removed.
    */
-  def removeIncomingEdge(edgeId: EdgeId[_, _]): Boolean = {
+  def removeIncomingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean = {
     incomingEdgeCount -= 1
+    edgesModifiedSinceCollectOperation = true
+    edgesModifiedSinceSignalOperation = true
     true
   }
 }

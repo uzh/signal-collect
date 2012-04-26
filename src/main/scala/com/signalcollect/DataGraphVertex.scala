@@ -91,7 +91,8 @@ abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateT
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
+  override def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
+    super.executeCollectOperation(signals, messageBus)
     val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
     // faster than scala foreach
     val i = castS.iterator
@@ -107,6 +108,21 @@ abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateT
    */
   override def getVertexIdsOfPredecessors: Option[Iterable[Any]] = {
     Some(mostRecentSignalMap.keys map (_.sourceId))
+  }
+
+  /**
+   *  Removes incoming `Edge` from this `Vertex`.
+   *  @param edgeId of the edge to be removed.
+   */
+  override def removeIncomingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean = {
+    val removed = super.removeIncomingEdge(edgeId, graphEditor)
+    if (removed) {
+      val castEdgeId = edgeId.asInstanceOf[EdgeId[_, Id]]
+      if (mostRecentSignalMap.contains(castEdgeId)) {
+        mostRecentSignalMap.remove(castEdgeId)
+      }
+    }
+    removed
   }
 
 }

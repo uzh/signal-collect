@@ -67,31 +67,31 @@ trait Vertex extends Serializable {
    *  Adds a new outgoing `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge): Boolean
+  def addOutgoingEdge(e: Edge, graphEditor: GraphEditor): Boolean
 
   /**
    *  Removes an outgoing `Edge` from this `Vertex`.
    *  @param edgeId the edge id to be removed
    *  @return returns if an edge was removed
    */
-  def removeOutgoingEdge(edgeId: EdgeId[_, _]): Boolean
+  def removeOutgoingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean
 
   /**
    *  Adds a new incoming `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addIncomingEdge(e: Edge): Boolean
+  def addIncomingEdge(e: Edge, graphEditor: GraphEditor): Boolean
 
   /**
    *  Removes incoming `Edge` from this `Vertex`.
    *  @param edgeId of the edge to be removed.
    */
-  def removeIncomingEdge(edgeId: EdgeId[_, _]): Boolean
-  
+  def removeIncomingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean
+
   /**
    *  Removes all outgoing `Edge`s from this `Vertex`, returns the number of edges that were removed.
    */
-  def removeAllOutgoingEdges: Int
+  def removeAllOutgoingEdges(graphEditor: GraphEditor): Int
 
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
@@ -130,12 +130,12 @@ trait Vertex extends Serializable {
   def outgoingEdgeCount: Int
 
   /**
-   *  @return ids of all vertices to which this vertex currently has an outgoing edge
+   *  @return Ids of all vertices to which this vertex currently has an outgoing edge
    */
   def getVertexIdsOfSuccessors: Iterable[_]
 
   /**
-   *  @return ids of vertices that currently have an outgoing edge to to this vertex. `None` if this operation is not
+   *  @return Ids of vertices that currently have an outgoing edge to to this vertex. `None` if this operation is not
    *  supported.
    */
   def getVertexIdsOfPredecessors: Option[Iterable[Any]]

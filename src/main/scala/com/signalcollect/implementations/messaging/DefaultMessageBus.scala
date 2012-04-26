@@ -155,7 +155,7 @@ class DefaultMessageBus(
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
   def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.sendSignalAlongEdge(signal, edgeId)
     } else {
@@ -165,7 +165,7 @@ class DefaultMessageBus(
   }
 
   def addVertex(vertex: Vertex, blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.addVertex(vertex)
     } else {
@@ -178,19 +178,31 @@ class DefaultMessageBus(
 
   def addEdge(edge: Edge, blocking: Boolean = false) {
     // thread that uses an object should instantiate it (performance)
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.addEdge(edge)
     } else {
-      // manually send a fire & forget request
+      // manually send a fire & forget request -- not delegated so we don't have to serialize twice
       val e = write(edge)
       val request = Request[Worker]((_.addOutgoingEdge(e)), returnResult = false)
       sendToWorkerForVertexId(request, edge.id.sourceId)
     }
   }
 
+  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) {
+    if (blocking) {
+      // use proxy
+      workerApi.addIncomingEdge(edge)
+    } else {
+      // manually send a fire & forget request
+      val e = write(edge)
+      val request = Request[Worker]((_.addIncomingEdge(e)), returnResult = false)
+      sendToWorkerForVertexId(request, edge.id.targetId)
+    }
+  }
+
   def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
     } else {
@@ -201,7 +213,7 @@ class DefaultMessageBus(
   }
 
   def removeVertex(vertexId: Any, blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.removeVertex(vertexId)
     } else {
@@ -212,16 +224,27 @@ class DefaultMessageBus(
   }
 
   def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       // use proxy
       workerApi.removeEdge(edgeId)
     } else {
-      // manually send a fire & forget request
+      // manually send a fire & forget request     
       val request = Request[Worker]((_.removeOutgoingEdge(edgeId)), returnResult = false)
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
 
+  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+    if (blocking) {
+      // use proxy
+      workerApi.removeIncomingEdge(edgeId)
+    } else {
+      // manually send a fire & forget request
+      val request = Request[Worker]((_.removeIncomingEdge(edgeId)), returnResult = false)
+      sendToWorkerForVertexId(request, edgeId.targetId)
+    }
+  }
+  
   def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
     if (blocking == true) {
       // use proxy
@@ -234,7 +257,7 @@ class DefaultMessageBus(
   }
 
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
-    if (blocking == true) {
+    if (blocking) {
       workerApi.loadGraph(vertexIdHint, graphLoader)
     } else {
       val request = Request[Worker]((_.loadGraph(graphLoader)), returnResult = false)
