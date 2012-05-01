@@ -105,9 +105,6 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }
   
   val coordinatorActor: ActorRef = {
-    val numberOfRegistries = numberOfWorkers // see initializeMessageBuses, coordinator is not counting proxy messages, so it does not have to be counted here
-    val registrationMessagesPerRegistry = numberOfWorkers + 2 // +2 for coordinator and logger (the logger does not have its own registry, because it only receives messages)
-    val initializationMessagesSent = numberOfRegistries * registrationMessagesPerRegistry
     val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.maxInboxSize, config.loggingLevel)
     config.akkaDispatcher match {
         case EventBased => system.actorOf(Props().withCreator(coordinatorCreator.create), name = "Coordinator")
