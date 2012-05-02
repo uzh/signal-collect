@@ -276,7 +276,6 @@ class AkkaWorker(val workerId: Int, val numberOfWorkers: Int, val messageBusFact
   }
 
   protected def processRemoveVertex(vertex: Vertex) {
-    counters.outgoingEdgesRemoved += vertex.outgoingEdgeCount
     val edgesRemoved = vertex.removeAllOutgoingEdges(graphEditor)
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
