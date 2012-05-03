@@ -55,6 +55,7 @@ trait VertexIdSet {
   def isEmpty: Boolean
   def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
   def applyToNext[U](f: (Any) => U, removeAfterProcessing: Boolean)
+  def updateStateOfVertex(vertex: Vertex)
   def cleanUp
 }
 

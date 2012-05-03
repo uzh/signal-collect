@@ -20,6 +20,7 @@ package com.signalcollect.implementations.storage
 
 import com.signalcollect.interfaces._
 import scala.collection.mutable.LinkedHashSet
+import com.signalcollect.Vertex
 
 /**
  * Stores a set of vertex IDs in main memory and allows iterating through them via a custom foreach function for processing the entries.
@@ -77,6 +78,11 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
       }
     }
   }
+
+  /**
+   * Ignored for this implementation.
+   */
+  def updateStateOfVertex(vertex: Vertex) = {}
 
   /**
    * Removes all entries from the collection.

@@ -63,17 +63,17 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     storage.toCollect.remove(id)
     storage.toSignal.remove(id)
   }
-  
-    /**
+
+  /**
    * Removes all vertices that satisfy the removal condition.
-   * 
+   *
    * @param removeCondition condition to check if a vertex should be removed.
    */
   def remove(removeCondition: Vertex => Boolean) {
     val it = vertexMap.values.iterator
     while (it.hasNext) {
       val vertex = it.next
-      if(removeCondition(vertex)) {
+      if (removeCondition(vertex)) {
         it.remove()
       }
     }
@@ -85,7 +85,9 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    *
    * @param vertex the vertex that would have to be updated
    */
-  def updateStateOfVertex(vertex: Vertex) = {}
+  def updateStateOfVertex(vertex: Vertex) = {
+    storage.toSignal.updateStateOfVertex(vertex)
+  }
 
   def foreach[U](f: Vertex => U) {
     val it = vertexMap.values.iterator
