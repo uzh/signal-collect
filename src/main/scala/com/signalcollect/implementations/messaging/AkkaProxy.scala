@@ -44,7 +44,7 @@ case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boo
  */
 object AkkaProxy {
 
-  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(10000 milliseconds)): T = {
+  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(7200 seconds)): T = {
     val c = manifest[T].erasure
     Proxy.newProxyInstance(
       c.getClassLoader,
