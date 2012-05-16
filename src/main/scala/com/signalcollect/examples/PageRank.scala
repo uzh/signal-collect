@@ -72,20 +72,21 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  //  val kraken = new TorqueHost(torqueHostname = "kraken.ifi.uzh.ch", jarPath = "./target/signal-collect-evaluation-2.0.0-SNAPSHOT-jar-with-dependencies.jar")
-  //  val krakenNodeProvisioner = new TorqueNodeProvisioner(kraken, 1)
-  //  val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).withLoggingLevel(LoggingLevel.Debug).build
-  //    val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).build //withLoggingLevel(LoggingLevel.Debug).
-  //    val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
-    val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-      override def getNodes: List[Node] = {
-        List(new LocalNode {
-          override def numberOfCores = 1
-        })
-      }
-    }).withLoggingLevel(LoggingLevel.Debug).build
+  //  For distributed execution on a torque cluster
+  //  val kraken = new TorqueHost(torqueHostname = "kraken.ifi.uzh.ch", localJarPath = "./target/signal-collect-core-2.0.0-SNAPSHOT-jar-with-dependencies.jar")
+  //  val krakenNodeProvisioner = new TorqueNodeProvisioner(kraken, 1, "")
+  //  val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).build
 
-  println("From client: Graph built")
+  //  val graph = GraphBuilder.withNodeProvisioner(krakenNodeProvisioner).withLoggingLevel(LoggingLevel.Debug).build
+  //  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
+
+  val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
+    override def getNodes: List[Node] = {
+      List(new LocalNode {
+        override def numberOfCores = 1
+      })
+    }
+  }).withLoggingLevel(LoggingLevel.Debug).build
 
   // Loading Method 1: Blocking loading
 
