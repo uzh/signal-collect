@@ -45,20 +45,19 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
   /** The set of available colors */
   val colors: Set[Int] = (1 to numColors).toSet
 
-  /** Returns a random color from the set of available colors */
+  /** Returns a random color */
   def getRandomColor: Int = Random.nextInt(numColors) + 1
 
   /**
    * Variable that indicates if the neighbors of this vertex should be informed
-   *  about its color choice. This is only the case if this vertex changed its
-   *  color.
+   * about its color choice. This is the case if the color has changed or if the color is the same but a conflict persists.
    */
   var informNeighbors: Boolean = false
 
   /**
    * Checks if one of the neighbors shares the same color. If so, the state is
-   *  set to a random color and the neighbors are informed about this vertex'
-   *  new color. If no neighbor shares the same color, we stay with the old color.
+   * set to a random color and the neighbors are informed about this vertex'
+   * new color. If no neighbor shares the same color, we stay with the old color.
    */
   def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
     if (mostRecentSignals.iterator.contains(state)) {

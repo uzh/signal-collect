@@ -31,7 +31,7 @@ import org.apache.commons.codec.binary.Base64
  */
 object TorquePriority {
   val superfast = "#PBS -l walltime=00:59:59,mem=50gb"
-  val fast = "#PBS -l walltime=23:59:59,mem=50gb"
+  val fast = "#PBS -l walltime=11:59:59,mem=50gb"
   val slow = "#PBS -l walltime=200:59:59,mem=50gb"
 }
 
