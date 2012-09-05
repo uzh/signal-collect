@@ -26,27 +26,25 @@ import com.signalcollect._
 @RunWith(classOf[JUnitRunner])
 class GraphModificationSpec extends SpecificationWithJUnit {
 
+  sequential
+  
   "GraphEditor" should {
 
     "remove all vertices that satisfy a condition" in {
-
       val g = GraphBuilder.build
       g.addVertex(new GraphModificationVertex(0, 1))
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
-
       g.execute
       g.removeVertices(v => (v.asInstanceOf[GraphModificationVertex].id % 2 == 0))
       g.aggregate(new CountVertices[GraphModificationVertex]) === 1
     }
     
     "remove all vertices that satisfy a condition" in {
-
       val g = GraphBuilder.build
       g.addVertex(new GraphModificationVertex(0, 1))
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
-
       g.execute
       g.removeVertex(2, true)
       g.removeVertex(1, true)

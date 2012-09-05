@@ -34,6 +34,8 @@ import com.signalcollect.examples.SudokuCell
 @RunWith(classOf[JUnitRunner])
 class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
 
+  sequential
+  
   "incoming edge count" should {
     val graph = GraphBuilder.build
     graph.addVertex(new PageRankVertex(1))

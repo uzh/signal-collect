@@ -33,6 +33,8 @@ import com.signalcollect.DefaultEdgeId
 @RunWith(classOf[JUnitRunner])
 class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {
 
+  sequential
+  
   "InMemoryVertexIdSet" should {
     val storage = mock[Storage]
     val toSignal = new InMemoryVertexIdSet(storage)
