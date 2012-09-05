@@ -19,11 +19,11 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
-import com.signalcollect.util.collections.Filter
-import com.signalcollect.interfaces.MessageBus
-import collection.JavaConversions._
+import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.util.collections.Filter
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.

@@ -24,7 +24,7 @@ import com.signalcollect.interfaces.AggregationOperation
 /**
  *  Builds a map with the vertex ids as keys and the vertex states as values.
  *
- *   Only works on graphs where this information fits into memory.
+ *  Only works on graphs where this information fits into memory.
  */
 class IdStateMapAggregator[IdType, StateType] extends AggregationOperation[Map[IdType, StateType]] {
   val neutralElement = Map[IdType, StateType]()
@@ -141,9 +141,9 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
   def aggregate(a: Option[ValueType], b: Option[ValueType]): Option[ValueType] = {
     (a, b) match {
       case (Some(x), Some(y)) => Some(operation(x, y))
-      case (Some(x), None) => Some(x)
-      case (None, Some(y)) => Some(y)
-      case (None, None) => None
+      case (Some(x), None)    => Some(x)
+      case (None, Some(y))    => Some(y)
+      case (None, None)       => None
     }
   }
 

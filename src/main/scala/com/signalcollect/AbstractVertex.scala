@@ -19,12 +19,11 @@
 
 package com.signalcollect
 
-import com.signalcollect._
-import com.signalcollect.interfaces._
-import com.signalcollect._
 import java.util.HashMap
-import collection.mutable.Map
-import collection.JavaConversions._
+import scala.collection.mutable.Map
+import scala.collection.JavaConversions._
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.SignalMessage
 
 abstract class AbstractVertex extends Vertex {
 
@@ -178,7 +177,7 @@ abstract class AbstractVertex extends Vertex {
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged => 1
+        case noStateOrStateChanged               => 1
       }
     }
   }

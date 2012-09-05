@@ -18,6 +18,7 @@
  */
 
 package com.signalcollect
+
 import com.signalcollect.interfaces.MessageBus
 
 /**

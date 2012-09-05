@@ -19,7 +19,8 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  *  DefaultEdgeId uniquely identifies an edge in the graph.

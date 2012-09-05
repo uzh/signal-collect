@@ -19,20 +19,15 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
-import com.signalcollect.configuration._
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
-import java.util.concurrent.TimeUnit
 import akka.util.duration._
 import akka.util.Duration
 import akka.util.FiniteDuration
 import configuration.TerminationReason
 import com.sun.management.OperatingSystemMXBean
-import java.lang.management.ManagementFactory
-import java.util.concurrent.TimeUnit
 import akka.util.duration._
 import akka.dispatch.Await
 import akka.util.Timeout
@@ -44,14 +39,15 @@ import scala.util.Random
 import akka.japi.Creator
 import akka.dispatch.Future
 import com.signalcollect.util.akka.ActorSystemRegistry
+import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.TimeUnit
+import com.signalcollect.interfaces._
+import com.signalcollect.configuration._
 import com.signalcollect.coordinator.DefaultCoordinator
 import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.coordinator.OnIdle
-import com.signalcollect.coordinator.IsIdle
-
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])

@@ -19,11 +19,9 @@
 
 package com.signalcollect
 
-import com.signalcollect.util.collections.Filter
+import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
-import scala.collection.mutable.Buffer
-import scala.collection.mutable.ListBuffer
-import com.signalcollect.interfaces._
+import com.signalcollect.util.collections.Filter
 
 /**
  *  Vertex implementation that collects all the signals that have arrived since the last
