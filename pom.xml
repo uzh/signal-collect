@@ -167,6 +167,6 @@
 			UTF-8
 		</project.reporting.outputEncoding>
 		<scala.version>2.9.2</scala.version>
-		<akka.version>2.0.1</akka.version>
+		<akka.version>2.0.3</akka.version>
 	</properties>
 </project>
