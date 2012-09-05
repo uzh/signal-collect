@@ -44,10 +44,9 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.TimeUnit
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
-import com.signalcollect.coordinator.DefaultCoordinator
+import com.signalcollect.coordinator._
+import com.signalcollect.messaging._
 import com.signalcollect.logging.DefaultLogger
-import com.signalcollect.messaging.DefaultVertexToWorkerMapper
-import com.signalcollect.messaging.AkkaProxy
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
