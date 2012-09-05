@@ -5,9 +5,17 @@
 	<artifactId>signal-collect-core</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 	<name>Signal/Collect Core</name>
+	<description>A framework for parallel graph processing.</description>
+	<url>http://www.signalcollect.com</url>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 	<modules>
 	</modules>
-
 	<repositories>
 		<repository>
 			<id>typesafe</id>
@@ -31,11 +39,6 @@
 			<artifactId>scala-library</artifactId>
 			<version>${scala.version}</version>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>berkeleydb</groupId>
-			<artifactId>je</artifactId>
-			<version>3.2.76</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.ethz.ganymed</groupId>
