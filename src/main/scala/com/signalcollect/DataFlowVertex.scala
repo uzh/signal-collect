@@ -19,7 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.implementations.graph._
 import com.signalcollect.util.collections.Filter
 import com.signalcollect.interfaces.SignalMessage
 import scala.collection.mutable.Buffer

@@ -21,7 +21,6 @@ package com.signalcollect
 
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.graph.DefaultGraph
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 
 /**

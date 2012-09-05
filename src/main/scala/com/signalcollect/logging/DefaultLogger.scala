@@ -17,15 +17,28 @@
  *  
  */
 
-package com.signalcollect.factory.storage
+package com.signalcollect.logging
 
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
-import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.LogMessage
+import akka.actor.Actor
 
-/**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
- */
-object InMemory extends StorageFactory {
-  def createInstance: Storage = new DefaultStorage
+object DefaultLogger {
+  def log(logMessage: LogMessage) {
+    logMessage.msg match {
+      case e: Exception =>
+        println(logMessage.from + ": " + e.getMessage)
+        e.printStackTrace
+      case other =>
+        println(logMessage.from + ": " + logMessage.msg)
+    }
+  }
+}
+
+class DefaultLogger(loggingFunction: LogMessage => Unit = DefaultLogger.log) extends Actor {
+
+  def receive = {
+    case logMessage: LogMessage =>
+      loggingFunction(logMessage)
+  }
+
 }

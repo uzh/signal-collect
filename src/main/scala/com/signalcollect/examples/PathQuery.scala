@@ -139,7 +139,7 @@ class QueryVertex(id: Int, state: List[PathQuery]) extends DataFlowVertex(id, st
         for (query <- queries) {
           if (query != null) {
             query.getRemainingQuery(this) match {
-              case Some(restQueries: List[PathQuery]) => {
+              case Some(restQueries) => {
                 for (restQuery <- restQueries) {
                   if (restQuery.unmatchedQuery.size == 0) {
                     ResultHandler.addPath(restQuery.matchedPath.toList)

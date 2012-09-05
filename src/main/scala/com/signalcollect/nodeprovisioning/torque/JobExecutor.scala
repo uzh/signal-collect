@@ -23,7 +23,7 @@
 package com.signalcollect.nodeprovisioning.torque
 
 import com.signalcollect.interfaces._
-import com.signalcollect.implementations.serialization.DefaultSerializer
+import com.signalcollect.serialization.DefaultSerializer
 import java.io.FileInputStream
 import java.io.File
 

@@ -1,6 +1,6 @@
 /*
- *  @author Philip Stutz
- *  
+ *  @author Daniel Strebel
+ *
  *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +14,20 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
  */
 
-package com.signalcollect.factory.storage
-
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
-import com.signalcollect.interfaces.Storage
+package com.signalcollect.serialization
 
 /**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
+ * Little utility to create a random string of variable length with an optional prefix
  */
-object InMemory extends StorageFactory {
-  def createInstance: Storage = new DefaultStorage
+object RandomString {
+  def apply(prefix: String="", length: Int): String = {
+	  val chars = (('a' to 'z') ++ ('A' to 'Z') ++ ('1' to '9')).toList
+	  var res = prefix
+	  for(i <- 0 to length) {
+	 	  res+=chars(scala.util.Random.nextInt(chars.size))
+	  }
+	  res
+  }
 }

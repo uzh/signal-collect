@@ -19,10 +19,10 @@
 
 package com.signalcollect.factory.storage
 
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.implementations.storage.DefaultStorage
 import com.signalcollect.interfaces.Storage
-import com.signalcollect.implementations.storage.BerkDBJE
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.storage.BerkDBJE
+import com.signalcollect.storage.DefaultStorage
 
 /**
  *  The Berkeley DB storage factory creates storage objects that store vertices in Berkeley DB.

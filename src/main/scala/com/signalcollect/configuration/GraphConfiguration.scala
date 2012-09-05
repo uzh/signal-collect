@@ -23,7 +23,7 @@ package com.signalcollect.configuration
 import com.signalcollect.interfaces._
 import java.util.HashMap
 import com.signalcollect._
-import com.signalcollect.implementations.logging.DefaultLogger
+import com.signalcollect.logging.DefaultLogger
 import akka.actor.ActorRef
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner

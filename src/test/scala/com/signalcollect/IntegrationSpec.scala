@@ -25,7 +25,7 @@ import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
-import com.signalcollect.implementations.logging.DefaultLogger
+import com.signalcollect.logging.DefaultLogger
 import collection.JavaConversions._
 import org.specs2.mutable._
 import org.junit.runner.RunWith

@@ -22,8 +22,8 @@ package com.signalcollect.interfaces
 import akka.dispatch.Future
 import akka.actor.ActorRef
 import com.signalcollect.GraphEditor
-import com.signalcollect.implementations.coordinator.WorkerApi
 import java.util.concurrent.atomic.AtomicInteger
+import com.signalcollect.coordinator.WorkerApi
 
 /**
  *  A message bus is responsible for sending messages.
@@ -53,11 +53,14 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
 
   def sendToCoordinator(m: Any)
 
-  def getWorkerApi: WorkerApi // returns an api that treats all workers as if there were only one
+  // Returns an api that treats all workers as if there were only one.
+  def getWorkerApi: WorkerApi  //TODO remove dependency on coordinator package.
 
-  def getWorkerProxies: Array[Worker] // returns an array of worker proxies for all workers, indexed by workerId
+  // Returns an array of worker proxies for all workers, indexed by workerId.
+  def getWorkerProxies: Array[Worker]
 
-  def getGraphEditor: GraphEditor // returns a graph editor that allows to manipulate the graph
+  // Returns a graph editor that allows to manipulate the graph.
+  def getGraphEditor: GraphEditor
 }
 
 trait MessageRecipientRegistry {

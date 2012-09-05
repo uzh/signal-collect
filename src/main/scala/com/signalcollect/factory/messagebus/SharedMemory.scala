@@ -21,7 +21,7 @@ package com.signalcollect.factory.messagebus
 
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.implementations.messaging.DefaultMessageBus
+import com.signalcollect.messaging.DefaultMessageBus
 
 /**
  *  The shared-memory message-bus factory creates message-bus instances that exchange messages in memory.

@@ -20,10 +20,10 @@
 package com.signalcollect.factory.storage
 
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.implementations.storage.DefaultStorage
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexIdSet
-import com.signalcollect.implementations.storage.AboveAverageVertexIdSet
+import com.signalcollect.storage.DefaultStorage
+import com.signalcollect.storage.AboveAverageVertexIdSet
 
 /**
  *  The InMemory storage factory creates storage objects that store vertices in memory.

@@ -24,7 +24,7 @@ import scala.util.Random
 import java.io.File
 import scala.sys.process._
 import org.apache.commons.codec.binary.Base64
-import com.signalcollect.implementations.serialization.DefaultSerializer
+import com.signalcollect.serialization.DefaultSerializer
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.BufferedReader
@@ -54,7 +54,7 @@ import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.interfaces.Worker
-import com.signalcollect.implementations.messaging.Request
+import com.signalcollect.messaging.Request
 import com.signalcollect.nodeprovisioning.AkkaHelper
 
 class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends Actor with Node {

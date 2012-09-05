@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2010 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,15 +17,21 @@
  *  
  */
 
-package com.signalcollect.factory.storage
+package com.signalcollect
 
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
-import com.signalcollect.interfaces.Storage
+import com.signalcollect._
+import com.signalcollect.interfaces.MessageBus
 
-/**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
- */
-object InMemory extends StorageFactory {
-  def createInstance: Storage = new DefaultStorage
+trait ResetStateAfterSignaling extends AbstractVertex {
+  
+  def resetState: State
+
+  /**
+   * Delegates to superclass and resets the state to the initial state after signaling.
+   */
+  abstract override def executeSignalOperation(messageBus: MessageBus) {
+    super.executeSignalOperation(messageBus)
+    state = resetState
+  }
+
 }

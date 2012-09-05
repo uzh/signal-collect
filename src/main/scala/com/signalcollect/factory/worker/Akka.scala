@@ -21,14 +21,14 @@ package com.signalcollect.factory.worker
 
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.implementations.messaging.DefaultMessageBus
+import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.interfaces.Worker
-import com.signalcollect.implementations.worker.AkkaWorker
+import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.configuration.GraphConfiguration
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.implementations.worker.ImmediateCollectScheduler
+import com.signalcollect.worker.ImmediateCollectScheduler
 
 /**
  *  The local worker factory creates worker instances that work in the local-machine scenario.

@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2010 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,15 +17,17 @@
  *  
  */
 
-package com.signalcollect.factory.storage
+package com.signalcollect
 
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
-import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces._
 
-/**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
- */
-object InMemory extends StorageFactory {
-  def createInstance: Storage = new DefaultStorage
+trait VertexGraphEditor extends AbstractVertex {
+
+  protected var graphEditor: GraphEditor = _
+
+  override def afterInitialization(graphEditor: GraphEditor) = {
+    this.graphEditor = graphEditor
+    super.afterInitialization(graphEditor)
+  }
+
 }
