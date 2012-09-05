@@ -88,7 +88,7 @@ case class Addition(e1: Expression, e2: Expression) extends Expression {
   }
 }
 
-case class Substraction(e1: Expression, e2: Expression) extends Expression {
+case class Subtraction(e1: Expression, e2: Expression) extends Expression {
   def evaluate(configuration: Map[Any, Double]): Double = {
     e1.evaluate(configuration) - e2.evaluate(configuration)
   }
@@ -111,7 +111,7 @@ case class Division(e1: Expression, e2: Expression) extends Expression {
 trait Expression {
   def *(other: Expression): Expression = Multiplication(this, other)
   def +(other: Expression): Expression = Addition(this, other)
-  def -(other: Expression): Expression = Substraction(this, other)
+  def -(other: Expression): Expression = Subtraction(this, other)
   def /(other: Expression): Expression = Division(this, other)
 
 
