@@ -36,7 +36,7 @@ import com.signalcollect.configuration.TerminationReason
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
-  def createGraph(vertices: Int): Graph = {
+  def createCircleGraph(vertices: Int): Graph = {
     val graph = GraphBuilder.build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
@@ -51,7 +51,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Time limit" should {
 
     "work for asynchronous computations" in {
-      val graph = createGraph(1000)
+      val graph = createCircleGraph(1000)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withTimeLimit(30)
@@ -61,7 +61,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "work for synchronous computations" in {
-      val graph = createGraph(100)
+      val graph = createCircleGraph(100)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withTimeLimit(30)
@@ -75,7 +75,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Steps limit" should {
 
     "work for synchronous computations" in {
-      val graph = createGraph(1000)
+      val graph = createCircleGraph(1000)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withStepsLimit(1)
@@ -89,7 +89,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Global convergence" should {
 
     "work for synchronous computations" in {
-      val graph = createGraph(30)
+      val graph = createCircleGraph(30)
       val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1) {
         def shouldTerminate(sum: Option[Double]): Boolean = {
           sum.isDefined && sum.get > 20.0 && sum.get < 29.0
@@ -106,10 +106,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "work for asynchronous computations" in {
-      val graph = createGraph(1000)
+      val graph = createCircleGraph(100)
       val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {
         def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 200.0
+          sum.isDefined && sum.get > 20.0
         }
       }
       val execConfig = ExecutionConfiguration
@@ -118,16 +118,16 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      if (aggregate <= 200.0) {
+      if (aggregate <= 20.0) {
         println("Computation ended before global condition was met.")
       }
-      if (aggregate > 999.999) {
+      if (aggregate > 99.999) {
         println("Computation converged completely instead of ending when the global constraint was met: " + aggregate)
       }
       if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
-      aggregate > 200.0 && aggregate < 999.999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
+      aggregate > 20.0 && aggregate < 99.999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
   }
 

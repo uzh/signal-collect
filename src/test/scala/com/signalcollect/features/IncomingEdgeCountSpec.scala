@@ -41,7 +41,7 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
     graph.addVertex(new PageRankVertex(3))
     graph.addEdge(new PageRankEdge(1, 2))
     graph.addEdge(new PageRankEdge(2, 1))
-    graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+    graph.execute(ExecutionConfiguration.withSignalThreshold(0.001))
 
     "count one edge correctly" in {
       val incomingEdgeCount2 = graph.forVertexWithId(2, (v: PageRankVertex) => v.incomingEdgeCount)
@@ -73,7 +73,7 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
     "have the correct PageRank after removal" in {
       graph.execute
       val state = graph.forVertexWithId(2, (v: PageRankVertex) => v.state)
-      (state - 0.15) < 0.00000000001
+      (state - 0.15) < 0.01
     }
 
   }
