@@ -120,7 +120,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
         }
         correct
       }
-      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.0001) must_== true
+      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.00001) must_== true
     }
 
     "deliver correct results on a 5-star graph" in {
