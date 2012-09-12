@@ -35,7 +35,7 @@ import com.signalcollect.examples.SudokuCell
 class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
-  
+
   "incoming edge count" should {
     val graph = GraphBuilder.build
     graph.addVertex(new PageRankVertex(1))
@@ -72,8 +72,17 @@ class IncomingEdgeCountSpec extends SpecificationWithJUnit with Mockito {
       incomingEdgeCount2 == 0
     }
 
+    val statistics = graph.execute
+
+    "have the correct number of vertices after removal" in {
+      statistics.aggregatedWorkerStatistics.numberOfVertices == 1
+    }
+
+    "have the correct number of edges after removal" in {
+      statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges == 0
+    }
+
     "have the correct PageRank after removal" in {
-      graph.execute
       val state = graph.forVertexWithId(2, (v: PageRankVertex) => v.state)
       (state - 0.15) < 0.01
     }

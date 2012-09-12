@@ -1,5 +1,6 @@
 /*
  *  @author Daniel Strebel
+ *  @author Philip Stutz
  *
  *  Copyright 2012 University of Zurich
  *      
@@ -30,25 +31,59 @@ class GraphModificationSpec extends SpecificationWithJUnit {
   
   "GraphEditor" should {
 
-    "remove all vertices that satisfy a condition" in {
+    "keep accurate statistics when using predicate-based vertex removals" in {
       val g = GraphBuilder.build
       g.addVertex(new GraphModificationVertex(0, 1))
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
-      g.execute
+      g.addVertex(new GraphModificationVertex(3, 1))
+      g.addEdge(new StateForwarderEdge(0, 1))
+      g.addEdge(new StateForwarderEdge(1, 3))
+      var statistics = g.execute
+      g.aggregate(new CountVertices[GraphModificationVertex]) === 4
+      statistics.aggregatedWorkerStatistics.numberOfVertices === 4
+      statistics.aggregatedWorkerStatistics.verticesAdded === 4
+      statistics.aggregatedWorkerStatistics.verticesRemoved === 0
+      statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 0
       g.removeVertices(v => (v.asInstanceOf[GraphModificationVertex].id % 2 == 0))
-      g.aggregate(new CountVertices[GraphModificationVertex]) === 1
+      statistics = g.execute
+      g.aggregate(new CountVertices[GraphModificationVertex]) === 2
+      statistics.aggregatedWorkerStatistics.numberOfVertices === 2
+      statistics.aggregatedWorkerStatistics.verticesAdded === 4
+      statistics.aggregatedWorkerStatistics.verticesRemoved === 2
+      statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
+      statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 0
     }
     
-    "remove all vertices that satisfy a condition" in {
+    "keep accurate statistics when using individual vertex removals" in {
       val g = GraphBuilder.build
       g.addVertex(new GraphModificationVertex(0, 1))
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
-      g.execute
+      g.addVertex(new GraphModificationVertex(3, 1))
+      g.addEdge(new StateForwarderEdge(0, 1))
+      g.addEdge(new StateForwarderEdge(1, 3))
+      var statistics = g.execute
+      g.aggregate(new CountVertices[GraphModificationVertex]) === 4
+      statistics.aggregatedWorkerStatistics.numberOfVertices === 4
+      statistics.aggregatedWorkerStatistics.verticesAdded === 4
+      statistics.aggregatedWorkerStatistics.verticesRemoved === 0
+      statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
+      g.removeVertex(0, true)
       g.removeVertex(2, true)
-      g.removeVertex(1, true)
-      g.aggregate(new CountVertices[GraphModificationVertex]) === 1
+      statistics = g.execute
+      g.aggregate(new CountVertices[GraphModificationVertex]) === 2
+      statistics.aggregatedWorkerStatistics.numberOfVertices === 2
+      statistics.aggregatedWorkerStatistics.verticesAdded === 4
+      statistics.aggregatedWorkerStatistics.verticesRemoved === 2
+      statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
+      statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
     }
   }
 }
