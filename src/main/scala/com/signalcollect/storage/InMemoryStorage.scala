@@ -22,6 +22,7 @@ import java.util.Set
 import com.signalcollect.interfaces._
 import java.util.HashMap
 import com.signalcollect._
+import scala.collection.JavaConversions
 
 /**
  * Stores all vertices in a in-memory HashMap data structure.
@@ -37,6 +38,23 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    */
   def get(id: Any): Vertex = {
     vertexMap.get(id)
+  }
+
+  /**
+   * Filter vertices that satisfy a condition
+   *
+   * @param condition that has to be met by a vertex so that it will be returned.
+   */
+  def getAll(condition: Vertex => Boolean): List[Vertex] = {
+	  var result = List[Vertex]()
+	  var iter = vertexMap.values.iterator
+	  while(iter.hasNext) {
+	    val condidateVertex = iter.next
+	    if(condition(condidateVertex)) {
+	      result = condidateVertex::result
+	    }
+	  }
+	  result
   }
 
   /**
@@ -64,20 +82,6 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     storage.toSignal.remove(id)
   }
 
-  /**
-   * Removes all vertices that satisfy the removal condition.
-   *
-   * @param removeCondition condition to check if a vertex should be removed.
-   */
-  def remove(removeCondition: Vertex => Boolean) {
-    val it = vertexMap.values.iterator
-    while (it.hasNext) {
-      val vertex = it.next
-      if (removeCondition(vertex)) {
-        it.remove()
-      }
-    }
-  }
 
   /**
    * Is not needed for this implementation because the state does not need to be retained, since the objects are passed by reference and changes

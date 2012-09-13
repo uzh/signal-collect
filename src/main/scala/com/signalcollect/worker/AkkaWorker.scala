@@ -61,12 +61,12 @@ class WorkerOperationCounters(
   var collectSteps: Long = 0l)
 
 class AkkaWorker(val workerId: Int,
-                 val numberOfWorkers: Int,
-                 val messageBusFactory: MessageBusFactory,
-                 val storageFactory: StorageFactory,
-                 val statusUpdateIntervalInMillis: Option[Long],
-                 val loggingLevel: Int)
-    extends Worker with ActorLogging {
+  val numberOfWorkers: Int,
+  val messageBusFactory: MessageBusFactory,
+  val storageFactory: StorageFactory,
+  val statusUpdateIntervalInMillis: Option[Long],
+  val loggingLevel: Int)
+  extends Worker with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -235,15 +235,6 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def removeVertex(vertexId: Any) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      processRemoveVertex(vertex)
-    } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
-    }
-  }
-
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
@@ -276,8 +267,18 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def removeVertices(shouldRemove: Vertex => Boolean) {
-    vertexStore.vertices.remove(shouldRemove)
+  def removeVertex(vertexId: Any) {
+    val vertex = vertexStore.vertices.get(vertexId)
+    if (vertex != null) {
+      processRemoveVertex(vertex)
+    } else {
+      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+    }
+  }
+
+  def removeVertices(removeCondition: Vertex => Boolean) {
+    val verticesToRemove = vertexStore.vertices.getAll(removeCondition)
+    verticesToRemove.foreach(vertexToRemove => processRemoveVertex(vertexToRemove))
   }
 
   protected def processRemoveVertex(vertex: Vertex) {
