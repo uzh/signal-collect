@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect.implementations.graph
+package com.signalcollect
 
 import org.specs2.mutable._
 import org.junit.runner.RunWith
@@ -26,10 +26,6 @@ import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import java.util.Map.Entry
-import com.signalcollect.Vertex
-import com.signalcollect.GraphBuilder
-import com.signalcollect.DataGraphVertex
-import com.signalcollect.GraphEditor
 
 @RunWith(classOf[JUnitRunner])
 class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {

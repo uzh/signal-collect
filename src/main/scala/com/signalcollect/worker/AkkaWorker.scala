@@ -235,15 +235,6 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def removeVertex(vertexId: Any) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      processRemoveVertex(vertex)
-    } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
-    }
-  }
-
   def removeOutgoingEdge(edgeId: EdgeId[Any, Any]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
@@ -275,9 +266,19 @@ class AkkaWorker(val workerId: Int,
       warning("Source vertex not found found when trying to remove incoming edge with id " + edgeId)
     }
   }
+  
+  def removeVertex(vertexId: Any) {
+	  val vertex = vertexStore.vertices.get(vertexId)
+			  if (vertex != null) {
+				  processRemoveVertex(vertex)
+			  } else {
+				  warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+			  }
+  }
 
-  def removeVertices(shouldRemove: Vertex => Boolean) {
-    vertexStore.vertices.remove(shouldRemove)
+  def removeVertices(removalCondition: Vertex => Boolean) {
+    val verticesToRemove = vertexStore.vertices.getAll(removalCondition)
+    verticesToRemove.foreach(processRemoveVertex)
   }
 
   protected def processRemoveVertex(vertex: Vertex) {

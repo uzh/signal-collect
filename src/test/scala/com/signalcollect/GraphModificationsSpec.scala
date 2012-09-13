@@ -17,7 +17,7 @@
  *  limitations under the License.
  */
 
-package com.signalcollect.implementations.graph
+package com.signalcollect
 
 import org.specs2.mutable._
 import org.junit.runner.RunWith
@@ -55,7 +55,7 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       statistics.aggregatedWorkerStatistics.verticesRemoved === 2
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
-      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 0
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
     }
     
     "keep accurate statistics when using individual vertex removals" in {
@@ -73,7 +73,7 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       statistics.aggregatedWorkerStatistics.verticesRemoved === 0
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 2
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
-      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
+      statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 0
       g.removeVertex(0, true)
       g.removeVertex(2, true)
       statistics = g.execute
