@@ -47,6 +47,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
     graph
   }
+  
+  sequential
 
   "Time limit" should {
 
