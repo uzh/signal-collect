@@ -173,7 +173,7 @@ class DefaultMessageBus(
       // manually send a fire & forget request
       val v = write(vertex) // thread that uses an object should instantiate it (performance)
       val request = Request[Worker]((_.addVertex(v)), returnResult = false)
-      sendToWorkerForVertexId(request, vertex.id)
+      sendToWorkerForVertexId(request, vertex.getId)
     }
   }
 

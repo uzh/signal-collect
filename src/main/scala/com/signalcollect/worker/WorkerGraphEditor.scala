@@ -35,7 +35,7 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
   def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) = graphEditor.sendSignalAlongEdge(signal, edgeId, blocking)
 
   def addVertex(vertex: Vertex, blocking: Boolean) = {
-    if (blocking && shouldHandleLocally(vertex.id)) {
+    if (blocking && shouldHandleLocally(vertex.getId)) {
       worker.addVertex(vertex)
     } else {
       graphEditor.addVertex(vertex, blocking)

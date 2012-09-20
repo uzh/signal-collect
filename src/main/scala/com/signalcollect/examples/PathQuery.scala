@@ -61,7 +61,7 @@ class StarQueryNode(condition: Vertex => Boolean = vertex => true, maxExpansion:
  * Query node that only matches a vertex if it has the specified id.
  */
 class FixedQueryNode(id: Any) extends PathQueryNode {
-  def matches(vertex: Vertex) = (vertex.id.hashCode() == id.hashCode())
+  def matches(vertex: Vertex) = (vertex.getId.hashCode() == id.hashCode())
 }
 
 /**
@@ -83,7 +83,7 @@ class PathQuery() extends Serializable {
   def getRemainingQuery(vertex: Vertex): Option[List[PathQuery]] = {
     if (unmatchedQuery.size > 0 && unmatchedQuery.head.matches(vertex)) {
       val remainingQuery = new PathQuery
-      remainingQuery.matchedPath = matchedPath.enqueue(vertex.id)
+      remainingQuery.matchedPath = matchedPath.enqueue(vertex.getId)
       remainingQuery.unmatchedQuery = unmatchedQuery.tail
       
       val expandedQueryHeads = unmatchedQuery.head.expand 

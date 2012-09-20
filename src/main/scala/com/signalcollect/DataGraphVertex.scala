@@ -45,6 +45,19 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   type State = StateTypeParameter
 
   /**
+   *  @return the identifier of this `Vertex`.
+   */
+  def getId: Id = id
+
+  /**
+   *  @return the object that stores the current state for this `Vertex`.
+   */
+  def getState: State = state
+  def setState(s: State) {
+    state = s
+  }
+  
+  /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
    *  @note If the edge along which a signal was sent is relevant, then mostRecentSignalMap can be used to access the edge id of a signal.

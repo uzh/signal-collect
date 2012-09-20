@@ -47,6 +47,19 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
   type State = StateTypeParameter
 
   /**
+   *  @return the identifier of this `Vertex`.
+   */
+  def getId: Id = id
+
+  /**
+   *  @return the object that stores the current state for this `Vertex`.
+   */
+  def getState: State = state
+  def setState(s: State) {
+    state = s
+  }
+  
+  /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
    *  @param uncollectedSignals all signals received by this vertex since the last time this function was executed
