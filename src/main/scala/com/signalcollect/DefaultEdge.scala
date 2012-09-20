@@ -63,19 +63,19 @@ class DefaultEdgeId[SourceId, TargetId](
  *  @param targetId target vertex id
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  */
-abstract class DefaultEdge[@specialized SourceIdTypeParameter, @specialized TargetIdTypeParameter](
+abstract class DefaultEdge[SourceIdTypeParameter, TargetIdTypeParameter](
   sourceId: SourceIdTypeParameter,
   targetId: TargetIdTypeParameter,
   description: String = "") extends Edge {
 
   /** The type of the source vertex id. */
-  @specialized type SourceId = SourceIdTypeParameter
+  type SourceId = SourceIdTypeParameter
 
   /** The type of the target vertex id. */
-  @specialized type TargetId = TargetIdTypeParameter
+  type TargetId = TargetIdTypeParameter
 
   /** The type of signals that are sent along this edge. */
-  @specialized type Signal = Any
+  type Signal = Any
 
   /** Called when the edge is attached to a source vertex */
   def onAttach(sourceVertex: SourceVertex, graphEditor: GraphEditor) = {}
