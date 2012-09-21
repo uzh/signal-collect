@@ -345,25 +345,26 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     loggerActor ! Info("Shutdown done.", this.toString)
   }
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex) => Unit) = workerApi.foreachVertex(f)
+  def foreachVertex(f: (Vertex[_, _]) => Unit) = workerApi.foreachVertex(f)
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
     workerApi.aggregate(aggregationOperation)
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
   //------------------GraphApi------------------
 
   /**
-   *  Sends `signal` along the edge with id `edgeId`.
+   *  Sends `signal` to the vertex with id `vertexId` using the virtual edge id 'edgeId'.
+   *  Blocks until the operation has completed if `blocking` is true.
    */
-  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
-    graphEditor.sendSignalAlongEdge(signal, edgeId, blocking)
+  def sendSignal(signal: Any, edgeId: EdgeId, blocking: Boolean) {
+    graphEditor.sendSignal(signal, edgeId, blocking)
   }
 
   /**
@@ -371,7 +372,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex, blocking: Boolean = false) {
+  def addVertex(vertex: Vertex[_, _], blocking: Boolean = false) {
     graphEditor.addVertex(vertex, blocking)
   }
 
@@ -381,19 +382,15 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addEdge(edge: Edge, blocking: Boolean = false) {
-    graphEditor.addEdge(edge, blocking)
-  }
-    
-  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) {
-    graphEditor.addIncomingEdge(edge, blocking)
-  }
+   def addEdge(sourceVertexId: Any, edge: Edge[_], blocking: Boolean) {
+    graphEditor.addEdge(sourceVertexId, edge, blocking)
+   }
 
   /**
    *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
    *  which will receive the respective vertex as a parameter.
    */
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) {
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_], blocking: Boolean = false) {
     graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
   }
 
@@ -412,23 +409,23 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+  def removeEdge(edgeId: EdgeId, blocking: Boolean = false) {
     graphEditor.removeEdge(edgeId, blocking)
-  }
-  
-  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
-    graphEditor.removeIncomingEdge(edgeId, blocking)
   }
   
   /**
    *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
    */
-  def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean = false) {
     graphEditor.removeVertices(shouldRemove, blocking)
   }
   
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
     graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  }
+  
+  private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
+    graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }
 
 }

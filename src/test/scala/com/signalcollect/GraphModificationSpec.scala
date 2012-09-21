@@ -37,8 +37,8 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
       g.addVertex(new GraphModificationVertex(3, 1))
-      g.addEdge(new StateForwarderEdge(0, 1))
-      g.addEdge(new StateForwarderEdge(1, 3))
+      g.addEdge(0, new StateForwarderEdge(1))
+      g.addEdge(1, new StateForwarderEdge(3))
       var statistics = g.execute
       g.aggregate(new CountVertices[GraphModificationVertex]) === 4
       statistics.aggregatedWorkerStatistics.numberOfVertices === 4
@@ -64,8 +64,8 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       g.addVertex(new GraphModificationVertex(1, 1))
       g.addVertex(new GraphModificationVertex(2, 1))
       g.addVertex(new GraphModificationVertex(3, 1))
-      g.addEdge(new StateForwarderEdge(0, 1))
-      g.addEdge(new StateForwarderEdge(1, 3))
+      g.addEdge(0, new StateForwarderEdge(1))
+      g.addEdge(1, new StateForwarderEdge(3))
       var statistics = g.execute
       g.aggregate(new CountVertices[GraphModificationVertex]) === 4
       statistics.aggregatedWorkerStatistics.numberOfVertices === 4
@@ -90,7 +90,7 @@ class GraphModificationSpec extends SpecificationWithJUnit {
 
 class GraphModificationVertex(id: Int, state: Int) extends DataGraphVertex(id, state) {
   type Signal = Int
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
     1
   }
 }

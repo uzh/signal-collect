@@ -132,7 +132,7 @@ trait Graph extends GraphEditor {
    *
    *  @usecase def forVertexWithId(vertexId: Any, f: Vertex => String): String
    */
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
 
   /**
    *  Executes the function `f` on all vertices.
@@ -142,7 +142,7 @@ trait Graph extends GraphEditor {
    *  @note This function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: Vertex => Unit)
+  def foreachVertex(f: Vertex[_, _] => Unit)
 
   /**
    *  Applies an aggregation operation to the graph and returns the result.
@@ -164,7 +164,7 @@ trait Graph extends GraphEditor {
    *  		receives the signal and an instance of GraphEditor as parameters in order to take some
    *  		action that handles this case.
    */
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit)
 }
 
 

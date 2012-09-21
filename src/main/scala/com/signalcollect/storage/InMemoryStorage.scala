@@ -28,7 +28,7 @@ import scala.collection.JavaConversions
  * Stores all vertices in a in-memory HashMap data structure.
  */
 class InMemoryStorage(storage: Storage) extends VertexStore {
-  protected var vertexMap = new HashMap[Any, Vertex]()
+  protected var vertexMap = new HashMap[Any, Vertex[_, _]]()
 
   /**
    * Returns a vertex from the store that has the specified id.
@@ -36,7 +36,7 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @param id the ID of the vertex to retrieve
    * @return the vertex object or null if the vertex is not contained in the store
    */
-  def get(id: Any): Vertex = {
+  def get(id: Any): Vertex[_, _] = {
     vertexMap.get(id)
   }
 
@@ -45,8 +45,8 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    *
    * @param condition that has to be met by a vertex so that it will be returned.
    */
-  def getAll(condition: Vertex => Boolean): List[Vertex] = {
-	  var result = List[Vertex]()
+  def getAll(condition: Vertex[_, _] => Boolean): List[Vertex[_, _]] = {
+	  var result = List[Vertex[_, _]]()
 	  var iter = vertexMap.values.iterator
 	  while(iter.hasNext) {
 	    val condidateVertex = iter.next
@@ -63,9 +63,9 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @param the vertex to insert
    * @return true if the insertion was successful, false if the storage already contained a vertex with the same id.
    */
-  def put(vertex: Vertex): Boolean = {
-    if (!vertexMap.containsKey(vertex.getId)) {
-      vertexMap.put(vertex.getId, vertex)
+  def put(vertex: Vertex[_, _]): Boolean = {
+    if (!vertexMap.containsKey(vertex.id)) {
+      vertexMap.put(vertex.id, vertex)
       true
     } else
       false
@@ -89,11 +89,11 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    *
    * @param vertex the vertex that would have to be updated
    */
-  def updateStateOfVertex(vertex: Vertex) = {
+  def updateStateOfVertex(vertex: Vertex[_, _]) = {
     storage.toSignal.updateStateOfVertex(vertex)
   }
 
-  def foreach[U](f: Vertex => U) {
+  def foreach[U](f: Vertex[_, _] => U) {
     val it = vertexMap.values.iterator
     while (it.hasNext) {
       val vertex = it.next

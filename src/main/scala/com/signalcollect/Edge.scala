@@ -20,40 +20,23 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.MessageBus
-
-/**
- *  An edge id uniquely identifies an edge in the graph.
- */
-trait EdgeId[+SourceId, +TargetId] extends Serializable {
-  def sourceId: SourceId
-  def targetId: TargetId
-  def description: String
-}
+import com.signalcollect.interfaces.EdgeId
 
 /**
  * This trait represents the framework's view of an edge.
  *
  *  @author Philip Stutz
  */
-trait Edge extends Serializable {
-
-  /** The type of the source {@link Vertex} which can be found using {@link #sourceId}. */
-  type SourceVertex <: Vertex
-
-  /** The type of the source vertex id. */
-  type SourceId
-
-  /** The type of the target vertex id. */
-  type TargetId
-
-  /** The type of signals that are sent along this edge. */
-  type Signal
-
+trait Edge[TargetId] extends Serializable {
   /** An edge id uniquely identifies an edge in the graph. */
-  def id: EdgeId[SourceId, TargetId]
+  def id: EdgeId
+
+  def sourceId: Any = sourceVertex.id
+  def targetId: TargetId
+  def sourceVertex: Vertex[_, _]
 
   /** Called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: SourceVertex, graphEditor: GraphEditor)
+  def onAttach(source: Vertex[_, _], graphEditor: GraphEditor)
 
   /** The weight of this edge. */
   def weight: Double
@@ -65,13 +48,11 @@ trait Edge extends Serializable {
   override def hashCode = id.hashCode
 
   /** Two edges are equal if their ids are equal */
-  override def equals(other: Any): Boolean = {
-    if (other.isInstanceOf[Edge]) {
-      id.equals(other.asInstanceOf[Edge].id)
-    } else {
-      false
+  override def equals(other: Any): Boolean =
+    other match {
+      case e: Edge[_] => e.id == id
+      case _          => false
     }
-  }
 
   /**
    *  Function that gets called by the source vertex whenever this edge is supposed to send a signal.
@@ -80,6 +61,6 @@ trait Edge extends Serializable {
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus)
+  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor)
 
 }

@@ -35,13 +35,13 @@ abstract class Storage {
  * Stores vertices and makes them retrievable through their associated id.
  */
 trait VertexStore {
-  def get(id: Any): Vertex
-  def getAll(condition: Vertex => Boolean): List[Vertex]
-  def put(vertex: Vertex): Boolean
+  def get(id: Any): Vertex[_, _]
+  def getAll(condition: Vertex[_, _] => Boolean): List[Vertex[_, _]]
+  def put(vertex: Vertex[_, _]): Boolean
   def remove(id: Any)
-  def updateStateOfVertex(vertex: Vertex)
+  def updateStateOfVertex(vertex: Vertex[_, _])
   def size: Long
-  def foreach[U](f: Vertex => U)
+  def foreach[U](f: Vertex[_, _] => U)
   def cleanUp
 }
 
@@ -55,7 +55,7 @@ trait VertexIdSet {
   def isEmpty: Boolean
   def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
   def applyToNext[U](f: (Any) => U, removeAfterProcessing: Boolean)
-  def updateStateOfVertex(vertex: Vertex)
+  def updateStateOfVertex(vertex: Vertex[_, _])
   def cleanUp
 }
 
@@ -63,12 +63,12 @@ trait VertexIdSet {
  * Allows storing a collection of signals and iterating through them
  */
 trait VertexSignalBuffer {
-  def addSignal(signal: SignalMessage[_, _, _])
+  def addSignal(signal: SignalMessage[_])
   def addVertex(vertexId: Any)
   def remove(vertexId: Any)
   def size: Int
   def isEmpty: Boolean
-  def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
+  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
   def cleanUp
 }
 

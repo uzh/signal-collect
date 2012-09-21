@@ -30,8 +30,7 @@ import com.signalcollect.interfaces.SignalMessage
  *  @param s: the identifier of the source vertex
  *  @param t: the identifier of the target vertex
  */
-class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
-  type SourceVertex = Location
+class Path(t: Any) extends OptionalSignalEdge(t) {
   /**
    * The signal function calculates the distance of the shortest currently
    *  known path from the SSSP source vertex which passes through the source
@@ -39,8 +38,8 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
    *  where this edge starts plus the length of the path represented by this
    *  edge (= the weight of this edge).
    */
-  def signal(sourceVertex: Location) = {
-    sourceVertex.state map (_ + weight.toInt)
+  def signal(sourceVertex: Vertex[_, _]) = {
+    sourceVertex.asInstanceOf[Location].state map (_ + weight.toInt)
   }
 }
 
@@ -52,7 +51,7 @@ class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
  *  if the distance is Int.MaxValue this means that there is no known path. If the distance is
  *  0 this means that this vertex is the source location.
  */
-class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVertex(id, initialState) {
+class Location(vertexId: Any, initialState: Option[Int] = None) extends DataGraphVertex(vertexId, initialState) {
   type Signal = Int
   /**
    * The collect function calculates the shortest currently known path
@@ -60,12 +59,12 @@ class Location(id: Any, initialState: Option[Int] = None) extends DataGraphVerte
    * up to now (= state) or one of the paths that had been advertised via a signal
    * by a neighbor.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Option[Int] = {
+  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Option[Int] = {
     val currentShortestPath = oldState.getOrElse(Int.MaxValue)
     Some(mostRecentSignals.foldLeft(currentShortestPath)(math.min(_, _)))
   }
 
-  override def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double = signals.size // changed so it only gets called once signals were received
+  override def scoreCollect(signals: Iterable[SignalMessage[_]]): Double = signals.size // changed so it only gets called once signals were received
 
 }
 
@@ -78,12 +77,12 @@ object SSSP extends App {
   graph.addVertex(new Location(4))
   graph.addVertex(new Location(5))
   graph.addVertex(new Location(6))
-  graph.addEdge(new Path(1, 2))
-  graph.addEdge(new Path(2, 3))
-  graph.addEdge(new Path(3, 4))
-  graph.addEdge(new Path(1, 5))
-  graph.addEdge(new Path(4, 6))
-  graph.addEdge(new Path(5, 6))
+  graph.addEdge(1, new Path(2))
+  graph.addEdge(2, new Path(3))
+  graph.addEdge(3, new Path(4))
+  graph.addEdge(1, new Path(5))
+  graph.addEdge(4, new Path(6))
+  graph.addEdge(5, new Path(6))
   val stats = graph.execute
   println(stats)
   graph.foreachVertex(println(_))

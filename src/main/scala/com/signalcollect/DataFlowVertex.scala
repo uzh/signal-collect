@@ -37,19 +37,13 @@ import com.signalcollect.util.collections.Filter
  *
  *  @author Philip Stutz
  */
-abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
-  val id: IdTypeParameter,
-  var state: StateTypeParameter,
-  val resetState: StateTypeParameter)
-  extends AbstractVertex with ResetStateAfterSignaling with VertexGraphEditor {
-
-  type Id = IdTypeParameter
-  type State = StateTypeParameter
-
-  /**
-   *  @return the identifier of this `Vertex`.
-   */
-  def getId: Id = id
+abstract class DataFlowVertex[Id, State](
+  val id: Id,
+  var state: State,
+  val resetState: State)
+  extends AbstractVertex[Id, State] with ResetStateAfterSignaling[Id, State] {
+  
+  type Signal
 
   /**
    *  @return the object that stores the current state for this `Vertex`.
@@ -69,19 +63,7 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, uncollectedSignals: Iterable[Signal]): State
-
-  /**
-   *  All uncollected signal messages, not just the signals.
-   */
-  protected var uncollectedMessages: Iterable[SignalMessage[_, _, Signal]] = _
-
-  /**
-   *  Utility function to filter out only certain signals of interest.
-   */
-  protected def uncollectedSignals[G](filterClass: Class[G]): Iterable[G] = {
-    uncollectedMessages flatMap (message => Filter.bySuperClass(filterClass, message.signal))
-  }
+  def collect(oldState: State, uncollectedSignals: Iterable[Signal], graphEditor: GraphEditor): State
 
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
@@ -90,10 +72,9 @@ abstract class DataFlowVertex[IdTypeParameter, StateTypeParameter](
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
-    super.executeCollectOperation(signals, messageBus)
-    uncollectedMessages = signals.asInstanceOf[Iterable[SignalMessage[_, _, Signal]]]
-    state = collect(state, (uncollectedMessages map (_.signal)).asInstanceOf[Iterable[Signal]])
+  override def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor) {
+    super.executeCollectOperation(signals, graphEditor)
+    state = collect(state, (signals map (_.signal)).asInstanceOf[Iterable[Signal]], graphEditor)
   }
 
 }

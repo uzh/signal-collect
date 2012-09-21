@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.ActorRef
 import com.signalcollect.coordinator.WorkerApi
 import com.signalcollect.GraphEditor
-import com.signalcollect.EdgeId
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
 import com.signalcollect.serialization.DefaultSerializer
@@ -155,54 +154,42 @@ class DefaultMessageBus(
   /**
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+  def sendSignal(signal: Any, edgeId: EdgeId, blocking: Boolean = false) {
     if (blocking) {
-      // use proxy
-      workerApi.sendSignalAlongEdge(signal, edgeId)
+      // Use proxy.
+      workerApi.sendSignal(signal, edgeId)
     } else {
-      // manually send a fire & forget request
-      sendToWorkerForVertexId(SignalMessage(edgeId, signal), edgeId.targetId)
+      // Manually send a fire & forget request.
+      sendToWorkerForVertexId(SignalMessage(signal, edgeId), edgeId.targetId)
     }
   }
 
-  def addVertex(vertex: Vertex, blocking: Boolean = false) {
+  def addVertex(vertex: Vertex[_, _], blocking: Boolean = false) {
     if (blocking) {
-      // use proxy
+      // Use proxy.
       workerApi.addVertex(vertex)
     } else {
-      // manually send a fire & forget request
+      // Manually send a fire & forget request.
       val v = write(vertex) // thread that uses an object should instantiate it (performance)
       val request = Request[Worker]((_.addVertex(v)), returnResult = false)
-      sendToWorkerForVertexId(request, vertex.getId)
+      sendToWorkerForVertexId(request, vertex.id)
     }
   }
 
-  def addEdge(edge: Edge, blocking: Boolean = false) {
+  def addEdge(sourceId: Any, edge: Edge[_], blocking: Boolean = false) {
     // thread that uses an object should instantiate it (performance)
     if (blocking) {
       // use proxy
-      workerApi.addEdge(edge)
+      workerApi.addEdge(sourceId, edge)
     } else {
       // manually send a fire & forget request -- not delegated so we don't have to serialize twice
       val e = write(edge)
-      val request = Request[Worker]((_.addOutgoingEdge(e)), returnResult = false)
-      sendToWorkerForVertexId(request, edge.id.sourceId)
+      val request = Request[Worker]((_.addEdge(sourceId, e)), returnResult = false)
+      sendToWorkerForVertexId(request, sourceId)
     }
   }
 
-  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) {
-    if (blocking) {
-      // use proxy
-      workerApi.addIncomingEdge(edge)
-    } else {
-      // manually send a fire & forget request
-      val e = write(edge)
-      val request = Request[Worker]((_.addIncomingEdge(e)), returnResult = false)
-      sendToWorkerForVertexId(request, edge.id.targetId)
-    }
-  }
-
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) {
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_], blocking: Boolean = false) {
     if (blocking) {
       // use proxy
       workerApi.addPatternEdge(sourceVertexPredicate, edgeFactory)
@@ -224,29 +211,18 @@ class DefaultMessageBus(
     }
   }
 
-  def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
+  def removeEdge(edgeId: EdgeId, blocking: Boolean = false) {
     if (blocking) {
       // use proxy
       workerApi.removeEdge(edgeId)
     } else {
       // manually send a fire & forget request     
-      val request = Request[Worker]((_.removeOutgoingEdge(edgeId)), returnResult = false)
+      val request = Request[Worker]((_.removeEdge(edgeId)), returnResult = false)
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
-
-  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) {
-    if (blocking) {
-      // use proxy
-      workerApi.removeIncomingEdge(edgeId)
-    } else {
-      // manually send a fire & forget request
-      val request = Request[Worker]((_.removeIncomingEdge(edgeId)), returnResult = false)
-      sendToWorkerForVertexId(request, edgeId.targetId)
-    }
-  }
   
-  def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean = false) {
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean = false) {
     if (blocking == true) {
       // use proxy
       workerApi.removeVertices(shouldRemove)

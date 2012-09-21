@@ -28,22 +28,19 @@ trait Worker extends Actor with MessageRecipientRegistry with Logging {
   override def toString = this.getClass.getSimpleName
   def workerId: Int
   
-  def processSignal(signal: SignalMessage[_, _, _])
+  def processSignal(signal: SignalMessage[_])
 
   def addVertex(serializedVertex: Array[Byte]) // object should be created in the heap of the thread which uses its
-  def addOutgoingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
-  def addIncomingEdge(serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
-  def addVertex(vertex: Vertex)
-  def addOutgoingEdge(edge: Edge)
-  def addIncomingEdge(edge: Edge)
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge)
+  def addEdge(sourceId: Any, serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
+  def addVertex(vertex: Vertex[_, _])
+  def addEdge(sourceId: Any, edge: Edge[_])
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_])
   def removeVertex(vertexId: Any)
-  def removeOutgoingEdge(edgeId: EdgeId[Any, Any])
-  def removeIncomingEdge(edgeId: EdgeId[Any, Any])
-  def removeVertices(shouldRemove: Vertex => Boolean)
+  def removeEdge(edgeId: EdgeId)
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean)
   def loadGraph(graphLoader: GraphEditor => Unit)
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit)
+  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit)
 
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)
@@ -51,8 +48,8 @@ trait Worker extends Actor with MessageRecipientRegistry with Logging {
   def recalculateScores
   def recalculateScoresForVertexWithId(vertexId: Any)
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
-  def foreachVertex(f: Vertex => Unit)
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
+  def foreachVertex(f: Vertex[_, _] => Unit)
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 

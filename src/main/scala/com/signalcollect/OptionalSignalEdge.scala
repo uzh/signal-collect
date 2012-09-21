@@ -30,24 +30,20 @@ import com.signalcollect.interfaces._
  *  @param targetId id of this edges's target vertex
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  */
-abstract class OptionalSignalEdge[SourceIdType, TargetIdType](
-  sourceId: SourceIdType,
-  targetId: TargetIdType,
-  description: String = getClass.getSimpleName)
-  extends DefaultEdge(sourceId, targetId, description) {
+abstract class OptionalSignalEdge[TargetIdType](targetId: TargetIdType) extends DefaultEdge(targetId) {
 
   /**
    *  Calculates the new signal and potentially sends it. If the return value of the `signal` function is of type `Some`,
    *  then the encapsulated value is sent. If it is of type `None`, then nothing is sent.
-   *  
+   *
    *  @param sourceVertex The source vertex of this edge.
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus) {
-    val optionalSignal = signal(sourceVertex.asInstanceOf[SourceVertex]).asInstanceOf[Option[_]]
+  override def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor) {
+    val optionalSignal = signal(sourceVertex).asInstanceOf[Option[_]]
     if (optionalSignal.isDefined) {
-      messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, optionalSignal.get), cachedTargetIdHashCode)
+      graphEditor.sendToWorkerForVertexIdHash(SignalMessage(optionalSignal.get, senderEdgeId), cachedTargetIdHashCode)
     }
   }
 }
