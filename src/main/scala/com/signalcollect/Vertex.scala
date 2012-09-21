@@ -34,7 +34,7 @@ trait Vertex extends Serializable {
   /**
    *  By default it is assumed that a vertex can receive signals of any type.
    *  This type can be overridden to set an upper bound for the types of signals
-   *  that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
+   *  that this vertex can receive. This occasionally allows for more elegant implementations.
    */
   type Signal
   type Id
