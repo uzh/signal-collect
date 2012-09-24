@@ -29,12 +29,6 @@ import com.signalcollect.interfaces.EdgeId
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
 
   /**
-   * Returns the most recent signal sent via the edge with the id @edgeId. None if this function is not
-   * supported or if there is no such signal.
-   */
-  def getMostRecentSignal(edgeId: Any): Option[_] = None
-
-  /**
    * hashCode is cached for better performance
    */
   override val hashCode = id.hashCode

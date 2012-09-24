@@ -77,11 +77,11 @@ abstract class DataGraphVertex[Id, State](
   }
 
   /**
-   *  Returns the most recent signal received along edge with id `id`.
+   *  Returns the most recent signal received from the vertex with id `id`.
    *
-   *  @param id The edge id of the edge for which we would like to retrieve the most recent signal that was sent along it.
+   *  @param id The id of the vertex from which we received a signal.
    */
-  override def getMostRecentSignal(id: Any): Option[_] =
+  def getMostRecentSignal(id: Any): Option[_] =
     mostRecentSignalMap.get(id) match {
       case null => None
       case s    => Some(s)
