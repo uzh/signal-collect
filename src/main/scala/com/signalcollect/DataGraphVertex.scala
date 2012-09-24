@@ -36,13 +36,13 @@ import com.signalcollect.util.collections.Filter
  *
  *  @author Philip Stutz
  */
-abstract class DataGraphVertex[@specialized IdTypeParameter, @specialized StateTypeParameter](
+abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   val id: IdTypeParameter,
   var state: StateTypeParameter)
   extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {
 
-  @specialized type Id = IdTypeParameter
-  @specialized type State = StateTypeParameter
+  type Id = IdTypeParameter
+  type State = StateTypeParameter
 
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
