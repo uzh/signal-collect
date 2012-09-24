@@ -24,7 +24,7 @@ import com.signalcollect.interfaces.MessageBus
 /**
  *  An edge id uniquely identifies an edge in the graph.
  */
-trait EdgeId[@specialized +SourceId, @specialized +TargetId] extends Serializable {
+trait EdgeId[+SourceId, +TargetId] extends Serializable {
   def sourceId: SourceId
   def targetId: TargetId
   def description: String
@@ -41,13 +41,13 @@ trait Edge extends Serializable {
   type SourceVertex <: Vertex
 
   /** The type of the source vertex id. */
-  @specialized type SourceId
+  type SourceId
 
   /** The type of the target vertex id. */
-  @specialized type TargetId
+  type TargetId
 
   /** The type of signals that are sent along this edge. */
-  @specialized type Signal
+  type Signal
 
   /** An edge id uniquely identifies an edge in the graph. */
   def id: EdgeId[SourceId, TargetId]
