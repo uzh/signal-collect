@@ -172,18 +172,8 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
     }
   }
 
-  /**
-   * Returns the ids of all vertices to which this vertex currently has an outgoing edge
-   */
-  def getVertexIdsOfSuccessors: Iterable[_] = outgoingEdges.values map (_.targetId)
-
-  /**
-   * Returns all outgoing edges
-   */
-  override def getOutgoingEdges: Option[Iterable[Edge[_]]] = Some(outgoingEdges.values)
-
   /** Returns the number of outgoing edges of this [com.signalcollect.interfaces.Vertex] */
-  def outgoingEdgeCount = outgoingEdges.size
+  def edgeCount = outgoingEdges.size
 
   /**
    * Returns "VertexClassName(id=ID, state=STATE)"

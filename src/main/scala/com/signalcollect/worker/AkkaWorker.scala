@@ -178,7 +178,7 @@ class AkkaWorker(val workerId: Int,
   def addVertex(vertex: Vertex[_, _]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
-      counters.outgoingEdgesAdded += vertex.outgoingEdgeCount
+      counters.outgoingEdgesAdded += vertex.edgeCount
       try {
         vertex.afterInitialization(graphEditor)
       } catch {

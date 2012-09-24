@@ -101,29 +101,7 @@ trait Vertex[Id, State] extends Serializable {
   /**
    *  @return the number of outgoing edges of this `Vertex`
    */
-  def outgoingEdgeCount: Int
-
-  /**
-   *  @return Ids of all vertices to which this vertex currently has an outgoing edge
-   */
-  def getVertexIdsOfSuccessors: Iterable[_]
-
-  /**
-   *  @return the most recent signal sent via the edge with the id `edgeId`. `None` if this operation is not
-   *  supported or if there is no such signal.
-   */
-  def getMostRecentSignal(id: Any): Option[_]
-
-  /**
-   *  @return all outgoing edges if this operation is supported by the vertex, `None` if this operation is not
-   *  supported or if there is no such signal.
-   */
-  def getOutgoingEdges: Option[Iterable[Edge[_]]]
-
-  /**
-   *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementation.
-   */
-  def getOutgoingEdgeMap: Option[Map[Any, Edge[_]]]
+  def edgeCount: Int
 
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
