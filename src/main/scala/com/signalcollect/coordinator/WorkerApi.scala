@@ -29,7 +29,6 @@ import scala.collection.JavaConversions._
 import com.signalcollect.Edge
 import com.signalcollect.Vertex
 import com.signalcollect.GraphEditor
-import com.signalcollect.EdgeId
 import akka.actor.Actor
 import akka.actor.ActorRef
 import scala.collection.mutable.ArrayBuffer
@@ -70,18 +69,18 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
 
   def shutdown = parallelWorkers foreach (_.shutdown)
 
-  def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
+  def foreachVertex(f: (Vertex[_, _]) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
     val aggregateArray: ParArray[ValueType] = parallelWorkers map (_.aggregate(aggregationOperation))
     aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_, _, _], GraphEditor) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
+  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
 
   def setSignalThreshold(t: Double) = parallelWorkers foreach (_.setSignalThreshold(t))
 
@@ -90,10 +89,11 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
   //----------------GraphEditor, BLOCKING variant-------------------------
 
   /**
-   *  Sends `signal` along the edge with id `edgeId`.
+   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
+   *  Blocks until the operation has completed.
    */
-  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any]) {
-    workers(mapper.getWorkerIdForVertexId(edgeId.targetId)).processSignal(SignalMessage(edgeId, signal))
+  def sendSignal(signal: Any, edgeId: EdgeId) {
+    workers(mapper.getWorkerIdForVertexId(edgeId.targetId)).processSignal(SignalMessage(signal, edgeId))
   }
 
   /**
@@ -101,8 +101,8 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex) {
-    workers(mapper.getWorkerIdForVertexId(vertex.getId)).addVertex(DefaultSerializer.write(vertex))
+  def addVertex(vertex: Vertex[_, _]) {
+    workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(DefaultSerializer.write(vertex))
   }
 
   /**
@@ -111,21 +111,16 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addEdge(edge: Edge) {
+  def addEdge(sourceId: Any, edge: Edge[_]) {
     val serializedEdge = DefaultSerializer.write(edge)
-    workers(mapper.getWorkerIdForVertexId(edge.id.sourceId)).addOutgoingEdge(serializedEdge)
-  }
-
-  def addIncomingEdge(edge: Edge) {
-    val serializedEdge = DefaultSerializer.write(edge)
-    workers(mapper.getWorkerIdForVertexId(edge.id.targetId)).addIncomingEdge(serializedEdge)
+    workers(mapper.getWorkerIdForVertexId(sourceId)).addEdge(sourceId, serializedEdge)
   }
 
   /**
    *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
    *  which will receive the respective vertex as a parameter.
    */
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge) {
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_]) {
     workers map (_.addPatternEdge(sourceVertexPredicate, edgeFactory))
   }
 
@@ -144,18 +139,14 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  def removeEdge(edgeId: EdgeId[Any, Any]) {
-    workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeOutgoingEdge(edgeId)
-  }
-
-  def removeIncomingEdge(edgeId: EdgeId[Any, Any]) {
-    workers(mapper.getWorkerIdForVertexId(edgeId.targetId)).removeIncomingEdge(edgeId)
+  def removeEdge(edgeId: EdgeId) {
+    workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeEdge(edgeId)
   }
 
   /**
    *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
    */
-  def removeVertices(shouldRemove: Vertex => Boolean) {
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
     workers map (_.removeVertices(shouldRemove))
   }
 

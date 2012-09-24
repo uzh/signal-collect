@@ -39,8 +39,8 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addVertex(new SudokuCell(1, None))
-    graph.addEdge(new PageRankEdge(1, 2))
-    graph.addEdge(new PageRankEdge(2, 1))
+    graph.addEdge(1, new PageRankEdge(2))
+    graph.addEdge(2, new PageRankEdge(1))
     graph.execute(ExecutionConfiguration.withSignalThreshold(0))
 
     "sum all states correctly" in {
@@ -54,8 +54,8 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addVertex(new SudokuCell(1, None))
-    graph.addEdge(new PageRankEdge(1, 2))
-    graph.addEdge(new PageRankEdge(2, 1))
+    graph.addEdge(1, new PageRankEdge(2))
+    graph.addEdge(2, new PageRankEdge(1))
     graph.execute(ExecutionConfiguration.withSignalThreshold(0))
 
     "multiply all states correctly" in {

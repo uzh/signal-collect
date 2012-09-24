@@ -57,7 +57,7 @@ class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends
         val webpage = io.Source.fromURL(id, "ISO-8859-1").mkString
         Regex.hyperlink.findAllIn(webpage).matchData map (_.group(1)) foreach { linked =>
           graphEditor.addVertex(new Webpage(linked, crawlDepth - 1))
-          graphEditor.addEdge(new PageRankEdge(id, linked))
+          graphEditor.addEdge(id, new PageRankEdge(linked))
         }
       } catch {
         case _ =>

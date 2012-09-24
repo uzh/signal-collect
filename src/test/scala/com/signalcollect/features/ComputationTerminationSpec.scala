@@ -43,7 +43,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       graph.addVertex(new PageRankVertex(id))
     }
     for (id <- idSet) {
-      graph.addEdge(new PageRankEdge(id, (id % vertices) + 1))
+      graph.addEdge(id, new PageRankEdge((id % vertices) + 1))
     }
     graph
   }

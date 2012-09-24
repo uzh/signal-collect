@@ -31,6 +31,7 @@ import com.signalcollect.configuration.LoggingLevel._
 import scala.util._
 import scala.math
 import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.EdgeId
 
 
 
@@ -55,17 +56,17 @@ class DSANVertex(id: Any, constraints: Iterable[Constraint], possibleValues: Arr
    * The collect function chooses a new random state and chooses it if it improves over the old state, 
    * or, if it doesn't it still chooses it (for exploring purposes) with probability decreasing with time 
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Double]): Double = {
+  def collect(oldState: Double, mostRecentSignals: Iterable[Double], graphEditor: GraphEditor): Double = {
     
     time += 1
 
     val neighbourConfigs = (mostRecentSignalMap map {
       keyValueTuple =>
-        (keyValueTuple._1.sourceId -> keyValueTuple._2.toDouble)
+        (keyValueTuple._1 -> keyValueTuple._2.toDouble)
     })
     
     																			//Calculate utility and number of satisfied constraints for the current value
-    val configs = neighbourConfigs + (id -> oldState.toDouble)
+    val configs = neighbourConfigs + (id -> oldState)
     utility = (constraints map (_.utility(configs)) sum)
     numberSatisfied = constraints map (_.satisfiesInt(configs)) sum
 
@@ -96,13 +97,13 @@ class DSANVertex(id: Any, constraints: Iterable[Constraint], possibleValues: Arr
       val adopt = r.nextDouble()
       if (adopt < math.exp(delta * time * time/ constTemp)) {  			// We choose the new state (to explore) over the old state with probability (e(delta/t_i))
         if (oldState == newState) 											//We send a dummy value to self to avoid blocking
-        	graphEditor.sendSignalToVertex(0.0, id)
+        	graphEditor.sendSignal(0.0, EdgeId(null, id))
         utility = newStateUtility
         numberSatisfied = newNumberSatisfied
         println("Vertex: "+id+" at time "+time+"; Case DELTA="+delta+"<= 0 and changed to state: "+newState +" instead of "+oldState+" with Adoption of new state prob ="+math.exp(delta * time * time/ constTemp)+" ")
         return newState
       } else { 															//With probability 1 - (e(delta/t_i)) we keep the old state which is better
-        graphEditor.sendSignalToVertex(0.0, id) 							//We send a dummy value to self to avoid blocking
+        graphEditor.sendSignal(0.0, EdgeId(null, id)) 							//We send a dummy value to self to avoid blocking
         println("Vertex: "+id+" at time "+time+"; Case DELTA="+delta+"<= 0 and NOT changed to state: "+newState +" instead of "+oldState+" with Adoption of new state prob ="+math.exp(delta * time * time/ constTemp)+" ")
         return oldState
       }
@@ -172,23 +173,23 @@ object DSAN extends App {
   graph.addVertex(new DSANVertex(5, Array(c35, c45, c56), Array(0, 1, 2)))
   graph.addVertex(new DSANVertex(6, Array(c26, c56), Array(0, 1, 2)))
 
-  graph.addEdge(new StateForwarderEdge(1, 2))
-  graph.addEdge(new StateForwarderEdge(1, 3))
-  graph.addEdge(new StateForwarderEdge(2, 3))
-  graph.addEdge(new StateForwarderEdge(3, 4))
-  graph.addEdge(new StateForwarderEdge(4, 5))
-  graph.addEdge(new StateForwarderEdge(3, 5))
-  graph.addEdge(new StateForwarderEdge(5, 6))
-  graph.addEdge(new StateForwarderEdge(2, 6))
+  graph.addEdge(1, new StateForwarderEdge(2))
+  graph.addEdge(1, new StateForwarderEdge(3))
+  graph.addEdge(2, new StateForwarderEdge(3))
+  graph.addEdge(3, new StateForwarderEdge(4))
+  graph.addEdge(4, new StateForwarderEdge(5))
+  graph.addEdge(3, new StateForwarderEdge(5))
+  graph.addEdge(5, new StateForwarderEdge(6))
+  graph.addEdge(2, new StateForwarderEdge(6))
 
-  graph.addEdge(new StateForwarderEdge(2, 1))
-  graph.addEdge(new StateForwarderEdge(3, 1))
-  graph.addEdge(new StateForwarderEdge(3, 2))
-  graph.addEdge(new StateForwarderEdge(4, 3))
-  graph.addEdge(new StateForwarderEdge(5, 4))
-  graph.addEdge(new StateForwarderEdge(5, 3))
-  graph.addEdge(new StateForwarderEdge(6, 5))
-  graph.addEdge(new StateForwarderEdge(6, 2))
+  graph.addEdge(2, new StateForwarderEdge(1))
+  graph.addEdge(3, new StateForwarderEdge(1))
+  graph.addEdge(3, new StateForwarderEdge(2))
+  graph.addEdge(4, new StateForwarderEdge(3))
+  graph.addEdge(5, new StateForwarderEdge(4))
+  graph.addEdge(5, new StateForwarderEdge(3))
+  graph.addEdge(6, new StateForwarderEdge(5))
+  graph.addEdge(6, new StateForwarderEdge(2))
 
   println("Begin")
 

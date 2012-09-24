@@ -37,14 +37,20 @@ object Hamiltonian extends App {
   graph.addVertex(new HamiltonianVertex("d", Map(List("d") -> 0)))
   graph.addVertex(new HamiltonianVertex("e", Map(List("e") -> 0)))
 
-  graph.addEdge(new HamiltonianEdge("a", "d", 3)); graph.addEdge(new HamiltonianEdge("d", "a", 3))
-  graph.addEdge(new HamiltonianEdge("a", "b", 1)); graph.addEdge(new HamiltonianEdge("b", "a", 1))
-  graph.addEdge(new HamiltonianEdge("d", "b", 2)); graph.addEdge(new HamiltonianEdge("b", "d", 2))
-  graph.addEdge(new HamiltonianEdge("d", "c", 1)); graph.addEdge(new HamiltonianEdge("c", "d", 1))
-  graph.addEdge(new HamiltonianEdge("b", "c", 1)); graph.addEdge(new HamiltonianEdge("c", "b", 1))
+  graph.addEdge("a", new HamiltonianEdge("d", 3))
+  graph.addEdge("d", new HamiltonianEdge("a", 3))
+  graph.addEdge("a", new HamiltonianEdge("b", 1))
+  graph.addEdge("b", new HamiltonianEdge("a", 1))
+  graph.addEdge("d", new HamiltonianEdge("b", 2))
+  graph.addEdge("b", new HamiltonianEdge("d", 2))
+  graph.addEdge("d", new HamiltonianEdge("c", 1))
+  graph.addEdge("c", new HamiltonianEdge("d", 1))
+  graph.addEdge("b", new HamiltonianEdge("c", 1))
+  graph.addEdge("c", new HamiltonianEdge("b", 1))
 
   // a problem with isolated vertices is that it is not able to find hamiltonian paths depending on the starting vertex
-  graph.addEdge(new HamiltonianEdge("e", "a", 1)); graph.addEdge(new HamiltonianEdge("a", "e", 1))
+  graph.addEdge("e", new HamiltonianEdge("a", 1))
+  graph.addEdge("a", new HamiltonianEdge("e", 1))
 
   val stats = graph.execute
   println(stats)
@@ -60,14 +66,14 @@ object Hamiltonian extends App {
  * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
  * 
  */
-class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extends DataGraphVertex(id, initialState) {
+class HamiltonianVertex(vertexId: String, initialState: Map[List[String], Int]) extends DataGraphVertex(vertexId, initialState) {
 
   override type Signal = Map[List[String], Int]
 
   /*
 	 * The state will contain all paths visited so far, not mattering the size of the path
 	 */
-  def collect(oldState: State, mostRecentSignals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
+  def collect(oldState: Map[List[String], Int], mostRecentSignals: Iterable[Map[List[String], Int]], graphEditor: GraphEditor): Map[List[String], Int] = {
     // consolidate the maps into one map
     val pathMap = mostRecentSignals reduceLeft (_ ++ _)
 
@@ -107,16 +113,14 @@ class HamiltonianVertex(id: String, initialState: Map[List[String], Int]) extend
  *
  * @param w the initial weight of the vertex
  */
-class HamiltonianEdge(s: Any, t: Any, w: Int) extends OnlySignalOnChangeEdge(s, t) {
+class HamiltonianEdge(t: Any, w: Int) extends OnlySignalOnChangeEdge(t) {
 
   override def weight: Double = w
 
-  type SourceVertex = HamiltonianVertex
-
-  override def signal(sourceVertex: HamiltonianVertex) = {
+  override def signal(sourceVertex: Vertex[_, _]) = {
     // signals only paths that do not contain the target vertex id
-    ((sourceVertex.state keySet) filterNot { x => x contains (id.targetId) }).map { k =>
-      Pair(k.::(id.targetId.toString), sourceVertex.state.get(k).get + weight.toInt)
+    ((sourceVertex.asInstanceOf[HamiltonianVertex].state keySet) filterNot { x => x contains (id.targetId) }).map { k =>
+      Pair(k.::(id.targetId.toString), sourceVertex.asInstanceOf[HamiltonianVertex].state.get(k).get + weight.toInt)
     } toMap
   }
 

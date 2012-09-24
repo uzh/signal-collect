@@ -82,7 +82,7 @@ class InMemoryVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   /**
    * Ignored for this implementation.
    */
-  def updateStateOfVertex(vertex: Vertex) = {}
+  def updateStateOfVertex(vertex: Vertex[_, _]) = {}
 
   /**
    * Removes all entries from the collection.

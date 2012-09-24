@@ -32,7 +32,7 @@ import com.signalcollect.interfaces.AggregationOperation
 class SegregationAgent(id: Any, initialState: Int, equalityThreshold: Float) extends DataGraphVertex(id, initialState) {
   type Signal = Int
 
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
     val equalNeighborsCount = (mostRecentSignals filter (_ equals this.state)).size
     val totalNeighborsCount = mostRecentSignals.size
     if (equalNeighborsCount.toFloat / totalNeighborsCount >= equalityThreshold) {
@@ -61,7 +61,7 @@ object SchellingSegregation extends App {
   for (column <- 0 to columns; row <- 0 to rows) {
     for (neighbor <- neighbors(column, row)) {
       if (inGrid(neighbor._1, neighbor._2)) {
-        graph.addEdge(new StateForwarderEdge((column, row), (neighbor._1, neighbor._2)))
+        graph.addEdge((column, row), new StateForwarderEdge((neighbor._1, neighbor._2)))
       }
     }
   }

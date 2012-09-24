@@ -32,7 +32,7 @@ class CWVertex(id: Any, selfPreference: Double = 1.0) extends DataGraphVertex(id
   
     type Signal = (Any, Double)
 
-    def collect(oldState: State, mostRecentSignals: Iterable[(Any, Double)]): Any = {
+    def collect(oldState: Any, mostRecentSignals: Iterable[(Any, Double)], graphEditor: GraphEditor): Any = {
       //group most recent signals by clustering label
       val grouped = (((state, selfPreference))::mostRecentSignals.toList).groupBy(_._1)
       //sort the grouped list by the sum of all clustering label weights
@@ -46,10 +46,9 @@ class CWVertex(id: Any, selfPreference: Double = 1.0) extends DataGraphVertex(id
  * Connects two entities in a Chinese Whispers algorithm and sets the signal to be
  * the source vertex's state plus together with the weight of the connection.
  */
-class CWEdge(s: Any, t: Any, weight: Double = 1.0) extends DefaultEdge(s, t) {
-  type SourceVertex = CWVertex
+class CWEdge(t: Any, weight: Double = 1.0) extends DefaultEdge(t) {
   
-  override def signal(sourceVertex: CWVertex) =  (sourceVertex.state, weight)
+  override def signal(sourceVertex: Vertex[_, _]) = (sourceVertex.asInstanceOf[CWVertex].state, weight)
 
 } 
 
@@ -72,25 +71,25 @@ object ChineseWhispersClustering extends App {
   graph.addVertex(new CWVertex(5))
   
   for(i <- 0 until 2){
-    graph.addEdge(new CWEdge(i, i+1))
-    graph.addEdge(new CWEdge(i+1, i))
+    graph.addEdge(i, new CWEdge(i+1))
+    graph.addEdge(i+1, new CWEdge(i))
   }
   
-  graph.addEdge(new CWEdge(0, 2))
-  graph.addEdge(new CWEdge(2, 0))
+  graph.addEdge(0, new CWEdge(2))
+  graph.addEdge(2, new CWEdge(0))
 
   for(i <- 2 until 8){
-    graph.addEdge(new CWEdge(i, i+1))
-    graph.addEdge(new CWEdge(i+1, i))
+    graph.addEdge(i, new CWEdge(i+1))
+    graph.addEdge(i+1, new CWEdge(i))
   }
   
   for(i <- 8 until 10){
-    graph.addEdge(new CWEdge(i, i+1))
-    graph.addEdge(new CWEdge(i+1, i))
+    graph.addEdge(i, new CWEdge(i+1))
+    graph.addEdge(i+1, new CWEdge(i))
   }
   
-  graph.addEdge(new CWEdge(10, 8))
-  graph.addEdge(new CWEdge(8, 10))
+  graph.addEdge(10, new CWEdge(8))
+  graph.addEdge(8, new CWEdge(10))
   
   val stats = graph.execute
   graph.foreachVertex { v => println(v) }

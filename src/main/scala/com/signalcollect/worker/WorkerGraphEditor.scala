@@ -32,41 +32,25 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
 
   val graphEditor = messageBus.getGraphEditor
 
-  def sendSignalAlongEdge(signal: Any, edgeId: EdgeId[Any, Any], blocking: Boolean = false) = graphEditor.sendSignalAlongEdge(signal, edgeId, blocking)
+  def sendSignal(signal: Any, edgeId: EdgeId, blocking: Boolean = false) = graphEditor.sendSignal(signal, edgeId, blocking)
 
-  def addVertex(vertex: Vertex, blocking: Boolean) = {
-    if (blocking && shouldHandleLocally(vertex.getId)) {
+  def addVertex(vertex: Vertex[_, _], blocking: Boolean) = {
+    if (blocking && shouldHandleLocally(vertex.id)) {
       worker.addVertex(vertex)
     } else {
       graphEditor.addVertex(vertex, blocking)
     }
   }
 
-  def addEdge(edge: Edge, blocking: Boolean) = {
-    if (blocking && shouldHandleLocally(edge.id.sourceId)) {
-      worker.addOutgoingEdge(edge)
+  def addEdge(sourceVertexId: Any, edge: Edge[_], blocking: Boolean) {
+    if (blocking && shouldHandleLocally(sourceVertexId)) {
+      worker.addEdge(sourceVertexId, edge)
     } else {
-      graphEditor.addEdge(edge, blocking)
+      graphEditor.addEdge(sourceVertexId, edge, blocking)
     }
   }
 
-  private[signalcollect] def addIncomingEdge(edge: Edge, blocking: Boolean = false) = {
-    if (blocking && shouldHandleLocally(edge.id.targetId)) {
-      worker.addIncomingEdge(edge)
-    } else {
-      graphEditor.addIncomingEdge(edge, blocking)
-    }
-  }
-
-  private[signalcollect] def removeIncomingEdge(edgeId: EdgeId[Any, Any], blocking: Boolean = false) = {
-    if (blocking && shouldHandleLocally(edgeId.targetId)) {
-      worker.removeIncomingEdge(edgeId)
-    } else {
-      graphEditor.removeIncomingEdge(edgeId, blocking)
-    }
-  }
-
-  def addPatternEdge(sourceVertexPredicate: Vertex => Boolean, edgeFactory: Vertex => Edge, blocking: Boolean = false) = graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
+  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_], blocking: Boolean = false) = graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
 
   def removeVertex(vertexId: Any, blocking: Boolean) {
     if (blocking && shouldHandleLocally(vertexId)) {
@@ -76,17 +60,21 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def removeEdge(edgeId: EdgeId[Any, Any], blocking: Boolean) {
+  def removeEdge(edgeId: EdgeId, blocking: Boolean) {
     if (blocking && shouldHandleLocally(edgeId.sourceId)) {
-      worker.removeOutgoingEdge(edgeId)
+      worker.removeEdge(edgeId)
     } else {
       graphEditor.removeEdge(edgeId, blocking)
     }
   }
 
-  def removeVertices(shouldRemove: Vertex => Boolean, blocking: Boolean) = graphEditor.removeVertices(shouldRemove, blocking)
+  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean) = graphEditor.removeVertices(shouldRemove, blocking)
 
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean) = graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
 
   def shouldHandleLocally(vertexId: Any) = messageBus.getWorkerIdForVertexId(vertexId) == worker.workerId
+  
+  private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
+    graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
+  }
 }

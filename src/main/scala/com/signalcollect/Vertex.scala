@@ -19,94 +19,67 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
 import collection.immutable.Map
 import collection.Iterable
+import com.signalcollect.interfaces.EdgeId
 
 /**
  *  This trait represents the framework's view of a vertex.
  *
  *  @author Philip Stutz
  */
-trait Vertex extends Serializable {
+trait Vertex[Id, State] extends Serializable {
+
+  override def hashCode = id.hashCode
 
   /**
-   *  By default it is assumed that a vertex can receive signals of any type.
-   *  This type can be overridden to set an upper bound for the types of signals
-   *  that this vertex can receive. This occasionally allows for better  allows for more elegant implementations.
+   * Two vertices are equal if their ids are equal.
    */
-  type Signal
-  type Id
-  type State
-
-  /**
-   *  Vertices are assigned to worker threads that are each responsible for a part of the graph.
-   *  We use a hash function on the vertex ids for the mapping of vertices to workers.
-   */
-  override def hashCode = getId.hashCode
-
-  override def equals(other: Any): Boolean = {
+  override def equals(other: Any): Boolean =
     other match {
-      case v: Vertex => v.getId == getId
-      case _ => false
+      case v: Vertex[_, _] => v.id == id
+      case _               => false
     }
-  }
 
   /**
-   *  @return the identifier of this `Vertex`.
+   * A vertex id uniquely defines a vertex in the graph.
    */
-  def getId: Id
-
-  /**
-   *  @return the object that stores the current state for this `Vertex`.
-   */
-  def getState: State
+  def id: Id
+  def state: State
   def setState(s: State)
 
   /**
    *  Adds a new outgoing `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addOutgoingEdge(e: Edge, graphEditor: GraphEditor): Boolean
+  def addEdge(e: Edge[_], graphEditor: GraphEditor): Boolean
 
   /**
    *  Removes an outgoing `Edge` from this `Vertex`.
    *  @param edgeId the edge id to be removed
    *  @return returns if an edge was removed
    */
-  def removeOutgoingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean
-
-  /**
-   *  Adds a new incoming `Edge` to this `Vertex`.
-   *  @param e the edge to be added.
-   */
-  def addIncomingEdge(e: Edge, graphEditor: GraphEditor): Boolean
-
-  /**
-   *  Removes incoming `Edge` from this `Vertex`.
-   *  @param edgeId of the edge to be removed.
-   */
-  def removeIncomingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean
+  def removeEdge(targetId: Any, graphEditor: GraphEditor): Boolean
 
   /**
    *  Removes all outgoing `Edge`s from this `Vertex`, returns the number of edges that were removed.
    */
-  def removeAllOutgoingEdges(graphEditor: GraphEditor): Int
+  def removeAllEdges(graphEditor: GraphEditor): Int
 
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
    *  `Worker` implementations).
    */
-  def executeSignalOperation(messageBus: MessageBus)
+  def executeSignalOperation(graphEditor: GraphEditor)
 
   /**
    *  Tells this vertex to execute the `collect` method.
    *
    *  @param signals the new signals that this vertex has received since the `executeCollectOperation` method was called last.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus)
+  def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor)
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -123,40 +96,12 @@ trait Vertex extends Serializable {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[SignalMessage[_, _, _]]): Double
+  def scoreCollect(signals: Iterable[SignalMessage[_]]): Double
 
   /**
    *  @return the number of outgoing edges of this `Vertex`
    */
-  def outgoingEdgeCount: Int
-
-  /**
-   *  @return Ids of all vertices to which this vertex currently has an outgoing edge
-   */
-  def getVertexIdsOfSuccessors: Iterable[_]
-
-  /**
-   *  @return Ids of vertices that currently have an outgoing edge to to this vertex. `None` if this operation is not
-   *  supported.
-   */
-  def getVertexIdsOfPredecessors: Option[Iterable[Any]]
-
-  /**
-   *  @return the most recent signal sent via the edge with the id `edgeId`. `None` if this operation is not
-   *  supported or if there is no such signal.
-   */
-  def getMostRecentSignal(id: EdgeId[_, _]): Option[_]
-
-  /**
-   *  @return all outgoing edges if this operation is supported by the vertex, `None` if this operation is not
-   *  supported or if there is no such signal.
-   */
-  def getOutgoingEdges: Option[Iterable[Edge]]
-
-  /**
-   *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementations
-   */
-  def getOutgoingEdgeMap: Option[Map[EdgeId[Id, _], Edge]]
+  def edgeCount: Int
 
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.

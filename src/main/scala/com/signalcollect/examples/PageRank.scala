@@ -31,15 +31,15 @@ import com.signalcollect.nodeprovisioning._
  *  @param s: the identifier of the source vertex
  *  @param t: the identifier of the target vertex
  */
-class PageRankEdge(s: Any, t: Any) extends DefaultEdge(s, t) {
-
-  type SourceVertex = PageRankVertex
+class PageRankEdge(t: Any) extends DefaultEdge(t) {
 
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
    */
-  override def signal(sourceVertex: PageRankVertex) = sourceVertex.state * weight / sourceVertex.sumOfOutWeights
+  override def signal(sourceVertex: Vertex[_, _]) = {
+   sourceVertex.asInstanceOf[PageRankVertex].state * weight / sourceVertex.asInstanceOf[PageRankVertex].sumOfOutWeights 
+  }
 
 }
 
@@ -57,13 +57,13 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
    * The collect function calculates the rank of this vertex based on the rank
    *  received from neighbors and the damping factor.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Double]): Double = {
+  def collect(oldState: Double, mostRecentSignals: Iterable[Double], graphEditor: GraphEditor): Double = {
     1 - dampingFactor + dampingFactor * mostRecentSignals.sum
   }
 
   override def scoreSignal: Double = {
     lastSignalState match {
-      case None => 1
+      case None           => 1
       case Some(oldState) => (state - oldState).abs
     }
   }
@@ -103,10 +103,10 @@ object PageRank extends App {
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
   graph.addVertex(new PageRankVertex(3))
-  graph.addEdge(new PageRankEdge(1, 2))
-  graph.addEdge(new PageRankEdge(2, 1))
-  graph.addEdge(new PageRankEdge(2, 3))
-  graph.addEdge(new PageRankEdge(3, 2))
+  graph.addEdge(1, new PageRankEdge(2))
+  graph.addEdge(2, new PageRankEdge(1))
+  graph.addEdge(2, new PageRankEdge(3))
+  graph.addEdge(3, new PageRankEdge(2))
 
   // Loading Method 3: Distributed Lading
 

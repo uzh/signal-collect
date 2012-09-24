@@ -27,7 +27,7 @@ import collection.JavaConversions._
  */
 class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_, _, _]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
 
   /**
@@ -38,11 +38,11 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    *
    * @param signalMessage the signal message that should be buffered before collection
    */
-  def addSignal(signalMessage: SignalMessage[_, _, _]) {
+  def addSignal(signalMessage: SignalMessage[_]) {
     if (undeliveredSignals.containsKey(signalMessage.edgeId.targetId)) {
       undeliveredSignals.get(signalMessage.edgeId.targetId).add(signalMessage)
     } else {
-      val signalsForVertex = new ArrayList[SignalMessage[_, _, _]]()
+      val signalsForVertex = new ArrayList[SignalMessage[_]]()
       signalsForVertex.add(signalMessage)
       undeliveredSignals.put(signalMessage.edgeId.targetId, signalsForVertex)
     }
@@ -56,7 +56,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    */
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
-      undeliveredSignals.put(vertexId, new ArrayList[SignalMessage[_, _, _]]())
+      undeliveredSignals.put(vertexId, new ArrayList[SignalMessage[_]]())
     }
   }
 
@@ -86,7 +86,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    * @param breakCondition 	determines if the loop should be escaped before it is done
    * @return 				has the execution handled all elements in the list i.e. has it not been interrupted by the break condition
    */
-  def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U,
+  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U,
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 
