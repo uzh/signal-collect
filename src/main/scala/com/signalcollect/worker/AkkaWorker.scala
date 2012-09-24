@@ -192,7 +192,7 @@ class AkkaWorker(val workerId: Int,
         case t: Throwable => severe(t)
       }
       if (vertex.scoreSignal > signalThreshold) {
-        vertexStore.toSignal.add(vertex.id)
+        vertexStore.toSignal.add(vertex.getId)
       }
     }
   }
@@ -203,8 +203,8 @@ class AkkaWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.addOutgoingEdge(edge, graphEditor)) {
         counters.outgoingEdgesAdded += 1
-        vertexStore.toCollect.addVertex(vertex.id)
-        vertexStore.toSignal.add(vertex.id)
+        vertexStore.toCollect.addVertex(vertex.getId)
+        vertexStore.toSignal.add(vertex.getId)
         vertexStore.vertices.updateStateOfVertex(vertex)
       }
     } else {
@@ -218,8 +218,8 @@ class AkkaWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.addIncomingEdge(edge, graphEditor)) {
         counters.incomingEdgesAdded += 1
-        vertexStore.toCollect.addVertex(vertex.id)
-        vertexStore.toSignal.add(vertex.id)
+        vertexStore.toCollect.addVertex(vertex.getId)
+        vertexStore.toSignal.add(vertex.getId)
         vertexStore.vertices.updateStateOfVertex(vertex)
       }
     } else {
@@ -240,8 +240,8 @@ class AkkaWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.removeOutgoingEdge(edgeId, graphEditor)) {
         counters.outgoingEdgesRemoved += 1
-        vertexStore.toCollect.addVertex(vertex.id)
-        vertexStore.toSignal.add(vertex.id)
+        vertexStore.toCollect.addVertex(vertex.getId)
+        vertexStore.toSignal.add(vertex.getId)
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
@@ -256,8 +256,8 @@ class AkkaWorker(val workerId: Int,
     if (vertex != null) {
       if (vertex.removeIncomingEdge(edgeId, graphEditor)) {
         counters.incomingEdgesRemoved += 1
-        vertexStore.toCollect.addVertex(vertex.id)
-        vertexStore.toSignal.add(vertex.id)
+        vertexStore.toCollect.addVertex(vertex.getId)
+        vertexStore.toSignal.add(vertex.getId)
         vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         warning("Incoming edge not found when trying to remove edge with id " + edgeId)
@@ -286,7 +286,7 @@ class AkkaWorker(val workerId: Int,
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
     vertex.beforeRemoval(graphEditor)
-    vertexStore.vertices.remove(vertex.id)
+    vertexStore.vertices.remove(vertex.getId)
   }
 
   def loadGraph(graphLoader: GraphEditor => Unit) {
@@ -317,8 +317,8 @@ class AkkaWorker(val workerId: Int,
   }
 
   protected def recalculateVertexScores(vertex: Vertex) {
-    vertexStore.toCollect.addVertex(vertex.id)
-    vertexStore.toSignal.add(vertex.id)
+    vertexStore.toCollect.addVertex(vertex.getId)
+    vertexStore.toSignal.add(vertex.getId)
   }
 
   def forVertexWithId[VertexType <: Vertex, ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
@@ -432,7 +432,7 @@ class AkkaWorker(val workerId: Int,
           vertexStore.vertices.updateStateOfVertex(vertex)
           hasCollected = true
           if (addToSignal && vertex.scoreSignal > signalThreshold) {
-            vertexStore.toSignal.add(vertex.id)
+            vertexStore.toSignal.add(vertex.getId)
           }
         } catch {
           case t: Throwable => severe(t)
