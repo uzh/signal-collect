@@ -27,8 +27,6 @@ import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import com.signalcollect.messaging.DefaultMessageBus
 import java.io.File
-import com.signalcollect.EdgeId
-import com.signalcollect.DefaultEdgeId
 
 @RunWith(classOf[JUnitRunner])
 class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {
@@ -75,10 +73,10 @@ class ToHandleColletionSpec extends SpecificationWithJUnit with Mockito {
   "DefaultVertexSignalBuffer" should {
     val storage = mock[Storage]
     val toCollect = new InMemoryVertexSignalBuffer
-    val signalMessage1a = new SignalMessage(new DefaultEdgeId(0, 1), 1)
-    val signalMessage1b = new SignalMessage(new DefaultEdgeId(2, 1), 1)
-    val signalMessage2 = new SignalMessage(new DefaultEdgeId(1, 2), 1)
-    val signalMessage3 = new SignalMessage(new DefaultEdgeId(1, 3), 1)
+    val signalMessage1a = new SignalMessage(1, EdgeId(0, 1))
+    val signalMessage1b = new SignalMessage(1, EdgeId(2, 1))
+    val signalMessage2 = new SignalMessage(1, EdgeId(1, 2))
+    val signalMessage3 = new SignalMessage(1, EdgeId(1, 3))
 
     val allSignalMessages = List(signalMessage1a, signalMessage2, signalMessage3)
 

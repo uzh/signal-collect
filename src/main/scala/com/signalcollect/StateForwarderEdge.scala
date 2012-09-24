@@ -25,18 +25,11 @@ import com.signalcollect.interfaces._
  *  StateForwarderEdge is an edge implementation that signals
  *  the state of its source vertex.
  *
- *  @param sourceId id of this edge's source vertex
  *  @param targetId id of this edges's target vertex
- *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  */
-class StateForwarderEdge[SourceIdType, TargetIdType](
-  sourceId: SourceIdType,
-  targetId: TargetIdType,
-  description: String = getClass.getSimpleName)
-  extends DefaultEdge(sourceId, targetId, description) {
+class StateForwarderEdge[TargetIdType](targetId: TargetIdType)
+    extends DefaultEdge(targetId) {
 
-  def this(sourceId: SourceIdType, targetId: TargetIdType) = this(sourceId, targetId, "")
-  
-  def signal(sourceVertex: SourceVertex) = sourceVertex.getState.asInstanceOf[Signal]
+  def signal(sourceVertex: Vertex[_, _]) = sourceVertex.state.asInstanceOf[Signal]
 
 }

@@ -21,17 +21,18 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect._
-import akka.actor.ActorRef
 
-// algorithm-specific message
-case class SignalMessage[SourceId, TargetId, SignalType](edgeId: EdgeId[SourceId, TargetId], signal: SignalType) {
-  override def toString = "Signal(edgeId=" + edgeId + ", " +  "signal=" + signal + ")"
+// Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.
+case class EdgeId(val sourceId: Any, val targetId: Any) {
+  def withTargetId(t: Any): EdgeId = EdgeId(sourceId, t)
+  def withSourceId(s: Any): EdgeId = EdgeId(s, targetId)
+  def removeTargetId: EdgeId = EdgeId(sourceId, null)
+  def removeSourceId: EdgeId = EdgeId(null, targetId)
 }
 
-// signal sender id used to indicate that a signal was sent from an external source
-object EXTERNAL { override val toString = "EXTERNAL" }
+case class SignalMessage[@specialized Signal](val signal: Signal, val edgeId: EdgeId)
 
-// stalling detection
+// Convergence/pause detection
 case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
@@ -40,20 +41,20 @@ case class WorkerStatus(
   messagesReceived: Long)
 
 case class WorkerStatistics(
-  messagesReceived: Long = 0l,
-  messagesSent: Map[Int, Long] = Map(),
-  collectOperationsExecuted: Long = 0l,
-  signalOperationsExecuted: Long = 0l,
-  numberOfVertices: Long = 0l,
-  verticesAdded: Long = 0l,
-  verticesRemoved: Long = 0l,
-  numberOfOutgoingEdges: Long = 0l,
-  outgoingEdgesAdded: Long = 0l,
-  outgoingEdgesRemoved: Long = 0l) {
+    messagesReceived: Long = 0l,
+    messagesSent: Map[Int, Long] = Map(),
+    collectOperationsExecuted: Long = 0l,
+    signalOperationsExecuted: Long = 0l,
+    numberOfVertices: Long = 0l,
+    verticesAdded: Long = 0l,
+    verticesRemoved: Long = 0l,
+    numberOfOutgoingEdges: Long = 0l,
+    outgoingEdgesAdded: Long = 0l,
+    outgoingEdgesRemoved: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       messagesReceived + other.messagesReceived,
-      messagesSent ++ other.messagesSent.map{ case (k,v) => k -> (v + messagesSent.getOrElse(k,0l)) }, //merges the sent messages statistics
+      messagesSent ++ other.messagesSent.map { case (k, v) => k -> (v + messagesSent.getOrElse(k, 0l)) }, //merges the sent messages statistics
       collectOperationsExecuted + other.collectOperationsExecuted,
       signalOperationsExecuted + other.signalOperationsExecuted,
       numberOfVertices + other.numberOfVertices,

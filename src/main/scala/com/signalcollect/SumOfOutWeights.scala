@@ -23,27 +23,28 @@ import com.signalcollect.interfaces._
 import com.signalcollect._
 import scala.reflect.BeanProperty
 
-trait SumOfOutWeights extends AbstractVertex {  
+trait SumOfOutWeights[Id, State] extends AbstractVertex[Id, State] {
 
-  /** @return the sum of the weights of all outgoing edges of this {@link FrameworkVertex}. */
+  /**
+   * @return The sum of the weights of all outgoing edges.
+   */
   @BeanProperty var sumOfOutWeights: Double = 0
 
-  abstract override def addOutgoingEdge(e: Edge, graphEditor: GraphEditor): Boolean = {
-    val added = super.addOutgoingEdge(e, graphEditor)
+  abstract override def addEdge(e: Edge[_], graphEditor: GraphEditor): Boolean = {
+    val added = super.addEdge(e, graphEditor)
     if (added) {
       sumOfOutWeights = sumOfOutWeights + e.weight
     }
     added
   }
 
-  abstract override def removeOutgoingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean = {
+  abstract override def removeEdge(edgeId: Any, graphEditor: GraphEditor): Boolean = {
     var weightToSubtract = 0.0
-    val castEdgeId = edgeId.asInstanceOf[EdgeId[Id, _]]
-    val outgoinEdge = outgoingEdges.get(castEdgeId)
+    val outgoinEdge = outgoingEdges.get(edgeId)
     if (outgoinEdge != null) {
       weightToSubtract = outgoinEdge.weight
     }
-    val removed = super.removeOutgoingEdge(edgeId, graphEditor)
+    val removed = super.removeEdge(edgeId, graphEditor)
     if (removed) {
       sumOfOutWeights -= weightToSubtract
     }

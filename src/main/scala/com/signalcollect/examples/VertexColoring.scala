@@ -59,7 +59,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    * set to a random color and the neighbors are informed about this vertex'
    * new color. If no neighbor shares the same color, we stay with the old color.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
     if (mostRecentSignals.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {
@@ -104,10 +104,10 @@ object VertexColoring extends App {
   graph.addVertex(new ColoredVertex(1, 2, 1))
   graph.addVertex(new ColoredVertex(2, 2, 1))
   graph.addVertex(new ColoredVertex(3, 2, 1))
-  graph.addEdge(new StateForwarderEdge(1, 2))
-  graph.addEdge(new StateForwarderEdge(2, 1))
-  graph.addEdge(new StateForwarderEdge(2, 3))
-  graph.addEdge(new StateForwarderEdge(3, 2))
+  graph.addEdge(1, new StateForwarderEdge(2))
+  graph.addEdge(2, new StateForwarderEdge(1))
+  graph.addEdge(2, new StateForwarderEdge(3))
+  graph.addEdge(3, new StateForwarderEdge(2))
   val stats = graph.execute
   println(stats)
   graph.foreachVertex(println(_))

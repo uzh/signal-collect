@@ -15,8 +15,8 @@ import com.signalcollect._
  * 
  * @param 			neutral value for the buffer if an empty vertexId is added.
  */
-class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[AggregatedValueType], SignalMessage[_, _, _]) => AggregatedValueType,
-    mapper: (AggregatedValueType, Any) => SignalMessage[_, _, _],
+class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[AggregatedValueType], SignalMessage[_]) => AggregatedValueType,
+    mapper: (AggregatedValueType, Any) => SignalMessage[_],
     neutralValue: AggregatedValueType) extends VertexSignalBuffer {
 
   val undeliveredSignals = new ConcurrentHashMap[Any, AggregatedValueType](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
@@ -30,7 +30,7 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
    *
    * @param signal the signal that should be buffered for further collecting
    */
-  def addSignal(signal: SignalMessage[_, _, _]) {
+  def addSignal(signal: SignalMessage[_]) {
     
     
     if (undeliveredSignals.containsKey(signal.edgeId.targetId)) {
@@ -78,7 +78,7 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
    * @param clearWhenDone	determines if the map should be cleared when all entries are processed
    * @param breakCondition 	determines if the loop should be escaped before it is done
    */
-  def foreach[U](f: (Any, Iterable[SignalMessage[_, _, _]]) => U,
+  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U,
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 
@@ -98,16 +98,4 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
   }
 
   def cleanUp = undeliveredSignals.clear
-}
-
-trait MinimalPath extends DefaultStorage {
-  override protected def vertexSignalFactory = new ReducingVertexSignalBuffer((oldAggregatedValue: Option[Int], signal: SignalMessage[_,_,_]) => math.min(oldAggregatedValue.getOrElse(Int.MaxValue), signal.signal.asInstanceOf[Int]),
-      (bufferedSignal: Int, id: Any) => new SignalMessage(new DefaultEdgeId(id, -1), bufferedSignal), 
-      Int.MaxValue)
-}
-
-trait SumSignals extends DefaultStorage {
-	override protected def vertexSignalFactory = new ReducingVertexSignalBuffer((oldAggregatedValue: Option[Float], signal: SignalMessage[_,_,_]) => oldAggregatedValue.getOrElse(0.0f)+signal.signal.asInstanceOf[Float],
-      (bufferedSignal: Float, id: Any) => new SignalMessage(new DefaultEdgeId(id, -1), bufferedSignal), 
-      0.0f)
 }

@@ -26,17 +26,13 @@ import com.signalcollect.interfaces._
  *  when the signal has changed compared to the last signal sent.
  *  For some algorithms this can reduce the number of messages sent.
  *
- *  @param sourceId id of this edge's source vertex
  *  @param targetId id of this edges's target vertex
  *  @param description an additional description of this edge that would allow to tell apart multiple edges between the source and the target vertex
  *
  *  @note Beware of modifying and signaling a referenced object, change detection fails in this case.
  */
-abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
-  sourceId: SourceIdType,
-  targetId: TargetIdType,
-  description: String = getClass.getSimpleName)
-  extends DefaultEdge(sourceId, targetId, description) {
+abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](targetId: TargetIdType)
+    extends DefaultEdge(targetId) {
 
   /** Last signal sent along this edge */
   var lastSignalSent: Option[Signal] = None
@@ -50,10 +46,10 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex, messageBus: MessageBus) {
-    val newSignal = signal(sourceVertex.asInstanceOf[SourceVertex])
+  override def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor) {
+    val newSignal = signal(sourceVertex)
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      messageBus.sendToWorkerForVertexIdHash(SignalMessage(id, newSignal), cachedTargetIdHashCode)
+      graphEditor.sendToWorkerForVertexIdHash(SignalMessage(newSignal, senderEdgeId), cachedTargetIdHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

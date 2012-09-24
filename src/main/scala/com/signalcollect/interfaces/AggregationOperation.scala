@@ -28,7 +28,7 @@ trait AggregationOperation[ValueType] extends Serializable {
   /**
    *  Extracts values of type `ValueType` from vertices.
    */
-  def extract(v: Vertex): ValueType
+  def extract(v: Vertex[_, _]): ValueType
 
   /**
    *  Aggregates all the values extracted by the `extract` function.

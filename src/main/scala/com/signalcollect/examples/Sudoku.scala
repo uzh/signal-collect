@@ -27,9 +27,8 @@ import collection.mutable.{ ListMap, HashMap, SynchronizedMap }
  * the value of a cell
  *
  */
-class SudokuAssociation(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
-  type SourceVertex = SudokuCell
-  def signal(sourceVertex: SudokuCell) = sourceVertex.state
+class SudokuAssociation(t: Any) extends OptionalSignalEdge(t) {
+  def signal(sourceVertex: Vertex[_, _]) = sourceVertex.asInstanceOf[SudokuCell].state
 }
 
 /**
@@ -45,7 +44,7 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVer
   var possibleValues = SudokuHelper.legalNumbers
   if (initialState.isDefined) possibleValues = Set(initialState.get)
 
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Option[Int] = {
+  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Option[Int] = {
 
     //make a list of all possible values
     possibleValues = possibleValues -- mostRecentSignals.toSet
@@ -119,7 +118,7 @@ object Sudoku extends App {
 
   //print initial Sudoku
   var seed = new HashMap[Int, Option[Int]]()
-  graph.foreachVertex { v => seed += Pair(v.getId.asInstanceOf[Int], v.getState.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
   val stats = graph.execute
@@ -137,7 +136,7 @@ object Sudoku extends App {
   println()
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-  graph.foreachVertex { v => result += Pair(v.getId.asInstanceOf[Int], v.getState.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   graph.shutdown
   SudokuHelper.printSudoku(result)
 
@@ -146,7 +145,7 @@ object Sudoku extends App {
    */
   def isDone(graph: Graph): Boolean = {
     var isDone = true
-    graph.foreachVertex(v => if (v.getState.asInstanceOf[Option[Int]] == None) isDone = false)
+    graph.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
   }
 
@@ -156,7 +155,7 @@ object Sudoku extends App {
   def tryPossibilities(graph: Graph): Graph = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
-    graph.foreachVertex(v => possibleValues.put(v.getId.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
+    graph.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
     graph.shutdown
 
     var solutionFound = false
@@ -207,7 +206,7 @@ object Sudoku extends App {
     //Determine neighboring cells for each cell and draw the edges between them
     for (index <- 0 to 80) {
       SudokuHelper.cellsToConsider(index).foreach({ i =>
-        graph.addEdge(new SudokuAssociation(i, index))
+        graph.addEdge(i, new SudokuAssociation(index))
       })
     }
     graph

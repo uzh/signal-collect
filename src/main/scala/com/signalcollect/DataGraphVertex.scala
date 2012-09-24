@@ -36,18 +36,11 @@ import com.signalcollect.util.collections.Filter
  *
  *  @author Philip Stutz
  */
-abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
-  val id: IdTypeParameter,
-  var state: StateTypeParameter)
-  extends AbstractVertex with SumOfOutWeights with VertexGraphEditor {
+abstract class DataGraphVertex[Id, State](
+    val id: Id,
+    var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
 
-  type Id = IdTypeParameter
-  type State = StateTypeParameter
-
-  /**
-   *  @return the identifier of this `Vertex`.
-   */
-  def getId: Id = id
+  type Signal
 
   /**
    *  @return the object that stores the current state for this `Vertex`.
@@ -56,7 +49,7 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
   def setState(s: State) {
     state = s
   }
-  
+
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
@@ -69,12 +62,12 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Signal]): State
+  def collect(oldState: State, mostRecentSignals: Iterable[Signal], graphEditor: GraphEditor): State
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
    */
-  protected val mostRecentSignalMap = new HashMap[EdgeId[_, Id], Signal]()
+  protected val mostRecentSignalMap = new HashMap[Any, Signal]()
 
   /**
    *  Utility function to filter out only certain signals of interest.
@@ -88,13 +81,11 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *
    *  @param id The edge id of the edge for which we would like to retrieve the most recent signal that was sent along it.
    */
-  override def getMostRecentSignal(id: EdgeId[_, _]): Option[_] = {
-    val signal = mostRecentSignalMap.get(id.asInstanceOf[EdgeId[_, Id]])
-    signal match {
+  override def getMostRecentSignal(id: Any): Option[_] =
+    mostRecentSignalMap.get(id) match {
       case null => None
-      case s => Some(s)
+      case s    => Some(s)
     }
-  }
 
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
@@ -103,38 +94,16 @@ abstract class DataGraphVertex[IdTypeParameter, StateTypeParameter](
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(signals: Iterable[SignalMessage[_, _, _]], messageBus: MessageBus) {
-    super.executeCollectOperation(signals, messageBus)
-    val castS = signals.asInstanceOf[Iterable[SignalMessage[_, Id, Signal]]]
-    // faster than scala foreach
+  override def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor) {
+    super.executeCollectOperation(signals, graphEditor)
+    val castS = signals.asInstanceOf[Iterable[SignalMessage[Signal]]]
+    // Faster than scala foreach.
     val i = castS.iterator
     while (i.hasNext) {
       val signalMessage = i.next
-      mostRecentSignalMap.put(signalMessage.edgeId, signalMessage.signal)
+      mostRecentSignalMap.put(signalMessage.edgeId.sourceId, signalMessage.signal)
     }
-    state = collect(state, mostRecentSignalMap.values)
-  }
-
-  /**
-   *  Returns ids of vertices that are known to be or have been predecessors at some point in time.
-   */
-  override def getVertexIdsOfPredecessors: Option[Iterable[Any]] = {
-    Some(mostRecentSignalMap.keys map (_.sourceId))
-  }
-
-  /**
-   *  Removes incoming `Edge` from this `Vertex`.
-   *  @param edgeId of the edge to be removed.
-   */
-  override def removeIncomingEdge(edgeId: EdgeId[_, _], graphEditor: GraphEditor): Boolean = {
-    val removed = super.removeIncomingEdge(edgeId, graphEditor)
-    if (removed) {
-      val castEdgeId = edgeId.asInstanceOf[EdgeId[_, Id]]
-      if (mostRecentSignalMap.contains(castEdgeId)) {
-        mostRecentSignalMap.remove(castEdgeId)
-      }
-    }
-    removed
+    state = collect(state, mostRecentSignalMap.values, graphEditor)
   }
 
 }
