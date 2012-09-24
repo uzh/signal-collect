@@ -97,7 +97,7 @@ abstract class DataGraphVertex[Id, State](
   override def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor) {
     super.executeCollectOperation(signals, graphEditor)
     val castS = signals.asInstanceOf[Iterable[SignalMessage[Signal]]]
-    // Faster than scala foreach.
+    // Faster than Scala foreach.
     val i = castS.iterator
     while (i.hasNext) {
       val signalMessage = i.next

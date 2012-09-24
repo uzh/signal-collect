@@ -28,23 +28,23 @@ trait SumOfOutWeights[Id, State] extends AbstractVertex[Id, State] {
   /**
    * @return The sum of the weights of all outgoing edges.
    */
-  @BeanProperty var sumOfOutWeights: Double = 0
+  var sumOfOutWeights: Double = 0
 
   abstract override def addEdge(e: Edge[_], graphEditor: GraphEditor): Boolean = {
     val added = super.addEdge(e, graphEditor)
     if (added) {
-      sumOfOutWeights = sumOfOutWeights + e.weight
+      sumOfOutWeights += e.weight
     }
     added
   }
 
-  abstract override def removeEdge(edgeId: Any, graphEditor: GraphEditor): Boolean = {
+  abstract override def removeEdge(targetId: Any, graphEditor: GraphEditor): Boolean = {
     var weightToSubtract = 0.0
-    val outgoinEdge = outgoingEdges.get(edgeId)
-    if (outgoinEdge != null) {
-      weightToSubtract = outgoinEdge.weight
+    val outgoingEdge = outgoingEdges.get(targetId)
+    if (outgoingEdge != null) {
+      weightToSubtract = outgoingEdge.weight
     }
-    val removed = super.removeEdge(edgeId, graphEditor)
+    val removed = super.removeEdge(targetId, graphEditor)
     if (removed) {
       sumOfOutWeights -= weightToSubtract
     }

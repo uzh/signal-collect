@@ -112,5 +112,5 @@ trait Vertex[Id, State] extends Serializable {
    *  This method gets called by the framework before the vertex gets removed.
    */
   def beforeRemoval(graphEditor: GraphEditor)
-
+  
 }

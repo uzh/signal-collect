@@ -31,30 +31,26 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
   /**
    * hashCode is cached for better performance
    */
-  override val hashCode = id.hashCode
+  override lazy val hashCode = id.hashCode  // Lazy to prevent premature initialization when using Java API.
 
-  protected def process(message: SignalMessage[_]) = {}
+  def process(message: SignalMessage[_]) = {}
 
   def afterInitialization(graphEditor: GraphEditor) = {}
 
   /**
-   * Access to the outgoing edges is required for some calculations and for executing the signal operations
+   * Access to the outgoing edges is required for some calculations and for executing the signal operations.
+   * It is a map so we can support fast edge removals.
    */
-  protected var outgoingEdges = new HashMap[Any, Edge[_]]()
-
-  /**
-   *  @return A map with edge ids as keys and edges as values. Optional, but supported by the default implementations
-   */
-  def getOutgoingEdgeMap: Option[collection.immutable.Map[Any, Edge[_]]] = Some(outgoingEdges.toMap[Any, Edge[_]])
+  var outgoingEdges = new HashMap[Any, Edge[_]]()
 
   /** The state of this vertex when it last signaled. */
-  protected var lastSignalState: Option[State] = None
+  var lastSignalState: Option[State] = None
 
   /** Keeps track if edges get modified so we know we should signal again */
-  protected var edgesModifiedSinceSignalOperation = false
+  var edgesModifiedSinceSignalOperation = false
 
   /** Keeps track if edges get modified so we know we should collect again */
-  protected var edgesModifiedSinceCollectOperation = false
+  var edgesModifiedSinceCollectOperation = false
 
   /**
    * Adds a new outgoing `Edge`
@@ -105,7 +101,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    * This method tells this Vertex to execute the signal operation
    * on all its outgoing edges. This method is going to be
    * called by the Signal/Collect framework during its execution (i.e. the
-   * {Worker implementation.
+   * Worker implementation.
    *
    * @see Worker
    * @see Edge#executeSignalOperation
@@ -117,7 +113,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
   }
 
   def doSignal(graphEditor: GraphEditor) {
-    // faster than scala foreach
+    // Faster than Scala foreach.
     var i = outgoingEdges.values.iterator
     while (i.hasNext) {
       val outgoingEdge = i.next
