@@ -37,6 +37,6 @@ class StateForwarderEdge[SourceIdType, TargetIdType](
 
   def this(sourceId: SourceIdType, targetId: TargetIdType) = this(sourceId, targetId, "")
   
-  def signal(sourceVertex: SourceVertex) = sourceVertex.state.asInstanceOf[Signal]
+  def signal(sourceVertex: SourceVertex) = sourceVertex.getState.asInstanceOf[Signal]
 
 }

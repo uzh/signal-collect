@@ -30,7 +30,7 @@ class IdStateMapAggregator[IdType, StateType] extends AggregationOperation[Map[I
   val neutralElement = Map[IdType, StateType]()
   def extract(v: Vertex): Map[IdType, StateType] = {
     try {
-      Map[IdType, StateType]((v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType]))
+      Map[IdType, StateType]((v.getId.asInstanceOf[IdType], v.getState.asInstanceOf[StateType]))
     }
   }
   def aggregate(a: Map[IdType, StateType], b: Map[IdType, StateType]): Map[IdType, StateType] = a ++ b
@@ -77,7 +77,7 @@ class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
   }
 
   def extract(v: Vertex): List[Any] = {
-    List(v.id)
+    List(v.getId)
   }
 }
 
@@ -121,7 +121,7 @@ abstract class StateExtractor[StateType: Manifest] extends AggregationOperation[
    */
   def extract(v: Vertex): Option[StateType] = {
     try {
-      Some(v.state.asInstanceOf[StateType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+      Some(v.getState.asInstanceOf[StateType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
       case _ => None
     }
@@ -159,7 +159,7 @@ abstract class StateAggregator[StateType] extends AggregationOperation[StateType
    */
   def extract(v: Vertex): StateType = {
     try {
-      v.state.asInstanceOf[StateType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
+      v.getState.asInstanceOf[StateType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
       case _ => neutralElement
     }

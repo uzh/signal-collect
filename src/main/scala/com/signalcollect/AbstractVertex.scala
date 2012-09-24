@@ -41,7 +41,7 @@ abstract class AbstractVertex extends Vertex {
   /**
    * hashCode is cached for better performance
    */
-  override val hashCode = this.id.hashCode
+  override val hashCode = getId.hashCode
 
   protected def process(message: SignalMessage[_, _, _]) = {}
 
@@ -65,7 +65,7 @@ abstract class AbstractVertex extends Vertex {
 
   /** Keeps track if edges get modified so we know we should collect again */
   protected var edgesModifiedSinceCollectOperation = false
-
+  
   var incomingEdgeCount = 0
 
   /**
@@ -128,7 +128,7 @@ abstract class AbstractVertex extends Vertex {
    */
   def executeSignalOperation(messageBus: MessageBus) {
     edgesModifiedSinceSignalOperation = false
-    lastSignalState = Some(state)
+    lastSignalState = Some(getState)
     doSignal(messageBus)
   }
 
@@ -176,7 +176,7 @@ abstract class AbstractVertex extends Vertex {
       1
     } else {
       lastSignalState match {
-        case Some(oldState) if oldState == state => 0
+        case Some(oldState) if oldState == getState => 0
         case noStateOrStateChanged               => 1
       }
     }
@@ -199,7 +199,7 @@ abstract class AbstractVertex extends Vertex {
    * Returns "VertexClassName(id=ID, state=STATE)"
    */
   override def toString: String = {
-    this.getClass.getSimpleName + "(id=" + id + ", state=" + state + ")"
+    this.getClass.getSimpleName + "(id=" + getId + ", state=" + getState + ")"
   }
 
   /**

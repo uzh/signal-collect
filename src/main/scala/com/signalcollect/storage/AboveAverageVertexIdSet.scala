@@ -63,8 +63,8 @@ class AboveAverageVertexIdSet(vertexStore: Storage) extends VertexIdSet {
   }
 
   def updateStateOfVertex(vertex: Vertex) = {
-    if (implementation.contains(vertex.id)) {
-      implementation.updateItemScore(item = vertex.id, newScore = vertex.scoreSignal)
+    if (implementation.contains(vertex.getId)) {
+      implementation.updateItemScore(item = vertex.getId, newScore = vertex.scoreSignal)
     }
   }
 

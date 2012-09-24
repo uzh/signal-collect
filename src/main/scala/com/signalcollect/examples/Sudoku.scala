@@ -119,7 +119,7 @@ object Sudoku extends App {
 
   //print initial Sudoku
   var seed = new HashMap[Int, Option[Int]]()
-  graph.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => seed += Pair(v.getId.asInstanceOf[Int], v.getState.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
   val stats = graph.execute
@@ -137,7 +137,7 @@ object Sudoku extends App {
   println()
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-  graph.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => result += Pair(v.getId.asInstanceOf[Int], v.getState.asInstanceOf[Option[Int]]) }
   graph.shutdown
   SudokuHelper.printSudoku(result)
 
@@ -146,7 +146,7 @@ object Sudoku extends App {
    */
   def isDone(graph: Graph): Boolean = {
     var isDone = true
-    graph.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
+    graph.foreachVertex(v => if (v.getState.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
   }
 
@@ -156,7 +156,7 @@ object Sudoku extends App {
   def tryPossibilities(graph: Graph): Graph = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
-    graph.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
+    graph.foreachVertex(v => possibleValues.put(v.getId.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
     graph.shutdown
 
     var solutionFound = false

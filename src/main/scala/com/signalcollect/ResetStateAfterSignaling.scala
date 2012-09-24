@@ -31,7 +31,7 @@ trait ResetStateAfterSignaling extends AbstractVertex {
    */
   abstract override def executeSignalOperation(messageBus: MessageBus) {
     super.executeSignalOperation(messageBus)
-    state = resetState
+    setState(resetState)
   }
 
 }

@@ -102,7 +102,7 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
   def addVertex(vertex: Vertex) {
-    workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(DefaultSerializer.write(vertex))
+    workers(mapper.getWorkerIdForVertexId(vertex.getId)).addVertex(DefaultSerializer.write(vertex))
   }
 
   /**

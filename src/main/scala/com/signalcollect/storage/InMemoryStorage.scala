@@ -64,8 +64,8 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @return true if the insertion was successful, false if the storage already contained a vertex with the same id.
    */
   def put(vertex: Vertex): Boolean = {
-    if (!vertexMap.containsKey(vertex.id)) {
-      vertexMap.put(vertex.id, vertex)
+    if (!vertexMap.containsKey(vertex.getId)) {
+      vertexMap.put(vertex.getId, vertex)
       true
     } else
       false

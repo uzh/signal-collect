@@ -44,11 +44,11 @@ trait Vertex extends Serializable {
    *  Vertices are assigned to worker threads that are each responsible for a part of the graph.
    *  We use a hash function on the vertex ids for the mapping of vertices to workers.
    */
-  override def hashCode = this.id.hashCode
+  override def hashCode = getId.hashCode
 
   override def equals(other: Any): Boolean = {
     other match {
-      case v: Vertex => v.id == id
+      case v: Vertex => v.getId == getId
       case _ => false
     }
   }
@@ -56,12 +56,13 @@ trait Vertex extends Serializable {
   /**
    *  @return the identifier of this `Vertex`.
    */
-  def id: Id
+  def getId: Id
 
   /**
    *  @return the object that stores the current state for this `Vertex`.
    */
-  var state: State
+  def getState: State
+  def setState(s: State)
 
   /**
    *  Adds a new outgoing `Edge` to this `Vertex`.
