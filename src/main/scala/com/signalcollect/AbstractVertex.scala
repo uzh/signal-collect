@@ -137,12 +137,12 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
   def scoreCollect(signals: Iterable[SignalMessage[_]]): Double = {
-    if (signals.size > 0) {
-      signals.size
+    if (!signals.isEmpty) {
+      1.0
     } else if (edgesModifiedSinceCollectOperation) {
-      1
+      1.0
     } else {
-      0
+      0.0
     }
   }
 

@@ -64,7 +64,7 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataGrap
     Some(mostRecentSignals.foldLeft(currentShortestPath)(math.min(_, _)))
   }
 
-  override def scoreCollect(signals: Iterable[SignalMessage[_]]): Double = signals.size // changed so it only gets called once signals were received
+  override def scoreCollect(signals: Iterable[SignalMessage[_]]): Double = if (signals.isEmpty) 0.0 else 1.0 // changed so it only gets called once signals were received
 
 }
 
