@@ -38,3 +38,10 @@ trait Coordinator extends Actor with MessageRecipientRegistry with Logging {
   
   def globalInboxSize: Long
 }
+
+object Coordinator {
+  // Returns the position of the number of messages sent to the coordinator in the message counter array.
+  def getCoodinatorPosition(numberOfWorkers: Int): Int = numberOfWorkers
+  // Returns the position of the number of messages sent to other actors in the message counter array.
+  def getOthersPosition(numberOfWorkers: Int): Int = numberOfWorkers + 1
+}

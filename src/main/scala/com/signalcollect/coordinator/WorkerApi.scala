@@ -52,7 +52,7 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
   }
 
   def getWorkerStatistics: WorkerStatistics = {
-    parallelWorkers.map(_.getWorkerStatistics).fold(WorkerStatistics())(_ + _)
+    parallelWorkers.map(_.getWorkerStatistics).fold(WorkerStatistics(null))(_ + _)
   }
 
   def signalStep = parallelWorkers foreach (_.signalStep)

@@ -19,6 +19,7 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect._
+import scala.collection.mutable.IndexedSeq
 
 /**
  * High level interface to abstract all vertex storage related implementations
@@ -68,7 +69,7 @@ trait VertexSignalBuffer {
   def remove(vertexId: Any)
   def size: Int
   def isEmpty: Boolean
-  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
+  def foreach[U](f: (Any, IndexedSeq[SignalMessage[_]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
   def cleanUp
 }
 

@@ -65,7 +65,7 @@ case class TorqueHost(
       val deleteConfig = "rm " + configPath
       deleteConfig !!
 
-      jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters)
+      jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
     }
   }
 }

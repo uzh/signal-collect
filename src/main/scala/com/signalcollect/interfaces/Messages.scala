@@ -37,12 +37,12 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-  messagesSent: Map[Int, Long],
+  messagesSent: Array[Int],
   messagesReceived: Long)
 
 case class WorkerStatistics(
+    messagesSent: Array[Long],
     messagesReceived: Long = 0l,
-    messagesSent: Map[Int, Long] = Map(),
     collectOperationsExecuted: Long = 0l,
     signalOperationsExecuted: Long = 0l,
     numberOfVertices: Long = 0l,
@@ -53,8 +53,21 @@ case class WorkerStatistics(
     outgoingEdgesRemoved: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
+      { // Merges the sent messages arrays.
+        if (messagesSent == null) other.messagesSent
+        else if (other.messagesSent == null) messagesSent
+        else if (messagesSent == null && other.messagesSent == null) null
+        else {
+          val merged = new Array[Long](messagesSent.length)
+          var i = 0
+          while (i < messagesSent.length) {
+            merged(i) = messagesSent(i) + other.messagesSent(i)
+            i += 1
+          }
+          merged
+        }
+      },
       messagesReceived + other.messagesReceived,
-      messagesSent ++ other.messagesSent.map { case (k, v) => k -> (v + messagesSent.getOrElse(k, 0l)) }, //merges the sent messages statistics
       collectOperationsExecuted + other.collectOperationsExecuted,
       signalOperationsExecuted + other.signalOperationsExecuted,
       numberOfVertices + other.numberOfVertices,

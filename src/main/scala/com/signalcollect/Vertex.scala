@@ -23,6 +23,7 @@ import com.signalcollect.interfaces.SignalMessage
 import collection.immutable.Map
 import collection.Iterable
 import com.signalcollect.interfaces.EdgeId
+import scala.collection.mutable.IndexedSeq
 
 /**
  *  This trait represents the framework's view of a vertex.
@@ -79,7 +80,7 @@ trait Vertex[Id, State] extends Serializable {
    *
    *  @param signals the new signals that this vertex has received since the `executeCollectOperation` method was called last.
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor)
+  def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor)
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -96,7 +97,7 @@ trait Vertex[Id, State] extends Serializable {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[SignalMessage[_]]): Double
+  def scoreCollect(signals: IndexedSeq[SignalMessage[_]]): Double
 
   /**
    *  @return the number of outgoing edges of this `Vertex`

@@ -25,6 +25,7 @@ import scala.collection.JavaConversions._
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.EdgeId
+import scala.collection.mutable.IndexedSeq
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
 
@@ -126,7 +127,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor) {
+  def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor) {
     edgesModifiedSinceCollectOperation = false
   }
 
@@ -136,7 +137,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: Iterable[SignalMessage[_]]): Double = {
+  def scoreCollect(signals: IndexedSeq[SignalMessage[_]]): Double = {
     if (!signals.isEmpty) {
       1.0
     } else if (edgesModifiedSinceCollectOperation) {

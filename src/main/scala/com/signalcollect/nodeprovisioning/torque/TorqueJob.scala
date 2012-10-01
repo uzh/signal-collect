@@ -24,4 +24,5 @@ case class TorqueJob(
   execute: () => Map[String, String],
   submittedByUser: String = "",
   jvmParameters:String = "",
-  jobDescription: String = "")
+  jobDescription: String = "",
+  jdkBinPath: String = "")

@@ -22,6 +22,7 @@ package com.signalcollect
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.util.collections.Filter
+import scala.collection.mutable.IndexedSeq
 
 /**
  *  Vertex implementation that collects all the signals that have arrived since the last
@@ -72,7 +73,7 @@ abstract class DataFlowVertex[Id, State](
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(signals: Iterable[SignalMessage[_]], graphEditor: GraphEditor) {
+  override def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor) {
     super.executeCollectOperation(signals, graphEditor)
     state = collect(state, (signals map (_.signal)).asInstanceOf[Iterable[Signal]], graphEditor)
   }

@@ -59,8 +59,8 @@ case class TorqueJobSubmitter(
     result
   }
 
-  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String): String = {
-    val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters)
+  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
+    val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath)
     val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
     val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
     executeCommandOnClusterManager(qsubCommand)
@@ -73,7 +73,7 @@ case class TorqueJobSubmitter(
     connection
   }
 
-  def getShellScript(jobId: String, jarname: String, mainClass: String, priority: String, jvmParameters: String): String = {
+  def getShellScript(jobId: String, jarname: String, mainClass: String, priority: String, jvmParameters: String, jdkBinPath: String): String = {
     val script = """
 #!/bin/bash
 #PBS -N """ + jobId + """
@@ -97,7 +97,7 @@ vm_args="""" + jvmParameters + """ -Xmx30000m -Xms30000m -d64"
 cp ~/$jarname $workingDir/
 
 # run test
-cmd="java $vm_args -cp $workingDir/$jarname $mainClass """ + jobId + """"
+cmd="""" + jdkBinPath + """java $vm_args -cp $workingDir/$jarname $mainClass """ + jobId + """"
 $cmd
 """
     script

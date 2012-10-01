@@ -51,13 +51,17 @@ class DefaultMessageBus(
 
   protected var coordinator: ActorRef = _
 
-  //Map with Int as key and atomic Int as values. Meaning of Ints positive => worker id, -1 => coordinator, -2 => otherRecipients
-  val coordinatorId = -1
-  val otherRecipients = -2
+  val coordinatorId = Coordinator.getCoodinatorPosition(numberOfWorkers)
+  val otherRecipients = Coordinator.getOthersPosition(numberOfWorkers)
 
-  protected var sentMessagesCounters: Map[Int, AtomicInteger] = {
-    val mapKeys = coordinatorId :: otherRecipients :: workerIds
-    Map[Int, AtomicInteger]() ++ mapKeys.map((_, new AtomicInteger(0)))
+  protected var sentMessagesCounters: Array[AtomicInteger] = {
+    val counters = new Array[AtomicInteger](numberOfWorkers + 2)
+    var i = 0
+    while (i < counters.length) {
+      counters(i) = new AtomicInteger(0)
+      i += 1
+    }
+    counters
   }
 
   protected val receivedMessagesCounter = new AtomicInteger(0)
@@ -78,11 +82,7 @@ class DefaultMessageBus(
   /**
    * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
    */
-  def messagesSent = sentMessagesCounters.map(element => {
-    element match {
-      case (id, count) => (id, count.get.toLong)
-    }
-  })
+  def messagesSent = sentMessagesCounters.map((c: AtomicInteger) => c.get)
 
   def messagesReceived = receivedMessagesCounter.get
 

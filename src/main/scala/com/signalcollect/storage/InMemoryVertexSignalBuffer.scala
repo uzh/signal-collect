@@ -19,15 +19,16 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces.{ VertexSignalBuffer, SignalMessage, Storage }
 import java.util.concurrent.ConcurrentHashMap
-import java.util.ArrayList
 import collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.IndexedSeq
 
 /**
  * Stores Signals that were received by the worker but not collected by the vertices yet
  */
 class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
 
-  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayList[SignalMessage[_]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
+  val undeliveredSignals = new ConcurrentHashMap[Any, ArrayBuffer[SignalMessage[_]]](16, 0.75f, 1) //key: recipients id, value: signals for that recipient
   var iterator = undeliveredSignals.keySet.iterator
 
   /**
@@ -42,7 +43,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
     if (undeliveredSignals.containsKey(signalMessage.edgeId.targetId)) {
       undeliveredSignals.get(signalMessage.edgeId.targetId).add(signalMessage)
     } else {
-      val signalsForVertex = new ArrayList[SignalMessage[_]]()
+      val signalsForVertex = new ArrayBuffer[SignalMessage[_]]()
       signalsForVertex.add(signalMessage)
       undeliveredSignals.put(signalMessage.edgeId.targetId, signalsForVertex)
     }
@@ -56,7 +57,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    */
   def addVertex(vertexId: Any) {
     if (!undeliveredSignals.containsKey(vertexId)) {
-      undeliveredSignals.put(vertexId, new ArrayList[SignalMessage[_]]())
+      undeliveredSignals.put(vertexId, new ArrayBuffer[SignalMessage[_]]())
     }
   }
 
@@ -86,9 +87,7 @@ class InMemoryVertexSignalBuffer extends VertexSignalBuffer {
    * @param breakCondition 	determines if the loop should be escaped before it is done
    * @return 				has the execution handled all elements in the list i.e. has it not been interrupted by the break condition
    */
-  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U,
-    removeAfterProcessing: Boolean,
-    breakCondition: () => Boolean = () => false): Boolean = {
+  def foreach[U](f: (Any, IndexedSeq[SignalMessage[_]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean = {
 
     if (!iterator.hasNext) {
       iterator = undeliveredSignals.keySet.iterator

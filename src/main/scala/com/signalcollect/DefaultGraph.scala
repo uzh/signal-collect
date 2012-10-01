@@ -177,7 +177,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     val executionStopTime = System.nanoTime
     stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
     val workerStatistics = workerApi.getIndividualWorkerStatistics
-    ExecutionInformation(config, numberOfWorkers, nodes map (_.numberOfCores.toString), parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
+    ExecutionInformation(config, numberOfWorkers, nodes map (_.numberOfCores.toString), parameters, stats, workerStatistics.fold(WorkerStatistics(null))(_ + _), workerStatistics)
   }
   
   protected def synchronousExecution(

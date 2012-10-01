@@ -46,6 +46,7 @@ import akka.dispatch.Future
 import akka.dispatch.Promise
 import akka.dispatch.MessageQueue
 import com.signalcollect.messaging.Request
+import scala.collection.mutable.IndexedSeq
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -329,7 +330,7 @@ class AkkaWorker(val workerId: Int,
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
       messagesReceived = counters.messagesReceived,
-      messagesSent = messageBus.messagesSent,
+      messagesSent = messageBus.messagesSent.map(c => c.toLong),
       collectOperationsExecuted = counters.collectOperationsExecuted,
       signalOperationsExecuted = counters.signalOperationsExecuted,
       numberOfVertices = vertexStore.vertices.size,
@@ -382,7 +383,7 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: Iterable[SignalMessage[_]], addToSignal: Boolean = true): Boolean = {
+  protected def executeCollectOperationOfVertex(vertexId: Any, uncollectedSignalsList: IndexedSeq[SignalMessage[_]], addToSignal: Boolean = true): Boolean = {
     var hasCollected = false
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {

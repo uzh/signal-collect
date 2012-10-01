@@ -2,7 +2,7 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces._
 import java.util.concurrent.ConcurrentHashMap
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.IndexedSeq
 import com.signalcollect._
 
 /**
@@ -78,7 +78,7 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
    * @param clearWhenDone	determines if the map should be cleared when all entries are processed
    * @param breakCondition 	determines if the loop should be escaped before it is done
    */
-  def foreach[U](f: (Any, Iterable[SignalMessage[_]]) => U,
+  def foreach[U](f: (Any, IndexedSeq[SignalMessage[_]]) => U,
     removeAfterProcessing: Boolean,
     breakCondition: () => Boolean = () => false): Boolean = {
 
@@ -89,7 +89,7 @@ class ReducingVertexSignalBuffer[AggregatedValueType](reducer: (Option[Aggregate
     while (iterator.hasNext && !breakCondition()) {
       val currentId = iterator.next
       val aggregatedSignal = mapper(undeliveredSignals.get(currentId), currentId)
-      f(currentId, List(aggregatedSignal))
+      f(currentId, IndexedSeq(aggregatedSignal))
       if (removeAfterProcessing) {
         remove(currentId)
       }

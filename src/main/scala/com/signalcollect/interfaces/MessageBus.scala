@@ -34,7 +34,7 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   
   def numberOfWorkers: Int
 
-  def messagesSent: Map[Int, Long]
+  def messagesSent: Array[Int]
   def messagesReceived: Long
 
   def getReceivedMessagesCounter: AtomicInteger
