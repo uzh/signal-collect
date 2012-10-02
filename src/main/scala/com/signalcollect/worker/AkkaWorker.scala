@@ -34,7 +34,7 @@ import java.util.Map
 import java.util.Set
 import com.signalcollect._
 import com.signalcollect.serialization.DefaultSerializer
-import akka.util.duration._
+import concurrent.util.duration._
 import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
 import akka.actor.ActorRef
@@ -42,8 +42,8 @@ import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.messaging.Request
-import akka.dispatch.Future
-import akka.dispatch.Promise
+import scala.concurrent.Future
+import scala.concurrent.Promise
 import akka.dispatch.MessageQueue
 import com.signalcollect.messaging.Request
 import scala.collection.mutable.IndexedSeq
@@ -148,7 +148,7 @@ class AkkaWorker(val workerId: Int,
       }
       case Request(command, reply) => {
         try {
-          val result = command(this)
+          val result = command.asInstanceOf[Worker => Any](this)
           if (reply) {
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
               messageBus.sendToActor(sender, None)

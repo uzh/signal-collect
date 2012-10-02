@@ -36,7 +36,7 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import com.signalcollect.serialization.DefaultSerializer
 import scala.util.Random
-import akka.dispatch.Future
+import scala.concurrent.Future
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.

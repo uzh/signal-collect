@@ -22,8 +22,8 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.configuration.TerminationReason
-import akka.util.duration._
-import akka.util.Duration
+import scala.concurrent.util.Duration._
+import scala.concurrent.util.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -68,10 +68,10 @@ case class ExecutionInformation(
 case class ExecutionStatistics(
   var signalSteps: Long = 0,
   var collectSteps: Long = 0,
-  var computationTime: Duration = 0 milliseconds,
-  var totalExecutionTime: Duration = 0 milliseconds, // should approximately equal computation time + idle waiting + garbage collection
-  var jvmCpuTime: Duration = 0 milliseconds,
-  var graphIdleWaitingTime: Duration = 0 milliseconds,
+  var computationTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
+  var totalExecutionTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS), // should approximately equal computation time + idle waiting + garbage collection
+  var jvmCpuTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
+  var graphIdleWaitingTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
   var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
 
   override def toString: String = {

@@ -89,10 +89,15 @@ akka {
       # (I) Should the remote server require that it peers share the same secure-cookie
       # (defined in the 'remote' section)?
       require-cookie = off
-
+   
       # (I) Reuse inbound connections for outbound messages
       use-passive-connections = off
 
+      # (I) EXPERIMENTAL If "<id.of.dispatcher>" then the specified dispatcher
+      # will be used to accept inbound connections, and perform IO. If "" then
+      # dedicated threads will be used.
+      use-dispatcher-for-io = ""
+    
       # (I) The hostname or ip to bind the remoting to,
       # InetAddress.getLocalHost.getHostAddress is used if empty
       hostname = ""
@@ -126,6 +131,22 @@ akka {
       # (I) Maximum total size of all channels, 0 for off
       max-total-memory-size = 0b
 
+      # (I&O) Sets the high water mark for the in and outbound sockets,
+      # set to 0b for platform default
+      write-buffer-high-water-mark = 0b
+ 
+      # (I&O) Sets the low water mark for the in and outbound sockets,
+      # set to 0b for platform default
+      write-buffer-low-water-mark = 0b
+ 
+      # (I&O) Sets the send buffer size of the Sockets,
+      # set to 0b for platform default
+      send-buffer-size = 0b
+ 
+      # (I&O) Sets the receive buffer size of the Sockets,
+      # set to 0b for platform default
+      receive-buffer-size = 0b
+    
       # (O) Time between reconnect attempts for active clients
       reconnect-delay = 5s
 
@@ -148,6 +169,61 @@ akka {
 
       # (O) Maximum time window that a client should try to reconnect for
       reconnection-time-window = 600s
+    
+      ssl {
+        # (I&O) Enable SSL/TLS encryption.
+        # This must be enabled on both the client and server to work.
+        enable = off
+ 
+        # (I) This is the Java Key Store used by the server connection
+        key-store = "keystore"
+ 
+        # This password is used for decrypting the key store
+        key-store-password = "changeme"
+ 
+        # (O) This is the Java Key Store used by the client connection
+        trust-store = "truststore"
+ 
+        # This password is used for decrypting the trust store
+        trust-store-password = "changeme"
+ 
+        # (I&O) Protocol to use for SSL encryption, choose from:
+        # Java 6 & 7:
+        #   'SSLv3', 'TLSv1'
+        # Java 7:
+        #   'TLSv1.1', 'TLSv1.2'
+        protocol = "TLSv1"
+ 
+        # Example: ["TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA"]
+        # You need to install the JCE Unlimited Strength Jurisdiction Policy
+        # Files to use AES 256.
+        # More info here: http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJCEProvider
+        enabled-algorithms = ["TLS_RSA_WITH_AES_128_CBC_SHA"]
+ 
+        # Using /dev/./urandom is only necessary when using SHA1PRNG on Linux to
+        # prevent blocking. It is NOT as secure because it reuses the seed.
+        # '' => defaults to /dev/random or whatever is set in java.security for
+        #    example: securerandom.source=file:/dev/random
+        # '/dev/./urandom' => NOT '/dev/urandom' as that doesn't work according
+        #    to: http://bugs.sun.com/view_bug.do?bug_id=6202721
+        sha1prng-random-source = ""
+ 
+        # There are three options, in increasing order of security:
+        # "" or SecureRandom => (default)
+        # "SHA1PRNG" => Can be slow because of blocking issues on Linux
+        # "AES128CounterSecureRNG" => fastest startup and based on AES encryption
+        # algorithm
+        # "AES256CounterSecureRNG"
+        # The following use one of 3 possible seed sources, depending on
+        # availability: /dev/random, random.org and SecureRandom (provided by Java)
+        # "AES128CounterInetRNG"
+        # "AES256CounterInetRNG" (Install JCE Unlimited Strength Jurisdiction
+        # Policy Files first)
+        # Setting a value here may require you to supply the appropriate cipher
+        # suite (see enabled-algorithms section above)
+        random-number-generator = ""
+      }
+    
     }
 
     # The dispatcher used for the system actor "network-event-sender"

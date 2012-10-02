@@ -23,13 +23,12 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
-import akka.util.duration._
-import akka.util.Duration
-import akka.util.FiniteDuration
-import configuration.TerminationReason
+import scala.concurrent.util.Duration._
+import scala.concurrent.util.Duration
+import com.signalcollect.configuration.TerminationReason
 import com.sun.management.OperatingSystemMXBean
-import akka.util.duration._
-import akka.dispatch.Await
+import scala.concurrent.util.Duration._
+import scala.concurrent.Await
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import akka.pattern.AskTimeoutException
@@ -37,7 +36,7 @@ import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
 import scala.util.Random
 import akka.japi.Creator
-import akka.dispatch.Future
+import scala.concurrent.Future
 import com.signalcollect.util.akka.ActorSystemRegistry
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeoutException
@@ -47,6 +46,8 @@ import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.messaging._
 import com.signalcollect.logging.DefaultLogger
+import scala.concurrent.util.FiniteDuration
+import com.signalcollect.interfaces.Coordinator
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -76,7 +77,7 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  */
 class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
 
-  val system = ActorSystem("SignalCollect", AkkaConfig.get)
+  val system: ActorSystem = ActorSystem("SignalCollect", AkkaConfig.get)
   ActorSystemRegistry.register(system)
   
   val nodes = config.nodeProvisioner.getNodes
@@ -103,14 +104,14 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   val coordinatorActor: ActorRef = {
     val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.maxInboxSize, config.loggingLevel)
     config.akkaDispatcher match {
-        case EventBased => system.actorOf(Props().withCreator(coordinatorCreator.create), name = "Coordinator")
-        case Pinned => system.actorOf(Props().withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+        case EventBased => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create), name = "Coordinator")
+        case Pinned => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
   
   val loggerActor: ActorRef = {
     val loggerCreator = LoggerCreator(config.logger)
-    system.actorOf(Props().withCreator(loggerCreator.create()), name = "Logger")
+    system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
   }
 
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
@@ -300,7 +301,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }  
   
   def awaitIdle {
-    implicit val timeout = Timeout(1000 days)
+    implicit val timeout = Timeout(Duration.create(1000, TimeUnit.DAYS))
     val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
     try {
       val result = Await.result(resultFuture, timeout.duration)
@@ -308,13 +309,17 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }
   
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
-    implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
-    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
-    try {
-      val result = Await.result(resultFuture, timeout.duration)
-      true
-    } catch {
-      case timeout: TimeoutException => false
+    if (timeoutNanoseconds > 1000000000) {
+      implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
+      val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
+      try {
+        val result = Await.result(resultFuture, timeout.duration)
+        true
+      } catch {
+        case timeout: TimeoutException => false
+      }
+    } else {
+      false
     }
   }
 

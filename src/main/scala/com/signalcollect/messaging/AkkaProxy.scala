@@ -19,7 +19,7 @@
 
 package com.signalcollect.messaging
 
-import akka.dispatch.Await
+import scala.concurrent.Await
 import com.signalcollect.interfaces._
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
@@ -27,10 +27,10 @@ import com.signalcollect.interfaces._
 import java.lang.reflect.Method
 import akka.actor.ActorRef
 import akka.util.Timeout
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.util.Duration
+import scala.concurrent.util.Duration._
 import java.util.concurrent.TimeUnit
-import akka.dispatch.Future
+import scala.concurrent.Future
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
 import akka.pattern.ask
@@ -44,7 +44,7 @@ case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boo
  */
 object AkkaProxy {
 
-  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(7200 seconds)): T = {
+  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
     val c = manifest[T].erasure
     Proxy.newProxyInstance(
       c.getClassLoader,

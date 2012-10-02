@@ -29,9 +29,9 @@ import com.signalcollect.configuration.AkkaConfig
 import akka.actor.Props
 import com.signalcollect.configuration.Pinned
 import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Worker
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.configuration.AkkaDispatcher
-import com.signalcollect.interfaces.Worker
 import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.util.akka.ActorSystemRegistry
 
@@ -43,10 +43,10 @@ class LocalNode extends Node {
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased=>
-        val worker = system.actorOf(Props().withCreator(creator()), name = workerName)
+        val worker = system.actorOf(Props[Worker].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
       case Pinned=>
-        val worker = system.actorOf(Props().withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker = system.actorOf(Props[Worker].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
     }
   }
