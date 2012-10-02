@@ -19,7 +19,7 @@
 
 package com.signalcollect.interfaces
 
-import akka.dispatch.Future
+import scala.concurrent.Future
 import akka.actor.ActorRef
 import com.signalcollect.GraphEditor
 import java.util.concurrent.atomic.AtomicInteger

@@ -41,11 +41,11 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.util.Duration
+import scala.concurrent.util.Duration._
 import java.util.concurrent.TimeUnit
-import akka.dispatch.Future
-import akka.dispatch.Await
+import scala.concurrent.Future
+import scala.concurrent.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig

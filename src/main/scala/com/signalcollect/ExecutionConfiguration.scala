@@ -21,7 +21,7 @@ package com.signalcollect
 
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration.ExecutionMode
-import akka.util.Duration
+import scala.concurrent.util.Duration
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object

@@ -26,12 +26,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-actor</artifactId>
+			<artifactId>akka-actor_2.10.0-M7</artifactId>
 			<version>${akka.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-remote</artifactId>
+			<artifactId>akka-remote_2.10.0-M7</artifactId>
 			<version>${akka.version}</version>
 		</dependency>
 		<dependency>
@@ -48,6 +48,13 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.7</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.2</version>
@@ -56,8 +63,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.specs2</groupId>
-			<artifactId>specs2_2.9.2</artifactId>
-			<version>1.12.1</version>
+			<artifactId>specs2_2.10.0-M7</artifactId>
+			<version>1.12.1.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -172,8 +179,8 @@
 		<project.reporting.outputEncoding>
 			UTF-8
 		</project.reporting.outputEncoding>
-		<scala.version>2.9.2</scala.version>
-		<akka.version>2.0.3</akka.version>
+		<scala.version>2.10.0-M7</scala.version>
+		<akka.version>2.1-M2</akka.version>
 		<maven-scala-plugin.version>2.15.2</maven-scala-plugin.version>
 	</properties>
 </project>

@@ -41,11 +41,11 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.util.Duration
+import scala.concurrent.util.Duration._
 import java.util.concurrent.TimeUnit
-import akka.dispatch.Future
-import akka.dispatch.Await
+import scala.concurrent.Future
+import scala.concurrent.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
@@ -67,10 +67,10 @@ class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends A
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased => 
-        val worker = context.system.actorOf(Props().withCreator(creator()), name = workerName)
+        val worker = context.system.actorOf(Props[Worker].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>
-        val worker = context.system.actorOf(Props().withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker = context.system.actorOf(Props[Worker].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
     }
   }
@@ -85,7 +85,7 @@ class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends A
   def receive = {
     case Request(command, reply) =>
       println("Received command: " + command)
-      val result = command(this)
+      val result = command.asInstanceOf[Node => Any](this)
       if (reply) {
         if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
           sender ! None

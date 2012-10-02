@@ -21,7 +21,7 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 import akka.actor.Actor
-import akka.dispatch.Future
+import scala.concurrent.Future
 
 trait Worker extends Actor with MessageRecipientRegistry with Logging {
 

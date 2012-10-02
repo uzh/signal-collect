@@ -41,11 +41,11 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.util.Duration
+import scala.concurrent.util.Duration._
 import java.util.concurrent.TimeUnit
-import akka.dispatch.Future
-import akka.dispatch.Await
+import scala.concurrent.Future
+import scala.concurrent.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
@@ -56,6 +56,7 @@ import akka.actor.ExtendedActorSystem
 import com.signalcollect.messaging.AkkaProxy
 import akka.japi.Creator
 import com.signalcollect.nodeprovisioning.AkkaHelper
+import com.signalcollect.nodeprovisioning.NodeProvisioner
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -75,16 +76,16 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParam
   def getNodes: List[Node] = {
     val system: ActorSystem = ActorSystem("NodeProvisioner", AkkaConfig.get)
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
-    val nodeProvisioner = system.actorOf(Props().withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
+    val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
     var jobs = List[TorqueJob]()
-    implicit val timeout = new Timeout(1800 seconds)
+    implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
     for (jobId <- 0 until numberOfNodes) {
       val function: () => Map[String, String] = {
         () =>
           val system = ActorSystem("SignalCollect", AkkaConfig.get)
           val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
-          val nodeController = system.actorOf(Props().withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
+          val nodeController = system.actorOf(Props[NodeControllerActor].withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()
       }
       jobs = new TorqueJob(jobId=jobId, execute=function, jvmParameters=jvmParameters) :: jobs

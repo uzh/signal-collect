@@ -60,7 +60,7 @@ class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends
           graphEditor.addEdge(id, new PageRankEdge(linked))
         }
       } catch {
-        case _ =>
+        case _: Throwable =>
       }
     }
   }
