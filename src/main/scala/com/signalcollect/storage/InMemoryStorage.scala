@@ -82,17 +82,11 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
     storage.toSignal.remove(id)
   }
 
-
   /**
-   * Is not needed for this implementation because the state does not need to be retained, since the objects are passed by reference and changes
-   * in the vertex's state are reflected immediately.
-   *
-   * @param vertex the vertex that would have to be updated
+   * Applies the supplied function to each stored vertex
+   * 
+   * @param f Function to apply to each stored vertex
    */
-  def updateStateOfVertex(vertex: Vertex[_, _]) = {
-    storage.toSignal.updateStateOfVertex(vertex)
-  }
-
   def foreach[U](f: Vertex[_, _] => U) {
     val it = vertexMap.values.iterator
     while (it.hasNext) {

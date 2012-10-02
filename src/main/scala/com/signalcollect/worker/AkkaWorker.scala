@@ -198,7 +198,6 @@ class AkkaWorker(val workerId: Int,
         counters.outgoingEdgesAdded += 1
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
-        vertexStore.vertices.updateStateOfVertex(vertex)
       }
     } else {
       warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
@@ -220,7 +219,6 @@ class AkkaWorker(val workerId: Int,
         counters.outgoingEdgesRemoved += 1
         vertexStore.toCollect.addVertex(vertex.id)
         vertexStore.toSignal.add(vertex.id)
-        vertexStore.vertices.updateStateOfVertex(vertex)
       } else {
         warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
@@ -287,7 +285,6 @@ class AkkaWorker(val workerId: Int,
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       val result = f(vertex.asInstanceOf[VertexType])
-      vertexStore.vertices.updateStateOfVertex(vertex)
       result
     } else {
       throw new Exception("Vertex with id " + vertexId + " not found.")
@@ -391,7 +388,6 @@ class AkkaWorker(val workerId: Int,
         try {
           counters.collectOperationsExecuted += 1
           vertex.executeCollectOperation(uncollectedSignalsList, graphEditor)
-          vertexStore.vertices.updateStateOfVertex(vertex)
           hasCollected = true
           if (addToSignal && vertex.scoreSignal > signalThreshold) {
             vertexStore.toSignal.add(vertex.id)
@@ -414,7 +410,6 @@ class AkkaWorker(val workerId: Int,
         try {
           vertex.executeSignalOperation(graphEditor)
           counters.signalOperationsExecuted += 1
-          vertexStore.vertices.updateStateOfVertex(vertex)
           hasSignaled = true
         } catch {
           case t: Throwable => severe(t)
