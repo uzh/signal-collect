@@ -40,7 +40,6 @@ trait VertexStore {
   def getAll(condition: Vertex[_, _] => Boolean): List[Vertex[_, _]]
   def put(vertex: Vertex[_, _]): Boolean
   def remove(id: Any)
-  def updateStateOfVertex(vertex: Vertex[_, _])
   def size: Long
   def foreach[U](f: Vertex[_, _] => U)
   def cleanUp
@@ -56,7 +55,6 @@ trait VertexIdSet {
   def isEmpty: Boolean
   def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
   def applyToNext[U](f: (Any) => U, removeAfterProcessing: Boolean)
-  def updateStateOfVertex(vertex: Vertex[_, _])
   def cleanUp
 }
 
