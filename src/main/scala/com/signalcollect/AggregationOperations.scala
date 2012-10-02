@@ -123,7 +123,7 @@ abstract class StateExtractor[StateType: Manifest] extends AggregationOperation[
     try {
       Some(v.state.asInstanceOf[StateType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
   }
 
@@ -161,7 +161,7 @@ abstract class StateAggregator[StateType] extends AggregationOperation[StateType
     try {
       v.state.asInstanceOf[StateType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
-      case _ => neutralElement
+      case _: Throwable => neutralElement
     }
   }
 

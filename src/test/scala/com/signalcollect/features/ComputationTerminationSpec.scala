@@ -56,7 +56,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val graph = createCircleGraph(1000)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
-        .withTimeLimit(30)
+        .withTimeLimit(50)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached

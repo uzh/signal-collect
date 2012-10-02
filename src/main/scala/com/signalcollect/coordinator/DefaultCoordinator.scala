@@ -36,7 +36,7 @@ import java.util.{ HashMap, Map }
 import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
-import akka.util.duration._
+import scala.concurrent.util.Duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.messaging.Request
@@ -70,7 +70,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
       }
     case Request(command, reply) =>
       try {
-        val result = command(this)
+        val result = command.asInstanceOf[Coordinator => Any](this)
         if (reply) {
           sender ! result
         }
