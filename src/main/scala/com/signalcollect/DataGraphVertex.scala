@@ -23,7 +23,6 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.util.collections.Filter
 import scala.collection.mutable.IndexedSeq
 
 /**
@@ -38,8 +37,8 @@ import scala.collection.mutable.IndexedSeq
  *  @author Philip Stutz
  */
 abstract class DataGraphVertex[Id, State](
-    val id: Id,
-    var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
+  val id: Id,
+  var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
 
   type Signal
 
@@ -70,11 +69,9 @@ abstract class DataGraphVertex[Id, State](
    */
   protected val mostRecentSignalMap = new HashMap[Any, Signal]()
 
-  /**
-   *  Utility function to filter out only certain signals of interest.
-   */
-  protected def signals[G](filterClass: Class[G]): Iterable[G] = {
-    mostRecentSignalMap.values flatMap (value => Filter.bySuperClass(filterClass, value))
+  def deliverSignal(signal: SignalMessage[_]): Boolean = {
+    mostRecentSignalMap.put(signal.edgeId.sourceId, signal.signal.asInstanceOf[Signal])
+    false
   }
 
   /**
@@ -85,7 +82,7 @@ abstract class DataGraphVertex[Id, State](
   def getMostRecentSignal(id: Any): Option[_] =
     mostRecentSignalMap.get(id) match {
       case null => None
-      case s    => Some(s)
+      case s => Some(s)
     }
 
   /**
@@ -95,16 +92,26 @@ abstract class DataGraphVertex[Id, State](
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor) {
-    super.executeCollectOperation(signals, graphEditor)
-    val castS = signals.asInstanceOf[Iterable[SignalMessage[Signal]]]
-    // Faster than Scala foreach.
-    val i = castS.iterator
-    while (i.hasNext) {
-      val signalMessage = i.next
-      mostRecentSignalMap.put(signalMessage.edgeId.sourceId, signalMessage.signal)
+  override def executeCollectOperation(graphEditor: GraphEditor) {
+    super.executeCollectOperation(graphEditor)
+    val castS = mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]]
+    state = collect(state, castS, graphEditor)
+  }
+
+  /**
+   * This method is used by the framework in order to decide if the vertex' collect operation
+   * should be executed.
+   *
+   * @return the score value. The meaning of this value depends on the thresholds set in the framework.
+   */
+  def scoreCollect: Double = {
+    if (!mostRecentSignalMap.isEmpty) {
+      1.0
+    } else if (edgesModifiedSinceCollectOperation) {
+      1.0
+    } else {
+      0.0
     }
-    state = collect(state, mostRecentSignalMap.values, graphEditor)
   }
 
 }

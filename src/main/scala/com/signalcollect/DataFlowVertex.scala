@@ -21,8 +21,8 @@ package com.signalcollect
 
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.util.collections.Filter
 import scala.collection.mutable.IndexedSeq
+import scala.collection.mutable.ArrayBuffer
 
 /**
  *  Vertex implementation that collects all the signals that have arrived since the last
@@ -45,6 +45,8 @@ abstract class DataFlowVertex[Id, State](
   extends AbstractVertex[Id, State] with ResetStateAfterSignaling[Id, State] {
   
   type Signal
+  
+  val uncollectedSignals = new ArrayBuffer[Signal]
 
   /**
    *  @return the object that stores the current state for this `Vertex`.
@@ -52,6 +54,11 @@ abstract class DataFlowVertex[Id, State](
   def getState: State = state
   def setState(s: State) {
     state = s
+  }
+  
+  def deliverSignal(signal: SignalMessage[_]): Boolean = {
+    uncollectedSignals.append(signal.signal.asInstanceOf[Signal])
+    false
   }
   
   /**
@@ -69,13 +76,30 @@ abstract class DataFlowVertex[Id, State](
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
    *
-   *  @param signals new signals that have arrived since the last time this vertex collected
-   *
-   *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
+   *  @param graphEditor can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor) {
-    super.executeCollectOperation(signals, graphEditor)
-    state = collect(state, (signals map (_.signal)).asInstanceOf[Iterable[Signal]], graphEditor)
+  override def executeCollectOperation(graphEditor: GraphEditor) {
+    super.executeCollectOperation(graphEditor)
+    state = collect(state, uncollectedSignals, graphEditor)
+    uncollectedSignals.clear
   }
+  
+    /**
+   * This method is used by the framework in order to decide if the vertex' collect operation
+   * should be executed.
+   *
+   * @return the score value. The meaning of this value depends on the thresholds set in the framework.
+   */
+  def scoreCollect: Double = {
+    if (!uncollectedSignals.isEmpty) {
+      1.0
+    } else if (edgesModifiedSinceCollectOperation) {
+      1.0
+    } else {
+      0.0
+    }
+  }
+  
+  
 
 }

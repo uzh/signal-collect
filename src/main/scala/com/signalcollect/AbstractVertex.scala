@@ -26,6 +26,7 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.EdgeId
 import scala.collection.mutable.IndexedSeq
+import scala.collection.mutable.ArrayBuffer
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
 
@@ -127,24 +128,8 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    * @see #collect
    * @param signals Buffered Signals for this vertex
    */
-  def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor) {
+  def executeCollectOperation(graphEditor: GraphEditor) {
     edgesModifiedSinceCollectOperation = false
-  }
-
-  /**
-   * This method is used by the framework in order to decide if the vertex' collect operation
-   * should be executed.
-   *
-   * @return the score value. The meaning of this value depends on the thresholds set in the framework.
-   */
-  def scoreCollect(signals: IndexedSeq[SignalMessage[_]]): Double = {
-    if (!signals.isEmpty) {
-      1.0
-    } else if (edgesModifiedSinceCollectOperation) {
-      1.0
-    } else {
-      0.0
-    }
   }
 
   /**

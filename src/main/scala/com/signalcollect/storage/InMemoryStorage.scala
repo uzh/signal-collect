@@ -77,9 +77,8 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @param id the ID of the vertex to remove
    */
   def remove(id: Any) = {
-    vertexMap.remove(id)
-    storage.toCollect.remove(id)
-    storage.toSignal.remove(id)
+    val vertex = vertexMap.remove(id)
+    storage.toSignal.remove(vertex)
   }
 
   /**

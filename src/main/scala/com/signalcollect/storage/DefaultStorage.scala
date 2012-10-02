@@ -22,6 +22,8 @@ import java.util.Set
 import com.signalcollect.interfaces._
 import com.signalcollect.serialization._
 import java.util.Set
+import com.signalcollect.Vertex
+import java.util.LinkedHashSet
 
 /**
  * Default configuration for storing vertices and the toSignal and toCollect collections
@@ -33,15 +35,15 @@ class DefaultStorage extends Storage {
   protected def vertexStoreFactory: VertexStore = new InMemoryStorage(this)
   
   var toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory: VertexSignalBuffer = new InMemoryVertexSignalBuffer 
+  protected def vertexSignalFactory = new LinkedHashSet[Vertex[_,_]] 
   var toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory: VertexIdSet = new InMemoryVertexIdSet(this)
+  protected def vertexSetFactory = new LinkedHashSet[Vertex[_,_]]
   
   def serializer: Serializer = DefaultSerializer
   
   def cleanUp {
     vertexStoreFactory.cleanUp
-    toCollect.cleanUp
-    toSignal.cleanUp
+    toCollect.clear
+    toSignal.clear
   }
 }

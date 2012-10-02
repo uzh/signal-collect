@@ -40,7 +40,7 @@ trait Vertex[Id, State] extends Serializable {
   override def equals(other: Any): Boolean =
     other match {
       case v: Vertex[_, _] => v.id == id
-      case _               => false
+      case _ => false
     }
 
   /**
@@ -69,6 +69,15 @@ trait Vertex[Id, State] extends Serializable {
   def removeAllEdges(graphEditor: GraphEditor): Int
 
   /**
+   *  Delivers signals that are addressed to this specific vertex
+   *  
+   *  @param signal the the signal to deliver to this vertex
+   *
+   *  @return true if the vertex decided to collect immediately.
+   */
+  def deliverSignal(signal: SignalMessage[_]): Boolean
+
+  /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
    *  `Worker` implementations).
@@ -77,10 +86,8 @@ trait Vertex[Id, State] extends Serializable {
 
   /**
    *  Tells this vertex to execute the `collect` method.
-   *
-   *  @param signals the new signals that this vertex has received since the `executeCollectOperation` method was called last.
    */
-  def executeCollectOperation(signals: IndexedSeq[SignalMessage[_]], graphEditor: GraphEditor)
+  def executeCollectOperation(graphEditor: GraphEditor)
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -93,11 +100,9 @@ trait Vertex[Id, State] extends Serializable {
    * This method is used by the framework in order to decide if the collect operation
    * should be executed.
    *
-   * @param signals the signals that have not yet been delivered to the `executeCollectOperation` method yet.
-   *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect(signals: IndexedSeq[SignalMessage[_]]): Double
+  def scoreCollect: Double
 
   /**
    *  @return the number of outgoing edges of this `Vertex`
@@ -113,5 +118,5 @@ trait Vertex[Id, State] extends Serializable {
    *  This method gets called by the framework before the vertex gets removed.
    */
   def beforeRemoval(graphEditor: GraphEditor)
-  
+
 }

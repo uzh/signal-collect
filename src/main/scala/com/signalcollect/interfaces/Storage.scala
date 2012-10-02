@@ -20,14 +20,16 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 import scala.collection.mutable.IndexedSeq
+import scala.collection.mutable.Iterable
+import java.util.Set
 
 /**
  * High level interface to abstract all vertex storage related implementations
  */
 abstract class Storage {
   def vertices: VertexStore
-  def toSignal: VertexIdSet //collection of all vertices that need to signal
-  def toCollect: VertexSignalBuffer // collection of all vertices that need to collect
+  def toSignal: Set[Vertex[_, _]] //collection of all vertices that need to signal
+  def toCollect: Set[Vertex[_, _]] //collection of all vertices that need to collect
   def cleanUp
   def serializer: Serializer
 }
@@ -42,32 +44,6 @@ trait VertexStore {
   def remove(id: Any)
   def size: Long
   def foreach[U](f: Vertex[_, _] => U)
-  def cleanUp
-}
-
-/**
- * Allows storing a set of id and iterating through them
- */
-trait VertexIdSet {
-  def add(vertexId: Any)
-  def remove(vertexId: Any)
-  def size: Int
-  def isEmpty: Boolean
-  def foreach[U](f: Any => U, removeAfterProcessing: Boolean)
-  def applyToNext[U](f: (Any) => U, removeAfterProcessing: Boolean)
-  def cleanUp
-}
-
-/**
- * Allows storing a collection of signals and iterating through them
- */
-trait VertexSignalBuffer {
-  def addSignal(signal: SignalMessage[_])
-  def addVertex(vertexId: Any)
-  def remove(vertexId: Any)
-  def size: Int
-  def isEmpty: Boolean
-  def foreach[U](f: (Any, IndexedSeq[SignalMessage[_]]) => U, removeAfterProcessing: Boolean, breakCondition: () => Boolean = () => false): Boolean
   def cleanUp
 }
 

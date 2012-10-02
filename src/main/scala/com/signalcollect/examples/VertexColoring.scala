@@ -67,7 +67,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
       } else {
         val r = Random.nextDouble
         if (r > 0.8) {
-          val freeColors = colors -- signals(classOf[Int])
+          val freeColors = colors -- mostRecentSignalMap.values.asInstanceOf[Iterable[Int]]
           val numberOfFreeColors = freeColors.size
           if (numberOfFreeColors > 0) {
             freeColors.toSeq(Random.nextInt(numberOfFreeColors))
