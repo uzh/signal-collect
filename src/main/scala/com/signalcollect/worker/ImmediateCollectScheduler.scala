@@ -11,7 +11,7 @@ trait ImmediateCollectScheduler extends AkkaWorker {
           }
         }, removeAfterProcessing = true, breakCondition = () => messageQueue.hasMessages)
       if (completed) {
-        vertexStore.toSignal.applyToNext(executeSignalOperationOfVertex(_), removeAfterProcessing = true)
+        vertexStore.toSignal.foreach(executeSignalOperationOfVertex(_), removeAfterProcessing = true)
       }
     }
   }
