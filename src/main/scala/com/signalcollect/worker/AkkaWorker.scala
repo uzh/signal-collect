@@ -47,6 +47,7 @@ import scala.concurrent.Promise
 import akka.dispatch.MessageQueue
 import com.signalcollect.messaging.Request
 import scala.collection.mutable.IndexedSeq
+import collection.JavaConversions._
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -60,12 +61,12 @@ class WorkerOperationCounters(
   var collectSteps: Long = 0l)
 
 class AkkaWorker(val workerId: Int,
-  val numberOfWorkers: Int,
-  val messageBusFactory: MessageBusFactory,
-  val storageFactory: StorageFactory,
-  val statusUpdateIntervalInMillis: Option[Long],
-  val loggingLevel: Int)
-  extends Worker with ActorLogging {
+                 val numberOfWorkers: Int,
+                 val messageBusFactory: MessageBusFactory,
+                 val storageFactory: StorageFactory,
+                 val statusUpdateIntervalInMillis: Option[Long],
+                 val loggingLevel: Int)
+    extends Worker with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -149,10 +150,13 @@ class AkkaWorker(val workerId: Int,
   protected def process(message: Any) {
     counters.messagesReceived += 1
     message match {
-      case s: SignalMessage[_] => {
+      case s: SignalMessage[_] =>
         processSignal(s)
-      }
-      case Request(command, reply) => {
+      case bulkSignal: collection.immutable.Map[_, _] =>
+        for ((vertexId, signal) <- bulkSignal) {
+          processSignal(SignalMessage(signal, EdgeId(null, vertexId)))
+        }
+      case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker => Any](this)
           if (reply) {
@@ -167,7 +171,6 @@ class AkkaWorker(val workerId: Int,
             severe(e)
             throw e
         }
-      }
       case other => warning("Could not handle message " + message)
     }
   }
@@ -324,6 +327,7 @@ class AkkaWorker(val workerId: Int,
       executeSignalOperationOfVertex(it.next)
       it.remove
     }
+    messageBus.flush
   }
 
   def collectStep: Boolean = {
@@ -367,7 +371,8 @@ class AkkaWorker(val workerId: Int,
 
   protected val vertexStore = storageFactory.createInstance
 
-  protected def isConverged = vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
+  protected def isConverged =
+    vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
 
   protected def getWorkerStatus: WorkerStatus = {
     WorkerStatus(
@@ -432,7 +437,7 @@ class AkkaWorker(val workerId: Int,
     val vertex = vertexStore.vertices.get(signal.edgeId.targetId)
     if (vertex != null) {
       if (vertex.deliverSignal(signal)) {
-          vertexStore.toSignal.add(vertex)
+        vertexStore.toSignal.add(vertex)
       } else {
         vertexStore.toCollect.add(vertex)
       }
