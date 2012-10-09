@@ -347,6 +347,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     nodes.par.foreach(_.shutdown)
     loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
+    system.awaitTermination
     loggerActor ! Info("Shutdown done.", this.toString)
   }
 

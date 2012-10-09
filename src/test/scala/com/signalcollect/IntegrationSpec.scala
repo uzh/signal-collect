@@ -38,6 +38,8 @@ import org.specs2.runner.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
+  sequential
+
   val computeGraphFactories: List[() => Graph] = List(() => GraphBuilder.build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)

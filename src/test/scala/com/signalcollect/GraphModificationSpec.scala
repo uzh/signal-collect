@@ -28,7 +28,7 @@ import com.signalcollect._
 class GraphModificationSpec extends SpecificationWithJUnit {
 
   sequential
-  
+    
   "GraphEditor" should {
 
     "keep accurate statistics when using predicate-based vertex removals" in {
@@ -56,6 +56,7 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
+      g.shutdown
     }
     
     "keep accurate statistics when using individual vertex removals" in {
@@ -84,6 +85,7 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
+      g.shutdown
     }
   }
 }
