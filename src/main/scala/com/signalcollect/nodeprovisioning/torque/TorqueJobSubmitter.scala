@@ -91,7 +91,7 @@ case class TorqueJobSubmitter(
 jarname=""" + jarname + """
 mainClass=""" + mainClass + """
 workingDir=/home/torque/tmp/${USER}.${PBS_JOBID}
-vm_args="""" + jvmParameters + """ -Xmx62000m -Xms62000m -d64"
+vm_args="""" + jvmParameters + """"
 
 # copy jar
 cp ~/$jarname $workingDir/
