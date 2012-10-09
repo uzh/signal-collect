@@ -6,10 +6,21 @@ object AkkaConfig {
   lazy val get = ConfigFactory.parseString(distributedConfig).withFallback(ConfigFactory.load).resolve
   val distributedConfig = """
 akka {
-  #logConfigOnStart=on
-  #loglevel = DEBUG
+  logConfigOnStart=off
+  # loglevel = DEBUG
+    
+  # debug {
+    # enable function of LoggingReceive, which is to log any received message at
+    # DEBUG level
+    # receive = on
+    # log-config-on-start = on
+    # lifecycle = on
+    # log-sent-messages = on
+    # log-received-messages = on
+  # }
+    
   actor {
-    #serialize-messages = on
+    # serialize-messages = on
     provider = "akka.remote.RemoteActorRefProvider"
     
   	pinned-dispatcher {
@@ -50,6 +61,12 @@ akka {
 
   remote {
 
+    # Options: "zlib" (lzf to come), leave out for no compression
+    compression-scheme = "zlib"
+    
+    # Options: 0-9 (1 being fastest and 9 being the most compressed), default is 6
+    zlib-compression-level = 9
+    
     # Which implementation of akka.remote.RemoteTransport to use
     # default is a TCP-based remote transport based on Netty
     transport = "akka.remote.netty.NettyRemoteTransport"
