@@ -35,9 +35,11 @@ import com.signalcollect.serialization.DefaultSerializer
 
 class DefaultMessageBus(
   val numberOfWorkers: Int)
-  extends MessageBus with GraphEditor with DefaultSerializer {
+    extends MessageBus with GraphEditor with DefaultSerializer {
 
   protected var registrations = new AtomicInteger()
+
+  def flush = {}
 
   def isInitialized = registrations.get == numberOfWorkers + 2
 
@@ -221,7 +223,7 @@ class DefaultMessageBus(
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
-  
+
   def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean = false) {
     if (blocking == true) {
       // use proxy

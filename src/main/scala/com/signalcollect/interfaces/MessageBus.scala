@@ -30,6 +30,8 @@ import com.signalcollect.coordinator.WorkerApi
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
 trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
+  def flush
+  
   def isInitialized: Boolean
   
   def numberOfWorkers: Int
