@@ -47,7 +47,7 @@ case class OnIdle(action: (DefaultCoordinator, ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, maxInboxSize: Option[Long], val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
+class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
 
   val messageBus: MessageBus = {
     messageBusFactory.createInstance(numberOfWorkers)

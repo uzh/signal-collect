@@ -24,14 +24,14 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.messaging.BulkMessageBus
 
-/**
- *  The shared-memory message-bus factory creates message-bus instances that exchange messages in memory.
- *  Only works locally.
- */
-object SharedMemory extends MessageBusFactory {
+object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance(numberOfWorkers: Int): MessageBus = new DefaultMessageBus(numberOfWorkers)
 }
 
-object BulkFloatSummer extends MessageBusFactory {
-  def createInstance(numberOfWorkers: Int): MessageBus = new BulkMessageBus(numberOfWorkers, (a: Any, b: Any) => a.asInstanceOf[Float] + b.asInstanceOf[Float])
+/**
+ * Stores outgoing messages until 'flushThreshold' messages are queued for a worker.
+ * Combines messages for the same vertex using 'combiner'. 
+ */
+class BulkAkkaMessageBusFactory(flushThreshold: Int, combiner: (Any, Any) => Any) extends MessageBusFactory {
+  def createInstance(numberOfWorkers: Int): MessageBus = new BulkMessageBus(numberOfWorkers, flushThreshold, combiner)
 }

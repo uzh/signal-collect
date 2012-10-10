@@ -21,11 +21,11 @@ package com.signalcollect.messaging
 
 import com.signalcollect.interfaces.SignalMessage
 
-class BulkMessageBus(numWorkers: Int, combine: (Any, Any) => Any)
+class BulkMessageBus(numWorkers: Int, flushThreshold: Int, combine: (Any, Any) => Any)
     extends DefaultMessageBus(numWorkers) {
 
   val emptyMap = Map[Any, Any]()
-  
+
   val outgoingMessages: Array[Map[Any, Any]] = new Array[Map[Any, Any]](numWorkers)
   for (i <- 0 until numberOfWorkers) {
     outgoingMessages(i) = emptyMap
@@ -36,7 +36,7 @@ class BulkMessageBus(numWorkers: Int, combine: (Any, Any) => Any)
     while (workerId < numberOfWorkers) {
       val signalsForWorker = outgoingMessages(workerId)
       if (!signalsForWorker.isEmpty) {
-        super.sendToWorker(workerId, signalsForWorker)
+        super.sendToWorker(workerId, signalsForWorker.toArray)
         outgoingMessages(workerId) = emptyMap
       }
       workerId += 1
@@ -49,10 +49,16 @@ class BulkMessageBus(numWorkers: Int, combine: (Any, Any) => Any)
         val signalsForWorker = outgoingMessages(workerId)
         var signalForVertex = signalsForWorker.get(edgeId.targetId)
         signalForVertex match {
-          case Some(oldSignal) => 
-             outgoingMessages(workerId) = signalsForWorker + ((edgeId.targetId, signal.asInstanceOf[Float] + oldSignal.asInstanceOf[Float]))
-          case None         =>
-            outgoingMessages(workerId) = signalsForWorker + ((edgeId.targetId, signal))
+          case Some(oldSignal) =>
+            outgoingMessages(workerId) = signalsForWorker + ((edgeId.targetId, signal.asInstanceOf[Float] + oldSignal.asInstanceOf[Float]))
+          case None =>
+            val updatedMap = signalsForWorker + ((edgeId.targetId, signal))
+            if (updatedMap.size > flushThreshold) {
+              outgoingMessages(workerId) = emptyMap
+              super.sendToWorker(workerId, signalsForWorker.toArray)
+            } else {
+              outgoingMessages(workerId) = updatedMap
+            }
         }
       case other =>
         super.sendToWorker(workerId, message)

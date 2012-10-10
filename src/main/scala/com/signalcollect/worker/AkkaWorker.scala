@@ -152,7 +152,7 @@ class AkkaWorker(val workerId: Int,
     message match {
       case s: SignalMessage[_] =>
         processSignal(s)
-      case bulkSignal: collection.immutable.Map[_, _] =>
+      case bulkSignal: Array[(Any, Any)] =>
         for ((vertexId, signal) <- bulkSignal) {
           processSignal(SignalMessage(signal, EdgeId(null, vertexId)))
         }
