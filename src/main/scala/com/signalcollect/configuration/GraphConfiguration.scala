@@ -32,11 +32,11 @@ import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
  * All the graph configuration parameters with their defaults.
  */
 case class GraphConfiguration(
-  maxInboxSize: Option[Long] = Some(Runtime.getRuntime.availableProcessors * 5000), //None
+  consoleEnabled: Boolean = false,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
   workerFactory: WorkerFactory = factory.worker.Akka,
-  messageBusFactory: MessageBusFactory = factory.messagebus.SharedMemory,
+  messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
   storageFactory: StorageFactory = factory.storage.InMemory,
   statusUpdateIntervalInMillis: Option[Long] = Some(500l),
   akkaDispatcher: AkkaDispatcher = Pinned,

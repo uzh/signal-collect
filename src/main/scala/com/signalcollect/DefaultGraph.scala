@@ -48,6 +48,7 @@ import com.signalcollect.messaging._
 import com.signalcollect.logging.DefaultLogger
 import scala.concurrent.util.FiniteDuration
 import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.console.ConsoleServer
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -59,8 +60,8 @@ case class WorkerCreator(workerId: Int, workerFactory: WorkerFactory, numberOfWo
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
  */
-case class CoordinatorCreator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, maxInboxSize: Option[Long], val loggingLevel: Int) extends Creator[DefaultCoordinator] {
-  def create: DefaultCoordinator = new DefaultCoordinator(numberOfWorkers, messageBusFactory, maxInboxSize, loggingLevel)
+case class CoordinatorCreator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Creator[DefaultCoordinator] {
+  def create: DefaultCoordinator = new DefaultCoordinator(numberOfWorkers, messageBusFactory, loggingLevel)
 }
 
 /**
@@ -102,7 +103,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }
   
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.maxInboxSize, config.loggingLevel)
+    val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.loggingLevel)
     config.akkaDispatcher match {
         case EventBased => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create), name = "Coordinator")
         case Pinned => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
@@ -121,8 +122,15 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     
   awaitIdle
 
+  val console = {
+    if (config.consoleEnabled) {
+      new ConsoleServer(coordinatorActor)  
+    } else {
+      null
+    }
+  }
+  
   def initializeMessageBuses {
-    // the MessageBus registries
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
     for (registry <- registries.par) {
       try {
@@ -341,12 +349,16 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def isIdle = coordinatorProxy.isIdle
 
   def shutdown = {
+    if (config.consoleEnabled) {
+      console.shutdown
+    }
     loggerActor ! Info("workerApi.shutdown ...", this.toString)
     workerApi.shutdown
     loggerActor ! Info("nodes.par.foreach(_.shutdown) ...", this.toString)
     nodes.par.foreach(_.shutdown)
     loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
+    system.awaitTermination
     loggerActor ! Info("Shutdown done.", this.toString)
   }
 

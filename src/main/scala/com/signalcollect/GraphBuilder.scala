@@ -31,9 +31,7 @@ import com.signalcollect.nodeprovisioning.NodeProvisioner
 object GraphBuilder extends GraphBuilder(GraphConfiguration())
 
 /**
- * Builder for the creation of a compute graph needs a configuration object for the creation.
- * If the user passes a configuration object but then uses a method of this class, the configuration's object
- * parameter gets overriden ("inserted" in the config object) by the method call's parameter which was passed.
+ * Configurable builder for a Signal/Collect graph.
  *
  *  @author Philip Stutz
  */
@@ -45,11 +43,9 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
   def build: Graph = new DefaultGraph(config)
 
   /**
-   *  Configures the node provider.
-   *
-   *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
+   *  Configures if the console website on port 8080 is enabled.
    */
-  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
+  def withConsole(newConsoleEnabled: Boolean) = newLocalBuilder(consoleEnabled = newConsoleEnabled)
 
   /**
    *  Configures the logging level.
@@ -94,26 +90,46 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
   def withStorageFactory(newStorageFactory: StorageFactory) = newLocalBuilder(storageFactory = newStorageFactory)
 
   /**
+   *  Configures the status update interval (in milliseconds).
+   */
+  def withStatusUpdateInterval(newStatusUpdateInterval: Option[Long]) = newLocalBuilder(statusUpdateIntervalInMillis = newStatusUpdateInterval)
+
+  /**
+   *  Configures the Akka dispatcher for the worker actors.
+   */
+  def withAkkaDispatcher(newAkkaDispatcher: AkkaDispatcher) = newLocalBuilder(akkaDispatcher = newAkkaDispatcher)
+
+  /**
+   *  Configures the node provider.
+   *
+   *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
+   */
+  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
+
+  /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
   protected def newLocalBuilder(
+    consoleEnabled: Boolean = config.consoleEnabled,
     loggingLevel: Int = config.loggingLevel,
     logger: LogMessage => Unit = config.logger,
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,
+    statusUpdateIntervalInMillis: Option[Long] = config.statusUpdateIntervalInMillis,
+    akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner): GraphBuilder = {
     new GraphBuilder(
       GraphConfiguration(
-        maxInboxSize = config.maxInboxSize, 
+        consoleEnabled = consoleEnabled,
         loggingLevel = loggingLevel,
         logger = logger,
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
         storageFactory = storageFactory,
-        statusUpdateIntervalInMillis = config.statusUpdateIntervalInMillis,
-        akkaDispatcher = config.akkaDispatcher,
+        statusUpdateIntervalInMillis = statusUpdateIntervalInMillis,
+        akkaDispatcher = akkaDispatcher,
         nodeProvisioner = nodeProvisioner))
   }
 
