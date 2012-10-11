@@ -342,8 +342,11 @@ class AkkaWorker(val workerId: Int,
 
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
+      workerId = workerId,
       messagesReceived = counters.messagesReceived,
       messagesSent = messageBus.messagesSent.map(c => c.toLong),
+      toSignalSize = vertexStore.toSignal.size,
+      toCollectSize = vertexStore.toCollect.size,
       collectOperationsExecuted = counters.collectOperationsExecuted,
       signalOperationsExecuted = counters.signalOperationsExecuted,
       numberOfVertices = vertexStore.vertices.size,

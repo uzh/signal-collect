@@ -80,12 +80,13 @@ object PageRank extends App {
   graph.addEdge(2, new PageRankEdge(1))
   graph.addEdge(2, new PageRankEdge(3))
   graph.addEdge(3, new PageRankEdge(2))
-
+  
   val stats = graph.execute
   graph.awaitIdle
   println(stats)
   graph.foreachVertex(println(_))
   
   readLine
+  graph.awaitIdle
   graph.shutdown
 }

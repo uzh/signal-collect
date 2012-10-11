@@ -359,7 +359,6 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
     system.awaitTermination
-    loggerActor ! Info("Shutdown done.", this.toString)
   }
 
   def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {

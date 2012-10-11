@@ -133,7 +133,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
 
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
-  def globalInboxSize: Long = totalMessagesSent - totalMessagesReceived
+  def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
 
   def isIdle: Boolean = {
     workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && totalMessagesSent == totalMessagesReceived

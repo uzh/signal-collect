@@ -42,7 +42,10 @@ case class WorkerStatus(
 
 case class WorkerStatistics(
     messagesSent: Array[Long],
+    workerId: Int = -1,
     messagesReceived: Long = 0l,
+    toSignalSize: Long = 0l,
+    toCollectSize: Long = 0l,
     collectOperationsExecuted: Long = 0l,
     signalOperationsExecuted: Long = 0l,
     numberOfVertices: Long = 0l,
@@ -67,7 +70,10 @@ case class WorkerStatistics(
           merged
         }
       },
+      -1,
       messagesReceived + other.messagesReceived,
+      toSignalSize + other.toSignalSize,
+      toCollectSize + other.toCollectSize,
       collectOperationsExecuted + other.collectOperationsExecuted,
       signalOperationsExecuted + other.signalOperationsExecuted,
       numberOfVertices + other.numberOfVertices,
