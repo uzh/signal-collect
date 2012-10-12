@@ -24,7 +24,7 @@ import scala.util.MurmurHash
 
 // Only keys >= 0 allowed.
 class VertexMap(
-    initialSize: Int,
+    initialSize: Int = 32768,
     rehashFraction: Float = 0.75f) extends VertexStore {
   assert(initialSize > 0)
   var maxSize = nextPowerOfTwo(initialSize)
