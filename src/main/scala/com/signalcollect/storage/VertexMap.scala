@@ -25,6 +25,7 @@ import com.signalcollect.examples.PageRankVertex
 import scala.util.MurmurHash
 
 object Mooh extends App {
+    
   val mooh = new VertexMap(2048)
 
   for (i <- 1 to 100) {
@@ -49,10 +50,12 @@ object Mooh extends App {
   for (i <- mooh) {
     println(i)
   }
+  
+  println(mooh.size)
 
 }
 
-// Only keys > 0 allowed.
+// Only keys >= 0 allowed.
 class VertexMap(
     initialSize: Int,
     rehashFraction: Float = 0.75f) extends VertexStore {
@@ -116,7 +119,7 @@ class VertexMap(
 
   // http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
   def remove(id: Any) {
-    val key = MurmurHash.finalizeHash(id.hashCode)
+    val key = MurmurHash.finalizeHash(id.hashCode) & Int.MaxValue
     var position = key & mask
     var keyAtPosition = keys(position)
     while (keyAtPosition != -1 && key != keyAtPosition && id != values(position).id) {
@@ -127,6 +130,7 @@ class VertexMap(
     if (keyAtPosition != -1) {
       keys(position) = -1
       values(position) = null
+      numberOfElements -= 1
       position = (position + 1) & mask
       keyAtPosition = keys(position)
       if (keyAtPosition != -1) {
@@ -138,7 +142,7 @@ class VertexMap(
   }
 
   def get(vertexId: Any): Vertex[_, _] = {
-    val key = MurmurHash.finalizeHash(vertexId.hashCode)
+    val key = MurmurHash.finalizeHash(vertexId.hashCode) & Int.MaxValue
     var position = key & mask
     var keyAtPosition = keys(position)
     while (keyAtPosition != -1 && key != keyAtPosition && vertexId != values(position).id) {
@@ -154,7 +158,7 @@ class VertexMap(
 
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
   def put(vertex: Vertex[_, _]): Boolean = {
-    val key = MurmurHash.finalizeHash(vertex.id.hashCode)
+    val key = MurmurHash.finalizeHash(vertex.id.hashCode) & Int.MaxValue
     var position = key & mask
     var keyAtPosition: Int = keys(position)
     while (keyAtPosition != -1 && key != keyAtPosition && vertex.id != values(position).id) {
