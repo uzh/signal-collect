@@ -24,37 +24,6 @@ import com.signalcollect.Vertex
 import com.signalcollect.examples.PageRankVertex
 import scala.util.MurmurHash
 
-object Mooh extends App {
-    
-  val mooh = new VertexMap(2048)
-
-  for (i <- 1 to 100) {
-    println("Adding " + i)
-    mooh.put(new PageRankVertex(i))
-  }
-
-  for (i <- 1 to 100 by 2) {
-    println("Removing " + i)
-    mooh.remove(i)
-  }
-
-  for (i <- 1 to 100 by 3) {
-    println("Adding " + i)
-    mooh.put(new PageRankVertex(i))
-  }
-
-  //  for (i <- 1 to 10000) {
-  //    println(mooh(i))
-  //  }
-
-  for (i <- mooh) {
-    println(i)
-  }
-  
-  println(mooh.size)
-
-}
-
 // Only keys >= 0 allowed.
 class VertexMap(
     initialSize: Int,
