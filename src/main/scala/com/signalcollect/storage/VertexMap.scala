@@ -18,10 +18,8 @@
 
 package com.signalcollect.storage
 
-import reflect.{ ClassTag, classTag }
 import com.signalcollect.interfaces.VertexStore
 import com.signalcollect.Vertex
-import com.signalcollect.examples.PageRankVertex
 import scala.util.MurmurHash
 
 // Only keys >= 0 allowed.
