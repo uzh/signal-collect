@@ -132,21 +132,17 @@ class VertexMap(
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    var shouldDouble = false
     var doPut = keyAtPosition == -1
     if (doPut) {
+      keys(position) = key
+      values(position) = vertex
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
-        shouldDouble = true
         if (numberOfElements >= maxSize) {
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
+        tryDouble
       }
-      keys(position) = key
-      values(position) = vertex
-    }
-    if (shouldDouble) {
-      tryDouble
     }
     doPut
   }
