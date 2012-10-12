@@ -144,21 +144,6 @@ trait GraphEditor {
   }
 
   /**
-   *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
-   *  Blocks until the operation has completed if `blocking` is true.
-   */
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean)
-
-  /**
-   *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
-   *
-   *  @note Does not block.
-   */
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
-    removeVertices(shouldRemove, false)
-  }
-
-  /**
    *  Loads a graph using the provided graphLoader function.
    *  Blocks until the operation has completed if `blocking` is true.
    *

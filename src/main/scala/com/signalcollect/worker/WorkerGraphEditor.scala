@@ -68,8 +68,6 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean) = graphEditor.removeVertices(shouldRemove, blocking)
-
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean) = graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
 
   def shouldHandleLocally(vertexId: Any) = messageBus.getWorkerIdForVertexId(vertexId) == worker.workerId

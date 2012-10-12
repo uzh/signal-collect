@@ -39,12 +39,10 @@ abstract class Storage {
  */
 trait VertexStore {
   def get(id: Any): Vertex[_, _]
-  def getAll(condition: Vertex[_, _] => Boolean): List[Vertex[_, _]]
   def put(vertex: Vertex[_, _]): Boolean
   def remove(id: Any)
   def size: Long
   def foreach[U](f: Vertex[_, _] => U)
-  def cleanUp
 }
 
 /**

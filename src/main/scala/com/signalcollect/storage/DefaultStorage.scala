@@ -42,7 +42,6 @@ class DefaultStorage extends Storage {
   def serializer: Serializer = DefaultSerializer
   
   def cleanUp {
-    vertexStoreFactory.cleanUp
     toCollect.clear
     toSignal.clear
   }

@@ -60,6 +60,8 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
+object MaySignal
+
 class AkkaWorker(val workerId: Int,
                  val numberOfWorkers: Int,
                  val messageBusFactory: MessageBusFactory,
@@ -147,6 +149,8 @@ class AkkaWorker(val workerId: Int,
 
   protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
 
+  var maySignal = false
+
   protected def process(message: Any) {
     counters.messagesReceived += 1
     message match {
@@ -156,6 +160,8 @@ class AkkaWorker(val workerId: Int,
         for ((vertexId, signal) <- bulkSignal) {
           processSignal(SignalMessage(signal, EdgeId(null, vertexId)))
         }
+      case MaySignal =>
+        maySignal = true
       case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker => Any](this)
@@ -243,11 +249,6 @@ class AkkaWorker(val workerId: Int,
     } else {
       warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
     }
-  }
-
-  def removeVertices(removeCondition: Vertex[_, _] => Boolean) {
-    val verticesToRemove = vertexStore.vertices.getAll(removeCondition)
-    verticesToRemove.foreach(vertexToRemove => processRemoveVertex(vertexToRemove))
   }
 
   protected def processRemoveVertex(vertex: Vertex[_, _]) {

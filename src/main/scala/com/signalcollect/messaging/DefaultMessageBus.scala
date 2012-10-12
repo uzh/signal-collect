@@ -224,17 +224,6 @@ class DefaultMessageBus(
     }
   }
 
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean, blocking: Boolean = false) {
-    if (blocking == true) {
-      // use proxy
-      workerApi.removeVertices(shouldRemove)
-    } else {
-      // manually send a fire & forget request
-      val request = Request[Worker](_.removeVertices(shouldRemove), returnResult = false)
-      sendToWorkers(request)
-    }
-  }
-
   def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
     if (blocking) {
       workerApi.loadGraph(vertexIdHint, graphLoader)

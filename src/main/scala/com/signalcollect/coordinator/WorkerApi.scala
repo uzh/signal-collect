@@ -144,13 +144,6 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
   }
 
   /**
-   *  Removes all vertices that satisfy the `shouldRemove` predicate from the graph.
-   */
-  def removeVertices(shouldRemove: Vertex[_, _] => Boolean) {
-    workers map (_.removeVertices(shouldRemove))
-  }
-
-  /**
    * Runs a graph loading function on a worker
    */
   def loadGraph(vertexIdHint: Option[Any], graphLoader: GraphEditor => Unit) {
