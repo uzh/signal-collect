@@ -54,7 +54,7 @@ class VertexMap(
   def foreach[U](f: Vertex[_, _] => U) {
     var i = 0
     var elementsProcessed = 0
-    while (i < maxSize && elementsProcessed < numberOfElements) {
+    while (elementsProcessed < numberOfElements) {
       if (keys(i) != -1) {
         f(values(i))
         elementsProcessed += 1
