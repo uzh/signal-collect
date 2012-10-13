@@ -32,12 +32,12 @@ import java.util.LinkedHashSet
 class DefaultStorage extends Storage {
   
   var vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore = new VertexMap()
+  protected def vertexStoreFactory: VertexStore = new VertexMap(initialSize = 32768, rehashFraction = .8f)
   
   var toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new LinkedHashSet[Vertex[_,_]] 
+  protected def vertexSignalFactory = new VertexMap(initialSize = 32768, rehashFraction = .5f)
   var toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new LinkedHashSet[Vertex[_,_]]
+  protected def vertexSetFactory = new VertexMap(initialSize = 1024, rehashFraction = .5f)
   
   def serializer: Serializer = DefaultSerializer
   

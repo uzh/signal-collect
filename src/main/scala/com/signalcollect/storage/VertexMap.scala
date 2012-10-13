@@ -21,35 +21,64 @@ package com.signalcollect.storage
 import com.signalcollect.interfaces.VertexStore
 import com.signalcollect.Vertex
 import scala.util.MurmurHash
+import scala.annotation.tailrec
 
 class VertexMap(
     initialSize: Int = 32768,
     rehashFraction: Float = 0.75f) extends VertexStore {
   assert(initialSize > 0)
-  var maxSize = nextPowerOfTwo(initialSize)
+  private[this] final var maxSize = nextPowerOfTwo(initialSize)
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
-  var maxElements = rehashFraction * maxSize
-  var values = new Array[Vertex[_, _]](maxSize)
-  var keys = new Array[Int](maxSize)
-  var mask = maxSize - 1
+  private[this] final var maxElements = rehashFraction * maxSize
+  private[this] final var values = new Array[Vertex[_, _]](maxSize)
+  private[this] final var keys = new Array[Int](maxSize)
+  private[this] final var mask = maxSize - 1
+  private[this] final var nextPositionToProcess = 0
 
-  override def size = numberOfElements
-  def isEmpty = numberOfElements == 0
-  var numberOfElements = 0
+  final override def size = numberOfElements
+  final def isEmpty = numberOfElements == 0
+  private[this] final var numberOfElements = 0
 
-  def foreach[U](f: Vertex[_, _] => U) {
+  final def clear {
+    maxElements = rehashFraction * maxSize
+    values = new Array[Vertex[_, _]](maxSize)
+    keys = new Array[Int](maxSize)
+    mask = maxSize - 1
+    numberOfElements = 0
+  }
+
+  final def foreach[U](f: Vertex[_, _] => U) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
-      if (keys(i) != 0) {
-        f(values(i))
+      val vertex = values(i)
+      if (vertex != null) {
+        f(vertex)
         elementsProcessed += 1
       }
       i += 1
     }
   }
 
-  protected def tryDouble {
+  // Removes the vertices after they have been processed.
+  final def process[U](p: Vertex[_, _] => U, numberOfVertices: Option[Int] = None) {
+    val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
+    var elementsProcessed = 0
+    while (elementsProcessed < limit) {
+      val vertex = values(nextPositionToProcess)
+      if (vertex != null) {
+        p(vertex)
+        elementsProcessed += 1
+        // Don't optimize, most of the next entries get removed anyway.
+        keys(nextPositionToProcess) = 0
+        values(nextPositionToProcess) = null
+        numberOfElements -= 1
+      }
+      nextPositionToProcess = (nextPositionToProcess + 1) & mask
+    }
+  }
+
+  private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
       val oldSize = maxSize
@@ -71,8 +100,9 @@ class VertexMap(
     }
   }
 
-  // http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-  def remove(id: Any) {
+  final def remove(id: Any) = remove(id, true)
+
+  private final def remove(id: Any, optimize: Boolean) {
     val key = MurmurHash.finalizeHash(id.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition = keys(position)
@@ -85,17 +115,25 @@ class VertexMap(
       keys(position) = 0
       values(position) = null
       numberOfElements -= 1
-      position = (position + 1) & mask
-      keyAtPosition = keys(position)
-      if (keyAtPosition != 0) {
-        val vertex = values(position)
-        remove(vertex.id)
-        put(vertex)
+      if (optimize) {
+        // Try to reinsert all elements that are not optimally placed until an empty position is found.
+        // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
+        position = ((position + 1) & mask)
+        keyAtPosition = keys(position)
+        while (keyAtPosition != 0) {
+          if ((keyAtPosition & mask) != position) {
+            val vertex = values(position)
+            remove(vertex.id, false)
+            put(vertex)
+          }
+          position = ((position + 1) & mask)
+          keyAtPosition = keys(position)
+        }
       }
     }
   }
 
-  def get(vertexId: Any): Vertex[_, _] = {
+  final def get(vertexId: Any): Vertex[_, _] = {
     val key = MurmurHash.finalizeHash(vertexId.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition = keys(position)
@@ -111,7 +149,7 @@ class VertexMap(
   }
 
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
-  def put(vertex: Vertex[_, _]): Boolean = {
+  final def put(vertex: Vertex[_, _]): Boolean = {
     val key = MurmurHash.finalizeHash(vertex.id.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition: Int = keys(position)
@@ -134,7 +172,7 @@ class VertexMap(
     doPut
   }
 
-  protected def nextPowerOfTwo(x: Int): Int = {
+  private[this] final def nextPowerOfTwo(x: Int): Int = {
     assert(x > 0)
     var r = x - 1
     r |= r >> 1

@@ -22,14 +22,15 @@ import com.signalcollect._
 import scala.collection.mutable.IndexedSeq
 import scala.collection.mutable.Iterable
 import java.util.Set
+import com.signalcollect.storage.VertexMap
 
 /**
  * High level interface to abstract all vertex storage related implementations
  */
 abstract class Storage {
   def vertices: VertexStore
-  def toSignal: Set[Vertex[_, _]] //collection of all vertices that need to signal
-  def toCollect: Set[Vertex[_, _]] //collection of all vertices that need to collect
+  def toSignal: VertexMap //collection of all vertices that need to signal
+  def toCollect: VertexMap //collection of all vertices that need to collect
   def cleanUp
   def serializer: Serializer
 }
