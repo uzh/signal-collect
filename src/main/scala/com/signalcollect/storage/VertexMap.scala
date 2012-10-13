@@ -22,7 +22,6 @@ import com.signalcollect.interfaces.VertexStore
 import com.signalcollect.Vertex
 import scala.util.MurmurHash
 
-// Only keys >= 0 allowed.
 class VertexMap(
     initialSize: Int = 32768,
     rehashFraction: Float = 0.75f) extends VertexStore {
@@ -38,22 +37,11 @@ class VertexMap(
   def isEmpty = numberOfElements == 0
   var numberOfElements = 0
 
-  initializeKeys(keys)
-
-  protected def initializeKeys(keys: Array[Int]) {
-    val length = keys.length
-    var i = 0
-    while (i < length) {
-      keys(i) = -1
-      i += 1
-    }
-  }
-
   def foreach[U](f: Vertex[_, _] => U) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
-      if (keys(i) != -1) {
+      if (keys(i) != 0) {
         f(values(i))
         elementsProcessed += 1
       }
@@ -71,12 +59,11 @@ class VertexMap(
       maxElements = rehashFraction * maxSize
       values = new Array[Vertex[_, _]](maxSize)
       keys = new Array[Int](maxSize)
-      initializeKeys(keys)
       mask = maxSize - 1
       numberOfElements = 0
       var i = 0
       while (i < oldSize) {
-        if (oldKeys(i) != -1) {
+        if (oldKeys(i) != 0) {
           put(oldValues(i))
         }
         i += 1
@@ -86,21 +73,21 @@ class VertexMap(
 
   // http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
   def remove(id: Any) {
-    val key = MurmurHash.finalizeHash(id.hashCode) & Int.MaxValue
+    val key = MurmurHash.finalizeHash(id.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition = keys(position)
-    while (keyAtPosition != -1 && key != keyAtPosition && id != values(position).id) {
+    while (keyAtPosition != 0 && key != keyAtPosition && id != values(position).id) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
     // We can only remove the entry if it was found.
-    if (keyAtPosition != -1) {
-      keys(position) = -1
+    if (keyAtPosition != 0) {
+      keys(position) = 0
       values(position) = null
       numberOfElements -= 1
       position = (position + 1) & mask
       keyAtPosition = keys(position)
-      if (keyAtPosition != -1) {
+      if (keyAtPosition != 0) {
         val vertex = values(position)
         remove(vertex.id)
         put(vertex)
@@ -109,14 +96,14 @@ class VertexMap(
   }
 
   def get(vertexId: Any): Vertex[_, _] = {
-    val key = MurmurHash.finalizeHash(vertexId.hashCode) & Int.MaxValue
+    val key = MurmurHash.finalizeHash(vertexId.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition = keys(position)
-    while (keyAtPosition != -1 && key != keyAtPosition && vertexId != values(position).id) {
+    while (keyAtPosition != 0 && key != keyAtPosition && vertexId != values(position).id) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    if (keyAtPosition != -1) {
+    if (keyAtPosition != 0) {
       values(position)
     } else {
       null.asInstanceOf[Vertex[_, _]]
@@ -125,14 +112,14 @@ class VertexMap(
 
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
   def put(vertex: Vertex[_, _]): Boolean = {
-    val key = MurmurHash.finalizeHash(vertex.id.hashCode) & Int.MaxValue
+    val key = MurmurHash.finalizeHash(vertex.id.hashCode) | Int.MinValue
     var position = key & mask
     var keyAtPosition: Int = keys(position)
-    while (keyAtPosition != -1 && key != keyAtPosition && vertex.id != values(position).id) {
+    while (keyAtPosition != 0 && key != keyAtPosition && vertex.id != values(position).id) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    var doPut = keyAtPosition == -1
+    var doPut = keyAtPosition == 0
     if (doPut) {
       keys(position) = key
       values(position) = vertex

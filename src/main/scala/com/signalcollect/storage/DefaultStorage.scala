@@ -32,7 +32,7 @@ import java.util.LinkedHashSet
 class DefaultStorage extends Storage {
   
   var vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore = new InMemoryStorage(this)
+  protected def vertexStoreFactory: VertexStore = new VertexMap()
   
   var toCollect = vertexSignalFactory //holds all signals that are not collected yet
   protected def vertexSignalFactory = new LinkedHashSet[Vertex[_,_]] 

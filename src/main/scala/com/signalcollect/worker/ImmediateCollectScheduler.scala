@@ -17,7 +17,7 @@ trait ImmediateCollectScheduler extends AkkaWorker {
       }
     }
     if (maySignal && !vertexStore.toSignal.isEmpty) {
-      var signalsLeft = 1000
+      var signalsLeft = 10000
       val signalIter = vertexStore.toSignal.iterator
       while (signalsLeft > 0 && signalIter.hasNext) {
         val vertex = signalIter.next
@@ -26,9 +26,11 @@ trait ImmediateCollectScheduler extends AkkaWorker {
         signalsLeft -= 1
       }
       messageBus.flush
+      maySignal = false
     }
-    if (!vertexStore.toSignal.isEmpty) {
+    if (!vertexStore.toSignal.isEmpty && !awaitingSignalPermission) {
       messageBus.sendToActor(self, MaySignal)
+      awaitingSignalPermission = true
     }
   }
 }

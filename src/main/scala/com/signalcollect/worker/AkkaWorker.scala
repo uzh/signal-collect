@@ -150,6 +150,7 @@ class AkkaWorker(val workerId: Int,
   protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
 
   var maySignal = false
+  var awaitingSignalPermission = false
 
   protected def process(message: Any) {
     counters.messagesReceived += 1
@@ -162,6 +163,7 @@ class AkkaWorker(val workerId: Int,
         }
       case MaySignal =>
         maySignal = true
+        awaitingSignalPermission = false
       case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker => Any](this)
@@ -441,6 +443,7 @@ class AkkaWorker(val workerId: Int,
     val vertex = vertexStore.vertices.get(signal.edgeId.targetId)
     if (vertex != null) {
       if (vertex.deliverSignal(signal)) {
+        counters.collectOperationsExecuted += 1
         vertexStore.toSignal.add(vertex)
       } else {
         vertexStore.toCollect.add(vertex)
