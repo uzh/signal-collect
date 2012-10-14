@@ -16,47 +16,33 @@
  *  limitations under the License.
  */
 
-package com.signalcollect.storage
-
-import com.signalcollect.interfaces.VertexStore
-import com.signalcollect.Vertex
+import reflect.{ ClassTag, classTag }
 import scala.util.MurmurHash
-import scala.annotation.tailrec
 
-// A special adaptation of IntHashMap[Vertex[_, _]].
-// We allow arbitrary types for the vertex id to make
-// the usage of the framework simple.
-// This unfortunately means that we cannot use the id
-// as the key, as these keys might be expensive to
-// compare and require more space than an array of Ints.
-// As a proxy we use the hashCode of a vertex id as
-// the key in this map. In order to handle (rare) collisions,
-// we have to do an additional check to verify that the vertex id
-// matches indeed (and not just the hash of the vertex id).
-class VertexMap(
+class IntHashMap[Value <: AnyRef: ClassTag](
     initialSize: Int = 32768,
-    rehashFraction: Float = 0.75f) extends VertexStore {
+    rehashFraction: Float = 0.85f) extends Traversable[Value] {
   assert(initialSize > 0)
   private[this] final var maxSize = nextPowerOfTwo(initialSize)
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
-  private[this] final var values = new Array[Vertex[_, _]](maxSize)
-  private[this] final var keys = new Array[Int](maxSize) // 0 means empty
+  private[this] final var values = classTag[Value].newArray(maxSize) // 0 means empty
+  private[this] final var keys = new Array[Int](maxSize)
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
 
   final override def size = numberOfElements
-  final def isEmpty = numberOfElements == 0
+  final override def isEmpty = numberOfElements == 0
   private[this] final var numberOfElements = 0
 
   final def clear {
-    values = new Array[Vertex[_, _]](maxSize)
+    values = classTag[Value].newArray(maxSize)
     keys = new Array[Int](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  final def foreach[U](f: Vertex[_, _] => U) {
+  final def foreach[U](f: Value => U) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -70,7 +56,7 @@ class VertexMap(
   }
 
   // Removes the vertices after they have been processed.
-  final def process[U](p: Vertex[_, _] => U, numberOfVertices: Option[Int] = None) {
+  final def process[U](p: Value => U, numberOfVertices: Option[Int] = None) {
     val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
     var elementsProcessed = 0
     while (elementsProcessed < limit) {
@@ -80,7 +66,7 @@ class VertexMap(
         elementsProcessed += 1
         // Don't optimize, most of the next entries get removed anyway.
         keys(nextPositionToProcess) = 0
-        values(nextPositionToProcess) = null
+        values(nextPositionToProcess) = null.asInstanceOf[Value]
         numberOfElements -= 1
       }
       nextPositionToProcess = (nextPositionToProcess + 1) & mask
@@ -96,7 +82,7 @@ class VertexMap(
       val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
-      values = new Array[Vertex[_, _]](maxSize)
+      values = classTag[Value].newArray(maxSize)
       keys = new Array[Int](maxSize)
       mask = maxSize - 1
       numberOfElements = 0
@@ -104,7 +90,7 @@ class VertexMap(
       var elementsMoved = 0
       while (elementsMoved < oldNumberOfElements) {
         if (oldKeys(i) != 0) {
-          put(oldValues(i))
+          putWithEntryKey(oldKeys(i), oldValues(i))
           elementsMoved += 1
         }
         i += 1
@@ -112,22 +98,25 @@ class VertexMap(
     }
   }
 
-  final def remove(vertexId: Any) {
-    remove(vertexId, true)
+  final def remove(key: Int) {
+    remove(key, true)
   }
 
-  private final def remove(vertexId: Any, optimize: Boolean) {
-    val key = idToKey(vertexId)
-    var position = keyToPosition(key)
+  private[this] final def remove(key: Int, optimize: Boolean) {
+    removeWithEntryKey(actualKeyToEntryKey(key), optimize)
+  }
+
+  private[this] final def removeWithEntryKey(entryKey: Int, optimize: Boolean) {
+    var position = entryKeyToPosition(entryKey)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertexId != values(position).id) {
+    while (keyAtPosition != 0 && entryKey != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
     // We can only remove the entry if it was found.
     if (keyAtPosition != 0) {
       keys(position) = 0
-      values(position) = null
+      values(position) = null.asInstanceOf[Value]
       numberOfElements -= 1
       if (optimize) {
         // Try to reinsert all elements that are not optimally placed until an empty position is found.
@@ -135,12 +124,12 @@ class VertexMap(
         position = ((position + 1) & mask)
         keyAtPosition = keys(position)
         while (keyAtPosition != 0) {
-          if ((keyAtPosition & mask) != position) {
-            val vertex = values(position)
+          if (entryKeyToPosition(keyAtPosition) != position) {
+            val value = values(position)
             keys(position) = 0
-            values(position) = null
+            values(position) = null.asInstanceOf[Value]
             numberOfElements -= 1
-            putWithKey(keyAtPosition, vertex)
+            putWithEntryKey(keyAtPosition, value)
           }
           position = ((position + 1) & mask)
           keyAtPosition = keys(position)
@@ -149,41 +138,56 @@ class VertexMap(
     }
   }
 
-  final def get(vertexId: Any): Vertex[_, _] = {
-    val key = idToKey(vertexId)
-    var position = keyToPosition(key)
+  final def get(key: Int): Value = {
+    val entryKey = actualKeyToEntryKey(key)
+    var position = entryKeyToPosition(entryKey)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertexId != values(position).id) {
+    while (keyAtPosition != 0 && entryKey != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
     if (keyAtPosition != 0) {
       values(position)
     } else {
-      null
+      null.asInstanceOf[Value]
     }
   }
 
+  private[this] final def entryKeyToPosition(entryKey: Int) = {
+    entryKey.hashCode & mask
+  }
+
+  //assert(entryKey != 0)
+  private[this] final def entryKeyToActualKey(entryKey: Int) = {
+    if (entryKey == Int.MinValue) 0 else entryKey
+  }
+
+  //assert(actualKey != Int.MinValue)
+  private[this] final def actualKeyToEntryKey(actualKey: Int) = {
+    if (actualKey == 0) Int.MinValue else actualKey
+  }
+
+  // assert(key != Int.MinValue)
+  // Only correct if a positive Int is used as the key.
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
-  final def put(vertex: Vertex[_, _]): Boolean = {
-    val key = idToKey(vertex.id)
-    putWithKey(key, vertex)
+  final def put(key: Int, value: Value): Boolean = {
+    putWithEntryKey(actualKeyToEntryKey(key), value)
   }
 
-  private[this] final def putWithKey(key: Int, vertex: Vertex[_, _]): Boolean = {
-    var position = keyToPosition(key)
-    var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertex.id != values(position).id) {
+  private[this] final def putWithEntryKey(entryKey: Int, value: Value): Boolean = {
+    var position = entryKeyToPosition(entryKey)
+    var entryKeyAtPosition = keys(position)
+    while (entryKeyAtPosition != 0 && entryKey != entryKeyAtPosition) {
       position = (position + 1) & mask
-      keyAtPosition = keys(position)
+      entryKeyAtPosition = keys(position)
     }
-    var doPut = keyAtPosition == 0
+    var doPut = entryKeyAtPosition == 0
     if (doPut) {
-      keys(position) = key
-      values(position) = vertex
+      keys(position) = entryKey
+      values(position) = value
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
-        if (numberOfElements >= maxSize) {
+        if (numberOfElements == maxSize) {
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
         tryDouble
@@ -192,25 +196,8 @@ class VertexMap(
     doPut
   }
 
-  private[this] final def keyToPosition(key: Int) = {
-    key & mask
-  }
-
-  private[this] final def idToKey(vertexId: Any) = {
-    // No key can be 0, because 0 is reserved for no-entry.
-    // This is why zero gets mapped to Int.MinValue.
-    // The increase in collisions should be negligible,
-    // because it is just one key and because usually that bits gets
-    // cut off by the mask.
-    // I tried some bit twiddling to avoid an if statement
-    // (i  + ((((i + Int.MaxValue) >> 31) & i >> 31) << 31)),
-    // but the compiler seems to be smarter about optimizing this.
-    val hashCode = vertexId.hashCode
-    if (hashCode == 0) Int.MinValue else hashCode
-  }
-
+  // assert(x > 0)
   private[this] final def nextPowerOfTwo(x: Int): Int = {
-    assert(x > 0)
     var r = x - 1
     r |= r >> 1
     r |= r >> 2
