@@ -16,6 +16,8 @@
  *  limitations under the License.
  */
 
+package com.signalcollect.util.collections
+
 import reflect.{ ClassTag, classTag }
 import scala.util.MurmurHash
 
@@ -24,6 +26,7 @@ class IntHashMap[Value <: AnyRef: ClassTag](
     rehashFraction: Float = 0.85f) extends Traversable[Value] {
   assert(initialSize > 0)
   private[this] final var maxSize = nextPowerOfTwo(initialSize)
+  assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
   private[this] final var values = classTag[Value].newArray(maxSize) // 0 means empty
@@ -64,12 +67,14 @@ class IntHashMap[Value <: AnyRef: ClassTag](
       if (vertex != null) {
         p(vertex)
         elementsProcessed += 1
-        // Don't optimize, most of the next entries get removed anyway.
         keys(nextPositionToProcess) = 0
         values(nextPositionToProcess) = null.asInstanceOf[Value]
         numberOfElements -= 1
       }
       nextPositionToProcess = (nextPositionToProcess + 1) & mask
+    }
+    if (elementsProcessed > 0) {
+      optimizeFromPosition(nextPositionToProcess)
     }
   }
 
@@ -119,22 +124,26 @@ class IntHashMap[Value <: AnyRef: ClassTag](
       values(position) = null.asInstanceOf[Value]
       numberOfElements -= 1
       if (optimize) {
-        // Try to reinsert all elements that are not optimally placed until an empty position is found.
-        // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-        position = ((position + 1) & mask)
-        keyAtPosition = keys(position)
-        while (keyAtPosition != 0) {
-          if (entryKeyToPosition(keyAtPosition) != position) {
-            val value = values(position)
-            keys(position) = 0
-            values(position) = null.asInstanceOf[Value]
-            numberOfElements -= 1
-            putWithEntryKey(keyAtPosition, value)
-          }
-          position = ((position + 1) & mask)
-          keyAtPosition = keys(position)
-        }
+        optimizeFromPosition((position + 1) & mask)
       }
+    }
+  }
+
+  // Try to reinsert all elements that are not optimally placed until an empty position is found.
+  // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
+  private[this] final def optimizeFromPosition(pos: Int) {
+    var position = pos
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0) {
+      if ((keyAtPosition & mask) != position) {
+        val value = values(position)
+        keys(position) = 0
+        values(position) = null.asInstanceOf[Value]
+        numberOfElements -= 1
+        putWithEntryKey(keyAtPosition, value)
+      }
+      position = ((position + 1) & mask)
+      keyAtPosition = keys(position)
     }
   }
 
@@ -171,6 +180,7 @@ class IntHashMap[Value <: AnyRef: ClassTag](
   // Only correct if a positive Int is used as the key.
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
   final def put(key: Int, value: Value): Boolean = {
+    assert(key != Int.MinValue)
     putWithEntryKey(actualKeyToEntryKey(key), value)
   }
 
@@ -187,10 +197,10 @@ class IntHashMap[Value <: AnyRef: ClassTag](
       values(position) = value
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
+        tryDouble
         if (numberOfElements == maxSize) {
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
-        tryDouble
       }
     }
     doPut

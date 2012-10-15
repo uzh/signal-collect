@@ -38,6 +38,7 @@ class VertexMap(
     rehashFraction: Float = 0.75f) extends VertexStore {
   assert(initialSize > 0)
   private[this] final var maxSize = nextPowerOfTwo(initialSize)
+  assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
   private[this] final var values = new Array[Vertex[_, _]](maxSize)
@@ -78,12 +79,14 @@ class VertexMap(
       if (vertex != null) {
         p(vertex)
         elementsProcessed += 1
-        // Don't optimize, most of the next entries get removed anyway.
         keys(nextPositionToProcess) = 0
         values(nextPositionToProcess) = null
         numberOfElements -= 1
       }
       nextPositionToProcess = (nextPositionToProcess + 1) & mask
+    }
+    if (elementsProcessed > 0) {
+      optimizeFromPosition(nextPositionToProcess)
     }
   }
 
@@ -120,7 +123,7 @@ class VertexMap(
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertexId != values(position).id) {
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertexId != values(position).id)) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
@@ -130,22 +133,26 @@ class VertexMap(
       values(position) = null
       numberOfElements -= 1
       if (optimize) {
-        // Try to reinsert all elements that are not optimally placed until an empty position is found.
-        // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-        position = ((position + 1) & mask)
-        keyAtPosition = keys(position)
-        while (keyAtPosition != 0) {
-          if ((keyAtPosition & mask) != position) {
-            val vertex = values(position)
-            keys(position) = 0
-            values(position) = null
-            numberOfElements -= 1
-            putWithKey(keyAtPosition, vertex)
-          }
-          position = ((position + 1) & mask)
-          keyAtPosition = keys(position)
-        }
+        optimizeFromPosition((position + 1) & mask)
       }
+    }
+  }
+
+  // Try to reinsert all elements that are not optimally placed until an empty position is found.
+  // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
+  private[this] final def optimizeFromPosition(pos: Int) {
+    var position = pos
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0) {
+      if ((keyAtPosition & mask) != position) {
+        val vertex = values(position)
+        keys(position) = 0
+        values(position) = null
+        numberOfElements -= 1
+        putWithKey(keyAtPosition, vertex)
+      }
+      position = ((position + 1) & mask)
+      keyAtPosition = keys(position)
     }
   }
 
@@ -153,7 +160,7 @@ class VertexMap(
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertexId != values(position).id) {
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertexId != values(position).id)) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
@@ -173,7 +180,7 @@ class VertexMap(
   private[this] final def putWithKey(key: Int, vertex: Vertex[_, _]): Boolean = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition && vertex.id != values(position).id) {
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertex.id != values(position).id)) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
@@ -183,10 +190,10 @@ class VertexMap(
       values(position) = vertex
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
+        tryDouble
         if (numberOfElements >= maxSize) {
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
-        tryDouble
       }
     }
     doPut
