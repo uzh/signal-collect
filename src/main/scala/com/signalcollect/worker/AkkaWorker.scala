@@ -345,9 +345,7 @@ class AkkaWorker(val workerId: Int,
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
 
-  def shutdown {
-    vertexStore.cleanUp
-  }
+  def shutdown { }
 
   protected var shouldShutdown = false
   protected var isIdle = false
