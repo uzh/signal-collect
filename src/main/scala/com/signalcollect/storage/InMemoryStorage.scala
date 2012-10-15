@@ -101,8 +101,4 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    */
   def size: Long = vertexMap.size
 
-  /**
-   * Removes all the vertices from the collection.
-   */
-  def cleanUp = vertexMap.clear
 }

@@ -41,8 +41,4 @@ class DefaultStorage extends Storage {
   
   def serializer: Serializer = DefaultSerializer
   
-  def cleanUp {
-    toCollect.clear
-    toSignal.clear
-  }
 }
