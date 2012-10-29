@@ -1,5 +1,6 @@
 .*
 !/.gitignore
+!/.travis.yml
 project/target/
 project/project/
 project/scala*/
