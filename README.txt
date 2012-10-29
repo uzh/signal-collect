@@ -1,1 +1,0 @@
-Please visit http://www.signalcollect.com for information about how to use Signal/Collect.
