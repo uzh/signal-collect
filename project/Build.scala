@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
 
-object RootBuild extends Build {
+object CoreBuild extends Build {
   lazy val core = Project(id = "signal-collect", base = file("."))
 }
