@@ -3,7 +3,7 @@ import AssemblyKeys._
 assemblySettings
 
 /** Project */
-name := "signal-collect-core"
+name := "signal-collect"
 
 version := "2.0.0-SNAPSHOT"
 
