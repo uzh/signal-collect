@@ -31,6 +31,7 @@ import akka.actor.ActorRef
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.interfaces.WorkerStatistics
+import scala.language.postfixOps
 
 class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
   val server = HttpServer.create(address, 0)
@@ -45,7 +46,7 @@ class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new
 }
 
 class CoordinatorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
-  val coordinator: Coordinator = AkkaProxy.newInstance[Coordinator](coordinatorActor)
+  val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
 
   def handle(exchange: HttpExchange) {
     val requestMethod = exchange.getRequestMethod

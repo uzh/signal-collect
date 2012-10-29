@@ -59,7 +59,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    * set to a random color and the neighbors are informed about this vertex'
    * new color. If no neighbor shares the same color, we stay with the old color.
    */
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
     if (mostRecentSignals.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {

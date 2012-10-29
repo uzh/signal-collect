@@ -27,8 +27,8 @@ import scala.collection.JavaConversions
 /**
  * Stores all vertices in a in-memory HashMap data structure.
  */
-class InMemoryStorage(storage: Storage) extends VertexStore {
-  protected var vertexMap = new HashMap[Any, Vertex[_, _]]()
+class InMemoryStorage[Id](storage: Storage[Id]) extends VertexStore[Id] {
+  protected var vertexMap = new HashMap[Any, Vertex[Id, _]]()
 
   /**
    * Returns a vertex from the store that has the specified id.
@@ -36,7 +36,7 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @param id the ID of the vertex to retrieve
    * @return the vertex object or null if the vertex is not contained in the store
    */
-  def get(id: Any): Vertex[_, _] = {
+  def get(id: Id): Vertex[Id, _] = {
     vertexMap.get(id)
   }
 
@@ -45,8 +45,8 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    *
    * @param condition that has to be met by a vertex so that it will be returned.
    */
-  def getAll(condition: Vertex[_, _] => Boolean): List[Vertex[_, _]] = {
-	  var result = List[Vertex[_, _]]()
+  def getAll(condition: Vertex[Id, _] => Boolean): List[Vertex[Id, _]] = {
+	  var result = List[Vertex[Id, _]]()
 	  var iter = vertexMap.values.iterator
 	  while(iter.hasNext) {
 	    val condidateVertex = iter.next
@@ -63,7 +63,7 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * @param the vertex to insert
    * @return true if the insertion was successful, false if the storage already contained a vertex with the same id.
    */
-  def put(vertex: Vertex[_, _]): Boolean = {
+  def put(vertex: Vertex[Id, _]): Boolean = {
     if (!vertexMap.containsKey(vertex.id)) {
       vertexMap.put(vertex.id, vertex)
       true
@@ -76,9 +76,9 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    *
    * @param id the ID of the vertex to remove
    */
-  def remove(id: Any) = {
+  def remove(id: Id) = {
     val vertex = vertexMap.remove(id)
-    storage.toSignal.remove(vertex)
+    storage.toSignal.remove(vertex.id)
   }
 
   /**
@@ -86,7 +86,7 @@ class InMemoryStorage(storage: Storage) extends VertexStore {
    * 
    * @param f Function to apply to each stored vertex
    */
-  def foreach[U](f: Vertex[_, _] => U) {
+  def foreach(f: Vertex[Id, _] => Unit) {
     val it = vertexMap.values.iterator
     while (it.hasNext) {
       val vertex = it.next

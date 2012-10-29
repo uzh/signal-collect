@@ -1,6 +1,7 @@
 package com.signalcollect.examples
 
 import scala.collection.mutable._
+import scala.language.implicitConversions
 
 object ConstraintExample extends App {
   
@@ -19,7 +20,6 @@ object ConstraintExample extends App {
 object Expression {
   implicit def toExpression(x: Int): Expression = new IntExpression(x)
   implicit def toExpression(x: String): Expression = new Variable(x)
-  
 }
 
 case class IntExpression(x: Int) extends Expression {

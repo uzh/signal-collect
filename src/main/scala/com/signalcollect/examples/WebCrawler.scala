@@ -50,7 +50,7 @@ object WebCrawler extends App {
 class Webpage(id: String, crawlDepth: Int, dampingFactor: Double = 0.85) extends PageRankVertex(id, dampingFactor) {
 
   /** This method gets called by the framework after the vertex has been fully initialized. */
-  override def afterInitialization(graphEditor: GraphEditor) {
+  override def afterInitialization(graphEditor: GraphEditor[Any, Any]) {
     super.afterInitialization(graphEditor)
     if (crawlDepth > 0) {
       try {

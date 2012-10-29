@@ -29,7 +29,6 @@ import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.examples.PageRankVertex
 import java.io.File
 import com.signalcollect.examples.PageRankVertex$
-import com.signalcollect.util.collections.IntHashMap
 
 @RunWith(classOf[JUnitRunner])
 class IntHashMapSpec extends SpecificationWithJUnit with Mockito {

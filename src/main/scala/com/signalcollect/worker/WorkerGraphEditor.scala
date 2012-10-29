@@ -22,19 +22,20 @@ package com.signalcollect.worker
 
 import com.signalcollect._
 import com.signalcollect.interfaces._
-import com.signalcollect.serialization.DefaultSerializer
 
 /**
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
  * by calling them directly on the worker itself.
  */
-class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEditor {
+class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](worker: Worker[Id, Signal], messageBus: MessageBus[Id, Signal]) extends GraphEditor[Id, Signal] {
 
-  val graphEditor = messageBus.getGraphEditor
+  private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
-  def sendSignal(signal: Any, edgeId: EdgeId, blocking: Boolean = false) = graphEditor.sendSignal(signal, edgeId, blocking)
+  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
+    graphEditor.sendSignal(signal, targetId, sourceId, blocking)
+  }
 
-  def addVertex(vertex: Vertex[_, _], blocking: Boolean) = {
+  def addVertex(vertex: Vertex[Id, _], blocking: Boolean) {
     if (blocking && shouldHandleLocally(vertex.id)) {
       worker.addVertex(vertex)
     } else {
@@ -42,7 +43,7 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def addEdge(sourceVertexId: Any, edge: Edge[_], blocking: Boolean) {
+  def addEdge(sourceVertexId: Id, edge: Edge[Id], blocking: Boolean) {
     if (blocking && shouldHandleLocally(sourceVertexId)) {
       worker.addEdge(sourceVertexId, edge)
     } else {
@@ -50,9 +51,7 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_], blocking: Boolean = false) = graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
-
-  def removeVertex(vertexId: Any, blocking: Boolean) {
+  def removeVertex(vertexId: Id, blocking: Boolean) {
     if (blocking && shouldHandleLocally(vertexId)) {
       worker.removeVertex(vertexId)
     } else {
@@ -60,7 +59,7 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def removeEdge(edgeId: EdgeId, blocking: Boolean) {
+  def removeEdge(edgeId: EdgeId[Id], blocking: Boolean) {
     if (blocking && shouldHandleLocally(edgeId.sourceId)) {
       worker.removeEdge(edgeId)
     } else {
@@ -68,10 +67,14 @@ class WorkerGraphEditor(worker: Worker, messageBus: MessageBus) extends GraphEdi
     }
   }
 
-  def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean) = graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean) {
+    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  }
 
-  def shouldHandleLocally(vertexId: Any) = messageBus.getWorkerIdForVertexId(vertexId) == worker.workerId
-  
+  protected def shouldHandleLocally(vertexId: Id): Boolean = {
+    messageBus.getWorkerIdForVertexId(vertexId) == worker.workerId
+  }
+
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }

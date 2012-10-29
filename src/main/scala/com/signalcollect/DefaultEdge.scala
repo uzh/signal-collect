@@ -34,7 +34,7 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
 
   /** The type of signals that are sent along this edge. */
   type Signal = Any
-
+  
   var sourceVertex: Vertex[_, _] = _
   
   /**
@@ -61,27 +61,18 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
   val cachedTargetIdHashCode = targetId.hashCode
 
   /**
-   *  The edge id that is send with signal messages.
-   *  Usually it is the real id, but for data flow algorithms there is no need to send the sourceId.
-   *  Data flow usage example: def senderEdgeId = EdgeId(null, targetId)
-   *  
-   *  To trade memory for speed, use a value instead to cache the edge id.
-   */
-  def senderEdgeId = id
-
-  /**
    *  Function that gets called by the source vertex whenever this edge is supposed to send a signal.
    *
    *  @param sourceVertex The source vertex of this edge.
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor) {
-    graphEditor.sendToWorkerForVertexIdHash(SignalMessage(signal(sourceVertex), senderEdgeId), cachedTargetIdHashCode)
+  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
+    graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal(sourceVertex)), cachedTargetIdHashCode)
   }
   
   /** Called when the edge is attached to a source vertex */
-  def onAttach(source: Vertex[_, _], graphEditor: GraphEditor) = {
+  def onAttach(source: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) = {
     sourceVertex = source
   }
 

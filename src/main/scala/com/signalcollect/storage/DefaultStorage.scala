@@ -29,16 +29,14 @@ import java.util.LinkedHashSet
  * Default configuration for storing vertices and the toSignal and toCollect collections
  * Uses in-memory implementations for all collections.
  */
-class DefaultStorage extends Storage {
-  
-  var vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore = new VertexMap(initialSize = 32768, rehashFraction = .8f)
-  
-  var toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new VertexMap(initialSize = 32768, rehashFraction = .5f)
-  var toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new VertexMap(initialSize = 1024, rehashFraction = .5f)
-  
-  def serializer: Serializer = DefaultSerializer
-  
+class DefaultStorage[@specialized(Int, Long) Id] extends Storage[Id] {
+
+  val vertices = vertexStoreFactory
+  protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+
+  val toCollect = vertexSignalFactory //holds all signals that are not collected yet
+  protected def vertexSignalFactory = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+  val toSignal = vertexSetFactory //holds all vertex ids that need to signal
+  protected def vertexSetFactory = new VertexMap[Id](initialSize = 1024, rehashFraction = .8f)
+
 }

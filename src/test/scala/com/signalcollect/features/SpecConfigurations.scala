@@ -34,8 +34,8 @@ trait SpecConfigurations {
   def numberOfWorkers = List(1, 2, 4, 8, 16, 32, 64, 128)
   def executionModes = List(ExecutionMode.OptimizedAsynchronous, ExecutionMode.Synchronous)
 
-  def computeGraphs: Seq[Graph] = {
-    var computeGraphs = Seq[Graph]()
+  def computeGraphs: Seq[Graph[_, _]] = {
+    var computeGraphs = Seq[Graph[_, _]]()
     for (workers <- numberOfWorkers) {
       for (computeGraphBuilder <- computeGraphBuilders) {
         computeGraphs = computeGraphBuilder.build +: computeGraphs

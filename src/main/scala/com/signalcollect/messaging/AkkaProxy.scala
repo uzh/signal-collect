@@ -27,15 +27,17 @@ import com.signalcollect.interfaces._
 import java.lang.reflect.Method
 import akka.actor.ActorRef
 import akka.util.Timeout
-import scala.concurrent.util.Duration
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
 import akka.pattern.ask
 import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.serialization.DefaultSerializer
+import scala.reflect.ClassTag
+import scala.reflect.classTag
+import scala.language.postfixOps
 
 case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
 
@@ -44,8 +46,8 @@ case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boo
  */
 object AkkaProxy {
 
-  def newInstance[T <: Any: Manifest](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
-    val c = manifest[T].erasure
+  def newInstance[T : ClassTag](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+    val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,
       Array[Class[_]](c),

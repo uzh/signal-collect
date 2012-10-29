@@ -26,10 +26,10 @@ object DefaultLogger {
   def log(logMessage: LogMessage) {
     logMessage.msg match {
       case e: Exception =>
-        println(logMessage.from + ": " + e.getMessage)
+        println("DefaultLogger: " + logMessage.from + ": " + e.getMessage)
         e.printStackTrace
       case other =>
-        println(logMessage.from + ": " + logMessage.msg)
+        println("DefaultLogger: " + logMessage.from + ": " + logMessage.msg)
     }
   }
 }

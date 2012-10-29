@@ -40,13 +40,10 @@ import scala.collection.mutable.ArrayBuffer
  */
 abstract class DataFlowVertex[Id, State](
   val id: Id,
-  var state: State,
-  val resetState: State)
-  extends AbstractVertex[Id, State] with ResetStateAfterSignaling[Id, State] {
-  
+  var state: State)
+    extends AbstractVertex[Id, State] {
+
   type Signal
-  
-  val uncollectedSignals = new ArrayBuffer[Signal]
 
   /**
    *  @return the object that stores the current state for this `Vertex`.
@@ -55,12 +52,12 @@ abstract class DataFlowVertex[Id, State](
   def setState(s: State) {
     state = s
   }
-  
-  def deliverSignal(signal: SignalMessage[_]): Boolean = {
-    uncollectedSignals.append(signal.signal.asInstanceOf[Signal])
-    false
+
+  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+    state = collect(state, signal.asInstanceOf[Signal])
+    true
   }
-  
+
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
@@ -71,35 +68,29 @@ abstract class DataFlowVertex[Id, State](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, uncollectedSignals: Iterable[Signal], graphEditor: GraphEditor): State
+  def collect(oldState: State, signal: Signal): State
 
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
    *
    *  @param graphEditor can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(graphEditor: GraphEditor) {
+  override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     super.executeCollectOperation(graphEditor)
-    state = collect(state, uncollectedSignals, graphEditor)
-    uncollectedSignals.clear
   }
-  
-    /**
+
+  /**
    * This method is used by the framework in order to decide if the vertex' collect operation
    * should be executed.
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
   def scoreCollect: Double = {
-    if (!uncollectedSignals.isEmpty) {
-      1.0
-    } else if (edgesModifiedSinceCollectOperation) {
+    if (edgesModifiedSinceCollectOperation) {
       1.0
     } else {
       0.0
     }
   }
-  
-  
 
 }

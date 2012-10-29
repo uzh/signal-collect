@@ -22,8 +22,8 @@ package com.signalcollect
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration._
 import com.signalcollect.configuration.TerminationReason
-import scala.concurrent.util.Duration._
-import scala.concurrent.util.Duration
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 
 /**

@@ -27,16 +27,16 @@ import com.signalcollect.interfaces.EdgeId
  *
  *  @author Philip Stutz
  */
-trait Edge[TargetId] extends Serializable {
+trait Edge[+TargetId] extends Serializable {
   /** An edge id uniquely identifies an edge in the graph. */
-  def id: EdgeId
+  def id: EdgeId[_]
 
   def sourceId: Any = sourceVertex.id
   def targetId: TargetId
   def sourceVertex: Vertex[_, _]
 
   /** Called when the edge is attached to a source vertex */
-  def onAttach(source: Vertex[_, _], graphEditor: GraphEditor)
+  def onAttach(source: Vertex[_, _], graphEditor: GraphEditor[Any, Any])
 
   /** The weight of this edge. */
   def weight: Double
@@ -61,6 +61,6 @@ trait Edge[TargetId] extends Serializable {
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor)
+  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any])
 
 }

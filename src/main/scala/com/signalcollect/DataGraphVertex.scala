@@ -62,15 +62,16 @@ abstract class DataGraphVertex[Id, State](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Signal], graphEditor: GraphEditor): State
+  def collect(oldState: State, mostRecentSignals: Iterable[Signal]): State
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
    */
   protected val mostRecentSignalMap = new HashMap[Any, Signal]()
 
-  def deliverSignal(signal: SignalMessage[_]): Boolean = {
-    mostRecentSignalMap.put(signal.edgeId.sourceId, signal.signal.asInstanceOf[Signal])
+  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+    assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
+    mostRecentSignalMap.put(sourceId.get, signal.asInstanceOf[Signal])
     false
   }
 
@@ -92,10 +93,10 @@ abstract class DataGraphVertex[Id, State](
    *
    *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
    */
-  override def executeCollectOperation(graphEditor: GraphEditor) {
+  override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     super.executeCollectOperation(graphEditor)
     val castS = mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]]
-    state = collect(state, castS, graphEditor)
+    state = collect(state, castS)
   }
 
   /**

@@ -18,7 +18,7 @@
 
 package com.signalcollect.interfaces
 
-trait VertexToWorkerMapper {
-  def getWorkerIdForVertexId(vertexId: Any): Int
+trait VertexToWorkerMapper[Id] {
+  def getWorkerIdForVertexId(vertexId: Id): Int
   def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int
 }

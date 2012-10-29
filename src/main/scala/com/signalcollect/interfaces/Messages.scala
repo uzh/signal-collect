@@ -23,14 +23,16 @@ package com.signalcollect.interfaces
 import com.signalcollect._
 
 // Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.
-case class EdgeId(val sourceId: Any, val targetId: Any) {
-  def withTargetId(t: Any): EdgeId = EdgeId(sourceId, t)
-  def withSourceId(s: Any): EdgeId = EdgeId(s, targetId)
-  def removeTargetId: EdgeId = EdgeId(sourceId, null)
-  def removeSourceId: EdgeId = EdgeId(null, targetId)
+case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
+  def withTargetId(t: Id): EdgeId[Id] = EdgeId(sourceId, t)
+  def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
+  def removeTargetId: EdgeId[Id] = EdgeId(sourceId, null.asInstanceOf[Id])
+  def removeSourceId: EdgeId[Id] = EdgeId(null.asInstanceOf[Id], targetId)
 }
 
-case class SignalMessage[@specialized Signal](val signal: Signal, val edgeId: EdgeId)
+case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val targetIds: Array[Id], val signals: Array[Signal])
+
+case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val targetId: Id, val sourceId: Option[Id], val signal: Signal)
 
 // Convergence/pause detection
 case class WorkerStatus(

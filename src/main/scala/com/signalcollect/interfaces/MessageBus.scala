@@ -29,7 +29,7 @@ import com.signalcollect.coordinator.WorkerApi
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
+trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
   def flush
   
   def isInitialized: Boolean
@@ -44,10 +44,10 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   def sendToActor(actor: ActorRef, m: Any) 
   
   def sendToLogger(m: LogMessage)
-
+  
   def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 
-  def sendToWorkerForVertexId(m: Any, vertexId: Any)
+  def sendToWorkerForVertexId(m: Any, vertexId: Id)
 
   def sendToWorker(workerId: Int, m: Any)
 
@@ -56,13 +56,13 @@ trait MessageBus extends MessageRecipientRegistry with VertexToWorkerMapper {
   def sendToCoordinator(m: Any)
 
   // Returns an api that treats all workers as if there were only one.
-  def getWorkerApi: WorkerApi  //TODO remove dependency on coordinator package.
+  def getWorkerApi: WorkerApi[Id, Signal]  //TODO remove dependency on coordinator package.
 
   // Returns an array of worker proxies for all workers, indexed by workerId.
-  def getWorkerProxies: Array[Worker]
+  def getWorkerProxies: Array[Worker[Id, Signal]]
 
   // Returns a graph editor that allows to manipulate the graph.
-  def getGraphEditor: GraphEditor
+  def getGraphEditor: GraphEditor[Id, Signal]
 }
 
 trait MessageRecipientRegistry {

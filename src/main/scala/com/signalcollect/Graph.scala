@@ -36,7 +36,7 @@ import com.signalcollect.interfaces.AggregationOperation
  *
  *  @author Philip Stutz
  */
-trait Graph extends GraphEditor {
+trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
 
   /**
    *  Starts the execution of the computation using the default execution parameters and
@@ -100,7 +100,7 @@ trait Graph extends GraphEditor {
    *
    *  @see `forVertexWithId`
    */
-  def recalculateScoresForVertexWithId(vertexId: Any)
+  def recalculateScoresForVertexWithId(vertexId: Id)
 
   /**
    *  Waits until all processing has finished.
@@ -132,7 +132,7 @@ trait Graph extends GraphEditor {
    *
    *  @usecase def forVertexWithId(vertexId: Any, f: Vertex => String): String
    */
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
 
   /**
    *  Executes the function `f` on all vertices.
@@ -142,7 +142,7 @@ trait Graph extends GraphEditor {
    *  @note This function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: Vertex[_, _] => Unit)
+  def foreachVertex(f: Vertex[Id, _] => Unit)
 
   /**
    *  Applies an aggregation operation to the graph and returns the result.
@@ -164,7 +164,7 @@ trait Graph extends GraphEditor {
    *  		receives the signal and an instance of GraphEditor as parameters in order to take some
    *  		action that handles this case.
    */
-  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit)
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
 }
 
 

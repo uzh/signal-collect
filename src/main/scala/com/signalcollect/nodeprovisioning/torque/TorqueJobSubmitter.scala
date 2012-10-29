@@ -25,6 +25,7 @@ import ch.ethz.ssh2.Connection
 import java.io.File
 import ch.ethz.ssh2.StreamGobbler
 import org.apache.commons.codec.binary.Base64
+import scala.language.postfixOps
 
 /**
  * Determines the priority in torque's scheduling queue

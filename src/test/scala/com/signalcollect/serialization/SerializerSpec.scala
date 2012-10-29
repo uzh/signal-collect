@@ -43,23 +43,6 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
     }
 
   }
-  
-  "CompressingSerializer" should {
-
-    "correclty serialize/deserialize a Double" in {
-      CompressingSerializer.read[Double](CompressingSerializer.write(1024.0)) === 1024.0
-    }
-
-    "correclty serialize/deserialize a job configuration" in {
-      val job = new Job(
-        100,
-        Some(SpreadsheetConfiguration("some.emailAddress@gmail.com", "somePasswordHere", "someSpreadsheetNameHere", "someWorksheetNameHere")),
-        "someUsername",
-        "someJobDescription")
-      CompressingSerializer.read[Job](CompressingSerializer.write(job)) === job
-    }
-
-  }
 
 }
 

@@ -41,9 +41,9 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   }
 
   "InMemory Vertex Store" should {
-    val defaultMessageBus = mock[DefaultMessageBus]
+    val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
     val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-    val inMemoryStore = new DefaultStorage
+    val inMemoryStore = new DefaultStorage[Any]
     vertexList.foreach(v => inMemoryStore.vertices.put(v))
 
     "hold all vertices inserted" in {
@@ -59,7 +59,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "remove vertices from the store" in {
-      val inMemoryStore = new DefaultStorage
+      val inMemoryStore = new DefaultStorage[Any]
       vertexList.foreach(v => inMemoryStore.vertices.put(v))
       inMemoryStore.vertices.remove(0)
       inMemoryStore.vertices.size must_== vertexList.size - 1

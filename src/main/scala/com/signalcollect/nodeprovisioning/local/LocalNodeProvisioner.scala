@@ -26,10 +26,11 @@ import com.signalcollect.nodeprovisioning.Node
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import com.signalcollect.configuration.AkkaConfig
+import com.typesafe.config.Config
 
 class LocalNodeProvisioner extends NodeProvisioner {
   
-  def getNodes: List[Node] = {
+  def getNodes(akkaConfig: Config): List[Node] = {
     List(new LocalNode())
   }
 }

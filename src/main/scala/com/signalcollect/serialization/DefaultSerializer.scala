@@ -18,8 +18,7 @@
 
 package com.signalcollect.serialization
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
-import com.signalcollect.interfaces.Serializer
+import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 
 /**
  * Companion object for DefaultSerializer
@@ -28,13 +27,13 @@ object DefaultSerializer extends DefaultSerializer
 
 /**
  * Default Serializer that uses standard java.io ObjectIn- and ObjectOutputStreams
- * and can serialize any object declared as serializable. 
+ * and can serialize any object declared as serializable.
  */
-trait DefaultSerializer extends Serializer {
-  
+trait DefaultSerializer {
+
   /**
-   * Serializes an object
-   * 
+   * Serializes an object.
+   *
    * @param inputObject the object to serialize
    * @return serialized object as byte array
    */
@@ -42,20 +41,20 @@ trait DefaultSerializer extends Serializer {
     val barr = new ByteArrayOutputStream(512)
     val out = new ObjectOutputStream(barr)
     out.writeObject(inputObject)
-    out.close()
-    barr.toByteArray()
+    out.close
+    barr.toByteArray
   }
 
   /**
-   * deserialize an object
-   * 
+   * Deserialize an object.
+   *
    * @param the serialized object as byte array
    * @return the deserialized object
    */
   def read[A](buffer: Array[Byte]): A = {
-	val input = new ObjectInputStream(new ByteArrayInputStream(buffer))
-	val obj = input.readObject()
-	input.close()
-	obj.asInstanceOf[A]
+    val input = new ObjectInputStream(new ByteArrayInputStream(buffer))
+    val obj = input.readObject
+    input.close
+    obj.asInstanceOf[A]
   }
 }

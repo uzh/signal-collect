@@ -27,28 +27,19 @@ import com.signalcollect.storage.VertexMap
 /**
  * High level interface to abstract all vertex storage related implementations
  */
-abstract class Storage {
-  def vertices: VertexStore
-  def toSignal: VertexMap //collection of all vertices that need to signal
-  def toCollect: VertexMap //collection of all vertices that need to collect
-  def serializer: Serializer
+trait Storage[@specialized(Int, Long) Id] {
+  def vertices: VertexStore[Id]
+  def toSignal: VertexMap[Id] //collection of all vertices that need to signal
+  def toCollect: VertexMap[Id] //collection of all vertices that need to collect
 }
 
 /**
  * Stores vertices and makes them retrievable through their associated id.
  */
-trait VertexStore {
-  def get(id: Any): Vertex[_, _]
-  def put(vertex: Vertex[_, _]): Boolean
-  def remove(id: Any)
+trait VertexStore[@specialized(Int, Long) Id] {
+  def get(id: Id): Vertex[Id, _]
+  def put(vertex: Vertex[Id, _]): Boolean
+  def remove(id: Id)
   def size: Long
-  def foreach[U](f: Vertex[_, _] => U)
-}
-
-/**
- * Defines all functionality needed for serialization/deserialization
- */
-trait Serializer {
-  def write[A](inputObject: A): Array[Byte]
-  def read[A](buffer: Array[Byte]): A
+  def foreach(f: Vertex[Id, _] => Unit)
 }

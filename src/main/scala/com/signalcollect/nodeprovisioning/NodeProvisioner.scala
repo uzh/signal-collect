@@ -19,7 +19,8 @@
 
 package com.signalcollect.nodeprovisioning
 
-trait NodeProvisioner extends Serializable {
-	def getNodes: List[Node]
-}
+import com.typesafe.config.Config
 
+trait NodeProvisioner extends Serializable {
+	def getNodes(akkaConfig: Config): List[Node]
+}

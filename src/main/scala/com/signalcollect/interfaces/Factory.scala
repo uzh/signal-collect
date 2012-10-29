@@ -19,24 +19,26 @@
 
 package com.signalcollect.interfaces
 
+import scala.reflect.ClassTag
+
 trait Factory extends Serializable {
   def name: String = this.getClass.getSimpleName.replace("$", "")
 }
 
 trait WorkerFactory extends Factory {
-  def createInstance(
+  def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
     messageBusFactory: MessageBusFactory,
     storageFactory: StorageFactory,
-    statusUpdateIntervalInMillis: Option[Long],
-    loggingLevel: Int): Worker
+    statusUpdateIntervalInMillis: Long,
+    loggingLevel: Int): Worker[Id, Signal]
 }
 
 trait MessageBusFactory extends Factory {
-  def createInstance(numberOfWorkers: Int): MessageBus
+  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal]
 }
 
 trait StorageFactory extends Factory {
-  def createInstance: Storage
+  def createInstance[Id]: Storage[Id]
 }

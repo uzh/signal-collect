@@ -41,8 +41,8 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.util.Duration
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.Await

@@ -22,31 +22,37 @@ package com.signalcollect
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import scala.reflect.ClassTag
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
  *  functions to modify this configuration and a build function to instantiate a graph
  *  with the defined configuration. This object represents a graph builder that is initialized with the default configuration.
  */
-object GraphBuilder extends GraphBuilder(GraphConfiguration())
+object GraphBuilder extends GraphBuilder[Any, Any](GraphConfiguration())
 
 /**
  * Configurable builder for a Signal/Collect graph.
  *
  *  @author Philip Stutz
  */
-class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
+class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
 
   /**
    *  Creates a graph with the specified configuration.
    */
-  def build: Graph = new DefaultGraph(config)
+  def build: Graph[Id, Signal] = new DefaultGraph[Id, Signal](config)
 
   /**
    *  Configures if the console website on port 8080 is enabled.
    */
   def withConsole(newConsoleEnabled: Boolean) = newLocalBuilder(consoleEnabled = newConsoleEnabled)
 
+  /**
+   *  Configures if Akka message compression is enabled.
+   */
+  def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) = newLocalBuilder(akkaMessageCompression = newAkkaMessageCompression)
+  
   /**
    *  Configures the logging level.
    *
@@ -92,7 +98,7 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
   /**
    *  Configures the status update interval (in milliseconds).
    */
-  def withStatusUpdateInterval(newStatusUpdateInterval: Option[Long]) = newLocalBuilder(statusUpdateIntervalInMillis = newStatusUpdateInterval)
+  def withStatusUpdateInterval(newStatusUpdateInterval: Long) = newLocalBuilder(statusUpdateIntervalInMillis = newStatusUpdateInterval)
 
   /**
    *  Configures the Akka dispatcher for the worker actors.
@@ -117,10 +123,11 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,
-    statusUpdateIntervalInMillis: Option[Long] = config.statusUpdateIntervalInMillis,
+    statusUpdateIntervalInMillis: Long = config.statusUpdateIntervalInMillis,
     akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
-    nodeProvisioner: NodeProvisioner = config.nodeProvisioner): GraphBuilder = {
-    new GraphBuilder(
+    akkaMessageCompression: Boolean = config.akkaMessageCompression,
+    nodeProvisioner: NodeProvisioner = config.nodeProvisioner): GraphBuilder[Id, Signal] = {
+    new GraphBuilder[Id, Signal](
       GraphConfiguration(
         consoleEnabled = consoleEnabled,
         loggingLevel = loggingLevel,
@@ -130,6 +137,7 @@ class GraphBuilder(protected val config: GraphConfiguration = GraphConfiguration
         storageFactory = storageFactory,
         statusUpdateIntervalInMillis = statusUpdateIntervalInMillis,
         akkaDispatcher = akkaDispatcher,
+        akkaMessageCompression = akkaMessageCompression,
         nodeProvisioner = nodeProvisioner))
   }
 

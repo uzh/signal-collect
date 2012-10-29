@@ -21,8 +21,8 @@ package com.signalcollect.messaging
 
 import com.signalcollect.interfaces.VertexToWorkerMapper
 
-class DefaultVertexToWorkerMapper(numberOfWorkers: Int) extends VertexToWorkerMapper with Serializable {
-  def getWorkerIdForVertexId(vertexId: Any): Int = getWorkerIdForVertexIdHash(vertexId.hashCode)
+class DefaultVertexToWorkerMapper[Id](numberOfWorkers: Int) extends VertexToWorkerMapper[Id] with Serializable {
+  def getWorkerIdForVertexId(vertexId: Id): Int = getWorkerIdForVertexIdHash(vertexId.hashCode)
 
   //  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = (vertexIdHash % numberOfWorkers).abs (BAD PERFORMANCE!)
   def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = {

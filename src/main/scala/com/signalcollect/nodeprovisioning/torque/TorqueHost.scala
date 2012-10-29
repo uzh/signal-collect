@@ -27,6 +27,7 @@ import org.apache.commons.codec.binary.Base64
 import com.signalcollect.serialization.DefaultSerializer
 import java.io.FileOutputStream
 import java.net.URI
+import scala.language.postfixOps
 
 case class TorqueHost(
   torqueHostname: String,

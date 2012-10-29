@@ -39,14 +39,14 @@ class LocalNode extends Node {
   
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("no actor systme with name \"SignalCollect\" found."))
   
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String = {
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased=>
-        val worker = system.actorOf(Props[Worker].withCreator(creator()), name = workerName)
+        val worker = system.actorOf(Props[Worker[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
       case Pinned=>
-        val worker = system.actorOf(Props[Worker].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker = system.actorOf(Props[Worker[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
     }
   }

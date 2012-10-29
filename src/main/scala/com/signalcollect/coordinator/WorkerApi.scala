@@ -34,14 +34,13 @@ import akka.actor.ActorRef
 import scala.collection.mutable.ArrayBuffer
 import akka.actor.ActorSystem
 import akka.actor.Props
-import com.signalcollect.serialization.DefaultSerializer
 import scala.util.Random
 import scala.concurrent.Future
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
  */
-class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
+class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: VertexToWorkerMapper[Id]) {
 
   override def toString = "WorkerApi"
 
@@ -65,22 +64,22 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
 
   def recalculateScores = parallelWorkers foreach (_.recalculateScores)
 
-  def recalculateScoresForVertexWithId(vertexId: Any) = workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
+  def recalculateScoresForVertexWithId(vertexId: Id) = workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
 
   def shutdown = parallelWorkers foreach (_.shutdown)
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
+  def foreachVertex(f: (Vertex[Id, _]) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
     val aggregateArray: ParArray[ValueType] = parallelWorkers map (_.aggregate(aggregationOperation))
     aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
 
   def setSignalThreshold(t: Double) = parallelWorkers foreach (_.setSignalThreshold(t))
 
@@ -89,20 +88,12 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
   //----------------GraphEditor, BLOCKING variant-------------------------
 
   /**
-   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
-   *  Blocks until the operation has completed.
-   */
-  def sendSignal(signal: Any, edgeId: EdgeId) {
-    workers(mapper.getWorkerIdForVertexId(edgeId.targetId)).processSignal(SignalMessage(signal, edgeId))
-  }
-
-  /**
    *  Adds `vertex` to the graph.
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[_, _]) {
-    workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(DefaultSerializer.write(vertex))
+  def addVertex(vertex: Vertex[Id, _]) {
+    workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(vertex)
   }
 
   /**
@@ -111,17 +102,16 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addEdge(sourceId: Any, edge: Edge[_]) {
-    val serializedEdge = DefaultSerializer.write(edge)
-    workers(mapper.getWorkerIdForVertexId(sourceId)).addEdge(sourceId, serializedEdge)
-  }
-
+  def addEdge(sourceId: Id, edge: Edge[Id]) {
+    workers(mapper.getWorkerIdForVertexId(sourceId)).addEdge(sourceId, edge)
+   }
+  
   /**
-   *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
-   *  which will receive the respective vertex as a parameter.
+   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
+   *  Blocks until the operation has completed.
    */
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_]) {
-    workers map (_.addPatternEdge(sourceVertexPredicate, edgeFactory))
+  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+    workers(mapper.getWorkerIdForVertexId(targetId)).processSignal(signal, targetId, sourceId)
   }
 
   /**
@@ -129,7 +119,7 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *
    *  @note If no vertex with this id is found, then the operation is ignored and a warning is logged.
    */
-  def removeVertex(vertexId: Any) {
+  def removeVertex(vertexId: Id) {
     workers(mapper.getWorkerIdForVertexId(vertexId)).removeVertex(vertexId)
   }
 
@@ -139,14 +129,14 @@ class WorkerApi(val workers: Array[Worker], val mapper: VertexToWorkerMapper) {
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  def removeEdge(edgeId: EdgeId) {
+  def removeEdge(edgeId: EdgeId[Id]) {
     workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeEdge(edgeId)
   }
 
   /**
    * Runs a graph loading function on a worker
    */
-  def loadGraph(vertexIdHint: Option[Any], graphLoader: GraphEditor => Unit) {
+  def loadGraph(vertexIdHint: Option[Any], graphLoader: GraphEditor[Id, Signal] => Unit) {
     if (vertexIdHint.isDefined) {
       val workerId = vertexIdHint.get.hashCode % workers.length
       workers(workerId).loadGraph(graphLoader)

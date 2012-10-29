@@ -38,11 +38,13 @@ import org.specs2.runner.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
-  val computeGraphFactories: List[() => Graph] = List(() => GraphBuilder.build)
+  sequential
+  
+  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 
-  def test(graphProviders: List[() => Graph] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: Graph => Unit = (graph: Graph) => (), signalThreshold: Double = 0.01, collectThreshold: Double = 0): Boolean = {
+  def test(graphProviders: List[() => Graph[Any, Any]] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: Graph[Any, Any] => Unit = (graph: Graph[Any, Any]) => (), signalThreshold: Double = 0.01, collectThreshold: Double = 0): Boolean = {
     var correct = true
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
@@ -69,7 +71,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     correct
   }
 
-  def buildPageRankGraph(graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildPageRankGraph(graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
     edgeTuples foreach {
       case (sourceId: Int, targetId: Int) =>
         graph.addVertex(new PageRankVertex(sourceId, 0.85))
@@ -79,7 +81,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     graph
   }
 
-  def buildVertexColoringGraph(numColors: Int, graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildVertexColoringGraph(numColors: Int, graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         graph.addVertex(new VerifiedColoredVertex(sourceId, numColors))
@@ -89,7 +91,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     graph
   }
 
-  def buildSsspGraph(pathSourceId: Any, graph: Graph, edgeTuples: Traversable[Tuple2[Int, Int]]): Graph = {
+  def buildSsspGraph(pathSourceId: Any, graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
     edgeTuples foreach {
       case (sourceId, targetId) =>
         if (sourceId.equals(pathSourceId)) {

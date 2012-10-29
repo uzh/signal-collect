@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.AggregationOperation
+import scala.reflect.ClassTag
 
 /**
  *  Builds a map with the vertex ids as keys and the vertex states as values.
@@ -88,8 +89,7 @@ class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
  *
  *  @usecase CountVertices[Vertex]
  */
-class CountVertices[VertexType <: Vertex[_, _]: Manifest] extends AggregationOperation[Long] {
-  val m = manifest[VertexType]
+class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends AggregationOperation[Long] {
 
   val neutralElement: Long = 0l
 
@@ -102,10 +102,9 @@ class CountVertices[VertexType <: Vertex[_, _]: Manifest] extends AggregationOpe
    *  Returns 1 for vertices that match `VertexType`, 0 for other types
    */
   def extract(v: Vertex[_, _]): Long = {
-    if (m.erasure.isInstance(v)) {
-      1l
-    } else {
-      0l
+    v match {
+      case v: VertexType => 1l
+      case other         => 0l
     }
   }
 

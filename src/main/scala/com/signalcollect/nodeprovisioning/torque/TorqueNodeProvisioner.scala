@@ -41,8 +41,8 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.util.Duration
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -57,6 +57,7 @@ import com.signalcollect.messaging.AkkaProxy
 import akka.japi.Creator
 import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.typesafe.config.Config
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -73,8 +74,8 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
 }
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParameters: String) extends NodeProvisioner {
-  def getNodes: List[Node] = {
-    val system: ActorSystem = ActorSystem("NodeProvisioner", AkkaConfig.get)
+  def getNodes(akkaConfig: Config): List[Node] = {
+    val system: ActorSystem = ActorSystem("NodeProvisioner", akkaConfig)
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
     val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
@@ -83,7 +84,7 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParam
     for (jobId <- 0 until numberOfNodes) {
       val function: () => Map[String, String] = {
         () =>
-          val system = ActorSystem("SignalCollect", AkkaConfig.get)
+          val system = ActorSystem("SignalCollect", akkaConfig)
           val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
           val nodeController = system.actorOf(Props[NodeControllerActor].withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()

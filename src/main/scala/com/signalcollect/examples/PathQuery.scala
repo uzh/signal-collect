@@ -32,7 +32,6 @@ import scala.collection.mutable.LinkedList
 abstract class PathQueryNode extends Serializable {
   def matches(vertex: Vertex[_, _]): Boolean
   def expand: List[PathQueryNode] = List()
-
 }
 
 /**
@@ -47,10 +46,9 @@ class WildcardQueryNode(condition: Vertex[_, _] => Boolean = vertex => true) ext
  */
 class StarQueryNode(condition: Vertex[_, _] => Boolean = vertex => true, maxExpansion: Int = 1) extends WildcardQueryNode(condition) {
   override def expand: List[PathQueryNode] = {
-    if(maxExpansion > 0) {
-      List(new StarQueryNode(condition, maxExpansion-1))
-    }
-    else {
+    if (maxExpansion > 0) {
+      List(new StarQueryNode(condition, maxExpansion - 1))
+    } else {
       List()
     }
   }
@@ -65,7 +63,7 @@ class FixedQueryNode(id: Any) extends PathQueryNode {
 
 /**
  * A PathQuery is a chain of PathQueryNodes that specify which conditions a path through the graph
- * must fulfill in order to match the query. As the query is passed along matching nodes the matched 
+ * must fulfill in order to match the query. As the query is passed along matching nodes the matched
  * PathQueryNodes are removed from the active path query and stored in the matched path queue to keep track
  * of the matched nodes in the graph.
  */
@@ -75,7 +73,7 @@ class PathQuery() extends Serializable {
 
   /**
    * Match the head of the query to the provided vertex. If the match was successful a list follow-up queries is returned.
-   * 
+   *
    * @param vertex that should be matched to the head of the remaining path query.
    * @return a list of remaining queries after matching a vertex to the head of the unmatched path query or None if the head did not match the vertex.
    */
@@ -84,15 +82,15 @@ class PathQuery() extends Serializable {
       val remainingQuery = new PathQuery
       remainingQuery.matchedPath = matchedPath.enqueue(vertex.id)
       remainingQuery.unmatchedQuery = unmatchedQuery.tail
-      
-      val expandedQueryHeads = unmatchedQuery.head.expand 
+
+      val expandedQueryHeads = unmatchedQuery.head.expand
       val expandedQueries = expandedQueryHeads.map(queryHead => {
         val expandedQuery = new PathQuery
         expandedQuery.matchedPath = remainingQuery.matchedPath
         expandedQuery.prependQueryNode(queryHead)
         expandedQuery
       })
-      Some(remainingQuery::expandedQueries)
+      Some(remainingQuery :: expandedQueries)
     } else {
       None
     }
@@ -102,9 +100,9 @@ class PathQuery() extends Serializable {
    * Adds a PathQueryNode to the end of the unmatched query
    */
   def appendQueryNode(node: PathQueryNode) {
-    unmatchedQuery =  unmatchedQuery :+ node
+    unmatchedQuery = unmatchedQuery :+ node
   }
-  
+
   /**
    * Adds a PathQueryNode to the beginning of the unmatched query
    */
@@ -127,40 +125,39 @@ object ResultHandler {
  */
 class QueryNode
 
-class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(vertexId, state, null) {
+class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(vertexId, state) with ResetStateAfterSignaling[Int, List[PathQuery]] {
 
   type Signal = List[PathQuery]
 
-  def collect(oldState: List[PathQuery], uncollectedSignals: Iterable[List[PathQuery]], graphEditor: GraphEditor): List[PathQuery] = {
-    var state = oldState
-    for (queries <- uncollectedSignals) {
-      if (queries != null) {
-        for (query <- queries) {
-          if (query != null) {
-            query.getRemainingQuery(this) match {
-              case Some(restQueries) => {
-                for (restQuery <- restQueries) {
-                  if (restQuery.unmatchedQuery.size == 0) {
-                    ResultHandler.addPath(restQuery.matchedPath.toList)
-                  } else {
-                    if(state != null) {
-                      state = restQuery +: state
-                    }
-                    else { 
-                      state = List(restQuery)
-                    }
-                    
-                  }
-                }
+  val resetState = null
 
+  def collect(oldState: List[PathQuery], queries: List[PathQuery]): List[PathQuery] = {
+    var newState = oldState
+    if (queries != null) {
+      for (query <- queries) {
+        if (query != null) {
+          query.getRemainingQuery(this) match {
+            case Some(restQueries) => {
+              for (restQuery <- restQueries) {
+                if (restQuery.unmatchedQuery.size == 0) {
+                  ResultHandler.addPath(restQuery.matchedPath.toList)
+                } else {
+                  if (state != null) {
+                    newState = restQuery +: newState
+                  } else {
+                    newState = List(restQuery)
+                  }
+
+                }
               }
-              case _ =>
+
             }
+            case _ =>
           }
         }
       }
     }
-    state
+    newState
   }
 }
 
@@ -168,19 +165,17 @@ class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(
  * A little demo that builds a graph and looks for paths
  */
 object PathQueryExample extends App {
-  
+
   val graph = GraphBuilder.build
   val query = new PathQuery
-//  query.addQueryNode(new WildcardQueryNode)
-//  query.addQueryNode(new WildcardQueryNode)
-//  query.addQueryNode(new FixedQueryNode(3))
-//  query.addQueryNode(new WildcardQueryNode)
-//  query.addQueryNode(new FixedQueryNode(2))
-//  query.addQueryNode(new WildcardQueryNode)
-  query.appendQueryNode(new StarQueryNode(maxExpansion=5))
+  //  query.addQueryNode(new WildcardQueryNode)
+  //  query.addQueryNode(new WildcardQueryNode)
+  //  query.addQueryNode(new FixedQueryNode(3))
+  //  query.addQueryNode(new WildcardQueryNode)
+  //  query.addQueryNode(new FixedQueryNode(2))
+  //  query.addQueryNode(new WildcardQueryNode)
+  query.appendQueryNode(new StarQueryNode(maxExpansion = 5))
   query.appendQueryNode(new FixedQueryNode(2))
-  
-  
 
   graph.addVertex(new QueryVertex(0, List(query)))
   graph.addVertex(new QueryVertex(1, null))

@@ -20,8 +20,6 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces.VertexStore
 import com.signalcollect.Vertex
-import scala.util.MurmurHash
-import scala.annotation.tailrec
 
 // A special adaptation of IntHashMap[Vertex[_, _]].
 // We allow arbitrary types for the vertex id to make
@@ -33,15 +31,15 @@ import scala.annotation.tailrec
 // the key in this map. In order to handle (rare) collisions,
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
-class VertexMap(
+class VertexMap[@specialized(Int, Long) Id](
     initialSize: Int = 32768,
-    rehashFraction: Float = 0.75f) extends VertexStore {
+    rehashFraction: Float = 0.75f) extends VertexStore[Id] {
   assert(initialSize > 0)
   private[this] final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
-  private[this] final var values = new Array[Vertex[_, _]](maxSize)
+  private[this] final var values = new Array[Vertex[Id, _]](maxSize)
   private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
@@ -51,13 +49,13 @@ class VertexMap(
   private[this] final var numberOfElements = 0
 
   final def clear {
-    values = new Array[Vertex[_, _]](maxSize)
+    values = new Array[Vertex[Id, _]](maxSize)
     keys = new Array[Int](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  final def foreach[U](f: Vertex[_, _] => U) {
+  final def foreach(f: Vertex[Id, _] => Unit) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -71,7 +69,7 @@ class VertexMap(
   }
 
   // Removes the vertices after they have been processed.
-  final def process[U](p: Vertex[_, _] => U, numberOfVertices: Option[Int] = None) {
+  final def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None) {
     val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
     var elementsProcessed = 0
     while (elementsProcessed < limit) {
@@ -99,7 +97,7 @@ class VertexMap(
       val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
-      values = new Array[Vertex[_, _]](maxSize)
+      values = new Array[Vertex[Id, _]](maxSize)
       keys = new Array[Int](maxSize)
       mask = maxSize - 1
       numberOfElements = 0
@@ -115,11 +113,11 @@ class VertexMap(
     }
   }
 
-  final def remove(vertexId: Any) {
+  final def remove(vertexId: Id) {
     remove(vertexId, true)
   }
 
-  private final def remove(vertexId: Any, optimize: Boolean) {
+  private final def remove(vertexId: Id, optimize: Boolean) {
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
@@ -156,7 +154,7 @@ class VertexMap(
     }
   }
 
-  final def get(vertexId: Any): Vertex[_, _] = {
+  final def get(vertexId: Id): Vertex[Id, _] = {
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
@@ -172,12 +170,12 @@ class VertexMap(
   }
 
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
-  final def put(vertex: Vertex[_, _]): Boolean = {
+  final def put(vertex: Vertex[Id, _]): Boolean = {
     val key = idToKey(vertex.id)
     putWithKey(key, vertex)
   }
 
-  private[this] final def putWithKey(key: Int, vertex: Vertex[_, _]): Boolean = {
+  private[this] final def putWithKey(key: Int, vertex: Vertex[Id, _]): Boolean = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != 0 && (key != keyAtPosition || vertex.id != values(position).id)) {

@@ -23,15 +23,16 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.messaging.BulkMessageBus
+import scala.reflect.ClassTag
 
 object AkkaMessageBusFactory extends MessageBusFactory {
-  def createInstance(numberOfWorkers: Int): MessageBus = new DefaultMessageBus(numberOfWorkers)
+  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new DefaultMessageBus[Id, Signal](numberOfWorkers)
 }
 
 /**
  * Stores outgoing messages until 'flushThreshold' messages are queued for a worker.
- * Combines messages for the same vertex using 'combiner'. 
+ * Combines messages for the same vertex using 'combiner'.
  */
-class BulkAkkaMessageBusFactory(flushThreshold: Int, combiner: (Any, Any) => Any) extends MessageBusFactory {
-  def createInstance(numberOfWorkers: Int): MessageBus = new BulkMessageBus(numberOfWorkers, flushThreshold, combiner)
+class BulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
+  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold)
 }

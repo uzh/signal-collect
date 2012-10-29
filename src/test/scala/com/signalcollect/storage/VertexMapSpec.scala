@@ -36,7 +36,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
   "VertexMap" should {
 
     "support puts" in {
-      val vm = new VertexMap(8, 0.99f)
+      val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
       vm.put(new PageRankVertex(3))
@@ -46,7 +46,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
 
     // There was a bug, where the map was not optimized after processing.
     "optimize after processing one item" in {
-      val vm = new VertexMap(8, 0.99f)
+      val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -60,7 +60,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "optimize after processing several items" in {
-      val vm = new VertexMap(8, 0.99f)
+      val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -75,7 +75,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "remove all elements via processing" in {
-      val vm = new VertexMap(8, 0.99f)
+      val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -90,7 +90,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "handle special keys" in {
-      val vm = new VertexMap(8, 0.99f)
+      val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(Int.MinValue))
       vm.put(new PageRankVertex(Int.MaxValue))

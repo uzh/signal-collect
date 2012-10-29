@@ -38,8 +38,9 @@ case class GraphConfiguration(
   workerFactory: WorkerFactory = factory.worker.Akka,
   messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Option[Long] = Some(500l),
+  statusUpdateIntervalInMillis: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
+  akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner)
 
 object LoggingLevel {

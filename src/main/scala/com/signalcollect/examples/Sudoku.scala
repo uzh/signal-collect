@@ -44,7 +44,7 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVer
   var possibleValues = SudokuHelper.legalNumbers
   if (initialState.isDefined) possibleValues = Set(initialState.get)
 
-  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Option[Int] = {
+  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int]): Option[Int] = {
 
     //make a list of all possible values
     possibleValues = possibleValues -- mostRecentSignals.toSet
@@ -143,7 +143,7 @@ object Sudoku extends App {
   /**
    * Check if all cells have a value assigned to it
    */
-  def isDone(graph: Graph): Boolean = {
+  def isDone(graph: Graph[_ , _]): Boolean = {
     var isDone = true
     graph.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
@@ -152,7 +152,7 @@ object Sudoku extends App {
   /**
    * Recursive depth first search for possible values
    */
-  def tryPossibilities(graph: Graph): Graph = {
+  def tryPossibilities(graph: Graph[_, _]): Graph[_, _] = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
     graph.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
@@ -194,7 +194,7 @@ object Sudoku extends App {
     null
   }
 
-  def computeGraphFactory(seed: Map[Int, Int]): Graph = {
+  def computeGraphFactory(seed: Map[Int, Int]): Graph[_, _] = {
     val graph = GraphBuilder.build
 
     //Add all Cells for Sudoku

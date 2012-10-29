@@ -32,9 +32,7 @@ import scala.util._
 import scala.math
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.EdgeId
-
-
-
+import scala.language.postfixOps
 
 /**
  * Represents an Agent
@@ -46,83 +44,85 @@ import com.signalcollect.interfaces.EdgeId
 class DSANVertex(id: Any, constraints: Iterable[Constraint], possibleValues: Array[Int]) extends DataGraphVertex(id, 0.0) {
 
   type Signal = Double
-  var time: Int = 0								//time counter used for calculating temperature
+  var time: Int = 0 //time counter used for calculating temperature
   var oldState = possibleValues(0)
-  var utility: Double = 0						
-  var numberSatisfied: Int = 0					//number of satisfied constraints
-  val constTemp: Double = 100 					//constant for calculating temperature
+  var utility: Double = 0
+  var numberSatisfied: Int = 0 //number of satisfied constraints
+  val constTemp: Double = 100 //constant for calculating temperature
+  var graphEditor: GraphEditor[Any, Any] = _
+
+  override def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {
+    super.afterInitialization(graphEditor)
+    this.graphEditor = graphEditor
+  }
 
   /**
-   * The collect function chooses a new random state and chooses it if it improves over the old state, 
-   * or, if it doesn't it still chooses it (for exploring purposes) with probability decreasing with time 
+   * The collect function chooses a new random state and chooses it if it improves over the old state,
+   * or, if it doesn't it still chooses it (for exploring purposes) with probability decreasing with time
    */
-  def collect(oldState: Double, mostRecentSignals: Iterable[Double], graphEditor: GraphEditor): Double = {
-    
+  def collect(oldState: Double, mostRecentSignals: Iterable[Double]): Double = {
+
     time += 1
 
     val neighbourConfigs = (mostRecentSignalMap map {
       keyValueTuple =>
         (keyValueTuple._1 -> keyValueTuple._2.toDouble)
     })
-    
-    																			//Calculate utility and number of satisfied constraints for the current value
+
+    //Calculate utility and number of satisfied constraints for the current value
     val configs = neighbourConfigs + (id -> oldState)
     utility = (constraints map (_.utility(configs)) sum)
     numberSatisfied = constraints map (_.satisfiesInt(configs)) sum
 
-																				// Select randomly a value and adopt it with probability (e(delta/t_i)) when delta<=0 (to explore)
-																				// or with probability 1 otherwise
+    // Select randomly a value and adopt it with probability (e(delta/t_i)) when delta<=0 (to explore)
+    // or with probability 1 otherwise
     val r = new Random()
 
-																				//Calculate utility and number of satisfied constraints for the new value
-    val newStateIndex = r.nextInt(possibleValues.size) 
+    //Calculate utility and number of satisfied constraints for the new value
+    val newStateIndex = r.nextInt(possibleValues.size)
     val newState = possibleValues(newStateIndex)
     val newconfigs = neighbourConfigs + (id -> newState.toDouble)
     val newStateUtility = (constraints map (_.utility(newconfigs)) sum)
     val newNumberSatisfied = constraints map (_.satisfiesInt(newconfigs)) sum
-    
-    																			// delta is the difference between the utility of the new randomly selected state and the utility of the old state. 
-    																			// It is > 0 if the new state would lead to improvements
-    val delta = newStateUtility - utility 
 
-  /**
-   * The actual algorithm:
-   * 	If new state does not improve the utility (delta<=0), select it for exploring purposes with probability (e(delta/t_i)) or else keep the old state
-   * 	If new state does improve the utility (delta>0), select it instead of the old state
-   * t_i is the temperature which has to be a decreasing function of time. For this particular case we chose t_i = constTemp/(time*time) 
-   */
+    // delta is the difference between the utility of the new randomly selected state and the utility of the old state. 
+    // It is > 0 if the new state would lead to improvements
+    val delta = newStateUtility - utility
 
-    
-    if (delta <= 0) { 												//The new state does not improve utility
+    /**
+     * The actual algorithm:
+     * 	If new state does not improve the utility (delta<=0), select it for exploring purposes with probability (e(delta/t_i)) or else keep the old state
+     * 	If new state does improve the utility (delta>0), select it instead of the old state
+     * t_i is the temperature which has to be a decreasing function of time. For this particular case we chose t_i = constTemp/(time*time)
+     */
+
+    if (delta <= 0) { //The new state does not improve utility
       val adopt = r.nextDouble()
-      if (adopt < math.exp(delta * time * time/ constTemp)) {  			// We choose the new state (to explore) over the old state with probability (e(delta/t_i))
-        if (oldState == newState) 											//We send a dummy value to self to avoid blocking
-        	graphEditor.sendSignal(0.0, EdgeId(null, id))
+      if (adopt < math.exp(delta * time * time / constTemp)) { // We choose the new state (to explore) over the old state with probability (e(delta/t_i))
+        if (oldState == newState) //We send a dummy value to self to avoid blocking
+          graphEditor.sendSignal(0.0, id, None)
         utility = newStateUtility
         numberSatisfied = newNumberSatisfied
-        println("Vertex: "+id+" at time "+time+"; Case DELTA="+delta+"<= 0 and changed to state: "+newState +" instead of "+oldState+" with Adoption of new state prob ="+math.exp(delta * time * time/ constTemp)+" ")
+        println("Vertex: " + id + " at time " + time + "; Case DELTA=" + delta + "<= 0 and changed to state: " + newState + " instead of " + oldState + " with Adoption of new state prob =" + math.exp(delta * time * time / constTemp) + " ")
         return newState
-      } else { 															//With probability 1 - (e(delta/t_i)) we keep the old state which is better
-        graphEditor.sendSignal(0.0, EdgeId(null, id)) 							//We send a dummy value to self to avoid blocking
-        println("Vertex: "+id+" at time "+time+"; Case DELTA="+delta+"<= 0 and NOT changed to state: "+newState +" instead of "+oldState+" with Adoption of new state prob ="+math.exp(delta * time * time/ constTemp)+" ")
+      } else { //With probability 1 - (e(delta/t_i)) we keep the old state which is better
+        graphEditor.sendSignal(0.0, id, None) //We send a dummy value to self to avoid blocking
+        println("Vertex: " + id + " at time " + time + "; Case DELTA=" + delta + "<= 0 and NOT changed to state: " + newState + " instead of " + oldState + " with Adoption of new state prob =" + math.exp(delta * time * time / constTemp) + " ")
         return oldState
       }
-    } else { 														//The new state improves utility (delta>0), so we adopt the new state
+    } else { //The new state improves utility (delta>0), so we adopt the new state
       utility = newStateUtility
       numberSatisfied = newNumberSatisfied
-      println("Vertex: "+id+" at time "+time+"; Case DELTA="+delta+"> 0 and changed to state: "+newState +" instead of "+oldState)
+      println("Vertex: " + id + " at time " + time + "; Case DELTA=" + delta + "> 0 and changed to state: " + newState + " instead of " + oldState)
       return newState
     }
-    
 
-
-
-  }//end collect function
+  } //end collect function
 
   override def scoreSignal: Double = {
     lastSignalState match {
-      case Some(oldState) => 
-        if ( ( oldState == state ) && ( numberSatisfied == constraints.size ) ){  //computation is allowed to stop only if state has not changed and the utility is maximized
+      case Some(oldState) =>
+        if ((oldState == state) && (numberSatisfied == constraints.size)) { //computation is allowed to stop only if state has not changed and the utility is maximized
           0
         } else {
           1
@@ -131,28 +131,27 @@ class DSANVertex(id: Any, constraints: Iterable[Constraint], possibleValues: Arr
 
     }
 
-  }//end scoreSignal
+  } //end scoreSignal
 
-}//end DSANVertex class
+} //end DSANVertex class
 
 /** Builds an agents graph and executes the computation */
 object DSAN extends App {
 
   val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
-  
+
   println("From client: Graph built")
-  
+
   //Simple graph with 2 vertices
- 
-//  val c12:  Constraint = Variable(1) != Variable(2)
-//  
-//  graph.addVertex(new DSANVertex(1, Array(c12), Array(0, 1)))
-// 	graph.addVertex(new DSANVertex(2, Array(c12), Array(0, 1)))
-// 
-// 	graph.addEdge(new StateForwarderEdge(1, 2))
-// 	graph.addEdge(new StateForwarderEdge(2, 1))
-  
-  
+
+  //  val c12:  Constraint = Variable(1) != Variable(2)
+  //  
+  //  graph.addVertex(new DSANVertex(1, Array(c12), Array(0, 1)))
+  // 	graph.addVertex(new DSANVertex(2, Array(c12), Array(0, 1)))
+  // 
+  // 	graph.addEdge(new StateForwarderEdge(1, 2))
+  // 	graph.addEdge(new StateForwarderEdge(2, 1))
+
   //Graph with 6 nodes 
 
   val c12: Constraint = Variable(1) != Variable(2)
@@ -163,8 +162,6 @@ object DSAN extends App {
   val c35: Constraint = Variable(5) != Variable(3)
   val c56: Constraint = Variable(5) != Variable(6)
   val c26: Constraint = Variable(6) != Variable(2)
-
-
 
   graph.addVertex(new DSANVertex(1, Array(c12, c13), Array(0, 1, 2)))
   graph.addVertex(new DSANVertex(2, Array(c12, c23, c26), Array(0, 1, 2)))

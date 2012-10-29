@@ -32,7 +32,7 @@ class CWVertex(id: Any, selfPreference: Double = 1.0) extends DataGraphVertex(id
   
     type Signal = (Any, Double)
 
-    def collect(oldState: Any, mostRecentSignals: Iterable[(Any, Double)], graphEditor: GraphEditor): Any = {
+    def collect(oldState: Any, mostRecentSignals: Iterable[(Any, Double)]): Any = {
       //group most recent signals by clustering label
       val grouped = (((state, selfPreference))::mostRecentSignals.toList).groupBy(_._1)
       //sort the grouped list by the sum of all clustering label weights

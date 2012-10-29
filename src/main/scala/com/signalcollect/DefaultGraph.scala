@@ -23,11 +23,10 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
-import scala.concurrent.util.Duration._
-import scala.concurrent.util.Duration
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration._
 import com.signalcollect.configuration.TerminationReason
 import com.sun.management.OperatingSystemMXBean
-import scala.concurrent.util.Duration._
 import scala.concurrent.Await
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -46,22 +45,23 @@ import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.messaging._
 import com.signalcollect.logging.DefaultLogger
-import scala.concurrent.util.FiniteDuration
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.console.ConsoleServer
+import scala.reflect.ClassTag
+import scala.language.postfixOps
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator(workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, messageBusFactory: MessageBusFactory, storageFactory: StorageFactory, statusUpdateIntervalInMillis: Option[Long], loggingLevel: Int) extends Creator[Worker] {
-  def create: Worker = workerFactory.createInstance(workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, messageBusFactory: MessageBusFactory, storageFactory: StorageFactory, statusUpdateIntervalInMillis: Long, loggingLevel: Int) extends Creator[Worker[Id, Signal]] {
+  def create: Worker[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
 }
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
  */
-case class CoordinatorCreator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Creator[DefaultCoordinator] {
-  def create: DefaultCoordinator = new DefaultCoordinator(numberOfWorkers, messageBusFactory, loggingLevel)
+case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, loggingLevel)
 }
 
 /**
@@ -76,12 +76,17 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  *
  * Provisions the resources and initializes the workers and the coordinator.
  */
-class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extends Graph {
+class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+    val config: GraphConfiguration = GraphConfiguration()
+    ) extends Graph[Id, Signal] {
 
-  val system: ActorSystem = ActorSystem("SignalCollect", AkkaConfig.get)
+  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
+  override def toString: String = "DefaultGraph"
+  
+  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
   ActorSystemRegistry.register(system)
   
-  val nodes = config.nodeProvisioner.getNodes
+  val nodes = config.nodeProvisioner.getNodes(akkaConfig)
   
   val numberOfWorkers = nodes.par map(_.numberOfCores) sum
   
@@ -93,7 +98,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     var workerId = 0
     for (node <- nodes) {
       for (core <- 0 until node.numberOfCores) {
-    	 val workerCreator = WorkerCreator(workerId, config.workerFactory, numberOfWorkers, config.messageBusFactory, config.storageFactory, config.statusUpdateIntervalInMillis, config.loggingLevel)
+    	 val workerCreator = WorkerCreator[Id, Signal](workerId, config.workerFactory, numberOfWorkers, config.messageBusFactory, config.storageFactory, config.statusUpdateIntervalInMillis, config.loggingLevel)
          val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
          actors(workerId) = system.actorFor(workerName)
          workerId += 1
@@ -103,10 +108,10 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   }
   
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator(numberOfWorkers, config.messageBusFactory, config.loggingLevel)
+    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.loggingLevel)
     config.akkaDispatcher match {
-        case EventBased => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create), name = "Coordinator")
-        case Pinned => system.actorOf(Props[DefaultCoordinator].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+        case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
+        case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
   
@@ -115,8 +120,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
   }
 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker](_))
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator](coordinatorActor)
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_))
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
     
@@ -310,7 +315,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   
   def awaitIdle {
     implicit val timeout = Timeout(Duration.create(1000, TimeUnit.DAYS))
-    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
+    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
     try {
       val result = Await.result(resultFuture, timeout.duration)
     }
@@ -319,7 +324,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
     if (timeoutNanoseconds > 1000000000) {
       implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
-      val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator, s: ActorRef) => s ! IsIdle(true))
+      val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
       try {
         val result = Await.result(resultFuture, timeout.duration)
         true
@@ -344,7 +349,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
 
   def recalculateScores = workerApi.recalculateScores
 
-  def recalculateScoresForVertexWithId(vertexId: Any) = workerApi.recalculateScoresForVertexWithId(vertexId)
+  def recalculateScoresForVertexWithId(vertexId: Id) = workerApi.recalculateScoresForVertexWithId(vertexId)
 
   def isIdle = coordinatorProxy.isIdle
 
@@ -361,17 +366,17 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
     system.awaitTermination
   }
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[_, _]) => Unit) = workerApi.foreachVertex(f)
+  def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
     workerApi.aggregate(aggregationOperation)
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
   //------------------GraphApi------------------
 
@@ -379,8 +384,8 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *  Sends `signal` to the vertex with id `vertexId` using the virtual edge id 'edgeId'.
    *  Blocks until the operation has completed if `blocking` is true.
    */
-  def sendSignal(signal: Any, edgeId: EdgeId, blocking: Boolean) {
-    graphEditor.sendSignal(signal, edgeId, blocking)
+  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean) {
+    graphEditor.sendSignal(signal, targetId, sourceId, blocking)
   }
 
   /**
@@ -388,7 +393,7 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[_, _], blocking: Boolean = false) {
+  def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
     graphEditor.addVertex(vertex, blocking)
   }
 
@@ -398,24 +403,16 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-   def addEdge(sourceVertexId: Any, edge: Edge[_], blocking: Boolean) {
+   def addEdge(sourceVertexId: Id, edge: Edge[Id], blocking: Boolean) {
     graphEditor.addEdge(sourceVertexId, edge, blocking)
    }
-
-  /**
-   *  Adds edges to vertices that satisfy `sourceVertexPredicate`. The edges added are created by `edgeFactory`,
-   *  which will receive the respective vertex as a parameter.
-   */
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_], blocking: Boolean = false) {
-    graphEditor.addPatternEdge(sourceVertexPredicate, edgeFactory, blocking)
-  }
 
   /**
    *  Removes the vertex with id `vertexId` from the graph.
    *
    *  @note If no vertex with this id is found, then the operation is ignored and a warning is logged.
    */
-  def removeVertex(vertexId: Any, blocking: Boolean = false) {
+  def removeVertex(vertexId: Id, blocking: Boolean = false) {
     graphEditor.removeVertex(vertexId, blocking)
   }
 
@@ -425,11 +422,11 @@ class DefaultGraph(val config: GraphConfiguration = GraphConfiguration()) extend
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  def removeEdge(edgeId: EdgeId, blocking: Boolean = false) {
+  def removeEdge(edgeId: EdgeId[Id], blocking: Boolean = false) {
     graphEditor.removeEdge(edgeId, blocking)
   }
   
-  def loadGraph(vertexIdHint: Option[Any] = None, graphLoader: GraphEditor => Unit, blocking: Boolean = false) {
+  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean = false) {
     graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
   }
   

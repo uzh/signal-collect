@@ -33,7 +33,7 @@ import com.signalcollect.configuration.ExecutionMode
 class GameOfLifeCell(id: Any, initialState: Int) extends DataGraphVertex(id, initialState) {
   type Signal = Int
 
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
     val numberOfAliveNeighbors = mostRecentSignals.sum
     numberOfAliveNeighbors match {
       case 0 => 0 // dies of loneliness

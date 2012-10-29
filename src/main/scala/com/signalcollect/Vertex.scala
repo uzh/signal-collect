@@ -22,7 +22,6 @@ package com.signalcollect
 import com.signalcollect.interfaces.SignalMessage
 import collection.immutable.Map
 import collection.Iterable
-import com.signalcollect.interfaces.EdgeId
 import scala.collection.mutable.IndexedSeq
 
 /**
@@ -30,7 +29,7 @@ import scala.collection.mutable.IndexedSeq
  *
  *  @author Philip Stutz
  */
-trait Vertex[Id, State] extends Serializable {
+trait Vertex[+Id, State] extends Serializable {
 
   override def hashCode = id.hashCode
 
@@ -54,19 +53,19 @@ trait Vertex[Id, State] extends Serializable {
    *  Adds a new outgoing `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addEdge(e: Edge[_], graphEditor: GraphEditor): Boolean
+  def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean
 
   /**
    *  Removes an outgoing `Edge` from this `Vertex`.
    *  @param edgeId the edge id to be removed
    *  @return returns if an edge was removed
    */
-  def removeEdge(targetId: Any, graphEditor: GraphEditor): Boolean
+  def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean
 
   /**
    *  Removes all outgoing `Edge`s from this `Vertex`, returns the number of edges that were removed.
    */
-  def removeAllEdges(graphEditor: GraphEditor): Int
+  def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int
 
   /**
    *  Delivers signals that are addressed to this specific vertex
@@ -75,19 +74,19 @@ trait Vertex[Id, State] extends Serializable {
    *
    *  @return true if the vertex decided to collect immediately.
    */
-  def deliverSignal(signal: SignalMessage[_]): Boolean
+  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean
 
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
    *  `Worker` implementations).
    */
-  def executeSignalOperation(graphEditor: GraphEditor)
+  def executeSignalOperation(graphEditor: GraphEditor[Any, Any])
 
   /**
    *  Tells this vertex to execute the `collect` method.
    */
-  def executeCollectOperation(graphEditor: GraphEditor)
+  def executeCollectOperation(graphEditor: GraphEditor[Any, Any])
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -112,11 +111,11 @@ trait Vertex[Id, State] extends Serializable {
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
    */
-  def afterInitialization(graphEditor: GraphEditor)
+  def afterInitialization(graphEditor: GraphEditor[Any, Any])
 
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(graphEditor: GraphEditor)
+  def beforeRemoval(graphEditor: GraphEditor[Any, Any])
 
 }

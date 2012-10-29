@@ -41,8 +41,8 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.util.Duration
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration._
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -63,14 +63,14 @@ class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends A
 
   def shutdown = context.system.shutdown
   
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String = {
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased => 
-        val worker = context.system.actorOf(Props[Worker].withCreator(creator()), name = workerName)
+        val worker = context.system.actorOf(Props[Worker[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>
-        val worker = context.system.actorOf(Props[Worker].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker = context.system.actorOf(Props[Worker[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
     }
   }

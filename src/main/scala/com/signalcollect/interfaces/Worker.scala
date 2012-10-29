@@ -23,32 +23,29 @@ import com.signalcollect._
 import akka.actor.Actor
 import scala.concurrent.Future
 
-trait Worker extends Actor with MessageRecipientRegistry with Logging {
+trait Worker[Id, Signal] extends Actor with MessageRecipientRegistry with Logging {
 
   override def toString = this.getClass.getSimpleName
   def workerId: Int
   
-  def processSignal(signal: SignalMessage[_])
+  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
 
-  def addVertex(serializedVertex: Array[Byte]) // object should be created in the heap of the thread which uses its
-  def addEdge(sourceId: Any, serializedEdge: Array[Byte]) // object should be created in the heap of the thread which uses its
-  def addVertex(vertex: Vertex[_, _])
-  def addEdge(sourceId: Any, edge: Edge[_])
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_])
-  def removeVertex(vertexId: Any)
-  def removeEdge(edgeId: EdgeId)
-  def loadGraph(graphLoader: GraphEditor => Unit)
+  def addVertex(vertex: Vertex[Id, _])
+  def addEdge(sourceId: Id, edge: Edge[Id])
+  def removeVertex(vertexId: Id)
+  def removeEdge(edgeId: EdgeId[Id])
+  def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit)
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit)
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
 
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)
 
   def recalculateScores
-  def recalculateScoresForVertexWithId(vertexId: Any)
+  def recalculateScoresForVertexWithId(vertexId: Id)
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType
-  def foreachVertex(f: Vertex[_, _] => Unit)
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
+  def foreachVertex(f: Vertex[Id, _] => Unit)
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 

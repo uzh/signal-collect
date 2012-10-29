@@ -57,7 +57,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
    * The collect function calculates the rank of this vertex based on the rank
    *  received from neighbors and the damping factor.
    */
-  def collect(oldState: Double, mostRecentSignals: Iterable[Double], graphEditor: GraphEditor): Double = {
+  def collect(oldState: Double, mostRecentSignals: Iterable[Double]): Double = {
     1 - dampingFactor + dampingFactor * mostRecentSignals.sum
   }
 

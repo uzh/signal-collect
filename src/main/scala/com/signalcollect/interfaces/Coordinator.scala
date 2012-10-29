@@ -26,15 +26,15 @@ import com.signalcollect.coordinator.WorkerApi
 /**
  * Required because a Java Dynamic Proxy can only work with interfaces
  */
-trait Coordinator extends Actor with MessageRecipientRegistry with Logging {
+trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logging {
 
   override def toString = this.getClass.getSimpleName
 
   def isIdle: Boolean
 
-  def getWorkerApi: WorkerApi  //TODO remove dependency on class inside of an implementation package.
+  def getWorkerApi: WorkerApi[Id, Signal]  //TODO remove dependency on class inside of an implementation package.
   
-  def getGraphEditor: GraphEditor
+  def getGraphEditor: GraphEditor[Id, Signal]
   
   def getGlobalInboxSize: Long
 }

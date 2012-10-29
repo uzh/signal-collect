@@ -20,48 +20,56 @@
 package com.signalcollect.messaging
 
 import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.BulkSignal
+import scala.reflect.ClassTag
 
-class BulkMessageBus(numWorkers: Int, flushThreshold: Int, combine: (Any, Any) => Any)
-    extends DefaultMessageBus(numWorkers) {
+class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
+  private var itemCount = 0
+  def numberOfItems = itemCount
+  def isFull: Boolean = itemCount == size
+  final val targetIds = new Array[Id](size)
+  final val signals = new Array[Signal](size)
+  def addSignal(targetId: Id, signal: Signal) {
+    targetIds(itemCount) = targetId
+    signals(itemCount) = signal
+    itemCount += 1
+  }
+}
 
-  val emptyMap = Map[Any, Any]()
+class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](val numberOfWorkers: Int, flushThreshold: Int)
+    extends AbstractMessageBus[Id, Signal] {
 
-  val outgoingMessages: Array[Map[Any, Any]] = new Array[Map[Any, Any]](numWorkers)
+  val outgoingMessages: Array[SignalBulker[Id, Signal]] = new Array[SignalBulker[Id, Signal]](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {
-    outgoingMessages(i) = emptyMap
+    outgoingMessages(i) = new SignalBulker[Id, Signal](flushThreshold)
   }
 
   override def flush {
     var workerId = 0
     while (workerId < numberOfWorkers) {
-      val signalsForWorker = outgoingMessages(workerId)
-      if (!signalsForWorker.isEmpty) {
-        super.sendToWorker(workerId, signalsForWorker.toArray)
-        outgoingMessages(workerId) = emptyMap
+      val bulker = outgoingMessages(workerId)
+      val signalCount = bulker.numberOfItems
+      if (signalCount > 0) {
+        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds.slice(0, signalCount), bulker.signals.slice(0, signalCount)))
+        outgoingMessages(workerId) = new SignalBulker[Id, Signal](flushThreshold)
       }
       workerId += 1
     }
   }
 
-  override def sendToWorker(workerId: Int, message: Any) {
-    message match {
-      case SignalMessage(signal, edgeId) =>
-        val signalsForWorker = outgoingMessages(workerId)
-        var signalForVertex = signalsForWorker.get(edgeId.targetId)
-        signalForVertex match {
-          case Some(oldSignal) =>
-            outgoingMessages(workerId) = signalsForWorker + ((edgeId.targetId, signal.asInstanceOf[Float] + oldSignal.asInstanceOf[Float]))
-          case None =>
-            val updatedMap = signalsForWorker + ((edgeId.targetId, signal))
-            if (updatedMap.size > flushThreshold) {
-              outgoingMessages(workerId) = emptyMap
-              super.sendToWorker(workerId, signalsForWorker.toArray)
-            } else {
-              outgoingMessages(workerId) = updatedMap
-            }
-        }
-      case other =>
-        super.sendToWorker(workerId, message)
+  override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
+    if (blocking) {
+      // Use proxy.
+      workerApi.sendSignal(signal, targetId, sourceId)
+    } else {
+      val workerId = mapper.getWorkerIdForVertexId(targetId)
+      val bulker = outgoingMessages(workerId)
+      bulker.addSignal(targetId, signal)
+      if (bulker.isFull) {
+        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds, bulker.signals))
+        outgoingMessages(workerId) = new SignalBulker[Id, Signal](flushThreshold)
+      }
     }
   }
+
 }

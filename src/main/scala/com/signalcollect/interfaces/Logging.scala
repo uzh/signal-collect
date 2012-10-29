@@ -23,7 +23,7 @@ import com.signalcollect.configuration.LoggingLevel
 
 trait Logging {
 
-  protected def messageBus: MessageBus
+  protected def messageBus: MessageBus[_, _]
   protected val loggingLevel: Int // = LoggingLevel.Warning
 
   lazy val from = this.toString

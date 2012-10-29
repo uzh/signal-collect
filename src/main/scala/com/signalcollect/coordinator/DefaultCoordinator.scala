@@ -36,21 +36,23 @@ import java.util.{ HashMap, Map }
 import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.messaging.Request
+import scala.reflect.ClassTag
+import scala.language.postfixOps
 
 // special command for coordinator
-case class OnIdle(action: (DefaultCoordinator, ActorRef) => Unit)
+case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator with ActorLogging {
+class DefaultCoordinator[Id : ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
 
-  val messageBus: MessageBus = {
-    messageBusFactory.createInstance(numberOfWorkers)
+  val messageBus: MessageBus[Id, Signal] = {
+    messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
   protected val workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
@@ -70,7 +72,7 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
       }
     case Request(command, reply) =>
       try {
-        val result = command.asInstanceOf[Coordinator => Any](this)
+        val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
           sender ! result
         }
@@ -92,12 +94,12 @@ class DefaultCoordinator(numberOfWorkers: Int, messageBusFactory: MessageBusFact
     for ((from, action) <- onIdleList) {
       action(this, from)
     }
-    onIdleList = List[(ActorRef, (DefaultCoordinator, ActorRef) => Unit)]()
+    onIdleList = List[(ActorRef, (DefaultCoordinator[Id, Signal], ActorRef) => Unit)]()
   }
 
   var waitingStart = System.nanoTime
 
-  var onIdleList = List[(ActorRef, (DefaultCoordinator, ActorRef) => Unit)]()
+  var onIdleList = List[(ActorRef, (DefaultCoordinator[Id, Signal], ActorRef) => Unit)]()
 
   protected lazy val workerApi = messageBus.getWorkerApi
   def getWorkerApi = workerApi

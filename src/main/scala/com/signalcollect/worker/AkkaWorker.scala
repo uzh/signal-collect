@@ -33,8 +33,7 @@ import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
 import com.signalcollect._
-import com.signalcollect.serialization.DefaultSerializer
-import concurrent.util.duration._
+import scala.concurrent.duration._
 import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
 import akka.actor.ActorRef
@@ -48,6 +47,8 @@ import akka.dispatch.MessageQueue
 import com.signalcollect.messaging.Request
 import scala.collection.mutable.IndexedSeq
 import collection.JavaConversions._
+import scala.reflect.ClassTag
+import scala.language.reflectiveCalls
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -60,26 +61,27 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-object MaySignal
+object MaySignal extends Serializable
 
-class AkkaWorker(val workerId: Int,
-                 val numberOfWorkers: Int,
-                 val messageBusFactory: MessageBusFactory,
-                 val storageFactory: StorageFactory,
-                 val statusUpdateIntervalInMillis: Option[Long],
-                 val loggingLevel: Int)
-    extends Worker with ActorLogging {
+class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+  val workerId: Int,
+  val numberOfWorkers: Int,
+  val messageBusFactory: MessageBusFactory,
+  val storageFactory: StorageFactory,
+  val statusUpdateIntervalInMillis: Long,
+  val loggingLevel: Int)
+    extends Worker[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
-  val messageBus: MessageBus = {
-    messageBusFactory.createInstance(numberOfWorkers)
+  val messageBus: MessageBus[Id, Signal] = {
+    messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(5 milliseconds)
+  context.setReceiveTimeout(5.milliseconds)
 
   def isInitialized = messageBus.isInitialized
 
@@ -112,54 +114,52 @@ class AkkaWorker(val workerId: Int,
   val messageQueue: MessageQueue = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue
 
   def performComputations {
-    if (statusUpdateIntervalInMillis.isDefined) {
-      val currentTime = System.currentTimeMillis
-      if (currentTime - lastStatusUpdate > updateInterval) {
-        lastStatusUpdate = currentTime
-        sendStatusToCoordinator
-      }
+    val currentTime = System.currentTimeMillis
+    if (currentTime - lastStatusUpdate > updateInterval) {
+      lastStatusUpdate = currentTime
+      sendStatusToCoordinator
     }
     if (!isPaused) {
-      while (!messageQueue.hasMessages && !isConverged) {
-        scheduleOperations
-      }
+      scheduleOperations
     }
   }
 
   def scheduleOperations {
-    vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
-    vertexStore.toCollect.process({ vertex =>
-      val collectExecuted = executeCollectOperationOfVertex(vertex, addToSignal = false)
-      if (collectExecuted) {
-        executeSignalOperationOfVertex(vertex)
-      }
-    })
+    while (!messageQueue.hasMessages && !isConverged) {
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
+      vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    }
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphEditor: GraphEditor = new WorkerGraphEditor(this, messageBus)
-  protected var undeliverableSignalHandler: (SignalMessage[_], GraphEditor) => Unit = (s, g) => {}
+  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(this, messageBus)
+  protected val vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]] // Vertex graph edits are not typesafe.
+  protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
 
-  protected val updateInterval: Long = statusUpdateIntervalInMillis.getOrElse(Long.MaxValue)
+  protected val updateInterval: Long = statusUpdateIntervalInMillis
 
   var maySignal = false
   var awaitingSignalPermission = false
 
   protected def process(message: Any) {
+
     counters.messagesReceived += 1
     message match {
-      case s: SignalMessage[_] =>
-        processSignal(s)
-      case bulkSignal: Array[(Any, Any)] =>
-        for ((vertexId, signal) <- bulkSignal) {
-          processSignal(SignalMessage(signal, EdgeId(null, vertexId)))
+      case s: SignalMessage[Id, Signal] =>
+        processSignal(s.signal, s.targetId, s.sourceId)
+      case bulkSignal: BulkSignal[Id, Signal] =>
+        val size = bulkSignal.signals.length
+        var i = 0
+        while (i < size) {
+          processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+          i += 1
         }
       case MaySignal =>
         maySignal = true
         awaitingSignalPermission = false
       case Request(command, reply) =>
         try {
-          val result = command.asInstanceOf[Worker => Any](this)
+          val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
           if (reply) {
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
               messageBus.sendToActor(sender, None)
@@ -176,59 +176,39 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def addVertex(serializedVertex: Array[Byte]) {
-    val vertex = DefaultSerializer.read[Vertex[_, _]](serializedVertex)
-    addVertex(vertex)
-  }
-
-  def addEdge(sourceId: Any, serializedEdge: Array[Byte]) {
-    val edge = DefaultSerializer.read[Edge[_]](serializedEdge)
-    addEdge(sourceId, edge)
-  }
-
-  def addVertex(vertex: Vertex[_, _]) {
+  def addVertex(vertex: Vertex[Id, _]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
-      try {
-        vertex.afterInitialization(graphEditor)
-      } catch {
-        case t: Throwable => severe(t)
-      }
+      vertex.afterInitialization(vertexGraphEditor)
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
     }
   }
 
-  def addEdge(sourceId: Any, edge: Edge[_]) {
+  def addEdge(sourceId: Id, edge: Edge[Id]) {
     val vertex = vertexStore.vertices.get(sourceId)
     if (vertex != null) {
-      if (vertex.addEdge(edge, graphEditor)) {
+      if (vertex.addEdge(edge, vertexGraphEditor)) {
         counters.outgoingEdgesAdded += 1
-        vertexStore.toCollect.put(vertex)
-        vertexStore.toSignal.put(vertex)
+        if (vertex.scoreSignal > signalThreshold) {
+          vertexStore.toSignal.put(vertex)
+        }
       }
     } else {
       warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
     }
   }
 
-  def addPatternEdge(sourceVertexPredicate: Vertex[_, _] => Boolean, edgeFactory: Vertex[_, _] => Edge[_]) {
-    for (vertex <- vertexStore.vertices) {
-      if (sourceVertexPredicate(vertex)) {
-        addEdge(vertex.id, edgeFactory(vertex))
-      }
-    }
-  }
-
-  def removeEdge(edgeId: EdgeId) {
+  def removeEdge(edgeId: EdgeId[Id]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
-      if (vertex.removeEdge(edgeId.targetId, graphEditor)) {
+      if (vertex.removeEdge(edgeId.targetId, vertexGraphEditor)) {
         counters.outgoingEdgesRemoved += 1
-        vertexStore.toCollect.put(vertex)
-        vertexStore.toSignal.put(vertex)
+        if (vertex.scoreSignal > signalThreshold) {
+          vertexStore.toSignal.put(vertex)
+        }
       } else {
         warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
@@ -237,7 +217,7 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def removeVertex(vertexId: Any) {
+  def removeVertex(vertexId: Id) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
@@ -246,19 +226,19 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  protected def processRemoveVertex(vertex: Vertex[_, _]) {
-    val edgesRemoved = vertex.removeAllEdges(graphEditor)
+  protected def processRemoveVertex(vertex: Vertex[Id, _]) {
+    val edgesRemoved = vertex.removeAllEdges(vertexGraphEditor)
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
-    vertex.beforeRemoval(graphEditor)
+    vertex.beforeRemoval(vertexGraphEditor)
     vertexStore.vertices.remove(vertex.id)
   }
 
-  def loadGraph(graphLoader: GraphEditor => Unit) {
+  def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
     graphLoader(graphEditor)
   }
 
-  def setUndeliverableSignalHandler(h: (SignalMessage[_], GraphEditor) => Unit) {
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
     undeliverableSignalHandler = h
   }
 
@@ -274,19 +254,19 @@ class AkkaWorker(val workerId: Int,
     vertexStore.vertices.foreach(recalculateVertexScores(_))
   }
 
-  def recalculateScoresForVertexWithId(vertexId: Any) {
+  def recalculateScoresForVertexWithId(vertexId: Id) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       recalculateVertexScores(vertex)
     }
   }
 
-  protected def recalculateVertexScores(vertex: Vertex[_, _]) {
+  protected def recalculateVertexScores(vertex: Vertex[Id, _]) {
     vertexStore.toCollect.put(vertex)
     vertexStore.toSignal.put(vertex)
   }
 
-  def forVertexWithId[VertexType <: Vertex[_, _], ResultType](vertexId: Any, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       val result = f(vertex.asInstanceOf[VertexType])
@@ -296,7 +276,7 @@ class AkkaWorker(val workerId: Int,
     }
   }
 
-  def foreachVertex(f: Vertex[_, _] => Unit) {
+  def foreachVertex(f: Vertex[Id, _] => Unit) {
     vertexStore.vertices.foreach(f)
   }
 
@@ -345,7 +325,7 @@ class AkkaWorker(val workerId: Int,
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
   }
 
-  def shutdown { }
+  def shutdown {}
 
   protected var shouldShutdown = false
   protected var isIdle = false
@@ -358,7 +338,7 @@ class AkkaWorker(val workerId: Int,
 
   protected var lastStatusUpdate = System.currentTimeMillis
 
-  protected val vertexStore = storageFactory.createInstance
+  protected val vertexStore = storageFactory.createInstance[Id]
 
   protected def isConverged =
     vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
@@ -378,61 +358,38 @@ class AkkaWorker(val workerId: Int,
   }
 
   protected def setIdle(newIdleState: Boolean) {
-    if (isIdle != newIdleState) {
-      if (isInitialized) {
-        isIdle = newIdleState
-        sendStatusToCoordinator
-      }
+    if (isInitialized && isIdle != newIdleState) {
+      isIdle = newIdleState
+      sendStatusToCoordinator
     }
   }
 
-  protected def executeCollectOperationOfVertex(vertex: Vertex[_, _], addToSignal: Boolean = true): Boolean = {
-    var hasCollected = false
-    if (vertex != null) {
-      if (vertex.scoreCollect > collectThreshold) {
-        try {
-          counters.collectOperationsExecuted += 1
-          vertex.executeCollectOperation(graphEditor)
-          hasCollected = true
-          if (addToSignal && vertex.scoreSignal > signalThreshold) {
-            vertexStore.toSignal.put(vertex)
-          }
-        } catch {
-          case t: Throwable => severe(t)
-        }
-      }
+  protected def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
+    counters.collectOperationsExecuted += 1
+    vertex.executeCollectOperation(vertexGraphEditor)
+    if (addToSignal && vertex.scoreSignal > signalThreshold) {
+      vertexStore.toSignal.put(vertex)
     }
-    hasCollected
   }
 
-  protected def executeSignalOperationOfVertex(vertex: Vertex[_, _]): Boolean = {
-    var hasSignaled = false
-    if (vertex != null) {
-      if (vertex.scoreSignal > signalThreshold) {
-        try {
-          vertex.executeSignalOperation(graphEditor)
-          counters.signalOperationsExecuted += 1
-          hasSignaled = true
-        } catch {
-          case t: Throwable => severe(t)
-        }
-      }
-    }
-    hasSignaled
+  protected def executeSignalOperationOfVertex(vertex: Vertex[Id, _]) {
+    counters.signalOperationsExecuted += 1
+    vertex.executeSignalOperation(vertexGraphEditor)
   }
 
-  def processSignal(signal: SignalMessage[_]) {
-    debug(signal)
-    val vertex = vertexStore.vertices.get(signal.edgeId.targetId)
+  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+    val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
-      if (vertex.deliverSignal(signal)) {
+      if (vertex.deliverSignal(signal, sourceId)) {
         counters.collectOperationsExecuted += 1
-        vertexStore.toSignal.put(vertex)
+        if (vertex.scoreSignal > signalThreshold) {
+          vertexStore.toSignal.put(vertex)
+        }
       } else {
         vertexStore.toCollect.put(vertex)
       }
     } else {
-      undeliverableSignalHandler(signal, graphEditor)
+      undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
     }
   }
 

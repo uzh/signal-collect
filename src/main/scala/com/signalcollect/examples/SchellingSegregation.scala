@@ -32,7 +32,7 @@ import com.signalcollect.interfaces.AggregationOperation
 class SegregationAgent(id: Any, initialState: Int, equalityThreshold: Float) extends DataGraphVertex(id, initialState) {
   type Signal = Int
 
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Int = {
+  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
     val equalNeighborsCount = (mostRecentSignals filter (_ equals this.state)).size
     val totalNeighborsCount = mostRecentSignals.size
     if (equalNeighborsCount.toFloat / totalNeighborsCount >= equalityThreshold) {

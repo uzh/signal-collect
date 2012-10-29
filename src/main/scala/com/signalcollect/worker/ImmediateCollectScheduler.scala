@@ -1,10 +1,16 @@
 package com.signalcollect.worker
 
-trait ImmediateCollectScheduler extends AkkaWorker {
+trait ImmediateCollectScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
   override def scheduleOperations {
-    vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    if (!vertexStore.toCollect.isEmpty) {
+      vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    }
     if (maySignal && !vertexStore.toSignal.isEmpty) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
+      val maxSignalingTime = 50000000 // 50 milliseconds
+      val signalingStart = System.nanoTime
+      do {
+        vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(100))
+      } while (System.nanoTime - signalingStart < maxSignalingTime)
       messageBus.flush
       maySignal = false
     }

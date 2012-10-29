@@ -40,7 +40,10 @@ class Path(t: Any) extends OptionalSignalEdge(t) {
    *  edge (= the weight of this edge).
    */
   def signal(sourceVertex: Vertex[_, _]) = {
-    sourceVertex.asInstanceOf[Location].state map (_ + weight.toInt)
+    sourceVertex.state match {
+      case None                => None
+      case Some(distance: Int) => Some(distance + weight.toInt)
+    }
   }
 }
 
@@ -48,11 +51,11 @@ class Path(t: Any) extends OptionalSignalEdge(t) {
  * Represents a location in a SSSP compute graph
  *
  *  @param id: the identifier of this vertex
- *  @param initialDIstance: the initial distance of this vertex to the source location
+ *  @param initialDistance: the initial distance of this vertex to the source location
  *  if the distance is Int.MaxValue this means that there is no known path. If the distance is
  *  0 this means that this vertex is the source location.
  */
-class Location(vertexId: Any, initialState: Option[Int] = None) extends DataGraphVertex(vertexId, initialState) {
+class Location(vertexId: Any, initialState: Option[Int] = None) extends DataFlowVertex(vertexId, initialState) {
   type Signal = Int
   /**
    * The collect function calculates the shortest currently known path
@@ -60,12 +63,21 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataGrap
    * up to now (= state) or one of the paths that had been advertised via a signal
    * by a neighbor.
    */
-  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int], graphEditor: GraphEditor): Option[Int] = {
-    val currentShortestPath = oldState.getOrElse(Int.MaxValue)
-    Some(mostRecentSignals.foldLeft(currentShortestPath)(math.min(_, _)))
+  def collect(oldState: Option[Int], signal: Int): Option[Int] = {
+    oldState match {
+      case None                      => Some(signal)
+      case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
+    }
   }
 
-  override def scoreCollect: Double = if (mostRecentSignalMap.isEmpty) 0.0 else 1.0 // changed so it only gets called once signals were received
+  override def scoreSignal: Double = {
+    if (state.isDefined && (!lastSignalState.isDefined || !lastSignalState.get.isDefined || state.get != lastSignalState.get.get)) {
+      println("will signal, state: " + state + " lastSignalState: " + lastSignalState)
+      1.0
+    } else {
+      0.0
+    }
+  }
 
 }
 

@@ -28,7 +28,7 @@ import akka.actor.Address
 import akka.actor.ExtendedActorSystem
 
 trait Node {
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker): String // string = remote actor address
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker[_, _]): String // string = remote actor address
   def numberOfCores: Int
   def shutdown
 }

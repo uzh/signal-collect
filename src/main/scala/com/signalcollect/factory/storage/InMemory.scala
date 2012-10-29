@@ -27,5 +27,5 @@ import com.signalcollect.interfaces.Storage
  *  The InMemory storage factory creates storage objects that store vertices in memory.
  */
 object InMemory extends StorageFactory {
-  def createInstance: Storage = new DefaultStorage
+  def createInstance[Id]: Storage[Id] = new DefaultStorage[Id]
 }

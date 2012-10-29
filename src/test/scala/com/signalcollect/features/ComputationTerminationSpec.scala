@@ -36,7 +36,7 @@ import com.signalcollect.configuration.TerminationReason
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
-  def createCircleGraph(vertices: Int): Graph = {
+  def createCircleGraph(vertices: Int): Graph[Any, Any] = {
     val graph = GraphBuilder.build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
