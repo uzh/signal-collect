@@ -72,7 +72,6 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataFlow
 
   override def scoreSignal: Double = {
     if (state.isDefined && (!lastSignalState.isDefined || !lastSignalState.get.isDefined || state.get != lastSignalState.get.get)) {
-      println("will signal, state: " + state + " lastSignalState: " + lastSignalState)
       1.0
     } else {
       0.0
