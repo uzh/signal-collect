@@ -69,7 +69,7 @@ class VertexMap[@specialized(Int, Long) Id](
   }
 
   // Removes the vertices after they have been processed.
-  final def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None) {
+  final def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int = {
     val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
     var elementsProcessed = 0
     while (elementsProcessed < limit) {
@@ -86,6 +86,7 @@ class VertexMap[@specialized(Int, Long) Id](
     if (elementsProcessed > 0) {
       optimizeFromPosition(nextPositionToProcess)
     }
+    limit
   }
 
   private[this] final def tryDouble {
