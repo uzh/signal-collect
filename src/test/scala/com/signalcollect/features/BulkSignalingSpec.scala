@@ -55,7 +55,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         correct
       }
 
-      val graph = GraphBuilder.withWorkerFactory(factory.worker.CollectFirstAkka).withMessageBusFactory(new BulkAkkaMessageBusFactory(1000)).build
+      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000)).build
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
         graph.addVertex(v)
@@ -82,7 +82,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         correct
       }
 
-      val graph = GraphBuilder.withWorkerFactory(factory.worker.CollectFirstAkka).withMessageBusFactory(new BulkAkkaMessageBusFactory(1)).build
+      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1)).build
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
         graph.addVertex(v)

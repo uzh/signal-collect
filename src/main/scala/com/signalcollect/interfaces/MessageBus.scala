@@ -51,7 +51,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToWorker(workerId: Int, m: Any)
 
-  def sendToWorkers(m: Any)
+  def sendToWorkers(m: Any, messageCounting: Boolean)
 
   def sendToCoordinator(m: Any)
 

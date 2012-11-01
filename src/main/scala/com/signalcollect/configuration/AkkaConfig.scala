@@ -64,7 +64,7 @@ akka {
       "scala.Float" = kryo
       "scala.Double" = kryo
       "scala.Some" = kryo
-      "com.signalcollect.worker.MaySignal$" = java
+      "com.signalcollect.worker.Continue$" = java
       "scala.None$" = java
     }
 
@@ -172,7 +172,7 @@ akka {
             "scala.Float" = 39
             "scala.Double" = 40
             "scala.Some" = 41
-            "com.signalcollect.worker.MaySignal$" = 42
+            "com.signalcollect.worker.Continue$" = 42
             "scala.None$" = 43
         }
 
@@ -201,7 +201,7 @@ akka {
             "scala.Float",
             "scala.Double",
             "scala.Some",
-            "com.signalcollect.worker.MaySignal$",
+            "com.signalcollect.worker.Continue$",
             "scala.None$"
         ]
     }

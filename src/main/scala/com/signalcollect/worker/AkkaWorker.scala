@@ -61,7 +61,7 @@ class WorkerOperationCounters(
   var signalSteps: Long = 0l,
   var collectSteps: Long = 0l)
 
-object MaySignal extends Serializable
+object Continue extends Serializable
 
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
@@ -76,6 +76,29 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
+  }
+
+  var calibratedCoordinatorTimeDelta = 0l
+  val globalInboxLimit = numberOfWorkers * 10000
+  val maxQueueDelay = 200000000l // nanoseconds, = 200 milliseconds
+  var lastCoordinatorTimestamp = 0l
+  var lastCoordinatorGlobalQueue = 0l
+
+  def queueDelayTooHigh: Boolean = {
+    (System.nanoTime - lastCoordinatorTimestamp) > (calibratedCoordinatorTimeDelta + maxQueueDelay)
+  }
+
+  def calibrateTime(coordinatorTimestamp: Long) {
+    calibratedCoordinatorTimeDelta = System.nanoTime - coordinatorTimestamp
+  }
+
+  def maySignal: Boolean = {
+    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
+  }
+
+  def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
+    lastCoordinatorTimestamp = coordinatorTimestamp
+    lastCoordinatorGlobalQueue = globalInboxSize
   }
 
   /**
@@ -104,6 +127,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         performComputations
       }
 
+    case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
+      receiveHeartbeat(coordinatorTimestamp, globalInboxSize)
+
     case msg =>
       setIdle(false)
       process(msg) // process the message
@@ -115,7 +141,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def performComputations {
     val currentTime = System.currentTimeMillis
-    if (currentTime - lastStatusUpdate > updateInterval) {
+    if (isInitialized && currentTime - lastStatusUpdate > statusUpdateIntervalInMillis) {
       lastStatusUpdate = currentTime
       sendStatusToCoordinator
     }
@@ -124,10 +150,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
+  var awaitingContinue = false
+  var continue = true
+
   def scheduleOperations {
-    while (!messageQueue.hasMessages && !isConverged) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
+    if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    }
+    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
+      messageBus.flush
+      continue = false
+    }
+    if (!awaitingContinue && !vertexStore.toSignal.isEmpty) {
+      messageBus.sendToActor(self, Continue)
+      awaitingContinue = true
     }
   }
 
@@ -136,13 +173,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   protected val vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]] // Vertex graph edits are not typesafe.
   protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
 
-  protected val updateInterval: Long = statusUpdateIntervalInMillis
-
-  var maySignal = false
-  var awaitingSignalPermission = false
-
   protected def process(message: Any) {
-
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
@@ -154,9 +185,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
           i += 1
         }
-      case MaySignal =>
-        maySignal = true
-        awaitingSignalPermission = false
+      case Continue =>
+        awaitingContinue = false
+        continue = true
       case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
@@ -262,8 +293,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   protected def recalculateVertexScores(vertex: Vertex[Id, _]) {
-    vertexStore.toCollect.put(vertex)
-    vertexStore.toSignal.put(vertex)
+    if (vertex.scoreCollect > collectThreshold) {
+      vertexStore.toCollect.put(vertex)
+    }
+    if (vertex.scoreSignal > signalThreshold) {
+      vertexStore.toSignal.put(vertex)
+    }
   }
 
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
@@ -296,10 +331,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     shouldPause = true
   }
 
-  def signalStep {
+  def signalStep: Boolean = {
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
+    vertexStore.toCollect.isEmpty
   }
 
   def collectStep: Boolean = {

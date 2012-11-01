@@ -49,10 +49,24 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator[Id : ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
+class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
+  }
+
+  val heartbeatInterval = 200000000l // nanoseconds, = 200 milliseconds
+  var lastHeartbeatSent = 0l
+
+  def shouldSendHeartbeat: Boolean = {
+    (System.nanoTime - lastHeartbeatSent) > heartbeatInterval
+  }
+
+  def sendHeartbeat {
+    //workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && totalMessagesSent == totalMessagesReceived
+    println("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+    lastHeartbeatSent = System.nanoTime
+    messageBus.sendToWorkers(Heartbeat(lastHeartbeatSent, getGlobalInboxSize), false)
   }
 
   protected val workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
@@ -63,6 +77,9 @@ class DefaultCoordinator[Id : ClassTag, Signal: ClassTag](numberOfWorkers: Int, 
       updateWorkerStatusMap(ws)
       if (isIdle) {
         onIdle
+      }
+      if (shouldSendHeartbeat) {
+        sendHeartbeat
       }
     case OnIdle(action) =>
       // Not counting these messages, because they only come from the local graph.
@@ -110,9 +127,11 @@ class DefaultCoordinator[Id : ClassTag, Signal: ClassTag](numberOfWorkers: Int, 
   /**
    * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers (eventually we will have received at least one status message per worker).
    *
-   * Initialization messages sent to the workers do not have to be taken into account, because they are balanced by replies from the workers that do not get counted when they are received.
+   * Initialization messages sent to the workers have to be added separately.
    */
-  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers
+  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers + initializationMessages
+
+  def initializationMessages = numberOfWorkers * (numberOfWorkers + 2) // +2 for registration of coordinator and logger
 
   /**
    *  Returns a map with the worker id as the key and the number of messages sent as the value.

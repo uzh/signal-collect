@@ -28,7 +28,6 @@ import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.configuration.GraphConfiguration
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.worker.ImmediateCollectScheduler
 import scala.reflect.ClassTag
 
 /**
@@ -43,17 +42,5 @@ object Akka extends WorkerFactory {
     statusUpdateIntervalInMillis: Long,
     loggingLevel: Int): Worker[Id, Signal] = {
     new AkkaWorker[Id, Signal](workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
-  }
-}
-
-object CollectFirstAkka extends WorkerFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
-    workerId: Int,
-    numberOfWorkers: Int,
-    messageBusFactory: MessageBusFactory,
-    storageFactory: StorageFactory,
-    statusUpdateIntervalInMillis: Long,
-    loggingLevel: Int): Worker[Id, Signal] = {
-    new AkkaWorker[Id, Signal](workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel) with ImmediateCollectScheduler[Id, Signal]
   }
 }

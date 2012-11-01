@@ -124,8 +124,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
-    
   awaitIdle
+  workerApi.calibrateWorkerTime
 
   val console = {
     if (config.consoleEnabled) {

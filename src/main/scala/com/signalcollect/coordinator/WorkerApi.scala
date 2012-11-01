@@ -54,6 +54,8 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
     parallelWorkers.map(_.getWorkerStatistics).fold(WorkerStatistics(null))(_ + _)
   }
 
+  def calibrateWorkerTime = parallelWorkers foreach (_.calibrateTime(System.nanoTime))
+    
   def signalStep = parallelWorkers foreach (_.signalStep)
 
   def collectStep: Boolean = parallelWorkers.map(_.collectStep).reduce(_ && _)

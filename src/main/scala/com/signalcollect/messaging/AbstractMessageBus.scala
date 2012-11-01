@@ -146,8 +146,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     workers(workerId) ! message
   }
 
-  def sendToWorkers(message: Any) {
-    workerIds.foreach(sentMessagesCounters(_).incrementAndGet)
+  def sendToWorkers(message: Any, messageCounting: Boolean) {
+    if (messageCounting) {
+      workerIds.foreach(sentMessagesCounters(_).incrementAndGet)
+    }
     for (worker <- parallelWorkers) {
       worker ! message
     }

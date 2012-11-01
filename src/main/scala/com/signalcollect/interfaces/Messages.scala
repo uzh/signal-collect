@@ -22,6 +22,8 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 
+case class Heartbeat(coordinatorTimestamp: Long, globalInboxSize: Long)
+
 // Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.
 case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def withTargetId(t: Id): EdgeId[Id] = EdgeId(sourceId, t)

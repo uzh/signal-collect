@@ -46,7 +46,7 @@ case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boo
  */
 object AkkaProxy {
 
-  def newInstance[T : ClassTag](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+  def newInstance[T: ClassTag](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
     val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,
@@ -68,11 +68,17 @@ class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicIntege
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
     val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.toString, arguments)
     try {
-      val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
-      sentMessagesCounter.incrementAndGet
-      val result = Await.result(resultFuture, timeout.duration)
-      receivedMessagesCounter.incrementAndGet
-      result.asInstanceOf[AnyRef]
+      if (!method.getReturnType.equals(Void.TYPE)) {
+        val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
+        sentMessagesCounter.incrementAndGet
+        val result = Await.result(resultFuture, timeout.duration)
+        receivedMessagesCounter.incrementAndGet
+        result.asInstanceOf[AnyRef]
+      } else {
+        actor ! Request(command, returnResult = false)
+        sentMessagesCounter.incrementAndGet
+        null.asInstanceOf[AnyRef] // Return type of method is void.
+      }
     } catch {
       case e: Exception =>
         println("Exception in proxy method `" + method.getName + "(" + { if (arguments != null) { arguments.foldLeft("")(_ + ", " + _) + ")`: " } else { "`: " } } + e + " from " + actor + " " + e.printStackTrace)
