@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect.evaluation.algorithms
+package com.signalcollect.features
 
 import com.signalcollect._
 import com.signalcollect.configuration._

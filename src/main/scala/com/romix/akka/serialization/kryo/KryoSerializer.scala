@@ -99,10 +99,19 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     log.debug("Got use manifests: {}", useManifests)
   }
 
-  val serializer = new KryoBasedSerializer(getKryo(idStrategy, serializerType),
-    bufferSize,
-    serializerPoolSize,
-    useManifests)
+  val serializer = {
+    try {
+      new KryoBasedSerializer(getKryo(idStrategy, serializerType),
+        bufferSize,
+        serializerPoolSize,
+        useManifests)
+    } catch {
+      case e: Throwable =>
+        println(e.getMessage())
+        e.printStackTrace()
+        throw e
+    }
+  }
 
   locally {
     log.debug("Got serializer: {}", serializer)
@@ -165,7 +174,7 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         kryo.register(classOf[Array[Float]], 22)
         kryo.register(classOf[Array[Double]], 23)
         kryo.register(classOf[Array[Boolean]], 24)
-        
+
         for ((fqcn: String, idNum: String) <- mappings) {
           val id = idNum.toInt
           // Load class

@@ -38,7 +38,7 @@ class PageRankEdge(t: Any) extends DefaultEdge(t) {
    *  transfers to the target vertex.
    */
   override def signal(sourceVertex: Vertex[_, _]) = {
-   sourceVertex.asInstanceOf[PageRankVertex].state * weight / sourceVertex.asInstanceOf[PageRankVertex].sumOfOutWeights 
+    sourceVertex.asInstanceOf[PageRankVertex].state * weight / sourceVertex.asInstanceOf[PageRankVertex].sumOfOutWeights
   }
 
 }
@@ -72,7 +72,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).withConsole(true).build
+  val graph = GraphBuilder.withConsole(true).build //.withLoggingLevel(LoggingLevel.Debug)
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
   graph.addVertex(new PageRankVertex(3))
@@ -80,12 +80,12 @@ object PageRank extends App {
   graph.addEdge(2, new PageRankEdge(1))
   graph.addEdge(2, new PageRankEdge(3))
   graph.addEdge(3, new PageRankEdge(2))
-  
+
   val stats = graph.execute
   graph.awaitIdle
   println(stats)
   graph.foreachVertex(println(_))
-  
+
   readLine
   graph.awaitIdle
   graph.shutdown

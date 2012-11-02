@@ -74,6 +74,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   override def toString = "Worker" + workerId
 
+  var toDoList = List[() => Unit]()
+
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
@@ -92,7 +94,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     calibratedCoordinatorTimeDelta = System.nanoTime - coordinatorTimestamp
   }
 
-  def maySignal: Boolean = {
+  def maySendMessages: Boolean = {
     lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
   }
 
@@ -157,7 +159,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
-    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
+    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySendMessages) {
       vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
       messageBus.flush
       continue = false
@@ -188,6 +190,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       case Continue =>
         awaitingContinue = false
         continue = true
+        while (!toDoList.isEmpty && maySendMessages) {
+          toDoList.last.apply
+          toDoList = toDoList.take(toDoList.size - 1)
+        }
+        if (!toDoList.isEmpty) {
+          messageBus.sendToActor(self, Continue)
+          awaitingContinue = true
+        }
       case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
@@ -266,7 +276,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
-    graphLoader(graphEditor)
+    if (maySendMessages) {
+      graphLoader(graphEditor)
+    } else {
+      // Cannot load right now, add it to the to do list.
+      toDoList = (() => graphLoader(graphEditor)) :: toDoList
+      if (!awaitingContinue) {
+        messageBus.sendToActor(self, Continue)
+        awaitingContinue = true
+      }
+    }
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {

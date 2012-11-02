@@ -140,7 +140,7 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *  Loads a graph using the provided graphLoader function.
    *
    *  @note Does not block.
-   *  @note The vertexIDHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
    *        the loading function will be able to exploit locality.
    *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
    */

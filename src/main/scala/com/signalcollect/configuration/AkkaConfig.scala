@@ -6,7 +6,7 @@ import com.signalcollect.configuration.LoggingLevel._
 object AkkaConfig {
   def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(
     distributedConfig(akkaMessageCompression, loggingLevel)
-  ) //.withFallback(ConfigFactory.load).resolve
+  )
   def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
@@ -47,25 +47,25 @@ akka {
     }
     
     serialization-bindings {
+      "scala.Int" = kryo
+      "scala.Long" = kryo
+      "scala.Float" = kryo
+      "scala.Double" = kryo
+      "scala.Some" = kryo
+      "com.signalcollect.Vertex" = kryo
+      "com.signalcollect.Edge" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
-      "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.LogMessage" = kryo
       "com.signalcollect.interfaces.Debug" = kryo
       "com.signalcollect.interfaces.Config" = kryo
       "com.signalcollect.interfaces.Info" = kryo
       "com.signalcollect.interfaces.Warning" = kryo
       "com.signalcollect.interfaces.Severe" = kryo
-      "scala.Int" = kryo
-      "scala.Long" = kryo
-      "scala.Float" = kryo
-      "scala.Double" = kryo
-      "scala.Some" = kryo
-      "com.signalcollect.worker.Continue$" = java
-      "scala.None$" = java
+      "com.signalcollect.interfaces.WorkerStatistics" = kryo
     }
 
     deployment {
@@ -136,7 +136,7 @@ akka {
         # Log implicitly registered classes. Useful, if you want to know all classes
         # which are serialized. You can then use this information in the mappings and/or 
         # classes sections
-        implicit-registration-logging = false
+        implicit-registration-logging = true
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking
@@ -154,26 +154,26 @@ akka {
         # The smallest possible id should start at 20 (or even higher), because
         # ids below it are used by Kryo internally e.g. for built-in Java and 
         # Scala types   
-        mappings {  
-            "com.signalcollect.interfaces.SignalMessage" = 25
-            "com.signalcollect.interfaces.BulkSignal" = 26
-            "java.util.HashMap" = 27
-            "com.signalcollect.interfaces.EdgeId" = 28
-            "com.signalcollect.interfaces.WorkerStatus" = 29
-            "com.signalcollect.interfaces.WorkerStatistics" = 30
-            "com.signalcollect.interfaces.LogMessage" = 31
-            "com.signalcollect.interfaces.Debug" = 32
-            "com.signalcollect.interfaces.Config" = 33
-            "com.signalcollect.interfaces.Info" = 34
-            "com.signalcollect.interfaces.Warning" = 35
-            "com.signalcollect.interfaces.Severe" = 36
-            "scala.Int" = 37
-            "scala.Long" = 38
-            "scala.Float" = 39
-            "scala.Double" = 40
-            "scala.Some" = 41
-            "com.signalcollect.worker.Continue$" = 42
-            "scala.None$" = 43
+        mappings {
+            "scala.Int" = 25
+            "scala.Long" = 26
+            "scala.Float" = 27
+            "scala.Double" = 28
+            "scala.Some" = 29
+            "com.signalcollect.Vertex" = 30
+            "com.signalcollect.Edge" = 31
+            "com.signalcollect.interfaces.SignalMessage" = 32
+            "com.signalcollect.interfaces.BulkSignal" = 33
+            "java.util.HashMap" = 34
+            "com.signalcollect.interfaces.EdgeId" = 35
+            "com.signalcollect.interfaces.WorkerStatus" = 36
+            "com.signalcollect.interfaces.LogMessage" = 37
+            "com.signalcollect.interfaces.Debug" = 38
+            "com.signalcollect.interfaces.Config" = 39
+            "com.signalcollect.interfaces.Info" = 40
+            "com.signalcollect.interfaces.Warning" = 41
+            "com.signalcollect.interfaces.Severe" = 42
+            "com.signalcollect.interfaces.WorkerStatistics" = 43
         }
 
         # Define a set of fully qualified class names for   
@@ -185,24 +185,24 @@ akka {
         # This section is ignored   for idstrategy=default  
         # This section is optional  for idstrategy=explicit  
         classes = [
+            "scala.Int",
+            "scala.Long",
+            "scala.Float",
+            "scala.Double",
+            "scala.Some",
+            "com.signalcollect.Vertex",
+            "com.signalcollect.Edge",
             "com.signalcollect.interfaces.SignalMessage",
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
-            "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.LogMessage",
             "com.signalcollect.interfaces.Debug",
             "com.signalcollect.interfaces.Config",
             "com.signalcollect.interfaces.Info",
             "com.signalcollect.interfaces.Warning",
             "com.signalcollect.interfaces.Severe",
-            "scala.Int",
-            "scala.Long",
-            "scala.Float",
-            "scala.Double",
-            "scala.Some",
-            "com.signalcollect.worker.Continue$",
-            "scala.None$"
+            "com.signalcollect.interfaces.WorkerStatistics"
         ]
     }
   }

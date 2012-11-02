@@ -28,6 +28,9 @@ import com.signalcollect.serialization.DefaultSerializer
 import java.io.FileOutputStream
 import java.net.URI
 import scala.language.postfixOps
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 case class TorqueHost(
   torqueHostname: String,
@@ -52,6 +55,7 @@ case class TorqueHost(
     }
 
     /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
+    var jubSubmissions = List[Future[String]]()
     for (job <- jobs) {
       val config = DefaultSerializer.write((job, resultHandlers))
       val folder = new File("." + fileSeparator + "config-tmp")
@@ -65,8 +69,9 @@ case class TorqueHost(
       jobSubmitter.copyFileToCluster(configPath)
       val deleteConfig = "rm " + configPath
       deleteConfig !!
-
-      jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
+      val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
+      jubSubmissions = result :: jubSubmissions
     }
+    jubSubmissions foreach (Await.ready(_, Duration.Inf))
   }
 }
