@@ -92,7 +92,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)  
 
-    
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
     var workerId = 0

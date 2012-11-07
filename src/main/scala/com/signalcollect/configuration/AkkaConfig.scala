@@ -11,7 +11,7 @@ object AkkaConfig {
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
-  logConfigOnStart=off
+  logConfigOnStart=on
     
     """ +
     {
@@ -136,7 +136,7 @@ akka {
         # Log implicitly registered classes. Useful, if you want to know all classes
         # which are serialized. You can then use this information in the mappings and/or 
         # classes sections
-        implicit-registration-logging = true
+        implicit-registration-logging = false
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking

@@ -31,16 +31,19 @@ import scala.language.postfixOps
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.Future
+import scala.concurrent.future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class TorqueHost(
-  torqueHostname: String,
-  localJarPath: String,
-  torqueUsername: String = System.getProperty("user.name"),
-  torqueMailAddress: String = "",
-  jarDescription: String = (Random.nextInt.abs % 1000).toString,
-  mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
-  priority: String = TorquePriority.superfast,
-  privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa") extends ExecutionHost {
+    torqueHostname: String,
+    localJarPath: String,
+    torqueUsername: String = System.getProperty("user.name"),
+    torqueMailAddress: String = "",
+    jarDescription: String = (Random.nextInt.abs % 1000).toString,
+    mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
+    priority: String = TorquePriority.superfast,
+    privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa") extends ExecutionHost {
 
   val fileSeparator = System.getProperty("file.separator")
   val jobSubmitter = new TorqueJobSubmitter(torqueUsername, torqueMailAddress, torqueHostname, privateKeyFilePath)
@@ -56,21 +59,23 @@ case class TorqueHost(
 
     /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
     var jubSubmissions = List[Future[String]]()
-    for (job <- jobs) {
-      val config = DefaultSerializer.write((job, resultHandlers))
-      val folder = new File("." + fileSeparator + "config-tmp")
-      if(!folder.exists) {
-        folder.mkdir
-      }
-      val configPath = "." + fileSeparator + "config-tmp" + fileSeparator + job.jobId + ".config"
-      val out = new FileOutputStream(configPath)
-      out.write(config)
-      out.close
-      jobSubmitter.copyFileToCluster(configPath)
-      val deleteConfig = "rm " + configPath
-      deleteConfig !!
-      val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
-      jubSubmissions = result :: jubSubmissions
+    val jobSubmissions = jobs map {
+      job =>
+        future {
+          val config = DefaultSerializer.write((job, resultHandlers))
+          val folder = new File("." + fileSeparator + "config-tmp")
+          if (!folder.exists) {
+            folder.mkdir
+          }
+          val configPath = "." + fileSeparator + "config-tmp" + fileSeparator + job.jobId + ".config"
+          val out = new FileOutputStream(configPath)
+          out.write(config)
+          out.close
+          jobSubmitter.copyFileToCluster(configPath)
+          val deleteConfig = "rm " + configPath
+          deleteConfig !!
+          val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
+        }
     }
     jubSubmissions foreach (Await.ready(_, Duration.Inf))
   }

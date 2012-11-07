@@ -26,9 +26,6 @@ import java.io.File
 import ch.ethz.ssh2.StreamGobbler
 import org.apache.commons.codec.binary.Base64
 import scala.language.postfixOps
-import scala.concurrent.Future
-import scala.concurrent.future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Determines the priority in torque's scheduling queue
@@ -63,14 +60,11 @@ case class TorqueJobSubmitter(
     result
   }
 
-  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): Future[String] = {
-    val f = future {
+  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
       val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath)
       val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
       val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
       executeCommandOnClusterManager(qsubCommand)
-    }
-    f
   }
 
   protected def connectToHost: Connection = {
