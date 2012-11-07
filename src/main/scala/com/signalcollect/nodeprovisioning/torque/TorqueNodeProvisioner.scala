@@ -58,6 +58,7 @@ import akka.japi.Creator
 import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
+import com.signalcollect.util.akka.ActorSystemRegistry
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -75,7 +76,7 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParameters: String) extends NodeProvisioner {
   def getNodes(akkaConfig: Config): List[Node] = {
-    val system: ActorSystem = ActorSystem("NodeProvisioner", akkaConfig)
+    val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
     val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
