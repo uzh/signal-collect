@@ -58,10 +58,10 @@ case class TorqueHost(
     }
 
     /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
-    var jubSubmissions = List[Future[String]]()
-    val jobSubmissions = jobs map {
+    val jubSubmissions = jobs map {
       job =>
         future {
+          println("Submitting job " + job.jobId + " ...")
           val config = DefaultSerializer.write((job, resultHandlers))
           val folder = new File("." + fileSeparator + "config-tmp")
           if (!folder.exists) {
@@ -75,6 +75,8 @@ case class TorqueHost(
           val deleteConfig = "rm " + configPath
           deleteConfig !!
           val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
+          println("Job " + job.jobId + " has been submitted.")
+          result
         }
     }
     jubSubmissions foreach (Await.ready(_, Duration.Inf))
