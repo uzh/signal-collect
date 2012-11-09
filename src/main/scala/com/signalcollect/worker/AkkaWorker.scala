@@ -81,13 +81,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   var calibratedCoordinatorTimeDelta = 0l
-  val globalInboxLimit = numberOfWorkers * 10000
-  val maxQueueDelay = 200000000l // nanoseconds, = 200 milliseconds
+  val globalInboxLimit = numberOfWorkers * 1000
+  val maxQueueDelay = 20 * 1000000l // nanoseconds, = 20 milliseconds
   var lastCoordinatorTimestamp = 0l
   var lastCoordinatorGlobalQueue = 0l
 
   def queueDelayTooHigh: Boolean = {
-    (System.nanoTime - lastCoordinatorTimestamp) > (calibratedCoordinatorTimeDelta + maxQueueDelay)
+    (System.nanoTime - lastCoordinatorTimestamp - calibratedCoordinatorTimeDelta) > maxQueueDelay
   }
 
   def calibrateTime(coordinatorTimestamp: Long) {
@@ -95,7 +95,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def maySendMessages: Boolean = {
-    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
+    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh 
   }
 
   def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
@@ -155,12 +155,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var awaitingContinue = false
   var continue = true
 
+  val signalProcessingBulkSize = Some(10000)
+
   def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
     if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySendMessages) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), signalProcessingBulkSize)
       messageBus.flush
       continue = false
     }

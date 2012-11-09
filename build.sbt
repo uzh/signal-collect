@@ -15,8 +15,6 @@ parallelExecution in Test := false
 
 EclipseKeys.withSource := true
 
-resolvers += "Typesafe Snapshot Repository" at "http://repo.typesafe.com/typesafe/snapshots/"
-
 /** Dependencies */
 libraryDependencies ++= Seq(
  "com.typesafe.akka" % "akka-actor_2.10.0-RC1" % "2.1.0-RC1" ,
