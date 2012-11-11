@@ -34,7 +34,7 @@ import java.util.Map
 import java.util.Set
 import com.signalcollect._
 import com.signalcollect.serialization.DefaultSerializer
-import concurrent.util.duration._
+import concurrent.duration._
 import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
 import akka.actor.ActorRef

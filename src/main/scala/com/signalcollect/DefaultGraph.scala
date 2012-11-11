@@ -23,11 +23,10 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
-import scala.concurrent.util.Duration._
-import scala.concurrent.util.Duration
+import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
 import com.signalcollect.configuration.TerminationReason
 import com.sun.management.OperatingSystemMXBean
-import scala.concurrent.util.Duration._
 import scala.concurrent.Await
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -46,7 +45,7 @@ import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.messaging._
 import com.signalcollect.logging.DefaultLogger
-import scala.concurrent.util.FiniteDuration
+import scala.concurrent.duration.FiniteDuration
 import com.signalcollect.interfaces.Coordinator
 
 /**

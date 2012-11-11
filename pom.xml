@@ -26,12 +26,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-actor_2.10.0-M7</artifactId>
+			<artifactId>akka-actor_2.10.0-RC2</artifactId>
 			<version>${akka.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-remote_2.10.0-M7</artifactId>
+			<artifactId>akka-remote_2.10.0-RC2</artifactId>
 			<version>${akka.version}</version>
 		</dependency>
 		<dependency>
@@ -63,8 +63,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.specs2</groupId>
-			<artifactId>specs2_2.10.0-M7</artifactId>
-			<version>1.12.1.1</version>
+			<artifactId>specs2_2.10.0-RC2</artifactId>
+			<version>1.12.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -181,8 +181,8 @@
 		<project.reporting.outputEncoding>
 			UTF-8
 		</project.reporting.outputEncoding>
-		<scala.version>2.10.0-M7</scala.version>
-		<akka.version>2.1-M2</akka.version>
+		<scala.version>2.10.0-RC2</scala.version>
+		<akka.version>2.1.0-RC2</akka.version>
 		<maven-scala-plugin.version>2.15.2</maven-scala-plugin.version>
 	</properties>
 </project>

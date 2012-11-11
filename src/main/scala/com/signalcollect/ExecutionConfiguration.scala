@@ -21,7 +21,7 @@ package com.signalcollect
 
 import com.signalcollect.interfaces._
 import com.signalcollect.configuration.ExecutionMode
-import scala.concurrent.util.Duration
+import scala.concurrent.duration.Duration
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object

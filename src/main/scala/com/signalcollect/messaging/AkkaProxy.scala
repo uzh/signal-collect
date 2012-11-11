@@ -27,8 +27,8 @@ import com.signalcollect.interfaces._
 import java.lang.reflect.Method
 import akka.actor.ActorRef
 import akka.util.Timeout
-import scala.concurrent.util.Duration
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import java.util.concurrent.atomic.AtomicLong
