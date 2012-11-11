@@ -36,7 +36,7 @@ import java.util.{ HashMap, Map }
 import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
-import scala.concurrent.util.Duration._
+import scala.concurrent.duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.messaging.Request
