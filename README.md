@@ -5,19 +5,19 @@ Signal/Collect is a framework for computations on large graphs. The model allows
 
 This repository conatains pre-release snapshots of the distributed 2.0 version.
 
-How to compile the project
+How to Compile the Project
 --------------------------
 Install SBT: http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html
 
 Go to the project folder and start SBT on the command line. The output should end with:
 "[info] Set current project to signal-collect (in build file:XYZ/signal-collect/)"
 
-Write "assembly" on the SBT prompt to generate a .jar file with dependencies.
+To generate a .jar file with dependencies, use the "assembly" command on the SBT prompt.
 
-Write "eclipse" on the SBT prompt to generate an eclipse project.
+To generate an Eclipse project, use the "eclipse" command on the SBT prompt.
 
 
-How to develop in Eclipse
+How to Develop in Eclipse
 -------------------------
 Generate an Eclipse project as described above.
 
