@@ -34,9 +34,9 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     signals(itemCount) = signal
     itemCount += 1
   }
-  //  def clear {
-  //    itemCount = 0
-  //  }
+  def clear {
+    itemCount = 0
+  }
 }
 
 class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](val numberOfWorkers: Int, flushThreshold: Int)
@@ -54,8 +54,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
       val signalCount = bulker.numberOfItems
       if (signalCount > 0) {
         super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds.slice(0, signalCount), bulker.signals.slice(0, signalCount)))
-        outgoingMessages(workerId) = new SignalBulker[Id, Signal](flushThreshold)
-        //        outgoingMessages(workerId).clear
+        outgoingMessages(workerId).clear
       }
       workerId += 1
     }
@@ -71,7 +70,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
       bulker.addSignal(targetId, signal)
       if (bulker.isFull) {
         super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds, bulker.signals))
-        outgoingMessages(workerId) = new SignalBulker[Id, Signal](flushThreshold)
+        outgoingMessages(workerId).clear
       }
     }
   }
