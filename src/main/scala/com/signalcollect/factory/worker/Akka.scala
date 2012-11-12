@@ -37,10 +37,15 @@ object Akka extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
-    messageBusFactory: MessageBusFactory,
-    storageFactory: StorageFactory,
-    statusUpdateIntervalInMillis: Long,
-    loggingLevel: Int): Worker[Id, Signal] = {
-    new AkkaWorker[Id, Signal](workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
+    config: GraphConfiguration): Worker[Id, Signal] = {
+    new AkkaWorker[Id, Signal](
+      workerId,
+      numberOfWorkers,
+      config.messageBusFactory,
+      config.storageFactory,
+      config.statusUpdateIntervalInMillis,
+      config.throttleInboxThresholdPerWorker,
+      config.throttleWorkerQueueThresholdInMilliseconds,
+      config.loggingLevel)
   }
 }

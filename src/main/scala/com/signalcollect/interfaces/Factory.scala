@@ -20,6 +20,7 @@
 package com.signalcollect.interfaces
 
 import scala.reflect.ClassTag
+import com.signalcollect.configuration.GraphConfiguration
 
 trait Factory extends Serializable {
   def name: String = this.getClass.getSimpleName.replace("$", "")
@@ -29,10 +30,7 @@ trait WorkerFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
-    messageBusFactory: MessageBusFactory,
-    storageFactory: StorageFactory,
-    statusUpdateIntervalInMillis: Long,
-    loggingLevel: Int): Worker[Id, Signal]
+    config: GraphConfiguration): Worker[Id, Signal]
 }
 
 trait MessageBusFactory extends Factory {

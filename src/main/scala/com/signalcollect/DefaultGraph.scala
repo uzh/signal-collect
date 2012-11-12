@@ -53,8 +53,8 @@ import scala.language.postfixOps
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, messageBusFactory: MessageBusFactory, storageFactory: StorageFactory, statusUpdateIntervalInMillis: Long, loggingLevel: Int) extends Creator[Worker[Id, Signal]] {
-  def create: Worker[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, messageBusFactory, storageFactory, statusUpdateIntervalInMillis, loggingLevel)
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[Worker[Id, Signal]] {
+  def create: Worker[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
 }
 
 /**
@@ -97,7 +97,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     var workerId = 0
     for (node <- nodes) {
       for (core <- 0 until node.numberOfCores) {
-    	 val workerCreator = WorkerCreator[Id, Signal](workerId, config.workerFactory, numberOfWorkers, config.messageBusFactory, config.storageFactory, config.statusUpdateIntervalInMillis, config.loggingLevel)
+    	 val workerCreator = WorkerCreator[Id, Signal](workerId, config.workerFactory, numberOfWorkers, config)
          val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
          actors(workerId) = system.actorFor(workerName)
          workerId += 1

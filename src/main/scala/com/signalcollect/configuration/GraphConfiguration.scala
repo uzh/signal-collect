@@ -41,7 +41,9 @@ case class GraphConfiguration(
   statusUpdateIntervalInMillis: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
-  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner)
+  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
+  throttleInboxThresholdPerWorker: Int = 1000,
+  throttleWorkerQueueThresholdInMilliseconds: Int = 20)
 
 object LoggingLevel {
   val Debug = 0

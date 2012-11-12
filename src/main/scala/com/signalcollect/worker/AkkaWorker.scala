@@ -69,33 +69,33 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
   val statusUpdateIntervalInMillis: Long,
+  val throttleInboxThresholdPerWorker: Int,
+  val throttleWorkerQueueThresholdInMilliseconds: Int,
   val loggingLevel: Int)
     extends Worker[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
-
-  var toDoList = List[() => Unit]()
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
   var calibratedCoordinatorTimeDelta = 0l
-  val globalInboxLimit = numberOfWorkers * 1000
-  val maxQueueDelay = 20 * 1000000l // nanoseconds, = 20 milliseconds
+  val globalInboxLimit = numberOfWorkers * throttleInboxThresholdPerWorker
+  val maxQueueDelay = 200000000l + throttleWorkerQueueThresholdInMilliseconds * 1000000
   var lastCoordinatorTimestamp = 0l
   var lastCoordinatorGlobalQueue = 0l
 
   def queueDelayTooHigh: Boolean = {
-    (System.nanoTime - lastCoordinatorTimestamp - calibratedCoordinatorTimeDelta) > maxQueueDelay
+    (System.nanoTime - lastCoordinatorTimestamp) > (calibratedCoordinatorTimeDelta + maxQueueDelay)
   }
 
   def calibrateTime(coordinatorTimestamp: Long) {
     calibratedCoordinatorTimeDelta = System.nanoTime - coordinatorTimestamp
   }
 
-  def maySendMessages: Boolean = {
-    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh 
+  def maySignal: Boolean = {
+    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
   }
 
   def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
@@ -155,14 +155,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var awaitingContinue = false
   var continue = true
 
-  val signalProcessingBulkSize = Some(10000)
-
   def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
-    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySendMessages) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), signalProcessingBulkSize)
+    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
       messageBus.flush
       continue = false
     }
@@ -192,14 +190,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       case Continue =>
         awaitingContinue = false
         continue = true
-        while (!toDoList.isEmpty && maySendMessages) {
-          toDoList.last.apply
-          toDoList = toDoList.take(toDoList.size - 1)
-        }
-        if (!toDoList.isEmpty) {
-          messageBus.sendToActor(self, Continue)
-          awaitingContinue = true
-        }
       case Request(command, reply) =>
         try {
           val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
@@ -278,16 +268,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
-    if (maySendMessages) {
-      graphLoader(graphEditor)
-    } else {
-      // Cannot load right now, add it to the to do list.
-      toDoList = (() => graphLoader(graphEditor)) :: toDoList
-      if (!awaitingContinue) {
-        messageBus.sendToActor(self, Continue)
-        awaitingContinue = true
-      }
-    }
+    graphLoader(graphEditor)
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
