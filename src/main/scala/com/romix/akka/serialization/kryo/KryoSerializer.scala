@@ -20,6 +20,7 @@ package com.romix.akka.serialization.kryo
 
 import akka.serialization._
 import akka.actor.ExtendedActorSystem
+import akka.actor.ActorRef
 import akka.event.Logging
 import com.typesafe.config.ConfigFactory
 import scala.collection.JavaConversions._
@@ -28,36 +29,22 @@ import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import org.objenesis.strategy.StdInstantiatorStrategy
 import com.esotericsoftware.kryo.util._
-
 import KryoSerialization._
 import com.esotericsoftware.minlog.{ Log => MiniLog }
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.TimeUnit
+import scala.util.Success
+import scala.util.Failure
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
   import KryoSerialization._
   val log = Logging(system, getClass.getName)
 
-  val settings = {
-    try {
-      new Settings(system.settings.config)
-    } catch {
-      case e: Throwable =>
-        println(e.getMessage())
-        e.printStackTrace()
-        throw e
-    }
-  }
+  val settings = new Settings(system.settings.config)
 
-  val mappings = {
-    try {
-      settings.ClassNameMappings
-    } catch {
-      case e: Throwable =>
-        println(e.getMessage())
-        e.printStackTrace()
-        throw e
-    }
-  }
+  val mappings = settings.ClassNameMappings
 
   locally {
     log.debug("Got mappings: {}", mappings)
@@ -99,17 +86,14 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     log.debug("Got use manifests: {}", useManifests)
   }
 
-  val serializer = {
-    try {
-      new KryoBasedSerializer(getKryo(idStrategy, serializerType),
-        bufferSize,
-        serializerPoolSize,
-        useManifests)
-    } catch {
-      case e: Throwable =>
-        println(e.getMessage())
-        e.printStackTrace()
-        throw e
+  val serializer = try new KryoBasedSerializer(getKryo(idStrategy, serializerType),
+    bufferSize,
+    serializerPoolSize,
+    useManifests)
+  catch {
+    case e: Exception => {
+      log.error("exception caught during akka-kryo-serialization startup: {}", e)
+      throw e
     }
   }
 
@@ -153,13 +137,27 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     val kryo = new Kryo(new KryoClassResolver(implicitRegistrationLogging), referenceResolver)
     // Support deserialization of classes without no-arg constructors
     kryo.setInstantiatorStrategy(new StdInstantiatorStrategy())
-    // Support serialization of Scala collections
+    // Support serialization of some standard or often used Scala classes 
     kryo.addDefaultSerializer(classOf[scala.Enumeration#Value], classOf[EnumerationSerializer])
+    system.dynamicAccess.getClassFor[AnyRef]("scala.Enumeration$Val") match {
+      case Success(clazz) => kryo.register(clazz)
+      case Failure(e) => {
+        log.error("Class could not be loaded and/or registered: {} ", "scala.Enumeration$Val")
+        throw e
+      }
+    }
+    kryo.register(classOf[scala.Enumeration#Value])
     kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Set[_]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.MapFactory[scala.collection.Map]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.SetFactory[scala.collection.Set]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
+    kryo.addDefaultSerializer(classOf[ActorRef], new ActorRefSerializer(system))
+    kryo.register(classOf[Array[Int]], 20)
+    kryo.register(classOf[Array[Long]], 21)
+    kryo.register(classOf[Array[Float]], 22)
+    kryo.register(classOf[Array[Double]], 23)
+    kryo.register(classOf[Array[Boolean]], 24)
 
     if (settings.KryoTrace)
       MiniLog.TRACE()
@@ -169,60 +167,54 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
       case "incremental" => {
         kryo.setRegistrationRequired(false)
-        kryo.register(classOf[Array[Int]], 20)
-        kryo.register(classOf[Array[Long]], 21)
-        kryo.register(classOf[Array[Float]], 22)
-        kryo.register(classOf[Array[Double]], 23)
-        kryo.register(classOf[Array[Boolean]], 24)
 
         for ((fqcn: String, idNum: String) <- mappings) {
           val id = idNum.toInt
           // Load class
-          val clazz = system.dynamicAccess.getClassFor[AnyRef](fqcn)
-          if (clazz.isSuccess) {
-            kryo.register(clazz.get, id)
-          } else {
-            log.error("Class could not be loaded and/or registered: {} ", fqcn)
-            throw new Exception("Class could not be loaded and/or registered: " + fqcn)
+          system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
+            case Success(clazz) => kryo.register(clazz, id)
+            case Failure(e) => {
+              log.error("Class could not be loaded and/or registered: {} ", fqcn)
+              throw e
+            }
           }
         }
 
         for (classname <- classnames) {
           // Load class
-          val clazz = system.dynamicAccess.getClassFor[AnyRef](classname)
-          if (clazz.isSuccess) {
-            kryo.register(clazz.get)
-          } else {
-            log.warning("Class could not be loaded and/or registered: {} ", classname)
+          system.dynamicAccess.getClassFor[AnyRef](classname) match {
+            case Success(clazz) => kryo.register(clazz)
+            case Failure(e) => {
+              log.warning("Class could not be loaded and/or registered: {} ", classname)
+              /* throw e */
+            }
           }
         }
       }
 
       case "explicit" => {
         kryo.setRegistrationRequired(false)
-        kryo.register(classOf[Array[Int]], 20)
-        kryo.register(classOf[Array[Long]], 21)
 
         for ((fqcn: String, idNum: String) <- mappings) {
           val id = idNum.toInt
           // Load class
-          val clazz = system.dynamicAccess.getClassFor[AnyRef](fqcn)
-          if (clazz.isSuccess) {
-            kryo.register(clazz.get)
-          } else {
-            log.error("Class could not be loaded and/or registered: {} ", fqcn)
-            throw new Exception("Class could not be loaded and/or registered: " + fqcn)
+          system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
+            case Success(clazz) => kryo.register(clazz, id)
+            case Failure(e) => {
+              log.error("Class could not be loaded and/or registered: {} ", fqcn)
+              throw e
+            }
           }
         }
 
         for (classname <- classnames) {
           // Load class
-          val clazz = system.dynamicAccess.getClassFor[AnyRef](classname)
-          if (clazz.isSuccess) {
-            kryo.register(clazz.get)
-          } else {
-            log.error("Class could not be loaded and/or registered: {} ", classname)
-            throw new Exception("Class could not be loaded and/or registered: " + classname)
+          system.dynamicAccess.getClassFor[AnyRef](classname) match {
+            case Success(clazz) => kryo.register(clazz)
+            case Failure(e) => {
+              log.warning("Class could not be loaded and/or registered: {} ", classname)
+              /* throw e */
+            }
           }
         }
         kryo.setRegistrationRequired(true)
@@ -255,15 +247,13 @@ class KryoBasedSerializer(val kryo: Kryo, val bufferSize: Int, val bufferPoolSiz
   def toBinary(obj: AnyRef): Array[Byte] = {
     val buffer = getBuffer
     try {
-      if (!useManifests) {
+      if (!useManifests)
         kryo.writeClassAndObject(buffer, obj)
-      } else {
+      else
         kryo.writeObject(buffer, obj)
-      }
       buffer.toBytes()
-    } finally {
+    } finally
       releaseBuffer(buffer)
-    }
   }
 
   // "fromBinary" deserializes the given array,
@@ -286,10 +276,6 @@ class KryoBasedSerializer(val kryo: Kryo, val bufferSize: Int, val bufferPoolSiz
 
 }
 
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.TimeUnit
-
 // Support pooling of objects. Useful if you want to reduce 
 // the GC overhead and memory pressure.
 class ObjectPool[T](number: Int, newInstance: () => T) {
@@ -298,9 +284,11 @@ class ObjectPool[T](number: Int, newInstance: () => T) {
   private val pool = new ArrayBlockingQueue[T](number)
 
   def fetch(): T = {
-    pool.poll() match {
-      case null => createOrBlock
-      case o    => o
+    val item = pool.poll
+    if (item != null) {
+      item
+    } else {
+      createOrBlock
     }
   }
 
@@ -328,9 +316,10 @@ class ObjectPool[T](number: Int, newInstance: () => T) {
 
   private def block: T = {
     val timeout = 5000
-    pool.poll(timeout, TimeUnit.MILLISECONDS) match {
-      case null => throw new Exception("Couldn't acquire object in %d milliseconds.".format(timeout))
-      case o    => o
+    try {
+      pool.poll(timeout, TimeUnit.MILLISECONDS)
+    } catch {
+      case t: Throwable => throw new Exception("Couldn't acquire object in %d milliseconds.".format(timeout))
     }
   }
 }
