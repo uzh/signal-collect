@@ -59,7 +59,14 @@ class WorkerOperationCounters(
   var outgoingEdgesAdded: Long = 0l,
   var outgoingEdgesRemoved: Long = 0l,
   var signalSteps: Long = 0l,
-  var collectSteps: Long = 0l)
+  var collectSteps: Long = 0l,
+  var receiveTimeoutMessagesReceived: Long = 0l,
+  var heartbeatMessagesReceived: Long = 0l,
+  var signalMessagesReceived: Long = 0l,
+  var bulkSignalMessagesReceived: Long = 0l,
+  var continueMessagesReceived: Long = 0l,
+  var requestMessagesReceived: Long = 0l,
+  var otherMessagesReceived: Long = 0)
 
 object Continue extends Serializable
 
@@ -122,6 +129,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
      */
     case ReceiveTimeout =>
+      counters.receiveTimeoutMessagesReceived += 1
       if (isConverged || isPaused) { // if the actor has nothing to compute and the mailbox is empty, then it is idle
         setIdle(true)
       } else {
@@ -130,6 +138,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
+      counters.heartbeatMessagesReceived += 1
       receiveHeartbeat(coordinatorTimestamp, globalInboxSize)
 
     case msg =>
@@ -164,7 +173,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       messageBus.flush
       continue = false
     }
-    if (!awaitingContinue && !vertexStore.toSignal.isEmpty) {
+    if (!continue && !awaitingContinue && !vertexStore.toSignal.isEmpty) {
       messageBus.sendToActor(self, Continue)
       awaitingContinue = true
     }
@@ -179,8 +188,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
+        counters.signalMessagesReceived += 1
         processSignal(s.signal, s.targetId, s.sourceId)
       case bulkSignal: BulkSignal[Id, Signal] =>
+        counters.bulkSignalMessagesReceived += 1
         val size = bulkSignal.signals.length
         var i = 0
         while (i < size) {
@@ -188,9 +199,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           i += 1
         }
       case Continue =>
+        counters.continueMessagesReceived += 1
         awaitingContinue = false
         continue = true
       case Request(command, reply) =>
+        counters.requestMessagesReceived += 1
         try {
           val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
           if (reply) {
@@ -205,7 +218,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             severe(e)
             throw e
         }
-      case other => warning("Could not handle message " + message)
+      case other =>
+        counters.otherMessagesReceived += 1
+        warning("Could not handle message " + message)
     }
   }
 
@@ -360,7 +375,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       verticesRemoved = counters.verticesRemoved,
       numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
       outgoingEdgesAdded = counters.outgoingEdgesAdded,
-      outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
+      outgoingEdgesRemoved = counters.outgoingEdgesRemoved,
+      receiveTimeoutMessagesReceived = counters.receiveTimeoutMessagesReceived,
+      heartbeatMessagesReceived = counters.heartbeatMessagesReceived,
+      signalMessagesReceived = counters.signalMessagesReceived,
+      bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
+      continueMessagesReceived = counters.continueMessagesReceived,
+      requestMessagesReceived = counters.requestMessagesReceived,
+      otherMessagesReceived = counters.otherMessagesReceived)
   }
 
   def shutdown {}

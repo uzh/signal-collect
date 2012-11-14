@@ -72,7 +72,24 @@ class CoordinatorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
     val workerStatistics: List[WorkerStatistics] = coordinator.getWorkerApi.getIndividualWorkerStatistics
     val senderStats: List[String] = coordinator.getWorkerApi.getWorkerStatistics.messagesSent map (_.toString) toList
     val workerNames: List[String] = (0 until senderStats.length - 2) map ("Worker " + _) toList
-    val tableHeaders = List("workerId", "toSignalSize", "toCollectSize", "messagesSent", "messagesReceived", "collectOperationsExecuted", "signalOperationsExecuted", "numberOfVertices", "outgoingEdges")
+    val tableHeaders = List(
+      "workerId",
+      "toSignalSize",
+      "toCollectSize",
+      "messagesSent",
+      "messagesReceived",
+      "collectOperationsExecuted",
+      "signalOperationsExecuted",
+      "numberOfVertices",
+      "outgoingEdges",
+      "receiveTimeoutMessagesReceived",
+      "heartbeatMessagesReceived",
+      "signalMessagesReceived",
+      "bulkSignalMessagesReceived",
+      "continueMessagesReceived",
+      "requestMessagesReceived",
+      "otherMessagesReceived"
+    )
 
     val rowEntries = workerStatistics map (stats =>
       List(stats.workerId,
@@ -83,7 +100,14 @@ class CoordinatorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
         stats.collectOperationsExecuted,
         stats.signalOperationsExecuted,
         stats.numberOfVertices,
-        stats.outgoingEdgesAdded - stats.outgoingEdgesRemoved
+        stats.outgoingEdgesAdded - stats.outgoingEdgesRemoved,
+        stats.receiveTimeoutMessagesReceived,
+        stats.heartbeatMessagesReceived,
+        stats.signalMessagesReceived,
+        stats.bulkSignalMessagesReceived,
+        stats.continueMessagesReceived,
+        stats.requestMessagesReceived,
+        stats.otherMessagesReceived
       ) map (_.toString)
     )
 
