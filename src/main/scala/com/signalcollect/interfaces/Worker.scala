@@ -51,8 +51,6 @@ trait Worker[Id, Signal] extends Actor with MessageRecipientRegistry with Loggin
 
   def pauseAsynchronousComputation
   def startAsynchronousComputation
-
-  def calibrateTime(coordinatorTimestamp: Long)
   
   def signalStep: Boolean
   def collectStep: Boolean

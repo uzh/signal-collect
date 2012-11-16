@@ -43,7 +43,8 @@ object Akka extends WorkerFactory {
       numberOfWorkers,
       config.messageBusFactory,
       config.storageFactory,
-      config.statusUpdateIntervalInMillis,
+      config.statusUpdateIntervalInMilliseconds,
+      config.heartbeatIntervalInMilliseconds,
       config.throttleInboxThresholdPerWorker,
       config.throttleWorkerQueueThresholdInMilliseconds,
       config.loggingLevel)

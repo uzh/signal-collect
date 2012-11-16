@@ -68,16 +68,15 @@ class WorkerOperationCounters(
   var requestMessagesReceived: Long = 0l,
   var otherMessagesReceived: Long = 0)
 
-object Continue extends Serializable
-
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val statusUpdateIntervalInMillis: Long,
-  val throttleInboxThresholdPerWorker: Int,
-  val throttleWorkerQueueThresholdInMilliseconds: Int,
+  val statusUpdateIntervalInMilliseconds: Long,
+  val heartbeatIntervalInMilliseconds: Long,
+  val throttleInboxThresholdPerWorker: Long,
+  val throttleWorkerQueueThresholdInMilliseconds: Long,
   val loggingLevel: Int)
     extends Worker[Id, Signal] with ActorLogging {
 
@@ -87,27 +86,26 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
-  var calibratedCoordinatorTimeDelta = 0l
   val globalInboxLimit = numberOfWorkers * throttleInboxThresholdPerWorker
-  val maxQueueDelay = 200000000l + throttleWorkerQueueThresholdInMilliseconds * 1000000
-  var lastCoordinatorTimestamp = 0l
-  var lastCoordinatorGlobalQueue = 0l
+  val maxQueueDelay = (heartbeatIntervalInMilliseconds + throttleWorkerQueueThresholdInMilliseconds) * 1000000
+  var previousHeartbeatTimestamp = 0l
+  var currentHeartbeatTimestamp = 0l
+  var currentCoordinatorGlobalQueue = 0l
 
-  def queueDelayTooHigh: Boolean = {
-    (System.nanoTime - lastCoordinatorTimestamp) > (calibratedCoordinatorTimeDelta + maxQueueDelay)
-  }
-
-  def calibrateTime(coordinatorTimestamp: Long) {
-    calibratedCoordinatorTimeDelta = System.nanoTime - coordinatorTimestamp
+  def queueGrowing: Boolean = {
+    val oldDelta = currentHeartbeatTimestamp - previousHeartbeatTimestamp
+    val currentDelta = System.currentTimeMillis - currentHeartbeatTimestamp
+    currentDelta > heartbeatIntervalInMilliseconds || oldDelta > heartbeatIntervalInMilliseconds
   }
 
   def maySignal: Boolean = {
-    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
+    // Throttle if global queue too big and queue growing
+    currentCoordinatorGlobalQueue <= globalInboxLimit || !queueGrowing
   }
 
   def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
-    lastCoordinatorTimestamp = coordinatorTimestamp
-    lastCoordinatorGlobalQueue = globalInboxSize
+    previousHeartbeatTimestamp = currentHeartbeatTimestamp
+    currentHeartbeatTimestamp = System.currentTimeMillis
   }
 
   /**
@@ -140,7 +138,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
       counters.heartbeatMessagesReceived += 1
       receiveHeartbeat(coordinatorTimestamp, globalInboxSize)
-
+      if (isConverged || isPaused) { // TODO: refactor code if this works
+        setIdle(true)
+      } else {
+        handlePauseAndContinue
+        performComputations
+      }
     case msg =>
       setIdle(false)
       process(msg) // process the message
@@ -152,7 +155,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def performComputations {
     val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusUpdateIntervalInMillis) {
+    if (isInitialized && currentTime - lastStatusUpdate > statusUpdateIntervalInMilliseconds) {
       lastStatusUpdate = currentTime
       sendStatusToCoordinator
     }
@@ -161,21 +164,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  var awaitingContinue = false
-  var continue = true
-
   def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
-    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
+    if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
       vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
       messageBus.flush
-      continue = false
-    }
-    if (!continue && !awaitingContinue && !vertexStore.toSignal.isEmpty) {
-      messageBus.sendToActor(self, Continue)
-      awaitingContinue = true
     }
   }
 
@@ -198,10 +193,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
           i += 1
         }
-      case Continue =>
-        counters.continueMessagesReceived += 1
-        awaitingContinue = false
-        continue = true
       case Request(command, reply) =>
         counters.requestMessagesReceived += 1
         try {

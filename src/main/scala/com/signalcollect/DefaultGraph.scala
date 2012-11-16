@@ -60,8 +60,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFa
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
  */
-case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
-  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, loggingLevel)
+case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, heartbeatIntervalInMilliseconds, loggingLevel)
 }
 
 /**
@@ -107,7 +107,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
   
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.loggingLevel)
+    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds, config.loggingLevel)
     config.akkaDispatcher match {
         case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
         case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
@@ -123,8 +123,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
-  awaitIdle
-  workerApi.calibrateWorkerTime
 
   val console = {
     if (config.consoleEnabled) {

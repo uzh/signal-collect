@@ -36,6 +36,7 @@ import java.util.{ HashMap, Map }
 import scala.collection.JavaConversions._
 import akka.actor.ReceiveTimeout
 import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
 import scala.concurrent.duration.Duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
@@ -49,13 +50,18 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
+class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
+
+  /**
+   * Timeout for Akka actor idling
+   */
+  context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
-  val heartbeatInterval = 200000000l // nanoseconds, = 200 milliseconds
+  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
   var lastHeartbeatSent = 0l
 
   def shouldSendHeartbeat: Boolean = {
@@ -64,6 +70,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   def sendHeartbeat {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+    println("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     lastHeartbeatSent = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(lastHeartbeatSent, getGlobalInboxSize), false)
   }
@@ -80,7 +87,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
       if (shouldSendHeartbeat) {
         sendHeartbeat
       }
+    case ReceiveTimeout =>
+      if (shouldSendHeartbeat) {
+        sendHeartbeat
+      }
     case OnIdle(action) =>
+      context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
       if (isIdle) {
@@ -107,6 +119,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   }
 
   def onIdle {
+    context.setReceiveTimeout(Duration.Undefined)
     for ((from, action) <- onIdleList) {
       action(this, from)
     }

@@ -38,10 +38,11 @@ case class GraphConfiguration(
   workerFactory: WorkerFactory = factory.worker.Akka,
   messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Long = 500l,
+  statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
+  heartbeatIntervalInMilliseconds: Long = 100,
   throttleInboxThresholdPerWorker: Int = 1000,
   throttleWorkerQueueThresholdInMilliseconds: Int = 20)
 
