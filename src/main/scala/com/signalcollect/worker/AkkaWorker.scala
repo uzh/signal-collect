@@ -75,10 +75,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfWorkers: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val statusUpdateIntervalInMilliseconds: Long,
   val heartbeatIntervalInMilliseconds: Long,
-  val throttleInboxThresholdPerWorker: Long,
-  val throttleWorkerQueueThresholdInMilliseconds: Long,
   val loggingLevel: Int)
     extends Worker[Id, Signal] with ActorLogging {
 
@@ -88,12 +85,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
-  val globalInboxLimit = numberOfWorkers * throttleInboxThresholdPerWorker
-  var globalInboxSize = 0l
-
-  def maySignal: Boolean = {
-    globalInboxSize <= globalInboxLimit
-  }
+  var maySignal = true
 
   var continueSignalingReceived = true
   var awaitingContinueSignaling = false
@@ -125,9 +117,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         performComputations
       }
 
-    case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
+    case Heartbeat(maySignal) =>
       counters.heartbeatMessagesReceived += 1
-      this.globalInboxSize = globalInboxSize
+      sendStatusToCoordinator
+      this.maySignal = maySignal
       if (isConverged || isPaused) { // TODO: refactor code if this works
         setIdle(true)
       } else {
@@ -137,6 +130,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case msg =>
       setIdle(false)
+      sendStatusToCoordinator
       process(msg) // process the message
       handlePauseAndContinue
       performComputations
@@ -145,22 +139,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: MessageQueue = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue
 
   def performComputations {
-    val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusUpdateIntervalInMilliseconds) {
-      lastStatusUpdate = currentTime
-      sendStatusToCoordinator
-    }
     if (!isPaused) {
       scheduleOperations
     }
   }
+
+  val batchProcessSize = 10000
 
   def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
     if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(batchProcessSize))
       messageBus.flush
       continueSignalingReceived = false
     }
@@ -270,6 +261,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.verticesRemoved += 1
     vertex.beforeRemoval(vertexGraphEditor)
     vertexStore.vertices.remove(vertex.id)
+    vertexStore.toCollect.remove(vertex.id)
+    vertexStore.toSignal.remove(vertex.id)
   }
 
   def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
@@ -403,8 +396,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   protected def sendStatusToCoordinator {
-    val status = getWorkerStatus
-    messageBus.sendToCoordinator(status)
+    val currentTime = System.currentTimeMillis
+    if (isInitialized && currentTime - lastStatusUpdate > heartbeatIntervalInMilliseconds) {
+      lastStatusUpdate = currentTime
+      val status = getWorkerStatus
+      messageBus.sendToCoordinator(status)
+    }
   }
 
   protected def setIdle(newIdleState: Boolean) {

@@ -55,7 +55,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
+  context.setReceiveTimeout(Duration.Undefined)
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
@@ -68,18 +68,24 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
   }
 
-  var globalQueueSizePreviousHeartbeat = 0l
+  var globalQueueSizeLimitPreviousHeartbeat = 0l
+  var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def sendHeartbeat {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     println("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     val currentGlobalQueueSize = getGlobalInboxSize
-    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizePreviousHeartbeat
+    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
     val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
+    val currentMessagesReceived = totalMessagesReceived
+    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
+    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
+    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
     lastHeartbeatTimestamp = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(lastHeartbeatTimestamp, predictedGlobalQueueSize), false)
-    globalQueueSizePreviousHeartbeat = currentGlobalQueueSize
+    messageBus.sendToWorkers(Heartbeat(maySignal), false)
+    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
+    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
 
   protected val workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
