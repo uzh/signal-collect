@@ -68,6 +68,8 @@ class WorkerOperationCounters(
   var requestMessagesReceived: Long = 0l,
   var otherMessagesReceived: Long = 0)
 
+object ContinueSignaling
+
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
@@ -87,26 +89,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   val globalInboxLimit = numberOfWorkers * throttleInboxThresholdPerWorker
-  val maxQueueDelay = (heartbeatIntervalInMilliseconds + throttleWorkerQueueThresholdInMilliseconds) * 1000000
-  var previousHeartbeatTimestamp = 0l
-  var currentHeartbeatTimestamp = 0l
-  var currentCoordinatorGlobalQueue = 0l
-
-  def queueGrowing: Boolean = {
-    val oldDelta = currentHeartbeatTimestamp - previousHeartbeatTimestamp
-    val currentDelta = System.currentTimeMillis - currentHeartbeatTimestamp
-    currentDelta > heartbeatIntervalInMilliseconds || oldDelta > heartbeatIntervalInMilliseconds
-  }
+  var globalInboxSize = 0l
 
   def maySignal: Boolean = {
-    // Throttle if global queue too big and queue growing
-    currentCoordinatorGlobalQueue <= globalInboxLimit || !queueGrowing
+    globalInboxSize <= globalInboxLimit
   }
 
-  def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
-    previousHeartbeatTimestamp = currentHeartbeatTimestamp
-    currentHeartbeatTimestamp = System.currentTimeMillis
-  }
+  var continueSignalingReceived = true
+  var awaitingContinueSignaling = false
 
   /**
    * Timeout for Akka actor idling
@@ -137,13 +127,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
       counters.heartbeatMessagesReceived += 1
-      receiveHeartbeat(coordinatorTimestamp, globalInboxSize)
+      this.globalInboxSize = globalInboxSize
       if (isConverged || isPaused) { // TODO: refactor code if this works
         setIdle(true)
       } else {
         handlePauseAndContinue
         performComputations
       }
+
     case msg =>
       setIdle(false)
       process(msg) // process the message
@@ -171,6 +162,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
       vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
       messageBus.flush
+      continueSignalingReceived = false
+    }
+    if (!continueSignalingReceived && !awaitingContinueSignaling && !vertexStore.toSignal.isEmpty) {
+      messageBus.sendToActor(self, ContinueSignaling)
+      awaitingContinueSignaling = true
     }
   }
 
@@ -193,6 +189,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
           i += 1
         }
+      case ContinueSignaling =>
+        continueSignalingReceived = true
+        awaitingContinueSignaling = false
       case Request(command, reply) =>
         counters.requestMessagesReceived += 1
         try {

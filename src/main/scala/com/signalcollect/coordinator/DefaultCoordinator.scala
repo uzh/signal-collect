@@ -62,17 +62,24 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
-  var lastHeartbeatSent = 0l
+  var lastHeartbeatTimestamp = 0l
 
   def shouldSendHeartbeat: Boolean = {
-    (System.nanoTime - lastHeartbeatSent) > heartbeatInterval
+    (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
   }
+
+  var globalQueueSizePreviousHeartbeat = 0l
 
   def sendHeartbeat {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     println("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
-    lastHeartbeatSent = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(lastHeartbeatSent, getGlobalInboxSize), false)
+    val currentGlobalQueueSize = getGlobalInboxSize
+    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizePreviousHeartbeat
+    // Linear interpolation to predict future queue size.
+    val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
+    lastHeartbeatTimestamp = System.nanoTime
+    messageBus.sendToWorkers(Heartbeat(lastHeartbeatTimestamp, predictedGlobalQueueSize), false)
+    globalQueueSizePreviousHeartbeat = currentGlobalQueueSize
   }
 
   protected val workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
@@ -160,10 +167,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   }
 
   def messagesSentByCoordinator = messageBus.messagesSent.sum
-
   def messagesReceivedByWorkers = workerStatus filter (_ != null) map (_.messagesReceived) sum
   def messagesReceivedByCoordinator = messageBus.messagesReceived
-
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByCoordinator
   def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByCoordinator
   def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
