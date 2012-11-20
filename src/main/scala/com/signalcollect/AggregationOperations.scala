@@ -86,8 +86,6 @@ class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
  *  Aggregation operation that counts the number of vertices in this graph that have type `VertexType`.
  *
  *  @example `val numberOfPageRankVertices = graph.aggregate(new CountVertices[PageRankVertex])`
- *
- *  @usecase CountVertices[Vertex]
  */
 class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends AggregationOperation[Long] {
 
