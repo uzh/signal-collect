@@ -28,4 +28,5 @@ import com.signalcollect.interfaces.Storage
  */
 object InMemory extends StorageFactory {
   def createInstance[Id]: Storage[Id] = new DefaultStorage[Id]
+  override def toString = "InMemoryStorageFactory"
 }

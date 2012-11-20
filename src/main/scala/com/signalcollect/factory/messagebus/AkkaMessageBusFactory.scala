@@ -27,6 +27,7 @@ import scala.reflect.ClassTag
 
 object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new DefaultMessageBus[Id, Signal](numberOfWorkers)
+  override def toString = "AkkaMessageBusFactory"
 }
 
 /**
@@ -35,4 +36,5 @@ object AkkaMessageBusFactory extends MessageBusFactory {
  */
 class BulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold)
+  override def toString = "BulkAkkaMessageBusFactory"
 }

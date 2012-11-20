@@ -46,4 +46,5 @@ object Akka extends WorkerFactory {
       config.heartbeatIntervalInMilliseconds,
       config.loggingLevel)
   }
+  override def toString = "AkkaWorkerFactory"
 }
