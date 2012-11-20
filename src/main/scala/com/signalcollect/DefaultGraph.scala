@@ -354,11 +354,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (config.consoleEnabled) {
       console.shutdown
     }
-    loggerActor ! Info("workerApi.shutdown ...", this.toString)
     workerApi.shutdown
-    loggerActor ! Info("nodes.par.foreach(_.shutdown) ...", this.toString)
     nodes.par.foreach(_.shutdown)
-    loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
     system.awaitTermination
   }
