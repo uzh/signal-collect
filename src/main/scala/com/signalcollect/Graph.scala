@@ -128,9 +128,9 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *
    *  @param f The function that gets executed on the vertex with id `vertexId`
    *
-   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex => v.state })`
+   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex[_, _] => v.state })`
    *
-   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex => String): String
+   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex[_, _] => String): String
    */
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
 
