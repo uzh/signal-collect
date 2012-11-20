@@ -15,6 +15,8 @@ parallelExecution in Test := false
 
 EclipseKeys.withSource := true
 
+jarName in assembly := "signal-collect-2.0-SNAPSHOT.jar"
+
 /** Dependencies */
 libraryDependencies ++= Seq(
  "com.typesafe.akka" % "akka-actor_2.10.0-RC2" % "2.1.0-RC2" ,
