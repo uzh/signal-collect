@@ -103,12 +103,11 @@ case class WorkerStatistics(
     )
   }
   override def toString: String = {
-    "messages received" + "\t" + messagesReceived + "\n" +
-      "messages sent" + "\t" + messagesSent + "\n" +
-      "# collect operations executed" + "\t\t" + collectOperationsExecuted + "\n" +
-      "# signal operations executed" + "\t\t" + signalOperationsExecuted + "\n" +
-      "# vertices (added/removed)" + "\t\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
-      "# outgoing edges  (added/removed)" + "\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
+    "# messages \t\t" + messagesReceived + "\n" +
+      "# collect operations \t" + collectOperationsExecuted + "\n" +
+      "# signal operations \t" + signalOperationsExecuted + "\n" +
+      "# vertices (add/remove) \t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
+      "# edges (add/remove) \t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }
 
