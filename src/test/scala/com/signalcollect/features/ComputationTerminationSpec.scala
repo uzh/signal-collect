@@ -32,12 +32,27 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.SudokuCell
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.nodeprovisioning.Node
+import com.signalcollect.nodeprovisioning.local.LocalNode
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
-  def createCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val graph = GraphBuilder.build
+  def createCircleGraph(vertices: Int, numberOfWorkers: Option[Int] = None): Graph[Any, Any] = {
+    val graph = {
+      if (numberOfWorkers.isEmpty) {
+        GraphBuilder.build
+      } else {
+        GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
+          def getNodes(akkaConfig: Config): List[Node] = {
+            List(new LocalNode {
+              override def numberOfCores = numberOfWorkers.get
+            })
+          }
+        }).build
+      }
+    }
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -47,7 +62,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
     graph
   }
-  
+
   sequential
 
   "Time limit" should {
@@ -130,6 +145,17 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
+    }
+
+    "work for asynchronous computations with one worker" in {
+      val graph = createCircleGraph(100, Some(1))
+      val info = graph.execute
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      val aggregate = graph.aggregate(new SumOfStates[Double]).get
+      if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+      }
+      aggregate > 98 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
 
