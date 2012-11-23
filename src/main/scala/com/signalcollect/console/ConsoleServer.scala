@@ -35,7 +35,8 @@ import scala.language.postfixOps
 
 class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
   val server = HttpServer.create(address, 0)
-  server.createContext("/", new CoordinatorRequestHandler(coordinatorActor))
+  server.createContext("/", new WorkerStateRequestHandler(coordinatorActor))
+  server.createContext("/inspect", new GraphInspectorRequestHandler(coordinatorActor))
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
   println("Console server started on localhost:" + address.getPort)
@@ -45,7 +46,57 @@ class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new
   }
 }
 
-class CoordinatorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
+class GraphInspectorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
+  val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
+
+  def handle(exchange: HttpExchange) {
+    val requestMethod = exchange.getRequestMethod
+    if (requestMethod.equalsIgnoreCase("GET")) {
+      val responseHeaders = exchange.getResponseHeaders
+      responseHeaders.set("Content-Type", "text/html")
+      exchange.sendResponseHeaders(200, 0)
+      val responseBody = exchange.getResponseBody
+      responseBody.write(renderInspector.getBytes)
+      responseBody.close
+    }
+  }
+  
+  def renderInspector: String = {
+    val content = new StringBuffer()
+    content.append("Hello, Ela! This is where we're gonna put the graph visualization")
+
+    //http://sigmajs.org/data/les_miserables.gexf
+    
+    
+    val sigmaExample = """
+<div id="sigma-instance" style="display:block;margin-left:auto;margin-right:auto;width:80%;height:800px;border:1px #ccf solid;"></div>
+<script type="text/javascript">
+function init() {
+  // Instantiate sigma.js and customize it :
+  var sigInst = sigma.init(document.getElementById('sigma-instance'));
+sigInst.addNode('hello',{'label': 'Hello', 'x': 100, 'y': 100, 'size': 4.5, 'color' : 'rgb(100, 10, 20)'})
+sigInst.addNode('world',{'label': 'World!', 'x': 120, 'y': 130, 'size': 4.5, 'color' : 'rgb(10, 100, 20)'})
+sigInst.addEdge('hello-world', 'hello','world');
+
+
+  document.getElementById('rescale-graph').addEventListener('click',function(){
+    sigInst.position(0,0,1).draw();
+  },true);
+}
+
+if (document.addEventListener) {
+  document.addEventListener('DOMContentLoaded', init, false);
+} else {
+  window.onload = init;
+}
+</script>
+      """
+      content.append(sigmaExample)
+    Template.html(title = "Signal/Collect Inspector", content = content.toString)
+  }
+}
+
+class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
   val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
 
   def handle(exchange: HttpExchange) {
@@ -91,7 +142,7 @@ class CoordinatorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
     val actorSendingStatsElement = Template.gridRow(span = 4, offset = 2, content = workerStatsTable)
     content.append(actorSendingStatsElement)
 
-    Template.html(title = "Signal/Collect Console", content = content.toString)
+    Template.html(title = "Signal/Collect Console", content = content.toString, refreshIntervalSeconds = Some(1))
   }
 }
 
@@ -141,16 +192,21 @@ object Template extends App {
 <th>$title</th>
 """
 
-  def html(title: String, content: String) = s"""
+  def html(title: String, content: String, refreshIntervalSeconds: Option[Int] = None) = s"""
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta http-equiv="refresh" content="1" >
+    ${refreshIntervalSeconds match {
+      case None => ""
+      case Some(seconds) => s"""<meta http-equiv="refresh" content="$seconds" >"""
+    }}
     <title>$title</title>
     <link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.0.4/css/bootstrap.min.css"/>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.1.1/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://sigmajs.org/js/sigma.min.js"></script>
+    <script type="text/javascript" src="http://sigmajs.org/js/sigma.parseGexf.js"></script>
   </head>
   <body>
     <section class="content">
