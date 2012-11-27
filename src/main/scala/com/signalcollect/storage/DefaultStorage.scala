@@ -35,8 +35,8 @@ class DefaultStorage[@specialized(Int, Long) Id] extends Storage[Id] {
   protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
 
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+  protected def vertexSignalFactory = new VertexMap[Id](initialSize = 32768, rehashFraction = .9f)
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new VertexMap[Id](initialSize = 1024, rehashFraction = .8f)
+  protected def vertexSetFactory = new VertexMap[Id](initialSize = 1024, rehashFraction = .9f)
 
 }
