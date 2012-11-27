@@ -23,7 +23,7 @@ import com.signalcollect._
 import akka.actor.Actor
 import scala.concurrent.Future
 
-trait Worker[Id, Signal] extends Actor with MessageRecipientRegistry with Logging {
+trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends Actor with MessageRecipientRegistry with Logging {
 
   override def toString = this.getClass.getSimpleName
   def workerId: Int

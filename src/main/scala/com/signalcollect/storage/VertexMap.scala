@@ -35,7 +35,7 @@ class VertexMap[@specialized(Int, Long) Id](
     initialSize: Int = 32768,
     rehashFraction: Float = 0.75f) extends VertexStore[Id] {
   assert(initialSize > 0)
-  private[this] final var maxSize = nextPowerOfTwo(initialSize)
+  final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt

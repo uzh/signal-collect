@@ -29,7 +29,7 @@ import scala.collection.mutable.IndexedSeq
  *
  *  @author Philip Stutz
  */
-trait Vertex[+Id, State] extends Serializable {
+trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float) State] extends Serializable {
 
   override def hashCode = id.hashCode
 
