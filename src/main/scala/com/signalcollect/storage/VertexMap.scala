@@ -88,6 +88,27 @@ class VertexMap[@specialized(Int, Long) Id](
     }
     limit
   }
+  
+  // Removes the vertices after they have been processed.
+  final def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
+    val limit = numberOfElements
+    var elementsProcessed = 0
+    while (elementsProcessed < limit && !breakCondition()) {
+      val vertex = values(nextPositionToProcess)
+      if (vertex != null) {
+        p(vertex)
+        elementsProcessed += 1
+        keys(nextPositionToProcess) = 0
+        values(nextPositionToProcess) = null
+        numberOfElements -= 1
+      }
+      nextPositionToProcess = (nextPositionToProcess + 1) & mask
+    }
+    if (elementsProcessed > 0) {
+      optimizeFromPosition(nextPositionToProcess)
+    }
+    limit
+  }
 
   private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
