@@ -3,7 +3,6 @@
  *  @author Francisco de Freitas
  *  @author Daniel Strebel
  *  
- *  
  *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -147,17 +146,17 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val batchProcessSize = 10000
 
   def scheduleOperations {
-    if (!vertexStore.toCollect.isEmpty) {
-      vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    if (!messageQueue.hasMessages) {
+      vertexStore.toCollect.processWithCondition(
+        vertex => {
+          executeCollectOperationOfVertex(vertex, addToSignal = false)
+          if (vertex.scoreSignal > signalThreshold) {
+            executeSignalOperationOfVertex(vertex)
+          }
+        }, breakCondition = () => messageQueue.hasMessages)
     }
-    if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(batchProcessSize))
-      messageBus.flush
-      continueSignalingReceived = false
-    }
-    if (!continueSignalingReceived && !awaitingContinueSignaling && !vertexStore.toSignal.isEmpty) {
-      messageBus.sendToActor(self, ContinueSignaling)
-      awaitingContinueSignaling = true
+    if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && vertexStore.toCollect.isEmpty) {
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     }
   }
 
