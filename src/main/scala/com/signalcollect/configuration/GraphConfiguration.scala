@@ -42,9 +42,7 @@ case class GraphConfiguration(
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
-  heartbeatIntervalInMilliseconds: Long = 100,
-  throttleInboxThresholdPerWorker: Int = 1000,
-  throttleWorkerQueueThresholdInMilliseconds: Int = 20)
+  heartbeatIntervalInMilliseconds: Long = 100)
 
 object LoggingLevel {
   val Debug = 0
