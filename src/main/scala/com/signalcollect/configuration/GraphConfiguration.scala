@@ -35,7 +35,7 @@ case class GraphConfiguration(
   consoleEnabled: Boolean = false,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
-  workerFactory: WorkerFactory = factory.worker.Akka,
+  workerFactory: WorkerFactory = factory.worker.LocalWorker,
   messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
   storageFactory: StorageFactory = factory.storage.InMemory,
   statusUpdateIntervalInMilliseconds: Long = 500l,

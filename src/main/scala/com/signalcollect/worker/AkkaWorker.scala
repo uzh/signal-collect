@@ -147,7 +147,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def scheduleOperations {
     if (!messageQueue.hasMessages) {
-      vertexStore.toCollect.processWithCondition(
+      val collected = vertexStore.toCollect.processWithCondition(
         vertex => {
           executeCollectOperationOfVertex(vertex, addToSignal = false)
           if (vertex.scoreSignal > signalThreshold) {
@@ -156,8 +156,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }, breakCondition = () => messageQueue.hasMessages)
     }
     if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && vertexStore.toCollect.isEmpty) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
+      vertexStore.toSignal.processWithCondition(executeSignalOperationOfVertex(_), breakCondition = () => messageQueue.hasMessages)
     }
+    messageBus.flush
   }
 
   protected val counters = new WorkerOperationCounters()
@@ -432,7 +433,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        vertexStore.toCollect.put(vertex)
+        if (vertex.scoreCollect > collectThreshold) {
+          vertexStore.toCollect.put(vertex)
+        }
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
