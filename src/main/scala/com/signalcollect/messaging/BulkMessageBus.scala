@@ -42,21 +42,26 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](val numberOfWorkers: Int, flushThreshold: Int)
     extends AbstractMessageBus[Id, Signal] {
 
+  protected var pendingSignals = 0
+
   val outgoingMessages: Array[SignalBulker[Id, Signal]] = new Array[SignalBulker[Id, Signal]](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {
     outgoingMessages(i) = new SignalBulker[Id, Signal](flushThreshold)
   }
 
   override def flush {
-    var workerId = 0
-    while (workerId < numberOfWorkers) {
-      val bulker = outgoingMessages(workerId)
-      val signalCount = bulker.numberOfItems
-      if (signalCount > 0) {
-        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds.slice(0, signalCount), bulker.signals.slice(0, signalCount)))
-        outgoingMessages(workerId).clear
+    if (pendingSignals > 0) {
+      var workerId = 0
+      while (workerId < numberOfWorkers) {
+        val bulker = outgoingMessages(workerId)
+        val signalCount = bulker.numberOfItems
+        if (signalCount > 0) {
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds.slice(0, signalCount), bulker.signals.slice(0, signalCount)))
+          outgoingMessages(workerId).clear
+        }
+        workerId += 1
       }
-      workerId += 1
+      pendingSignals = 0
     }
   }
 
@@ -68,7 +73,9 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)
       bulker.addSignal(targetId, signal)
+      pendingSignals += 1
       if (bulker.isFull) {
+        pendingSignals -= bulker.numberOfItems
         super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds, bulker.signals))
         outgoingMessages(workerId).clear
       }
