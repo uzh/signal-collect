@@ -31,14 +31,6 @@ import com.signalcollect.Vertex
 import com.signalcollect.Edge
 import java.util.Random
 
-// val numberOfWorkers: Int
-
-/**
- * Specialization does not play nicely with proper classes:
- * "warning: class DefaultMessageBus must be a trait. Specialized
- * version of class BulkMessageBus will inherit generic com.signalcollect.
- * messaging.DefaultMessageBus[Boolean,Boolean]"
- */
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def numberOfWorkers: Int
