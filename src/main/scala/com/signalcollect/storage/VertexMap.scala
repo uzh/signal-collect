@@ -107,9 +107,9 @@ class VertexMap[@specialized(Int, Long) Id](
     if (elementsProcessed > 0) {
       optimizeFromPosition(nextPositionToProcess)
     }
-    limit
+    elementsProcessed
   }
-
+  
   private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
