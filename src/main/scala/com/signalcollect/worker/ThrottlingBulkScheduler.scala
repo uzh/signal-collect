@@ -19,7 +19,7 @@
 
 package com.signalcollect.worker
 
-trait DataflowHighThroughputScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
+trait ThrottlingBulkScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
   override def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
