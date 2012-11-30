@@ -32,19 +32,11 @@ import java.io.File
 @RunWith(classOf[JUnitRunner])
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
-  /**
-   * Check for read/write permission on current folder
-   */
-  def hasReadAndWritePermission(path: String): Boolean = {
-    val tempFolder = new File(path)
-    tempFolder.canWrite && tempFolder.canRead
-  }
-
-  "InMemory Vertex Store" should {
+  "Default Vertex Store" should {
     val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
     val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
     val inMemoryStore = new DefaultStorage[Any]
-    vertexList.foreach(v => inMemoryStore.vertices.put(v))
+    vertexList.foreach(inMemoryStore.vertices.put(_))
 
     "hold all vertices inserted" in {
       inMemoryStore.vertices.size must_== vertexList.size
