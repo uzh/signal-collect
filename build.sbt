@@ -28,5 +28,6 @@ libraryDependencies ++= Seq(
  "commons-codec" % "commons-codec" % "1.7"  % "compile",
  "junit" % "junit" % "4.8.2"  % "test",
  "org.specs2" % "specs2_2.10.0-RC3" % "1.12.3"  % "test",
+ "org.specs2" % "classycle" % "1.4.1" % "test",
  "org.mockito" % "mockito-all" % "1.9.0"  % "test"
   )
