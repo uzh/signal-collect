@@ -39,7 +39,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable with Test
 
   sequential
 
-  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build)
+  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 

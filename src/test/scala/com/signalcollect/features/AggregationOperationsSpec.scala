@@ -35,79 +35,106 @@ import com.signalcollect.examples.SudokuCell
 class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
   "SumOfStates" should {
-    val graph = GraphBuilder.build
-    graph.addVertex(new PageRankVertex(1))
-    graph.addVertex(new PageRankVertex(2))
-    graph.addVertex(new SudokuCell(1, None))
-    graph.addEdge(1, new PageRankEdge(2))
-    graph.addEdge(2, new PageRankEdge(1))
-    graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+    def createGraph = {
+      val graph = GraphBuilder.build
+      graph.addVertex(new PageRankVertex(1))
+      graph.addVertex(new PageRankVertex(2))
+      graph.addVertex(new SudokuCell(1, None))
+      graph.addEdge(1, new PageRankEdge(2))
+      graph.addEdge(2, new PageRankEdge(1))
+      graph
+    }
 
     "sum all states correctly" in {
+      val graph = createGraph
+      graph.execute(ExecutionConfiguration.withSignalThreshold(0))
       val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
-      (sumOfStates - 2.0) <= 0.0001
+      graph.shutdown
+      math.abs(sumOfStates - 2.0) <= 0.0001
     }
-    graph.shutdown
+
   }
 
   "ProductOfStates" should {
-    val graph = GraphBuilder.build
-    graph.addVertex(new PageRankVertex(1))
-    graph.addVertex(new PageRankVertex(2))
-    graph.addVertex(new SudokuCell(1, None))
-    graph.addEdge(1, new PageRankEdge(2))
-    graph.addEdge(2, new PageRankEdge(1))
-    graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+    def createGraph = {
+      val graph = GraphBuilder.build
+      graph.addVertex(new PageRankVertex(1))
+      graph.addVertex(new PageRankVertex(2))
+      graph.addVertex(new SudokuCell(1, None))
+      graph.addEdge(1, new PageRankEdge(2))
+      graph.addEdge(2, new PageRankEdge(1))
+      graph
+    }
 
     "multiply all states correctly" in {
+      val graph = createGraph
+      graph.execute(ExecutionConfiguration.withSignalThreshold(0))
       val productOfStates = graph.aggregate(new ProductOfStates[Double]).getOrElse(0.0)
-      (productOfStates - 1.0) <= 0.0001
+      graph.shutdown
+      math.abs(productOfStates - 1.0) <= 0.0001
     }
-    graph.shutdown
   }
 
   "CountVertices" should {
-    val graph = GraphBuilder.build
-    graph.addVertex(new PageRankVertex(1))
-    graph.addVertex(new PageRankVertex(2))
-    graph.addVertex(new PageRankVertex(3))
-    graph.addVertex(new SudokuCell(1, None))
-    graph.removeVertex(1)
+    def createGraph = {
+      val graph = GraphBuilder.build
+      graph.addVertex(new PageRankVertex(1))
+      graph.addVertex(new PageRankVertex(2))
+      graph.addVertex(new PageRankVertex(3))
+      graph.removeVertex(1)
+      graph.addVertex(new SudokuCell(1, None))
+      graph.addVertex(new SudokuCell(2, None))
+      graph
+    }
 
     "count the number of PageRank vertices correctly" in {
+      val graph = createGraph
       val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex])
-      (numberOfPRVertices - 2.0) <= 0.0001
+      graph.shutdown
+      numberOfPRVertices === 2
     }
 
     "count the number of SudokuCell vertices correctly" in {
+      val graph = createGraph
+      graph.foreachVertex(println(_))
       val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
-      (numberOfSCVertices - 1.0) <= 0.0001
+      graph.shutdown
+      numberOfSCVertices === 1
     }
-    graph.shutdown
   }
 
   "SampleVertexIds" should {
-    val graph = GraphBuilder.build
     val idSet = (1 to 1000).toSet
-    for (id <- idSet) {
-      graph.addVertex(new PageRankVertex(id))
+    def createGraph = {
+      val graph = GraphBuilder.build
+      for (id <- idSet) {
+        graph.addVertex(new PageRankVertex(id))
+      }
+      graph
     }
 
     "sample 0 vertex ids correctly" in {
+      val graph = createGraph
       val vertexSample = graph.aggregate(new SampleVertexIds(0))
-      vertexSample.size == 0
+      graph.shutdown
+      vertexSample.size === 0
     }
 
     "sample 50 vertex ids correclty" in {
+      val graph = createGraph
       val vertexSample = graph.aggregate(new SampleVertexIds(50))
-      vertexSample.size == 50 && vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+      graph.shutdown
+      vertexSample.size === 50
+      vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
     }
 
     "sample 50 vertex ids correclty" in {
+      val graph = createGraph
       val vertexSample = graph.aggregate(new SampleVertexIds(1000))
-      vertexSample.size == 1000 && vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+      graph.shutdown
+      vertexSample.size === 1000
+      vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
     }
-    graph.shutdown
   }
 
 }
