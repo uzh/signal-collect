@@ -28,8 +28,8 @@ import com.signalcollect.interfaces._
 import java.util.Map.Entry
 
 @RunWith(classOf[JUnitRunner])
-class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
-
+class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer { 
+  
   "Framework" should {
     val g = GraphBuilder.build
     g.addVertex(new BeforeRemovalVertex)

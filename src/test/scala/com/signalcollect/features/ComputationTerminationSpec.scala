@@ -37,7 +37,7 @@ import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNode
 
 @RunWith(classOf[JUnitRunner])
-class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
+class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
   def createCircleGraph(vertices: Int, numberOfWorkers: Option[Int] = None): Graph[Any, Any] = {
     val graph = {

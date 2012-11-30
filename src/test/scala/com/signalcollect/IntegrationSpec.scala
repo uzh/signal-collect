@@ -35,7 +35,7 @@ import org.specs2.runner.JUnitRunner
  * http://code.google.com/p/specs/wiki/RunningSpecs
  */
 @RunWith(classOf[JUnitRunner])
-class IntegrationSpec extends SpecificationWithJUnit with Serializable {
+class IntegrationSpec extends SpecificationWithJUnit with Serializable with TestAnnouncer {
 
   sequential
 

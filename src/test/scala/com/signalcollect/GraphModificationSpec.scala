@@ -25,7 +25,7 @@ import org.specs2.runner.JUnitRunner
 import com.signalcollect._
 
 @RunWith(classOf[JUnitRunner])
-class GraphModificationSpec extends SpecificationWithJUnit {
+class GraphModificationSpec extends SpecificationWithJUnit with TestAnnouncer {
  
   "GraphEditor" should {
     

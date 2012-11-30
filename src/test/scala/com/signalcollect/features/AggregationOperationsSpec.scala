@@ -32,7 +32,7 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.SudokuCell
 
 @RunWith(classOf[JUnitRunner])
-class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
+class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
   "SumOfStates" should {
     val graph = GraphBuilder.build

@@ -29,9 +29,10 @@ import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.examples.PageRankVertex
 import java.io.File
 import com.signalcollect.examples.PageRankVertex$
+import com.signalcollect.TestAnnouncer
 
 @RunWith(classOf[JUnitRunner])
-class VertexMapSpec extends SpecificationWithJUnit with Mockito {
+class VertexMapSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
   "VertexMap" should {
 
