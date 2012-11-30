@@ -35,6 +35,7 @@ import com.signalcollect.examples.SudokuCell
 class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
   "SumOfStates" should {
+    println("TRAVIS CI DEBUG: inside 'SumOfStates'")
     def createGraph = {
       val graph = GraphBuilder.build
       graph.addVertex(new PageRankVertex(1))
@@ -46,10 +47,15 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with
     }
 
     "sum all states correctly" in {
+      println("TRAVIS CI DEBUG: inside 'sum all states correctly'")
       val graph = createGraph
+      println("TRAVIS CI DEBUG: graph was build, executing'")
       graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+      println("TRAVIS CI DEBUG: execution done, aggregating'")
       val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
+      println("TRAVIS CI DEBUG: aggregation done, shutting down'")
       graph.shutdown
+      println("TRAVIS CI DEBUG: shutdown done'")
       math.abs(sumOfStates - 2.0) <= 0.0001
     }
 
