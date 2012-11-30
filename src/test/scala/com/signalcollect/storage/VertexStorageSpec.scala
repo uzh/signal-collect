@@ -43,11 +43,11 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito with TestAnn
       inMemoryStore.vertices.size must_== vertexList.size
     }
 
-    "don't add vertices automatically to the toSignal list" in {
+    "not add vertices automatically to the toSignal list" in {
       inMemoryStore.toSignal.size must_== 0
     }
 
-    "don't add vertices automatically to the toCollect list" in {
+    "not add vertices automatically to the toCollect list" in {
       inMemoryStore.toCollect.size must_== 0
     }
 

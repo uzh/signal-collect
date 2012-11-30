@@ -31,18 +31,14 @@ import java.util.Map.Entry
 class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer { 
   
   "Framework" should {
-    val g = GraphBuilder.build
-    g.addVertex(new BeforeRemovalVertex)
-    g.removeVertex(1)
-    
-    g.execute
-
-   
+    val graph = GraphBuilder.build
+    graph.addVertex(new BeforeRemovalVertex)
+    graph.removeVertex(1)
+    graph.execute   
     "call the beforeRemoval function of a vertex before removing it" in {
       RemovalDetector.beforeRemovalWorked must_== true
     }
-    
-    g.shutdown
+    graph.shutdown
   }
 
 }

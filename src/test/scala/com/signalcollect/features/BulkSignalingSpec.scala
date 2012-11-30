@@ -68,6 +68,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable with Te
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
       })
+      graph.shutdown
       allcorrect
     }
 
@@ -95,6 +96,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable with Te
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
       })
+      graph.shutdown
       allcorrect
     }
 

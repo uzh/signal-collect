@@ -74,6 +74,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
         .withTimeLimit(50)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      graph.shutdown
       state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
     }
 
@@ -85,6 +86,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      graph.shutdown
       state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
     }
   }
@@ -99,6 +101,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      graph.shutdown
       state == 0.2775 && info.executionStatistics.terminationReason == TerminationReason.ComputationStepLimitReached
     }
   }
@@ -119,6 +122,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
+      graph.shutdown
       aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
 
@@ -144,6 +148,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
       if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
+      graph.shutdown
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
 
@@ -155,6 +160,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito wit
       if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
+      graph.shutdown
       aggregate > 98 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
