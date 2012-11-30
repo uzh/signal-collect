@@ -37,12 +37,15 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with
   "SumOfStates" should {
     println("TRAVIS CI DEBUG: inside 'SumOfStates'")
     def createGraph = {
+      println("TRAVIS CI DEBUG: building the graph")
       val graph = GraphBuilder.build
+      println("TRAVIS CI DEBUG: graph built, adding edges and vertices")
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
       graph.addEdge(1, new PageRankEdge(2))
       graph.addEdge(2, new PageRankEdge(1))
+      println("TRAVIS CI DEBUG: edges and vertices were added")
       graph
     }
 
