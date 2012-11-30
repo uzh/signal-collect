@@ -23,7 +23,6 @@ package com.signalcollect
 import com.signalcollect._
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
-import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
 import com.signalcollect.logging.DefaultLogger
 import collection.JavaConversions._
