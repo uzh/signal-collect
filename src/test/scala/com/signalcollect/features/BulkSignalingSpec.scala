@@ -39,7 +39,7 @@ import com.signalcollect.examples.PageRankEdge
  * http://code.google.com/p/specs/wiki/RunningSpecs
  */
 @RunWith(classOf[JUnitRunner])
-class BulkSignalingSpec extends SpecificationWithJUnit with Serializable with TestAnnouncer {
+class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
 
   sequential
 

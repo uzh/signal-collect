@@ -32,35 +32,26 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.SudokuCell
 
 @RunWith(classOf[JUnitRunner])
-class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
   "SumOfStates" should {
-    println("TRAVIS CI DEBUG: inside 'SumOfStates'")
     def createGraph = {
-      println("TRAVIS CI DEBUG: building the graph")
       val graph = GraphBuilder.build
-      println("TRAVIS CI DEBUG: graph built, adding edges and vertices")
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
       graph.addEdge(1, new PageRankEdge(2))
       graph.addEdge(2, new PageRankEdge(1))
-      println("TRAVIS CI DEBUG: edges and vertices were added")
       graph
     }
 
     "sum all states correctly" in {
-      println("TRAVIS CI DEBUG: inside 'sum all states correctly'")
       val graph = createGraph
-      println("TRAVIS CI DEBUG: graph was build, executing'")
       graph.execute(ExecutionConfiguration.withSignalThreshold(0))
-      println("TRAVIS CI DEBUG: execution done, aggregating'")
       val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
-      println("TRAVIS CI DEBUG: aggregation done, shutting down'")
       graph.shutdown
-      println("TRAVIS CI DEBUG: shutdown done'")
       math.abs(sumOfStates - 2.0) <= 0.0001
     }
 
@@ -107,7 +98,6 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with
 
     "count the number of SudokuCell vertices correctly" in {
       val graph = createGraph
-      graph.foreachVertex(println(_))
       val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
       graph.shutdown
       numberOfSCVertices === 1

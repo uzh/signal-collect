@@ -25,27 +25,21 @@ import org.specs2.runner.JUnitRunner
 import com.signalcollect._
 
 @RunWith(classOf[JUnitRunner])
-class GraphModificationSpec extends SpecificationWithJUnit with TestAnnouncer {
+class GraphModificationSpec extends SpecificationWithJUnit {
 
   sequential
 
   "GraphEditor" should {
-    println("TRAVIS CI DEBUG: inside 'GraphEditor should'")
     "keep accurate statistics when using individual vertex removals" in {
-      println("TRAVIS CI DEBUG: inside 'keep accurate statistics when using individual vertex removals'")
       val graph = GraphBuilder.build
-      println("TRAVIS CI DEBUG: graph built")
       graph.addVertex(new GraphModificationVertex(0, 1))
       graph.addVertex(new GraphModificationVertex(1, 1))
       graph.addVertex(new GraphModificationVertex(2, 1))
       graph.addVertex(new GraphModificationVertex(3, 1))
       graph.addEdge(0, new StateForwarderEdge(1))
       graph.addEdge(1, new StateForwarderEdge(3))
-      println("TRAVIS CI DEBUG: starting first execute")
       var statistics = graph.execute
-      println("TRAVIS CI DEBUG: first execute done, aggregating")
       graph.aggregate(new CountVertices[GraphModificationVertex]) === 4
-      println("TRAVIS CI DEBUG: aggregation done")
       statistics.aggregatedWorkerStatistics.numberOfVertices === 4
       statistics.aggregatedWorkerStatistics.verticesAdded === 4
       statistics.aggregatedWorkerStatistics.verticesRemoved === 0
@@ -54,11 +48,8 @@ class GraphModificationSpec extends SpecificationWithJUnit with TestAnnouncer {
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 0
       graph.removeVertex(0, true)
       graph.removeVertex(2, true)
-      println("TRAVIS CI DEBUG: starting second execute")
       statistics = graph.execute
-      println("TRAVIS CI DEBUG: second execute done, aggregating")
       graph.aggregate(new CountVertices[GraphModificationVertex]) === 2
-      println("TRAVIS CI DEBUG: aggregation done")
       statistics.aggregatedWorkerStatistics.numberOfVertices === 2
       statistics.aggregatedWorkerStatistics.verticesAdded === 4
       statistics.aggregatedWorkerStatistics.verticesRemoved === 2

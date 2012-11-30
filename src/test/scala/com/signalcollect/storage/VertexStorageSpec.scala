@@ -28,10 +28,9 @@ import com.signalcollect.interfaces._
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.examples.PageRankVertex
 import java.io.File
-import com.signalcollect.TestAnnouncer
 
 @RunWith(classOf[JUnitRunner])
-class VertexStorageSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 

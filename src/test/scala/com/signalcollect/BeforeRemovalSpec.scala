@@ -28,7 +28,7 @@ import com.signalcollect.interfaces._
 import java.util.Map.Entry
 
 @RunWith(classOf[JUnitRunner])
-class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 

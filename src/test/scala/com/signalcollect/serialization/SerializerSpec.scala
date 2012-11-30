@@ -24,10 +24,9 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.TestAnnouncer
 
 @RunWith(classOf[JUnitRunner])
-class SerializerSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+class SerializerSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
