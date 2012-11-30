@@ -33,6 +33,8 @@ import com.signalcollect.TestAnnouncer
 @RunWith(classOf[JUnitRunner])
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
+  sequential
+
   "Default Vertex Store" should {
     val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
     val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))

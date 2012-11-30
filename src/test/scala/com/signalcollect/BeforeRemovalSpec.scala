@@ -30,6 +30,8 @@ import java.util.Map.Entry
 @RunWith(classOf[JUnitRunner])
 class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
+  sequential
+
   "Framework" should {
 
     "call the beforeRemoval function of a vertex before removing it" in {

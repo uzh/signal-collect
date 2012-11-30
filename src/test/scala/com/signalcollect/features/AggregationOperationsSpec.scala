@@ -34,6 +34,8 @@ import com.signalcollect.examples.SudokuCell
 @RunWith(classOf[JUnitRunner])
 class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
+  sequential
+
   "SumOfStates" should {
     println("TRAVIS CI DEBUG: inside 'SumOfStates'")
     def createGraph = {

@@ -28,6 +28,9 @@ import com.signalcollect.TestAnnouncer
 
 @RunWith(classOf[JUnitRunner])
 class SerializerSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+
+  sequential
+
   "DefaultSerializer" should {
 
     "correclty serialize/deserialize a Double" in {

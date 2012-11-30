@@ -27,6 +27,8 @@ import com.signalcollect._
 @RunWith(classOf[JUnitRunner])
 class GraphModificationSpec extends SpecificationWithJUnit with TestAnnouncer {
 
+  sequential
+
   "GraphEditor" should {
     println("TRAVIS CI DEBUG: inside 'GraphEditor should'")
     "keep accurate statistics when using individual vertex removals" in {

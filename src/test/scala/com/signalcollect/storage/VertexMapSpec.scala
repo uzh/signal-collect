@@ -34,6 +34,8 @@ import com.signalcollect.TestAnnouncer
 @RunWith(classOf[JUnitRunner])
 class VertexMapSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
 
+  sequential
+
   "VertexMap" should {
 
     "support puts" in {
