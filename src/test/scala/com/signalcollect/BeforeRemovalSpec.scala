@@ -28,17 +28,19 @@ import com.signalcollect.interfaces._
 import java.util.Map.Entry
 
 @RunWith(classOf[JUnitRunner])
-class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer { 
-  
+class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito with TestAnnouncer {
+
   "Framework" should {
-    val graph = GraphBuilder.build
-    graph.addVertex(new BeforeRemovalVertex)
-    graph.removeVertex(1)
-    graph.execute   
+
     "call the beforeRemoval function of a vertex before removing it" in {
+      val graph = GraphBuilder.build
+      graph.addVertex(new BeforeRemovalVertex)
+      graph.removeVertex(1)
+      graph.execute
       RemovalDetector.beforeRemovalWorked must_== true
+      graph.shutdown
     }
-    graph.shutdown
+
   }
 
 }
