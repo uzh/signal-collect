@@ -72,7 +72,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable with Te
       allcorrect
     }
 
-    "can handle bulk size of 1" in {
+    "handle a bulk size of 1 correctly" in {
       def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
