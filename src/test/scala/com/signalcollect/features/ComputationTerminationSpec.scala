@@ -65,31 +65,31 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
-  "Time limit" should {
-
-    "work for asynchronous computations" in {
-      val graph = createCircleGraph(1000)
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withTimeLimit(50)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      graph.shutdown
-      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
-    }
-
-    "work for synchronous computations" in {
-      val graph = createCircleGraph(100)
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withTimeLimit(30)
-        .withExecutionMode(ExecutionMode.Synchronous)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      graph.shutdown
-      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
-    }
-  }
+//  "Time limit" should {
+//
+//    "work for asynchronous computations" in {
+//      val graph = createCircleGraph(1000)
+//      val execConfig = ExecutionConfiguration
+//        .withSignalThreshold(0)
+//        .withTimeLimit(50)
+//      val info = graph.execute(execConfig)
+//      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+//      graph.shutdown
+//      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
+//    }
+//
+//    "work for synchronous computations" in {
+//      val graph = createCircleGraph(100)
+//      val execConfig = ExecutionConfiguration
+//        .withSignalThreshold(0)
+//        .withTimeLimit(30)
+//        .withExecutionMode(ExecutionMode.Synchronous)
+//      val info = graph.execute(execConfig)
+//      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+//      graph.shutdown
+//      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
+//    }
+//  }
 
   "Steps limit" should {
 
