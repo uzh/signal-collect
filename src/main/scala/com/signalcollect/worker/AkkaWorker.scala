@@ -39,11 +39,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.messaging.Request
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import akka.dispatch.MessageQueue
-import com.signalcollect.messaging.Request
 import scala.collection.mutable.IndexedSeq
 import collection.JavaConversions._
 import scala.reflect.ClassTag
@@ -76,9 +74,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-    extends Worker[Id, Signal] with ActorLogging {
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
-  override def toString = "Worker" + workerId
+  override def toString = "Worker"+workerId
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
@@ -162,7 +160,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(this, messageBus)
+  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   protected val vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]] // Vertex graph edits are not typesafe.
   protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
 
@@ -186,7 +184,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       case Request(command, reply) =>
         counters.requestMessagesReceived += 1
         try {
-          val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
+          val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](this)
           if (reply) {
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
               messageBus.sendToActor(sender, None)
@@ -201,11 +199,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       case other =>
         counters.otherMessagesReceived += 1
-        warning("Could not handle message " + message)
+        warning("Could not handle message "+message)
     }
   }
 
-  def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
@@ -216,7 +214,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  def addEdge(sourceId: Id, edge: Edge[Id]) {
+  override def addEdge(sourceId: Id, edge: Edge[Id]) {
     val vertex = vertexStore.vertices.get(sourceId)
     if (vertex != null) {
       if (vertex.addEdge(edge, vertexGraphEditor)) {
@@ -226,11 +224,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       }
     } else {
-      warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
+      warning("Did not find vertex with id "+sourceId+" when trying to add outgoing edge ("+sourceId+", "+edge.targetId+")")
     }
   }
 
-  def removeEdge(edgeId: EdgeId[Id]) {
+  override def removeEdge(edgeId: EdgeId[Id]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
       if (vertex.removeEdge(edgeId.targetId, vertexGraphEditor)) {
@@ -239,19 +237,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
+        warning("Outgoing edge not found when trying to remove edge with id "+edgeId)
       }
     } else {
-      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
+      warning("Source vertex not found found when trying to remove outgoing edge with id "+edgeId)
     }
   }
 
-  def removeVertex(vertexId: Id) {
+  override def removeVertex(vertexId: Id) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+      warning("Should remove vertex with id "+vertexId+": could not find this vertex.")
     }
   }
 
@@ -265,7 +263,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.toSignal.remove(vertex.id)
   }
 
-  def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
+  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit) {
+     graphEditor.loadGraph(vertexIdHint, graphLoader)
+  }
+
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
     graphLoader(graphEditor)
   }
 
@@ -307,7 +309,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       val result = f(vertex.asInstanceOf[VertexType])
       result
     } else {
-      throw new Exception("Vertex with id " + vertexId + " not found.")
+      throw new Exception("Vertex with id "+vertexId+" not found.")
     }
   }
 
@@ -323,11 +325,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     accumulator
   }
 
-  def startAsynchronousComputation {
+  def startComputation {
     shouldStart = true
   }
 
-  def pauseAsynchronousComputation {
+  def pauseComputation {
     shouldPause = true
   }
 
@@ -343,6 +345,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     vertexStore.toSignal.isEmpty
   }
+
+  def getIndividualWorkerStatistics = List(getWorkerStatistics)
 
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(

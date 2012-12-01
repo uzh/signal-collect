@@ -40,8 +40,8 @@ class ModularitySpec extends SpecificationWithJUnit with Analysis with Classycle
 
   "The modules" should {
     " have no direct dependencies between each other" in {
+      // All except for configuration, factory and interfaces.  
       val layerStructure = layers(
-        "configuration",
         "console",
         "coordinator",
         "examples",
@@ -51,8 +51,7 @@ class ModularitySpec extends SpecificationWithJUnit with Analysis with Classycle
         "nodeprovisioning",
         "serialization",
         "storage",
-        "worker"
-      ).withPrefix("com.signalcollect")
+        "worker").withPrefix("com.signalcollect")
         .inTargetDir("target/scala-2.10")
       layerStructure must beRespected
     }

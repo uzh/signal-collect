@@ -40,7 +40,6 @@ import scala.concurrent.duration._
 import scala.concurrent.duration.Duration._
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
-import com.signalcollect.messaging.Request
 import scala.reflect.ClassTag
 import scala.language.postfixOps
 
@@ -58,7 +57,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   context.setReceiveTimeout(Duration.Undefined)
 
   val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
+    messageBusFactory.createInstance[Id, Signal](
+        numberOfWorkers)
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds

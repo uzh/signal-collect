@@ -23,13 +23,13 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.interfaces.Worker
 import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.configuration.GraphConfiguration
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.StorageFactory
 import scala.reflect.ClassTag
 import com.signalcollect.worker.ThrottlingBulkScheduler
+import com.signalcollect.interfaces.WorkerActor
 
 /**
  *  The local worker factory creates worker instances that work in the local-machine scenario.
@@ -38,7 +38,7 @@ object LocalWorker extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
-    config: GraphConfiguration): Worker[Id, Signal] = {
+    config: GraphConfiguration): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
@@ -57,7 +57,7 @@ object DistributedWorker extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
-    config: GraphConfiguration): Worker[Id, Signal] = {
+    config: GraphConfiguration): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,

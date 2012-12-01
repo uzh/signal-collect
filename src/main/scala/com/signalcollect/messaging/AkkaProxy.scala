@@ -39,8 +39,6 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 import scala.language.postfixOps
 
-case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
-
 /**
  * Used to create proxies
  */

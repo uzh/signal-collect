@@ -36,7 +36,7 @@ import com.signalcollect.interfaces.LogMessage
 import scala.util.Random
 import akka.japi.Creator
 import scala.concurrent.Future
-import com.signalcollect.util.akka.ActorSystemRegistry
+import com.signalcollect.configuration.ActorSystemRegistry
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.TimeUnit
@@ -53,8 +53,8 @@ import scala.language.postfixOps
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[Worker[Id, Signal]] {
-  def create: Worker[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
+  def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
 }
 
 /**
@@ -119,7 +119,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
   }
 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_))
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses

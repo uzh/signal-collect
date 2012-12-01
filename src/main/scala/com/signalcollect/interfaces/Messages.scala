@@ -22,6 +22,8 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 
+case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
+
 case class Heartbeat(maySignal: Boolean)
 
 // Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.

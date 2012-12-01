@@ -23,18 +23,15 @@ import com.signalcollect._
 import akka.actor.Actor
 import scala.concurrent.Future
 
-trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends Actor with MessageRecipientRegistry with Logging {
-
-  override def toString = this.getClass.getSimpleName
-  def workerId: Int
-  
-  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
+trait WorkerApi[Id, Signal] {
 
   def addVertex(vertex: Vertex[Id, _])
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
   def removeEdge(edgeId: EdgeId[Id])
-  def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit)
+  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
+  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit)
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit)
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
 
@@ -49,13 +46,14 @@ trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) 
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
 
-  def pauseAsynchronousComputation
-  def startAsynchronousComputation
-  
+  def pauseComputation
+  def startComputation
+
   def signalStep: Boolean
   def collectStep: Boolean
 
   def getWorkerStatistics: WorkerStatistics
+  def getIndividualWorkerStatistics: List[WorkerStatistics]
 
   def shutdown
 

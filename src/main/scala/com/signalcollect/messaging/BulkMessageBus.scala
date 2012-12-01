@@ -22,6 +22,7 @@ package com.signalcollect.messaging
 import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.BulkSignal
 import scala.reflect.ClassTag
+import com.signalcollect.interfaces.WorkerApiFactory
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
   private var itemCount = 0
@@ -39,10 +40,15 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 }
 
-class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](val numberOfWorkers: Int, flushThreshold: Int)
+class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+  val numberOfWorkers: Int,
+  flushThreshold: Int,
+  workerApiFactory: WorkerApiFactory)
     extends AbstractMessageBus[Id, Signal] {
 
   protected var pendingSignals = 0
+
+  lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
 
   val outgoingMessages: Array[SignalBulker[Id, Signal]] = new Array[SignalBulker[Id, Signal]](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {
@@ -68,7 +74,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.sendSignal(signal, targetId, sourceId)
+      workerApi.processSignal(signal, targetId, sourceId)
     } else {
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)

@@ -21,22 +21,29 @@ package com.signalcollect.interfaces
 
 import scala.reflect.ClassTag
 import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 
-trait Factory extends Serializable {
-  def name: String = this.getClass.getSimpleName.replace("$", "")
-}
+trait Factory extends Serializable
 
 trait WorkerFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
-    config: GraphConfiguration): Worker[Id, Signal]
+    config: GraphConfiguration): WorkerActor[Id, Signal]
 }
 
 trait MessageBusFactory extends Factory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal]
+  def createInstance[Id: ClassTag, Signal: ClassTag](
+    numberOfWorkers: Int,
+    workerApiFactory: WorkerApiFactory = DefaultWorkerApiFactory): MessageBus[Id, Signal]
 }
 
 trait StorageFactory extends Factory {
   def createInstance[Id]: Storage[Id]
+}
+
+trait WorkerApiFactory extends Factory {
+  def createInstance[Id, Signal](
+    workerProxies: Array[WorkerApi[Id, Signal]],
+    mapper: VertexToWorkerMapper[Id]): WorkerApi[Id, Signal]
 }

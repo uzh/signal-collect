@@ -25,13 +25,13 @@ import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.interfaces.LogMessage
 import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.ActorRef
-import com.signalcollect.coordinator.WorkerApi
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
 import java.util.Random
 
-trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def numberOfWorkers: Int
 
@@ -69,15 +69,15 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   lazy val parallelWorkers = workers.par
 
-  lazy val workerProxies: Array[Worker[Id, Signal]] = {
-    val result = new Array[Worker[Id, Signal]](numberOfWorkers)
+  lazy val workerProxies: Array[WorkerApi[Id, Signal]] = {
+    val result = new Array[WorkerApi[Id, Signal]](numberOfWorkers)
     for (workerId <- workerIds) {
-      result(workerId) = AkkaProxy.newInstance[Worker[Id, Signal]](workers(workerId), sentMessagesCounters(workerId), receivedMessagesCounter)
+      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](workers(workerId), sentMessagesCounters(workerId), receivedMessagesCounter)
     }
     result
   }
 
-  lazy val workerApi = new WorkerApi(workerProxies, mapper)
+  def workerApi: WorkerApi[Id, Signal]
 
   /**
    * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
@@ -119,7 +119,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     if (logger != null) {
       logger ! message
     } else {
-      println("Could not log message: " + message)
+      println("Could not log message: "+message)
     }
   }
 
@@ -159,7 +159,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.sendSignal(signal, targetId, sourceId)
+      workerApi.processSignal(signal, targetId, sourceId)
     } else {
       // Manually send a fire & forget request.
       sendToWorkerForVertexId(SignalMessage(targetId, sourceId, signal), targetId)
@@ -172,7 +172,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addVertex(vertex)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[Worker[Id, Signal]]((_.addVertex(vertex)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.addVertex(vertex)), returnResult = false)
       sendToWorkerForVertexId(request, vertex.id)
     }
   }
@@ -184,7 +184,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addEdge(sourceId, edge)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[Worker[Id, Signal]]((_.addEdge(sourceId, edge)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.addEdge(sourceId, edge)), returnResult = false)
       sendToWorkerForVertexId(request, sourceId)
     }
   }
@@ -195,7 +195,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.removeVertex(vertexId)
     } else {
       // manually send a fire & forget request
-      val request = Request[Worker[Id, Signal]]((_.removeVertex(vertexId)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.removeVertex(vertexId)), returnResult = false)
       sendToWorkerForVertexId(request, vertexId)
     }
   }
@@ -206,7 +206,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.removeEdge(edgeId)
     } else {
       // manually send a fire & forget request     
-      val request = Request[Worker[Id, Signal]]((_.removeEdge(edgeId)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.removeEdge(edgeId)), returnResult = false)
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
@@ -215,7 +215,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     if (blocking) {
       workerApi.loadGraph(vertexIdHint, graphLoader)
     } else {
-      val request = Request[Worker[Id, Signal]]((_.loadGraph(graphLoader)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphLoader)), returnResult = false)
       if (vertexIdHint.isDefined) {
         val workerId = vertexIdHint.get.hashCode % workers.length
         sendToWorker(workerId, request)
@@ -233,5 +233,5 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   def getWorkerApi: WorkerApi[Id, Signal] = workerApi
 
-  def getWorkerProxies: Array[Worker[Id, Signal]] = workerProxies
+  def getWorkerProxies: Array[WorkerApi[Id, Signal]] = workerProxies
 }

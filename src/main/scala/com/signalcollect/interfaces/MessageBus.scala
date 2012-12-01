@@ -23,7 +23,7 @@ import scala.concurrent.Future
 import akka.actor.ActorRef
 import com.signalcollect.GraphEditor
 import java.util.concurrent.atomic.AtomicInteger
-import com.signalcollect.coordinator.WorkerApi
+import com.signalcollect.coordinator.DefaultWorkerApi
 
 /**
  *  A message bus is responsible for sending messages.
@@ -56,10 +56,10 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   def sendToCoordinator(m: Any)
 
   // Returns an api that treats all workers as if there were only one.
-  def getWorkerApi: WorkerApi[Id, Signal]  //TODO remove dependency on coordinator package.
+  def getWorkerApi: WorkerApi[Id, Signal]
 
   // Returns an array of worker proxies for all workers, indexed by workerId.
-  def getWorkerProxies: Array[Worker[Id, Signal]]
+  def getWorkerProxies: Array[WorkerApi[Id, Signal]]
 
   // Returns a graph editor that allows to manipulate the graph.
   def getGraphEditor: GraphEditor[Id, Signal]

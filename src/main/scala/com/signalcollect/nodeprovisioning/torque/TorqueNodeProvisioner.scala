@@ -58,7 +58,7 @@ import akka.japi.Creator
 import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
-import com.signalcollect.util.akka.ActorSystemRegistry
+import com.signalcollect.configuration.ActorSystemRegistry
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
