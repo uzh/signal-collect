@@ -22,7 +22,9 @@ package com.signalcollect.interfaces
 
 import com.signalcollect._
 
-case class Heartbeat(coordinatorTimestamp: Long, globalInboxSize: Long)
+case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
+
+case class Heartbeat(maySignal: Boolean)
 
 // Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.
 case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
@@ -57,7 +59,14 @@ case class WorkerStatistics(
     verticesRemoved: Long = 0l,
     numberOfOutgoingEdges: Long = 0l,
     outgoingEdgesAdded: Long = 0l,
-    outgoingEdgesRemoved: Long = 0l) {
+    outgoingEdgesRemoved: Long = 0l,
+    receiveTimeoutMessagesReceived: Long = 0l,
+    heartbeatMessagesReceived: Long = 0l,
+    signalMessagesReceived: Long = 0l,
+    bulkSignalMessagesReceived: Long = 0l,
+    continueMessagesReceived: Long = 0l,
+    requestMessagesReceived: Long = 0l,
+    otherMessagesReceived: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       { // Merges the sent messages arrays.
@@ -85,15 +94,22 @@ case class WorkerStatistics(
       verticesRemoved + other.verticesRemoved,
       numberOfOutgoingEdges + other.numberOfOutgoingEdges,
       outgoingEdgesAdded + other.outgoingEdgesAdded,
-      outgoingEdgesRemoved + other.outgoingEdgesRemoved)
+      outgoingEdgesRemoved + other.outgoingEdgesRemoved,
+      receiveTimeoutMessagesReceived + other.receiveTimeoutMessagesReceived,
+      heartbeatMessagesReceived + other.heartbeatMessagesReceived,
+      signalMessagesReceived + other.signalMessagesReceived,
+      bulkSignalMessagesReceived + other.bulkSignalMessagesReceived,
+      continueMessagesReceived + other.continueMessagesReceived,
+      requestMessagesReceived + other.requestMessagesReceived,
+      otherMessagesReceived + other.otherMessagesReceived
+    )
   }
   override def toString: String = {
-    "messages received" + "\t" + messagesReceived + "\n" +
-      "messages sent" + "\t" + messagesSent + "\n" +
-      "# collect operations executed" + "\t\t" + collectOperationsExecuted + "\n" +
-      "# signal operations executed" + "\t\t" + signalOperationsExecuted + "\n" +
-      "# vertices (added/removed)" + "\t\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
-      "# outgoing edges  (added/removed)" + "\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
+    "# messages \t\t" + messagesReceived + "\n" +
+      "# collect operations \t" + collectOperationsExecuted + "\n" +
+      "# signal operations \t" + signalOperationsExecuted + "\n" +
+      "# vertices (add/remove) \t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
+      "# edges (add/remove) \t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }
 

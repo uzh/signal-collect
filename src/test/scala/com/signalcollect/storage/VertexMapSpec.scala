@@ -33,6 +33,8 @@ import com.signalcollect.examples.PageRankVertex$
 @RunWith(classOf[JUnitRunner])
 class VertexMapSpec extends SpecificationWithJUnit with Mockito {
 
+  sequential
+
   "VertexMap" should {
 
     "support puts" in {

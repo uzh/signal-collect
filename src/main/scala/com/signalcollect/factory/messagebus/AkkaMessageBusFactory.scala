@@ -24,9 +24,11 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.messaging.BulkMessageBus
 import scala.reflect.ClassTag
+import com.signalcollect.interfaces.WorkerApiFactory
 
 object AkkaMessageBusFactory extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new DefaultMessageBus[Id, Signal](numberOfWorkers)
+  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = new DefaultMessageBus[Id, Signal](numberOfWorkers, workerApiFactory)
+  override def toString = "AkkaMessageBusFactory"
 }
 
 /**
@@ -34,5 +36,6 @@ object AkkaMessageBusFactory extends MessageBusFactory {
  * Combines messages for the same vertex using 'combiner'.
  */
 class BulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int): MessageBus[Id, Signal] = new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold)
+  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold, workerApiFactory)
+  override def toString = "BulkAkkaMessageBusFactory"
 }

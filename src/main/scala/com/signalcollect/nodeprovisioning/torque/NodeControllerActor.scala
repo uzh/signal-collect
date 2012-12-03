@@ -53,9 +53,9 @@ import com.signalcollect.configuration.EventBased
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
 import com.signalcollect.configuration.AkkaDispatcher
-import com.signalcollect.interfaces.Worker
-import com.signalcollect.messaging.Request
 import com.signalcollect.nodeprovisioning.AkkaHelper
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.interfaces.Request
 
 class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends Actor with Node {
 
@@ -63,14 +63,14 @@ class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends A
 
   def shutdown = context.system.shutdown
   
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => Worker[_, _]): String = {
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased => 
-        val worker = context.system.actorOf(Props[Worker[_, _]].withCreator(creator()), name = workerName)
+        val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>
-        val worker = context.system.actorOf(Props[Worker[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
     }
   }

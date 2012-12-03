@@ -26,32 +26,35 @@ import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
 import com.signalcollect.interfaces._
 import java.util.Map.Entry
+import org.specs2.analysis.ClassycleDependencyFinder
+import org.specs2.specification.Analysis
 
+/**
+ * Thanks to Jan Machacek for the description
+ * @ http://www.cakesolutions.net/teamblogs/2012/11/20/maven-sbt-and-modularisation/.
+ */
 @RunWith(classOf[JUnitRunner])
-class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
+class ModularitySpec extends SpecificationWithJUnit with Analysis with ClassycleDependencyFinder {
 
   sequential
 
-  "Framework" should {
-
-    "call the beforeRemoval function of a vertex before removing it" in {
-      val graph = GraphBuilder.build
-      graph.addVertex(new BeforeRemovalVertex)
-      graph.removeVertex(1)
-      graph.execute
-      RemovalDetector.beforeRemovalWorked must_== true
-      graph.shutdown
+  "The modules" should {
+    " have no direct dependencies between each other" in {
+      // All except for configuration, factory and interfaces.  
+      val layerStructure = layers(
+        "console",
+        "coordinator",
+        "examples",
+        "factory",
+        "logging",
+        "messaging",
+        "nodeprovisioning",
+        "serialization",
+        "storage",
+        "worker").withPrefix("com.signalcollect")
+        .inTargetDir("target/scala-2.10")
+      layerStructure must beRespected
     }
-
   }
 
-}
-
-object RemovalDetector {
-  var beforeRemovalWorked = false
-}
-
-class BeforeRemovalVertex extends DataGraphVertex(1, 0) {
-  def collect(oldState: Int, mostRecentSignals: Iterable[Signal]): Int = 0
-  override def beforeRemoval(ge: GraphEditor[Any, Any]) = RemovalDetector.beforeRemovalWorked = true
 }

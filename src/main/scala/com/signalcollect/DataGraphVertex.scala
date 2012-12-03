@@ -89,9 +89,7 @@ abstract class DataGraphVertex[Id, State](
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
    *
-   *  @param signals new signals that have arrived since the last time this vertex collected
-   *
-   *  @param messageBus an instance of MessageBus which can be used by this vertex to interact with the graph.
+   *  @param graphEditor an instance of GraphEditor which can be used by this vertex to interact with the graph.
    */
   override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     super.executeCollectOperation(graphEditor)

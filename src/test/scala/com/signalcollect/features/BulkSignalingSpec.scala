@@ -68,10 +68,11 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
       })
+      graph.shutdown
       allcorrect
     }
 
-    "can handle bulk size of 1" in {
+    "handle a bulk size of 1 correctly" in {
       def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
@@ -95,6 +96,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
       })
+      graph.shutdown
       allcorrect
     }
 

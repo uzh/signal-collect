@@ -36,7 +36,7 @@ import com.signalcollect.interfaces.LogMessage
 import scala.util.Random
 import akka.japi.Creator
 import scala.concurrent.Future
-import com.signalcollect.util.akka.ActorSystemRegistry
+import com.signalcollect.configuration.ActorSystemRegistry
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.TimeUnit
@@ -53,15 +53,15 @@ import scala.language.postfixOps
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[Worker[Id, Signal]] {
-  def create: Worker[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
+  def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
 }
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph]) 
  */
-case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, val loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
-  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, loggingLevel)
+case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, heartbeatIntervalInMilliseconds, loggingLevel)
 }
 
 /**
@@ -107,7 +107,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
   
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.loggingLevel)
+    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds, config.loggingLevel)
     config.akkaDispatcher match {
         case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
         case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
@@ -119,12 +119,10 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
   }
 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_))
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
-  awaitIdle
-  workerApi.calibrateWorkerTime
 
   val console = {
     if (config.consoleEnabled) {
@@ -356,11 +354,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (config.consoleEnabled) {
       console.shutdown
     }
-    loggerActor ! Info("workerApi.shutdown ...", this.toString)
     workerApi.shutdown
-    loggerActor ! Info("nodes.par.foreach(_.shutdown) ...", this.toString)
     nodes.par.foreach(_.shutdown)
-    loggerActor ! Info("system.shutdown ...", this.toString)
     system.shutdown
     system.awaitTermination
   }
@@ -425,8 +420,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graphEditor.removeEdge(edgeId, blocking)
   }
   
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean = false) {
-    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
+    graphEditor.modifyGraph(graphModification, vertexIdHint, blocking)
   }
   
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {

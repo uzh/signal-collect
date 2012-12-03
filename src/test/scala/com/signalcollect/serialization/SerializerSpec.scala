@@ -27,6 +27,9 @@ import org.specs2.mock.Mockito
 
 @RunWith(classOf[JUnitRunner])
 class SerializerSpec extends SpecificationWithJUnit with Mockito {
+
+  sequential
+
   "DefaultSerializer" should {
 
     "correclty serialize/deserialize a Double" in {

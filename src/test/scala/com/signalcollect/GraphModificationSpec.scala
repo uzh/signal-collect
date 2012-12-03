@@ -26,9 +26,10 @@ import com.signalcollect._
 
 @RunWith(classOf[JUnitRunner])
 class GraphModificationSpec extends SpecificationWithJUnit {
- 
+
+  sequential
+
   "GraphEditor" should {
-    
     "keep accurate statistics when using individual vertex removals" in {
       val graph = GraphBuilder.build
       graph.addVertex(new GraphModificationVertex(0, 1))

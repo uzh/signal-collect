@@ -23,7 +23,6 @@ package com.signalcollect
 import com.signalcollect._
 import com.signalcollect.configuration._
 import com.signalcollect.interfaces._
-import com.signalcollect.graphproviders._
 import com.signalcollect.examples._
 import com.signalcollect.logging.DefaultLogger
 import collection.JavaConversions._
@@ -39,8 +38,8 @@ import org.specs2.runner.JUnitRunner
 class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   sequential
-  
-  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build)
+
+  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 
@@ -49,11 +48,9 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     var computationStatistics = Map[String, List[ExecutionInformation]]()
 
     for (executionMode <- executionModes) {
-      println("ExecutionMode: " + executionMode)
       for (graphProvider <- graphProviders) {
         val graph = graphProvider()
         buildGraph(graph)
-        println("Graph has been built.")
         val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
         correct &= graph.aggregate(new AggregationOperation[Boolean] {
           val neutralElement = true
@@ -63,9 +60,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
         if (!correct) {
           System.err.println("Test failed. Computation stats: " + stats)
         }
-        println("Test completed, shutting down...")
         graph.shutdown
-        println("Shutdown completed.")
       }
     }
     correct
@@ -111,14 +106,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   "PageRank algorithm" should {
     "deliver correct results on a 5-cycle graph" in {
-      println("PageRank algorithm on a 5-cycle graph")
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
       def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -126,14 +120,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "deliver correct results on a 5-star graph" in {
-      println("PageRank algorithm on a 5-star graph")
       val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
       def pageRankFiveStarVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = if (v.id == 4.0) 0.66 else 0.15
         val correct = (state - expectedState).abs < 0.00001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -141,14 +134,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "deliver correct results on a 2*2 symmetric grid" in {
-      println("PageRank algorithm on a 2*2 symmetric grid")
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       def pageRankTwoOnTwoGridVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -156,14 +148,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "deliver correct results on a 5*5 torus" in {
-      println("PageRank algorithm on a 5*5 torus")
       val symmetricTorusEdges = new Torus(5, 5)
       def pageRankTorusVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -176,30 +167,27 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
       case v: VerifiedColoredVertex =>
         val verified = !v.publicMostRecentSignals.iterator.contains(v.state)
         if (!verified) {
-          println("Vertex Coloring: " + v + " has the same color as one of its neighbors.\n" +
+          System.err.println("Vertex Coloring: " + v + " has the same color as one of its neighbors.\n" +
             "Most recent signals received: " + v.publicMostRecentSignals + "\n" +
             "Score signal: " + v.scoreSignal)
         }
         verified
       case other =>
-        println("Vertex " + other + " is not of type VerifiedColoredVertex"); false
+        System.err.println("Vertex " + other + " is not of type VerifiedColoredVertex"); false
     }
   }
 
   "VertexColoring algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
-      println("VertexColoring algorithm on a symmetric 4-cycle")
       val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) must_== true
     }
 
     "deliver correct results on a symmetric 5-star" in {
-      println("VertexColoring algorithm on a symmetric 5-star")
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) must_== true
     }
     "deliver correct results on a 2*2 symmetric grid" in {
-      println("VertexColoring algorithm on a 2*2 symmetric grid")
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) must_== true
     }
@@ -207,14 +195,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   "SSSP algorithm" should {
     "deliver correct results on a symmetric 4-cycle" in {
-      println("SSSP algorithm on a symmetric 4-cycle")
       val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
       def ssspSymmetricsFourCycleVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Option[Int]].get
         val expectedState = v.id
         val correct = state == expectedState
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -222,14 +209,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "deliver correct results on a symmetric 5-star" in {
-      println("SSSP algorithm on a symmetric 5-star")
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       def ssspSymmetricFiveStarVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Option[Int]].get
         val expectedState = if (v.id == 4) 0 else 1
         val correct = state == expectedState
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
@@ -242,4 +228,70 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 class VerifiedColoredVertex(id: Int, numColors: Int) extends ColoredVertex(id, numColors, 0, false) {
   // only necessary to allow access to vertex internals
   def publicMostRecentSignals: Iterable[Int] = mostRecentSignalMap.values
+}
+
+/**
+ * Required for integration testing. Returns an undirected grid-structured graph.
+ * Example Grid(2,2): Edges=(1,3), (3,1), (1,2), (2,1), (2,4), (4,2), (3,4), (4,3)
+ * 		1-2
+ * 		| |
+ * 		3-4
+ */
+class Grid(val width: Int, height: Int) extends Traversable[(Int, Int)] with Serializable {
+
+  def foreach[U](f: ((Int, Int)) => U) = {
+    val max = width * height
+    for (n <- 1 to max) {
+      if (n + width <= max) {
+        f(n, n + width)
+        f(n + width, n)
+      }
+      if (n % height != 0) {
+        f(n, n + 1)
+        f(n + 1, n)
+      }
+    }
+  }
+}
+
+class Torus(val width: Int, height: Int) extends Traversable[(Int, Int)] with Serializable {
+
+  def foreach[U](f: ((Int, Int)) => U) = {
+    val max = width * height
+    for (y <- 0 until height) {
+      for (x <- 0 until width) {
+        val flattenedCurrentId = flatten((x, y), width)
+        for (neighbor <- neighbors(x, y, width, height).map(flatten(_, width))) {
+          f(flattenedCurrentId, neighbor)
+        }
+      }
+    }
+  }
+
+  def neighbors(x: Int, y: Int, width: Int, height: Int): List[(Int, Int)] = {
+    List(
+      (x, decrease(y, height)),
+      (decrease(x, width), y), (increase(x, width), y),
+      (x, increase(y, height)))
+  }
+
+  def decrease(counter: Int, limit: Int): Int = {
+    if (counter - 1 >= 0) {
+      counter - 1
+    } else {
+      width - 1
+    }
+  }
+
+  def increase(counter: Int, limit: Int): Int = {
+    if (counter + 1 >= width) {
+      0
+    } else {
+      counter + 1
+    }
+  }
+
+  def flatten(coordinates: (Int, Int), width: Int): Int = {
+    coordinates._1 + coordinates._2 * width
+  }
 }

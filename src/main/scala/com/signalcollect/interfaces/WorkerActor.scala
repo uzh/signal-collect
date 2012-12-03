@@ -1,7 +1,7 @@
 /*
- *  @author Daniel Strebel
+ *  @author Philip Stutz
  *  
- *  Copyright 2012 University of Zurich
+ *  Copyright 2010 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,23 +17,14 @@
  *  
  */
 
-package com.signalcollect.util.akka
+package com.signalcollect.interfaces
 
-import akka.actor.ActorSystem
+import com.signalcollect._
+import akka.actor.Actor
+import scala.concurrent.Future
 
-object ActorSystemRegistry {
-
-  var systems = Map[String, ActorSystem]()
-
-  def register(system: ActorSystem) {
-    synchronized {
-      systems += ((system.name, system))
-    }
-  }
-
-  def retrieve(name: String): Option[ActorSystem] = {
-    synchronized {
-      systems.get(name)
-    }
-  }
-}
+trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+  extends Actor
+  with WorkerApi[Id, Signal]
+  with MessageRecipientRegistry
+  with Logging

@@ -3,7 +3,6 @@
  *  @author Francisco de Freitas
  *  @author Daniel Strebel
  *  
- *  
  *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,11 +39,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.messaging.Request
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import akka.dispatch.MessageQueue
-import com.signalcollect.messaging.Request
 import scala.collection.mutable.IndexedSeq
 import collection.JavaConversions._
 import scala.reflect.ClassTag
@@ -59,49 +56,36 @@ class WorkerOperationCounters(
   var outgoingEdgesAdded: Long = 0l,
   var outgoingEdgesRemoved: Long = 0l,
   var signalSteps: Long = 0l,
-  var collectSteps: Long = 0l)
+  var collectSteps: Long = 0l,
+  var receiveTimeoutMessagesReceived: Long = 0l,
+  var heartbeatMessagesReceived: Long = 0l,
+  var signalMessagesReceived: Long = 0l,
+  var bulkSignalMessagesReceived: Long = 0l,
+  var continueMessagesReceived: Long = 0l,
+  var requestMessagesReceived: Long = 0l,
+  var otherMessagesReceived: Long = 0)
 
-object Continue extends Serializable
+object ContinueSignaling
 
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val statusUpdateIntervalInMillis: Long,
-  val throttleInboxThresholdPerWorker: Int,
-  val throttleWorkerQueueThresholdInMilliseconds: Int,
+  val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-    extends Worker[Id, Signal] with ActorLogging {
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
-  override def toString = "Worker" + workerId
+  override def toString = "Worker"+workerId
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
   }
 
-  var calibratedCoordinatorTimeDelta = 0l
-  val globalInboxLimit = numberOfWorkers * throttleInboxThresholdPerWorker
-  val maxQueueDelay = 200000000l + throttleWorkerQueueThresholdInMilliseconds * 1000000
-  var lastCoordinatorTimestamp = 0l
-  var lastCoordinatorGlobalQueue = 0l
+  var maySignal = true
 
-  def queueDelayTooHigh: Boolean = {
-    (System.nanoTime - lastCoordinatorTimestamp) > (calibratedCoordinatorTimeDelta + maxQueueDelay)
-  }
-
-  def calibrateTime(coordinatorTimestamp: Long) {
-    calibratedCoordinatorTimeDelta = System.nanoTime - coordinatorTimestamp
-  }
-
-  def maySignal: Boolean = {
-    lastCoordinatorGlobalQueue <= globalInboxLimit && !queueDelayTooHigh
-  }
-
-  def receiveHeartbeat(coordinatorTimestamp: Long, globalInboxSize: Long) {
-    lastCoordinatorTimestamp = coordinatorTimestamp
-    lastCoordinatorGlobalQueue = globalInboxSize
-  }
+  var continueSignalingReceived = true
+  var awaitingContinueSignaling = false
 
   /**
    * Timeout for Akka actor idling
@@ -122,6 +106,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
      */
     case ReceiveTimeout =>
+      counters.receiveTimeoutMessagesReceived += 1
       if (isConverged || isPaused) { // if the actor has nothing to compute and the mailbox is empty, then it is idle
         setIdle(true)
       } else {
@@ -129,11 +114,20 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         performComputations
       }
 
-    case Heartbeat(coordinatorTimestamp, globalInboxSize) =>
-      receiveHeartbeat(coordinatorTimestamp, globalInboxSize)
+    case Heartbeat(maySignal) =>
+      counters.heartbeatMessagesReceived += 1
+      sendStatusToCoordinator
+      this.maySignal = maySignal
+      if (isConverged || isPaused) { // TODO: refactor code if this works
+        setIdle(true)
+      } else {
+        handlePauseAndContinue
+        performComputations
+      }
 
     case msg =>
       setIdle(false)
+      sendStatusToCoordinator
       process(msg) // process the message
       handlePauseAndContinue
       performComputations
@@ -142,36 +136,31 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: MessageQueue = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue
 
   def performComputations {
-    val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusUpdateIntervalInMillis) {
-      lastStatusUpdate = currentTime
-      sendStatusToCoordinator
-    }
     if (!isPaused) {
       scheduleOperations
     }
   }
 
-  var awaitingContinue = false
-  var continue = true
+  val batchProcessSize = 10000
 
   def scheduleOperations {
-    if (!vertexStore.toCollect.isEmpty) {
-      vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
+    if (!messageQueue.hasMessages) {
+      val collected = vertexStore.toCollect.processWithCondition(
+        vertex => {
+          executeCollectOperationOfVertex(vertex, addToSignal = false)
+          if (vertex.scoreSignal > signalThreshold) {
+            executeSignalOperationOfVertex(vertex)
+          }
+        }, breakCondition = () => messageQueue.hasMessages)
     }
-    if (continue && !vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && maySignal) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(10000))
-      messageBus.flush
-      continue = false
+    if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && vertexStore.toCollect.isEmpty) {
+      vertexStore.toSignal.processWithCondition(executeSignalOperationOfVertex(_), breakCondition = () => messageQueue.hasMessages)
     }
-    if (!awaitingContinue && !vertexStore.toSignal.isEmpty) {
-      messageBus.sendToActor(self, Continue)
-      awaitingContinue = true
-    }
+    messageBus.flush
   }
 
   protected val counters = new WorkerOperationCounters()
-  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(this, messageBus)
+  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   protected val vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]] // Vertex graph edits are not typesafe.
   protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
 
@@ -179,20 +168,23 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
+        counters.signalMessagesReceived += 1
         processSignal(s.signal, s.targetId, s.sourceId)
       case bulkSignal: BulkSignal[Id, Signal] =>
+        counters.bulkSignalMessagesReceived += 1
         val size = bulkSignal.signals.length
         var i = 0
         while (i < size) {
           processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
           i += 1
         }
-      case Continue =>
-        awaitingContinue = false
-        continue = true
+      case ContinueSignaling =>
+        continueSignalingReceived = true
+        awaitingContinueSignaling = false
       case Request(command, reply) =>
+        counters.requestMessagesReceived += 1
         try {
-          val result = command.asInstanceOf[Worker[Id, Signal] => Any](this)
+          val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](this)
           if (reply) {
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
               messageBus.sendToActor(sender, None)
@@ -205,11 +197,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             severe(e)
             throw e
         }
-      case other => warning("Could not handle message " + message)
+      case other =>
+        counters.otherMessagesReceived += 1
+        warning("Could not handle message "+message)
     }
   }
 
-  def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
@@ -220,7 +214,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  def addEdge(sourceId: Id, edge: Edge[Id]) {
+  override def addEdge(sourceId: Id, edge: Edge[Id]) {
     val vertex = vertexStore.vertices.get(sourceId)
     if (vertex != null) {
       if (vertex.addEdge(edge, vertexGraphEditor)) {
@@ -230,11 +224,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       }
     } else {
-      warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
+      warning("Did not find vertex with id "+sourceId+" when trying to add outgoing edge ("+sourceId+", "+edge.targetId+")")
     }
   }
 
-  def removeEdge(edgeId: EdgeId[Id]) {
+  override def removeEdge(edgeId: EdgeId[Id]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
       if (vertex.removeEdge(edgeId.targetId, vertexGraphEditor)) {
@@ -243,19 +237,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
+        warning("Outgoing edge not found when trying to remove edge with id "+edgeId)
       }
     } else {
-      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
+      warning("Source vertex not found found when trying to remove outgoing edge with id "+edgeId)
     }
   }
 
-  def removeVertex(vertexId: Id) {
+  override def removeVertex(vertexId: Id) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+      warning("Should remove vertex with id "+vertexId+": could not find this vertex.")
     }
   }
 
@@ -265,10 +259,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.verticesRemoved += 1
     vertex.beforeRemoval(vertexGraphEditor)
     vertexStore.vertices.remove(vertex.id)
+    vertexStore.toCollect.remove(vertex.id)
+    vertexStore.toSignal.remove(vertex.id)
   }
 
-  def loadGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
-    graphLoader(graphEditor)
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
+     graphEditor.modifyGraph(graphLoader, vertexIdHint)
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
@@ -309,7 +305,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       val result = f(vertex.asInstanceOf[VertexType])
       result
     } else {
-      throw new Exception("Vertex with id " + vertexId + " not found.")
+      throw new Exception("Vertex with id "+vertexId+" not found.")
     }
   }
 
@@ -325,11 +321,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     accumulator
   }
 
-  def startAsynchronousComputation {
+  def startComputation {
     shouldStart = true
   }
 
-  def pauseAsynchronousComputation {
+  def pauseComputation {
     shouldPause = true
   }
 
@@ -346,6 +342,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.toSignal.isEmpty
   }
 
+  def getIndividualWorkerStatistics = List(getWorkerStatistics)
+
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
       workerId = workerId,
@@ -360,7 +358,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       verticesRemoved = counters.verticesRemoved,
       numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
       outgoingEdgesAdded = counters.outgoingEdgesAdded,
-      outgoingEdgesRemoved = counters.outgoingEdgesRemoved)
+      outgoingEdgesRemoved = counters.outgoingEdgesRemoved,
+      receiveTimeoutMessagesReceived = counters.receiveTimeoutMessagesReceived,
+      heartbeatMessagesReceived = counters.heartbeatMessagesReceived,
+      signalMessagesReceived = counters.signalMessagesReceived,
+      bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
+      continueMessagesReceived = counters.continueMessagesReceived,
+      requestMessagesReceived = counters.requestMessagesReceived,
+      otherMessagesReceived = counters.otherMessagesReceived)
   }
 
   def shutdown {}
@@ -391,8 +396,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   protected def sendStatusToCoordinator {
-    val status = getWorkerStatus
-    messageBus.sendToCoordinator(status)
+    val currentTime = System.currentTimeMillis
+    if (isInitialized && currentTime - lastStatusUpdate > heartbeatIntervalInMilliseconds) {
+      lastStatusUpdate = currentTime
+      val status = getWorkerStatus
+      messageBus.sendToCoordinator(status)
+    }
   }
 
   protected def setIdle(newIdleState: Boolean) {
@@ -424,7 +433,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        vertexStore.toCollect.put(vertex)
+        if (vertex.scoreCollect > collectThreshold) {
+          vertexStore.toCollect.put(vertex)
+        }
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)

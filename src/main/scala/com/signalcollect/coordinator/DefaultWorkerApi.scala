@@ -40,9 +40,12 @@ import scala.concurrent.Future
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
  */
-class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: VertexToWorkerMapper[Id]) {
+class DefaultWorkerApi[Id, Signal](
+  val workers: Array[WorkerApi[Id, Signal]],
+  val mapper: VertexToWorkerMapper[Id])
+    extends WorkerApi[Id, Signal] {
 
-  override def toString = "WorkerApi"
+  override def toString = "DefaultWorkerApi"
 
   protected lazy val parallelWorkers = workers.par
 
@@ -50,42 +53,40 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
     parallelWorkers.map(_.getWorkerStatistics).toList
   }
 
-  def getWorkerStatistics: WorkerStatistics = {
+  override def getWorkerStatistics: WorkerStatistics = {
     parallelWorkers.map(_.getWorkerStatistics).fold(WorkerStatistics(null))(_ + _)
   }
 
-  def calibrateWorkerTime = parallelWorkers foreach (_.calibrateTime(System.nanoTime))
-    
-  def signalStep = parallelWorkers foreach (_.signalStep)
+  override def signalStep = parallelWorkers forall (_.signalStep)
 
-  def collectStep: Boolean = parallelWorkers.map(_.collectStep).reduce(_ && _)
+  override def collectStep: Boolean = parallelWorkers forall (_.collectStep)
 
-  def startComputation = parallelWorkers foreach (_.startAsynchronousComputation)
+  override def startComputation = parallelWorkers foreach (_.startComputation)
 
-  def pauseComputation = parallelWorkers foreach (_.pauseAsynchronousComputation)
+  override def pauseComputation = parallelWorkers foreach (_.pauseComputation)
 
-  def recalculateScores = parallelWorkers foreach (_.recalculateScores)
+  override def recalculateScores = parallelWorkers foreach (_.recalculateScores)
 
-  def recalculateScoresForVertexWithId(vertexId: Id) = workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
+  override def recalculateScoresForVertexWithId(vertexId: Id) = workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
 
-  def shutdown = parallelWorkers foreach (_.shutdown)
+  override def shutdown = parallelWorkers foreach (_.shutdown)
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[Id, _]) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
+  override def foreachVertex(f: (Vertex[Id, _]) => Unit) = parallelWorkers foreach (_.foreachVertex(f))
 
-  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
+  override def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
     val aggregateArray: ParArray[ValueType] = parallelWorkers map (_.aggregate(aggregationOperation))
     aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
   }
 
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
+  override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
 
-  def setSignalThreshold(t: Double) = parallelWorkers foreach (_.setSignalThreshold(t))
+  override def setSignalThreshold(t: Double) = parallelWorkers foreach (_.setSignalThreshold(t))
 
-  def setCollectThreshold(t: Double) = parallelWorkers foreach (_.setCollectThreshold(t))
+  override def setCollectThreshold(t: Double) = parallelWorkers foreach (_.setCollectThreshold(t))
 
   //----------------GraphEditor, BLOCKING variant-------------------------
 
@@ -94,7 +95,7 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _]) {
     workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(vertex)
   }
 
@@ -104,15 +105,16 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addEdge(sourceId: Id, edge: Edge[Id]) {
+  override def addEdge(sourceId: Id, edge: Edge[Id]) {
     workers(mapper.getWorkerIdForVertexId(sourceId)).addEdge(sourceId, edge)
-   }
-  
+  }
+
   /**
-   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
+   *  Processes `signal` on the worker that has the vertex with
+   *  `vertex.id==edgeId.targetId`.
    *  Blocks until the operation has completed.
    */
-  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+  override def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
     workers(mapper.getWorkerIdForVertexId(targetId)).processSignal(signal, targetId, sourceId)
   }
 
@@ -121,7 +123,7 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
    *
    *  @note If no vertex with this id is found, then the operation is ignored and a warning is logged.
    */
-  def removeVertex(vertexId: Id) {
+  override def removeVertex(vertexId: Id) {
     workers(mapper.getWorkerIdForVertexId(vertexId)).removeVertex(vertexId)
   }
 
@@ -131,21 +133,22 @@ class WorkerApi[Id, Signal](val workers: Array[Worker[Id, Signal]], val mapper: 
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  def removeEdge(edgeId: EdgeId[Id]) {
+  override def removeEdge(edgeId: EdgeId[Id]) {
     workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeEdge(edgeId)
   }
 
   /**
    * Runs a graph loading function on a worker
    */
-  def loadGraph(vertexIdHint: Option[Any], graphLoader: GraphEditor[Id, Signal] => Unit) {
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) {
     if (vertexIdHint.isDefined) {
       val workerId = vertexIdHint.get.hashCode % workers.length
-      workers(workerId).loadGraph(graphLoader)
+      workers(workerId).modifyGraph(graphLoader, vertexIdHint)
     } else {
       val rand = new Random
       val randomWorkerId = rand.nextInt(workers.length)
-      workers(randomWorkerId).loadGraph(graphLoader)
+      workers(randomWorkerId).modifyGraph(graphLoader, vertexIdHint)
     }
   }
+
 }

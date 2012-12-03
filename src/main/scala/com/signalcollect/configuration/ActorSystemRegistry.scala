@@ -1,7 +1,7 @@
 /*
- *  @author Philip Stutz
+ *  @author Daniel Strebel
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2012 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,16 +17,24 @@
  *  
  */
 
-package com.signalcollect.factory.storage
+package com.signalcollect.configuration
 
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
-import com.signalcollect.interfaces.Storage
+import akka.actor.ActorSystem
+import scala.Predef.Map.apply
 
-/**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
- */
-object InMemory extends StorageFactory {
-  def createInstance[Id]: Storage[Id] = new DefaultStorage[Id]
-  override def toString = "InMemoryStorageFactory"
+object ActorSystemRegistry {
+
+  var systems = Map[String, ActorSystem]()
+
+  def register(system: ActorSystem) {
+    synchronized {
+      systems += ((system.name, system))
+    }
+  }
+
+  def retrieve(name: String): Option[ActorSystem] = {
+    synchronized {
+      systems.get(name)
+    }
+  }
 }

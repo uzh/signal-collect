@@ -35,15 +35,14 @@ case class GraphConfiguration(
   consoleEnabled: Boolean = false,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
-  workerFactory: WorkerFactory = factory.worker.Akka,
+  workerFactory: WorkerFactory = factory.worker.LocalWorker,
   messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
   storageFactory: StorageFactory = factory.storage.InMemory,
-  statusUpdateIntervalInMillis: Long = 500l,
+  statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
-  throttleInboxThresholdPerWorker: Int = 1000,
-  throttleWorkerQueueThresholdInMilliseconds: Int = 20)
+  heartbeatIntervalInMilliseconds: Long = 100)
 
 object LoggingLevel {
   val Debug = 0

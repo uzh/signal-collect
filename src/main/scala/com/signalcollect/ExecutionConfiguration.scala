@@ -43,12 +43,12 @@ object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.Optim
  *  @author Philip Stutz
  */
 case class ExecutionConfiguration(
-  executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
-  signalThreshold: Double = 0.01,
-  collectThreshold: Double = 0.0,
-  timeLimit: Option[Long] = None,
-  stepsLimit: Option[Long] = None,
-  globalTerminationCondition: Option[GlobalTerminationCondition[_]] = None) {
+    executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
+    signalThreshold: Double = 0.01,
+    collectThreshold: Double = 0.0,
+    timeLimit: Option[Long] = None,
+    stepsLimit: Option[Long] = None,
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]] = None) {
 
   /**
    *  Configures the execution mode used in a computation.
@@ -123,11 +123,11 @@ case class ExecutionConfiguration(
   }
 
   override def toString: String = {
-    "execution mode" + "\t" + "\t" + executionMode + "\n" +
-      "signal threshold" + "\t" + signalThreshold + "\n" +
-      "collect threshold" + "\t" + collectThreshold + "\n" +
-      "time limit" + "\t" + "\t" + timeLimit + "\n" +
-      "steps limit" + "\t" + "\t" + stepsLimit
+    "Execution mode \t\t" + executionMode + "\n" +
+      "Signal threshold \t" + signalThreshold + "\n" +
+      "Collect threshold \t" + collectThreshold + "\n" +
+      "Time limit \t\t" + timeLimit + "\n" +
+      "Steps limit \t\t" + stepsLimit
   }
 }
 
@@ -140,8 +140,8 @@ case class ExecutionConfiguration(
  *  						   In an asynchronous computation: aggregation interval in milliseconds
  */
 abstract class GlobalTerminationCondition[ValueType](
-  val aggregationOperation: AggregationOperation[ValueType],
-  val aggregationInterval: Long = 1000l) {
+    val aggregationOperation: AggregationOperation[ValueType],
+    val aggregationInterval: Long = 1000l) {
 
   /**
    *  Determines if the computation should terminate when the aggregated value is `value`.

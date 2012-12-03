@@ -29,8 +29,8 @@ import com.signalcollect.storage.VertexMap
  */
 trait Storage[@specialized(Int, Long) Id] {
   def vertices: VertexStore[Id]
-  def toSignal: VertexMap[Id] //collection of all vertices that need to signal
-  def toCollect: VertexMap[Id] //collection of all vertices that need to collect
+  def toSignal: VertexStore[Id] //collection of all vertices that need to signal
+  def toCollect: VertexStore[Id] //collection of all vertices that need to collect
 }
 
 /**
@@ -40,6 +40,10 @@ trait VertexStore[@specialized(Int, Long) Id] {
   def get(id: Id): Vertex[Id, _]
   def put(vertex: Vertex[Id, _]): Boolean
   def remove(id: Id)
+  def isEmpty: Boolean
   def size: Long
   def foreach(f: Vertex[Id, _] => Unit)
+  def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int
+  def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int
 }
+

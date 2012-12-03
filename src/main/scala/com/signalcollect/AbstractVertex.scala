@@ -33,7 +33,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
   /**
    * hashCode is cached for better performance
    */
-  override lazy val hashCode = id.hashCode  // Lazy to prevent premature initialization when using Java API.
+  override lazy val hashCode = id.hashCode // Lazy to prevent premature initialization when using Java API.
 
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
 
@@ -122,9 +122,9 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
   }
 
   /**
-   * Adds the buffered signals for that vertex and executes the {@link #collect} method on this vertex.
-   * @see #collect
-   * @param signals Buffered Signals for this vertex
+   *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
+   *
+   *  @param graphEditor an instance of GraphEditor which can be used by this vertex to interact with the graph.
    */
   def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     edgesModifiedSinceCollectOperation = false
@@ -141,7 +141,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged               => 1
+        case noStateOrStateChanged => 1
       }
     }
   }

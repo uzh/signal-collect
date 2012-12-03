@@ -35,7 +35,7 @@ class VertexMap[@specialized(Int, Long) Id](
     initialSize: Int = 32768,
     rehashFraction: Float = 0.75f) extends VertexStore[Id] {
   assert(initialSize > 0)
-  private[this] final var maxSize = nextPowerOfTwo(initialSize)
+  final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
@@ -88,7 +88,28 @@ class VertexMap[@specialized(Int, Long) Id](
     }
     limit
   }
-
+  
+  // Removes the vertices after they have been processed.
+  final def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
+    val limit = numberOfElements
+    var elementsProcessed = 0
+    while (elementsProcessed < limit && !breakCondition()) {
+      val vertex = values(nextPositionToProcess)
+      if (vertex != null) {
+        p(vertex)
+        elementsProcessed += 1
+        keys(nextPositionToProcess) = 0
+        values(nextPositionToProcess) = null
+        numberOfElements -= 1
+      }
+      nextPositionToProcess = (nextPositionToProcess + 1) & mask
+    }
+    if (elementsProcessed > 0) {
+      optimizeFromPosition(nextPositionToProcess)
+    }
+    elementsProcessed
+  }
+  
   private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {

@@ -27,7 +27,11 @@ import com.signalcollect.interfaces._
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
  * by calling them directly on the worker itself.
  */
-class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](worker: Worker[Id, Signal], messageBus: MessageBus[Id, Signal]) extends GraphEditor[Id, Signal] {
+class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+  workerId: Int,
+  worker: WorkerActor[Id, Signal],
+  messageBus: MessageBus[Id, Signal])
+    extends GraphEditor[Id, Signal] {
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
@@ -67,12 +71,12 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean) {
-    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean) {
+    graphEditor.modifyGraph(graphLoader, vertexIdHint, blocking)
   }
 
   protected def shouldHandleLocally(vertexId: Id): Boolean = {
-    messageBus.getWorkerIdForVertexId(vertexId) == worker.workerId
+    messageBus.getWorkerIdForVertexId(vertexId) == workerId
   }
 
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {

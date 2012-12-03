@@ -98,7 +98,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   /**
    *  Configures the status update interval (in milliseconds).
    */
-  def withStatusUpdateInterval(newStatusUpdateInterval: Long) = newLocalBuilder(statusUpdateIntervalInMillis = newStatusUpdateInterval)
+  def withStatusUpdateInterval(newStatusUpdateInterval: Long) = newLocalBuilder(statusUpdateIntervalInMilliseconds = newStatusUpdateInterval)
 
   /**
    *  Configures the Akka dispatcher for the worker actors.
@@ -113,21 +113,12 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) = newLocalBuilder(nodeProvisioner = newNodeProvisioner)
 
   /**
-   *  Specifies how many messages can be sent and not received in the distributed system, before worker throttling kicks in.
-   *  If throttling kicks in, the workers will not send any messages, until the number of sent but not received messages is below the threshold.
+   *  Configures the interval with which the coordinator sends a heartbeat to the workers.
    *
-   *  @param withThrottleInboxThresholdPerWorker The average number of messages that can be underway per worker (without triggering throttling).
-   */  
-  def withThrottleInboxThresholdPerWorker(newThrottleInboxThresholdPerWorker: Int) = newLocalBuilder(throttleInboxThresholdPerWorker = newThrottleInboxThresholdPerWorker)
- 
-  /**
-   *  Specifies how many milliseconds the heartbeat message from the coordinator can be delayed, before worker throttling kicks in.
-   *  If throttling kicks in, the worker will not send any messages, until the queue delay is reduced below the threshold.
-   *
-   *  @param withThrottleWorkerQueueThresholdInMilliseconds The maximum allowed delay of the coordinator heartbeat message (without triggering throttling).
-   */  
-  def withThrottleWorkerQueueThresholdInMilliseconds(newThrottleWorkerQueueThresholdInMilliseconds: Int) = newLocalBuilder(throttleWorkerQueueThresholdInMilliseconds = newThrottleWorkerQueueThresholdInMilliseconds)
-  
+   *  @param newHeartbeatIntervalInMilliseconds The interval with which the coordinator sends a heartbeat to the workers.
+   */
+  def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Long) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
+
   /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
@@ -139,12 +130,11 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,
-    statusUpdateIntervalInMillis: Long = config.statusUpdateIntervalInMillis,
+    statusUpdateIntervalInMilliseconds: Long = config.statusUpdateIntervalInMilliseconds,
     akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
     akkaMessageCompression: Boolean = config.akkaMessageCompression,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner,
-    throttleInboxThresholdPerWorker: Int = config.throttleInboxThresholdPerWorker,
-    throttleWorkerQueueThresholdInMilliseconds: Int = config.throttleWorkerQueueThresholdInMilliseconds): GraphBuilder[Id, Signal] = {
+    heartbeatIntervalInMilliseconds: Long = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         consoleEnabled = consoleEnabled,
@@ -153,12 +143,11 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
         storageFactory = storageFactory,
-        statusUpdateIntervalInMillis = statusUpdateIntervalInMillis,
+        statusUpdateIntervalInMilliseconds = statusUpdateIntervalInMilliseconds,
         akkaDispatcher = akkaDispatcher,
         akkaMessageCompression = akkaMessageCompression,
         nodeProvisioner = nodeProvisioner,
-        throttleInboxThresholdPerWorker = throttleInboxThresholdPerWorker,
-        throttleWorkerQueueThresholdInMilliseconds = throttleWorkerQueueThresholdInMilliseconds))
+        heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds))
   }
 
 }
