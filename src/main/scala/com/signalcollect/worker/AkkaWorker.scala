@@ -263,12 +263,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.toSignal.remove(vertex.id)
   }
 
-  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit) {
-     graphEditor.loadGraph(vertexIdHint, graphLoader)
-  }
-
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
-    graphLoader(graphEditor)
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
+     graphEditor.modifyGraph(graphLoader, vertexIdHint)
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {

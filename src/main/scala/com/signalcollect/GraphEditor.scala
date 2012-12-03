@@ -130,11 +130,11 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *  Loads a graph using the provided graphLoader function.
    *  Blocks until the operation has completed if `blocking` is true.
    *
-   *  @note The vertexIDHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
    *        the loading function will be able to exploit locality.
    *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
    */
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id], blocking: Boolean)
 
   /**
    *  Loads a graph using the provided graphLoader function.
@@ -144,8 +144,8 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *        the loading function will be able to exploit locality.
    *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
    */
-  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit) {
-    loadGraph(vertexIdHint, graphLoader, false)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
+    modifyGraph(graphModification, vertexIdHint, false)
   }
 
   private[signalcollect] def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)

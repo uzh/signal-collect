@@ -420,8 +420,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graphEditor.removeEdge(edgeId, blocking)
   }
   
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean = false) {
-    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
+    graphEditor.modifyGraph(graphModification, vertexIdHint, blocking)
   }
   
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {

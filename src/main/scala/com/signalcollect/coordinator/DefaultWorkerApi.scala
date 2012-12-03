@@ -140,19 +140,15 @@ class DefaultWorkerApi[Id, Signal](
   /**
    * Runs a graph loading function on a worker
    */
-  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit) {
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) {
     if (vertexIdHint.isDefined) {
       val workerId = vertexIdHint.get.hashCode % workers.length
-      workers(workerId).modifyGraph(graphLoader)
+      workers(workerId).modifyGraph(graphLoader, vertexIdHint)
     } else {
       val rand = new Random
       val randomWorkerId = rand.nextInt(workers.length)
-      workers(randomWorkerId).modifyGraph(graphLoader)
+      workers(randomWorkerId).modifyGraph(graphLoader, vertexIdHint)
     }
-  }
-
-  override def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit) {
-    loadGraph(None, graphLoader)
   }
 
 }

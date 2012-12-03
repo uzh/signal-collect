@@ -30,8 +30,7 @@ trait WorkerApi[Id, Signal] {
   def removeVertex(vertexId: Id)
   def removeEdge(edgeId: EdgeId[Id])
   def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
-  def loadGraph(vertexIdHint: Option[Id], graphLoader: GraphEditor[Id, Signal] => Unit)
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None)
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
 

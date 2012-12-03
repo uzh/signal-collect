@@ -211,9 +211,9 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean = false) {
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     if (blocking) {
-      workerApi.loadGraph(vertexIdHint, graphLoader)
+      workerApi.modifyGraph(graphLoader, vertexIdHint)
     } else {
       val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphLoader)), returnResult = false)
       if (vertexIdHint.isDefined) {

@@ -71,8 +71,8 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
-  def loadGraph(vertexIdHint: Option[Id] = None, graphLoader: GraphEditor[Id, Signal] => Unit, blocking: Boolean) {
-    graphEditor.loadGraph(vertexIdHint, graphLoader, blocking)
+  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean) {
+    graphEditor.modifyGraph(graphLoader, vertexIdHint, blocking)
   }
 
   protected def shouldHandleLocally(vertexId: Id): Boolean = {
