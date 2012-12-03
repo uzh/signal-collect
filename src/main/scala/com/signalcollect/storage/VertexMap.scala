@@ -205,6 +205,7 @@ class VertexMap[@specialized(Int, Long) Id](
       keyAtPosition = keys(position)
     }
     var doPut = keyAtPosition == 0
+    // Only put if the there is no vertex with the same id yet.
     if (doPut) {
       keys(position) = key
       values(position) = vertex
