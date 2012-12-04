@@ -7,7 +7,7 @@ This repository contains pre-release snapshots of the distributed 2.0 version.
 
 How to Compile the Project
 --------------------------
-Ensure JDK 7 is used for the compilation, verify using "java -version" on the command line.
+Ensure Java 7 is used for the compilation, verify using "java -version" on the command line.
 
 Install SBT: http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html
 
@@ -25,7 +25,7 @@ Generate an Eclipse project as described above.
 
 Install Eclipse IDE 3.7 (Indigo) for Java developers from: http://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/indigosr2
 
-Ensure that Eclipse uses the Java 7 library and JVM: Preferences → Java → Installed JREs → JDK 7 should be installed and selected.
+Ensure that Eclipse uses the Java 7 library and JVM: Preferences → Java → Installed JREs → JRE/JDK 7 should be installed and selected.
 
 Within Eclipse, install the Scala IDE plugins (for Scala 2.10-RC3): Help → Install New Software ... → Add → http://download.scala-ide.org/sdk/e38/scala210/dev/site/
 Select and install all plugins from that location.
