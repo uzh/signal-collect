@@ -185,15 +185,8 @@ class VertexMap[@specialized(Int, Long) Id](
         val vertex = values(currentPosition)
         removeCurrentEntry
         putWithKey(keyAtPosition, vertex)
-        // Advance only if the re-insertion failed to improve the placement of the entry,
-        // otherwise we are done.
-        keyAtPosition = keys(currentPosition)
-        if (isCurrentPositionOccupied) {
-          advance
-        }
-      } else {
-        advance
       }
+      advance
     }
     def advance {
       currentPosition = ((currentPosition + 1) & mask)
