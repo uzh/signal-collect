@@ -76,7 +76,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val loggingLevel: Int)
     extends WorkerActor[Id, Signal] with ActorLogging {
 
-  override def toString = "Worker"+workerId
+  override def toString = "Worker" + workerId
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
@@ -199,7 +199,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       case other =>
         counters.otherMessagesReceived += 1
-        warning("Could not handle message "+message)
+        warning("Could not handle message " + message)
     }
   }
 
@@ -224,7 +224,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       }
     } else {
-      warning("Did not find vertex with id "+sourceId+" when trying to add outgoing edge ("+sourceId+", "+edge.targetId+")")
+      warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
     }
   }
 
@@ -237,10 +237,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        warning("Outgoing edge not found when trying to remove edge with id "+edgeId)
+        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
     } else {
-      warning("Source vertex not found found when trying to remove outgoing edge with id "+edgeId)
+      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
     }
   }
 
@@ -249,7 +249,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      warning("Should remove vertex with id "+vertexId+": could not find this vertex.")
+      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
     }
   }
 
@@ -264,7 +264,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
-     graphEditor.modifyGraph(graphLoader, vertexIdHint)
+    graphLoader(graphEditor)
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
@@ -305,7 +305,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       val result = f(vertex.asInstanceOf[VertexType])
       result
     } else {
-      throw new Exception("Vertex with id "+vertexId+" not found.")
+      throw new Exception("Vertex with id " + vertexId + " not found.")
     }
   }
 
