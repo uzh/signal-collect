@@ -88,7 +88,7 @@ class VertexMap[@specialized(Int, Long) Id](
     }
     limit
   }
-  
+
   // Removes the vertices after they have been processed.
   final def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
     val limit = numberOfElements
@@ -109,7 +109,7 @@ class VertexMap[@specialized(Int, Long) Id](
     }
     elementsProcessed
   }
-  
+
   private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
@@ -160,19 +160,50 @@ class VertexMap[@specialized(Int, Long) Id](
 
   // Try to reinsert all elements that are not optimally placed until an empty position is found.
   // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-  private[this] final def optimizeFromPosition(pos: Int) {
-    var position = pos
-    var keyAtPosition = keys(position)
-    while (keyAtPosition != 0) {
-      if ((keyAtPosition & mask) != position) {
-        val vertex = values(position)
-        keys(position) = 0
-        values(position) = null
-        numberOfElements -= 1
-        putWithKey(keyAtPosition, vertex)
+  private[this] final def optimizeFromPosition(startingPosition: Int) {
+    var currentPosition = startingPosition
+    var keyAtPosition = keys(currentPosition)
+    while (isCurrentPositionOccupied) {
+      val perfectPositionForEntry = keyToPosition(keyAtPosition)
+      // Returns if it might be possible to find a better place for the current entry.
+      // Because we know that all positions from the starting position on are occupied,
+      // that means that the position would have to be before the starting position.
+      // We also have to consider position wrap-around in the array.
+      def betterPlacementPossible: Boolean = {
+        if (currentPosition < startingPosition) {
+          // We are wrapped around already, better position possible if inside +++ area.
+          // Illustration: [----current++++++++++start------]
+          perfectPositionForEntry < startingPosition && perfectPositionForEntry > currentPosition
+        } else {
+          // Standard case, better position possible if inside +++ area.
+          // Illustration: [++++++start----current++++++++++]
+          perfectPositionForEntry < startingPosition || perfectPositionForEntry > currentPosition
+        }
       }
-      position = ((position + 1) & mask)
-      keyAtPosition = keys(position)
+      if (perfectPositionForEntry != currentPosition && betterPlacementPossible) {
+        // We try to optimize the placement of the entry by removing and then reinserting it.
+        val vertex = values(currentPosition)
+        removeCurrentEntry
+        putWithKey(keyAtPosition, vertex)
+        // Advance only if the re-insertion failed to improve the placement of the entry,
+        // otherwise we are done.
+        keyAtPosition = keys(currentPosition)
+        if (isCurrentPositionOccupied) {
+          advance
+        }
+      } else {
+        advance
+      }
+    }
+    def advance {
+      currentPosition = ((currentPosition + 1) & mask)
+      keyAtPosition = keys(currentPosition)
+    }
+    def isCurrentPositionOccupied = keyAtPosition != 0
+    def removeCurrentEntry {
+      keys(currentPosition) = 0
+      values(currentPosition) = null
+      numberOfElements -= 1
     }
   }
 
