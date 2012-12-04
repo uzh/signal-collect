@@ -86,7 +86,6 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.put(new PageRankVertex(5))
       vm.put(new PageRankVertex(16))
       vm.put(new PageRankVertex(17))
-      vm.foreach(println(_))
       vm.process(v => {}, Some(6))
       vm.get(17) != null
     }
