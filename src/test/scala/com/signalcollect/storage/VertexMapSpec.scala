@@ -91,6 +91,20 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.get(17) != null
     }
     
+    "optimize correctly in an edge case" in {
+      val vm = new VertexMap[Any](8, 0.99f)
+      vm.put(new PageRankVertex(0))
+      vm.put(new PageRankVertex(1))
+      vm.put(new PageRankVertex(2))
+      vm.put(new PageRankVertex(3))
+      vm.put(new PageRankVertex(4))
+      vm.put(new PageRankVertex(5))
+      vm.put(new PageRankVertex(16))
+      vm.put(new PageRankVertex(6))
+      vm.process(v => {}, Some(6))
+      vm.get(6) != null
+    }
+    
     "remove all elements via processing" in {
       val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))

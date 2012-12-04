@@ -165,22 +165,7 @@ class VertexMap[@specialized(Int, Long) Id](
     var keyAtPosition = keys(currentPosition)
     while (isCurrentPositionOccupied) {
       val perfectPositionForEntry = keyToPosition(keyAtPosition)
-      // Returns if it might be possible to find a better place for the current entry.
-      // Because we know that all positions from the starting position on are occupied,
-      // that means that the position would have to be before the starting position.
-      // We also have to consider position wrap-around in the array.
-      def betterPlacementPossible: Boolean = {
-        if (currentPosition < startingPosition) {
-          // We are wrapped around already, better position possible if inside +++ area.
-          // Illustration: [----current++++++++++start------]
-          perfectPositionForEntry < startingPosition && perfectPositionForEntry > currentPosition
-        } else {
-          // Standard case, better position possible if inside +++ area.
-          // Illustration: [++++++start----current++++++++++]
-          perfectPositionForEntry < startingPosition || perfectPositionForEntry > currentPosition
-        }
-      }
-      if (perfectPositionForEntry != currentPosition && betterPlacementPossible) {
+      if (perfectPositionForEntry != currentPosition) {
         // We try to optimize the placement of the entry by removing and then reinserting it.
         val vertex = values(currentPosition)
         removeCurrentEntry
@@ -192,7 +177,9 @@ class VertexMap[@specialized(Int, Long) Id](
       currentPosition = ((currentPosition + 1) & mask)
       keyAtPosition = keys(currentPosition)
     }
-    def isCurrentPositionOccupied = keyAtPosition != 0
+    def isCurrentPositionOccupied = {
+      keyAtPosition != 0
+    }
     def removeCurrentEntry {
       keys(currentPosition) = 0
       values(currentPosition) = null
