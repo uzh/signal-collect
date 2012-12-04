@@ -65,6 +65,7 @@ class VertexMap[@specialized(Int, Long) Id](
     final def matches(comparisonKey: Int, comparisonVertexId: Id): Boolean = {
       comparisonKey == key && comparisonVertexId == vertex.id
     }
+    // Only call if isStillPresent == true, otherwise the count is off.
     final def delete {
       keys(position) = 0
       values(position) = null
@@ -76,7 +77,7 @@ class VertexMap[@specialized(Int, Long) Id](
     var entry = new Entry(0)
     var entriesProcessed = 0
     while (entriesProcessed < numberOfEntries) {
-      if (entry.vertex != null) {
+      if (entry.wasPresentAtCreation) {
         f(entry.vertex)
         entriesProcessed += 1
       }
