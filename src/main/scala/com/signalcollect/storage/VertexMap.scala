@@ -44,60 +44,44 @@ class VertexMap[@specialized(Int, Long) Id](
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
 
-  final override def size = numberOfEntries
-  final def isEmpty = numberOfEntries == 0
-  private[this] final var numberOfEntries = 0
+  final override def size = numberOfElements
+  final def isEmpty = numberOfElements == 0
+  private[this] final var numberOfElements = 0
 
   final def clear {
     values = new Array[Vertex[Id, _]](maxSize)
     keys = new Array[Int](maxSize)
-    numberOfEntries = 0
+    numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  private class Entry(val position: Int) {
-    final lazy val key = keys(position)
-    final lazy val vertex = values(position)
-    final lazy val nextPosition = (position + 1) & mask
-    final lazy val wasPresentAtCreation = key != 0
-    final def nextEntry = new Entry((nextPosition))
-    final def isStillPresent = keys(position) != 0
-    final def matches(comparisonKey: Int, comparisonVertexId: Id): Boolean = {
-      comparisonKey == key && comparisonVertexId == vertex.id
-    }
-    // Only call if isStillPresent == true, otherwise the count is off.
-    final def delete {
-      keys(position) = 0
-      values(position) = null
-      numberOfEntries -= 1
-    }
-  }
-
   final def foreach(f: Vertex[Id, _] => Unit) {
-    var entry = new Entry(0)
-    var entriesProcessed = 0
-    while (entriesProcessed < numberOfEntries) {
-      if (entry.wasPresentAtCreation) {
-        f(entry.vertex)
-        entriesProcessed += 1
+    var i = 0
+    var elementsProcessed = 0
+    while (elementsProcessed < numberOfElements) {
+      val vertex = values(i)
+      if (vertex != null) {
+        f(vertex)
+        elementsProcessed += 1
       }
-      entry = entry.nextEntry
+      i += 1
     }
   }
 
   // Removes the vertices after they have been processed.
   final def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int = {
-    val limit = math.min(numberOfEntries, numberOfVertices.getOrElse(numberOfEntries))
+    val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
     var elementsProcessed = 0
-    var entry: Entry = null
     while (elementsProcessed < limit) {
-      entry = new Entry(nextPositionToProcess)
-      if (entry.wasPresentAtCreation) {
-        p(entry.vertex)
+      val vertex = values(nextPositionToProcess)
+      if (vertex != null) {
+        p(vertex)
         elementsProcessed += 1
-        entry.delete
+        keys(nextPositionToProcess) = 0
+        values(nextPositionToProcess) = null
+        numberOfElements -= 1
       }
-      nextPositionToProcess = entry.nextPosition
+      nextPositionToProcess = (nextPositionToProcess + 1) & mask
     }
     if (elementsProcessed > 0) {
       optimizeFromPosition(nextPositionToProcess)
@@ -107,17 +91,18 @@ class VertexMap[@specialized(Int, Long) Id](
 
   // Removes the vertices after they have been processed.
   final def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
-    val limit = numberOfEntries
+    val limit = numberOfElements
     var elementsProcessed = 0
-    var entry: Entry = null
     while (elementsProcessed < limit && !breakCondition()) {
-      entry = new Entry(nextPositionToProcess)
-      if (entry.wasPresentAtCreation) {
-        p(entry.vertex)
+      val vertex = values(nextPositionToProcess)
+      if (vertex != null) {
+        p(vertex)
         elementsProcessed += 1
-        entry.delete
+        keys(nextPositionToProcess) = 0
+        values(nextPositionToProcess) = null
+        numberOfElements -= 1
       }
-      nextPositionToProcess = entry.nextPosition
+      nextPositionToProcess = (nextPositionToProcess + 1) & mask
     }
     if (elementsProcessed > 0) {
       optimizeFromPosition(nextPositionToProcess)
@@ -131,13 +116,13 @@ class VertexMap[@specialized(Int, Long) Id](
       val oldSize = maxSize
       val oldValues = values
       val oldKeys = keys
-      val oldNumberOfElements = numberOfEntries
+      val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
       values = new Array[Vertex[Id, _]](maxSize)
       keys = new Array[Int](maxSize)
       mask = maxSize - 1
-      numberOfEntries = 0
+      numberOfElements = 0
       var i = 0
       var elementsMoved = 0
       while (elementsMoved < oldNumberOfElements) {
@@ -156,17 +141,19 @@ class VertexMap[@specialized(Int, Long) Id](
 
   private final def remove(vertexId: Id, optimize: Boolean) {
     val key = idToKey(vertexId)
-    var entry = new Entry(keyToPosition(key))
-    // Advance until we either found an empty position
-    // or the matching entry.
-    while (entry.wasPresentAtCreation && !entry.matches(key, vertexId)) {
-      entry = entry.nextEntry
+    var position = keyToPosition(key)
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertexId != values(position).id)) {
+      position = (position + 1) & mask
+      keyAtPosition = keys(position)
     }
     // We can only remove the entry if it was found.
-    if (entry.wasPresentAtCreation) {
-      entry.delete
+    if (keyAtPosition != 0) {
+      keys(position) = 0
+      values(position) = null
+      numberOfElements -= 1
       if (optimize) {
-        optimizeFromPosition(entry.nextPosition)
+        optimizeFromPosition((position + 1) & mask)
       }
     }
   }
@@ -174,29 +161,42 @@ class VertexMap[@specialized(Int, Long) Id](
   // Try to reinsert all elements that are not optimally placed until an empty position is found.
   // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
   private[this] final def optimizeFromPosition(startingPosition: Int) {
-    var entry = new Entry(startingPosition)
-    while (entry.wasPresentAtCreation) {
-      val perfectPositionForEntry = keyToPosition(entry.key)
-      if (perfectPositionForEntry != entry.position) {
+    var currentPosition = startingPosition
+    var keyAtPosition = keys(currentPosition)
+    while (isCurrentPositionOccupied) {
+      val perfectPositionForEntry = keyToPosition(keyAtPosition)
+      if (perfectPositionForEntry != currentPosition) {
         // We try to optimize the placement of the entry by removing and then reinserting it.
-        val vertex = entry.vertex
-        entry.delete
-        putWithKey(entry.key, vertex)
+        val vertex = values(currentPosition)
+        removeCurrentEntry
+        putWithKey(keyAtPosition, vertex)
       }
-      entry = entry.nextEntry
+      advance
+    }
+    def advance {
+      currentPosition = ((currentPosition + 1) & mask)
+      keyAtPosition = keys(currentPosition)
+    }
+    def isCurrentPositionOccupied = {
+      keyAtPosition != 0
+    }
+    def removeCurrentEntry {
+      keys(currentPosition) = 0
+      values(currentPosition) = null
+      numberOfElements -= 1
     }
   }
 
   final def get(vertexId: Id): Vertex[Id, _] = {
     val key = idToKey(vertexId)
-    var entry = new Entry(keyToPosition(key))
-    // Advance until we either found an empty position
-    // or the matching entry.
-    while (entry.wasPresentAtCreation && !entry.matches(key, vertexId)) {
-      entry = entry.nextEntry
+    var position = keyToPosition(key)
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertexId != values(position).id)) {
+      position = (position + 1) & mask
+      keyAtPosition = keys(position)
     }
-    if (entry.wasPresentAtCreation) {
-      entry.vertex
+    if (keyAtPosition != 0) {
+      values(position)
     } else {
       null
     }
@@ -209,21 +209,21 @@ class VertexMap[@specialized(Int, Long) Id](
   }
 
   private[this] final def putWithKey(key: Int, vertex: Vertex[Id, _]): Boolean = {
-    var entry = new Entry(keyToPosition(key))
-    // Advance until we either found an empty position
-    // or the matching entry.
-    while (entry.wasPresentAtCreation && !entry.matches(key, vertex.id)) {
-      entry = entry.nextEntry
+    var position = keyToPosition(key)
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0 && (key != keyAtPosition || vertex.id != values(position).id)) {
+      position = (position + 1) & mask
+      keyAtPosition = keys(position)
     }
+    var doPut = keyAtPosition == 0
     // Only put if the there is no vertex with the same id yet.
-    var doPut = !entry.wasPresentAtCreation
     if (doPut) {
-      keys(entry.position) = key
-      values(entry.position) = vertex
-      numberOfEntries += 1
-      if (numberOfEntries >= maxElements) {
+      keys(position) = key
+      values(position) = vertex
+      numberOfElements += 1
+      if (numberOfElements >= maxElements) {
         tryDouble
-        if (numberOfEntries >= maxSize) {
+        if (numberOfElements >= maxSize) {
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
       }
@@ -245,11 +245,7 @@ class VertexMap[@specialized(Int, Long) Id](
     // (i  + ((((i + Int.MaxValue) >> 31) & i >> 31) << 31)),
     // but the compiler seems to be smarter about optimizing this.
     val hashCode = vertexId.hashCode
-    if (hashCode == 0) {
-      Int.MinValue
-    } else {
-      hashCode
-    }
+    if (hashCode == 0) Int.MinValue else hashCode
   }
 
   private[this] final def nextPowerOfTwo(x: Int): Int = {
