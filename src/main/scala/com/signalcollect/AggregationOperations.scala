@@ -163,3 +163,40 @@ abstract class StateAggregator[StateType] extends AggregationOperation[StateType
   }
 
 }
+
+/**
+ * Finds the ids and states of the K vertices with the largest states.
+ */
+class TopKFinder[Id, State](k: Int, isFirstLargerThanSecond: (State, State) => Boolean) extends AggregationOperation[List[(Id, State)]] {
+  def extract(v: Vertex[_, _]): List[(Id, State)] = {
+    v match {
+      case vertex: Vertex[Id, State] => List((vertex.id, vertex.state))
+    }
+  }
+  def aggregate(a: List[(Id, State)], b: List[(Id, State)]): List[(Id, State)] = {
+    merge[(Id, State)](a, b, 0, k, { (first: (Id, State), second: (Id, State)) => isFirstLargerThanSecond(first._2, second._2) })
+  }
+  val neutralElement = List[(Id, State)]()
+
+  final def merge[G](a: List[G], b: List[G], counter: Int, limit: Int, isFirstLargerThanSecond: (G, G) => Boolean): List[G] = {
+    if (counter < limit) {
+      b match {
+        case Nil => a.take(limit - counter)
+        case other => {
+          a match {
+            case Nil => b.take(limit - counter)
+            case x :: xs => {
+              if (isFirstLargerThanSecond(x, b.head)) {
+                x :: merge(xs, b, counter + 1, limit, isFirstLargerThanSecond)
+              } else {
+                b.head :: merge(a, b.tail, counter + 1, limit, isFirstLargerThanSecond)
+              }
+            }
+          }
+        }
+      }
+    } else {
+      Nil
+    }
+  }
+}

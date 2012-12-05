@@ -138,4 +138,23 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
     }
   }
 
+  "TopKFinder" should {
+    def createGraph = {
+      val graph = GraphBuilder.build
+      graph.addVertex(new PageRankVertex(1, 0.3))
+      graph.addVertex(new PageRankVertex(3, 0.2))
+      graph.addVertex(new PageRankVertex(2, 0.1))
+      graph.addVertex(new PageRankVertex(4, 0.4))
+      graph
+    }
+
+    "find the largest vertices in the right order" in {
+      val graph = createGraph
+      val largestVertices = graph.aggregate(new TopKFinder[Int, Double](2, { (a: Double, b: Double) => a > b }))
+      graph.shutdown
+      largestVertices == List[(Int, Double)]((2, 0.9), (3, 0.8))
+    }
+
+  }
+
 }
