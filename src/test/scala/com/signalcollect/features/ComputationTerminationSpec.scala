@@ -65,32 +65,6 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
-//  "Time limit" should {
-//
-//    "work for asynchronous computations" in {
-//      val graph = createCircleGraph(1000)
-//      val execConfig = ExecutionConfiguration
-//        .withSignalThreshold(0)
-//        .withTimeLimit(50)
-//      val info = graph.execute(execConfig)
-//      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-//      graph.shutdown
-//      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
-//    }
-//
-//    "work for synchronous computations" in {
-//      val graph = createCircleGraph(100)
-//      val execConfig = ExecutionConfiguration
-//        .withSignalThreshold(0)
-//        .withTimeLimit(30)
-//        .withExecutionMode(ExecutionMode.Synchronous)
-//      val info = graph.execute(execConfig)
-//      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-//      graph.shutdown
-//      state > 0.15 && state < 0.999999999999999 && info.executionStatistics.terminationReason == TerminationReason.TimeLimitReached
-//    }
-//  }
-
   "Steps limit" should {
 
     "work for synchronous computations" in {
@@ -103,6 +77,22 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
       graph.shutdown
       state == 0.2775 && info.executionStatistics.terminationReason == TerminationReason.ComputationStepLimitReached
+    }
+  }
+
+  "Convergence detection" should {
+
+    "work for asynchronous computations with one worker" in {
+      val graph = createCircleGraph(3, Some(1))
+      val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
+      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      state > 0.999
+      val aggregate = graph.aggregate(new SumOfStates[Double]).get
+      if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+      }
+      graph.shutdown
+      aggregate > 2.999 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
 
@@ -150,18 +140,6 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       }
       graph.shutdown
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
-    }
-
-    "work for asynchronous computations with one worker" in {
-      val graph = createCircleGraph(100, Some(1))
-      val info = graph.execute
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
-        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
-      }
-      graph.shutdown
-      aggregate > 98 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
 

@@ -71,8 +71,12 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean) {
-    graphEditor.modifyGraph(graphLoader, vertexIdHint, blocking)
+  override def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean) {
+   if (blocking && vertexIdHint.isDefined && shouldHandleLocally(vertexIdHint.get)) {
+      worker.modifyGraph(graphLoader, vertexIdHint)
+    } else {
+      graphEditor.modifyGraph(graphLoader, vertexIdHint, blocking)
+    }
   }
 
   protected def shouldHandleLocally(vertexId: Id): Boolean = {

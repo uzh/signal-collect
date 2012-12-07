@@ -88,34 +88,34 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   //--------------------MessageRecipientRegistry--------------------
 
-  def registerWorker(workerId: Int, worker: ActorRef) {
+  override def registerWorker(workerId: Int, worker: ActorRef) {
     workers(workerId) = worker
     registrations.incrementAndGet
   }
 
-  def registerCoordinator(c: ActorRef) {
+  override def registerCoordinator(c: ActorRef) {
     coordinator = c
     registrations.incrementAndGet
   }
 
-  def registerLogger(l: ActorRef) {
+  override def registerLogger(l: ActorRef) {
     logger = l
     registrations.incrementAndGet
   }
 
   //--------------------MessageBus--------------------
 
-  def sendToActor(actor: ActorRef, message: Any) {
+  override def sendToActor(actor: ActorRef, message: Any) {
     sentMessagesCounters(otherRecipients).incrementAndGet()
     actor ! message
   }
 
-  def sendToCoordinator(message: Any) {
+  override def sendToCoordinator(message: Any) {
     sentMessagesCounters(coordinatorId).incrementAndGet
     coordinator ! message
   }
 
-  def sendToLogger(message: LogMessage) {
+  override def sendToLogger(message: LogMessage) {
     if (logger != null) {
       logger ! message
     } else {
@@ -123,22 +123,22 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def sendToWorkerForVertexId(message: Any, recipientId: Id) {
+  override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
     val workerId = mapper.getWorkerIdForVertexId(recipientId)
     sendToWorker(workerId, message)
   }
 
-  def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
+  override def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
     val workerId = mapper.getWorkerIdForVertexIdHash(recipientIdHash)
     sendToWorker(workerId, message)
   }
 
-  def sendToWorker(workerId: Int, message: Any) {
+  override def sendToWorker(workerId: Int, message: Any) {
     sentMessagesCounters(workerId).incrementAndGet
     workers(workerId) ! message
   }
 
-  def sendToWorkers(message: Any, messageCounting: Boolean) {
+  override def sendToWorkers(message: Any, messageCounting: Boolean) {
     if (messageCounting) {
       workerIds.foreach(sentMessagesCounters(_).incrementAndGet)
     }
@@ -147,16 +147,16 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
+  override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
 
-  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)
+  override def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)
 
   //--------------------GraphEditor--------------------
 
   /**
    * Sends a signal to the vertex with vertex.id=edgeId.targetId
    */
-  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
+  override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.processSignal(signal, targetId, sourceId)
@@ -166,7 +166,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  override def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.addVertex(vertex)
@@ -177,7 +177,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def addEdge(sourceId: Id, edge: Edge[Id], blocking: Boolean = false) {
+  override def addEdge(sourceId: Id, edge: Edge[Id], blocking: Boolean = false) {
     // thread that uses an object should instantiate it (performance)
     if (blocking) {
       // use proxy
@@ -189,7 +189,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def removeVertex(vertexId: Id, blocking: Boolean = false) {
+  override def removeVertex(vertexId: Id, blocking: Boolean = false) {
     if (blocking) {
       // use proxy
       workerApi.removeVertex(vertexId)
@@ -200,7 +200,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def removeEdge(edgeId: EdgeId[Id], blocking: Boolean = false) {
+  override def removeEdge(edgeId: EdgeId[Id], blocking: Boolean = false) {
     if (blocking) {
       // use proxy
       workerApi.removeEdge(edgeId)
@@ -211,17 +211,17 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
+  override def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     if (blocking) {
       workerApi.modifyGraph(graphLoader, vertexIdHint)
     } else {
       val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphLoader)), returnResult = false)
       if (vertexIdHint.isDefined) {
-        val workerId = vertexIdHint.get.hashCode % workers.length
+        val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
         sendToWorker(workerId, request)
       } else {
         val rand = new Random
-        sendToWorker(rand.nextInt(workers.length), request)
+        sendToWorker(rand.nextInt(numberOfWorkers), request)
       }
     }
 
