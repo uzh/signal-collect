@@ -20,12 +20,12 @@
 
 package com.signalcollect.configuration
 
-import com.signalcollect.interfaces._
-import java.util.HashMap
-import com.signalcollect._
-import com.signalcollect.logging.DefaultLogger
-import akka.actor.ActorRef
+import com.signalcollect.interfaces.{ LogMessage, MessageBusFactory, StorageFactory, WorkerFactory }
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.signalcollect.logging.DefaultLogger
+import com.signalcollect.factory.worker.LocalWorker
+import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
+import com.signalcollect.factory.storage.InMemory
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 
 /**
@@ -35,9 +35,9 @@ case class GraphConfiguration(
   consoleEnabled: Boolean = false,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
-  workerFactory: WorkerFactory = factory.worker.LocalWorker,
-  messageBusFactory: MessageBusFactory = factory.messagebus.AkkaMessageBusFactory,
-  storageFactory: StorageFactory = factory.storage.InMemory,
+  workerFactory: WorkerFactory = LocalWorker,
+  messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
+  storageFactory: StorageFactory = InMemory,
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,

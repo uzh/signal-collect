@@ -19,7 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.EdgeId
 
 /**

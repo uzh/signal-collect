@@ -19,11 +19,8 @@
 
 package com.signalcollect
 
-import com.signalcollect._
-import com.signalcollect.interfaces.MessageBus
-
 trait ResetStateAfterSignaling[Id, State] extends AbstractVertex[Id, State] {
-  
+
   def resetState: State
 
   /**

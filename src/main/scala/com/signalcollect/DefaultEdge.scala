@@ -19,7 +19,9 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.MessageBus
+import scala.Some.apply
+import com.signalcollect.interfaces.EdgeId.apply
+import com.signalcollect.interfaces.SignalMessage.apply
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.SignalMessage
 
@@ -34,9 +36,9 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
 
   /** The type of signals that are sent along this edge. */
   type Signal = Any
-  
+
   var sourceVertex: Vertex[_, _] = _
-  
+
   /**
    *  An edge id uniquely identifies an edge in the graph.
    */
@@ -70,7 +72,7 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
   def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
     graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal(sourceVertex)), cachedTargetIdHashCode)
   }
-  
+
   /** Called when the edge is attached to a source vertex */
   def onAttach(source: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) = {
     sourceVertex = source

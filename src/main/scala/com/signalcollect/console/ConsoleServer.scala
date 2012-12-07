@@ -19,19 +19,15 @@
 
 package com.signalcollect.console
 
-import java.io.IOException
-import java.io.OutputStream
 import java.net.InetSocketAddress
-import com.sun.net.httpserver.Headers
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpHandler
-import com.sun.net.httpserver.HttpServer
 import java.util.concurrent.Executors
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.interfaces.WorkerStatistics
 import scala.language.postfixOps
+import scala.Array.canBuildFrom
+import scala.collection.immutable.List.apply
+import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics }
+import com.signalcollect.messaging.AkkaProxy
+import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
+import akka.actor.ActorRef
 
 class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
   val server = HttpServer.create(address, 0)

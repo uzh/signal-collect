@@ -19,7 +19,9 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
+import scala.Some.apply
+import com.signalcollect.interfaces.SignalMessage.apply
+import com.signalcollect.interfaces.SignalMessage
 
 /**
  *  OptionalSignalEdge is an edge implementation that  that requires the

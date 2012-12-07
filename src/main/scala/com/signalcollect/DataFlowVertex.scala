@@ -19,11 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.SignalMessage
-import scala.collection.mutable.IndexedSeq
-import scala.collection.mutable.ArrayBuffer
-
 /**
  *  Vertex implementation that collects all the signals that have arrived since the last
  *  time this vertex has collected. Users of the framework extend this class to implement

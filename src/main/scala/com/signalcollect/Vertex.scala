@@ -19,11 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.SignalMessage
-import collection.immutable.Map
-import collection.Iterable
-import scala.collection.mutable.IndexedSeq
-
 /**
  *  This trait represents the framework's view of a vertex.
  *
@@ -39,7 +34,7 @@ trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float)
   override def equals(other: Any): Boolean =
     other match {
       case v: Vertex[_, _] => v.id == id
-      case _ => false
+      case _               => false
     }
 
   /**
@@ -69,7 +64,7 @@ trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float)
 
   /**
    *  Delivers signals that are addressed to this specific vertex
-   *  
+   *
    *  @param signal the the signal to deliver to this vertex
    *
    *  @return true if the vertex decided to collect immediately.

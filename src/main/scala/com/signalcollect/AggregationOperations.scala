@@ -19,8 +19,12 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.AggregationOperation
+import scala.Predef.Map.apply
+import scala.Some.apply
+import scala.collection.immutable.List.apply
 import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  Builds a map with the vertex ids as keys and the vertex states as values.

@@ -19,28 +19,19 @@
 
 package com.signalcollect.coordinator
 
-import com.signalcollect.configuration._
-import com.signalcollect.interfaces._
-import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.ExecutionInformation
-import com.signalcollect.ExecutionStatistics
-import com.signalcollect.GlobalTerminationCondition
-import com.signalcollect.configuration.TerminationReason
-import akka.actor.Actor
-import java.util.concurrent.atomic.AtomicLong
-import com.signalcollect.GraphEditor
-import akka.actor.ActorRef
 import java.util.{ HashMap, Map }
-import scala.collection.JavaConversions._
-import akka.actor.ReceiveTimeout
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration._
-import scala.concurrent.duration.Duration._
-import akka.actor.ActorLogging
-import akka.event.LoggingReceive
+import scala.Array.canBuildFrom
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.immutable.List.apply
+import scala.concurrent.duration.{ Duration, DurationLong }
 import scala.reflect.ClassTag
+import com.signalcollect.interfaces.{ Logging, MessageBus, MessageBusFactory, MessageRecipientRegistry, Request, WorkerStatus }
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Heartbeat.apply
+import com.sun.management.OperatingSystemMXBean
+import akka.actor.{ Actor, ActorLogging, ActorRef, ReceiveTimeout, actorRef2Scala }
+import com.signalcollect.interfaces.Heartbeat
 import scala.language.postfixOps
 
 // special command for coordinator
@@ -58,7 +49,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
-        numberOfWorkers)
+      numberOfWorkers)
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds

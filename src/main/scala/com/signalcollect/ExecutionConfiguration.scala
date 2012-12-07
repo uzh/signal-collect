@@ -19,9 +19,10 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
+import scala.Some.apply
+
 import com.signalcollect.configuration.ExecutionMode
-import scala.concurrent.duration.Duration
+import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object

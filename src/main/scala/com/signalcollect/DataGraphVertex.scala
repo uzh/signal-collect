@@ -19,11 +19,8 @@
 
 package com.signalcollect
 
-import scala.collection.JavaConversions._
+import scala.Some.apply
 import scala.collection.mutable.HashMap
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.SignalMessage
-import scala.collection.mutable.IndexedSeq
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -37,8 +34,8 @@ import scala.collection.mutable.IndexedSeq
  *  @author Philip Stutz
  */
 abstract class DataGraphVertex[Id, State](
-  val id: Id,
-  var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
+    val id: Id,
+    var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
 
   type Signal
 
@@ -83,7 +80,7 @@ abstract class DataGraphVertex[Id, State](
   def getMostRecentSignal(id: Any): Option[_] =
     mostRecentSignalMap.get(id) match {
       case null => None
-      case s => Some(s)
+      case s    => Some(s)
     }
 
   /**
