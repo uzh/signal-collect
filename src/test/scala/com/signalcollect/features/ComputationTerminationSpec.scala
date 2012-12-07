@@ -68,17 +68,18 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Steps limit" should {
 
     "work for synchronous computations" in {
-      val graph = createCircleGraph(1000)
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withStepsLimit(1)
-        .withExecutionMode(ExecutionMode.Synchronous)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      graph.shutdown
-      info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
-      state === 0.2775
-      
+      for (i <- 1 to 10) {
+        val graph = createCircleGraph(1000)
+        val execConfig = ExecutionConfiguration
+          .withSignalThreshold(0)
+          .withStepsLimit(1)
+          .withExecutionMode(ExecutionMode.Synchronous)
+        val info = graph.execute(execConfig)
+        val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+        graph.shutdown
+        info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
+        state === 0.2775
+      }
     }
   }
 

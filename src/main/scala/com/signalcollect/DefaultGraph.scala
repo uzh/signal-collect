@@ -211,6 +211,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
     while (!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
       workerApi.signalStep
+      awaitIdle
       stats.signalSteps += 1
       converged = workerApi.collectStep
       stats.collectSteps += 1
@@ -241,7 +242,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     val startTime = System.nanoTime
     workerApi.signalStep
     stats.signalSteps += 1
-    awaitIdle
     val millisecondsSpentAlready = (System.nanoTime - startTime) / 1000000l
     var adjustedTimeLimit: Option[Long] = None
     if (timeLimit.isDefined) {
