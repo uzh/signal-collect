@@ -47,6 +47,7 @@ import collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.language.reflectiveCalls
 import java.util.Queue
+import language.postfixOps
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
