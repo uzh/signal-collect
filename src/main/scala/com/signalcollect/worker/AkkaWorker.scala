@@ -155,7 +155,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           }
         })
     }
-    if (!vertexStore.toSignal.isEmpty && messageQueue.isEmpty && vertexStore.toCollect.isEmpty) {
+    if (!vertexStore.toSignal.isEmpty && vertexStore.toCollect.isEmpty && messageQueue.isEmpty) {
       vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     }
     messageBus.flush
@@ -214,7 +214,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         vertexStore.toSignal.put(vertex)
       }
     } else {
-      warning("Vertex " + vertex  + " could not be added, vertex with the same id exists already.")
+      warning("Vertex with id " + vertex.id  + " could not be added, vertex with the same id exists already.")
     }
   }
 
