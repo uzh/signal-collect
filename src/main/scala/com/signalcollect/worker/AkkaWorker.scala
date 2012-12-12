@@ -92,7 +92,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(5 milliseconds)
+  context.setReceiveTimeout(10 milliseconds)
 
   def isInitialized = messageBus.isInitialized
 
@@ -213,6 +213,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
+    } else {
+      warning("Vertex " + vertex  + " could not be added, vertex with the same id exists already.")
     }
   }
 
