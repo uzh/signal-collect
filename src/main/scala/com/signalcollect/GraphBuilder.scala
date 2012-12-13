@@ -19,10 +19,12 @@
 
 package com.signalcollect
 
-import com.signalcollect.configuration._
-import com.signalcollect.interfaces._
-import com.signalcollect.nodeprovisioning.NodeProvisioner
 import scala.reflect.ClassTag
+
+import com.signalcollect.configuration.{ AkkaDispatcher, GraphConfiguration }
+import com.signalcollect.configuration.GraphConfiguration.apply
+import com.signalcollect.interfaces.{ LogMessage, MessageBusFactory, StorageFactory, WorkerFactory }
+import com.signalcollect.nodeprovisioning.NodeProvisioner
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,

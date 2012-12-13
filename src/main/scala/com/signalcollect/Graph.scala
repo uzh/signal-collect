@@ -19,8 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.AggregationOperation
 
 /**
@@ -108,7 +106,7 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *  @note Only used with continuous asynchronous execution.
    */
   def awaitIdle
-  
+
   /**
    *  Shuts down the compute graph and frees associated resources.
    *

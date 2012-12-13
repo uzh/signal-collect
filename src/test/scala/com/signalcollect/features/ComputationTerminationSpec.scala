@@ -68,15 +68,18 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Steps limit" should {
 
     "work for synchronous computations" in {
-      val graph = createCircleGraph(1000)
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withStepsLimit(1)
-        .withExecutionMode(ExecutionMode.Synchronous)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      graph.shutdown
-      state == 0.2775 && info.executionStatistics.terminationReason == TerminationReason.ComputationStepLimitReached
+      for (i <- 1 to 10) {
+        val graph = createCircleGraph(1000)
+        val execConfig = ExecutionConfiguration
+          .withSignalThreshold(0)
+          .withStepsLimit(1)
+          .withExecutionMode(ExecutionMode.Synchronous)
+        val info = graph.execute(execConfig)
+        val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+        graph.shutdown
+        info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
+        state === 0.2775
+      }
     }
   }
 
@@ -86,13 +89,13 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       val graph = createCircleGraph(3, Some(1))
       val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
       val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
-      state > 0.999
+      state > 0.99
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
         println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       graph.shutdown
-      aggregate > 2.999 && info.executionStatistics.terminationReason == TerminationReason.Converged
+      aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
 

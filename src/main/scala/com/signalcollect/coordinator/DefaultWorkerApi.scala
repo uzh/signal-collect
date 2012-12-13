@@ -19,23 +19,12 @@
 
 package com.signalcollect.coordinator
 
-import com.signalcollect.interfaces._
-import com.signalcollect.configuration._
-import java.lang.reflect.Method
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 import scala.collection.parallel.mutable.ParArray
-import scala.collection.JavaConversions._
-import com.signalcollect.Edge
-import com.signalcollect.Vertex
-import com.signalcollect.GraphEditor
-import akka.actor.Actor
-import akka.actor.ActorRef
-import scala.collection.mutable.ArrayBuffer
-import akka.actor.ActorSystem
-import akka.actor.Props
 import scala.util.Random
-import scala.concurrent.Future
+
+import com.signalcollect.{ Edge, GraphEditor, Vertex }
+import com.signalcollect.interfaces.{ AggregationOperation, EdgeId, VertexToWorkerMapper, WorkerApi, WorkerStatistics }
+import com.signalcollect.interfaces.WorkerStatistics.apply
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.

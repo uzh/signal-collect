@@ -20,13 +20,9 @@
 package com.signalcollect
 
 import java.util.HashMap
-import scala.collection.mutable.Map
-import scala.collection.JavaConversions._
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.interfaces.EdgeId
-import scala.collection.mutable.IndexedSeq
-import scala.collection.mutable.ArrayBuffer
+
+import scala.Some.apply
+import scala.collection.JavaConversions.mapAsScalaMap
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
 
@@ -141,7 +137,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged => 1
+        case noStateOrStateChanged               => 1
       }
     }
   }

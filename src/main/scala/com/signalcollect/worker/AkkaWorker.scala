@@ -46,6 +46,8 @@ import scala.collection.mutable.IndexedSeq
 import collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.language.reflectiveCalls
+import java.util.Queue
+import language.postfixOps
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -90,7 +92,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(5.milliseconds)
+  context.setReceiveTimeout(5 milliseconds)
 
   def isInitialized = messageBus.isInitialized
 
@@ -133,7 +135,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       performComputations
   }
 
-  val messageQueue: MessageQueue = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue
+  val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def performComputations {
     if (!isPaused) {
@@ -144,17 +146,17 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val batchProcessSize = 10000
 
   def scheduleOperations {
-    if (!messageQueue.hasMessages) {
-      val collected = vertexStore.toCollect.processWithCondition(
+    if (messageQueue.isEmpty) {
+      val collected = vertexStore.toCollect.process(
         vertex => {
           executeCollectOperationOfVertex(vertex, addToSignal = false)
           if (vertex.scoreSignal > signalThreshold) {
             executeSignalOperationOfVertex(vertex)
           }
-        }, breakCondition = () => messageQueue.hasMessages)
+        })
     }
-    if (!vertexStore.toSignal.isEmpty && !messageQueue.hasMessages && vertexStore.toCollect.isEmpty) {
-      vertexStore.toSignal.processWithCondition(executeSignalOperationOfVertex(_), breakCondition = () => messageQueue.hasMessages)
+    if (!vertexStore.toSignal.isEmpty && messageQueue.isEmpty && vertexStore.toCollect.isEmpty) {
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     }
     messageBus.flush
   }

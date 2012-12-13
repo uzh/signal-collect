@@ -19,8 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
-
 /**
  *  StateForwarderEdge is an edge implementation that signals
  *  the state of its source vertex.

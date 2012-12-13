@@ -19,10 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
-import com.signalcollect._
-import scala.reflect.BeanProperty
-
 trait SumOfOutWeights[Id, State] extends AbstractVertex[Id, State] {
 
   /**

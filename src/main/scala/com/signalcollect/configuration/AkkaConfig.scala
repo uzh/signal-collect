@@ -1,7 +1,7 @@
 package com.signalcollect.configuration
 
-import com.typesafe.config._
-import com.signalcollect.configuration.LoggingLevel._
+import com.signalcollect.configuration.LoggingLevel.Debug
+import com.typesafe.config.ConfigFactory
 
 object AkkaConfig {
   def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(

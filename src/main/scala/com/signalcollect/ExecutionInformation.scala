@@ -19,12 +19,12 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces._
-import com.signalcollect.configuration._
-import com.signalcollect.configuration.TerminationReason
-import scala.concurrent.duration.Duration._
-import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
+
+import scala.concurrent.duration.Duration
+
+import com.signalcollect.configuration.{ GraphConfiguration, TerminationReason }
+import com.signalcollect.interfaces.WorkerStatistics
 
 /**
  *  An instance of ExecutionInformation reports information such as execution statistics
@@ -48,7 +48,7 @@ case class ExecutionInformation(
     individualWorkerStatistics: List[WorkerStatistics]) {
 
   override def toString: String = {
-      "------------------------\n" +
+    "------------------------\n" +
       "- Execution Parameters -\n" +
       "------------------------\n" +
       parameters.toString + "\n" +
