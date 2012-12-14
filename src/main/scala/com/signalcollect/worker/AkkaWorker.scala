@@ -76,7 +76,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -214,7 +214,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         vertexStore.toSignal.put(vertex)
       }
     } else {
-      warning("Vertex with id " + vertex.id  + " could not be added, vertex with the same id exists already.")
+      val existing = vertexStore.vertices.get(vertex.id)
+      warning("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
     }
   }
 
