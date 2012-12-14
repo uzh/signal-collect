@@ -24,10 +24,13 @@ import java.util.concurrent.Executors
 import scala.language.postfixOps
 import scala.Array.canBuildFrom
 import scala.collection.immutable.List.apply
-import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics }
+import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, Inspectable }
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
 import akka.actor.ActorRef
+import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.Vertex
+import scala.util.Random
 
 class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
   val server = HttpServer.create(address, 0)
@@ -42,9 +45,62 @@ class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new
   }
 }
 
+class VertexToStringAggregator extends AggregationOperation[String] {
+  def extract(v: Vertex[_, _]): String = v match {
+    case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
+    case other => ""
+  }
+
+  /**
+   *  Aggregates all the values extracted by the `extract` function.
+   *
+   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
+   */
+  def reduce(vertexDescriptions: Stream[String]): String = {
+    val sb = new StringBuilder
+    for (vertexDescription <- vertexDescriptions) {
+      sb.append(vertexDescription)
+    }
+    sb.toString
+  }
+
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): String = {
+    Template.addVertex(v.id.toString)
+  }
+}
+
+class EdgeToStringAggregator extends AggregationOperation[String] {
+  def extract(v: Vertex[_, _]): String = v match {
+    case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
+    case other => ""
+  }
+
+  /**
+   *  Aggregates all the values extracted by the `extract` function.
+   *
+   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
+   */
+  def reduce(vertexDescriptions: Stream[String]): String = {
+    val sb = new StringBuilder
+    for (vertexDescription <- vertexDescriptions) {
+      sb.append(vertexDescription)
+    }
+    sb.toString
+  }
+
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): String = {
+    val sb = new StringBuilder
+    for (targetId <- v.getTargetIdsOfOutgoingEdges) {
+      sb.append(Template.addEdge(v.id.toString+targetId.toString, v.id.toString, targetId.toString))
+    }
+    sb.toString
+  }
+}
+
 class GraphInspectorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
   val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
-
+  val workerApi = coordinator.getWorkerApi 
+    
   def handle(exchange: HttpExchange) {
     val requestMethod = exchange.getRequestMethod
     if (requestMethod.equalsIgnoreCase("GET")) {
@@ -56,25 +112,29 @@ class GraphInspectorRequestHandler(coordinatorActor: ActorRef) extends HttpHandl
       responseBody.close
     }
   }
-  
+
   def renderInspector: String = {
     val content = new StringBuffer()
     content.append("Hello, Ela! This is where we're gonna put the graph visualization")
 
     //http://sigmajs.org/data/les_miserables.gexf
-    
-    
+
+    //    var sigInst = sigma.init(document.getElementById('sigma-instance'));
+    //sigInst.addNode('hello',{'label': 'Hello', 'x': 100, 'y': 100, 'size': 4.5, 'color' : 'rgb(100, 10, 20)'})
+    //sigInst.addNode('world',{'label': 'World!', 'x': 120, 'y': 130, 'size': 4.5, 'color' : 'rgb(10, 100, 20)'})
+    //sigInst.addEdge('hello-world', 'hello','world');
+
     val sigmaExample = """
 <div id="sigma-instance" style="display:block;margin-left:auto;margin-right:auto;width:80%;height:800px;border:1px #ccf solid;"></div>
 <script type="text/javascript">
 function init() {
   // Instantiate sigma.js and customize it :
-  var sigInst = sigma.init(document.getElementById('sigma-instance'));
-sigInst.addNode('hello',{'label': 'Hello', 'x': 100, 'y': 100, 'size': 4.5, 'color' : 'rgb(100, 10, 20)'})
-sigInst.addNode('world',{'label': 'World!', 'x': 120, 'y': 130, 'size': 4.5, 'color' : 'rgb(10, 100, 20)'})
-sigInst.addEdge('hello-world', 'hello','world');
-
-
+  var sigInst = sigma.init(document.getElementById('sigma-instance'));""" + {
+      val vertexAggregator = new VertexToStringAggregator
+      val edgeAggregator = new EdgeToStringAggregator
+     
+      workerApi.aggregate(vertexAggregator) + workerApi.aggregate(edgeAggregator)
+    } + """
   document.getElementById('rescale-graph').addEventListener('click',function(){
     sigInst.position(0,0,1).draw();
   },true);
@@ -87,7 +147,7 @@ if (document.addEventListener) {
 }
 </script>
       """
-      content.append(sigmaExample)
+    content.append(sigmaExample)
     Template.html(title = "Signal/Collect Inspector", content = content.toString)
   }
 }
@@ -135,8 +195,7 @@ class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
       "bulkSignalMessagesReceived",
       "continueMessagesReceived",
       "requestMessagesReceived",
-      "otherMessagesReceived"
-    )
+      "otherMessagesReceived")
 
     val rowEntries = workerStatistics map (stats =>
       List(stats.workerId,
@@ -154,9 +213,7 @@ class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
         stats.bulkSignalMessagesReceived,
         stats.continueMessagesReceived,
         stats.requestMessagesReceived,
-        stats.otherMessagesReceived
-      ) map (_.toString)
-    )
+        stats.otherMessagesReceived) map (_.toString))
 
     val workerStatsTable = Template.table(tableHeaders, rowEntries)
     val actorSendingStatsElement = Template.gridRow(span = 4, offset = 2, content = workerStatsTable)
@@ -167,6 +224,16 @@ class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
 }
 
 object Template extends App {
+
+  //  sigInst.addNode('hello',{'label': 'Hello', 'x': 100, 'y': 100, 'size': 4.5, 'color' : 'rgb(100, 10, 20)'})
+  //  sigInst.addNode('world',{'label': 'World!', 'x': 120, 'y': 130, 'size': 4.5, 'color' : 'rgb(10, 100, 20)'})
+  //  sigInst.addEdge('hello-world', 'hello','world');
+
+  def addVertex(id: String): String = s"""
+sigInst.addNode('$id',{'label': '$id', 'x': ${Random.nextInt(200)}, 'y': ${Random.nextInt(200)}, 'size': 10, 'color' : 'rgb(${Random.nextInt(200)}, ${Random.nextInt(200)}, ${Random.nextInt(200)})'});"""
+
+  def addEdge(edgeId: String, sourceId: String, targetId: String): String = s"""
+sigInst.addEdge('$edgeId', '$sourceId','$targetId');"""
 
   def bodyCopy(text: String): String = s"""
 <p>$text</p>
@@ -218,10 +285,12 @@ object Template extends App {
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    ${refreshIntervalSeconds match {
+    ${
+    refreshIntervalSeconds match {
       case None => ""
       case Some(seconds) => s"""<meta http-equiv="refresh" content="$seconds" >"""
-    }}
+    }
+  }
     <title>$title</title>
     <link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.0.4/css/bootstrap.min.css"/>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.1.1/bootstrap.min.js"></script>

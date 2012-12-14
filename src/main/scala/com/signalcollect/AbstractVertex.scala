@@ -20,11 +20,11 @@
 package com.signalcollect
 
 import java.util.HashMap
-
 import scala.Some.apply
 import scala.collection.JavaConversions.mapAsScalaMap
+import com.signalcollect.interfaces.Inspectable
 
-abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
+abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
 
   /**
    * hashCode is cached for better performance
@@ -137,7 +137,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged               => 1
+        case noStateOrStateChanged => 1
       }
     }
   }
@@ -156,5 +156,12 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
    *  This method gets called by the framework before the vertex gets removed.
    */
   def beforeRemoval(graphEditor: GraphEditor[Any, Any]) = {}
+
+  /**
+   * Returns the ids of the target vertices of outgoing edges of the vertex.
+   */
+  def getTargetIdsOfOutgoingEdges: Traversable[_] = {
+    outgoingEdges map (_._2.targetId)
+  }
 
 }
