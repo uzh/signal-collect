@@ -63,7 +63,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
       }
 
       graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous).withCollectThreshold(0).withSignalThreshold(0.00001))
-      var allcorrect = graph.aggregate(new AggregationOperation[Boolean] {
+      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
         val neutralElement = true
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
@@ -91,7 +91,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
       }
 
       graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous).withCollectThreshold(0).withSignalThreshold(0.00001))
-      var allcorrect = graph.aggregate(new AggregationOperation[Boolean] {
+      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
         val neutralElement = true
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
         def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)

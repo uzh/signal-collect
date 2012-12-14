@@ -31,9 +31,9 @@ import com.signalcollect.Vertex
 // the key in this map. In order to handle (rare) collisions,
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
-class VertexMap[@specialized(Int, Long) Id](
-    initialSize: Int = 32768,
-    rehashFraction: Float = 0.75f) extends VertexStore[Id] {
+class VertexMap[Id](
+  initialSize: Int = 32768,
+  rehashFraction: Float = 0.75f) extends VertexStore[Id] {
   assert(initialSize > 0)
   final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
@@ -47,6 +47,24 @@ class VertexMap[@specialized(Int, Long) Id](
   final override def size = numberOfElements
   final def isEmpty = numberOfElements == 0
   private[this] final var numberOfElements = 0
+
+  def stream: Stream[Vertex[Id, _]] = {
+    def remainder(i: Int, elementsProcessed: Int): Stream[Vertex[Id, _]] = {
+      if (elementsProcessed == numberOfElements) {
+        Stream.empty
+      } else {
+        var index = i
+        var vertex = values(index)
+        while (vertex == null) {
+          index += 1
+          vertex = values(index)
+        }
+        Stream.cons(vertex, remainder(index + 1, elementsProcessed + 1))
+      }
+    }
+
+    remainder(0, 0)
+  }
 
   final def clear {
     values = new Array[Vertex[Id, _]](maxSize)
@@ -205,7 +223,8 @@ class VertexMap[@specialized(Int, Long) Id](
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
   final def put(vertex: Vertex[Id, _]): Boolean = {
     val key = idToKey(vertex.id)
-    putWithKey(key, vertex)
+    val success = putWithKey(key, vertex)
+    success
   }
 
   private[this] final def putWithKey(key: Int, vertex: Vertex[Id, _]): Boolean = {

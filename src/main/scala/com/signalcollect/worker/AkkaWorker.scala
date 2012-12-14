@@ -316,11 +316,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
-    var accumulator = aggregationOperation.neutralElement
-    for (vertex <- vertexStore.vertices) {
-      accumulator = aggregationOperation.aggregate(accumulator, aggregationOperation.extract(vertex))
-    }
-    accumulator
+    aggregationOperation.reduce(vertexStore.vertices.stream map (aggregationOperation.extract(_)))
   }
 
   def startComputation {

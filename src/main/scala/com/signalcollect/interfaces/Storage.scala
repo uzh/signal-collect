@@ -42,6 +42,7 @@ trait VertexStore[@specialized(Int, Long) Id] {
   def remove(id: Id)
   def isEmpty: Boolean
   def size: Long
+  def stream: Stream[Vertex[Id, _]]
   def foreach(f: Vertex[Id, _] => Unit)
   def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int
   def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int

@@ -27,11 +27,37 @@ import scala.reflect.ClassTag
 import com.signalcollect.interfaces.AggregationOperation
 
 /**
+ *  More modular interface for aggregation operations.
+ */
+trait ModularAggregationOperation[ValueType] extends AggregationOperation[ValueType] {
+  
+  /**
+   * Reduces an arbitrary number of elements to one element.
+   */
+  def reduce(elements: Stream[ValueType]): ValueType = {
+    elements.foldLeft(neutralElement)(aggregate)
+  }
+
+  /**
+   *  Aggregates all the values extracted by the `extract` function.
+   *
+   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
+   */
+  def aggregate(a: ValueType, b: ValueType): ValueType
+
+  /**
+   *  Neutral element of the `aggregate` function:
+   *  `aggregate(x, neutralElement) == x`
+   */
+  def neutralElement: ValueType
+}
+
+/**
  *  Builds a map with the vertex ids as keys and the vertex states as values.
  *
  *  Only works on graphs where this information fits into memory.
  */
-class IdStateMapAggregator[IdType, StateType] extends AggregationOperation[Map[IdType, StateType]] {
+class IdStateMapAggregator[IdType, StateType] extends ModularAggregationOperation[Map[IdType, StateType]] {
   val neutralElement = Map[IdType, StateType]()
   def extract(v: Vertex[_, _]): Map[IdType, StateType] = {
     try {
@@ -72,7 +98,7 @@ class ProductOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
 /**
  *  Aggregation operation that returns a sample of all vertex ids.
  */
-class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
+class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[List[Any]] {
 
   val neutralElement = List[Any]()
 
@@ -91,7 +117,7 @@ class SampleVertexIds(sampleSize: Int) extends AggregationOperation[List[Any]] {
  *
  *  @example `val numberOfPageRankVertices = graph.aggregate(new CountVertices[PageRankVertex])`
  */
-class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends AggregationOperation[Long] {
+class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends ModularAggregationOperation[Long] {
 
   val neutralElement: Long = 0l
 
@@ -106,7 +132,7 @@ class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends AggregationOpe
   def extract(v: Vertex[_, _]): Long = {
     v match {
       case v: VertexType => 1l
-      case other         => 0l
+      case other => 0l
     }
   }
 
@@ -115,7 +141,7 @@ class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends AggregationOpe
 /**
  *  Extracts states from vertices
  */
-abstract class StateExtractor[StateType: Manifest] extends AggregationOperation[Option[StateType]] {
+abstract class StateExtractor[StateType: Manifest] extends ModularAggregationOperation[Option[StateType]] {
 
   /**
    * Extracts the state from v if it matches `StateType`
@@ -142,9 +168,9 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
   def aggregate(a: Option[ValueType], b: Option[ValueType]): Option[ValueType] = {
     (a, b) match {
       case (Some(x), Some(y)) => Some(operation(x, y))
-      case (Some(x), None)    => Some(x)
-      case (None, Some(y))    => Some(y)
-      case (None, None)       => None
+      case (Some(x), None) => Some(x)
+      case (None, Some(y)) => Some(y)
+      case (None, None) => None
     }
   }
 
@@ -153,7 +179,7 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
 /**
  *  Implements an extractor for aggregation operations that will operate on states of type `StateType`.
  */
-abstract class StateAggregator[StateType] extends AggregationOperation[StateType] {
+abstract class StateAggregator[StateType] extends ModularAggregationOperation[StateType] {
 
   /**
    *  Extracts the state from v if it matches `StateType`
@@ -171,7 +197,7 @@ abstract class StateAggregator[StateType] extends AggregationOperation[StateType
 /**
  * Finds the ids and states of the K vertices with the largest states.
  */
-class TopKFinder[Id, State](k: Int, isFirstLargerThanSecond: (State, State) => Boolean) extends AggregationOperation[List[(Id, State)]] {
+class TopKFinder[Id, State](k: Int, isFirstLargerThanSecond: (State, State) => Boolean) extends ModularAggregationOperation[List[(Id, State)]] {
   def extract(v: Vertex[_, _]): List[(Id, State)] = {
     v match {
       case vertex: Vertex[Id, State] => List((vertex.id, vertex.state))

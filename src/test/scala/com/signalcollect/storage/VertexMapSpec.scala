@@ -29,6 +29,7 @@ import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.examples.PageRankVertex
 import java.io.File
 import com.signalcollect.examples.PageRankVertex$
+import com.signalcollect.examples.SudokuCell
 
 @RunWith(classOf[JUnitRunner])
 class VertexMapSpec extends SpecificationWithJUnit with Mockito {
@@ -89,7 +90,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.process(v => {}, Some(6))
       vm.get(17) != null
     }
-    
+
     "optimize correctly in an edge case" in {
       val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
@@ -103,7 +104,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.process(v => {}, Some(6))
       vm.get(6) != null
     }
-    
+
     "remove all elements via processing" in {
       val vm = new VertexMap[Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
@@ -129,6 +130,16 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.get(Int.MinValue).id.asInstanceOf[Int] must_== Int.MinValue
       vm.get(Int.MaxValue).id.asInstanceOf[Int] must_== Int.MaxValue
     }
+
+    "stream vertices" in {
+      val vm = new VertexMap[Int](8, 0.99f)
+      vm.put(new SudokuCell(0)) === true
+      vm.put(new SudokuCell(Int.MinValue)) === true
+      vm.put(new SudokuCell(Int.MaxValue)) === true
+      vm.size must_== 3
+      (vm.stream.toList map (_.id)) === List(0, Int.MinValue, Int.MaxValue)
+    }
+
   }
 
 }

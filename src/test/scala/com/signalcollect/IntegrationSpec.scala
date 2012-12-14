@@ -52,7 +52,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
         val graph = graphProvider()
         buildGraph(graph)
         val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-        correct &= graph.aggregate(new AggregationOperation[Boolean] {
+        correct &= graph.aggregate(new ModularAggregationOperation[Boolean] {
           val neutralElement = true
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
           def extract(v: Vertex[_, _]): Boolean = verify(v)

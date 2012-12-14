@@ -21,10 +21,10 @@ package com.signalcollect.coordinator
 
 import scala.collection.parallel.mutable.ParArray
 import scala.util.Random
-
 import com.signalcollect.{ Edge, GraphEditor, Vertex }
 import com.signalcollect.interfaces.{ AggregationOperation, EdgeId, VertexToWorkerMapper, WorkerApi, WorkerStatistics }
 import com.signalcollect.interfaces.WorkerStatistics.apply
+import com.sun.org.apache.xml.internal.serializer.ToStream
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -68,7 +68,7 @@ class DefaultWorkerApi[Id, Signal](
 
   override def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]) = {
     val aggregateArray: ParArray[ValueType] = parallelWorkers map (_.aggregate(aggregationOperation))
-    aggregateArray.fold(aggregationOperation.neutralElement)(aggregationOperation.aggregate(_, _))
+    aggregationOperation.reduce(aggregateArray.toStream)
   }
 
   override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = parallelWorkers foreach (_.setUndeliverableSignalHandler(h))
