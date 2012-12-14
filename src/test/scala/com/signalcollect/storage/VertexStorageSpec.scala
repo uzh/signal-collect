@@ -35,26 +35,36 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
   sequential
 
   "Default Vertex Store" should {
-    val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-    val inMemoryStore = new DefaultStorage[Any]
-    vertexList.foreach(inMemoryStore.vertices.put(_))
 
     "hold all vertices inserted" in {
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+      val inMemoryStore = new DefaultStorage[Any]
+      vertexList.foreach(inMemoryStore.vertices.put(_))
       inMemoryStore.vertices.size must_== vertexList.size
     }
 
     "not add vertices automatically to the toSignal list" in {
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+      val inMemoryStore = new DefaultStorage[Any]
+      vertexList.foreach(inMemoryStore.vertices.put(_))
       inMemoryStore.toSignal.size must_== 0
     }
 
     "not add vertices automatically to the toCollect list" in {
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+      val inMemoryStore = new DefaultStorage[Any]
+      vertexList.foreach(inMemoryStore.vertices.put(_))
       inMemoryStore.toCollect.size must_== 0
     }
 
     "remove vertices from the store" in {
+      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
+      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
       val inMemoryStore = new DefaultStorage[Any]
-      vertexList.foreach(v => inMemoryStore.vertices.put(v))
+      vertexList.foreach(inMemoryStore.vertices.put(_))
       inMemoryStore.vertices.remove(0)
       inMemoryStore.vertices.size must_== vertexList.size - 1
     }
