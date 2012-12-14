@@ -29,7 +29,7 @@ import java.util.LinkedHashSet
  * Default configuration for storing vertices and the toSignal and toCollect collections
  * Uses in-memory implementations for all collections.
  */
-class DefaultStorage[@specialized(Int, Long) Id] extends Storage[Id] {
+class DefaultStorage[Id] extends Storage[Id] {
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
