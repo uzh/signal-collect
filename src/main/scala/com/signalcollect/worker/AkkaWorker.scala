@@ -92,7 +92,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(5 milliseconds)
+  context.setReceiveTimeout(10 milliseconds)
 
   def isInitialized = messageBus.isInitialized
 
@@ -155,7 +155,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           }
         })
     }
-    if (!vertexStore.toSignal.isEmpty && messageQueue.isEmpty && vertexStore.toCollect.isEmpty) {
+    if (!vertexStore.toSignal.isEmpty && vertexStore.toCollect.isEmpty && messageQueue.isEmpty) {
       vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     }
     messageBus.flush
@@ -213,6 +213,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
+    } else {
+      warning("Vertex with id " + vertex.id  + " could not be added, vertex with the same id exists already.")
     }
   }
 
