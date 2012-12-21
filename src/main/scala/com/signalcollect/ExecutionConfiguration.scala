@@ -20,9 +20,9 @@
 package com.signalcollect
 
 import scala.Some.apply
-
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.ComplexAggregation
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object
@@ -140,8 +140,8 @@ case class ExecutionConfiguration(
  *  @param aggregationInterval In a synchronous computation: aggregation interval in computation steps.
  *  						   In an asynchronous computation: aggregation interval in milliseconds
  */
-abstract class GlobalTerminationCondition[ValueType](
-    val aggregationOperation: AggregationOperation[ValueType],
+abstract class GlobalTerminationCondition[ResultType](
+    val aggregationOperation: ComplexAggregation[_, ResultType],
     val aggregationInterval: Long = 1000l) {
 
   /**
@@ -150,5 +150,5 @@ abstract class GlobalTerminationCondition[ValueType](
    *   @param value The current value computed by `aggregationOperation`
    *   @return If the computation should terminate
    */
-  def shouldTerminate(value: ValueType): Boolean
+  def shouldTerminate(aggregate: ResultType): Boolean
 }

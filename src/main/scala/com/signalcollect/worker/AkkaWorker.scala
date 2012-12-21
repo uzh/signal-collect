@@ -76,7 +76,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-  extends WorkerActor[Id, Signal] with ActorLogging {
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -318,8 +318,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.vertices.foreach(f)
   }
 
-  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
-    aggregationOperation.reduce(vertexStore.vertices.stream map (aggregationOperation.extract(_)))
+  override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
+    aggregationOperation.aggregationOnWorker(vertexStore.vertices.stream)
+  }
+
+  override def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult = {
+    throw new UnsupportedOperationException("AkkaWorker does not support this operation.")
   }
 
   def startComputation {

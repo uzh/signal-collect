@@ -24,7 +24,7 @@ import com.signalcollect.Vertex
 /**
  *  An aggregation operation aggregates some value of type `ValueType` over all the vertices in a graph.
  */
-trait AggregationOperation[ValueType] extends Serializable {
+trait AggregationOperation[ValueType] extends ComplexAggregation[ValueType, ValueType] {
 
   /**
    *  Extracts values of type `ValueType` from vertices.
@@ -35,5 +35,25 @@ trait AggregationOperation[ValueType] extends Serializable {
    * Reduces an arbitrary number of elements to one element.
    */
   def reduce(elements: Stream[ValueType]): ValueType
+
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): ValueType = {
+    reduce(vertices map extract)
+  }
+
+  def aggregationOnCoordinator(workerResults: Iterable[ValueType]): ValueType = {
+    reduce(workerResults.toStream)
+  }
+
+}
+
+/**
+ * Implementation related interface.
+ * Only use for more complex aggregations or when performance is important.
+ */
+trait ComplexAggregation[WorkerResult, EndResult] extends Serializable {
+
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): WorkerResult
+
+  def aggregationOnCoordinator(workerResults: Iterable[WorkerResult]): EndResult
 
 }

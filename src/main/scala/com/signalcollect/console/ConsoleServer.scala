@@ -133,7 +133,7 @@ function init() {
       val vertexAggregator = new VertexToStringAggregator
       val edgeAggregator = new EdgeToStringAggregator
      
-      workerApi.aggregate(vertexAggregator) + workerApi.aggregate(edgeAggregator)
+      workerApi.aggregateAll(vertexAggregator) + workerApi.aggregateAll(edgeAggregator)
     } + """
   document.getElementById('rescale-graph').addEventListener('click',function(){
     sigInst.position(0,0,1).draw();
