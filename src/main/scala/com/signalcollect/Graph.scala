@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.ComplexAggregation
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -153,7 +154,7 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *
    *  @example See concrete implementations of other aggregation operations, i.e. `SumOfStates`.
    */
-  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
+  def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType
 
   /**
    *  Sets the function that handles signals that could not be delivered to a vertex.

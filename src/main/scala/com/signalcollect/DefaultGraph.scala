@@ -54,6 +54,7 @@ import akka.util.Timeout
 import com.signalcollect.coordinator.OnIdle
 import com.signalcollect.coordinator.IsIdle
 import scala.language.postfixOps
+import com.signalcollect.interfaces.ComplexAggregation
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -227,8 +228,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       stats.terminationReason = TerminationReason.GlobalConstraintMet
     }
     def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
-    def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
-      val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+    def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+      val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
       gtc.shouldTerminate(globalAggregateValue)
     }
     def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
@@ -276,7 +277,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         }
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
           workerApi.pauseComputation
-          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation
           gtc.shouldTerminate(globalAggregateValue)
         }
@@ -301,9 +302,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           stats.terminationReason = TerminationReason.GlobalConstraintMet
         }
         def intervalHasPassed = remainingIntervalTime <= 0
-        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+        def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
           workerApi.pauseComputation
-          val globalAggregateValue = workerApi.aggregate(gtc.aggregationOperation)
+          val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation
           gtc.shouldTerminate(globalAggregateValue)
         }
@@ -371,8 +372,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
 
-  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType = {
-    workerApi.aggregate(aggregationOperation)
+  def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
+    workerApi.aggregateAll(aggregationOperation)
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = workerApi.setUndeliverableSignalHandler(h)

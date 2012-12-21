@@ -43,7 +43,8 @@ trait WorkerApi[Id, Signal] {
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
   def foreachVertex(f: Vertex[Id, _] => Unit)
 
-  def aggregate[ValueType](aggregationOperation: AggregationOperation[ValueType]): ValueType
+  def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult
+  def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult
 
   def pauseComputation
   def startComputation

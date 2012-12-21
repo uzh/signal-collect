@@ -23,14 +23,16 @@ import scala.Predef.Map.apply
 import scala.Some.apply
 import scala.collection.immutable.List.apply
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.ComplexAggregation
+import scala.collection.mutable.PriorityQueue
+import scala.util.Sorting
 
 /**
  *  More modular interface for aggregation operations.
  */
 trait ModularAggregationOperation[ValueType] extends AggregationOperation[ValueType] {
-  
+
   /**
    * Reduces an arbitrary number of elements to one element.
    */
@@ -132,7 +134,7 @@ class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends ModularAggrega
   def extract(v: Vertex[_, _]): Long = {
     v match {
       case v: VertexType => 1l
-      case other => 0l
+      case other         => 0l
     }
   }
 
@@ -168,9 +170,9 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
   def aggregate(a: Option[ValueType], b: Option[ValueType]): Option[ValueType] = {
     (a, b) match {
       case (Some(x), Some(y)) => Some(operation(x, y))
-      case (Some(x), None) => Some(x)
-      case (None, Some(y)) => Some(y)
-      case (None, None) => None
+      case (Some(x), None)    => Some(x)
+      case (None, Some(y))    => Some(y)
+      case (None, None)       => None
     }
   }
 
@@ -197,36 +199,55 @@ abstract class StateAggregator[StateType] extends ModularAggregationOperation[St
 /**
  * Finds the ids and states of the K vertices with the largest states.
  */
-class TopKFinder[Id, State](k: Int, isFirstLargerThanSecond: (State, State) => Boolean) extends ModularAggregationOperation[List[(Id, State)]] {
-  def extract(v: Vertex[_, _]): List[(Id, State)] = {
-    v match {
-      case vertex: Vertex[Id, State] => List((vertex.id, vertex.state))
-    }
-  }
-  def aggregate(a: List[(Id, State)], b: List[(Id, State)]): List[(Id, State)] = {
-    merge[(Id, State)](a, b, 0, k, { (first: (Id, State), second: (Id, State)) => isFirstLargerThanSecond(first._2, second._2) })
-  }
-  val neutralElement = List[(Id, State)]()
+class TopKFinder[Id, State](k: Int)(implicit ord: Ordering[State])
+    extends ComplexAggregation[Iterable[(Id, State)], Iterable[(Id, State)]] {
 
-  final def merge[G](a: List[G], b: List[G], counter: Int, limit: Int, isFirstLargerThanSecond: (G, G) => Boolean): List[G] = {
-    if (counter < limit) {
-      b match {
-        case Nil => a.take(limit - counter)
-        case other => {
-          a match {
-            case Nil => b.take(limit - counter)
-            case x :: xs => {
-              if (isFirstLargerThanSecond(x, b.head)) {
-                x :: merge(xs, b, counter + 1, limit, isFirstLargerThanSecond)
-              } else {
-                b.head :: merge(a, b.tail, counter + 1, limit, isFirstLargerThanSecond)
-              }
-            }
-          }
+  implicit val ordering = Ordering.by((value: (Id, State)) => value._2)
+
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): Iterable[(Id, State)] = {
+    println("Top K aggregator started on worker: " + System.currentTimeMillis)
+    val values = (vertices map (extract(_)))
+    println("Lazyly extracted vertex states: " + System.currentTimeMillis)
+    selectTopK(k, values)
+  }
+
+  protected def selectTopK[G](k: Int, items: Stream[G])(implicit ord: Ordering[G]): Iterable[G] = {
+    println("Starting selection: " + System.currentTimeMillis)
+    var counter = 0
+    val topK = new PriorityQueue[G]()(ord.reverse)
+    for (item <- items) {
+      counter += 1
+      if (counter % 10000 == 0) {
+        println("Number of items processed: " + counter + ", timestamp: " + System.currentTimeMillis)
+      }
+      if (topK.size < k) {
+        topK += item
+      } else {
+        if (ord.compare(topK.head, item) < 0) {
+          topK.dequeue
+          topK += item
         }
       }
-    } else {
-      Nil
+    }
+    println("Top K selection has finished: " + System.currentTimeMillis)
+    topK
+  }
+
+  def aggregationOnCoordinator(workerResults: Iterable[Iterable[(Id, State)]]): Iterable[(Id, State)] = {
+    println("Top K aggregator started on coordinator: " + System.currentTimeMillis)
+    val values = workerResults.toStream.flatMap(identity)
+    println("Lazyly merged iterators: " + System.currentTimeMillis)
+    val topK = (selectTopK(k, values)).toArray
+    println("Sorting result: " + System.currentTimeMillis)
+    Sorting.quickSort[(Id, State)](topK)(ordering.reverse)
+    println("Top K selection done: " + System.currentTimeMillis)
+    topK
+  }
+
+  def extract(v: Vertex[_, _]): (Id, State) = {
+    v match {
+      case vertex: Vertex[Id, State] => (vertex.id, vertex.state)
     }
   }
+
 }
