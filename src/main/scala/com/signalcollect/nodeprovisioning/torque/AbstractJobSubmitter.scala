@@ -13,7 +13,7 @@ abstract class AbstractJobSubmitter(mailAddress: String) extends Serializable {
  
   def executeCommandOnClusterManager(command: String): String
 
-  def copyFileToCluster(localPath: String, targetPath: String = "") {}
+  def copyFileToCluster(localPath: String, targetPath: String = "")
 
   def getShellScript(jobId: String, jarname: String, mainClass: String, priority: String, jvmParameters: String, jdkBinPath: String, mailAddress: String): String = {
     val script = """
