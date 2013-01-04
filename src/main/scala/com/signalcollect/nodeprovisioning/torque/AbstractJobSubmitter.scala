@@ -2,7 +2,7 @@ package com.signalcollect.nodeprovisioning.torque
 
 import org.apache.commons.codec.binary.Base64
 
-abstract class AbstractJobSubmitter(mailAddress: String) {
+abstract class AbstractJobSubmitter(mailAddress: String) extends Serializable {
 
  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
       val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
