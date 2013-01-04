@@ -8,4 +8,10 @@ class LocalJobSubmitter(mailAddress:String = "") extends AbstractJobSubmitter(ma
     println(command)
     command !!
   }
+  
+  def copyFileToCluster(localPath: String, targetPath: String = "") {
+    val command = "cp " + localPath + " ~"
+    println(command)
+    command !!
+  }
 }
