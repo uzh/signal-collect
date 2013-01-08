@@ -205,21 +205,22 @@ class TopKFinder[Id, State](k: Int)(implicit ord: Ordering[State])
   implicit val ordering = Ordering.by((value: (Id, State)) => value._2)
 
   def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): Iterable[(Id, State)] = {
-    println("Top K aggregator started on worker: " + System.currentTimeMillis)
+    def extract(v: Vertex[_, _]): (Id, State) = {
+      v match {
+        case vertex: Vertex[Id, State] => (vertex.id, vertex.state)
+      }
+    }
+    val threadName = Thread.currentThread.getName
     val values = (vertices map (extract(_)))
-    println("Lazyly extracted vertex states: " + System.currentTimeMillis)
     selectTopK(k, values)
   }
 
-  protected def selectTopK[G](k: Int, items: Stream[G])(implicit ord: Ordering[G]): Iterable[G] = {
-    println("Starting selection: " + System.currentTimeMillis)
+  protected def selectTopK[G: ClassTag](k: Int, items: Stream[G])(implicit ord: Ordering[G]): Iterable[G] = {
+    val startTime = System.currentTimeMillis
     var counter = 0
     val topK = new PriorityQueue[G]()(ord.reverse)
     for (item <- items) {
       counter += 1
-      if (counter % 10000 == 0) {
-        println("Number of items processed: " + counter + ", timestamp: " + System.currentTimeMillis)
-      }
       if (topK.size < k) {
         topK += item
       } else {
@@ -229,25 +230,16 @@ class TopKFinder[Id, State](k: Int)(implicit ord: Ordering[State])
         }
       }
     }
-    println("Top K selection has finished: " + System.currentTimeMillis)
-    topK
+    topK.toArray[G]
   }
 
   def aggregationOnCoordinator(workerResults: Iterable[Iterable[(Id, State)]]): Iterable[(Id, State)] = {
-    println("Top K aggregator started on coordinator: " + System.currentTimeMillis)
+    val startTime = System.currentTimeMillis
+    def timePassedInSeconds = System.currentTimeMillis - System.currentTimeMillis
     val values = workerResults.toStream.flatMap(identity)
-    println("Lazyly merged iterators: " + System.currentTimeMillis)
     val topK = (selectTopK(k, values)).toArray
-    println("Sorting result: " + System.currentTimeMillis)
     Sorting.quickSort[(Id, State)](topK)(ordering.reverse)
-    println("Top K selection done: " + System.currentTimeMillis)
     topK
-  }
-
-  def extract(v: Vertex[_, _]): (Id, State) = {
-    v match {
-      case vertex: Vertex[Id, State] => (vertex.id, vertex.state)
-    }
   }
 
 }
