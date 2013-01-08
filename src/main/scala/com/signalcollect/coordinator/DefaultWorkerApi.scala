@@ -46,7 +46,7 @@ class DefaultWorkerApi[Id, Signal](
 
   protected def get[G](f: Future[G]): G = Await.result(f, timeout)
 
-  protected val timeout = 1 hour
+  protected val timeout = 2 hours
 
   def getIndividualWorkerStatistics: List[WorkerStatistics] = futures(_.getWorkerStatistics) map get toList
 
