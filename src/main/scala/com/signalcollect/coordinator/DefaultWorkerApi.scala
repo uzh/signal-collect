@@ -81,8 +81,10 @@ class DefaultWorkerApi[Id, Signal](
   }
 
   override def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult = {
-    val aggregateArray = futures(_.aggregateOnWorker(aggregationOperation)) map get
-    aggregationOperation.aggregationOnCoordinator(aggregateArray)
+    // TODO: Identify and fix bug that appears on large graphs with the TopK aggregator when using futures.
+    //val aggregateArray = futures(_.aggregateOnWorker(aggregationOperation)) map get
+    val workerAggregates = workers.par map (_.aggregateOnWorker(aggregationOperation))
+    aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
   }
 
   override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
