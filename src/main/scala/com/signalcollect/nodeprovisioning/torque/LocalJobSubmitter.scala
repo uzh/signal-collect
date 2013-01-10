@@ -1,6 +1,7 @@
 package com.signalcollect.nodeprovisioning.torque
 
 import scala.sys.process._
+import language.postfixOps
 
 class LocalJobSubmitter(mailAddress:String = "") extends AbstractJobSubmitter(mailAddress) {
 
