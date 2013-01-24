@@ -160,7 +160,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   /**
    * Returns the ids of the target vertices of outgoing edges of the vertex.
    */
-  def getTargetIdsOfOutgoingEdges: Traversable[_] = {
+  def getTargetIdsOfOutgoingEdges: Traversable[Any] = {
     outgoingEdges map (_._2.targetId)
   }
 

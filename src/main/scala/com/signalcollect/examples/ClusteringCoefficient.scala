@@ -27,11 +27,11 @@ class ClusteringCoefficientVertex(id: Any) extends DataGraphVertex(id, 0.0) {
   type Signal = Set[Any]
 
   lazy val maxEdges = outgoingEdges.size * (outgoingEdges.size - 1)
-  lazy val neighbourIds = outgoingEdges.values.map(_.targetId).toSet
+  lazy val neighbourIds = getTargetIdsOfOutgoingEdges.toSet
 
-  def collect(oldState: Double, mostRecentSignals: Iterable[Set[Any]]): Double = {
+  def collect = {
     if (maxEdges != 0) {
-      val edgesBetweenNeighbours = mostRecentSignals.map(neighbourIds.intersect(_)).map(_.size).sum
+      val edgesBetweenNeighbours = signals.map(neighbourIds.intersect(_)).map(_.size).sum
       edgesBetweenNeighbours / maxEdges.toDouble
     } else {
       Double.NaN
@@ -41,11 +41,9 @@ class ClusteringCoefficientVertex(id: Any) extends DataGraphVertex(id, 0.0) {
 }
 
 class ClusteringCoefficientEdge(t: Any) extends DefaultEdge(t) {
+  type Source = ClusteringCoefficientVertex
 
-  override def signal(source: Vertex[_, _]) = {
-    val ccVertex = source.asInstanceOf[ClusteringCoefficientVertex]
-    ccVertex.neighbourIds
-  }
+  def signal = source.neighbourIds
 
 }
 
