@@ -131,8 +131,8 @@ class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(
 
   val resetState = null
 
-  def collect(oldState: List[PathQuery], queries: List[PathQuery]): List[PathQuery] = {
-    var newState = oldState
+  def collect(queries: List[PathQuery]): List[PathQuery] = {
+    var newState = state
     if (queries != null) {
       for (query <- queries) {
         if (query != null) {

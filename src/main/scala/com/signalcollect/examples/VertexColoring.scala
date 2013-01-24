@@ -59,15 +59,15 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
    * set to a random color and the neighbors are informed about this vertex'
    * new color. If no neighbor shares the same color, we stay with the old color.
    */
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
-    if (mostRecentSignals.iterator.contains(state)) {
+  def collect = {
+    if (signals.iterator.contains(state)) {
       informNeighbors = true
       if (isFixed) {
         initialColor
       } else {
         val r = Random.nextDouble
         if (r > 0.8) {
-          val freeColors = colors -- mostRecentSignalMap.values.asInstanceOf[Iterable[Int]]
+          val freeColors = colors -- signals
           val numberOfFreeColors = freeColors.size
           if (numberOfFreeColors > 0) {
             freeColors.toSeq(Random.nextInt(numberOfFreeColors))
@@ -79,8 +79,8 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
         }
       }
     } else {
-      informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != oldState)
-      oldState
+      informNeighbors = false || (lastSignalState.isDefined && lastSignalState.get != state)
+      state
     }
   }
 

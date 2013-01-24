@@ -28,13 +28,13 @@ import collection.mutable.{ ListMap, HashMap, SynchronizedMap }
  *
  */
 class SudokuAssociation(t: Any) extends OptionalSignalEdge(t) {
-  def signal(sourceVertex: Vertex[_, _]) = sourceVertex.asInstanceOf[SudokuCell].state
+  def signal = source.state
 }
 
 /**
  * Cell in a Sudoku grid.
  *
- * @param id ID of the cell, where top left cell has id=0 top right has id of 8 and bottom right has id 80
+ * @param id identifier of the cell, where top left cell has id=0 top right has id of 8 and bottom right has id 80
  *
  */
 class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVertex(id, initialState) {
@@ -44,16 +44,17 @@ class SudokuCell(id: Int, initialState: Option[Int] = None) extends DataGraphVer
   var possibleValues = SudokuHelper.legalNumbers
   if (initialState.isDefined) possibleValues = Set(initialState.get)
 
-  def collect(oldState: Option[Int], mostRecentSignals: Iterable[Int]): Option[Int] = {
+  def collect = {
 
     //make a list of all possible values
-    possibleValues = possibleValues -- mostRecentSignals.toSet
+    possibleValues = possibleValues -- signals.toSet
 
     //If own value is determined i.e. if only one possible value is left choose own value
     if (possibleValues.size == 1) {
       Some(possibleValues.head)
-    } else
-      oldState
+    } else {
+      state
+    }
   }
 }
 
@@ -143,7 +144,7 @@ object Sudoku extends App {
   /**
    * Check if all cells have a value assigned to it
    */
-  def isDone(graph: Graph[_ , _]): Boolean = {
+  def isDone(graph: Graph[_, _]): Boolean = {
     var isDone = true
     graph.foreachVertex(v => if (v.state.asInstanceOf[Option[Int]] == None) isDone = false)
     isDone
@@ -287,7 +288,7 @@ object SudokuHelper {
       for (k <- j to j + 8) {
         data.get(k) match {
           case Some(Some(v)) => print(" " + v + " ")
-          case v => print("   ") //Empty or Error
+          case v             => print("   ") //Empty or Error
         }
         if (k % 3 == 2) {
           print("II")

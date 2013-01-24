@@ -150,7 +150,7 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
 
     "find the largest vertices in the right order" in {
       val graph = createGraph
-      val largestVertices = graph.aggregate(new TopKFinder[Int, Double](2))
+      val largestVertices = graph.aggregate(new TopKFinder[Double](2))
       graph.shutdown
       largestVertices.toSeq == Array[(Int, Double)]((2, 0.9), (3, 0.8)).toSeq
     }

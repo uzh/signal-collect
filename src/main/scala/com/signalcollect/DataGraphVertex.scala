@@ -59,7 +59,7 @@ abstract class DataGraphVertex[Id, State](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, mostRecentSignals: Iterable[Signal]): State
+  def collect: State
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
@@ -72,6 +72,8 @@ abstract class DataGraphVertex[Id, State](
     false
   }
 
+  def signals = mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]]
+  
   /**
    *  Returns the most recent signal received from the vertex with id `id`.
    *
@@ -90,8 +92,7 @@ abstract class DataGraphVertex[Id, State](
    */
   override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     super.executeCollectOperation(graphEditor)
-    val castS = mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]]
-    state = collect(state, castS)
+    state = collect
   }
 
   /**

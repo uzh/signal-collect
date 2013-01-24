@@ -91,8 +91,5 @@ class GraphModificationSpec extends SpecificationWithJUnit {
 }
 
 class GraphModificationVertex(id: Int, state: Int) extends DataGraphVertex(id, state) {
-  type Signal = Int
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
-    1
-  }
+  def collect = 1
 }

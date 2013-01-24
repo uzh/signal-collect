@@ -42,8 +42,8 @@ abstract class OptionalSignalEdge[TargetIdType](targetId: TargetIdType) extends 
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
-    val optionalSignal = signal(sourceVertex).asInstanceOf[Option[_]]
+  override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+    val optionalSignal = signal.asInstanceOf[Option[_]]
     if (optionalSignal.isDefined) {
       graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), optionalSignal.get), cachedTargetIdHashCode)
     }

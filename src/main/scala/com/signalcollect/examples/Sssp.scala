@@ -39,8 +39,8 @@ class Path(t: Any) extends OptionalSignalEdge(t) {
    *  where this edge starts plus the length of the path represented by this
    *  edge (= the weight of this edge).
    */
-  def signal(sourceVertex: Vertex[_, _]) = {
-    sourceVertex.state match {
+  def signal = {
+    source.state match {
       case None                => None
       case Some(distance: Int) => Some(distance + weight.toInt)
     }
@@ -63,8 +63,8 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataFlow
    * up to now (= state) or one of the paths that had been advertised via a signal
    * by a neighbor.
    */
-  def collect(oldState: Option[Int], signal: Int): Option[Int] = {
-    oldState match {
+  def collect(signal: Int) = {
+    state match {
       case None                      => Some(signal)
       case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
     }

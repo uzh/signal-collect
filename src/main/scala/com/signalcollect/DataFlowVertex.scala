@@ -49,7 +49,7 @@ abstract class DataFlowVertex[Id, State](
   }
 
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
-    state = collect(state, signal.asInstanceOf[Signal])
+    state = collect(signal.asInstanceOf[Signal])
     true
   }
 
@@ -63,7 +63,7 @@ abstract class DataFlowVertex[Id, State](
    *  @note Beware of modifying and returning a referenced object,
    *  default signal scoring and termination detection fail in this case.
    */
-  def collect(oldState: State, signal: Signal): State
+  def collect(signal: Signal): State
 
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.

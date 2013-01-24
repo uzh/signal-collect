@@ -199,15 +199,15 @@ abstract class StateAggregator[StateType] extends ModularAggregationOperation[St
 /**
  * Finds the ids and states of the K vertices with the largest states.
  */
-class TopKFinder[Id, State](k: Int)(implicit ord: Ordering[State])
-    extends ComplexAggregation[Iterable[(Id, State)], Iterable[(Id, State)]] {
+class TopKFinder[State](k: Int)(implicit ord: Ordering[State])
+    extends ComplexAggregation[Iterable[(_, State)], Iterable[(_, State)]] {
 
-  implicit val ordering = Ordering.by((value: (Id, State)) => value._2)
+  implicit val ordering = Ordering.by((value: (_, State)) => value._2)
 
-  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): Iterable[(Id, State)] = {
-    def extract(v: Vertex[_, _]): (Id, State) = {
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): Iterable[(_, State)] = {
+    def extract(v: Vertex[_, _]): (_, State) = {
       v match {
-        case vertex: Vertex[Id, State] => (vertex.id, vertex.state)
+        case vertex: Vertex[_, State] => (vertex.id, vertex.state)
       }
     }
     val threadName = Thread.currentThread.getName
@@ -233,12 +233,12 @@ class TopKFinder[Id, State](k: Int)(implicit ord: Ordering[State])
     topK.toArray[G]
   }
 
-  def aggregationOnCoordinator(workerResults: Iterable[Iterable[(Id, State)]]): Iterable[(Id, State)] = {
+  def aggregationOnCoordinator(workerResults: Iterable[Iterable[(_, State)]]): Iterable[(_, State)] = {
     val startTime = System.currentTimeMillis
     def timePassedInSeconds = System.currentTimeMillis - System.currentTimeMillis
     val values = workerResults.toStream.flatMap(identity)
     val topK = (selectTopK(k, values)).toArray
-    Sorting.quickSort[(Id, State)](topK)(ordering.reverse)
+    Sorting.quickSort[(_, State)](topK)(ordering.reverse)
     topK
   }
 

@@ -73,9 +73,9 @@ class HamiltonianVertex(vertexId: String, initialState: Map[List[String], Int]) 
   /*
 	 * The state will contain all paths visited so far, not mattering the size of the path
 	 */
-  def collect(oldState: Map[List[String], Int], mostRecentSignals: Iterable[Map[List[String], Int]]): Map[List[String], Int] = {
+  def collect: Map[List[String], Int] = {
     // consolidate the maps into one map
-    val pathMap = mostRecentSignals reduceLeft (_ ++ _)
+    val pathMap = signals reduceLeft (_ ++ _)
 
     // add signal maps to state as a one map
     val newState = List(pathMap, state) reduceLeft (_ ++ _)
@@ -117,10 +117,12 @@ class HamiltonianEdge(t: Any, w: Int) extends OnlySignalOnChangeEdge(t) {
 
   override def weight: Double = w
 
-  override def signal(sourceVertex: Vertex[_, _]) = {
+  type Source = HamiltonianVertex
+  
+  def signal = {
     // signals only paths that do not contain the target vertex id
-    ((sourceVertex.asInstanceOf[HamiltonianVertex].state.keySet) filterNot { x => x contains (id.targetId) }).map { k =>
-      Pair(k.::(id.targetId.toString), sourceVertex.asInstanceOf[HamiltonianVertex].state.get(k).get + weight.toInt)
+    ((source.state.keySet) filterNot { x => x contains (id.targetId) }).map { k =>
+      Pair(k.::(id.targetId.toString), source.state.get(k).get + weight.toInt)
     }.toMap
   }
 

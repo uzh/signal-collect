@@ -113,7 +113,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
     var i = outgoingEdges.values.iterator
     while (i.hasNext) {
       val outgoingEdge = i.next
-      outgoingEdge.executeSignalOperation(this, graphEditor)
+      outgoingEdge.executeSignalOperation(graphEditor)
     }
   }
 

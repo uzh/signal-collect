@@ -215,7 +215,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
-      warning("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
+      debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
     }
   }
 

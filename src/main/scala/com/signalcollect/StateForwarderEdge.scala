@@ -28,6 +28,6 @@ package com.signalcollect
 class StateForwarderEdge[TargetIdType](targetId: TargetIdType)
     extends DefaultEdge(targetId) {
 
-  def signal(sourceVertex: Vertex[_, _]) = sourceVertex.state.asInstanceOf[Signal]
+  def signal = source.state.asInstanceOf[Signal]
 
 }
