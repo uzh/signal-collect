@@ -30,20 +30,20 @@ import com.signalcollect.configuration.ExecutionMode
  *  @param id: the identifier of this vertex
  *  @param initialState: initial state of the agent: 0 = dead, 1 = alive
  */
-class GameOfLifeCell(id: Any, initialState: Int) extends DataGraphVertex(id, initialState) {
-  type Signal = Int
 
-  def collect(oldState: Int, mostRecentSignals: Iterable[Int]): Int = {
-    val numberOfAliveNeighbors = mostRecentSignals.sum
+class GameOfLifeCell(id: Any, initialState: Int)
+    extends DataGraphVertex(id, initialState) {
+  type Signal = Int
+  def collect(oldState: Int, signals: Iterable[Int]) = {
+    val numberOfAliveNeighbors = signals.sum
     numberOfAliveNeighbors match {
-      case 0 => 0 // dies of loneliness
-      case 1 => 0 // dies of loneliness
-      case 2 => oldState // same as before
-      case 3 => 1 // becomes alive if dead
+      case 0      => 0 // dies of loneliness
+      case 1      => 0 // dies of loneliness
+      case 2      => oldState // same as before
+      case 3      => 1 // becomes alive if dead
       case higher => 0 // dies of overcrowding
     }
   }
-
 }
 
 /**
@@ -75,10 +75,10 @@ object GameOfLife extends App {
   val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withStepsLimit(1)
 
   for (i <- 0 to generations) {
-//    println(stringRepresentationOfGraph)
+    //    println(stringRepresentationOfGraph)
     val stats = graph.execute(execConfig)
   }
-//  println(stringRepresentationOfGraph)
+  //  println(stringRepresentationOfGraph)
 
   graph.shutdown
 
@@ -103,7 +103,7 @@ object GameOfLife extends App {
       for (column <- 0 to columns) {
         val state = stateMap((column, row))
         val symbol = state match {
-          case 0 => " "
+          case 0     => " "
           case other => "x"
         }
         stringBuilder.append(symbol)
