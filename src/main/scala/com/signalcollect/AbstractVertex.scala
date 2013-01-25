@@ -19,10 +19,9 @@
 
 package com.signalcollect
 
-import java.util.HashMap
 import scala.Some.apply
-import scala.collection.JavaConversions.mapAsScalaMap
 import com.signalcollect.interfaces.Inspectable
+import scala.collection.mutable.OpenHashMap
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
 
@@ -37,7 +36,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.
    * It is a map so we can support fast edge removals.
    */
-  var outgoingEdges = new HashMap[Any, Edge[_]]()
+  var outgoingEdges = new OpenHashMap[Any, Edge[_]]()
 
   /** The state of this vertex when it last signaled. */
   var lastSignalState: Option[State] = None
@@ -54,14 +53,15 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * @param e the edge to be added.
    */
   def addEdge(edge: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
-    if (outgoingEdges.get(edge.targetId) == null) {
-      edgesModifiedSinceSignalOperation = true
-      edgesModifiedSinceCollectOperation = true
-      outgoingEdges.put(edge.targetId, edge.asInstanceOf[Edge[_]])
-      edge.onAttach(this, graphEditor)
-      true
-    } else {
-      false
+    outgoingEdges.get(edge.targetId) match {
+      case None =>
+        edgesModifiedSinceSignalOperation = true
+        edgesModifiedSinceCollectOperation = true
+        outgoingEdges.put(edge.targetId, edge)
+        edge.onAttach(this, graphEditor)
+        true
+      case Some(edge) =>
+        false
     }
   }
 
@@ -71,13 +71,14 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    */
   def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
     val outgoingEdge = outgoingEdges.get(targetId)
-    if (outgoingEdge != null) {
-      edgesModifiedSinceSignalOperation = true
-      edgesModifiedSinceCollectOperation = true
-      outgoingEdges.remove(targetId)
-      true
-    } else {
-      false
+    outgoingEdge match {
+      case None =>
+        false
+      case Some(edge) =>
+        edgesModifiedSinceSignalOperation = true
+        edgesModifiedSinceCollectOperation = true
+        outgoingEdges.remove(targetId)
+        true
     }
   }
 
@@ -109,12 +110,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   }
 
   def doSignal(graphEditor: GraphEditor[Any, Any]) {
-    // Faster than Scala foreach.
-    var i = outgoingEdges.values.iterator
-    while (i.hasNext) {
-      val outgoingEdge = i.next
-      outgoingEdge.executeSignalOperation(graphEditor)
-    }
+    outgoingEdges.values foreach (_.executeSignalOperation(graphEditor))
   }
 
   /**
@@ -137,7 +133,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged => 1
+        case noStateOrStateChanged               => 1
       }
     }
   }
@@ -160,8 +156,8 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   /**
    * Returns the ids of the target vertices of outgoing edges of the vertex.
    */
-  def getTargetIdsOfOutgoingEdges: Traversable[Any] = {
-    outgoingEdges map (_._2.targetId)
+  def getTargetIdsOfOutgoingEdges: Iterable[Any] = {
+    outgoingEdges.values map (_.targetId)
   }
 
 }

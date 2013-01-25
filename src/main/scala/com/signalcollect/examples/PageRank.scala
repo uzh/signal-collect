@@ -34,7 +34,7 @@ import com.signalcollect.nodeprovisioning._
 class PageRankEdge(t: Any) extends DefaultEdge(t) {
 
   type Source = PageRankVertex
-  
+
   /**
    * The signal function calculates how much rank the source vertex
    *  transfers to the target vertex.
@@ -57,9 +57,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
    * The collect function calculates the rank of this vertex based on the rank
    *  received from neighbors and the damping factor.
    */
-  def collect: Double = {
-    1 - dampingFactor + dampingFactor * signals.sum
-  }
+  def collect: Double = 1 - dampingFactor + dampingFactor * signals.sum
 
   override def scoreSignal: Double = {
     lastSignalState match {

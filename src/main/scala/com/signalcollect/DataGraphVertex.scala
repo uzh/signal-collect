@@ -20,7 +20,7 @@
 package com.signalcollect
 
 import scala.Some.apply
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.OpenHashMap
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -39,10 +39,6 @@ abstract class DataGraphVertex[Id, State](
 
   type Signal
 
-  /**
-   *  @return the object that stores the current state for this `Vertex`.
-   */
-  def getState: State = state
   def setState(s: State) {
     state = s
   }
@@ -64,7 +60,7 @@ abstract class DataGraphVertex[Id, State](
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
    */
-  protected val mostRecentSignalMap = new HashMap[Any, Signal]()
+  protected val mostRecentSignalMap = new OpenHashMap[Any, Signal]()
 
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
     assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
@@ -72,18 +68,7 @@ abstract class DataGraphVertex[Id, State](
     false
   }
 
-  def signals = mostRecentSignalMap.values.asInstanceOf[Iterable[Signal]]
-  
-  /**
-   *  Returns the most recent signal received from the vertex with id `id`.
-   *
-   *  @param id The id of the vertex from which we received a signal.
-   */
-  def getMostRecentSignal(id: Any): Option[_] =
-    mostRecentSignalMap.get(id) match {
-      case null => None
-      case s    => Some(s)
-    }
+  def signals = mostRecentSignalMap.values
 
   /**
    *  Function that gets called by the framework whenever this vertex is supposed to collect new signals.
@@ -92,7 +77,7 @@ abstract class DataGraphVertex[Id, State](
    */
   override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
     super.executeCollectOperation(graphEditor)
-    state = collect
+    setState(collect)
   }
 
   /**

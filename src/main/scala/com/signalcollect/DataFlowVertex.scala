@@ -40,16 +40,12 @@ abstract class DataFlowVertex[Id, State](
 
   type Signal
 
-  /**
-   *  @return the object that stores the current state for this `Vertex`.
-   */
-  def getState: State = state
   def setState(s: State) {
     state = s
   }
-
+  
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
-    state = collect(signal.asInstanceOf[Signal])
+    setState(collect(signal.asInstanceOf[Signal]))
     true
   }
 
