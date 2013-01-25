@@ -25,8 +25,8 @@ import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.factory.worker.LocalWorker
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
-import com.signalcollect.factory.storage.InMemory
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.factory.storage.DefaultStorage
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -37,7 +37,7 @@ case class GraphConfiguration(
   logger: LogMessage => Unit = DefaultLogger.log,
   workerFactory: WorkerFactory = LocalWorker,
   messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
-  storageFactory: StorageFactory = InMemory,
+  storageFactory: StorageFactory = DefaultStorage,
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,

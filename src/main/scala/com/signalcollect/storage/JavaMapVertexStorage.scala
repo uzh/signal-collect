@@ -1,7 +1,7 @@
 /*
- *  @author Daniel Strebel
+ *  @author Philip Stutz
  *
- *  Copyright 2011 University of Zurich
+ *  Copyright 2013 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,25 +18,15 @@
 
 package com.signalcollect.storage
 
-import java.util.Set
 import com.signalcollect.interfaces._
-import com.signalcollect.serialization._
-import java.util.Set
-import com.signalcollect.Vertex
-import java.util.LinkedHashSet
 
-/**
- * Default configuration for storing vertices and the toSignal and toCollect collections
- * Uses in-memory implementations for all collections.
- */
-class DefaultStorage[Id] extends Storage[Id] {
-
+class JavaMapVertexStorage[Id] extends Storage[Id] {
   val vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+  protected def vertexStoreFactory: VertexStore[Id] = new JavaVertexMap[Id]
 
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new VertexMap[Id](initialSize = 32768, rehashFraction = .9f)
+  protected def vertexSignalFactory = new JavaVertexMap[Id]
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new VertexMap[Id](initialSize = 1024, rehashFraction = .9f)
+  protected def vertexSetFactory = new JavaVertexMap[Id]
 
 }

@@ -20,13 +20,13 @@
 package com.signalcollect.factory.storage
 
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.DefaultStorage
 import com.signalcollect.interfaces.Storage
+import com.signalcollect.storage.CustomVertexStorage
 
 /**
- *  The InMemory storage factory creates storage objects that store vertices in memory.
+ *  Storage backed by a custom-tailored open hash map implementation for vertices.
  */
-object InMemory extends StorageFactory {
-  def createInstance[Id]: Storage[Id] = new DefaultStorage[Id]
-  override def toString = "InMemoryStorageFactory"
+object DefaultStorage extends StorageFactory {
+  def createInstance[Id]: Storage[Id] = new CustomVertexStorage[Id]
+  override def toString = "DefaultStorage"
 }
