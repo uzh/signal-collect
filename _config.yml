@@ -3,3 +3,4 @@ source: signal-collect
 destination: .
 lsi: false
 pygments: true
+baseurl: signal-collect
