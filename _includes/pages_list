@@ -3,7 +3,7 @@
     {% if page.url == node.url %}
       <li class="active"><a href="#" class="active">{{node.title}}</a></li>
     {% else %}
-      <li><a href="/{{page.baseurl}}{{node.url}}">{{node.title}}</a></li>
+      <li><a href="/signal-collect{{node.url}}">{{node.title}}</a></li>
     {% endif %}
   {% endif %}
 {% endfor %}
