@@ -1,7 +1,5 @@
-auto: true
-server: true
-permalink: none
-baseurl: "signal-collect"
-exclude:
-- .gitignore
-- README.md
+safe: true
+source: signal-collect
+destination: .
+lsi: false
+pygments: true
