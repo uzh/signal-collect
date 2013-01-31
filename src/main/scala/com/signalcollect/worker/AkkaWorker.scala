@@ -176,9 +176,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         counters.bulkSignalMessagesReceived += 1
         val size = bulkSignal.signals.length
         var i = 0
-        while (i < size) {
-          processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-          i += 1
+        if (bulkSignal.sourceIds != null) {
+          while (i < size) {
+            var sourceId = bulkSignal.sourceIds(i)
+            if (sourceId != null) {
+              processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
+            } else {
+              processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+            }
+            i += 1
+          }
+        } else {
+          while (i < size) {
+            processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+            i += 1
+          }
         }
       case ContinueSignaling =>
         continueSignalingReceived = true

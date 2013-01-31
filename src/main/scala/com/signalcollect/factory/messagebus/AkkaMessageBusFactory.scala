@@ -27,7 +27,11 @@ import scala.reflect.ClassTag
 import com.signalcollect.interfaces.WorkerApiFactory
 
 object AkkaMessageBusFactory extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = new DefaultMessageBus[Id, Signal](numberOfWorkers, workerApiFactory)
+  def createInstance[Id: ClassTag, Signal: ClassTag](
+    numberOfWorkers: Int,
+    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
+    new DefaultMessageBus[Id, Signal](numberOfWorkers, workerApiFactory)
+  }
   override def toString = "AkkaMessageBusFactory"
 }
 
@@ -35,7 +39,11 @@ object AkkaMessageBusFactory extends MessageBusFactory {
  * Stores outgoing messages until 'flushThreshold' messages are queued for a worker.
  * Combines messages for the same vertex using 'combiner'.
  */
-class BulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold, workerApiFactory)
+class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) extends MessageBusFactory {
+  def createInstance[Id: ClassTag, Signal: ClassTag](
+    numberOfWorkers: Int,
+    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
+    new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold, withSourceIds, workerApiFactory)
+  }
   override def toString = "BulkAkkaMessageBusFactory"
 }

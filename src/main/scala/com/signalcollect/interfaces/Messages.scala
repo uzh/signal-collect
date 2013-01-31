@@ -34,7 +34,7 @@ case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def removeSourceId: EdgeId[Id] = EdgeId(null.asInstanceOf[Id], targetId)
 }
 
-case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val targetIds: Array[Id], val signals: Array[Signal])
+case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val signals: Array[Signal], val targetIds: Array[Id], val sourceIds: Array[Id])
 
 case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val targetId: Id, val sourceId: Option[Id], val signal: Signal)
 

@@ -28,11 +28,15 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   private var itemCount = 0
   def numberOfItems = itemCount
   def isFull: Boolean = itemCount == size
+  final val sourceIds = new Array[Id](size)
   final val targetIds = new Array[Id](size)
   final val signals = new Array[Signal](size)
-  def addSignal(targetId: Id, signal: Signal) {
-    targetIds(itemCount) = targetId
+  def addSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
     signals(itemCount) = signal
+    targetIds(itemCount) = targetId
+    if (sourceId.isDefined) {
+      targetIds(itemCount) = sourceId.get
+    }
     itemCount += 1
   }
   def clear {
@@ -43,6 +47,7 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val numberOfWorkers: Int,
   flushThreshold: Int,
+  val withSourceIds: Boolean,
   workerApiFactory: WorkerApiFactory)
     extends AbstractMessageBus[Id, Signal] {
 
@@ -62,7 +67,11 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
         val bulker = outgoingMessages(workerId)
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds.slice(0, signalCount), bulker.signals.slice(0, signalCount)))
+          if (withSourceIds) {
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, bulker.sourceIds))
+          } else {
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, null.asInstanceOf[Array[Id]]))
+          }
           outgoingMessages(workerId).clear
         }
         workerId += 1
@@ -78,11 +87,19 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
     } else {
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)
-      bulker.addSignal(targetId, signal)
+      if (withSourceIds) {
+        bulker.addSignal(signal, targetId, sourceId)
+      } else {
+        bulker.addSignal(signal, targetId, None)
+      }
       pendingSignals += 1
       if (bulker.isFull) {
         pendingSignals -= bulker.numberOfItems
-        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.targetIds, bulker.signals))
+        if (withSourceIds) {
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, bulker.sourceIds))
+        } else {
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, null.asInstanceOf[Array[Id]]))
+        }
         outgoingMessages(workerId).clear
       }
     }

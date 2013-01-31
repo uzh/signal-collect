@@ -33,6 +33,7 @@ import com.signalcollect.nodeprovisioning.local.LocalNode
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.factory.worker.DistributedWorker
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -55,14 +56,18 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         correct
       }
 
-      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000)).build
+      val graph = GraphBuilder.withWorkerFactory(DistributedWorker).
+        withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
         graph.addVertex(v)
         graph.addEdge(i, new PageRankEdge((i + 1) % 5))
       }
 
-      graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous).withCollectThreshold(0).withSignalThreshold(0.00001))
+      graph.execute(ExecutionConfiguration.
+        withExecutionMode(ExecutionMode.PureAsynchronous).
+        withCollectThreshold(0).
+        withSignalThreshold(0.00001))
       var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
         val neutralElement = true
         def aggregate(a: Boolean, b: Boolean): Boolean = a && b
@@ -83,7 +88,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         correct
       }
 
-      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1)).build
+      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
         graph.addVertex(v)
