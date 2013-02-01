@@ -21,7 +21,7 @@ package com.signalcollect
 
 import scala.Some.apply
 import com.signalcollect.interfaces.Inspectable
-import scala.collection.mutable.OpenHashMap
+import scala.collection.JavaConversions._
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
 
@@ -35,8 +35,11 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.
    * It is a map so we can support fast edge removals.
+   * 
+   *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
+   *  implementation in a future release.
    */
-  var outgoingEdges = new OpenHashMap[Any, Edge[_]]()
+  var outgoingEdges: collection.mutable.Map[Any, Edge[_]] = new java.util.HashMap[Any, Edge[_]](0)
 
   /** The state of this vertex when it last signaled. */
   var lastSignalState: Option[State] = None
