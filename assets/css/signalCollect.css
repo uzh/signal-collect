@@ -19,3 +19,9 @@ img {
 	margin-bottom: 18px;
 	margin-top:18px;
 }
+
+.logo img {
+margin-top: -20px;
+margin-left: -10px;
+margin-right: 30px;
+}
