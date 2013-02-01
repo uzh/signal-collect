@@ -204,6 +204,8 @@ graph.execute</pre>
 
 <p>How to start a computation using the pure asynchronous execution mode:</p>
 
+
+
 <pre class="prettyprint lang-scala">val graph = GraphBuilder.build
 val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous)
 graph.execute(execConfig)</pre>
@@ -213,3 +215,9 @@ graph.execute(execConfig)</pre>
 <pre class="prettyprint lang-scala">val graph = GraphBuilder.build
 val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.ContinuousAsynchronous)
 graph.execute(execConfig)</pre>
+
+<hr class="soften">
+
+<h2 id="DistributedExecution">Distributed Execution</h2>
+<p>The current release of the Signal/Collect framework enables distributing the execution of an algorithm among multiple machines.</p>
+<p>We currently only included deployment code for Torque cluster instances. Official support for deployment on Amazon EC2 instances will follow in the near future.</p>
