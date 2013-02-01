@@ -1,11 +1,15 @@
 {% for node in pages_list %}
-  {% if group == null or group == node.group %}
-    {% if page.url == node.url %}
-      <li class="active"><a href="#" class="active">{{node.title}}</a></li>
-    {% else %}
-      <li><a href="/signal-collect{{node.url}}">{{node.title}}</a></li>
+  {% for weight in (1..10) %}
+  {% if p.weight == weight %}
+    {% if group == null or group == node.group %}
+      {% if page.url == node.url %}
+        <li class="active"><a href="#" class="active">{{node.title}}</a></li>
+      {% else %}
+        <li><a href="/signal-collect{{node.url}}">{{node.title}}</a></li>
     {% endif %}
   {% endif %}
+  {% endif %}
+{% endfor %}
 {% endfor %}
 {% assign pages_list = nil %}
 {% assign group = nil %}
