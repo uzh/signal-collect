@@ -26,7 +26,6 @@ margin-left: -10px;
 margin-right: 30px;
 }
 
-.supporter {
-position: relative;
-top: -50%;
+.supporterRow {
+height: 160px;
 }
