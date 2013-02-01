@@ -1,5 +1,5 @@
-{% for node in pages_list %}
-  {% for weight in (1..10) %}
+{% for weight in (1..10) %}
+  {% for node in pages_list %}
     {% if node.weight == weight %}
       {% if group == null or group == node.group %}
         {% if page.url == node.url %}
