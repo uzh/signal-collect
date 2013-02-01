@@ -64,3 +64,15 @@ weight: 2
 <p>Edges don't necessarily have to be algorithm specific. Sometimes one of the provided concrete edge implementations can be used without any modifications:</p>
 
 <p>The concrete class StateForwarderEdge, which extends the DefaultEdge abstract class, forwards its current state whenever the signal method is invoked by the source vertex.</p>
+
+<h2 id="SignalCollectOperations">Signal Collect Operations</h2>
+<p>A Signal/Collect computation consists of edges and vertices executing two operations:</p>
+
+<ul>
+<li>signaling: All outgoing edges of a vertex compute and send signals to their target vertex
+collecting: Vertices update their state based on the signals they received
+A Signal/Collect computation is guided by two elements:
+
+scoreSignal/scoreCollect functions and the respective signalThreshold/collectThreshold
+The execution mode
+The scoring functions and thresholds tell the framework if a vertex should signal/collect at all. There is a more in-depth description of scoring in the Algorithm Termination page. The order of execution of the signal/collect operations is determined by the Execution mode.
