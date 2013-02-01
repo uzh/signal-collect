@@ -65,14 +65,66 @@ weight: 2
 
 <p>The concrete class StateForwarderEdge, which extends the DefaultEdge abstract class, forwards its current state whenever the signal method is invoked by the source vertex.</p>
 
+<hr class="soften">
+
 <h2 id="SignalCollectOperations">Signal Collect Operations</h2>
 <p>A Signal/Collect computation consists of edges and vertices executing two operations:</p>
 
 <ul>
-<li>signaling: All outgoing edges of a vertex compute and send signals to their target vertex
-collecting: Vertices update their state based on the signals they received
-A Signal/Collect computation is guided by two elements:
+<li>signaling: All outgoing edges of a vertex compute and send signals to their target vertex</li>
+<li>collecting: Vertices update their state based on the signals they received</li>
+</ul>
 
-scoreSignal/scoreCollect functions and the respective signalThreshold/collectThreshold
-The execution mode
-The scoring functions and thresholds tell the framework if a vertex should signal/collect at all. There is a more in-depth description of scoring in the Algorithm Termination page. The order of execution of the signal/collect operations is determined by the Execution mode.
+<p>A Signal/Collect computation is guided by two elements:</p>
+
+<ul>
+<li>scoreSignal/scoreCollect functions and the respective signalThreshold/collectThreshold which tell  the framework if a vertex should signal/collect at all. There is a more in-depth description of scoring in the <a href="#AlgorithmTermination">Algorithm Termination</a> section</li>
+<li>The execution mode that determines the order of execution of the signal/collect operations.
+</ul>
+
+<hr class="soften">
+
+<h2 id="AlgorithmTermination">Algorithm Termination</h2>
+<p>There are several different mechanisms to terminate algorithm execution.</p>
+
+<h3>Automated Convergence Detection</h3>
+<p>This is the usual way for a computation to end and it is enabled by default. See the section Continuous Execution below to find out how to explicitly disable it.</p>
+
+<p>A computation ends when a computation has converged. Convergence is detected with the scoreSignal/scoreCollect functions on vertices and the respective signalThreshold/collectThreshold which are defined globally. The framework will execute signal/collect operations while the respective scores are above the thresholds. A computation ends when no score is above the respective threshold anymore.</p>
+
+<p>IMPORTANT: Vertices are only re-scored using scoreCollect if:</p>
+<ul>
+	<li>At least one new signal was received</li>
+	<li>Or an outgoing edge was added/removed</li>
+	<li>Or an explicit re-scoring was triggered via Graph.recalculateScoresForVertexWithId/Graph.recalculateScores</li>
+</ul>
+
+
+
+<p>Vertices are only re-scored using scoreSignal if:</p>
+
+<ul>
+	<li>The collect operation was executed</li>
+	<li>Or an outgoing edge was added/removed</li>
+	<li>Or an explicit re-scoring was triggered via Graph.recalculateScoresForVertexWithId/Graph.recalculateScores</li>
+</ul>
+
+
+
+<p>This is the default implementation of the scoreSignal method in AbstractVertex:</p>
+
+<pre class="prettyprint lang-scala">def scoreSignal: Double = {
+  if (edgesModifiedSinceSignalOperation) {
+    1
+  } else {
+    lastSignalState match {
+      case Some(oldState) if oldState == state => 0
+      case noStateOrStateChanged               => 1
+    }
+  }
+}</pre>
+
+<p>The default implementation of the scoreSignal function indicates that a vertex should have its edges signal if a new edge was added or if the state has changed.</p>
+
+
+
