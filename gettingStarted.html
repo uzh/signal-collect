@@ -77,8 +77,6 @@ object PageRank extends App {
   println(stats)
   graph.foreachVertex(println(_))
 
-  graph.awaitIdle
-  readLine
   graph.shutdown
 }
 </pre>

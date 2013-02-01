@@ -11,5 +11,23 @@ weight: 2
 
 <h2>Programming Model</h2>
 
+<p>The goals of the Signal/Collect programming model are:</p>
+<ul>
+	<li>Expressive enough to tersely formulate a broad range of graph algorithms</li>
+	<li>Can define both synchronous and dataflow-like asynchronous computations</li>
+	<li>Straightforward to parallelize/distribute</li>
+</ul>
 
-<iframe width="640" height="360" src="http://www.youtube.com/embed/39CVxALBcK4?feature=player_detailpage" frameborder="0" allowfullscreen></iframe>
+<p>The intuition behind the Signal/Collect programming model is that computations are executed on a graph, where the vertices are the computational units that interact by the means of signals that flow along the edges. This is similar to the actor programming model. All computations in the vertices are accomplished by collecting the incoming signals and then signaling the neighbors in the graph.</p>
+
+<p>This means that every vertex, beyond holding the information about its own id and state, has a collect function which computes the new vertex state based on the old vertex state and the signals that were received.</p>
+
+<pre class="prettyprint lang-scala">class Vertex {
+  def collect(oldState: State, uncollectedSignals: Iterable[Signal]): State
+}</pre>
+
+<p>Every edge has a reference to its source vertex (if it is attached to one), the id of the target vertex and its weight. It implements a signal function which computes the signal sent along this edge based on its source vertex.</p>
+
+<pre class="prettyprint lang-scala">class Edge {
+  def signal(sourceVertex: SourceVertex): Signal
+}</pre>
