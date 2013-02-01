@@ -9,7 +9,7 @@ weight: 2
   <p>Explore the fundamental concepts of Signal/Collect</p>
 </div>
 
-<h2>Programming Model</h2>
+<h2 id="ProgrammingModel">Programming Model</h2>
 
 <p>The goals of the Signal/Collect programming model are:</p>
 <ul>
@@ -31,3 +31,23 @@ weight: 2
 <pre class="prettyprint lang-scala">class Edge {
   def signal(sourceVertex: SourceVertex): Signal
 }</pre>
+
+<hr class="soften">
+
+<h2 id="DafaultVertex">Default Vertex Types</h2>
+
+<p>In any Signal/Collect graph different vertices and edges can be freely combined. Usually a vertex is implemented by extending one of the default vertex implementations and an edge is implemented by extending <a href="#DefaultEdge">DefaultEdge</a>. If the default implementations are not memory-efficient enough for a specific purpose, then it is possible to write custom graph elements.</p>
+
+<p>Signal/Collect has two different default vertex implementations:</p>
+
+<p><a href="#DataGraphVertex">DataGraphVertex</a> is suitable for algorithms that iteratively update state associated with vertices and edges. <a href="#DataFlowVertex">DataFlowVertex</a> is suitable for dataflow computations where data is routed through a network of processing vertices. For the user the main noticeable difference between these implementations is how received signals are submitted to the collect function.</p>
+
+<h3 id="DataGraphVertex">DataGraphVertex</h3>
+<p>In most iterative computations old values get overridden by newer ones . This is why the collect function of DataGraphVertex receives signals as the parameter mostRecentSignals, which contains only the most recently received signal for each incoming edge that has received at least one signal already.</p>
+
+<h3 id="DataFlowVertex">DataFlowVertex</h3>
+<p>In a dataflow computation no signal should ever be lost. This is why the collect function of DataFlowVertex receives a parameter, uncollectedSignals, which contains all the signals that have been received since the collect operation was last executed. The signals are ordered by their time of arrival, oldest signals first. Also, the vertex state is supposed to hold the processed elements and it is automatically reset to a customizable resetState whenever the edges are done with signaling.</p>
+
+<hr class="soften">
+
+<h2 id="DefaultEdge">Default Edge Types</h2>
