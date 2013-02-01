@@ -69,7 +69,7 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
     graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
   }
 

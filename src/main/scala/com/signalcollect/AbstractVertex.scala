@@ -113,7 +113,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   }
 
   def doSignal(graphEditor: GraphEditor[Any, Any]) {
-    outgoingEdges.values foreach (_.executeSignalOperation(graphEditor))
+    outgoingEdges.values foreach (_.executeSignalOperation(this, graphEditor))
   }
 
   /**
