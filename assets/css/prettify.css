@@ -77,11 +77,13 @@ pre.prettyprint {
 padding: 8px;
 border: 0px solid rgb(230, 228, 228);
 box-shadow: 5px 5px 8px rgb(136, 136, 136);
-background: #DDD
+background: rgb(250, 250, 250)
 }
 ol.linenums {
 margin-top: 0;
-margin-bottom: 0
+margin-bottom: 0;
+font-family: monospace;
+font-weight: lighter
 }
 li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8 {
 /*list-style-type: none*/
