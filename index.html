@@ -75,10 +75,10 @@ import com.signalcollect._
 
 object PageRank extends App {
   val graph = GraphBuilder.build
-  graph.addVertex(new PageRankVertex(id=1))
-  graph.addVertex(new PageRankVertex(id=2))
-  graph.addEdge(new PageRankEdge(sourceId=1, targetId=2))
-  graph.addEdge(new PageRankEdge(sourceId=2, targetId=1))
+  graph.addVertex(new PageRankVertex(1))
+  graph.addVertex(new PageRankVertex(2))
+  graph.addEdge(1, new PageRankEdge(2))
+  graph.addEdge(2, new PageRankEdge(1))
   graph.execute
   graph.foreachVertex(println(_))
   graph.shutdown
@@ -88,17 +88,24 @@ class PageRankVertex(id: Any, dampingFactor: Double=0.85)
     extends DataGraphVertex(id=id, state=1-dampingFactor) {
   type Signal = Double
 
-  def collect(oldState: Double, mostRecentSignals: Iterable[Double]): Double = {
-    1 - dampingFactor + dampingFactor * mostRecentSignals.sum
+  def collect: Double = {
+    1 - dampingFactor + dampingFactor * signals.sum
+  }
+  
+  override def scoreSignal: Double = {
+    lastSignalState match {
+      case None           => 1
+      case Some(oldState) => (state - oldState).abs
+    }
   }
 }
 
-class PageRankEdge(sourceId: Any, targetId: Any)
-    extends DefaultEdge(sourceId, targetId) {
-  type SourceVertex = PageRankVertex
+class PageRankEdge(targetId: Any)
+    extends DefaultEdge(targetId) {
+  type Source = PageRankVertex
 
-  def signal(sourceVertex: PageRankVertex) = {
-    sourceVertex.state * weight / sourceVertex.sumOfOutWeights
+  def signal = {
+    source.state * weight / source.sumOfOutWeights
   }
 }
 </pre>
@@ -112,8 +119,8 @@ object SSSP extends App {
   graph.addVertex(new Location(1, Some(0)))
   graph.addVertex(new Location(2))
   graph.addVertex(new Location(3))
-  graph.addEdge(new Path(1, 2))
-  graph.addEdge(new Path(2, 3))
+  graph.addEdge(1, new Path(2))
+  graph.addEdge(2, new Path(3))
   graph.execute
   graph.foreachVertex(println(_))
   graph.shutdown
@@ -123,17 +130,28 @@ class Location(id: Any, initialState: Option[Int] = None)
 	extends DataGraphVertex(id, initialState) {
   type Signal = Int
 
-  def collect(oldState: State, mostRecentSignals: Iterable[Int]): Option[Int] = {
-    val currentShortestPath = oldState.getOrElse(Int.MaxValue)
-    Some(mostRecentSignals.reduce(math.min(_, _)))
+  def collect(signal: Int) = {
+    state match {
+      case None                      => Some(signal)
+      case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
+    }
+  }
+
+  override def scoreSignal: Double = {
+    if (state.isDefined && (!lastSignalState.isDefined || !lastSignalState.get.isDefined || state.get != lastSignalState.get.get)) {
+      1.0
+    } else {
+      0.0
+    }
   }
 }
 
-class Path(s: Any, t: Any) extends OptionalSignalEdge(s, t) {
-  type SourceVertex = Location
-
-  def signal(sourceVertex: Location) = {
-    sourceVertex.state map (_ + weight.toInt)
+class Path(t: Any) extends OptionalSignalEdge(t) {
+  def signal = 
+	source.state match {
+      case None                => None
+      case Some(distance: Int) => Some(distance + weight.toInt)
+    }
   }
 }
 </pre>
