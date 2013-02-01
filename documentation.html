@@ -60,7 +60,6 @@ weight: 2
 <li id="DefaultEdge">DefaultEdge is the default edge implementation and provides the basic structure for linking vertices and sending a signal from the source vertex to the target vertex.</li>
 <li id="OnlySignalOnChangeEdge">OnlySignalOnChangeEdge extends the default edge implementation but keeps track of the last signal sent and only sends a new signal if the current signal differs from it.</li>
 <li id="OptionalSignalEdge">OptionalSignalEdge extends the default edge implementation but requires the signal function to return an Option[_]- type and sends the contained signal if the return differed from None.</li>
-<li id="StateForwarderEdge">StateForwarderEdge extends the default edge implementation and forwards the state of its source vertex whenever the </li>
 </ul>
 <p>Edges don't necessarily have to be algorithm specific. Sometimes one of the provided concrete edge implementations can be used without any modifications:</p>
 
