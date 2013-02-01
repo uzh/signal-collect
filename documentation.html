@@ -51,3 +51,17 @@ weight: 2
 <hr class="soften">
 
 <h2 id="DefaultEdge">Default Edge Types</h2>
+
+<p>Analogous to the <a href="#DafaultVertex">default vertex implementations</a>, Signal/Collect also provides default implementations for edges. Depending on the specific algorithm these edges can directly be used for constructing a graph or provide some predefined functionality and therefore reduce the functionality that needs to be implemented on top of them when creating a new class that extends them.</p>
+
+<p>Three abstract edge implementations exist (the signal functionality needs to be provided on top of them):</p>
+
+<ul>
+<li id="DefaultEdge">DefaultEdge is the default edge implementation and provides the basic structure for linking vertices and sending a signal from the source vertex to the target vertex.</li>
+<li id="OnlySignalOnChangeEdge">OnlySignalOnChangeEdge extends the default edge implementation but keeps track of the last signal sent and only sends a new signal if the current signal differs from it.</li>
+<li id="OptionalSignalEdge">OptionalSignalEdge extends the default edge implementation but requires the signal function to return an Option[_]- type and sends the contained signal if the return differed from None.</li>
+<li id="StateForwarderEdge">StateForwarderEdge extends the default edge implementation and forwards the state of its source vertex whenever the </li>
+</ul>
+<p>Edges don't necessarily have to be algorithm specific. Sometimes one of the provided concrete edge implementations can be used without any modifications:</p>
+
+<p>The concrete class StateForwarderEdge, which extends the DefaultEdge abstract class, forwards its current state whenever the signal method is invoked by the source vertex.</p>
