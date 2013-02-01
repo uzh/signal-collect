@@ -126,5 +126,56 @@ weight: 2
 
 <p>The default implementation of the scoreSignal function indicates that a vertex should have its edges signal if a new edge was added or if the state has changed.</p>
 
+<p>IMPORTANT: Detection of a changed vertex state is by default done with a reference comparison, so if the state reference points to a mutable collection that has changed, no change will be detected! You should in this case either use immutable collections or override the scoreSignal function.</p>
 
+<p>The scoreSignal function can be overridden with an algorithm-specific implementation, for example to use the residual as a convergence criterion:</p>
 
+<pre class="prettyprint lang-scala">override def scoreSignal: Double = {
+  lastSignalState match {
+    case None => 1
+    case Some(oldState) => (state - oldState).abs
+  }
+}</pre>
+
+<p>The default implementations of the scoreCollect function can be found in DataGraphVertex (Scala version, Java version) and DataFlowVertex (Scala version, Java version). The following is the implementation in Scala of the scoreCollect function in the DataGraphVertex. Collecting will only be done when either the mostRecentSignalMap is not empty or when some edges were modified.</p>
+
+<pre class="prettyprint lang-scala">def scoreCollect: Double = {
+    if (!mostRecentSignalMap.isEmpty) {
+      1.0
+    } else if (edgesModifiedSinceCollectOperation) {
+      1.0
+    } else {
+      0.0
+    }
+}</pre>
+
+<p>When you extend either the DataGraphVertex or the DataFlowVertex, the scoreCollect function can be overridden, if necessary.</p>
+
+<h3>Global Termination Conditions</h3>
+
+<p>It is possible to define termination conditions that depend on some global criterium by using AggregationOperations. There is a detailed description of how to use this including a usage example in the AggregationOperations wiki article.</p>
+
+<h4>Time</h4>
+<p>It is possible to set a time limit in milliseconds for a computation. The framework will terminate the computation when the limit is overstepped.</p>
+
+<p>Usage:</p>
+
+<pre class="prettyprint lang-scala">val execConfig = ExecutionConfiguration.withTimeLimit(10000) // 10 seconds
+graph.execute(execConfig)</pre>
+<h4>Computation Steps</h4>
+
+<p>For synchronous computations it is possible to limit the number of computation steps that get executed. A computation step is a signal step followed by a collect step. A signal step is the parallel execution of the signal operation on all edges of vertices that have a signal score > signal threshold. A collect step is the parallel execution of collect operations on vertices that have a collect score > collect threshold.</p>
+
+<p>Usage:</p>
+
+<pre class="prettyprint lang-scala">val execConfig = ExecutionConfiguration
+      .withExecutionMode(ExecutionMode.Synchronous)
+      .withStepsLimit(1)
+graph.execute(execConfig)</pre>
+<h4>Continuous Execution</h4>
+<p>Continuous execution is an asynchronous execution mode that disables the automated termination upon convergence detection. The main use case is for dataflow computations where the system should keep running even if it converges occasionally. When in this execution mode the Graph.execute method does not block, but it returns immediately.</p>
+
+<p>Usage:</p>
+
+<pre class="prettyprint lang-scala">val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.ContinuousAsynchronous)
+graph.execute(execConfig)</pre>
