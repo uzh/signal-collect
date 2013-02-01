@@ -24,7 +24,7 @@ weight: 1
 	<img src="images/eclipse_scala_project.png"  width="526" height="399" />
 </div>
 <p>Once you named your project and clicked on the <em>Finish</em> button you will see the your project folder in the package explorer on the right hand side of your IDE. The project folder already containes an empty source folder together with the Scala library and the Java Runtime Environment. In addition to these libraries we now need to add the the previously downloaded Signal/Collect jar file to the projects build path. We achieve this by right clicking on the project folder and selecting <em>Build Path → Configure Build Path ... → Libraries → Add external JARs...</em>.</p>
-<p>We now have provided all the needed libraries and are ready to write for some actual coding. Since the implementation of our PageRank algorithm will be rather short, we will define all our classes in a single scala file. To add a new Scala file to your project select the <em>src</em> Folder and click on <em>New → Scala Object</em>.</p>
+<p>We now have provided all the needed libraries and are ready to write some actual code. Since the implementation of our PageRank algorithm will be rather short, we will define all our classes in a single scala file. To add a new Scala file to your project select the <em>src</em> Folder and click on <em>New → Scala Object</em>.</p>
 	
 <div class="span12 pagination-centered">
 	<img src="images/eclipse_scala_object.png"  width="526" height="399" />
@@ -33,7 +33,7 @@ weight: 1
 <p>Let's name this Object <em>PageRank</em> because it will also act as the entry point of our application as we will see in just a moment.<br/>
 	Our algorithm will consist of three disctinct parts which specify the structure and behavior of the vertices and edges in the graph as well as one part that handles the loading of the graph and triggers the execution.</p>
 	
-	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to specify the algorithm specific collect function and the termination criterion.</p>
+	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to write the algorithm specific collect function and the termination criterion (defined in the scoreSignal function).</p>
 	
 <pre class="prettyprint linenums">
 class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
@@ -50,7 +50,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
   }
 }
 </pre>
-	<p>Similarly we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
+	<p>Similarly, we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
 	
 <pre class="prettyprint linenums">
 class PageRankEdge(t: Any) extends DefaultEdge(t) {
@@ -59,11 +59,11 @@ class PageRankEdge(t: Any) extends DefaultEdge(t) {
 }
 </pre>
 
-<p>As a final step we now have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
+<p>As a final step, we also have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
 
 <pre class="prettyprint linenums">
 object PageRank extends App {
-  val graph = GraphBuilder.withConsole(true).build
+  val graph = GraphBuilder.build
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
   graph.addVertex(new PageRankVertex(3))
@@ -73,7 +73,6 @@ object PageRank extends App {
   graph.addEdge(3, new PageRankEdge(2))
 
   val stats = graph.execute
-  graph.awaitIdle
   println(stats)
   graph.foreachVertex(println(_))
 
