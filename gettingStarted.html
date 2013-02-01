@@ -35,7 +35,7 @@ weight: 1
 	
 	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to specify the algorithm specific collect function and the termination criterion.</p>
 	
-<pre class="brush: scala;">
+<pre class="prettyprint linenums">
 class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
 
   type Signal = Double
@@ -52,7 +52,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 </pre>
 	<p>Similarly we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
 	
-<pre class="brush: scala;">
+<pre class="prettyprint linenums">
 class PageRankEdge(t: Any) extends DefaultEdge(t) {
   type Source = PageRankVertex
   def signal = source.state * weight / source.sumOfOutWeights
@@ -61,7 +61,7 @@ class PageRankEdge(t: Any) extends DefaultEdge(t) {
 
 <p>As a final step we now have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
 
-<pre class="brush: scala;">
+<pre class="prettyprint linenums">
 object PageRank extends App {
   val graph = GraphBuilder.withConsole(true).build
   graph.addVertex(new PageRankVertex(1))
