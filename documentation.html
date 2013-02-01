@@ -92,7 +92,7 @@ weight: 2
 
 <p>A computation ends when a computation has converged. Convergence is detected with the scoreSignal/scoreCollect functions on vertices and the respective signalThreshold/collectThreshold which are defined globally. The framework will execute signal/collect operations while the respective scores are above the thresholds. A computation ends when no score is above the respective threshold anymore.</p>
 
-<p>IMPORTANT: Vertices are only re-scored using scoreCollect if:</p>
+<p><strong>IMPORTANT:</strong> Vertices are only re-scored using scoreCollect if:</p>
 <ul>
 	<li>At least one new signal was received</li>
 	<li>Or an outgoing edge was added/removed</li>
@@ -126,7 +126,7 @@ weight: 2
 
 <p>The default implementation of the scoreSignal function indicates that a vertex should have its edges signal if a new edge was added or if the state has changed.</p>
 
-<p>IMPORTANT: Detection of a changed vertex state is by default done with a reference comparison, so if the state reference points to a mutable collection that has changed, no change will be detected! You should in this case either use immutable collections or override the scoreSignal function.</p>
+<p><strong>IMPORTANT:</strong> Detection of a changed vertex state is by default done with a reference comparison, so if the state reference points to a mutable collection that has changed, no change will be detected! You should in this case either use immutable collections or override the scoreSignal function.</p>
 
 <p>The scoreSignal function can be overridden with an algorithm-specific implementation, for example to use the residual as a convergence criterion:</p>
 
@@ -153,7 +153,7 @@ weight: 2
 
 <h3>Global Termination Conditions</h3>
 
-<p>It is possible to define termination conditions that depend on some global criterium by using AggregationOperations. There is a detailed description of how to use this including a usage example in the AggregationOperations wiki article.</p>
+<p>It is possible to define termination conditions that depend on some global criterion by using AggregationOperations. There is a detailed description of how to use this including a usage example in the AggregationOperations wiki article.</p>
 
 <h4>Time</h4>
 <p>It is possible to set a time limit in milliseconds for a computation. The framework will terminate the computation when the limit is overstepped.</p>
@@ -178,4 +178,38 @@ graph.execute(execConfig)</pre>
 <p>Usage:</p>
 
 <pre class="prettyprint lang-scala">val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.ContinuousAsynchronous)
+graph.execute(execConfig)</pre>
+
+<hr class="soften">
+
+<h2>Execution modes</h2>
+<p>Signal/Collect supports different execution modes. The execution mode determines what kind of guarantees about the execution order of the signal/collect operations a user gets.</p>
+
+<h3>Synchronous execution</h3>
+<p>A synchronous computation consists of alternating parallel signaling/collecting phases for vertices. Phase transitions are globally synchronized, which guarantees that all vertices are in the same phase at the same time. One signaling phase followed by one collecting phase is referred to as a computation step. This execution mode is closely related to the Bulk Synchronous Parallel (BSP) model and <a href="http://www-bd.lip6.fr/ens/grbd2011/extra/SIGMOD10_pregel.pdf">Pregel</a>.</p>
+
+<p>In order to start a computation using the synchronous execution mode we call the execute method on our graph, with the parameter of an execution configuration, for which we already specified the ExecutionMode:</p>
+
+<pre class="prettyprint lang-scala">val graph = GraphBuilder.build
+val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous)
+graph.execute(execConfig)</pre>
+
+<h3>Asynchronous execution</h3>
+<p>In an asynchronous computation the framework does not give any guarantees about the order in which signal/collect operations get executed. This allows workers to operate without central synchronisation, which can improve performance. Some algorithms also have better convergence when run asynchronously, because it can prevent oscillations. This execution mode is closely related to the Actor Model. The default execution mode of Signal/Collect is to start with one synchronous signaling step followed by an asynchronous execution, we refer to this mode as OptimizedAsynchronousExecutionMode.</p>
+
+<p>How to start a computation using the default execution mode:</p>
+
+<pre class="prettyprint lang-scala">val graph = GraphBuilder.build
+graph.execute</pre>
+
+<p>How to start a computation using the pure asynchronous execution mode:</p>
+
+<pre class="prettyprint lang-scala">val graph = GraphBuilder.build
+val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous)
+graph.execute(execConfig)</pre>
+
+<p>There is also a continuous asynchronous execution mode, but apart from not blocking, but immediately returning and from not using termination detection (see <a href="AlgorithmTermination">Algorithm Termination</a>), it is equivalent to the pure asynchronous execution mode:</p>
+
+<pre class="prettyprint lang-scala">val graph = GraphBuilder.build
+val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.ContinuousAsynchronous)
 graph.execute(execConfig)</pre>
