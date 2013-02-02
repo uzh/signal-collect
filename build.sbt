@@ -5,7 +5,7 @@ assemblySettings
 /** Project */
 name := "signal-collect"
 
-version := "2.0.0"
+version := "2.1.0-SNAPSHOT"
 
 organization := "com.signalcollect"
 
@@ -17,7 +17,7 @@ parallelExecution in Test := false
 
 EclipseKeys.withSource := true
 
-jarName in assembly := "signal-collect-2.0.jar"
+jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
