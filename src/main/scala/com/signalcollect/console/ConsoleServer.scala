@@ -1,7 +1,8 @@
 /*
  *  @author Philip Stutz
+ *  @author Carol Alexandru
  *  
- *  Copyright 2012 University of Zurich
+ *  Copyright 2013 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -32,16 +33,38 @@ import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.Vertex
 import scala.util.Random
 
-class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
-  val server = HttpServer.create(address, 0)
+import org.java_websocket._;
+import org.java_websocket.WebSocketImpl;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
+
+class WebSocketConsoleServer(port: InetSocketAddress) extends WebSocketServer(port) {
+  def onClose(conn: WebSocket, code: Int,
+              reason: String, remote: Boolean): Unit = ???
+  def onError(conn: WebSocket, ex: Exception): Unit = ???
+  def onMessage(conn: WebSocket, msg: String): Unit = ???
+  def onOpen(conn: WebSocket, handshake:ClientHandshake): Unit = ???
+}
+
+class ConsoleServer(coordinatorActor: ActorRef,
+              httpPort: InetSocketAddress = new InetSocketAddress(8080),
+              socketsPort: InetSocketAddress = new InetSocketAddress(8081)) {
+
+  WebSocketImpl.DEBUG = true;
+  def sockets = new WebSocketConsoleServer(socketsPort);
+  sockets.start();
+  System.out.println( "WebSocket server started on port: " + sockets.getPort() );
+
+  val server = HttpServer.create(httpPort, 0)
   server.createContext("/", new WorkerStateRequestHandler(coordinatorActor))
   server.createContext("/inspect", new GraphInspectorRequestHandler(coordinatorActor))
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
-  println("Console server started on localhost:" + address.getPort)
+  println("HTTP server started on localhost:" + socketsPort.getPort)
 
   def shutdown {
     server.stop(0)
+    sockets.stop(0)
   }
 }
 
