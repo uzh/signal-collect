@@ -17,6 +17,8 @@ EclipseKeys.withSource := true
 
 jarName in assembly := "signal-collect-2.0-SNAPSHOT.jar"
 
+test in assembly := {}
+
 /** Dependencies */
 libraryDependencies ++= Seq(
  "com.typesafe.akka" % "akka-actor_2.10" % "2.1.0" ,
@@ -28,5 +30,7 @@ libraryDependencies ++= Seq(
  "junit" % "junit" % "4.8.2"  % "test",
  "org.specs2" % "specs2_2.10" % "1.13"  % "test",
  "org.specs2" % "classycle" % "1.4.1" % "test",
- "org.mockito" % "mockito-all" % "1.9.0"  % "test"
+ "org.mockito" % "mockito-all" % "1.9.0"  % "test",
+ "org.java_websocket" % "java_websocket" % "1.0.0-SNAPSHOT" % "compile" from "https://github.com/TooTallNate/Java-WebSocket/raw/master/dist/java_websocket.jar"
   )
+
