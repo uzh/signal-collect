@@ -20,7 +20,7 @@
 package com.signalcollect
 
 import scala.Some.apply
-import scala.collection.mutable.OpenHashMap
+import scala.collection.JavaConversions._
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -59,8 +59,11 @@ abstract class DataGraphVertex[Id, State](
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
+   *  
+   *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
+   *  implementation in a future release.
    */
-  protected val mostRecentSignalMap = new OpenHashMap[Any, Signal]()
+  protected val mostRecentSignalMap: collection.mutable.Map[Any, Signal] = new java.util.HashMap[Any, Signal](0)
 
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
     assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
