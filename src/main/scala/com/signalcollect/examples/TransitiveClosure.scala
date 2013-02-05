@@ -1,7 +1,7 @@
 /*
  *  @author Silvan Troxler
  *  
- *  Copyright 2010 University of Zurich
+ *  Copyright 2013 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import com.signalcollect._
 import com.signalcollect.interfaces.SignalMessage
 import scala.collection.mutable.IndexedSeq
 import scala.collection.mutable.Set
+import scala.io.Source
+
 
 
 /**
@@ -56,31 +58,38 @@ class Type(vertexId: Any, initialState: Set[Int] = Set()) extends DataFlowVertex
 }
 
 /**
- * Builds a tree consisting of several Types and SubType-connections, then execute the computation on that graph
+ * Builds a tree consisting of several Types and SubType-connections, then executes the computation on that graph
  */
 object TransitiveClosure extends App {
   
-  /* Visual Representation of the graph to be created:
-   *      1
-   *   2     5
-   *  3 4   6 7
-   */
+  // Data file not in the repository but can be obtained here: 
+  // http://snap.stanford.edu/data/cit-HepPh.html
+  val dataFile = "Cit-HepPh.txt"
   
-  val graph = GraphBuilder.build
-  graph.addVertex(new Type(1, Set(0)))
-  graph.addVertex(new Type(2))
-  graph.addVertex(new Type(3))
-  graph.addVertex(new Type(4))
-  graph.addVertex(new Type(5))
-  graph.addVertex(new Type(6))
-  graph.addVertex(new Type(7))
-  graph.addEdge(1, new SubType(2))
-  graph.addEdge(1, new SubType(5))
-  graph.addEdge(2, new SubType(3))
-  graph.addEdge(2, new SubType(4))
-  graph.addEdge(5, new SubType(6))
-  graph.addEdge(5, new SubType(7))
-  val stats = graph.execute
+  println("Building graph...")
+  val graph = GraphBuilder.withConsole(true).build
+  
+  var i = 1
+  for (line <- Source.fromFile(dataFile).getLines()) {
+    if (!line.startsWith("#") && i<= 2000) { // limit number of edges
+//    if (!line.startsWith("#")) {
+      
+      // split and trim values
+      var citation = line.split("\\s+");
+      citation(0) = citation(0).trim()
+      citation(1) = citation(1).trim()
+      
+      // build graph
+      graph.addVertex(new Type(citation(0)))
+      graph.addVertex(new Type(citation(1)))
+      graph.addEdge(citation(0), new SubType(citation(1)))
+      
+      i += 1
+    }
+  }
+
+  println("Starting computation...")
+  val stats = graph. execute
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown
