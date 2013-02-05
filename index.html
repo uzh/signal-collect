@@ -84,29 +84,17 @@ object PageRank extends App {
   graph.shutdown
 }
 
-class PageRankVertex(id: Any, dampingFactor: Double=0.85)
-    extends DataGraphVertex(id=id, state=1-dampingFactor) {
+class PageRankVertex(id: Any, baseRank: Double=0.15)
+    extends DataGraphVertex(id, baseRank) {
   type Signal = Double
-
-  def collect: Double = {
-    1 - dampingFactor + dampingFactor * signals.sum
-  }
-  
-  override def scoreSignal: Double = {
-    lastSignalState match {
-      case None           => 1
-      case Some(oldState) => (state - oldState).abs
-    }
-  }
+  def dampingFactor = 1 - baseRank
+  def collect: Double = baseRank + dampingFactor * signals.sum
 }
 
 class PageRankEdge(targetId: Any)
     extends DefaultEdge(targetId) {
   type Source = PageRankVertex
-
-  def signal = {
-    source.state * weight / source.sumOfOutWeights
-  }
+  def signal = source.state * weight / source.sumOfOutWeights
 }
 </pre>
             </div>
@@ -134,14 +122,6 @@ class Location(id: Any, initialState: Option[Int] = None)
     state match {
       case None                      => Some(signal)
       case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
-    }
-  }
-
-  override def scoreSignal: Double = {
-    if (state.isDefined && (!lastSignalState.isDefined || !lastSignalState.get.isDefined || state.get != lastSignalState.get.get)) {
-      1.0
-    } else {
-      0.0
     }
   }
 }
