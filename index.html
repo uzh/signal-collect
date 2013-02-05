@@ -128,7 +128,7 @@ class Location(id: Any, initialState: Option[Int] = None)
 
 class Path(t: Any) extends OptionalSignalEdge(t) {
   def signal = {
-	source.state match {
+    source.state match {
       case None                => None
       case Some(distance: Int) => Some(distance + weight.toInt)
     }
