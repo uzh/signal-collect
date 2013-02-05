@@ -117,20 +117,16 @@ object SSSP extends App {
 class Location(id: Any, initialState: Option[Int] = None)
 	extends DataFlowVertex(id, initialState) {
   type Signal = Int
-  def collect(signal: Int) = {
-    state match {
-      case None                      => Some(signal)
-      case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
-    }
+  def collect(signal: Int) = state match {
+    case None                      => Some(signal)
+    case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
   }
 }
 
 class Path(t: Any) extends OptionalSignalEdge(t) {
-  def signal = {
-    source.state match {
-      case None                => None
-      case Some(distance: Int) => Some(distance + weight.toInt)
-    }
+  def signal = source.state match {
+    case None                => None
+    case Some(distance: Int) => Some(distance + weight.toInt)
   }
 }
 </pre>
