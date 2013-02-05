@@ -70,7 +70,7 @@ title: Home
           </ul>
           <div id="myTabContent" class="tab-content">
             <div class="tab-pane fade in active" id="home">
-<pre class="prettyprint linenums">
+<pre class="prettyprint">
 import com.signalcollect._
 
 object PageRank extends App {
@@ -99,7 +99,7 @@ class PageRankEdge(targetId: Any)
 </pre>
             </div>
             <div class="tab-pane fade" id="profile">
-<pre class="prettyprint linenums">
+<pre class="prettyprint">
 import com.signalcollect._
 
 object SSSP extends App {
@@ -115,9 +115,8 @@ object SSSP extends App {
 }
 
 class Location(id: Any, initialState: Option[Int] = None)
-	extends DataGraphVertex(id, initialState) {
+	extends DataFlowVertex(id, initialState) {
   type Signal = Int
-
   def collect(signal: Int) = {
     state match {
       case None                      => Some(signal)
