@@ -54,6 +54,7 @@ class ConsoleServer(coordinatorActor: ActorRef,
   server.createContext("/", new FileServer("graph.html"))
   server.createContext("/graph", new FileServer("graph.html"))
   server.createContext("/graph.js", new FileServer("graph.js", "application/javascript"))
+  server.createContext("/rickshaw.min.js", new FileServer("rickshaw-1.2.0.min.js", "application/javascript"))
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
   println("HTTP server started on localhost:" + httpPort.getPort)
