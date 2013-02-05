@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  var ws = new WebSocket("ws://192.168.1.3:8081");
+  var ws = new WebSocket("ws://localhost:8081/resources");
   ws.onopen = function() {
       console.log("[websocket#onopen]\n");
   }
