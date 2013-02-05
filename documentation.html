@@ -23,13 +23,13 @@ weight: 2
 <p>This means that every vertex, beyond holding the information about its own id and state, has a collect function which computes the new vertex state based on the old vertex state and the signals that were received.</p>
 
 <pre class="prettyprint lang-scala">class Vertex {
-  def collect(oldState: State, uncollectedSignals: Iterable[Signal]): State
+  def collect: State
 }</pre>
 
-<p>Every edge has a reference to its source vertex (if it is attached to one), the id of the target vertex and its weight. It implements a signal function which computes the signal sent along this edge based on its source vertex.</p>
+<p>Every edge has a reference to its source vertex (if it is attached to one), the id of the target vertex and its weight. It implements a signal function which computes the signal sent along this edge.</p>
 
 <pre class="prettyprint lang-scala">class Edge {
-  def signal(sourceVertex: SourceVertex): Signal
+  def signal: Signal
 }</pre>
 
 <hr class="soften">
