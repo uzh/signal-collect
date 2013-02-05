@@ -88,7 +88,7 @@ class PageRankVertex(id: Any, baseRank: Double=0.15)
     extends DataGraphVertex(id, baseRank) {
   type Signal = Double
   def dampingFactor = 1 - baseRank
-  def collect: Double = baseRank + dampingFactor * signals.sum
+  def collect = baseRank + dampingFactor * signals.sum
 }
 
 class PageRankEdge(targetId: Any)
