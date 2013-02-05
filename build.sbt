@@ -11,7 +11,7 @@ organization := "com.signalcollect"
 
 scalaVersion := "2.10.0"
 
-assembleArtifact in packageScala := false
+assembleArtifact in packageScala := true
 
 parallelExecution in Test := false
 
