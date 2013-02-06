@@ -107,6 +107,9 @@ class WebSocketConsoleServer(
   }
 
   def onClose(socket: WebSocket, code: Int, reason: String, remote: Boolean) {
+    println("client: " + socket.getRemoteSocketAddress
+                               .getAddress
+                               .getHostAddress + " left the room!" )
   }
 
 }
