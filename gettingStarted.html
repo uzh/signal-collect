@@ -8,128 +8,146 @@ weight: 1
   <h1>Let's get started</h1>
   <p>Run your first algorithm in less than 10 minutes!</p>
 </div>
+<div class="row">
+  <div class="span3 bs-docs-sidebar">
+      <ul class="nav nav-list bs-docs-sidenav">
+        <li><a href="#prepare"><i class="icon-chevron-right"></i> Prepare</a></li>
+        <li><a href="#download"><i class="icon-chevron-right"></i> Download</a></li>
+        <li><a href="#newProject"><i class="icon-chevron-right"></i>Create the project</a></li>
+        <li><a href="#vertex"><i class="icon-chevron-right"></i> Vertex</a></li>
 
-<h2>Prepare Eclipse IDE</h2>
-<p>We suggest you install <a href="http://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/indigosr2">Eclipse IDE 3.7 (Indigo)</a> for Java developers, since this is currently the officially supported version by the Scala IDE plugin.</p>
-<p>For an optimal expericence please make sure that Eclipse uses the Java 7 library and JVM: Preferences → Java → Installed JREs → JRE/JDK 7 should be installed and selected.</p>
-<p>To leverage Eclipse for Scala development, install the Scala IDE plugins (for Scala 2.10): Help → Install New Software ... → Add → http://download.scala-ide.org/sdk/e37/scala210/dev/site/ Select and install all plugins from that location.</p>
-
-<h2>Download the Signal/Collect .jar file</h2>
-<p>Download the Signal/Collect .jar file which is available <a href="downloads/signal-collect-2.0.jar">here</a></p>
-
-<h2>Your first Signal/Collect Algorithm</h2>
-<p>Now that you have all the necessary components and tools in place you are ready to implement your first algorithm based on Signal/Collect. For this purpose we selected the well known <a href="http://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm which calculates the relative importance of a node in a network in an iterative fashion.</p>
-<p>We start off by creating a new Scala Project in an eclipse workspace. (File → New → Other... → Scala Wizards → Scala Project)</p>
-<div class="span12 pagination-centered">
-	<img src="images/eclipse_scala_project.png"  width="526" height="399" />
+      </ul>
+  </div>
+  
+  <div class="span9">
+    <section id="prepare">
+      <h2>Prepare Eclipse IDE</h2>
+      <p>We suggest you install <a href="http://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/indigosr2">Eclipse IDE 3.7 (Indigo)</a> for Java developers, since this is currently the officially supported version by the Scala IDE plugin.</p>
+      <p>For an optimal expericence please make sure that Eclipse uses the Java 7 library and JVM: Preferences → Java → Installed JREs → JRE/JDK 7 should be installed and selected.</p>
+      <p>To leverage Eclipse for Scala development, install the Scala IDE plugins (for Scala 2.10): Help → Install New Software ... → Add → http://download.scala-ide.org/sdk/e37/scala210/dev/site/ Select and install all plugins from that location.</p>
+    </section>
+    <section id="download">
+      <h2>Download the Signal/Collect .jar file</h2>
+      <p>Download the Signal/Collect .jar file which is available <a href="downloads/signal-collect-2.0.jar">here</a></p>
+    </section>
+      <h2>Your first Signal/Collect Algorithm</h2>
+    <section id="newProject">
+      <p>Now that you have all the necessary components and tools in place you are ready to implement your first algorithm based on Signal/Collect. For this purpose we selected the well known <a href="http://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm which calculates the relative importance of a node in a network in an iterative fashion.</p>
+      <p>We start off by creating a new Scala Project in an eclipse workspace. (File → New → Other... → Scala Wizards → Scala Project)</p>
+      <div class="span12 pagination-centered">
+      	<img src="images/eclipse_scala_project.png"  width="526" height="399" />
+      </div>
+      <p>Once you named your project and clicked on the <em>Finish</em> button you will see the your project folder in the package explorer on the right hand side of your IDE. The project folder already containes an empty source folder together with the Scala library and the Java Runtime Environment. In addition to these libraries we now need to add the the previously downloaded Signal/Collect jar file to the projects build path. We achieve this by right clicking on the project folder and selecting <em>Build Path → Configure Build Path ... → Libraries → Add external JARs...</em>.</p>
+      <p>We now have provided all the needed libraries and are ready to write some actual code. Since the implementation of our PageRank algorithm will be rather short, we will define all our classes in a single scala file. To add a new Scala file to your project select the <em>src</em> Folder and click on <em>New → Scala Object</em>.</p>
+      	
+      <div class="span12 pagination-centered">
+      	<img src="images/eclipse_scala_object.png"  width="526" height="399" />
+      </div>
+      
+      <p>Let's name this Object <em>PageRank</em> because it will also act as the entry point of our application as we will see in just a moment.<br/>
+      	Our algorithm will consist of three disctinct parts which specify the structure and behavior of the vertices and edges in the graph as well as one part that handles the loading of the graph and triggers the execution.</p>
+     </section>
+     <section id="vertex">	
+      	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to write the algorithm specific collect function and the termination criterion (defined in the scoreSignal function).</p>
+      	
+      <pre class="prettyprint linenums">
+      class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
+      
+        type Signal = Double
+      
+        def collect: Double = 1 - dampingFactor + dampingFactor * signals.sum
+      
+        override def scoreSignal: Double = {
+          lastSignalState match {
+            case None           => 1
+            case Some(oldState) => (state - oldState).abs
+          }
+        }
+      }
+      </pre>
+      </section>
+      	<p>Similarly, we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
+      	
+      <pre class="prettyprint linenums">
+      class PageRankEdge(t: Any) extends DefaultEdge(t) {
+        type Source = PageRankVertex
+        def signal = source.state * weight / source.sumOfOutWeights
+      }
+      </pre>
+      
+      <p>As a final step, we also have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
+      
+      <pre class="prettyprint linenums">
+      object PageRank extends App {
+        val graph = GraphBuilder.build
+        graph.addVertex(new PageRankVertex(1))
+        graph.addVertex(new PageRankVertex(2))
+        graph.addVertex(new PageRankVertex(3))
+        graph.addEdge(1, new PageRankEdge(2))
+        graph.addEdge(2, new PageRankEdge(1))
+        graph.addEdge(2, new PageRankEdge(3))
+        graph.addEdge(3, new PageRankEdge(2))
+      
+        val stats = graph.execute
+        println(stats)
+        graph.foreachVertex(println(_))
+      
+        graph.shutdown
+      }
+      </pre>
+      
+      <p>A commented version of this algorithm is also available in our <a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/PageRank.scala">GitHub repository</a>.
+      
+      	<p>Now take a deep breath and run your first PageRank algorithm on Signal/Collect.</p>
+      	
+      	<div class="span12 pagination-centered">
+      		<img src="images/eclipse_scala_run.png"  width="526" height="399" />
+      	</div>
+      	
+      	<p> The results of this simple graph do not matter too much at this point, but they should look something similar to this:</p>
+      	
+      	<div class="nuget-badge" >
+      	  <p>
+      	    <code>------------------------</br>
+      - Execution Parameters -</br>
+      ------------------------</br>
+      Execution mode 		OptimizedAsynchronous</br>
+      Signal threshold 	0.01</br>
+      Collect threshold 	0.0</br>
+      Time limit 		None</br>
+      Steps limit 		None</br>
+      </br>
+      --------------</br>
+      - Execution Statistics -</br>
+      --------------</br>
+      # signal steps 		1</br>
+      # collect steps 		0</br>
+      Computation time 	49 milliseconds</br>
+      JVM CPU time 		50 milliseconds</br>
+      Graph loading time 	104 milliseconds</br>
+      Termination reason 	Converged</br>
+      # messages 		81</br>
+      # collect operations 	39</br>
+      # signal operations 	40</br>
+      # vertices (add/remove) 	3 (3/0)</br>
+      # edges (add/remove) 	4 (4/0)</br>
+      </br>
+      PageRankVertex(id=1, state=0.7474643455022485)</br>
+      PageRankVertex(id=2, state=1.4057984600052906)</br>
+      PageRankVertex(id=3, state=0.7474643455022485)</code>
+      	  </p>
+      	</div>
+      	
+      	<p>Contratulations! You have successfully implemented and run your first Signal/Collect computation.</p>
+      	<p>To learn more about the underlying concepts and mechanisms of Signal/Collect we suggest you read the <a href="documentation.html">documentation</a> section or get inspired by some of our example algorithms:</p>
+      	<ul>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/Sssp.scala">Single-Source Shortest Path (SSSP)</a></li>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/VertexColoring.scala">Vertex Coloring</a></li>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/Sudoku.scala">Sudoku Solver</a></li>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/WebCrawler.scala">Web Crawler</a></li>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/SchellingSegregation.scala">Schelling Segregation</a></li>
+      		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/GameOfLife.scala">Conway's Game of Life</a></li>
+      	</ul>
+  </div>
 </div>
-<p>Once you named your project and clicked on the <em>Finish</em> button you will see the your project folder in the package explorer on the right hand side of your IDE. The project folder already containes an empty source folder together with the Scala library and the Java Runtime Environment. In addition to these libraries we now need to add the the previously downloaded Signal/Collect jar file to the projects build path. We achieve this by right clicking on the project folder and selecting <em>Build Path → Configure Build Path ... → Libraries → Add external JARs...</em>.</p>
-<p>We now have provided all the needed libraries and are ready to write some actual code. Since the implementation of our PageRank algorithm will be rather short, we will define all our classes in a single scala file. To add a new Scala file to your project select the <em>src</em> Folder and click on <em>New → Scala Object</em>.</p>
-	
-<div class="span12 pagination-centered">
-	<img src="images/eclipse_scala_object.png"  width="526" height="399" />
-</div>
-
-<p>Let's name this Object <em>PageRank</em> because it will also act as the entry point of our application as we will see in just a moment.<br/>
-	Our algorithm will consist of three disctinct parts which specify the structure and behavior of the vertices and edges in the graph as well as one part that handles the loading of the graph and triggers the execution.</p>
-	
-	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to write the algorithm specific collect function and the termination criterion (defined in the scoreSignal function).</p>
-	
-<pre class="prettyprint linenums">
-class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
-
-  type Signal = Double
-
-  def collect: Double = 1 - dampingFactor + dampingFactor * signals.sum
-
-  override def scoreSignal: Double = {
-    lastSignalState match {
-      case None           => 1
-      case Some(oldState) => (state - oldState).abs
-    }
-  }
-}
-</pre>
-	<p>Similarly, we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
-	
-<pre class="prettyprint linenums">
-class PageRankEdge(t: Any) extends DefaultEdge(t) {
-  type Source = PageRankVertex
-  def signal = source.state * weight / source.sumOfOutWeights
-}
-</pre>
-
-<p>As a final step, we also have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
-
-<pre class="prettyprint linenums">
-object PageRank extends App {
-  val graph = GraphBuilder.build
-  graph.addVertex(new PageRankVertex(1))
-  graph.addVertex(new PageRankVertex(2))
-  graph.addVertex(new PageRankVertex(3))
-  graph.addEdge(1, new PageRankEdge(2))
-  graph.addEdge(2, new PageRankEdge(1))
-  graph.addEdge(2, new PageRankEdge(3))
-  graph.addEdge(3, new PageRankEdge(2))
-
-  val stats = graph.execute
-  println(stats)
-  graph.foreachVertex(println(_))
-
-  graph.shutdown
-}
-</pre>
-
-<p>A commented version of this algorithm is also available in our <a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/PageRank.scala">GitHub repository</a>.
-
-	<p>Now take a deep breath and run your first PageRank algorithm on Signal/Collect.</p>
-	
-	<div class="span12 pagination-centered">
-		<img src="images/eclipse_scala_run.png"  width="526" height="399" />
-	</div>
-	
-	<p> The results of this simple graph do not matter too much at this point, but they should look something similar to this:</p>
-	
-	<div class="nuget-badge" >
-	  <p>
-	    <code>------------------------</br>
-- Execution Parameters -</br>
-------------------------</br>
-Execution mode 		OptimizedAsynchronous</br>
-Signal threshold 	0.01</br>
-Collect threshold 	0.0</br>
-Time limit 		None</br>
-Steps limit 		None</br>
-</br>
---------------</br>
-- Execution Statistics -</br>
---------------</br>
-# signal steps 		1</br>
-# collect steps 		0</br>
-Computation time 	49 milliseconds</br>
-JVM CPU time 		50 milliseconds</br>
-Graph loading time 	104 milliseconds</br>
-Termination reason 	Converged</br>
-# messages 		81</br>
-# collect operations 	39</br>
-# signal operations 	40</br>
-# vertices (add/remove) 	3 (3/0)</br>
-# edges (add/remove) 	4 (4/0)</br>
-</br>
-PageRankVertex(id=1, state=0.7474643455022485)</br>
-PageRankVertex(id=2, state=1.4057984600052906)</br>
-PageRankVertex(id=3, state=0.7474643455022485)</code>
-	  </p>
-	</div>
-	
-	<p>Contratulations! You have successfully implemented and run your first Signal/Collect computation.</p>
-	<p>To learn more about the underlying concepts and mechanisms of Signal/Collect we suggest you read the <a href="documentation.html">documentation</a> section or get inspired by some of our example algorithms:</p>
-	<ul>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/Sssp.scala">Single-Source Shortest Path (SSSP)</a></li>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/VertexColoring.scala">Vertex Coloring</a></li>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/Sudoku.scala">Sudoku Solver</a></li>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/WebCrawler.scala">Web Crawler</a></li>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/SchellingSegregation.scala">Schelling Segregation</a></li>
-		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/GameOfLife.scala">Conway's Game of Life</a></li>
-	</ul>
 	
