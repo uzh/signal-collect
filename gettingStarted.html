@@ -8,18 +8,20 @@ weight: 1
   <h1>Let's get started</h1>
   <p>Run your first algorithm in less than 10 minutes!</p>
 </div>
-<!--<div class="row">
-  <div class="span3 bs-docs-sidebar">
+<div class="row">
+  <div class="span2 bs-docs-sidebar">
       <ul class="nav nav-list bs-docs-sidenav">
         <li><a href="#prepare"><i class="icon-chevron-right"></i>Prepare</a></li>
         <li><a href="#download"><i class="icon-chevron-right"></i>Download</a></li>
-        <li><a href="#newProject"><i class="icon-chevron-right"></i>Create the project</a></li>
-        <li><a href="#vertex"><i class="icon-chevron-right"></i>Vertex</a></li>
-
+        <li><a href="#newProject"><i class="icon-chevron-right"></i>Create the Project</a></li>
+        <li><a href="#vertex"><i class="icon-chevron-right"></i>Define the Vertex</a></li>
+        <li><a href="#edge"><i class="icon-chevron-right"></i>Define the Edge</a></li>
+        <li><a href="#structure"><i class="icon-chevron-right"></i>Create the Graph</a></li>
+        <li><a href="#run"><i class="icon-chevron-right"></i>Run</a></li>
       </ul>
   </div>
   
-  <div class="span9">    -->
+  <div class="span10">   
     <section id="prepare">
       <h2>Prepare Eclipse IDE</h2>
       <p>We suggest you install <a href="http://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/indigosr2">Eclipse IDE 3.7 (Indigo)</a> for Java developers, since this is currently the officially supported version by the Scala IDE plugin.</p>
@@ -30,8 +32,8 @@ weight: 1
       <h2>Download the Signal/Collect .jar file</h2>
       <p>Download the Signal/Collect .jar file which is available <a href="downloads/signal-collect-2.0.jar">here</a></p>
     </section>
-      <h2>Your first Signal/Collect Algorithm</h2>
     <section id="newProject">
+      <h2>Your first Signal/Collect Algorithm</h2>
       <p>Now that you have all the necessary components and tools in place you are ready to implement your first algorithm based on Signal/Collect. For this purpose we selected the well known <a href="http://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm which calculates the relative importance of a node in a network in an iterative fashion.</p>
       <p>We start off by creating a new Scala Project in an eclipse workspace. (File → New → Other... → Scala Wizards → Scala Project)</p>
       <div class="span12 pagination-centered">
@@ -47,7 +49,8 @@ weight: 1
       <p>Let's name this Object <em>PageRank</em> because it will also act as the entry point of our application as we will see in just a moment.<br/>
       	Our algorithm will consist of three disctinct parts which specify the structure and behavior of the vertices and edges in the graph as well as one part that handles the loading of the graph and triggers the execution.</p>
      </section>
-     <section id="vertex">	
+     <section id="vertex">
+     <h2>Define the Vertex</h2>	
       	<p>The definition of the vertex structure is very short since we can build on top of the default implementation that is provided by the Signal/Collect library. All that is left to do is to write the algorithm specific collect function and the termination criterion (defined in the scoreSignal function).</p>
       	
       <pre class="prettyprint linenums">
@@ -66,6 +69,8 @@ weight: 1
       }
       </pre>
       </section>
+      <section id="edge">
+      <h2>Define the Edge</h2>	
       	<p>Similarly, we can also use the default edge implementation as a basis for our own edge and just modify its signal method.</p>
       	
       <pre class="prettyprint linenums">
@@ -75,6 +80,9 @@ weight: 1
       }
       </pre>
       
+      </section>
+      <section id="structure">
+      <h2>Define the Graph Structure</h2>
       <p>As a final step, we also have to define the entry point for our program together with the code that sets up the graph structure and runs the algorithm.<p>
       
       <pre class="prettyprint linenums">
@@ -97,7 +105,9 @@ weight: 1
       </pre>
       
       <p>A commented version of this algorithm is also available in our <a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/PageRank.scala">GitHub repository</a>.
-      
+      </section>
+      <section id="run">
+        <h2>Run the algorithm</h2>
       	<p>Now take a deep breath and run your first PageRank algorithm on Signal/Collect.</p>
       	
       	<div class="span12 pagination-centered">
@@ -149,6 +159,6 @@ weight: 1
       		<li><a href="https://github.com/uzh/signal-collect/blob/master/src/main/scala/com/signalcollect/examples/GameOfLife.scala">Conway's Game of Life</a></li>
       	</ul>
  
- <!-- </div>   
-</div>        -->
+  </div>   
+</div>        
 	
