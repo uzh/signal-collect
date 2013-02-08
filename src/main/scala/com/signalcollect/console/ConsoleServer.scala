@@ -89,27 +89,24 @@ class WebSocketConsoleServer(
   val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
 
   def onError(socket: WebSocket, ex: Exception): Unit = ???
-  def onMessage(socket: WebSocket, msg: String): Unit = ???
 
-  def onOpen(socket: WebSocket, handshake:ClientHandshake) {
-    println("client: " + socket.getRemoteSocketAddress
-                               .getAddress
-                               .getHostAddress + " entered the room!" )
-    def provider: DataProvider = handshake.getResourceDescriptor match {
-      case "/graph" => new GraphDataProvider(coordinator)
-      case "/computation" => new ComputationDataProvider(coordinator)
-      case "/resources" => new ResourceDataProvider(coordinator)
+  def onMessage(socket: WebSocket, msg: String) {
+    def provider: DataProvider = msg match {
+      case "graph" => new GraphDataProvider(coordinator)
+      case "computation" => new ComputationDataProvider(coordinator)
+      case "resources" => new ResourceDataProvider(coordinator)
     }
-    while (true) {
-      socket.send(provider.fetch)
-      Thread.sleep(1000) 
-    }
+    socket.send(provider.fetch)
   }
 
+  def onOpen(socket: WebSocket, handshake:ClientHandshake) {
+    println("WebSocket - client connected: " + 
+            socket.getRemoteSocketAddress.getAddress.getHostAddress)
+    }
+
   def onClose(socket: WebSocket, code: Int, reason: String, remote: Boolean) {
-    println("client: " + socket.getRemoteSocketAddress
-                               .getAddress
-                               .getHostAddress + " left the room!" )
+    println("WebSocket - client disconected: " + 
+            socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
 }

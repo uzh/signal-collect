@@ -34,7 +34,8 @@ $(document).ready(function() {
   while (typeof ws === "undefined") {
     try {
       console.log("[websocket] Trying to connect...");
-      ws = new WebSocket("ws://localhost:8081/resources");
+      ws = new WebSocket("ws://" + document.domain + ":" + 
+                        (parseInt(window.location.port) + 1));
       console.log("[websocket] Connected");
     } catch (e) {
       console.log("[websocket] Could not connect, retrying in 1 second...");
@@ -44,6 +45,7 @@ $(document).ready(function() {
   
   ws.onopen = function() {
     console.log("[websocket#onopen]\n");
+    ws.send("resources")
   }
   
   ws.onerror = function(e) {
@@ -68,6 +70,10 @@ $(document).ready(function() {
     newData = { one: newDataJson.workerStats[0][2] };
     graph2.series.addData(newData);
     graph2.render();
+    
+    setTimeout(function(){
+      ws.send("resources")
+    }, 2000);
     
   }
 
