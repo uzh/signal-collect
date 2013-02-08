@@ -51,9 +51,11 @@ class ConsoleServer(coordinatorActor: ActorRef,
   System.out.println( "WebSocket server started on port: " + sockets.getPort() );
 
   val server = HttpServer.create(httpPort, 0)
-  server.createContext("/", new FileServer("graph.html"))
+  server.createContext("/", new FileServer("resources.html"))
   server.createContext("/graph", new FileServer("graph.html"))
   server.createContext("/graph.js", new FileServer("graph.js", "application/javascript"))
+  server.createContext("/resources", new FileServer("resources.html"))
+  server.createContext("/resources.js", new FileServer("resources.js", "application/javascript"))
   server.createContext("/rickshaw.min.js", new FileServer("rickshaw-1.2.0.min.js", "application/javascript"))
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
@@ -93,8 +95,8 @@ class WebSocketConsoleServer(
   def onMessage(socket: WebSocket, msg: String) {
     def provider: DataProvider = msg match {
       case "graph" => new GraphDataProvider(coordinator)
-      case "computation" => new ComputationDataProvider(coordinator)
       case "resources" => new ResourceDataProvider(coordinator)
+      case otherwise => new InvalidDataProvider()
     }
     socket.send(provider.fetch)
   }
@@ -115,6 +117,10 @@ trait DataProvider {
   def fetch(): String
 }
 
+class InvalidDataProvider extends DataProvider {
+    def fetch(): String = "invalid request"
+}
+
 class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
     val workerApi = coordinator.getWorkerApi 
     val vertexAggregator = new VertexToStringAggregator
@@ -126,12 +132,6 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
       content.append("{\"vertices\":[" + vertices + "],\"edges\":[" + edges + "]}")
       content.toString
   }
-}
-
-class ComputationDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
-    def fetch(): String = {
-      "stub"
-    }
 }
 
 class ResourceDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
