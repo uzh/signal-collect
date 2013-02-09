@@ -60,14 +60,14 @@ $(document).ready(function() {
     
     // graph 1
     var newData  = [];
-    for (var index in newDataJson.workerStats[0]) {
-      newData.push({ 'x': index, 'y': newDataJson.workerStats[0][index]});
+    for (var index in newDataJson.workerStatistics["workerId"]) {
+      newData.push({ 'x': index, 'y': newDataJson.workerStatistics["messagesSent"][index]});
     }
     graph.series[0].data = newData;
     graph.update();
 
     // graph 2
-    newData = { one: newDataJson.workerStats[0][2] };
+    newData = { one: newDataJson.workerStatistics["messagesSent"] };
     graph2.series.addData(newData);
     graph2.render();
     

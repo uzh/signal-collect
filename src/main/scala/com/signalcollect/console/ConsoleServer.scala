@@ -28,7 +28,8 @@ import java.net._
 import scala.language.postfixOps
 import scala.Array.canBuildFrom
 import scala.collection.immutable.List.apply
-import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, Inspectable }
+import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, 
+                                      Inspectable }
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
 import akka.actor.ActorRef
@@ -41,6 +42,9 @@ import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import scala.collection.JavaConversions._
+import sjson.json._
+import sjson.json.DefaultProtocol._
+import sjson.json.JsonSerialization._
 
 class ConsoleServer(coordinatorActor: ActorRef,
               httpPort: InetSocketAddress = new InetSocketAddress(8080),
@@ -51,12 +55,20 @@ class ConsoleServer(coordinatorActor: ActorRef,
   System.out.println( "WebSocket server started on port: " + sockets.getPort() );
 
   val server = HttpServer.create(httpPort, 0)
+
   server.createContext("/", new FileServer("resources.html"))
-  server.createContext("/graph", new FileServer("graph.html"))
-  server.createContext("/graph.js", new FileServer("graph.js", "application/javascript"))
-  server.createContext("/resources", new FileServer("resources.html"))
-  server.createContext("/resources.js", new FileServer("resources.js", "application/javascript"))
-  server.createContext("/rickshaw.min.js", new FileServer("rickshaw-1.2.0.min.js", "application/javascript"))
+  server.createContext("/graph", 
+                       new FileServer("graph.html"))
+  server.createContext("/graph.js", 
+                       new FileServer("graph.js", "application/javascript"))
+  server.createContext("/resources", 
+                       new FileServer("resources.html"))
+  server.createContext("/resources.js", 
+                       new FileServer("resources.js", "application/javascript"))
+  server.createContext("/rickshaw.min.js", 
+                       new FileServer("rickshaw-1.2.0.min.js", 
+                                      "application/javascript"))
+
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
   println("HTTP server started on localhost:" + httpPort.getPort)
@@ -67,7 +79,7 @@ class ConsoleServer(coordinatorActor: ActorRef,
   }
 }
 
-class FileServer(fileName: String = "index.html",
+class FileServer(fileName: String,
                  fileType: String = "text/html") extends HttpHandler {
   def handle(t: HttpExchange) {
     t.getResponseHeaders.set("Content-Type", fileType)
@@ -84,13 +96,15 @@ class FileServer(fileName: String = "index.html",
   }
 }
 
-class WebSocketConsoleServer(
-         port: InetSocketAddress,
-         coordinatorActor: ActorRef)
-      extends WebSocketServer(port) {
-  val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
+class WebSocketConsoleServer(port: InetSocketAddress,
+                             coordinatorActor: ActorRef)
+                             extends WebSocketServer(port) {
+  val coordinator: Coordinator[_, _] = 
+                   AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
 
-  def onError(socket: WebSocket, ex: Exception): Unit = ???
+  def onError(socket: WebSocket, ex: Exception) {
+    println("WebSocket - an error occured: " + ex)
+  }
 
   def onMessage(socket: WebSocket, msg: String) {
     def provider: DataProvider = msg match {
@@ -118,7 +132,7 @@ trait DataProvider {
 }
 
 class InvalidDataProvider extends DataProvider {
-    def fetch(): String = "invalid request"
+    def fetch(): String = "{\"msg\":\"invalid request\"}"
 }
 
 class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
@@ -129,84 +143,111 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
     def fetch(): String = {
       val vertices = workerApi.aggregateAll(vertexAggregator)
       val edges = workerApi.aggregateAll(edgeAggregator)
-      content.append("{\"vertices\":[" + vertices + "],\"edges\":[" + edges + "]}")
-      content.toString
+      case class GraphData(vertices: List[String], 
+                           edges: List[(String,String)])
+      implicit val GraphDataFormat: Format[GraphData] = 
+                   asProduct2("vertices", "edges")(
+                              GraphData)(GraphData.unapply(_).get)
+      val data = GraphData(vertices, edges)
+      tojson(data).toString
   }
 }
 
 class ResourceDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
   def fetch(): String = {
-    val content = new StringBuilder()
-
-    val inboxSize = coordinator.getGlobalInboxSize.toString
-    content.append("{\"inboxSize\":" + inboxSize)
-
-    val senderStats: List[String] =
-        (coordinator.getWorkerApi.getWorkerStatistics.messagesSent map (_.toString) toList)
-    content.append(",\"msgsSent\":[" + senderStats.mkString(",") + "]")
+    val inboxSize: Long = coordinator.getGlobalInboxSize
 
     val workerStatistics: List[WorkerStatistics] = 
-        (coordinator.getWorkerApi.getIndividualWorkerStatistics)
-    content.append(",\"workerStats\":[")
+      (coordinator.getWorkerApi.getIndividualWorkerStatistics)
 
-    val wstats = workerStatistics map {stats =>
-      val statsContent = new StringBuilder()
-      statsContent.append("[")
-      def s = List(stats.workerId,
-                   stats.toSignalSize,
-                   stats.toCollectSize,
-                   stats.messagesSent.sum,
-                   stats.messagesReceived,
-                   stats.collectOperationsExecuted,
-                   stats.signalOperationsExecuted,
-                   stats.numberOfVertices,
-                   stats.outgoingEdgesAdded - stats.outgoingEdgesRemoved,
-                   stats.receiveTimeoutMessagesReceived,
-                   stats.heartbeatMessagesReceived,
-                   stats.signalMessagesReceived,
-                   stats.bulkSignalMessagesReceived,
-                   stats.continueMessagesReceived,
-                   stats.requestMessagesReceived,
-                   stats.otherMessagesReceived) map (_.toString)
-       statsContent.append(s.mkString(","))
-       statsContent.append("]")
-       statsContent.toString
+    val workerStatisticsHeaders = List(
+          "messagesSent", 
+          "workerId",
+          "messagesReceived",
+          "toSignalSize",
+          "toCollectSize",
+          "collectOperationsExecuted",
+          "signalOperationsExecuted",
+          "numberOfVertices",
+          "verticesAdded",
+          "verticesRemoved",
+          "numberOfOutgoingEdges",
+          "outgoingEdgesAdded",
+          "outgoingEdgesRemoved",
+          "receiveTimeoutMessagesReceived",
+          "heartbeatMessagesReceived",
+          "signalMessagesReceived",
+          "bulkSignalMessagesReceived",
+          "continueMessagesReceived",
+          "requestMessagesReceived",
+          "otherMessagesReceived"
+    )
+
+    val workerStatisticsTempMap: 
+        scala.collection.mutable.Map[String,List[Long]] = 
+        scala.collection.mutable.Map[String,List[Long]]()
+
+    workerStatisticsHeaders.foreach { h =>
+      var l: List[Long] = List() 
+      workerStatistics.foreach { w =>
+        val srcVal: Any = w.getClass.getMethods
+                           .find(_.getName == h).get.invoke(w)
+        val dstVal: Long = srcVal match {
+          case l: Long => l
+          case al: Array[Long] => al.sum.toLong
+          case i: Int => i.toLong
+          case other => 0
+        }
+        l = dstVal :: l
+      }
+      workerStatisticsTempMap += (h -> l.reverse)
     }
-    content.append(wstats.mkString(",") + "]}")
-    content.toString
+
+    val workerStatisticsMap = workerStatisticsTempMap.toMap
+
+    case class ResourceData(inboxSize: Long, 
+                            workerStatistics: Map[String,List[Long]])
+    implicit val ResourceDataFormat: Format[ResourceData] = 
+                 asProduct2("inboxSize", "workerStatistics")(
+                            ResourceData)(ResourceData.unapply(_).get)
+
+    val data = ResourceData(inboxSize, workerStatisticsMap)
+    tojson(data).toString
   }
 }
 
-class VertexToStringAggregator extends AggregationOperation[String] {
-  def extract(v: Vertex[_, _]): String = v match {
+class VertexToStringAggregator extends AggregationOperation[List[String]] {
+  def extract(v: Vertex[_, _]): List[String] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
-    case other => ""
+    case other => List()
   }
 
-  def reduce(vertices: Stream[String]): String = {
-    vertices.mkString(",")
+  def reduce(vertices: Stream[List[String]]): List[String] = {
+    vertices.flatMap(identity).toList
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): String = {
-    "\"" + v.id.toString + "\""
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[String] = {
+    List(v.id.toString)
   }
 }
 
-class EdgeToStringAggregator extends AggregationOperation[String] {
-  def extract(v: Vertex[_, _]): String = v match {
+class EdgeToStringAggregator 
+      extends AggregationOperation[List[(String,String)]] {
+  def extract(v: Vertex[_, _]): List[(String,String)] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
-    case other => ""
   }
 
-  def reduce(vertices: Stream[String]): String = {
-    vertices.mkString(",")
+  def reduce(vertices: Stream[List[(String,String)]]): 
+                              List[(String,String)] = {
+    vertices.flatMap(identity).toList
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): String = {
-    val edges = v.getTargetIdsOfOutgoingEdges.foldLeft(List[String]()) { (list, e) =>
-      ("(\"" + v.id.toString + "\",\"" + e.toString + "\")") :: list
-    }
-    edges.mkString(",")
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[(String,String)] = {
+    val edges = v.getTargetIdsOfOutgoingEdges
+                 .foldLeft(List[(String,String)]()) { (list, e) =>
+                     (v.id.toString, e.toString) :: list
+                 }
+    edges
   }
 }
 
