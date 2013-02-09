@@ -143,7 +143,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
     def fetch(): String = {
       val vertices = workerApi.aggregateAll(vertexAggregator)
       val edges = workerApi.aggregateAll(edgeAggregator)
-      case class GraphData(vertices: List[String], 
+      case class GraphData(vertices: List[(String,String)], 
                            edges: List[(String,String)])
       implicit val GraphDataFormat: Format[GraphData] = 
                    asProduct2("vertices", "edges")(
@@ -216,18 +216,18 @@ class ResourceDataProvider(coordinator: Coordinator[_, _]) extends DataProvider 
   }
 }
 
-class VertexToStringAggregator extends AggregationOperation[List[String]] {
-  def extract(v: Vertex[_, _]): List[String] = v match {
+class VertexToStringAggregator extends AggregationOperation[List[(String, String)]] {
+  def extract(v: Vertex[_, _]): List[(String,String)] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
     case other => List()
   }
 
-  def reduce(vertices: Stream[List[String]]): List[String] = {
+  def reduce(vertices: Stream[List[(String,String)]]): List[(String,String)] = {
     vertices.flatMap(identity).toList
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[String] = {
-    List(v.id.toString)
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[(String,String)] = {
+    List((v.id.toString, v.state.toString))
   }
 }
 
