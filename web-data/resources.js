@@ -1,91 +1,75 @@
-$(document).ready(function() {
-  
+scc.modules.resources = function() {
+
+  var graph1, graph2, reloadTimeout
+
   // simple graph that visualizes all data that it gets
-  var graph = new Rickshaw.Graph( {
-    element: document.querySelector("#graph"),
-    width: 400,
-    height: 300,
-    renderer: 'line',
-    series: new Rickshaw.Series([{ name: 'This' }])
-  });
-  graph.render();
+  this.onopen = function () {
+    graph1 = new Rickshaw.Graph( {
+      element: document.querySelector("#res_graph1"),
+      width: 400,
+      height: 250,
+      renderer: 'line',
+      series: new Rickshaw.Series([{ name: 'This' }])
+    });
+    graph1.render();
 
- 
-  
 
-  // add a trending graph with real time data
-  var tv = 1000;
-  //instantiate our graph!
-  var graph2 = new Rickshaw.Graph( {
-    element: document.getElementById("chart"),
-    width: 400,
-    height: 300,
-    renderer: 'line',
-    series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
-      timeInterval: tv,
-      maxDataPoints: 100,
-      timeBase: new Date().getTime() / 1000
-    }) 
-  } );
-  
-  graph2.render();
-  
-
-  while (typeof ws === "undefined") {
-    try {
-      console.log("[websocket] Trying to connect...");
-      ws = new WebSocket("ws://" + document.domain + ":" + 
-                        (parseInt(window.location.port) + 1));
-      console.log("[websocket] Connected");
-    } catch (e) {
-      console.log("[websocket] Could not connect, retrying in 1 second...");
-      sleep(1000);
-    }
+    // add a trending graph with real time data
+    var tv = 1000;
+    //instantiate our graph!
+    graph2 = new Rickshaw.Graph( {
+      element: document.getElementById("res_graph2"),
+      width: 450,
+      height: 250,
+      renderer: 'line',
+      series: new Rickshaw.Series.FixedDuration([{ name: 'one' }], undefined, {
+        timeInterval: tv,
+        maxDataPoints: 100,
+        timeBase: new Date().getTime() / 1000
+      }) 
+    } );
+    
+    graph2.render();
+    scc.webSocket.send("resources")
   }
-  
-  ws.onopen = function() {
-    console.log("[websocket#onopen]\n");
-    ws.send("resources")
-  }
-  
-  ws.onerror = function(e) {
+    
+  this.onerror = function(e) {
     console.log("[websocket#onerror]")
     console.dir(e)
   }
 
-  ws.onmessage = function(e) {
+  this.onmessage = function(e) {
     console.log("[websocket#onmessage] message: '" + e.data + "'\n");
  
     var newDataJson = eval("(" + e.data + ")");
     
     // graph 1
     var newData  = [];
-    for (var index in newDataJson.workerStatistics["workerId"]) {
-      newData.push({ 'x': index, 'y': newDataJson.workerStatistics["messagesSent"][index]});
+    for (var index in newDataJson.workerStatistics["collectOperationsExecuted"]) {
+      newData.push({ 'x': index, 
+                     'y': newDataJson.workerStatistics["messagesSent"][index]});
     }
-    graph.series[0].data = newData;
-    graph.update();
+    graph1.series[0].data = newData;
+    graph1.update();
 
     // graph 2
     newData = { one: newDataJson.workerStatistics["messagesSent"] };
     graph2.series.addData(newData);
     graph2.render();
     
-    setTimeout(function(){
-      ws.send("resources")
+    reloadTimeout = setTimeout(function(){
+      scc.webSocket.send("resources")
     }, 2000);
-    
   }
 
-  ws.onclose = function() {
-    console.log("[websocket#onclose]\n");
-    ws = null;
+  this.onclose = function() {
+    this.destroy()
   }
-  
-});
 
+  this.destroy = function() {
+    $("res_graph1").empty()
+    $("res_graph2").empty()
+    clearTimeout(reloadTimeout)
+  }
+}
 
-window.onbeforeunload = function() {
-  ws.onclose = function () {}; // disable onclose handler first
-  ws.close();
-};

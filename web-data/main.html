@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Console - Signal/Collect</title>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript" src="rickshaw.min.js"></script>
+    <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="resources.js"></script>
+  </head>
+  <body>
+    <div id="title">
+        <img src="sc.png" alt="Signal/Collect Logo">
+        <div id="title_text">Signal/Collect</div>
+        <div id="title_subtext">Console</div>
+    </div>
+    <div id="top">
+    </div>
+    <div id="left">
+      <div id="modes">
+        <span id="mode_graph" class="leftmost selected">Graph</span>
+        <span id="mode_resources">Resources</span>
+      </div>
+    </div>
+    <div id="content">
+      <div class="view" id="graph">
+      </div>
+      <div class="view" id="resources">
+        <div class="structured">
+          <h1>Resource Monitor</h1>
+          <div class="statistic" id="res_graph1"><h3>Number of Messages</h3></div>
+          <div class="statistic" id="res_graph2"><h3>Global Inbox Size</h3></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

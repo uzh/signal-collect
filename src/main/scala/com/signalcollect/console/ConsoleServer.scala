@@ -56,17 +56,26 @@ class ConsoleServer(coordinatorActor: ActorRef,
 
   val server = HttpServer.create(httpPort, 0)
 
-  server.createContext("/", new FileServer("resources.html"))
-  server.createContext("/graph", 
-                       new FileServer("graph.html"))
+  server.createContext("/", new FileServer("main.html"))
+  server.createContext("/graph", new FileServer("main.html"))
+  server.createContext("/resources", new FileServer("main.html"))
+  server.createContext("/main.js", 
+                       new FileServer("main.js", "application/javascript"))
+  server.createContext("/main.css", 
+                       new FileServer("main.css", "text/css"))
   server.createContext("/graph.js", 
                        new FileServer("graph.js", "application/javascript"))
-  server.createContext("/resources", 
-                       new FileServer("resources.html"))
+  server.createContext("/graph.css", 
+                       new FileServer("graph.css", "text/css"))
   server.createContext("/resources.js", 
                        new FileServer("resources.js", "application/javascript"))
+  server.createContext("/sc.png", 
+                       new FileServer("sc.png", "image/png"))
   server.createContext("/rickshaw.min.js", 
                        new FileServer("rickshaw-1.2.0.min.js", 
+                                      "application/javascript"))
+  server.createContext("/reconnecting-websocket.min.js", 
+                       new FileServer("reconnecting-websocket.min.js", 
                                       "application/javascript"))
 
   server.setExecutor(Executors.newCachedThreadPool())
