@@ -51,6 +51,12 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withConsole(newConsoleEnabled: Boolean) = newLocalBuilder(consoleEnabled = newConsoleEnabled)
 
   /**
+   *  Configures if the console website on a configurable port is enabled.
+   */
+  def withConsole(newConsoleEnabled: Boolean, newConsoleHttpPort: Int) =
+      newLocalBuilder(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort)
+
+  /**
    *  Configures if Akka message compression is enabled.
    */
   def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) = newLocalBuilder(akkaMessageCompression = newAkkaMessageCompression)
@@ -127,6 +133,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   protected def newLocalBuilder(
     consoleEnabled: Boolean = config.consoleEnabled,
+    consoleHttpPort: Int = config.consoleHttpPort,
     loggingLevel: Int = config.loggingLevel,
     logger: LogMessage => Unit = config.logger,
     workerFactory: WorkerFactory = config.workerFactory,
@@ -140,6 +147,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         consoleEnabled = consoleEnabled,
+        consoleHttpPort = consoleHttpPort,
         loggingLevel = loggingLevel,
         logger = logger,
         workerFactory = workerFactory,

@@ -48,8 +48,8 @@ import sjson.json.JsonSerialization._
 
 class ConsoleServer(coordinatorActor: ActorRef,
               httpPort: InetSocketAddress = new InetSocketAddress(8080),
-              socketsPort: InetSocketAddress = new InetSocketAddress(8081),
               bindIp: String = InetAddress.getLocalHost.getHostAddress) {
+  val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
   def sockets = new WebSocketConsoleServer(socketsPort, coordinatorActor);
   sockets.start();
   System.out.println( "WebSocket server started on port: " + sockets.getPort() );

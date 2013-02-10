@@ -55,6 +55,7 @@ import com.signalcollect.coordinator.OnIdle
 import com.signalcollect.coordinator.IsIdle
 import scala.language.postfixOps
 import com.signalcollect.interfaces.ComplexAggregation
+import java.net.InetSocketAddress
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -131,7 +132,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   val console = {
     if (config.consoleEnabled) {
-      new ConsoleServer(coordinatorActor)
+      if (config.consoleHttpPort > (0)) {
+        // start with user defined port
+        new ConsoleServer(coordinatorActor, new InetSocketAddress(config.consoleHttpPort))
+      } else {
+        // start with default port
+        new ConsoleServer(coordinatorActor)
+      }
     } else {
       null
     }
