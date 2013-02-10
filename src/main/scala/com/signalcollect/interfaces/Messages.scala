@@ -32,6 +32,7 @@ case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
   def removeTargetId: EdgeId[Id] = EdgeId(sourceId, null.asInstanceOf[Id])
   def removeSourceId: EdgeId[Id] = EdgeId(null.asInstanceOf[Id], targetId)
+  override def toString(): String = sourceId.toString + targetId.toString
 }
 
 case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val signals: Array[Signal], val targetIds: Array[Id], val sourceIds: Array[Id])

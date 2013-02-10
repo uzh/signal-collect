@@ -118,7 +118,7 @@ class WebSocketConsoleServer(port: InetSocketAddress,
   def onMessage(socket: WebSocket, msg: String) {
     def provider: DataProvider = msg match {
       case "graph" => new GraphDataProvider(coordinator)
-      case "resources" => new ResourceDataProvider(coordinator)
+      case "resources" => new ResourcesDataProvider(coordinator)
       case otherwise => new InvalidDataProvider()
     }
     socket.send(provider.fetch)
@@ -152,17 +152,18 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
     def fetch(): String = {
       val vertices = workerApi.aggregateAll(vertexAggregator)
       val edges = workerApi.aggregateAll(edgeAggregator)
-      case class GraphData(vertices: List[(String,String)], 
-                           edges: List[(String,String)])
+      case class GraphData(vertices: Map[String,String], 
+                           edges: Map[String,Map[String,String]],
+                           provider: String = "graph")
       implicit val GraphDataFormat: Format[GraphData] = 
-                   asProduct2("vertices", "edges")(
+                   asProduct3("nodes", "edges", "provider")(
                               GraphData)(GraphData.unapply(_).get)
       val data = GraphData(vertices, edges)
       tojson(data).toString
   }
 }
 
-class ResourceDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
+class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
   def fetch(): String = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
@@ -214,47 +215,50 @@ class ResourceDataProvider(coordinator: Coordinator[_, _]) extends DataProvider 
 
     val workerStatisticsMap = workerStatisticsTempMap.toMap
 
-    case class ResourceData(inboxSize: Long, 
-                            workerStatistics: Map[String,List[Long]])
-    implicit val ResourceDataFormat: Format[ResourceData] = 
-                 asProduct2("inboxSize", "workerStatistics")(
-                            ResourceData)(ResourceData.unapply(_).get)
+    case class ResourcesData(inboxSize: Long, 
+                             workerStatistics: Map[String,List[Long]],
+                             provider: String = "resources")
+    implicit val ResourcesDataFormat: Format[ResourcesData] = 
+                 asProduct3("inboxSize", "workerStatistics", "provider")(
+                            ResourcesData)(ResourcesData.unapply(_).get)
 
-    val data = ResourceData(inboxSize, workerStatisticsMap)
+    val data = ResourcesData(inboxSize, workerStatisticsMap)
     tojson(data).toString
   }
 }
 
-class VertexToStringAggregator extends AggregationOperation[List[(String, String)]] {
-  def extract(v: Vertex[_, _]): List[(String,String)] = v match {
+class VertexToStringAggregator extends AggregationOperation[Map[String, String]] {
+  def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
-    case other => List()
+    case other => Map()
   }
 
-  def reduce(vertices: Stream[List[(String,String)]]): List[(String,String)] = {
-    vertices.flatMap(identity).toList
+  def reduce(vertices: Stream[Map[String,String]]): Map[String,String] = {
+    vertices reduce (_ ++ _)
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[(String,String)] = {
-    List((v.id.toString, v.state.toString))
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): Map[String,String] = {
+    Map(v.id.toString -> v.state.toString)
   }
 }
 
 class EdgeToStringAggregator 
-      extends AggregationOperation[List[(String,String)]] {
-  def extract(v: Vertex[_, _]): List[(String,String)] = v match {
+      extends AggregationOperation[Map[String,Map[String,String]]] {
+  def extract(v: Vertex[_, _]): Map[String,Map[String,String]] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
   }
 
-  def reduce(vertices: Stream[List[(String,String)]]): 
-                              List[(String,String)] = {
-    vertices.flatMap(identity).toList
+  def reduce(vertices: Stream[Map[String,Map[String,String]]]): 
+                              Map[String,Map[String,String]] = {
+    vertices reduce (_ ++ _)
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): List[(String,String)] = {
-    val edges = v.getTargetIdsOfOutgoingEdges
-                 .foldLeft(List[(String,String)]()) { (list, e) =>
-                     (v.id.toString, e.toString) :: list
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): Map[String,Map[String,String]] = {
+    val edges = v.outgoingEdges.values
+                 .foldLeft(Map[String,Map[String,String]]()) { (map, e) =>
+                     map ++ Map(e.id.toString ->
+                                Map("source" -> v.id.toString, 
+                                    "target" -> e.targetId.toString))
                  }
     edges
   }

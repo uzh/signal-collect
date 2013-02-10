@@ -6,9 +6,11 @@
     <link rel="stylesheet" href="main.css">
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
     <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript" src="http://sigmajs.org/js/sigma.min.js"></script>
     <script type="text/javascript" src="rickshaw.min.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="graph.js"></script>
     <script type="text/javascript" src="resources.js"></script>
   </head>
   <body>
@@ -27,6 +29,7 @@
     </div>
     <div id="content">
       <div class="view" id="graph">
+        <div id="graph_canvas"></div>
       </div>
       <div class="view" id="resources">
         <div class="structured">

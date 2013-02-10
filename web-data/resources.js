@@ -1,8 +1,8 @@
 scc.modules.resources = function() {
+  this.requires = ["resources"]
 
   var graph1, graph2, reloadTimeout
 
-  // simple graph that visualizes all data that it gets
   this.onopen = function () {
     graph1 = new Rickshaw.Graph( {
       element: document.querySelector("#res_graph1"),
@@ -13,10 +13,7 @@ scc.modules.resources = function() {
     });
     graph1.render();
 
-
-    // add a trending graph with real time data
     var tv = 1000;
-    //instantiate our graph!
     graph2 = new Rickshaw.Graph( {
       element: document.getElementById("res_graph2"),
       width: 450,
@@ -38,24 +35,20 @@ scc.modules.resources = function() {
     console.dir(e)
   }
 
-  this.onmessage = function(e) {
-    console.log("[websocket#onmessage] message: '" + e.data + "'\n");
- 
-    var newDataJson = eval("(" + e.data + ")");
-    
+  this.onmessage = function(j) {
     // graph 1
     var newData  = [];
-    for (var index in newDataJson.workerStatistics["collectOperationsExecuted"]) {
+    for (var index in j.workerStatistics["collectOperationsExecuted"]) {
       newData.push({ 'x': index, 
-                     'y': newDataJson.workerStatistics["messagesSent"][index]});
+                     'y': j.workerStatistics["messagesSent"][index]});
     }
     graph1.series[0].data = newData;
     graph1.update();
 
     // graph 2
-    newData = { one: newDataJson.workerStatistics["messagesSent"] };
+    newData = { one: j.workerStatistics["messagesSent"] };
     graph2.series.addData(newData);
-    graph2.render();
+    //graph2.render();
     
     reloadTimeout = setTimeout(function(){
       scc.webSocket.send("resources")
@@ -67,8 +60,8 @@ scc.modules.resources = function() {
   }
 
   this.destroy = function() {
-    $("res_graph1").empty()
-    $("res_graph2").empty()
+    $("#res_graph1").empty()
+    $("#res_graph2").empty()
     clearTimeout(reloadTimeout)
   }
 }

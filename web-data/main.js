@@ -1,4 +1,4 @@
-var scc = {"modules": {}, "monitors": {}}
+var scc = {"modules": {}, "consumers": {}}
 
 $(document).ready(function() {
   
@@ -31,28 +31,36 @@ $(document).ready(function() {
   }, 1000);
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
-    for (var m in scc.monitors) { scc.monitors[m].onopen(e) }
+    for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
   }
   scc.webSocket.onmessage = function(e) {
+    j = JSON.parse(e.data)
     console.log("[WebSocket] onmessage");
-    for (var m in scc.monitors) { scc.monitors[m].onmessage(e) }
+    var provider = j["provider"]
+    for (var m in scc.consumers) { 
+      var consumer = scc.consumers[m]
+      if (consumer.requires.indexOf(provider) >= 0) {
+        consumer.onmessage(j)
+      }
+    }
   }
   scc.webSocket.onclose = function(e) {
     console.log("[WebSocket] onclose");
-    for (var m in scc.monitors) { scc.monitors[m].onclose(e) }
+    for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
   }
   scc.webSocket.onerror = function(e) {
     console.log("[WebSocket] onerror");
-    for (var m in scc.monitors) { scc.monitors[m].onerror(e) }
+    for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
   }
 
   /* Enable modules */
-  scc.monitors.resources = new scc.modules.resources()
+  scc.consumers.resources = new scc.modules.resources()
+  scc.consumers.graph = new scc.modules.graph()
 
   /* Autojump to right tab depending on URL */
   switch (window.location.pathname) {
     case "/resources": load_resources(); break;
-    case "/graph": load_graph(); break;
+    default: load_graph(); break;
   }
 });
 
