@@ -54,8 +54,8 @@ object GameOfLife extends App {
   val graph = GraphBuilder.withConsole(true).build
 
   //Dimensions of the grid
-  val columns = 100
-  val rows = 100
+  val columns = 10
+  val rows = 10
   val generations = 10000
 
   println("Adding vertices ...") //Create all cells.
