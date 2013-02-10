@@ -32,7 +32,7 @@ scc.modules.resources = function() {
     
   this.onerror = function(e) {
     console.log("[websocket#onerror]")
-    console.dir(e)
+    //console.dir(e) // pollutes the console output when enabled
   }
 
   this.onmessage = function(j) {
