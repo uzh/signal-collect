@@ -10,6 +10,7 @@ $(document).ready(function() {
 
   var load_graph = function(e) {
     load_view()
+    top.location.hash = "graph";
     $("#mode_graph").addClass("selected");
     $("#graph.view").fadeIn()
   }
@@ -17,6 +18,7 @@ $(document).ready(function() {
 
   var load_resources = function(e) {
     load_view()
+    top.location.hash = "resources";
     $("#mode_resources").addClass("selected");
     $("#resources.view").fadeIn()
   }
@@ -58,8 +60,8 @@ $(document).ready(function() {
   scc.consumers.graph = new scc.modules.graph()
 
   /* Autojump to right tab depending on URL */
-  switch (window.location.pathname) {
-    case "/resources": load_resources(); break;
+  switch (top.location.hash) {
+    case "#resources": load_resources(); break;
     default: load_graph(); break;
   }
 });
