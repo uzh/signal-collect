@@ -23,6 +23,18 @@ $(document).ready(function() {
     $("#resources.view").fadeIn()
   }
   $("#mode_resources").click(load_resources);
+  
+  // add keyboard shortcuts to change between tabs
+  $(document).keypress(function() {
+	if (event.which == 103) { // g
+	  event.preventDefault();
+	  load_graph();
+	}
+	if (event.which == 114) { // r
+	  event.preventDefault();
+	  load_resources();
+	}
+  });
 
   /* WebSocket communication */
   scc.webSocket = new ReconnectingWebSocket(
