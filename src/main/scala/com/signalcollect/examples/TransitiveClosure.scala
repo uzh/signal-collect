@@ -24,6 +24,10 @@ import com.signalcollect.interfaces.SignalMessage
 import scala.collection.mutable.IndexedSeq
 import scala.collection.mutable.Set
 import scala.io.Source
+import com.signalcollect.nodeprovisioning.torque.TorqueNodeProvisioner
+import com.signalcollect.nodeprovisioning.torque.TorqueHost
+import com.signalcollect.nodeprovisioning.torque.TorqueJobSubmitter
+import com.signalcollect.nodeprovisioning.torque.TorquePriority
 
 
 
@@ -66,12 +70,40 @@ object TransitiveClosure extends App {
   // http://snap.stanford.edu/data/cit-HepPh.html
   val dataFile = "Cit-HepPh.txt"
   
+  
+  // cluster configuration
+  val jobname  = "tc"
+  val username = "stroxler" // System.getProperty("user.name")
+  val numberOfNodes = 1
+  val baseOptions = " -Xmx64000m" + " -Xms64000m" + " -Xmn8000m" + " -d64"
+  val priority = TorquePriority.fast
+  
+  println("Connecting to Cluster...")
+  val torqueJobSubmitter = new TorqueJobSubmitter(username, username + "@ifi.uzh.ch", "kraken.ifi.uzh.ch",
+                                                  System.getProperty("user.home") + System.getProperty("file.separator")
+                                                  + ".ssh" + System.getProperty("file.separator") + "id_rsa")
+  
+  // remove output file from last time and upload data file
+  torqueJobSubmitter.executeCommandOnClusterManager("rm /home/user/" + username + "/out/" + jobname + ".out")
+  torqueJobSubmitter.copyFileToCluster("Cit-HepPh.txt", "Cit-HepPh.txt")
+  
+  val torqueNodeProvisioner = new TorqueNodeProvisioner(
+          													torqueHost = new TorqueHost(
+      		  	  										  jobSubmitter = torqueJobSubmitter,
+    			  	  									    localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
+    			  	  									    priority = priority),
+  			  	  									    numberOfNodes = numberOfNodes,
+  			  	  									    jvmParameters = baseOptions) // + jvmParams)
+  
   println("Building graph...")
-  val graph = GraphBuilder.withConsole(true).build
+  val graph = GraphBuilder
+              .withConsole(true, 8088)
+              .withNodeProvisioner(torqueNodeProvisioner)
+              .build
   
   var i = 1
   for (line <- Source.fromFile(dataFile).getLines()) {
-    if (!line.startsWith("#") && i<= 2000) { // limit number of edges
+    if (!line.startsWith("#") && i<= 300000) { // limit number of edges
 //    if (!line.startsWith("#")) {
       
       // split and trim values
@@ -89,7 +121,7 @@ object TransitiveClosure extends App {
   }
 
   println("Starting computation...")
-  val stats = graph. execute
+  val stats = graph.execute
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown
