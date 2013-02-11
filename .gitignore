@@ -5,3 +5,4 @@ project/target/
 project/project/
 project/scala*/
 target/*
+graph-data/

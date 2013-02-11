@@ -47,8 +47,7 @@ import sjson.json.DefaultProtocol._
 import sjson.json.JsonSerialization._
 
 class ConsoleServer(coordinatorActor: ActorRef,
-              httpPort: InetSocketAddress = new InetSocketAddress(8080),
-              bindIp: String = InetAddress.getLocalHost.getHostAddress) {
+              httpPort: InetSocketAddress = new InetSocketAddress(8080)) {
   val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
   def sockets = new WebSocketConsoleServer(socketsPort, coordinatorActor);
   sockets.start();
