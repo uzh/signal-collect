@@ -54,6 +54,11 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   def sendToWorkers(m: Any, messageCounting: Boolean)
 
   def sendToCoordinator(m: Any)
+  
+  /**
+   * Resets the message but does not touch the counters.
+   */
+  def reset
 
   // Returns an api that treats all workers as if there were only one.
   def getWorkerApi: WorkerApi[Id, Signal]

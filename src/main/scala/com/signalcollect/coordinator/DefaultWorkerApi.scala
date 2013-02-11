@@ -94,6 +94,8 @@ class DefaultWorkerApi[Id, Signal](
   override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
 
   override def setCollectThreshold(t: Double) = futures(_.setCollectThreshold(t)) foreach get
+  
+  override def reset = futures(_.reset) foreach get
 
   //----------------GraphEditor, BLOCKING variant-------------------------
 

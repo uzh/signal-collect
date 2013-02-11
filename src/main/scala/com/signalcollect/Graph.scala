@@ -164,6 +164,13 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *  		action that handles this case.
    */
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
+  
+  /**
+   *  Resets operation statistics and removes all the vertices and edges in this graph.
+   *  Leaves the message counters untouched.
+   */
+  def reset
+    
 }
 
 

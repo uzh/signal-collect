@@ -33,9 +33,11 @@ import java.util.Random
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
     extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
+  def reset { }
+
   def numberOfWorkers: Int
 
-  protected var registrations = new AtomicInteger()
+  protected val registrations = new AtomicInteger()
 
   def flush = {}
 
@@ -54,7 +56,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   val coordinatorId = Coordinator.getCoodinatorPosition(numberOfWorkers)
   val otherRecipients = Coordinator.getOthersPosition(numberOfWorkers)
 
-  protected var sentMessagesCounters: Array[AtomicInteger] = {
+  protected val sentMessagesCounters: Array[AtomicInteger] = {
     val counters = new Array[AtomicInteger](numberOfWorkers + 2)
     var i = 0
     while (i < counters.length) {
@@ -119,7 +121,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     if (logger != null) {
       logger ! message
     } else {
-      println("Could not log message: "+message)
+      println("Could not log message: " + message)
     }
   }
 

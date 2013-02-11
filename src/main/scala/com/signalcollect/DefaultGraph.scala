@@ -384,6 +384,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = workerApi.setUndeliverableSignalHandler(h)
 
+  /**
+   *  Resets operation statistics and removes all the vertices and edges in this graph.
+   *  Leaves the message counters untouched.
+   */
+  def reset {
+    workerApi.reset
+  }
+
   //------------------GraphApi------------------
 
   /**
