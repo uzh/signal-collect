@@ -63,10 +63,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def sendHeartbeat {
-    println("received messages on workers:")
-    workerStatus filter (_ != null) map (_.messagesReceived) foreach (println(_))
-    println("sent messages on workers:")
-    workerStatus filter (_ != null) map (_.messagesSent.sum) foreach (println(_))
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
