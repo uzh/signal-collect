@@ -1,9 +1,15 @@
 scc.modules.graph = function() {
   this.requires = ["graph"]
   
-  var sigInst;
+  var s;
 
   this.onopen = function() {
+
+    s = sigma.init(document.getElementById('graph_canvas'))
+             .drawingProperties({
+                 defaultLabelColor: '#fff',
+             });
+    s.resize($("#content").width(), $("#content").height())
 
     sigma.publicPrototype.gridLayout = function() {
       i = 0,
@@ -11,35 +17,30 @@ scc.modules.graph = function() {
        
       this.iterNodes(function(n){
         var coordinates = n.id.match(/\d+/g)
-        n.x = coordinates[0]/20;
-        n.y = coordinates[1]/20;
+        n.x = coordinates[0]/15;
+        n.y = coordinates[1]/15;
       });
        
       return this.position(0,0,1).draw();
     };
 
-    sigInst = sigma.init(document.getElementById('graph_canvas'))
-                   .drawingProperties({
-                     defaultLabelColor: '#fff'
-                   });
-
-    sigInst.drawingProperties({
+    s.drawingProperties({
       defaultLabelColor: '#ccc',
       font: 'Arial',
-      edgeColor: 'source',
+      edgeColor: '#22dd22',
       defaultEdgeType: 'line'
     }).graphProperties({
       minNodeSize: 1,
       maxNodeSize: 5
     });
     scc.webSocket.send("graph")
-    sigInst.gridLayout();
+    s.gridLayout();
   }
    
   this.onmessage = function(j) {
-    sigInst.iterNodes(function(n) {
+    s.iterNodes(function(n) {
       if (!j["nodes"][n.id]) {
-        sigInst.dropNode(n)
+        s.dropNode(n)
       }
       else {
         n.label = j["nodes"][n.id];
@@ -49,20 +50,18 @@ scc.modules.graph = function() {
     });
     for (var n in j["nodes"]) {
       var coordinates = n.match(/\d+/g)
-      sigInst.addNode(n, {
-        'x': coordinates[0]/20,
-        'y': coordinates[1]/20,
+      s.addNode(n, {
+        'x': coordinates[0]/15,
+        'y': coordinates[1]/15,
         'label': j["nodes"][n],
         'size': 3+3*parseInt(j["nodes"][n]),
-        'color': 'rgb('+Math.round(Math.random()*256)+','+
-                        Math.round(Math.random()*256)+','+
-                        Math.round(Math.random()*256)+')'
+        'color': '#16bbbd'
       });
     }
    
-    sigInst.iterEdges(function(e) {
+    s.iterEdges(function(e) {
       if (!j["edges"][e.id]) {
-        sigInst.dropEdge(e)
+        s.dropEdge(e)
       }
       else {
         delete j["edges"][e.id];
@@ -70,10 +69,10 @@ scc.modules.graph = function() {
     });
     for(var e in j["edges"]) {
       var edge = j["edges"][e]
-      sigInst.addEdge(e, edge["source"], edge["target"]);
+      s.addEdge(e, edge["source"], edge["target"]);
     }
    
-    sigInst.draw(2,2,2);
+    s.draw(2,2,0);
    
     reloadTimeout = setTimeout(function(){
       scc.webSocket.send("graph")

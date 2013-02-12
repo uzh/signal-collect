@@ -3,21 +3,24 @@ var scc = {"modules": {}, "consumers": {}}
 $(document).ready(function() {
   
   /* Console navigation and handling */
-  var load_view = function(e) { 
+  var clear_views = function(e) { 
     $("#modes span").removeClass("selected");
     $(".view").hide()
   }
 
   var load_graph = function(e) {
-    load_view()
+    if ($("#graph.view").is(":visible")) { return }
+    clear_views()
     top.location.hash = "graph";
     $("#mode_graph").addClass("selected");
     $("#graph.view").fadeIn()
+    console.log(scc.consumers)
   }
   $("#mode_graph").click(load_graph);
 
   var load_resources = function(e) {
-    load_view()
+    if ($("#resources.view").is(":visible")) { return }
+    clear_views()
     top.location.hash = "resources";
     $("#mode_resources").addClass("selected");
     $("#resources.view").fadeIn()
@@ -25,13 +28,13 @@ $(document).ready(function() {
   $("#mode_resources").click(load_resources);
   
   // add keyboard shortcuts to change between tabs
-  $(document).keypress(function() {
-	if (event.which == 103) { // g
-	  event.preventDefault();
+  $(document).keypress(function(e) {
+	if (e.which == 103) { // g
+	  e.preventDefault();
 	  load_graph();
 	}
-	if (event.which == 114) { // r
-	  event.preventDefault();
+	if (e.which == 114) { // r
+	  e.preventDefault();
 	  load_resources();
 	}
   });
@@ -40,9 +43,6 @@ $(document).ready(function() {
   scc.webSocket = new ReconnectingWebSocket(
                       "ws://" + document.domain + ":" + 
                       (parseInt(window.location.port) + 1));
-  setInterval(function() {
-    console.log("[WebSocket] status: " + scc.webSocket.readyState)
-  }, 1000);
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
     for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
