@@ -233,7 +233,8 @@ class VertexToStringAggregator extends AggregationOperation[Map[String, String]]
   }
 
   def reduce(vertices: Stream[Map[String,String]]): Map[String,String] = {
-    vertices reduce (_ ++ _)
+    vertices.foldLeft(Map[String,String]())((acc:Map[String,String], 
+                                               v:Map[String,String]) => acc ++ v)
   }
 
   def vertexToSigmaAddCommand(v: Inspectable[_, _]): Map[String,String] = {
@@ -249,7 +250,8 @@ class EdgeToStringAggregator
 
   def reduce(vertices: Stream[Map[String,Map[String,String]]]): 
                               Map[String,Map[String,String]] = {
-    vertices reduce (_ ++ _)
+    vertices.foldLeft(Map[String,Map[String,String]]())((acc:Map[String,Map[String,String]], 
+                                               v:Map[String,Map[String,String]]) => acc ++ v)
   }
 
   def vertexToSigmaAddCommand(v: Inspectable[_, _]): Map[String,Map[String,String]] = {
