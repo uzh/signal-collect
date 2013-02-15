@@ -8,7 +8,7 @@ $(document).ready(function() {
     $(".view").hide()
   }
 
-  var load_graph = function(e) {
+  var show_graph = function(e) {
     if ($("#graph.view").is(":visible")) { return }
     clear_views()
     top.location.hash = "graph";
@@ -16,27 +16,27 @@ $(document).ready(function() {
     $("#graph.view").fadeIn()
     console.log(scc.consumers)
   }
-  $("#mode_graph").click(load_graph);
+  $("#mode_graph").click(show_graph);
 
-  var load_resources = function(e) {
+  var show_resources = function(e) {
     if ($("#resources.view").is(":visible")) { return }
     clear_views()
     top.location.hash = "resources";
     $("#mode_resources").addClass("selected");
     $("#resources.view").fadeIn()
   }
-  $("#mode_resources").click(load_resources);
+  $("#mode_resources").click(show_resources);
   
   // add keyboard shortcuts to change between tabs
   $(document).keypress(function(e) {
-	if (e.which == 103) { // g
-	  e.preventDefault();
-	  load_graph();
-	}
-	if (e.which == 114) { // r
-	  e.preventDefault();
-	  load_resources();
-	}
+    if (e.which == 103) { // g
+      e.preventDefault();
+      show_graph();
+    }
+    if (e.which == 114) { // r
+      e.preventDefault();
+      show_resources();
+    }
   });
 
   /* WebSocket communication */
@@ -46,7 +46,7 @@ $(document).ready(function() {
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
     for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
-  }
+  } 
   scc.webSocket.onmessage = function(e) {
     j = JSON.parse(e.data)
     console.log("[WebSocket] onmessage");
@@ -67,14 +67,32 @@ $(document).ready(function() {
     for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
   }
 
-  /* Enable modules */
-  scc.consumers.resources = new scc.modules.resources()
-  scc.consumers.graph = new scc.modules.graph()
+  /* Enable modules depending on URL and jump to a tab depending on hashtag */
+  enable_modules = function(modules) {
+    $("#modes span").css("width", (100/modules.length) + "%");
+    for (var m in modules) {
+      module = modules[m];
+      scc.consumers[module] = new scc.modules[module]();
+      $("#mode_" + module + ".tab").show();
 
-  /* Autojump to right tab depending on URL */
-  switch (top.location.hash) {
-    case "#resources": load_resources(); break;
-    default: load_graph(); break;
+    }
+  }
+  switch (window.location.pathname) {
+    case "/resources": 
+      enable_modules(["resources"]); 
+      show_resources()
+      break;
+    case "/graph": 
+      enable_modules(["graph"]); 
+      show_graph()
+      break;
+    default:
+      enable_modules(["graph", "resources"]);
+      switch (top.location.hash) {
+        case "#resources": show_resources(); break;
+        case "#graph":
+        default: show_graph();
+      }
   }
 });
 

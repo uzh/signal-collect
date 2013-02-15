@@ -67,12 +67,12 @@ body {
 }
 
 #modes span {
+  display: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
   float: left;
-  width: 139px;
-  padding: 5px;
   text-align: center;
   border: 0;
-  border-left: 1px solid #aaa;
   background-image: -moz-linear-gradient(top,
                     rgba(255,255,255,.25),
                     rgba(0,0,0,.11));
