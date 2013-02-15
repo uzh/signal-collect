@@ -48,35 +48,14 @@ import sjson.json.JsonSerialization._
 
 class ConsoleServer(coordinatorActor: ActorRef,
               httpPort: InetSocketAddress = new InetSocketAddress(8080)) {
+
   val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
   def sockets = new WebSocketConsoleServer(socketsPort, coordinatorActor);
   sockets.start();
   System.out.println( "WebSocket server started on port: " + sockets.getPort() );
 
   val server = HttpServer.create(httpPort, 0)
-
-  server.createContext("/", new FileServer("main.html"))
-  server.createContext("/graph", new FileServer("main.html"))
-  server.createContext("/resources", new FileServer("main.html"))
-  server.createContext("/main.js", 
-                       new FileServer("main.js", "application/javascript"))
-  server.createContext("/main.css", 
-                       new FileServer("main.css", "text/css"))
-  server.createContext("/graph.js", 
-                       new FileServer("graph.js", "application/javascript"))
-  server.createContext("/graph.css", 
-                       new FileServer("graph.css", "text/css"))
-  server.createContext("/resources.js", 
-                       new FileServer("resources.js", "application/javascript"))
-  server.createContext("/sc.png", 
-                       new FileServer("sc.png", "image/png"))
-  server.createContext("/rickshaw.min.js", 
-                       new FileServer("rickshaw-1.2.0.min.js", 
-                                      "application/javascript"))
-  server.createContext("/reconnecting-websocket.min.js", 
-                       new FileServer("reconnecting-websocket.min.js", 
-                                      "application/javascript"))
-
+  server.createContext("/", new FileServer("web-data"))
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
   println("HTTP server started on localhost:" + httpPort.getPort)
@@ -87,20 +66,40 @@ class ConsoleServer(coordinatorActor: ActorRef,
   }
 }
 
-class FileServer(fileName: String,
-                 fileType: String = "text/html") extends HttpHandler {
+class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
-    t.getResponseHeaders.set("Content-Type", fileType)
-    t.sendResponseHeaders(200, 0)
-    def root = "./web-data/";
-    def os = t.getResponseBody; 
-    val file = new BufferedInputStream(new FileInputStream(root + fileName))
-    Iterator 
-      .continually (file.read)
-      .takeWhile (-1 !=)
-      .foreach (os.write)
-    file.close
-    os.close
+
+    def root = "./" + folderName
+    var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "") 
+    if (target == "") { target = "main.html" }
+    val fileType = target match {
+      case t if t.matches(".*\\.html$") => "text/html"
+      case t if t.matches(".*\\.css$")  => "text/css"
+      case t if t.matches(".*\\.js$")   => "application/javascript"
+      case t if t.matches(".*\\.png$")  => "image/png"
+      case t if t.matches(".*\\.svg$")  => "image/svg+xml"
+      case t if t.matches(".*\\.ico$")  => "image/x-icon"
+      case otherwise                    => "text/plain"
+    }
+
+    def os = t.getResponseBody
+    try {
+      val file = new BufferedInputStream(
+                 new FileInputStream(root + "/" + target))
+      t.getResponseHeaders.set("Content-Type", fileType)
+      t.sendResponseHeaders(200, 0)
+      Iterator 
+        .continually (file.read)
+        .takeWhile (-1 !=)
+        .foreach (os.write)
+      file.close
+    }
+    catch {
+      case e: Exception => t.sendResponseHeaders(400, 0)
+    }
+    finally {
+      os.close
+    }
   }
 }
 
