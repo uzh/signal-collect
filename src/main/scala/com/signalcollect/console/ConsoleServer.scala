@@ -46,26 +46,37 @@ import sjson.json._
 import sjson.json.DefaultProtocol._
 import sjson.json.JsonSerialization._
 
-class ConsoleServer(coordinatorActor: ActorRef,
+class ConsoleServer(
               httpPort: InetSocketAddress = new InetSocketAddress(8080)) {
-
-  val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
-  def sockets = new WebSocketConsoleServer(socketsPort, coordinatorActor);
-  sockets.start();
-  System.out.println( "WebSocket server started on port: " + sockets.getPort() );
 
   val server = HttpServer.create(httpPort, 0)
   server.createContext("/", new FileServer("web-data"))
+  server.createContext("/api", new ApiServer())
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
   println("HTTP server started on localhost:" + httpPort.getPort)
 
+  val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
+  val sockets = new WebSocketConsoleServer(socketsPort);
+  sockets.start();
+  System.out.println( "WebSocket server started on port: " + sockets.getPort() );
+
+  def setCoordinator(coordinatorActor: ActorRef) {
+    sockets.setCoordinator(coordinatorActor)
+  }
+
   def shutdown {
     server.stop(0)
-    sockets.stop(0)
+    //sockets.stop(0)
   }
 }
 
+class ApiServer() extends HttpHandler {
+  def handle(t: HttpExchange) {
+    var target = t.getRequestURI.getPath
+    println(target)
+  }
+}
 class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
 
@@ -103,21 +114,28 @@ class FileServer(folderName: String) extends HttpHandler {
   }
 }
 
-class WebSocketConsoleServer(port: InetSocketAddress,
-                             coordinatorActor: ActorRef)
+class WebSocketConsoleServer(port: InetSocketAddress)
                              extends WebSocketServer(port) {
-  val coordinator: Coordinator[_, _] = 
-                   AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
+  var coordinator: Option[Coordinator[_,_]] = None;
+
+  def setCoordinator(coordinatorActor: ActorRef) {
+    println("ConsoleServer: got coordinator ActorRef")
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[_, _]]
+                      (coordinatorActor))
+  }
 
   def onError(socket: WebSocket, ex: Exception) {
     println("WebSocket - an error occured: " + ex)
   }
 
   def onMessage(socket: WebSocket, msg: String) {
-    def provider: DataProvider = msg match {
-      case "graph" => new GraphDataProvider(coordinator)
-      case "resources" => new ResourcesDataProvider(coordinator)
-      case otherwise => new InvalidDataProvider()
+    def provider: DataProvider = coordinator match {
+      case Some(c) => msg match {
+        case "graph" => new GraphDataProvider(c)
+        case "resources" => new ResourcesDataProvider(c)
+        case otherwise => new InvalidDataProvider(msg)
+      }
+      case None => new NotReadyDataProvider()
     }
     socket.send(provider.fetch)
   }
@@ -138,8 +156,16 @@ trait DataProvider {
   def fetch(): String
 }
 
-class InvalidDataProvider extends DataProvider {
-    def fetch(): String = "{\"msg\":\"invalid request\"}"
+class InvalidDataProvider(msg: String) extends DataProvider {
+    def fetch(): String = {
+      tojson("Invalid Message: " + msg).toString
+    }
+}
+
+class NotReadyDataProvider() extends DataProvider {
+    def fetch(): String = {
+      tojson("The signal/collect computation is not ready yet").toString
+    }
 }
 
 class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {

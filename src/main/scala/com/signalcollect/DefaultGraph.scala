@@ -86,6 +86,18 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
     val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
+  val console = {
+    if (config.consoleEnabled) {
+      if (config.consoleHttpPort > (0)) {
+        new ConsoleServer(new InetSocketAddress(config.consoleHttpPort))
+      } else {
+        new ConsoleServer()
+      }
+    } else {
+      null
+    }
+  }
+
   val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
   override def toString: String = "DefaultGraph"
 
@@ -120,6 +132,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     }
   }
 
+  if (console != null) { console.setCoordinator(coordinatorActor) }
+
   val loggerActor: ActorRef = {
     val loggerCreator = LoggerCreator(config.logger)
     system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
@@ -129,20 +143,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
-
-  val console = {
-    if (config.consoleEnabled) {
-      if (config.consoleHttpPort > (0)) {
-        // start with user defined port
-        new ConsoleServer(coordinatorActor, new InetSocketAddress(config.consoleHttpPort))
-      } else {
-        // start with default port
-        new ConsoleServer(coordinatorActor)
-      }
-    } else {
-      null
-    }
-  }
 
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
