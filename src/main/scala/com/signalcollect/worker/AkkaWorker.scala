@@ -50,22 +50,34 @@ import java.util.Queue
 import language.postfixOps
 
 class WorkerOperationCounters(
-  var messagesReceived: Long = 0l,
-  var collectOperationsExecuted: Long = 0l,
-  var signalOperationsExecuted: Long = 0l,
-  var verticesAdded: Long = 0l,
-  var verticesRemoved: Long = 0l,
-  var outgoingEdgesAdded: Long = 0l,
-  var outgoingEdgesRemoved: Long = 0l,
-  var signalSteps: Long = 0l,
-  var collectSteps: Long = 0l,
-  var receiveTimeoutMessagesReceived: Long = 0l,
-  var heartbeatMessagesReceived: Long = 0l,
-  var signalMessagesReceived: Long = 0l,
-  var bulkSignalMessagesReceived: Long = 0l,
-  var continueMessagesReceived: Long = 0l,
-  var requestMessagesReceived: Long = 0l,
-  var otherMessagesReceived: Long = 0)
+    var messagesReceived: Long = 0l,
+    var collectOperationsExecuted: Long = 0l,
+    var signalOperationsExecuted: Long = 0l,
+    var verticesAdded: Long = 0l,
+    var verticesRemoved: Long = 0l,
+    var outgoingEdgesAdded: Long = 0l,
+    var outgoingEdgesRemoved: Long = 0l,
+    var signalSteps: Long = 0l,
+    var collectSteps: Long = 0l,
+    var receiveTimeoutMessagesReceived: Long = 0l,
+    var heartbeatMessagesReceived: Long = 0l,
+    var signalMessagesReceived: Long = 0l,
+    var bulkSignalMessagesReceived: Long = 0l,
+    var continueMessagesReceived: Long = 0l,
+    var requestMessagesReceived: Long = 0l,
+    var otherMessagesReceived: Long = 0) {
+  // Resets operation counters but not messages received/sent counters.
+  def resetOperationCounters {
+    collectOperationsExecuted = 0l
+    signalOperationsExecuted = 0l
+    verticesAdded = 0l
+    verticesRemoved = 0l
+    outgoingEdgesAdded = 0l
+    outgoingEdgesRemoved = 0l
+    signalSteps = 0l
+    collectSteps = 0l
+  }
+}
 
 object ContinueSignaling
 
@@ -398,7 +410,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   protected var lastStatusUpdate = System.currentTimeMillis
 
-  protected val vertexStore = storageFactory.createInstance[Id]
+  protected var vertexStore = storageFactory.createInstance[Id]
 
   protected def isConverged =
     vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
@@ -481,6 +493,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       isPaused = true
       sendStatusToCoordinator
     }
+  }
+
+  def reset {
+    maySignal = true
+    continueSignalingReceived = true
+    awaitingContinueSignaling = false
+    shouldShutdown = false
+    isIdle = false
+    isPaused = true
+    shouldPause = false
+    shouldStart = false
+    lastStatusUpdate = System.currentTimeMillis
+    counters.resetOperationCounters
+    vertexStore = storageFactory.createInstance[Id]
+    messageBus.reset
   }
 
 }

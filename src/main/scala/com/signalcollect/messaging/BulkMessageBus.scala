@@ -51,6 +51,12 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   workerApiFactory: WorkerApiFactory)
     extends AbstractMessageBus[Id, Signal] {
 
+  override def reset {
+    super.reset
+    pendingSignals = 0
+    outgoingMessages foreach (_.clear)
+  }
+  
   protected var pendingSignals = 0
 
   lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)

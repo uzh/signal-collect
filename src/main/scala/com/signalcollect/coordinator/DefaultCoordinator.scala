@@ -78,7 +78,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
 
-  protected val workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
+  protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
 
   def receive = {
     case ws: WorkerStatus =>
@@ -143,10 +143,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
    * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers (eventually we will have received at least one status message per worker).
    *
    * Initialization messages sent to the workers have to be added separately.
+   *
+   * + numberOfWorkers, because the status message sent by the worker is not included in the stats yet.
    */
   def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers + initializationMessages
 
-  def initializationMessages = numberOfWorkers * (numberOfWorkers + 2) // +2 for registration of coordinator and logger
+  val initializationMessages = numberOfWorkers * (numberOfWorkers + 2) // +2 for registration of coordinator and logger
 
   /**
    *  Returns a map with the worker id as the key and the number of messages sent as the value.
@@ -193,5 +195,4 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   def registerLogger(logger: ActorRef) {
     messageBus.registerLogger(logger)
   }
-
 }
