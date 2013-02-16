@@ -73,7 +73,7 @@ $(document).ready(function() {
     for (var m in modules) {
       module = modules[m];
       scc.consumers[module] = new scc.modules[module]();
-      $("#mode_" + module + ".tab").show();
+      $("span#mode_" + module).show();
 
     }
   }

@@ -7,7 +7,7 @@
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
     <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
     <script type="text/javascript" src="http://sigmajs.org/js/sigma.min.js"></script>
-    <script type="text/javascript" src="rickshaw.min.js"></script>
+    <script type="text/javascript" src="rickshaw-1.2.0.min.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="graph.js"></script>
@@ -25,6 +25,13 @@
       <div id="modes">
         <span id="mode_graph" class="leftmost selected">Graph</span>
         <span id="mode_resources">Resources</span>
+      </div>
+      <div id="controls">
+        <div id="reset" class="icon"></div>
+        <div id="step" class="icon"></div>
+        <div id="pause" class="icon hidden"></div>
+        <div id="continue" class="icon"></div>
+        <div id="terminate" class="icon"></div>
       </div>
     </div>
     <div id="content">

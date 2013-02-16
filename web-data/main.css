@@ -64,6 +64,7 @@ body {
 #modes {
   float: left;
   width: 300px;
+  border-bottom: 1px solid #ccc;
 }
 
 #modes span {
@@ -108,6 +109,65 @@ body {
   background-image: -webkit-linear-gradient(
                     rgba(255,255,255,.25),
                     rgba(255,255,255,.11));
+}
+
+#controls {
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  height: 38px;
+  background-image: -moz-linear-gradient(top,
+                    rgba(255,255,255,.25),
+                    rgba(0,0,0,.11));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(0, rgba(255,255,255,.25)),
+                    color-stop(1, rgba(0,0,0,.11)));
+  background-image: -webkit-linear-gradient(
+                    rgba(255,255,255,.25),
+                    rgba(0,0,0,.11));
+}
+#controls .icon {
+  height: 32px;
+  width: 32px;
+  margin: 4px;
+  float: left;
+}
+
+#controls #reset.icon {
+  background-image: url('reset.svg');
+}
+#controls #reset.icon:hover {
+  background-image: url('hi_reset.svg');
+}
+#controls #step.icon {
+  background-image: url('step.svg');
+}
+#controls #step.icon:hover {
+  background-image: url('hi_step.svg');
+}
+#controls #pause.icon {
+  background-image: url('pause.svg');
+}
+#controls #pause.icon:hover {
+  background-image: url('hi_pause.svg');
+}
+#controls #continue.icon {
+  background-image: url('continue.svg');
+}
+#controls #continue.icon:hover {
+  background-image: url('hi_continue.svg');
+}
+#controls #terminate.icon {
+  float:right;
+  background-image: url('terminate.svg');
+}
+#controls #terminate.icon:hover {
+  float:right;
+  background-image: url('hi_terminate.svg');
+}
+#controls #terminate.icon.disabled {
+  float:right;
+  background-image: url('na_terminate.svg');
 }
 
 #content {
@@ -172,3 +232,7 @@ body {
 /*   width: 40px; */
 /*   background:white; */
 /* } */
+
+.hidden {
+  display: none;
+}
