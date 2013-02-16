@@ -114,6 +114,41 @@ case class WorkerStatistics(
   }
 }
 
+case class SystemInformation(
+    workerId: Int = -1,
+    os: String = "",
+    runtime_mem_total: Long = 0l,
+    runtime_mem_max: Long = 0l,
+    runtime_mem_free: Long = 0l,
+    runtime_cores: Long = 0l,
+    jmx_committed_vms: Long = 0l,
+    jmx_mem_free: Long = 0l,
+    jmx_mem_total: Long = 0l,
+    jmx_swap_free: Long = 0l,
+    jmx_swap_total: Long = 0l,
+    jmx_process_load: Double = 0.0,
+    jmx_process_time: Double = 0.0,
+    jmx_system_load: Double = 0.0
+) {
+  def +(other: SystemInformation): SystemInformation = {
+    SystemInformation(
+        -1,
+        os + other.os,
+        runtime_mem_total + other.runtime_mem_total,
+        runtime_mem_max + other.runtime_mem_max,
+        runtime_mem_free + other.runtime_mem_free,
+        runtime_cores + other.runtime_cores,
+        jmx_committed_vms + other.jmx_committed_vms,
+        jmx_mem_free + other.jmx_mem_free,
+        jmx_mem_total + other.jmx_mem_total,
+        jmx_swap_free + other.jmx_swap_free,
+        jmx_swap_total + other.jmx_swap_total,
+        (jmx_process_load + other.jmx_process_load) / 2,
+        jmx_process_time + other.jmx_process_time,
+        (jmx_system_load + other.jmx_system_load) / 2)
+  }
+}
+
 sealed trait LogMessage {
   def msg: Any
   def from: Any

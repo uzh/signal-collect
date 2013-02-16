@@ -57,5 +57,8 @@ trait WorkerApi[Id, Signal] {
 
   def shutdown
   def reset
+  
+  def getSystemInformation: SystemInformation
+  def getIndividualSystemInformation: List[SystemInformation]
 
 }

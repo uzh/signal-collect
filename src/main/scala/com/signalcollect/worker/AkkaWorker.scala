@@ -31,6 +31,8 @@ import java.util.LinkedHashSet
 import java.util.LinkedHashMap
 import java.util.Map
 import java.util.Set
+import java.lang.management.ManagementFactory
+import com.sun.management.OperatingSystemMXBean
 import com.signalcollect._
 import scala.concurrent.duration._
 import akka.actor.PoisonPill
@@ -508,6 +510,29 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.resetOperationCounters
     vertexStore = storageFactory.createInstance[Id]
     messageBus.reset
+  }
+
+  def getIndividualSystemInformation = List(getSystemInformation)
+
+  def getSystemInformation: SystemInformation = {
+    val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
+    val runtime: Runtime = Runtime.getRuntime()
+    SystemInformation(
+      workerId = workerId,
+      os = System.getProperty("os.name"),
+      runtime_mem_total = runtime.totalMemory(),
+      runtime_mem_max = runtime.maxMemory(),
+      runtime_mem_free = runtime.freeMemory(),
+      runtime_cores = runtime.availableProcessors(),
+      jmx_committed_vms = osBean.getCommittedVirtualMemorySize(),
+      jmx_mem_free = osBean.getFreePhysicalMemorySize(),
+      jmx_mem_total = osBean.getTotalPhysicalMemorySize(),
+      jmx_swap_free = osBean.getFreeSwapSpaceSize(),
+      jmx_swap_total = osBean.getTotalSwapSpaceSize(),
+      jmx_process_load = osBean.getProcessCpuLoad(),
+      jmx_process_time = osBean.getProcessCpuTime(),
+      jmx_system_load = osBean.getSystemCpuLoad()
+    )
   }
 
 }

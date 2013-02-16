@@ -29,7 +29,7 @@ import scala.language.postfixOps
 import scala.Array.canBuildFrom
 import scala.collection.immutable.List.apply
 import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, 
-                                      Inspectable }
+                                      SystemInformation, Inspectable }
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
 import akka.actor.ActorRef
@@ -133,6 +133,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
       case Some(c) => msg match {
         case "graph" => new GraphDataProvider(c)
         case "resources" => new ResourcesDataProvider(c)
+        case "system" => new SystemDataProvider(c)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => new NotReadyDataProvider()
@@ -247,6 +248,29 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
                             ResourcesData)(ResourcesData.unapply(_).get)
 
     val data = ResourcesData(inboxSize, workerStatisticsMap)
+    tojson(data).toString
+  }
+}
+
+class SystemDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
+  def fetch(): String = {
+    val systemInformation: List[SystemInformation] = 
+      (coordinator.getWorkerApi.getIndividualSystemInformation)
+    implicit val SystemInformationFormat: Format[SystemInformation] = 
+                 asProduct14("workerId", "os", "runtime_mem_total", 
+                             "runtime_mem_max", "runtime_mem_free", 
+                             "runtime_cores", "jmx_committed_vms", 
+                             "jmx_mem_free", "jmx_mem_total",
+                             "jmx_swap_free", "jmx_swap_total", 
+                             "jmx_process_load", "jmx_process_time", 
+                             "jmx_system_load")(
+                            SystemInformation)(SystemInformation.unapply(_).get)
+    case class SystemData(information: List[SystemInformation],
+                          provider: String = "system")
+    implicit val SystemDataFormat: Format[SystemData] = 
+                 asProduct2("information", "provider")(
+                            SystemData)(SystemData.unapply(_).get)
+    val data = SystemData(systemInformation)
     tojson(data).toString
   }
 }

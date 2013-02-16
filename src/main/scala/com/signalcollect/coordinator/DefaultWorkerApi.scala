@@ -25,7 +25,7 @@ import scala.language.postfixOps
 import scala.concurrent.duration._
 import scala.util.Random
 import com.signalcollect.{ Edge, GraphEditor, Vertex }
-import com.signalcollect.interfaces.{ AggregationOperation, EdgeId, VertexToWorkerMapper, WorkerApi, WorkerStatistics }
+import com.signalcollect.interfaces.{ AggregationOperation, EdgeId, VertexToWorkerMapper, WorkerApi, WorkerStatistics, SystemInformation }
 import com.signalcollect.interfaces.WorkerStatistics.apply
 import com.sun.org.apache.xml.internal.serializer.ToStream
 import com.signalcollect.interfaces.ComplexAggregation
@@ -52,6 +52,12 @@ class DefaultWorkerApi[Id, Signal](
 
   override def getWorkerStatistics: WorkerStatistics = {
     getIndividualWorkerStatistics.fold(WorkerStatistics(null))(_ + _)
+  }
+
+  def getIndividualSystemInformation: List[SystemInformation] = futures(_.getSystemInformation) map get toList
+
+  override def getSystemInformation: SystemInformation = {
+    getIndividualSystemInformation.fold(SystemInformation(-1, null))(_ + _)
   }
 
   override def signalStep: Boolean = futures(_.signalStep) forall get
