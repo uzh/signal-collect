@@ -85,8 +85,9 @@ object GameOfLife extends App {
   // Returns all the neighboring cells of the cell with the given row/column
   def neighbors(column: Int, row: Int): List[(Int, Int)] = {
     List(
-      (column, row - 1), (column - 1, row), 
-      (column + 1, row), (column, row + 1))
+      (column - 1, row - 1), (column, row - 1), (column + 1, row - 1),
+      (column - 1, row), (column + 1, row),
+      (column - 1, row + 1), (column, row + 1), (column + 1, row + 1))
   }
 
   // Tests if a cell is within the grid boundaries
