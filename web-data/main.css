@@ -47,7 +47,17 @@ body {
   background: #F5F5F5;
   z-index: 9;
   border-bottom: 2px solid #999;
+  font-size: 25px;
+  opacity: 0.8;
 }
+
+.msg {
+  height: 60px;
+  width: 100%;
+  line-height: 60px;
+  text-align: center;
+}
+
 
 #left {
   position: fixed;
@@ -172,7 +182,7 @@ body {
 
 #content {
   position: fixed;
-  top: 60px;
+  top: 0px;
   left: 300px;
   right: 0px;
   bottom: 0px;
@@ -236,3 +246,17 @@ body {
 .hidden {
   display: none;
 }
+#error {
+  color: #eee;
+  background-color: #a91c00;
+}
+#error:before {
+  content: "Error: "
+}
+#success {
+  color: #eee;
+  background-color: #00c742;
+}
+#success:before {
+}
+

@@ -1,7 +1,7 @@
 scc.modules.graph = function() {
   this.requires = ["graph"]
   
-  var s;
+  var s, reloadTimeout;
   var paused = false;
   var layoutDone = false;
 
@@ -139,8 +139,8 @@ scc.modules.graph = function() {
   this.destroy = function() {
     s.stopForceAtlas2();
     started = paused = false;
-    $("#graph_canvas").empty()
-    //clearTimeout(reloadTimeout)
+    $("#graph_canvas").empty();
+    clearTimeout(reloadTimeout);
   }
 
   $("#grid_layout").click(function () {

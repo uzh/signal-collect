@@ -1,8 +1,35 @@
 var scc = {"modules": {}, "consumers": {}}
 
 $(document).ready(function() {
+ 
+  var hidingTimeout;
+
+  function hideMsg(fast) {
+    if (fast) {
+      $("#top").css("top", "-60px")
+    }
+    else {
+      $("#top").stop().animate({"top": "-60px"});
+    }
+  }
+  hideMsg(true);
+
+  function showMsg(type, msg, timeout) {
+    clearTimeout(hidingTimeout);
+    $(".msg").stop().addClass("hidden");
+    $(type).html(msg);
+    $(type).removeClass("hidden");
+    $("#top").animate({"top": "0px"});
+
+    if (timeout) {
+        hidingTimeout = setTimeout(function() {
+          hideMsg();
+        }, 3000);
+    }
+  }
   
   /* Console navigation and handling */
+  hideMsg();
   var clear_views = function(e) { 
     $("#modes span").removeClass("selected");
     $(".view").hide()
@@ -45,6 +72,8 @@ $(document).ready(function() {
                       (parseInt(window.location.port) + 1));
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
+    showMsg("#success", "WebSocket connection established", true);
+    
     for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
   } 
   scc.webSocket.onmessage = function(e) {
@@ -60,6 +89,7 @@ $(document).ready(function() {
   }
   scc.webSocket.onclose = function(e) {
     console.log("[WebSocket] onclose");
+    showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
     for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
   }
   scc.webSocket.onerror = function(e) {
