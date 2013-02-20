@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="main.css">
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
     <script type="text/javascript" src="http://sigmajs.org/js/sigma.min.js"></script>
+    <script type="text/javascript" src="sigma.forceatlas2.js"></script>
     <script type="text/javascript" src="d3.js"></script>
     <script type="text/javascript" src="rickshaw-1.2.0.min.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
@@ -25,6 +26,16 @@
       <div id="modes">
         <span id="mode_graph" class="leftmost selected">Graph</span>
         <span id="mode_resources">Resources</span>
+        <div id="graph_panel_container">
+          <div id="layouts" class="panel">
+            <h3>Layouts</h3>
+            <ul>
+              <li id="grid_layout">Grid</li>
+              <li id="force_layout">ForcedAtlas2</li>
+              <li id="custom_layout">Custom</li>
+            </ul>
+          </div>
+        </div>
       </div>
       <div id="controls">
         <div id="reset" class="icon"></div>

@@ -2,27 +2,61 @@ scc.modules.graph = function() {
   this.requires = ["graph"]
   
   var s;
+  var paused = false;
+  var layoutDone = false;
 
-  this.onopen = function() {
+  var gridLayout = function () {
+    this.ready = false,
+    this.setup = function () {
+      setCoordinateFunctions(function(n) { return n.id.match(/\d+/g)[0]/15; },
+                             function(n) { return n.id.match(/\d+/g)[1]/15; });
+      this.ready = true;
+    }
+    this.refresh = function () { 
+      if (!this.ready) { this.setup(); }
+      s.draw(2,2,2); 
+    }
+    this.teardown = function () { }
+  }
 
-    s = sigma.init(document.getElementById('graph_canvas'))
+  var forceLayout = function () {
+    this.ready = false,
+    this.paused = false,
+    this.setup = function () {
+      setCoordinateFunctions(function(n) { return Math.random(); },
+                             function(n) { return Math.random(); });
+      s.startForceAtlas2();
+      this.ready = true;
+    },
+    this.refresh = function () {
+      if (!this.ready) { this.setup(); }
+      if (paused) { 
+        if (!this.paused) {
+          s.stopForceAtlas2();
+          this.paused = true;
+        }
+        s.draw(2,0,0);
+      }
+      else {
+        if (this.paused) {
+          s.startForceAtlas2();
+          this.paused = false;
+        }
+      }
+    },
+    this.teardown = function () {
+      s.stopForceAtlas2();
+      paused = false;
+    }
+  }
+
+  var layout = new forceLayout();
+
+  this.onopen = function() { s = sigma.init(document.getElementById('graph_canvas'))
              .drawingProperties({
                  defaultLabelColor: '#fff',
              });
     s.resize($("#content").width(), $("#content").height())
-
-    sigma.publicPrototype.gridLayout = function() {
-      i = 0,
-      L = this.getNodesCount();
-       
-      this.iterNodes(function(n){
-        var coordinates = n.id.match(/\d+/g)
-        n.x = coordinates[0]/15;
-        n.y = coordinates[1]/15;
-      });
-       
-      return this.position(0,0,1).draw();
-    };
 
     s.drawingProperties({
       defaultLabelColor: '#ccc',
@@ -33,8 +67,18 @@ scc.modules.graph = function() {
       minNodeSize: 1,
       maxNodeSize: 5
     });
+
+    $("#graph_canvas").mousedown(function(e) {
+      paused = true;
+      layout.refresh()
+    });
+    $("#graph_canvas").mouseup(function(e) {
+      paused = false;
+      layout.refresh()
+    });
+
     scc.webSocket.send("graph")
-    s.gridLayout();
+
   }
    
   this.onmessage = function(j) {
@@ -49,10 +93,7 @@ scc.modules.graph = function() {
       }
     });
     for (var n in j["nodes"]) {
-      var coordinates = n.match(/\d+/g)
       s.addNode(n, {
-        'x': coordinates[0]/15,
-        'y': coordinates[1]/15,
         'label': j["nodes"][n],
         'size': 3+3*parseInt(j["nodes"][n]),
         'color': '#16bbbd'
@@ -72,12 +113,18 @@ scc.modules.graph = function() {
       s.addEdge(e, edge["source"], edge["target"]);
     }
    
-    s.draw(2,2,0);
-   
-    reloadTimeout = setTimeout(function(){
+    layout.refresh()
+
+    reloadTimeout = setTimeout(function() {
       scc.webSocket.send("graph")
     }, 1000);
+  }
 
+  var setCoordinateFunctions = function(funX, funY) {
+     s.iterNodes(function(n) {
+      n.x = funX(n);
+      n.y = funY(n);
+    });
   }
 
   this.onerror = function(e) {
@@ -90,8 +137,22 @@ scc.modules.graph = function() {
   }
 
   this.destroy = function() {
+    s.stopForceAtlas2();
+    started = paused = false;
     $("#graph_canvas").empty()
     //clearTimeout(reloadTimeout)
   }
+
+  $("#grid_layout").click(function () {
+    layout.teardown();
+    layout = new gridLayout();
+    layout.setup();
+  });
+
+  $("#force_layout").click(function () {
+    layout.teardown();
+    layout = new forceLayout();
+    layout.setup();
+  });
 
 }
