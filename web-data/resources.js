@@ -42,7 +42,7 @@ scc.modules.resources = function() {
 //    y_axis.render();
     
 //    graph2.render();
-    scc.webSocket.send("resources")
+    scc.order("resources")
   }
     
   this.onerror = function(e) {
@@ -66,9 +66,7 @@ scc.modules.resources = function() {
     graph2.series.addData(newData);
     graph2.render();
     
-    reloadTimeout = setTimeout(function(){
-      scc.webSocket.send("resources")
-    }, 2000);
+    scc.order("resources", 2000);
   }
 
   this.onclose = function() {

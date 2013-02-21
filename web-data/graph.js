@@ -1,9 +1,8 @@
 scc.modules.graph = function() {
   this.requires = ["graph"]
   
-  var s, reloadTimeout;
+  var s, reloadTimeout, layout;
   var paused = false;
-  var layoutDone = false;
 
   var gridLayout = function () {
     this.ready = false,
@@ -50,35 +49,32 @@ scc.modules.graph = function() {
     }
   }
 
-  var layout = new forceLayout();
+  s = sigma.init(document.getElementById('graph_canvas'));
+  s.resize($("#content").width(), $("#content").height());
 
-  this.onopen = function() { s = sigma.init(document.getElementById('graph_canvas'))
-             .drawingProperties({
-                 defaultLabelColor: '#fff',
-             });
-    s.resize($("#content").width(), $("#content").height())
+  layout = new forceLayout();
 
-    s.drawingProperties({
-      defaultLabelColor: '#ccc',
-      font: 'Arial',
-      edgeColor: '#22dd22',
-      defaultEdgeType: 'line'
-    }).graphProperties({
-      minNodeSize: 1,
-      maxNodeSize: 5
-    });
+  s.drawingProperties({
+    defaultLabelColor: '#ccc',
+    font: 'Arial',
+    edgeColor: '#22dd22',
+    defaultEdgeType: 'line'
+  }).graphProperties({
+    minNodeSize: 1,
+    maxNodeSize: 5
+  });
 
-    $("#graph_canvas").mousedown(function(e) {
-      paused = true;
-      layout.refresh()
-    });
-    $("#graph_canvas").mouseup(function(e) {
-      paused = false;
-      layout.refresh()
-    });
+  $("#graph_canvas").mousedown(function(e) {
+    paused = true;
+    layout.refresh()
+  });
+  $("#graph_canvas").mouseup(function(e) {
+    paused = false;
+    layout.refresh()
+  });
 
-    scc.webSocket.send("graph")
-
+  this.onopen = function() { 
+    scc.order("graph");
   }
    
   this.onmessage = function(j) {
@@ -115,9 +111,7 @@ scc.modules.graph = function() {
    
     layout.refresh()
 
-    reloadTimeout = setTimeout(function() {
-      scc.webSocket.send("graph")
-    }, 1000);
+    scc.order("graph", 1000);
   }
 
   var setCoordinateFunctions = function(funX, funY) {
@@ -133,24 +127,28 @@ scc.modules.graph = function() {
   }
 
   this.onclose = function() {
-    this.destroy()
+    //this.destroy()
   }
 
   this.destroy = function() {
     s.stopForceAtlas2();
     started = paused = false;
+    delete layout;
     $("#graph_canvas").empty();
     clearTimeout(reloadTimeout);
+    delete s;
   }
 
   $("#grid_layout").click(function () {
     layout.teardown();
+    delete layout;
     layout = new gridLayout();
     layout.setup();
   });
 
   $("#force_layout").click(function () {
     layout.teardown();
+    delete layout;
     layout = new forceLayout();
     layout.setup();
   });

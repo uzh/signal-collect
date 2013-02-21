@@ -136,7 +136,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
         case "system" => new SystemDataProvider(c)
         case otherwise => new InvalidDataProvider(msg)
       }
-      case None => new NotReadyDataProvider()
+      case None => new NotReadyDataProvider(msg)
     }
     socket.send(provider.fetch)
   }
@@ -159,13 +159,19 @@ trait DataProvider {
 
 class InvalidDataProvider(msg: String) extends DataProvider {
     def fetch(): String = {
-      tojson("Invalid Message: " + msg).toString
+      tojson(Map("provider" -> "invalid",
+                 "msg"      -> ("Received an invalid message: " + msg))
+            ).toString
+
     }
 }
 
-class NotReadyDataProvider() extends DataProvider {
+class NotReadyDataProvider(msg: String) extends DataProvider {
     def fetch(): String = {
-      tojson("The signal/collect computation is not ready yet").toString
+      tojson(Map("provider" -> "notready",
+                 "msg"      -> "The signal/collect computation is not ready yet",
+                 "request"  -> msg)
+            ).toString
     }
 }
 

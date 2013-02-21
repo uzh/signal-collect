@@ -1,4 +1,4 @@
-var scc = {"modules": {}, "consumers": {}}
+var scc = {"modules": {}, "consumers": {}, "orders": {}}
 
 $(document).ready(function() {
  
@@ -22,9 +22,9 @@ $(document).ready(function() {
     $("#top").animate({"top": "0px"});
 
     if (timeout) {
-        hidingTimeout = setTimeout(function() {
-          hideMsg();
-        }, 3000);
+      hidingTimeout = setTimeout(function() {
+        hideMsg();
+      }, 3000);
     }
   }
   
@@ -41,7 +41,6 @@ $(document).ready(function() {
     top.location.hash = "graph";
     $("#mode_graph").addClass("selected");
     $("#graph.view").fadeIn()
-    console.log(scc.consumers)
   }
   $("#mode_graph").click(show_graph);
 
@@ -73,13 +72,15 @@ $(document).ready(function() {
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
     showMsg("#success", "WebSocket connection established", true);
-    
     for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
   } 
   scc.webSocket.onmessage = function(e) {
     j = JSON.parse(e.data)
-    console.log("[WebSocket] onmessage");
     var provider = j["provider"]
+    if (provider == "notready") {
+      var request = j["request"]
+      scc.order(request, 1000);
+    }
     for (var m in scc.consumers) { 
       var consumer = scc.consumers[m]
       if (consumer.requires.indexOf(provider) >= 0) {
@@ -95,6 +96,15 @@ $(document).ready(function() {
   scc.webSocket.onerror = function(e) {
     console.log("[WebSocket] onerror");
     for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
+  }
+  scc.order = function(msg, delay) {
+    if (!delay) { delay = 0; }
+    if (scc.orders[msg]) {
+      clearTimeout(scc.orders[msg])
+    }
+    scc.orders[msg] = setTimeout(function() {
+      scc.webSocket.send(msg);
+    }, delay);
   }
 
   /* Enable modules depending on URL and jump to a tab depending on hashtag */
