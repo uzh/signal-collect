@@ -1,156 +1,130 @@
 scc.modules.graph = function() {
   this.requires = ["graph"]
   
-  var s, reloadTimeout, layout;
-  var paused = false;
+  var s, svg, width, height, force;
+  var color = d3.scale.category20();
+  var nodes = [];
+  var links = [];
+  var nodeRefs = {};
+  var linkRefs = {};
+  var node;
+  var link;
 
-  var gridLayout = function () {
-    this.ready = false,
-    this.setup = function () {
-      setCoordinateFunctions(function(n) { return n.id.match(/\d+/g)[0]/15; },
-                             function(n) { return n.id.match(/\d+/g)[1]/15; });
-      this.ready = true;
+  this.onopen = function() {
+
+    width = $("#content").width()
+    height = $("#content").height()
+
+    svg = d3.select("#graph_canvas").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.behavior.zoom().on("zoom", redraw))
+        .append('svg:g')
+        .append('svg:g');
+
+    force = d3.layout.force()
+        .size([width, height])
+        .nodes(nodes)
+        .links(links)
+        .linkDistance(30)
+        .charge(-120)
+
+    node = svg.selectAll(".node");
+    link = svg.selectAll(".link");
+
+    force.on("tick", function() {
+      /*link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });*/
+
+      node.attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    });
+
+    force.start();
+
+    function redraw() {
+      svg.attr("transform",
+               "translate(" + d3.event.translate + ")"
+               + " scale(" + d3.event.scale + ")");
     }
-    this.refresh = function () { 
-      if (!this.ready) { this.setup(); }
-      s.draw(2,2,2); 
-    }
-    this.teardown = function () { }
-  }
 
-  var forceLayout = function () {
-    this.ready = false,
-    this.paused = false,
-    this.setup = function () {
-      setCoordinateFunctions(function(n) { return Math.random(); },
-                             function(n) { return Math.random(); });
-      s.startForceAtlas2();
-      this.ready = true;
-    },
-    this.refresh = function () {
-      if (!this.ready) { this.setup(); }
-      if (paused) { 
-        if (!this.paused) {
-          s.stopForceAtlas2();
-          this.paused = true;
-        }
-        s.draw(2,0,0);
-      }
-      else {
-        if (this.paused) {
-          s.startForceAtlas2();
-          this.paused = false;
-        }
-      }
-    },
-    this.teardown = function () {
-      s.stopForceAtlas2();
-      paused = false;
-    }
-  }
-
-  s = sigma.init(document.getElementById('graph_canvas'));
-  s.resize($("#content").width(), $("#content").height());
-
-  layout = new forceLayout();
-
-  s.drawingProperties({
-    defaultLabelColor: '#ccc',
-    font: 'Arial',
-    edgeColor: '#22dd22',
-    defaultEdgeType: 'line'
-  }).graphProperties({
-    minNodeSize: 1,
-    maxNodeSize: 5
-  });
-
-  $("#graph_canvas").mousedown(function(e) {
-    paused = true;
-    layout.refresh()
-  });
-  $("#graph_canvas").mouseup(function(e) {
-    paused = false;
-    layout.refresh()
-  });
-
-  this.onopen = function() { 
-    scc.order("graph");
+    scc.order("graph")
   }
    
   this.onmessage = function(j) {
-    s.iterNodes(function(n) {
-      if (!j["nodes"][n.id]) {
-        s.dropNode(n)
+    nodes = force.nodes();
+    links = force.links();
+    var newNodes = false;
+
+    for (var i = 0; i < nodes.length; i++) {
+      nodeRefs[nodes[i].id] = i;
+    }
+    for (var i = 0; i < links.length; i++) {
+      linkRefs[links[i].source + "-" + links[i].target] = i;
+    }
+
+    $.each(j.nodes, function(id, state) {
+      if (nodeRefs[id] == undefined) {
+        nodes.push({"id": id, "state": state});
+        nodeRefs[id] = nodes.length - 1;
+        newNodes = true;
       }
       else {
-        n.label = j["nodes"][n.id];
-        n.size = 3+3*parseInt(j["nodes"][n.id]);
-        delete j["nodes"][n.id];
+        nodes[nodeRefs[id]].state = state
       }
     });
-    for (var n in j["nodes"]) {
-      s.addNode(n, {
-        'label': j["nodes"][n],
-        'size': 3+3*parseInt(j["nodes"][n]),
-        'color': '#16bbbd'
-      });
-    }
-   
-    s.iterEdges(function(e) {
-      if (!j["edges"][e.id]) {
-        s.dropEdge(e)
-      }
-      else {
-        delete j["edges"][e.id];
+
+    $.each(j.edges, function (source, targets) {
+      for (var t = 0; t < targets.length; t++) {
+        linkID = source + "-" + targets[t]
+        if (linkRefs[linkID] == undefined) {
+          links.push({"source": nodes[nodeRefs[source]], 
+                      "target": nodes[nodeRefs[targets[t]]],
+                      "value": 5})
+          linkRefs[linkID] = links.length - 1;
+        }
+        else { 
+          links[linkRefs[linkID]].value = 5
+        }
       }
     });
-    for(var e in j["edges"]) {
-      var edge = j["edges"][e]
-      s.addEdge(e, edge["source"], edge["target"]);
-    }
-   
-    layout.refresh()
 
-    scc.order("graph", 1000);
+    node = node.data(force.nodes(), 
+              function (d) { return d.id; });
+    node.enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 5)
+        .call(force.drag);
+    node.exit().remove();
+    node.style("fill", function(d) { return color(d.state); })
+
+    link = svg.selectAll(".link")
+        .data(force.links(), 
+              function (d) { d.source + "-" + d.target; });
+    link.enter().append("line")
+        .attr("class", "link")
+    link.exit().remove();
+    link.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+    /*node.append("title")
+        .text(function(d) { return d.id; });*/
+
+    if (newNodes) {force.start(); }
+
+    scc.order("graph", 1000)
+
   }
 
-  var setCoordinateFunctions = function(funX, funY) {
-     s.iterNodes(function(n) {
-      n.x = funX(n);
-      n.y = funY(n);
-    });
-  }
-
-  this.onerror = function(e) {
-    console.log("[websocket#onerror]")
-    //console.dir(e) // pollutes the console output when enabled
-  }
+  this.onerror = function(e) { }
 
   this.onclose = function() {
-    //this.destroy()
+    this.destroy()
   }
 
   this.destroy = function() {
-    s.stopForceAtlas2();
-    started = paused = false;
-    delete layout;
-    $("#graph_canvas").empty();
-    clearTimeout(reloadTimeout);
-    delete s;
+    $("#graph_canvas").empty()
   }
-
-  $("#grid_layout").click(function () {
-    layout.teardown();
-    delete layout;
-    layout = new gridLayout();
-    layout.setup();
-  });
-
-  $("#force_layout").click(function () {
-    layout.teardown();
-    delete layout;
-    layout = new forceLayout();
-    layout.setup();
-  });
 
 }

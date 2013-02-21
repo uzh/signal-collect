@@ -103,7 +103,8 @@ $(document).ready(function() {
       clearTimeout(scc.orders[msg])
     }
     scc.orders[msg] = setTimeout(function() {
-      scc.webSocket.send(msg);
+      try { scc.webSocket.send(msg); }
+      catch(err) { scc.order(msg, 1000); }
     }, delay);
   }
 

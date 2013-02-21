@@ -182,10 +182,7 @@ scc.modules.resources = function() {
     scc.order("resources")
   }
     
-  this.onerror = function(e) {
-    console.log("[websocket#onerror]")
-    //console.dir(e) // pollutes the console output when enabled
-  }
+  this.onerror = function(e) { }
 
   this.onmessage = function(j) {
     
@@ -195,15 +192,7 @@ scc.modules.resources = function() {
     scc.order("resources", interval);
   }
 
-  this.onclose = function() {
-    this.destroy()
-  }
+  this.onclose = function() { }
 
-  this.destroy = function() {
-    $("#chart").empty()
-    $("#chart2").empty()
-    $("#chart3").empty()
-    clearTimeout(reloadTimeout)
-  }
 }
 

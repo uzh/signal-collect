@@ -222,6 +222,16 @@ body {
   background-color: #444;
 }
 
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
 
 /* graph styling */
 /* #chart_container { */

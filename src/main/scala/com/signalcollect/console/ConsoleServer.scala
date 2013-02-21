@@ -184,7 +184,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
       val vertices = workerApi.aggregateAll(vertexAggregator)
       val edges = workerApi.aggregateAll(edgeAggregator)
       case class GraphData(vertices: Map[String,String], 
-                           edges: Map[String,Map[String,String]],
+                           edges: Map[String,List[String]],
                            provider: String = "graph")
       implicit val GraphDataFormat: Format[GraphData] = 
                    asProduct3("nodes", "edges", "provider")(
@@ -297,26 +297,27 @@ class VertexToStringAggregator extends AggregationOperation[Map[String, String]]
   }
 }
 
-class EdgeToStringAggregator 
-      extends AggregationOperation[Map[String,Map[String,String]]] {
-  def extract(v: Vertex[_, _]): Map[String,Map[String,String]] = v match {
+class EdgeToStringAggregator
+      extends AggregationOperation[Map[String,List[String]]] {
+
+  type EdgeMap = Map[String,List[String]]
+
+  def extract(v: Vertex[_, _]): EdgeMap = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
   }
 
-  def reduce(vertices: Stream[Map[String,Map[String,String]]]): 
-                              Map[String,Map[String,String]] = {
-    vertices.foldLeft(Map[String,Map[String,String]]())((acc:Map[String,Map[String,String]], 
-                                               v:Map[String,Map[String,String]]) => acc ++ v)
+  def reduce(vertices: Stream[EdgeMap]):
+                              EdgeMap = {
+    vertices.foldLeft(Map[String,List[String]]())((acc:EdgeMap,
+                                               v:EdgeMap) => acc ++ v)
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): Map[String,Map[String,String]] = {
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): EdgeMap = {
     val edges = v.outgoingEdges.values
-                 .foldLeft(Map[String,Map[String,String]]()) { (map, e) =>
-                     map ++ Map(e.id.toString ->
-                                Map("source" -> v.id.toString, 
-                                    "target" -> e.targetId.toString))
+                 .foldLeft(List[String]()) { (list, e) =>
+                     list ++ List(e.targetId.toString)
                  }
-    edges
+     Map(v.id.toString -> edges)
   }
 }
 
