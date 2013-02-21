@@ -82,7 +82,7 @@ class FileServer(folderName: String) extends HttpHandler {
 
     def root = "./" + folderName
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "") 
-    if (target == "") { target = "main.html" }
+    if (target == "" || target == "graph" || target == "resources") { target = "main.html" }
     val fileType = target match {
       case t if t.matches(".*\\.html$") => "text/html"
       case t if t.matches(".*\\.css$")  => "text/css"

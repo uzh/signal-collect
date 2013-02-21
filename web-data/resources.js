@@ -1,6 +1,7 @@
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
+  var interval = 1000;
   /*
    * TODO
    * - add x axis with format HH:MM:SS
@@ -129,17 +130,17 @@ scc.modules.resources = function() {
       
       // add new data
 //      graph.selectAll("path").data([data.slice((newDataLength > 20 ? -20 : -newDataLength))]).attr("d", area);
-      graph.selectAll("#" + this.conf.graphName + " path").data([data]).attr("d", area);
+      //graph.selectAll("#" + this.conf.graphName + " path").data([data]).attr("d", area);
       
       // update with animation
-//      graph.selectAll("#" + this.conf.graphName + " path")
-//        .data([data]) // set the new data
-//        .attr("transform", "translate(" + x(1) + ")") // set the transform to the right by x(1) pixels (6 for the scale we've set) to hide the new value
-//        .attr("d", area) // apply the new data values ... but the new value is hidden at this point off the right of the canvas
-//        .transition() // start a transition to bring the new value into view
-//        .ease("linear")
-//        .duration(1000) // for this demo we want a continual slide so set this to the same as the setInterval amount below
-//        .attr("transform", "translate(" + x(0) + ")"); // animate a slide to the left back to x(0) pixels to reveal the new value
+      graph.selectAll("#" + this.conf.graphName + " path")
+        .data([data]) // set the new data
+        .attr("transform", "translate(" + x(1) + ")") // set the transform to the right by x(1) pixels (6 for the scale we've set) to hide the new value
+        .attr("d", area) // apply the new data values ... but the new value is hidden at this point off the right of the canvas
+        .transition() // start a transition to bring the new value into view
+        .ease("linear")
+        .duration(interval) // for this demo we want a continual slide so set this to the same as the setInterval amount below
+        .attr("transform", "translate(" + x(0) + ")"); // animate a slide to the left back to x(0) pixels to reveal the new value
     };
     
   }
@@ -191,7 +192,7 @@ scc.modules.resources = function() {
     // update all graphs
     allGraphs.forEach(function(g) { g.update(j.workerStatistics); });
     
-    scc.order("resources", 2000);
+    scc.order("resources", interval);
   }
 
   this.onclose = function() {
