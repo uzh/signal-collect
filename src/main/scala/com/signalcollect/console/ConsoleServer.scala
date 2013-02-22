@@ -248,9 +248,10 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
 
     case class ResourcesData(inboxSize: Long, 
                              workerStatistics: Map[String,List[Long]],
-                             provider: String = "resources")
+                             provider: String = "resources",
+                             timestamp : Long = System.currentTimeMillis)
     implicit val ResourcesDataFormat: Format[ResourcesData] = 
-                 asProduct3("inboxSize", "workerStatistics", "provider")(
+                 asProduct4("inboxSize", "workerStatistics", "provider", "timestamp")(
                             ResourcesData)(ResourcesData.unapply(_).get)
 
     val data = ResourcesData(inboxSize, workerStatisticsMap)
