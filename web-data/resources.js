@@ -1,6 +1,29 @@
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
+  /* panel */
+  $(".sectionLink").click(function() {
+    section = $(this).attr("id").split("_")[1];
+    show_section(section)
+  });
+  function show_section(s) {
+    if (s == "") { return; }
+    // hide all sections
+    $("#resources .structured > div").hide();
+    // show the appropriate section
+    $("#crs_" + s).show();
+    // show change in the panel
+    $(".sectionLink").removeClass("active");
+    $("#rs_" + s).addClass("active");
+    // set section to the hash tah
+    set_section(s);
+  }
+  $(document).ready(function() {
+    show_section(get_section());
+  });
+  
+  
+  
   var interval = 1000;
   /*
    * TODO
