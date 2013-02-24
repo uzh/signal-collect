@@ -138,7 +138,6 @@ body {
 
 .panel .panel_section {
   width: 100%;
-  text-align: center;
 }
 
 .panel .panel_section .title {
@@ -157,10 +156,37 @@ body {
   background-image: -webkit-linear-gradient(
                     rgba(245,245,245,1),
                     rgba(220,220,220,1));
+}
+.panel .panel_section .title:before {
+  content: " . ";
+  position: relative;
+  top: -5px;
+  width:0px; 
+  height:0px; 
+  margin-left: 5px;
+  margin-right: 5px;
+  border-bottom:6px solid transparent;  /* left arrow slant */
+  border-top:6px solid transparent; /* right arrow slant */
+  border-left:8px solid #666; /* bottom, add background color here */
+  font-size:0px;
+  line-height:0px;
+}
+.panel .panel_section .title.expanded:before {
+  content: " . ";
+  position: relative;
+  top: -1px;
+  width:0px; 
+  height:0px; 
+  margin-left: 3px;
+  margin-right: 3px;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-top:8px solid #666;
+  font-size:0px;
+  line-height:0px;
 
 }
 .panel .panel_section .contents {
-  text-align: left;
 }
 
 #controls {

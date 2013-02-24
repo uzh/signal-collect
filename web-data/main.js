@@ -78,14 +78,19 @@ $(document).ready(function() {
     section = $(this)
     if (section.next().is(":visible")) {
       scc.settings.set(function (s) { s.hiddenSections[section.text()] = true; })
+      section.removeClass("expanded");
     }
     else {
       scc.settings.set(function (s) { delete s.hiddenSections[section.text()]; })
+      section.addClass("expanded");
     }
     section.next().toggle(200)
   });
   $.each(scc.settings.get().hiddenSections, function (key, value) {
-    $(".panel_section .title:contains(" + key + ")").next().hide();
+    $(".panel_section .title:contains(" + key + ")").each(function () {
+        $(this).removeClass("expanded");
+        $(this).next().hide();
+    });
   });
   
   // add keyboard shortcuts to change between tabs
