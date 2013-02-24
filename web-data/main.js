@@ -32,7 +32,9 @@ $(document).ready(function() {
   hideMsg();
   var clear_views = function(e) { 
     $("#modes span").removeClass("selected");
-    $(".view").hide()
+    $(".view").hide();
+    $("#graph_panel_container").hide();
+    $("#resource_panel_container").hide();
   }
 
   var show_graph = function(e) {
@@ -41,6 +43,7 @@ $(document).ready(function() {
     top.location.hash = "graph";
     $("#mode_graph").addClass("selected");
     $("#graph.view").fadeIn()
+    $("#graph_panel_container").show();
   }
   $("#mode_graph").click(show_graph);
 
@@ -50,6 +53,7 @@ $(document).ready(function() {
     top.location.hash = "resources";
     $("#mode_resources").addClass("selected");
     $("#resources.view").fadeIn()
+    $("#resource_panel_container").show();
   }
   $("#mode_resources").click(show_resources);
   
