@@ -3,6 +3,7 @@ var scc = {"modules": {}, "consumers": {}, "orders": {}}
 $(document).ready(function() {
  
   var hidingTimeout;
+  var resource = "resources", graph = "graph";
 
   function hideMsg(fast) {
     if (fast) {
@@ -39,8 +40,8 @@ $(document).ready(function() {
 
   var show_graph = function(e) {
     if ($("#graph.view").is(":visible")) { return }
-    clear_views()
-    top.location.hash = "graph";
+    clear_views();
+    set_module(graph);
     $("#mode_graph").addClass("selected");
     $("#graph.view").fadeIn()
     $("#graph_panel_container").show();
@@ -49,8 +50,8 @@ $(document).ready(function() {
 
   var show_resources = function(e) {
     if ($("#resources.view").is(":visible")) { return }
-    clear_views()
-    top.location.hash = "resources";
+    clear_views();
+    set_module(resource);
     $("#mode_resources").addClass("selected");
     $("#resources.view").fadeIn()
     $("#resource_panel_container").show();
@@ -119,23 +120,22 @@ $(document).ready(function() {
       module = modules[m];
       scc.consumers[module] = new scc.modules[module]();
       $("span#mode_" + module).show();
-
     }
   }
   switch (window.location.pathname) {
-    case "/resources": 
+    case "/" + resource: 
       enable_modules(["resources"]); 
       show_resources()
       break;
-    case "/graph": 
-      enable_modules(["graph"]); 
+    case "/" + graph: 
+      enable_modules(["graph"]);
       show_graph()
       break;
     default:
       enable_modules(["graph", "resources"]);
-      switch (top.location.hash) {
-        case "#resources": show_resources(); break;
-        case "#graph":
+      switch (get_module()) {
+        case resource: show_resources(); break;
+        case graph:
         default: show_graph();
       }
   }
@@ -146,3 +146,41 @@ window.onbeforeunload = function() {
   ws.close();
 };
 
+/* returns the hash without # and splitted at / */
+function get_hash_splitted() {
+  hash = top.location.hash.slice(1); // remove #
+  parts = hash.split("/");
+  return parts;    
+}
+
+/* Hash format: MODULE/SECTION */
+function get_module() {
+  parts = get_hash_splitted(); 
+//  console.log("Module: " + parts[0]);
+  return parts[0]
+}
+function set_module(m) {
+  // change pathname in single-module-mode
+  if (window.location.pathname != "/") {
+    window.location.pathname = "/" + m;
+  }
+  // change hash tag
+  parts = get_hash_splitted();
+  if (parts[0] != m) { set_section(""); }
+  parts[0] = m;
+  top.location.hash = parts.join("/");
+}
+function get_section () {
+  parts = get_hash_splitted(); 
+  if (parts[1] == null) {
+//    console.log("Section: ");
+    return "";
+  }
+//  console.log("Module: " + parts[1]);
+  return parts[1];
+}
+function set_section(m) {
+  parts = get_hash_splitted();
+  parts[1] = m;
+  top.location.hash = parts.join("/");
+}

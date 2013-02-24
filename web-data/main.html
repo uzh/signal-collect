@@ -39,9 +39,10 @@
           <div id="layouts2" class="panel">
             <h3>Resources</h3>
             <ul>
-              <li id="grid_layout">Grid</li>
-              <li id="force_layout">ForcedAtlas2</li>
-              <li id="custom_layout">Custom</li>
+              <li id="rsOverview">Overview</li>
+              <li id="rsDetailed">Detailed Overview</li>
+              <li id="rsLogs">Logs and Errors</li>
+              <li id="rsSC">Signal/Collect Statistics</li>
             </ul>
           </div>
         </div>
@@ -60,19 +61,23 @@
       </div>
       <div class="view" id="resources">
         <div class="structured">
-          <h1>Resource Monitor</h1>
-<!--           <div class="statistic" id="res_graph1"><h3>Number of Messages</h3></div> -->
-<!--           <div class="statistic" id="res_graph2"><h3>Global Inbox Size</h3></div> -->
-          <div id="chart_container">
-	          <div id="y_axis"></div>
-	          <div id="res_graph2"></div>
+        
+          <!-- content resource section overview -->
+          <div id="crsOverview">
+	          <h1>Overview</h1>
           </div>
-          <div id="graphMessagesSent" class="graphs"></div>
-          <div id="graphMessagesReceived" class="graphs"></div>
-          <div id="graphOutgoingEdges" class="graphs"></div>
-          <div id="graphToSignalSize" class="graphs"></div>
-          <div id="graphRequestMessagesReceived" class="graphs"></div>
-          <div id="graphSignalOperationsExecuted" class="graphs"></div>
+
+          <!-- content resource section statistics -->
+          <div id="crsStatistics">
+            <h1>Signal/Collect Statistics</h1>
+            <div id="graphMessagesSent" class="graphs"></div>
+            <div id="graphMessagesReceived" class="graphs"></div>
+            <div id="graphOutgoingEdges" class="graphs"></div>
+            <div id="graphToSignalSize" class="graphs"></div>
+            <div id="graphRequestMessagesReceived" class="graphs"></div>
+            <div id="graphSignalOperationsExecuted" class="graphs"></div>
+          </div>
+          
         </div>
       </div>
     </div>
