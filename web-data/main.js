@@ -1,18 +1,30 @@
-var scc = {"modules": {}, "consumers": {}, "orders": {}}
+var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}}
 
 function Settings() {
   this.settings = loadSettings();
-  this.set = function(key, value) {
-    this.settings[key] = value;
+  this.set = function(fun) {
+    fun(this.settings);
     top.location.hash = JSON.stringify(this.settings);
   }
-  this.get = function(key) {
-    return this.settings[key];
+  this.get = function() {
+    return this.settings;
   }
   function loadSettings() {
+    settings = { 
+      "view": "graph",
+      "hiddenSections": {}
+    }; 
+    $.each(scc.defaults, function (c) {
+      settings[c] = scc.defaults[c];
+    });
     hash = top.location.hash.slice(1);
-    if (hash) { return JSON.parse(hash); }
-    else { return {}; }
+    if (hash) {
+      hash = JSON.parse(hash);
+      $.each(settings, function (key, value) {
+        if (hash[key]) { settings[key] = hash[key]; }
+      });
+    }
+    return settings
   }
 }
 
@@ -22,12 +34,8 @@ $(document).ready(function() {
 
   /* Message bar at the top */
   function hideMsg(fast) {
-    if (fast) {
-      $("#top").css("top", "-60px")
-    }
-    else {
-      $("#top").stop().animate({"top": "-60px"});
-    }
+    if (fast) { $("#top").css("top", "-60px") }
+    else { $("#top").stop().animate({"top": "-60px"}); }
   }
   hideMsg(true);
 
@@ -57,7 +65,7 @@ $(document).ready(function() {
   var showView = function(view) {
     if ($("#" + view + ".view").is(":visible")) { return }
     clearViews();
-    scc.settings.set("view", view);
+    scc.settings.set(function(s) { s.view = view; });
     $("#mode_" + view).addClass("selected");
     $("#" + view + ".view").fadeIn()
     $("#" + view + "_panel_container").show();
@@ -65,6 +73,20 @@ $(document).ready(function() {
 
   $("#mode_resources").click(function () { showView("resources"); });
   $("#mode_graph").click(function () { showView("graph"); });
+
+  $(".panel_section .title").click(function () {
+    section = $(this)
+    if (section.next().is(":visible")) {
+      scc.settings.set(function (s) { s.hiddenSections[section.text()] = true; })
+    }
+    else {
+      scc.settings.set(function (s) { delete s.hiddenSections[section.text()]; })
+    }
+    section.next().toggle(200)
+  });
+  $.each(scc.settings.get().hiddenSections, function (key, value) {
+    $(".panel_section .title:contains(" + key + ")").next().hide();
+  });
   
   // add keyboard shortcuts to change between tabs
   $(document).keypress(function(e) {
@@ -139,7 +161,7 @@ $(document).ready(function() {
       break;
     default:
       enable_modules(["graph", "resources"]);
-      switch (scc.settings.get("view")) {
+      switch (scc.settings.get().view) {
         case "resources": showView("resources"); break;
         case "graph":
         default: showView("graph");

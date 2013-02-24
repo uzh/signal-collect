@@ -1,3 +1,4 @@
+scc.defaults.resources = {"section": "overview"}
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
@@ -16,11 +17,9 @@ scc.modules.resources = function() {
     $(".sectionLink").removeClass("active");
     $("#rs_" + s).addClass("active");
     // set section to the hash tah
-    set_section(s);
+    scc.settings.set(function (settings) { settings.resources.section = s; });
   }
-  $(document).ready(function() {
-    show_section(get_section());
-  });
+  show_section(scc.settings.get().resources.section);
   
   
   

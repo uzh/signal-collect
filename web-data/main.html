@@ -25,25 +25,41 @@
       <div id="modes">
         <span id="mode_graph" class="leftmost selected">Graph</span>
         <span id="mode_resources">Resources</span>
-        <div id="graph_panel_container">
-          <div id="layouts" class="panel">
-            <h3>Layouts</h3>
-            <ul>
-              <li class="sectionLink" id="grid_layout">Grid</li>
-              <li class="sectionLink" id="force_layout">ForcedAtlas2</li>
-              <li class="sectionLink" id="custom_layout">Custom</li>
-            </ul>
+      </div>
+      <div id="graph_panel_container">
+        <div class="panel">
+          <div class="panel_section">
+            <div class="title">Node Selection</div>
+            <div class="contents">
+              <form>
+                <input type="radio" name="layout" value="grid"/>Option1<br/>
+                <input type="radio" name="layout" value="force"/>Option2<br/>
+                <input type="radio" name="layout" value="custom"/>Option3<br/>
+              </form> 
+            </div>
+          </div>
+          <div class="panel_section">
+            <div class="title">Layouts</div>
+            <div class="contents">
+              <form>
+                <input type="radio" name="layout" value="grid"/>Grid<br/>
+                <input type="radio" name="layout" value="force"/>Forced<br/>
+                <input type="radio" name="layout" value="custom"/>Custom<br/>
+              </form> 
+            </div>
           </div>
         </div>
-        <div id="resources_panel_container">
-          <div id="layouts2" class="panel">
-            <h3>Resources</h3>
-            <ul>
-              <li class="sectionLink" id="rs_overview">Overview</li>
-              <li class="sectionLink" id="rs_detailed">Detailed Overview</li>
-              <li class="sectionLink" id="rs_logs">Logs and Errors</li>
-              <li class="sectionLink" id="rs_sc">Signal/Collect Statistics</li>
-            </ul>
+      </div>
+      <div id="resources_panel_container">
+        <div class="panel">
+          <div class="panel_section">
+            <div class="title">Something</div>
+            <div class="contents">
+              <span class="sectionLink" id="rs_overview">Overview</span><br/>
+              <span class="sectionLink" id="rs_detailed">Detailed Overview</span><br/>
+              <span class="sectionLink" id="rs_logs">Logs and Errors</span><br/>
+              <span class="sectionLink" id="rs_sc">Signal/Collect Statistics</span><br/>
+            </div>
           </div>
         </div>
       </div>
