@@ -36,6 +36,8 @@ $(document).ready(function() {
     $(".view").hide();
     $("#graph_panel_container").hide();
     $("#resource_panel_container").hide();
+    $(".sectionLink").removeClass("active");
+    $("#resources .structured > div").show();
   }
 
   var show_graph = function(e) {
