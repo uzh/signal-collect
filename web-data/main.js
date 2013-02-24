@@ -1,10 +1,26 @@
 var scc = {"modules": {}, "consumers": {}, "orders": {}}
 
-$(document).ready(function() {
- 
-  var hidingTimeout;
-  var resource = "resources", graph = "graph";
+function Settings() {
+  this.settings = loadSettings();
+  this.set = function(key, value) {
+    this.settings[key] = value;
+    top.location.hash = JSON.stringify(this.settings);
+  }
+  this.get = function(key) {
+    return this.settings[key];
+  }
+  function loadSettings() {
+    hash = top.location.hash.slice(1);
+    if (hash) { return JSON.parse(hash); }
+    else { return {}; }
+  }
+}
 
+$(document).ready(function() {
+  var hidingTimeout;
+  scc.settings = new Settings();
+
+  /* Message bar at the top */
   function hideMsg(fast) {
     if (fast) {
       $("#top").css("top", "-60px")
@@ -29,34 +45,26 @@ $(document).ready(function() {
     }
   }
   
-  /* Console navigation and handling */
+  /* Console navigation and view handling */
   hideMsg();
-  var clear_views = function(e) { 
+  var clearViews = function(e) { 
     $("#modes span").removeClass("selected");
     $(".view").hide();
     $("#graph_panel_container").hide();
-    $("#resource_panel_container").hide();
+    $("#resources_panel_container").hide();
   }
 
-  var show_graph = function(e) {
-    if ($("#graph.view").is(":visible")) { return }
-    clear_views();
-    set_module(graph);
-    $("#mode_graph").addClass("selected");
-    $("#graph.view").fadeIn()
-    $("#graph_panel_container").show();
+  var showView = function(view) {
+    if ($("#" + view + ".view").is(":visible")) { return }
+    clearViews();
+    scc.settings.set("view", view);
+    $("#mode_" + view).addClass("selected");
+    $("#" + view + ".view").fadeIn()
+    $("#" + view + "_panel_container").show();
   }
-  $("#mode_graph").click(show_graph);
 
-  var show_resources = function(e) {
-    if ($("#resources.view").is(":visible")) { return }
-    clear_views();
-    set_module(resource);
-    $("#mode_resources").addClass("selected");
-    $("#resources.view").fadeIn()
-    $("#resource_panel_container").show();
-  }
-  $("#mode_resources").click(show_resources);
+  $("#mode_resources").click(function () { showView("resources"); });
+  $("#mode_graph").click(function () { showView("graph"); });
   
   // add keyboard shortcuts to change between tabs
   $(document).keypress(function(e) {
@@ -123,20 +131,18 @@ $(document).ready(function() {
     }
   }
   switch (window.location.pathname) {
-    case "/" + resource: 
-      enable_modules(["resources"]); 
-      show_resources()
-      break;
-    case "/" + graph: 
-      enable_modules(["graph"]);
-      show_graph()
+    case "/resources": 
+    case "/graph": 
+      module = window.location.pathname.slice(1);
+      enable_modules([module]); 
+      showView(module)
       break;
     default:
       enable_modules(["graph", "resources"]);
-      switch (get_module()) {
-        case resource: show_resources(); break;
-        case graph:
-        default: show_graph();
+      switch (scc.settings.get("view")) {
+        case "resources": showView("resources"); break;
+        case "graph":
+        default: showView("graph");
       }
   }
 });
@@ -145,42 +151,3 @@ window.onbeforeunload = function() {
   ws.onclose = function () {}; // disable onclose handler first
   ws.close();
 };
-
-/* returns the hash without # and splitted at / */
-function get_hash_splitted() {
-  hash = top.location.hash.slice(1); // remove #
-  parts = hash.split("/");
-  return parts;    
-}
-
-/* Hash format: MODULE/SECTION */
-function get_module() {
-  parts = get_hash_splitted(); 
-//  console.log("Module: " + parts[0]);
-  return parts[0]
-}
-function set_module(m) {
-  // change pathname in single-module-mode
-  if (window.location.pathname != "/") {
-    window.location.pathname = "/" + m;
-  }
-  // change hash tag
-  parts = get_hash_splitted();
-  if (parts[0] != m) { set_section(""); }
-  parts[0] = m;
-  top.location.hash = parts.join("/");
-}
-function get_section () {
-  parts = get_hash_splitted(); 
-  if (parts[1] == null) {
-//    console.log("Section: ");
-    return "";
-  }
-//  console.log("Module: " + parts[1]);
-  return parts[1];
-}
-function set_section(m) {
-  parts = get_hash_splitted();
-  parts[1] = m;
-  top.location.hash = parts.join("/");
-}
