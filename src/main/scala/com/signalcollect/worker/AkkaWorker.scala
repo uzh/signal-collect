@@ -50,22 +50,22 @@ import java.util.Queue
 import language.postfixOps
 
 class WorkerOperationCounters(
-    var messagesReceived: Long = 0l,
-    var collectOperationsExecuted: Long = 0l,
-    var signalOperationsExecuted: Long = 0l,
-    var verticesAdded: Long = 0l,
-    var verticesRemoved: Long = 0l,
-    var outgoingEdgesAdded: Long = 0l,
-    var outgoingEdgesRemoved: Long = 0l,
-    var signalSteps: Long = 0l,
-    var collectSteps: Long = 0l,
-    var receiveTimeoutMessagesReceived: Long = 0l,
-    var heartbeatMessagesReceived: Long = 0l,
-    var signalMessagesReceived: Long = 0l,
-    var bulkSignalMessagesReceived: Long = 0l,
-    var continueMessagesReceived: Long = 0l,
-    var requestMessagesReceived: Long = 0l,
-    var otherMessagesReceived: Long = 0) {
+  var messagesReceived: Long = 0l,
+  var collectOperationsExecuted: Long = 0l,
+  var signalOperationsExecuted: Long = 0l,
+  var verticesAdded: Long = 0l,
+  var verticesRemoved: Long = 0l,
+  var outgoingEdgesAdded: Long = 0l,
+  var outgoingEdgesRemoved: Long = 0l,
+  var signalSteps: Long = 0l,
+  var collectSteps: Long = 0l,
+  var receiveTimeoutMessagesReceived: Long = 0l,
+  var heartbeatMessagesReceived: Long = 0l,
+  var signalMessagesReceived: Long = 0l,
+  var bulkSignalMessagesReceived: Long = 0l,
+  var continueMessagesReceived: Long = 0l,
+  var requestMessagesReceived: Long = 0l,
+  var otherMessagesReceived: Long = 0) {
   // Resets operation counters but not messages received/sent counters.
   def resetOperationCounters {
     collectOperationsExecuted = 0l
@@ -88,7 +88,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -190,7 +190,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         var i = 0
         if (bulkSignal.sourceIds != null) {
           while (i < size) {
-            var sourceId = bulkSignal.sourceIds(i)
+            val sourceId = bulkSignal.sourceIds(i)
             if (sourceId != null) {
               processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
             } else {
