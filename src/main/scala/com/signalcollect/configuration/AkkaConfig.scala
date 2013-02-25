@@ -241,7 +241,7 @@ akka {
     # If this is "on", Akka will log all RemoteLifeCycleEvents at the level defined for each, if off then they are not logged
     log-remote-lifecycle-events = off
 
-    # Each property is annotated with (I) or (O) or (I&O), where I stands for “inbound” and O for “outbound” connections.
+    # Each property is annotated with (I) or (O) or (I&O), where I stands for "inbound" and O for "outbound" connections.
     # The NettyRemoteTransport always starts the server role to allow inbound connections, and it starts
     # active client connections whenever sending to a destination which is not yet connected; if configured
     # it reuses inbound connections for replies, which is called a passive client connection (i.e. from server
