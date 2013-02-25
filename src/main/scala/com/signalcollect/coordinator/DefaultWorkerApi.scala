@@ -160,4 +160,8 @@ class DefaultWorkerApi[Id, Signal](
     }
   }
 
+  def snapshot = futures(_.snapshot) foreach get
+  def restore = futures(_.restore) foreach get
+  def deleteSnapshot = futures(_.deleteSnapshot) foreach get
+  
 }

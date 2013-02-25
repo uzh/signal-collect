@@ -48,6 +48,15 @@ import scala.reflect.ClassTag
 import scala.language.reflectiveCalls
 import java.util.Queue
 import language.postfixOps
+import akka.serialization.SerializationExtension
+import java.io.PrintStream
+import java.io.FileOutputStream
+import java.io.BufferedWriter
+import java.io.FileInputStream
+import java.io.File
+import com.signalcollect.serialization.DefaultSerializer
+import java.io.DataInputStream
+import java.io.DataOutputStream
 
 class WorkerOperationCounters(
   var messagesReceived: Long = 0l,
@@ -508,6 +517,58 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.resetOperationCounters
     vertexStore = storageFactory.createInstance[Id]
     messageBus.reset
+  }
+
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  def snapshot {
+    // Overwrites previous file if it should exist.
+    val snapshotFileOutput = new DataOutputStream(new FileOutputStream(s"$workerId.snapshot"))
+    vertexStore.vertices.foreach { vertex =>
+      val bytes = DefaultSerializer.write(vertex)
+      snapshotFileOutput.writeInt(bytes.length)
+      snapshotFileOutput.write(bytes)
+    }
+    snapshotFileOutput.close
+  }
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  def restore {
+    reset
+    val maxSerializedSize = 64768
+    val snapshotFile = new File(s"$workerId.snapshot")
+    val buffer = new Array[Byte](maxSerializedSize)
+    if (snapshotFile.exists) {
+      val snapshotFileInput = new DataInputStream(new FileInputStream(snapshotFile))
+      val buffer = new Array[Byte](maxSerializedSize)
+      while (snapshotFileInput.available > 0) {
+        val serializedLength = snapshotFileInput.readInt
+        assert(serializedLength <= maxSerializedSize)
+        val bytesRead = snapshotFileInput.read(buffer, 0, serializedLength)
+        assert(bytesRead == serializedLength)
+        val vertex = DefaultSerializer.read[Vertex[Id, _]](buffer)
+        addVertex(vertex)
+      }
+      snapshotFileInput.close
+    }
+  }
+
+  /**
+   * Deletes the worker snapshots if they exist.
+   */
+  def deleteSnapshot {
+    val snapshotFile = new File(s"$workerId.snapshot")
+    if (snapshotFile.exists) {
+      snapshotFile.delete
+    }
   }
 
 }

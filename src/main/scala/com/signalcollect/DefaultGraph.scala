@@ -450,4 +450,24 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }
 
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  private[signalcollect] def snapshot = workerApi.snapshot
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  private[signalcollect] def restore = workerApi.restore
+
+  /**
+   * Deletes the worker snapshots if they exist.
+   */
+  private[signalcollect] def deleteSnapshot = workerApi.deleteSnapshot
+  
 }

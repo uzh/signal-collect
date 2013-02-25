@@ -24,7 +24,7 @@ package com.signalcollect
  *
  *  @author Philip Stutz
  */
-trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float) State] extends Serializable {
+trait Vertex[+Id, State] extends Serializable {
 
   override def hashCode = id.hashCode
 

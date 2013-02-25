@@ -164,13 +164,33 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *  		action that handles this case.
    */
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-  
+
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.
    */
   def reset
-    
+
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  private[signalcollect] def snapshot
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  private[signalcollect] def restore
+
+  /**
+   * Deletes the worker snapshots if they exist.
+   */
+  private[signalcollect] def deleteSnapshot
+
 }
 
 

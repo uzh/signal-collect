@@ -58,4 +58,24 @@ trait WorkerApi[Id, Signal] {
   def shutdown
   def reset
 
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  def snapshot
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  def restore
+
+  /**
+   * Deletes the worker snapshots if they exist. 
+   */
+  def deleteSnapshot
+
 }
