@@ -45,7 +45,7 @@ class ModularitySpec extends SpecificationWithJUnit with Analysis with Classycle
       // Prevents this test from being run if run with an older JVM version.
       System.getProperty("java.version") must startWith("1.7").orSkip("This test only works with java 1.7")
       
-      // All except for configuration, factory and interfaces.  
+      // All except for configuration, factory, serialization and interfaces.  
       val layerStructure = layers(
         "console",
         "coordinator",
@@ -54,7 +54,6 @@ class ModularitySpec extends SpecificationWithJUnit with Analysis with Classycle
         "logging", 
         "messaging",
         "nodeprovisioning",
-        "serialization",
         "storage",
         "worker").withPrefix("com.signalcollect")
         .inTargetDir("target/scala-2.10")
