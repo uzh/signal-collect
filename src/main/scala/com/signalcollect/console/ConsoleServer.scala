@@ -133,7 +133,6 @@ class WebSocketConsoleServer(port: InetSocketAddress)
       case Some(c) => msg match {
         case "graph" => new GraphDataProvider(c)
         case "resources" => new ResourcesDataProvider(c)
-        case "system" => new SystemDataProvider(c)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => new NotReadyDataProvider(msg)
@@ -246,23 +245,9 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
 
     val workerStatisticsMap = workerStatisticsTempMap.toMap
 
-    case class ResourcesData(inboxSize: Long, 
-                             workerStatistics: Map[String,List[Long]],
-                             provider: String = "resources",
-                             timestamp : Long = System.currentTimeMillis)
-    implicit val ResourcesDataFormat: Format[ResourcesData] = 
-                 asProduct4("inboxSize", "workerStatistics", "provider", "timestamp")(
-                            ResourcesData)(ResourcesData.unapply(_).get)
-
-    val data = ResourcesData(inboxSize, workerStatisticsMap)
-    tojson(data).toString
-  }
-}
-
-class SystemDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
-  def fetch(): String = {
     val systemInformation: List[SystemInformation] = 
       (coordinator.getWorkerApi.getIndividualSystemInformation)
+
     implicit val SystemInformationFormat: Format[SystemInformation] = 
                  asProduct14("workerId", "os", "runtime_mem_total", 
                              "runtime_mem_max", "runtime_mem_free", 
@@ -272,13 +257,20 @@ class SystemDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
                              "jmx_process_load", "jmx_process_time", 
                              "jmx_system_load")(
                             SystemInformation)(SystemInformation.unapply(_).get)
-    case class SystemData(information: List[SystemInformation],
-                          provider: String = "system")
-    implicit val SystemDataFormat: Format[SystemData] = 
-                 asProduct2("information", "provider")(
-                            SystemData)(SystemData.unapply(_).get)
-    val data = SystemData(systemInformation)
+
+    case class ResourcesData(inboxSize: Long, 
+                             workerStatistics: Map[String,List[Long]],
+                             systemStatistics: List[SystemInformation],
+                             provider: String = "resources",
+                             timestamp : Long = System.currentTimeMillis)
+    implicit val ResourcesDataFormat: Format[ResourcesData] = 
+                 asProduct5("inboxSize", "workerStatistics", "systemStatistics", 
+                            "provider", "timestamp")(
+                            ResourcesData)(ResourcesData.unapply(_).get)
+
+    val data = ResourcesData(inboxSize, workerStatisticsMap, systemInformation)
     tojson(data).toString
+    
   }
 }
 
