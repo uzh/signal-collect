@@ -188,6 +188,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       case ExecutionMode.ContinuousAsynchronous =>
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
+      case ExecutionMode.Interactive =>
+        stats.terminationReason = TerminationReason.Ongoing
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
