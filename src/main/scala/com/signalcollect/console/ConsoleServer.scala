@@ -126,6 +126,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
 
   def onError(socket: WebSocket, ex: Exception) {
     println("WebSocket - an error occured: " + ex)
+    ex.printStackTrace()
   }
 
   def onMessage(socket: WebSocket, msg: String) {
@@ -245,9 +246,17 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
 
     val workerStatisticsMap = workerStatisticsTempMap.toMap
 
-    val systemInformation: List[SystemInformation] = 
+    var systemInformation: List[SystemInformation] = 
       (coordinator.getWorkerApi.getIndividualSystemInformation)
-
+    
+    // fixing NaNs
+    systemInformation = systemInformation.map(
+      _ match {
+        case s:SystemInformation if s.jmx_system_load.isNaN() => s.copy(jmx_system_load = 0.0)
+        case a:SystemInformation => a
+      }
+    )
+    
     implicit val SystemInformationFormat: Format[SystemInformation] = 
                  asProduct14("workerId", "os", "runtime_mem_total", 
                              "runtime_mem_max", "runtime_mem_free", 
