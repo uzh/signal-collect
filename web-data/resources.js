@@ -16,7 +16,7 @@ scc.modules.resources = function() {
     // show change in the panel
     $(".sectionLink").removeClass("active");
     $("#rs_" + s).addClass("active");
-    // set section to the hash tah
+    // set section to the hash tag
     scc.settings.set(function (settings) { settings.resources.section = s; });
   }
   show_section(scc.settings.get().resources.section);
@@ -28,7 +28,6 @@ scc.modules.resources = function() {
    * TODO
    * - fix animation
    * - Drag timeline
-   * - add -1 as no data
    * - add hover effects
    */
   
@@ -45,15 +44,20 @@ scc.modules.resources = function() {
   {
     var data = [];
     
-    var margin, width, height, x, y, xAxis, yAxis, area, graph;
+    // all graphs
+    var margin, width, height, x, y, xAxis, yAxis, area, graph, circle;
 
+    // stacked graphs
+    var z, stack, nest, layers;
+    
     // number of values to show in the chart
-    var numOfValues = 20;
+    var numOfValues = 100;
     
     this.conf = Object.create({
       graphName : "",
       friendlyName : "",
       dataCallback : null,
+      stacked : false,
 //      size : {
 //        width  : 0,
 //        height : 0
@@ -62,7 +66,6 @@ scc.modules.resources = function() {
     
     this.setup = function() {
       
-      // D3
       margin = {top: 20, right: 20, bottom: 30, left: 50},
       width = 500 - margin.left - margin.right,
       height = 300 - margin.top - margin.bottom;
@@ -99,6 +102,20 @@ scc.modules.resources = function() {
                     ;
       
       graph.append("path").attr("d", area(data)).attr("class", "area");
+      
+      if (this.conf.stacked) {
+        z = d3.scale.category20c();
+        
+        stack = d3.layout.stack()
+                  .offset("zero")
+                  .values(function(d) { return d.values; })
+                  .x(function(d) { return d.date; })
+                  .y(function(d) { return d.value; });
+
+        nest = d3.nest().key(function(d) { return d.key; });
+        
+//        layers = stack(nest.entries(data));
+      }
     
 
       
@@ -119,7 +136,52 @@ scc.modules.resources = function() {
       graph.append("g")
            .attr("class", "y axis")
            .call(yAxis);
+      
+      // add circle for more information
+      circle = graph.append("circle").attr("r", 5).attr("display", "none");
+      graph.on("mouseover", function() { circle.attr("display", "block"); })
+           .on("mousemove", updateCircle)
+           .on("mouseout", function() { circle.attr("display", "none"); });
     };
+    
+    
+    
+    function updateCircle() {
+      console.log("updating");
+      
+      var xMouse = d3.mouse(this)[0];
+      console.log("MouseX=" + xMouse);
+      if (xMouse < 0) {
+        return;
+      }
+      
+//      var x = Math.min(Math.round(xMouse / (numOfValues-1))-1, numOfValues-1);
+      // Normalize: NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+      var x = Math.round((((xMouse - 0) * (numOfValues-1 - 0)) / (width - 0)) + 0);
+      var y;
+      var SPACING = 5;
+      
+      if ( data[x] === undefined ) {
+          var lower = x - (x % SPACING);
+          var upper = lower + SPACING;
+          var between = d3.interpolateNumber(data[lower], data[upper]);
+          y = between( (x+0.001 % SPACING) / SPACING );
+      } else {
+          y = data[x][0];
+      }
+      
+      var yMax = Math.max(d3.max(data, function(d) { return d[0]; }), 1)
+//      console.log("yMax = " + yMax);
+      var yVal = ((height / 1.1) / yMax) * y; // distance from top
+      
+      console.log("x=" + x);
+      console.log("y=" + y);
+      
+      circle
+      // De-Normalize: NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+           .attr("cx", (x*width) / (numOfValues-1))
+           .attr("cy", height-yVal);
+    }
     
     
     
@@ -162,6 +224,15 @@ scc.modules.resources = function() {
 //        .ease("linear")
 //        .duration(interval) // for this demo we want a continual slide so set this to the same as the setInterval amount below
 //        .attr("transform", "translate(" + x(0) + ")"); // animate a slide to the left back to x(0) pixels to reveal the new value
+      
+      $(graph).mousemove();
+      
+//      try {
+//        updateCircle();
+//      } catch(e) {
+//        // propably no mouseover
+//        console.log(e);
+//      }
     };
     
   }
@@ -169,11 +240,12 @@ scc.modules.resources = function() {
   
 
   // helper function to create a new graph
-  function createGraph(graphName, friendlyName, dataCallback) {
+  function createGraph(graphName, friendlyName, dataCallback, stacked) {
     var graph = new GraphClass();
     graph.conf.graphName = graphName;
     graph.conf.friendlyName = friendlyName;
     graph.conf.dataCallback = dataCallback;
+    graph.conf.stacked = stacked;
     return graph;
   }
   
@@ -183,22 +255,32 @@ scc.modules.resources = function() {
   // add some graphs and set them up
   allGraphs.push(createGraph("graphMessagesSent",
                              "Messages Sent (#)",
-                             function(newData) { return newData["messagesSent"][0]; }));
+                             function(newData) { return newData.workerStatistics["messagesSent"][0]; },
+                             false));
   allGraphs.push(createGraph("graphMessagesReceived",
                              "Messages Received (#)",
-                             function(newData) { return newData["messagesReceived"][0]; }));
+                             function(newData) { return newData.workerStatistics["messagesReceived"][0]; },
+                             false));
   allGraphs.push(createGraph("graphOutgoingEdges",
                              "Outgoing Edges (#)",
-                             function(newData) { return newData["numberOfOutgoingEdges"][0]; }));
+                             function(newData) { return newData.workerStatistics["numberOfOutgoingEdges"][0]; },
+                             false));
   allGraphs.push(createGraph("graphToSignalSize",
                              "To Signal Size (#)",
-                             function(newData) { return newData["toSignalSize"][0]; }));
+                             function(newData) { return newData.workerStatistics["toSignalSize"][0]; },
+                             false));
   allGraphs.push(createGraph("graphRequestMessagesReceived",
                              "Request Messages Received (#)",
-                             function(newData) { return newData["requestMessagesReceived"][0]; }));
+                             function(newData) { return newData.workerStatistics["requestMessagesReceived"][0]; },
+                             false));
   allGraphs.push(createGraph("graphSignalOperationsExecuted",
                              "signalOperationsExecuted (#)",
-                             function(newData) { return newData["signalOperationsExecuted"][0]; }));
+                             function(newData) { return newData.workerStatistics["signalOperationsExecuted"][0]; },
+                             false));
+  allGraphs.push(createGraph("graphRamStacked",
+                             "RAM (B)",
+                             function(newData) { return newData.systemStatistics[0]["jmx_mem_free"]; },
+                             true));
   allGraphs.forEach(function(g) { g.setup(); });
   
   
@@ -211,7 +293,7 @@ scc.modules.resources = function() {
   this.onmessage = function(j) {
     
     // update all graphs
-    allGraphs.forEach(function(g) { g.update(j.workerStatistics, j.timestamp); });
+    allGraphs.forEach(function(g) { g.update(j, j.timestamp); });
     
     scc.order("resources", interval);
   }

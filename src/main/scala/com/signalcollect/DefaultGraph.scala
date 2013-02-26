@@ -88,11 +88,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   val console = {
     if (config.consoleEnabled) {
-      if (config.consoleHttpPort > (0)) {
-        new ConsoleServer(new InetSocketAddress(config.consoleHttpPort))
-      } else {
-        new ConsoleServer()
-      }
+      new ConsoleServer(config.consoleHttpPort)
     } else {
       null
     }

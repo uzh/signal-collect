@@ -97,18 +97,18 @@ $(document).ready(function() {
   $(document).keypress(function(e) {
     if (e.which == 103) { // g
       e.preventDefault();
-      show_graph();
+      showView("graph");
     }
     if (e.which == 114) { // r
       e.preventDefault();
-      show_resources();
+      showView("resources");
     }
   });
 
   /* WebSocket communication */
   scc.webSocket = new ReconnectingWebSocket(
                       "ws://" + document.domain + ":" + 
-                      (parseInt(window.location.port) + 1));
+                      (parseInt(window.location.port) + 100));
   scc.webSocket.onopen = function(e) {
     console.log("[WebSocket] onopen");
     showMsg("#success", "WebSocket connection established", true);

@@ -33,7 +33,7 @@ import com.signalcollect.factory.storage.DefaultStorage
  */
 case class GraphConfiguration(
   consoleEnabled: Boolean = false,
-  consoleHttpPort: Int = 8080,
+  consoleHttpPort: Int = -1,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
   workerFactory: WorkerFactory = LocalWorker,
