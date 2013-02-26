@@ -42,10 +42,6 @@ import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import scala.collection.JavaConversions._
-import sjson.json._
-import sjson.json.DefaultProtocol._
-import sjson.json.JsonSerialization._
-import sjson.json.Serializer
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
@@ -190,39 +186,36 @@ trait DataProvider {
 }
 
 class InvalidDataProvider(msg: String) extends DataProvider {
-    def fetch(): String = {
-      tojson(Map("provider" -> "invalid",
-                 "msg"      -> ("Received an invalid message: " + msg))
-            ).toString
-
-    }
+  def fetch(): String = {
+    return compact(render((
+      ("provider" -> "invalid") ~
+      ("msg" -> ("Received an invalid message: " + msg))
+    )))
+  }
 }
 
 class NotReadyDataProvider(msg: String) extends DataProvider {
-    def fetch(): String = {
-      tojson(Map("provider" -> "notready",
-                 "msg"      -> "The signal/collect computation is not ready yet",
-                 "request"  -> msg)
-            ).toString
-    }
+  def fetch(): String = {
+    return compact(render((
+      ("provider" -> "notready") ~
+      ("msg" -> "The signal/collect computation is not ready yet") ~
+      ("request" -> msg)
+    )))
+  }
 }
 
 class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
-    val workerApi = coordinator.getWorkerApi 
-    val vertexAggregator = new VertexToStringAggregator
-    val edgeAggregator = new EdgeToStringAggregator
-    val content = new StringBuilder()
-    def fetch(): String = {
-      val vertices = workerApi.aggregateAll(vertexAggregator)
-      val edges = workerApi.aggregateAll(edgeAggregator)
-      case class GraphData(vertices: Map[String,String], 
-                           edges: Map[String,List[String]],
-                           provider: String = "graph")
-      implicit val GraphDataFormat: Format[GraphData] = 
-                   asProduct3("nodes", "edges", "provider")(
-                              GraphData)(GraphData.unapply(_).get)
-      val data = GraphData(vertices, edges)
-      tojson(data).toString
+  val workerApi = coordinator.getWorkerApi 
+  val vertexAggregator = new VertexToStringAggregator
+  val edgeAggregator = new EdgeToStringAggregator
+  val content = new StringBuilder()
+  def fetch(): String = {
+    val graphData = (
+      ("provider" -> "graph") ~
+      ("vertices" -> workerApi.aggregateAll(vertexAggregator)) ~
+      ("edges" -> workerApi.aggregateAll(edgeAggregator)) 
+    )
+    return compact(render(graphData))
   }
 }
 
@@ -237,6 +230,10 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
       (coordinator.getWorkerApi.getIndividualSystemInformation)
 
     val resourceData = (
+      ("provider" -> "resources") ~
+      ("timestamp" -> System.currentTimeMillis) ~
+      ("inboxSize" -> inboxSize) ~
+      ("workerStatistics" ->
         /* from WorkerStatistics */
         ("workerId" -> List(ws.map(_.workerId))) ~
         ("messagesSent" -> List(ws.map(_.messagesSent.toList))) ~
@@ -271,7 +268,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
         ("jmx_swap_total" ->List(si.map(_.jmx_swap_total))) ~
         ("jmx_process_load" -> List(si.map(_.jmx_process_load))) ~
         ("jmx_process_time" -> List(si.map(_.jmx_process_time))) ~
-        ("jmx_system_load" -> List(si.map(_.jmx_system_load)))
+        ("jmx_system_load" -> List(si.map(_.jmx_system_load)))) 
     )
     return compact(render(resourceData))
 
