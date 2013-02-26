@@ -84,7 +84,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   /**
    * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
    */
-  def messagesSent = sentMessagesCounters.map((c: AtomicInteger) => c.get)
+  def messagesSent = sentMessagesCounters.map((c: AtomicInteger) => c.get.toLong)
 
   def messagesReceived = receivedMessagesCounter.get
 

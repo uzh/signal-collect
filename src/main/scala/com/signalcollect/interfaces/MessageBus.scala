@@ -36,7 +36,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   
   def numberOfWorkers: Int
 
-  def messagesSent: Array[Int]
+  def messagesSent: Array[Long]
   def messagesReceived: Long
 
   def getReceivedMessagesCounter: AtomicInteger

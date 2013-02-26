@@ -57,7 +57,7 @@ class DefaultWorkerApi[Id, Signal](
   def getIndividualSystemInformation: List[SystemInformation] = futures(_.getSystemInformation) map get toList
 
   override def getSystemInformation: SystemInformation = {
-    getIndividualSystemInformation.fold(SystemInformation(-1, null))(_ + _)
+    getIndividualSystemInformation.fold(SystemInformation())(_ + _)
   }
 
   override def signalStep: Boolean = futures(_.signalStep) forall get

@@ -45,6 +45,9 @@ import scala.collection.JavaConversions._
 import sjson.json._
 import sjson.json.DefaultProtocol._
 import sjson.json.JsonSerialization._
+import sjson.json.Serializer
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 class ConsoleServer(
               httpPort: InetSocketAddress = new InetSocketAddress(8080)) {
@@ -198,88 +201,55 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
   def fetch(): String = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
-    val workerStatistics: List[WorkerStatistics] = 
+    val ws: List[WorkerStatistics] = 
       (coordinator.getWorkerApi.getIndividualWorkerStatistics)
 
-    val workerStatisticsHeaders = List(
-          "messagesSent", 
-          "workerId",
-          "messagesReceived",
-          "toSignalSize",
-          "toCollectSize",
-          "collectOperationsExecuted",
-          "signalOperationsExecuted",
-          "numberOfVertices",
-          "verticesAdded",
-          "verticesRemoved",
-          "numberOfOutgoingEdges",
-          "outgoingEdgesAdded",
-          "outgoingEdgesRemoved",
-          "receiveTimeoutMessagesReceived",
-          "heartbeatMessagesReceived",
-          "signalMessagesReceived",
-          "bulkSignalMessagesReceived",
-          "continueMessagesReceived",
-          "requestMessagesReceived",
-          "otherMessagesReceived"
-    )
-
-    val workerStatisticsTempMap: 
-        scala.collection.mutable.Map[String,List[Long]] = 
-        scala.collection.mutable.Map[String,List[Long]]()
-
-    workerStatisticsHeaders.foreach { h =>
-      var l: List[Long] = List() 
-      workerStatistics.foreach { w =>
-        val srcVal: Any = w.getClass.getMethods
-                           .find(_.getName == h).get.invoke(w)
-        val dstVal: Long = srcVal match {
-          case l: Long => l
-          case al: Array[Long] => al.sum.toLong
-          case i: Int => i.toLong
-          case other => 0
-        }
-        l = dstVal :: l
-      }
-      workerStatisticsTempMap += (h -> l.reverse)
-    }
-
-    val workerStatisticsMap = workerStatisticsTempMap.toMap
-
-    var systemInformation: List[SystemInformation] = 
+    var si: List[SystemInformation] = 
       (coordinator.getWorkerApi.getIndividualSystemInformation)
-    
-    // fixing NaNs
-    systemInformation = systemInformation.map(
-      _ match {
-        case s:SystemInformation if s.jmx_system_load.isNaN() => s.copy(jmx_system_load = 0.0)
-        case a:SystemInformation => a
-      }
+
+    val resourceData = (
+        /* from WorkerStatistics */
+        ("workerId" -> List(ws.map(_.workerId))) ~
+        ("messagesSent" -> List(ws.map(_.messagesSent.toList))) ~
+        ("messagesReceived" -> List(ws.map(_.messagesReceived))) ~
+        ("toSignalSize" -> List(ws.map(_.toSignalSize))) ~
+        ("toCollectSize" -> List(ws.map(_.toCollectSize))) ~
+        ("collectOperationsExecuted" -> List(ws.map(_.collectOperationsExecuted))) ~
+        ("signalOperationsExecuted" -> List(ws.map(_.signalOperationsExecuted))) ~
+        ("numberOfVertices" -> List(ws.map(_.numberOfVertices))) ~
+        ("verticesAdded" -> List(ws.map(_.verticesAdded))) ~
+        ("verticesRemoved" -> List(ws.map(_.verticesRemoved))) ~
+        ("numberOfOutgoingEdges" -> List(ws.map(_.numberOfOutgoingEdges))) ~
+        ("outgoingEdgesAdded" -> List(ws.map(_.outgoingEdgesAdded))) ~
+        ("outgoingEdgesRemoved" -> List(ws.map(_.outgoingEdgesRemoved))) ~
+        ("receiveTimeoutMessagesReceived" -> List(ws.map(_.receiveTimeoutMessagesReceived))) ~
+        ("heartbeatMessagesReceived" -> List(ws.map(_.heartbeatMessagesReceived))) ~
+        ("signalMessagesReceived" -> List(ws.map(_.signalMessagesReceived))) ~
+        ("bulkSignalMessagesReceived" -> List(ws.map(_.bulkSignalMessagesReceived))) ~
+        ("continueMessagesReceived" -> List(ws.map(_.continueMessagesReceived))) ~
+        ("requestMessagesReceived" -> List(ws.map(_.requestMessagesReceived))) ~
+        ("otherMessagesReceived" -> List(ws.map(_.otherMessagesReceived))) ~
+        /* from SystemInformation */
+        ("os" -> List(si.map(_.os))) ~
+        ("runtime_mem_total" -> List(si.map(_.runtime_mem_total))) ~
+        ("runtime_mem_max" -> List(si.map(_.runtime_mem_max))) ~
+        ("runtime_mem_free" -> List(si.map(_.runtime_mem_free))) ~
+        ("runtime_cores" -> List(si.map(_.runtime_cores))) ~
+        ("jmx_committed_vms" -> List(si.map(_.jmx_committed_vms))) ~
+        ("jmx_mem_free" -> List(si.map(_.jmx_mem_free))) ~
+        ("jmx_mem_total" -> List(si.map(_.jmx_mem_total))) ~
+        ("jmx_swap_free" -> List(si.map(_.jmx_swap_free))) ~
+        ("jmx_swap_total" ->List(si.map(_.jmx_swap_total))) ~
+        ("jmx_process_load" -> List(si.map(_.jmx_process_load))) ~
+        ("jmx_process_time" -> List(si.map(_.jmx_process_time))) ~
+        ("jmx_system_load" -> List(si.map(_.jmx_system_load)))
     )
-    
-    implicit val SystemInformationFormat: Format[SystemInformation] = 
-                 asProduct14("workerId", "os", "runtime_mem_total", 
-                             "runtime_mem_max", "runtime_mem_free", 
-                             "runtime_cores", "jmx_committed_vms", 
-                             "jmx_mem_free", "jmx_mem_total",
-                             "jmx_swap_free", "jmx_swap_total", 
-                             "jmx_process_load", "jmx_process_time", 
-                             "jmx_system_load")(
-                            SystemInformation)(SystemInformation.unapply(_).get)
+    return compact(render(resourceData))
 
-    case class ResourcesData(inboxSize: Long, 
-                             workerStatistics: Map[String,List[Long]],
-                             systemStatistics: List[SystemInformation],
-                             provider: String = "resources",
-                             timestamp : Long = System.currentTimeMillis)
-    implicit val ResourcesDataFormat: Format[ResourcesData] = 
-                 asProduct5("inboxSize", "workerStatistics", "systemStatistics", 
-                            "provider", "timestamp")(
-                            ResourcesData)(ResourcesData.unapply(_).get)
+    /* code kept for reference; use something like this to genericise?
+    val srcVal: Any = w.getClass.getMethods.find(_.getName == h).get.invoke(w)
+    */
 
-    val data = ResourcesData(inboxSize, workerStatisticsMap, systemInformation)
-    tojson(data).toString
-    
   }
 }
 

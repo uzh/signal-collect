@@ -379,7 +379,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     WorkerStatistics(
       workerId = workerId,
       messagesReceived = counters.messagesReceived,
-      messagesSent = messageBus.messagesSent.map(c => c.toLong),
+      messagesSent = messageBus.messagesSent,
       toSignalSize = vertexStore.toSignal.size,
       toCollectSize = vertexStore.toCollect.size,
       collectOperationsExecuted = counters.collectOperationsExecuted,

@@ -44,7 +44,7 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-  messagesSent: Array[Int],
+  messagesSent: Array[Long],
   messagesReceived: Long)
 
 case class WorkerStatistics(
