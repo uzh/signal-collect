@@ -46,21 +46,50 @@ import sjson.json._
 import sjson.json.DefaultProtocol._
 import sjson.json.JsonSerialization._
 
-class ConsoleServer(
-              httpPort: InetSocketAddress = new InetSocketAddress(8080)) {
+class ConsoleServer(userHttpPort: Int) {
 
-  val server = HttpServer.create(httpPort, 0)
+  val (server: HttpServer, sockets: WebSocketConsoleServer) = setupUserPorts(userHttpPort)
+  
   server.createContext("/", new FileServer("web-data"))
   server.createContext("/api", new ApiServer())
   server.setExecutor(Executors.newCachedThreadPool())
   server.start
-  println("HTTP server started on localhost:" + httpPort.getPort)
+  println("HTTP server started on http://localhost:" + server.getAddress().getPort() + "")
 
-  val socketsPort = new InetSocketAddress(httpPort.getPort() + 1)
-  val sockets = new WebSocketConsoleServer(socketsPort);
   sockets.start();
-  System.out.println( "WebSocket server started on port: " + sockets.getPort() );
+  println("WebSocket - Server started on port: " + sockets.getPort())
 
+  def setupUserPorts(httpPort: Int) : (HttpServer, WebSocketConsoleServer) = {
+    val minAllowedUserPortNumber = 1025
+    if (httpPort < minAllowedUserPortNumber) {
+      val defaultPort = 8080
+      val maxUserPort = 8179
+      println("Websocket - No valid port given (using default port " + defaultPort + ")")
+      for (port <- defaultPort to maxUserPort) {
+        try {
+          println("Websocket - Connecting to port " + port + "...")
+          return getNewServers(port)
+        } catch {
+          case e: Exception => println("Websocket - Starting server on port " + port + " failed: " + e.getMessage())
+        }
+      }
+      println("Could not start server on ports " + defaultPort + " to " + maxUserPort)
+      sys.exit
+    } else {
+      try {
+        return getNewServers(httpPort)
+      } catch {
+        case e: Throwable => println("Could not start server: " + e.getMessage()); sys.exit
+      }
+    }
+  }
+  
+  def getNewServers(httpPort: Int) = {
+    val server: HttpServer = HttpServer.create(new InetSocketAddress(httpPort), 0)
+    val sockets: WebSocketConsoleServer = new WebSocketConsoleServer(new InetSocketAddress(httpPort + 100));
+    (server, sockets)
+  }
+  
   def setCoordinator(coordinatorActor: ActorRef) {
     sockets.setCoordinator(coordinatorActor)
   }
