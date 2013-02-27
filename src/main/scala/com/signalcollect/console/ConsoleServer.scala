@@ -95,7 +95,7 @@ class ConsoleServer(userHttpPort: Int) {
 
   def shutdown {
     server.stop(0)
-    //sockets.stop(0)
+    sockets.stop(0)
   }
 }
 
@@ -295,9 +295,13 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
         ("jmx_swap_total" ->si.map(_.jmx_swap_total)) ~
         ("jmx_process_load" -> si.map(_.jmx_process_load)) ~
         ("jmx_process_time" -> si.map(_.jmx_process_time)) ~
-        ("jmx_system_load" -> si.map(_.jmx_system_load)) 
+        ("jmx_system_load" -> si.map({ s =>
+          val v = s.jmx_system_load
+          println("NaN Candidate: ")
+          println(v)
+          if (v.isNaN()) { 0 } 
+          else {v}})) 
     )
-    println(compact(render(resourceData)))
     return compact(render(resourceData))
 
     /* code kept for reference; use something like this to genericise?

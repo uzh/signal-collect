@@ -88,7 +88,7 @@ $(document).ready(function() {
     var provider = j["provider"]
     if (provider == "notready") {
       var request = j["request"]
-      scc.order(request, 1000);
+      scc.order(request, 1000, true);
     }
     for (var m in scc.consumers) { 
       var consumer = scc.consumers[m]
@@ -107,15 +107,19 @@ $(document).ready(function() {
     console.log(e)
     for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
   }
-  scc.order = function(msg, delay) {
-    msg = JSON.stringify(msg)
-    console.log("ordering " + msg)
-    if (!delay) { delay = 0; }
-    if (scc.orders[msg]) {
-      clearTimeout(scc.orders[msg])
+  scc.order = function(msg, delay, forward) {
+    var id = msg.provider
+    if (!delay) { var delay = 0; }
+    if (scc.orders[id]) {
+      clearTimeout(scc.orders[id])
+      delete scc.orders[id];
     }
-    scc.orders[msg] = setTimeout(function() {
-      try { scc.webSocket.send(msg); }
+    scc.orders[id] = setTimeout(function() {
+      var j = JSON.stringify(msg)
+      try { 
+        if (forward) { scc.webSocket.send(msg); }
+        else {scc.webSocket.send(j); }
+      }
       catch(err) { scc.order(msg, 1000); }
     }, delay);
   }
@@ -139,7 +143,7 @@ $(document).ready(function() {
 });
 
 window.onbeforeunload = function() {
-  ws.onclose = function () {}; // disable onclose handler first
+  ws.onclose = function () {}; 
   ws.close();
 };
 

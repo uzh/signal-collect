@@ -18,6 +18,7 @@ scc.modules.graph = function() {
   var linkRefs = {};
   var node;
   var link;
+  var query;
 
   this.layout = function() {
     $.each(scc.settings.get().graph.layout, function (key, value) {
@@ -143,7 +144,11 @@ scc.modules.graph = function() {
     $("#graph_canvas").empty()
   }
 
-  $("searchById").click(function () {
-    
+  $("#searchById").click(function (e) {
+    e.preventDefault();
+    scc.order({"provider": "graph", 
+               "search": "vicinity", 
+               "id": $("#searchId").val()}, 0)
+    return false;
   });
 }
