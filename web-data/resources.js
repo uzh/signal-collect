@@ -258,10 +258,10 @@ scc.modules.resources = function() {
   var allGraphs = [];
   
   // add some graphs and set them up
-//  allGraphs.push(createGraph("graphMessagesSent",
-//                             "Messages Sent (#)",
-//                             function(newData) { return newData.workerStatistics["messagesSent"][0]; },
-//                             false));
+  allGraphs.push(createGraph("graphMessagesSent",
+                             "Messages Sent (#)",
+                             function(newData) { return newData.workerStatistics["messagesSent"][0][0]; },
+                             false));
   allGraphs.push(createGraph("graphMessagesReceived",
                              "Messages Received (#)",
                              function(newData) { return newData.workerStatistics["messagesReceived"][0]; },
@@ -282,10 +282,10 @@ scc.modules.resources = function() {
                              "signalOperationsExecuted (#)",
                              function(newData) { return newData.workerStatistics["signalOperationsExecuted"][0]; },
                              false));
-//  allGraphs.push(createGraph("graphRamStacked",
-//                             "RAM (B)",
-//                             function(newData) { return newData.systemStatistics["jmx_mem_free"][0]; },
-//                             true));
+  allGraphs.push(createGraph("graphRamStacked",
+                             "RAM (B)",
+                             function(newData) { return newData.jmx_mem_free[0]; },
+                             true));
   allGraphs.forEach(function(g) { g.setup(); });
   
   
