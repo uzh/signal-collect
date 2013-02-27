@@ -118,7 +118,7 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
   /**
    *  Executes the function `f` on the vertex with id `vertexId` and returns the result.
    *
-   *  @return `Some` return value of the function `f` if the function was executed successfully, else `None`.
+   *  @return Returns the result of function `f`.
    *
    *  @note The function `f` may be executed in another thread or on another computer.
    *
