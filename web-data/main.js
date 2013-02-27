@@ -1,98 +1,66 @@
 var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}}
+scc.defaults.main = {"view": "graph",
+                      "choices": {
+                        "Node Selection": "topk", 
+                        "TopK": "degree",
+                        "Graph Layout": "forced"
+                    }}
+
 
 function Settings() {
   this.settings = loadSettings();
-  this.set = function(fun) {
-    fun(this.settings);
-    top.location.hash = JSON.stringify(this.settings);
+  this.set = function(modification) {
+    if (typeof(modification) == "function") {
+      modification(this.settings);
+    }
+    else {
+      var newSettings = {};
+      $.extend(true, newSettings, this.settings);
+      $.extend(true, newSettings, modification);
+      this.settings = hideDefaults(scc.defaults, newSettings);
+    }
+    if (Object.keys(this.settings).length > 0) {
+      top.location.hash = JSON.stringify(this.settings);
+    }
+    else {
+      top.location.hash = ""
+    }
   }
   this.get = function() {
-    return this.settings;
+    var s = {}
+    $.extend(true, s, scc.defaults);
+    $.extend(true, s, this.settings);
+    return s;
   }
   function loadSettings() {
-    settings = { 
-      "view": "graph",
-      "hiddenSections": {}
-    }; 
-    $.each(scc.defaults, function (c) {
-      settings[c] = scc.defaults[c];
-    });
+    settings = {}
     hash = top.location.hash.slice(1);
     if (hash) {
       hash = JSON.parse(hash);
-      $.each(settings, function (key, value) {
-        if (hash[key]) { settings[key] = hash[key]; }
-      });
+      $.extend(true, settings, hash);
     }
     return settings
+  }
+  function hideDefaults(defaults, added) {
+    if (typeof(added) == "object" ) {
+      $.each(added, function(k, v) {
+        added[k] = hideDefaults(defaults[k], v);
+        if (added[k] == null || 
+           (typeof(added[k]) == "object" &&  Object.keys(added[k]).length == 0)) {
+          delete added[k];
+        }
+      });
+    }
+    else {
+      if (defaults == added) { return null; }
+    }
+    return added
   }
 }
 
 $(document).ready(function() {
-  var hidingTimeout;
   scc.settings = new Settings();
 
-  /* Message bar at the top */
-  function hideMsg(fast) {
-    if (fast) { $("#top").css("top", "-60px") }
-    else { $("#top").stop().animate({"top": "-60px"}); }
-  }
-  hideMsg(true);
-
-  function showMsg(type, msg, timeout) {
-    clearTimeout(hidingTimeout);
-    $(".msg").stop().addClass("hidden");
-    $(type).html(msg);
-    $(type).removeClass("hidden");
-    $("#top").animate({"top": "0px"});
-
-    if (timeout) {
-      hidingTimeout = setTimeout(function() {
-        hideMsg();
-      }, 3000);
-    }
-  }
-  
-  /* Console navigation and view handling */
-  hideMsg();
-  var clearViews = function(e) { 
-    $("#modes span").removeClass("selected");
-    $(".view").hide();
-    $("#graph_panel_container").hide();
-    $("#resources_panel_container").hide();
-  }
-
-  var showView = function(view) {
-    if ($("#" + view + ".view").is(":visible")) { return }
-    clearViews();
-    scc.settings.set(function(s) { s.view = view; });
-    $("#mode_" + view).addClass("selected");
-    $("#" + view + ".view").fadeIn()
-    $("#" + view + "_panel_container").show();
-  }
-
-  $("#mode_resources").click(function () { showView("resources"); });
-  $("#mode_graph").click(function () { showView("graph"); });
-
-  $(".panel_section .title").click(function () {
-    section = $(this)
-    if (section.next().is(":visible")) {
-      scc.settings.set(function (s) { s.hiddenSections[section.text()] = true; })
-      section.removeClass("expanded");
-    }
-    else {
-      scc.settings.set(function (s) { delete s.hiddenSections[section.text()]; })
-      section.addClass("expanded");
-    }
-    section.next().toggle(200)
-  });
-  $.each(scc.settings.get().hiddenSections, function (key, value) {
-    $(".panel_section .title:contains(" + key + ")").each(function () {
-        $(this).removeClass("expanded");
-        $(this).next().hide();
-    });
-  });
-  
   // add keyboard shortcuts to change between tabs
   $(document).keypress(function(e) {
     if (e.which == 103) { // g
@@ -148,29 +116,21 @@ $(document).ready(function() {
     }, delay);
   }
 
-  /* Enable modules depending on URL and jump to a tab depending on hashtag */
   enable_modules = function(modules) {
-    $("#modes span").css("width", (100/modules.length) + "%");
     for (var m in modules) {
       module = modules[m];
       scc.consumers[module] = new scc.modules[module]();
-      $("span#mode_" + module).show();
     }
+    layout(modules);
   }
   switch (window.location.pathname) {
     case "/resources": 
     case "/graph": 
       module = window.location.pathname.slice(1);
       enable_modules([module]); 
-      showView(module)
       break;
     default:
-      enable_modules(["graph", "resources"]);
-      switch (scc.settings.get().view) {
-        case "resources": showView("resources"); break;
-        case "graph":
-        default: showView("graph");
-      }
+      enable_modules(["graph", "resources"]); break;
   }
 });
 
@@ -178,3 +138,4 @@ window.onbeforeunload = function() {
   ws.onclose = function () {}; // disable onclose handler first
   ws.close();
 };
+

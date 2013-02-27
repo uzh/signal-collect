@@ -165,9 +165,9 @@ body {
   height:0px; 
   margin-left: 5px;
   margin-right: 5px;
-  border-bottom:6px solid transparent;  /* left arrow slant */
-  border-top:6px solid transparent; /* right arrow slant */
-  border-left:8px solid #666; /* bottom, add background color here */
+  border-bottom:6px solid transparent;
+  border-top:6px solid transparent;
+  border-left:8px solid #666;
   font-size:0px;
   line-height:0px;
 }
@@ -187,6 +187,31 @@ body {
 
 }
 .panel .panel_section .contents {
+}
+
+.panel input[type="radio"] {
+  display:none;
+}
+
+.panel input[type="radio"] + label {
+  position: relative;
+  left: 5px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+}
+.panel input[type="radio"] + label:before {
+  content: "○";
+  margin-right: 5px;
+  font-size: 20px;
+}
+
+.panel input[type="radio"]:checked + label {
+  color: #2c90c4;
+}
+.panel input[type="radio"]:checked + label:before {
+  content: "●";
+  font-size: 20px;
 }
 
 #controls {

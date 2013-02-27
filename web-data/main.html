@@ -7,6 +7,7 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="d3.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src="layout.js"></script>
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="graph.js"></script>
     <script type="text/javascript" src="resources.js"></script>
@@ -19,7 +20,7 @@
     </div>
     <div id="top">
       <div id="error" class="msg">Javascript is required to run this Application.</div>
-      <div id="success" class="msg hidden">Javascript is required to run this Application.</div>
+      <div id="success" class="msg hidden"></div>
     </div>
     <div id="left">
       <div id="modes">
@@ -29,22 +30,28 @@
       <div id="graph_panel_container">
         <div class="panel">
           <div class="panel_section">
-            <div class="title expanded">Node Selection</div>
+            <div id="cNodeSelection" 
+                 class="title expanded">Select nodes to display</div>
             <div class="contents">
               <form>
-                <input type="radio" name="layout" value="grid"/>Option1<br/>
-                <input type="radio" name="layout" value="force"/>Option2<br/>
-                <input type="radio" name="layout" value="custom"/>Option3<br/>
+                <input type="radio" name="ns" id="ns_search"/>
+                <label for="ns_search">Search for vertex by ID</label><br/>
+                <input type="radio" name="ns" id="ns_topk"/>
+                <label for="ns_topk">Top K vertices</label><br/>
               </form> 
             </div>
           </div>
           <div class="panel_section">
-            <div class="title expanded">Layouts</div>
+            <div id="cGraphLayout" 
+                 class="title expanded">Graph Layout</div>
             <div class="contents">
               <form>
-                <input type="radio" name="layout" value="grid"/>Grid<br/>
-                <input type="radio" name="layout" value="force"/>Forced<br/>
-                <input type="radio" name="layout" value="custom"/>Custom<br/>
+                <input type="radio" name="gl" id="gl_grid"/>
+                <label for="gl_grid">Grid</label><br/>
+                <input type="radio" name="gl" id="gl_forced"/>
+                <label for="gl_forced">Forced</label><br/>
+                <input type="radio" name="gl" id="gl_custom"/>
+                <label for="gl_custom">Custom</label><br/>
               </form> 
             </div>
           </div>
@@ -53,7 +60,7 @@
       <div id="resources_panel_container">
         <div class="panel">
           <div class="panel_section">
-            <div class="title expanded">Something</div>
+            <div id="cResourceViews" class="title expanded">Views</div>
             <div class="contents">
               <span class="sectionLink" id="rs_overview">Overview</span><br/>
               <span class="sectionLink" id="rs_detailed">Detailed Overview</span><br/>

@@ -1,4 +1,8 @@
-scc.defaults.resources = {"section": "overview"}
+scc.defaults.resources = {"layout":{
+                            "cResourceViews":"show"},
+                          "section": "overview"
+                         }
+
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
@@ -17,7 +21,8 @@ scc.modules.resources = function() {
     $(".sectionLink").removeClass("active");
     $("#rs_" + s).addClass("active");
     // set section to the hash tag
-    scc.settings.set(function (settings) { settings.resources.section = s; });
+    var mod = {"resources": {"section": s }}
+    scc.settings.set(mod);
   }
   show_section(scc.settings.get().resources.section);
   

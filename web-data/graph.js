@@ -1,6 +1,15 @@
+scc.defaults.graph = {"layout": {
+                        "cNodeSelection": "show",
+                        "cGraphLayout": "show"
+                      },
+                      "choices": {
+                        "Node Selection": "topk", 
+                        "TopK": "degree",
+                        "Graph Layout": "forced"
+                      }}
+
 scc.modules.graph = function() {
   this.requires = ["graph"]
-  
   var s, svg, width, height, force;
   var color = d3.scale.category20();
   var nodes = [];
@@ -9,6 +18,13 @@ scc.modules.graph = function() {
   var linkRefs = {};
   var node;
   var link;
+
+  this.layout = function() {
+    $.each(scc.settings.get().graph.layout, function (key, value) {
+      if (value == "show") { $("#" + key).show(); }
+    })
+  }
+  this.layout()
 
   this.onopen = function() {
 

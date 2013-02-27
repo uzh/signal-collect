@@ -212,7 +212,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
   def fetch(): String = {
     val graphData = (
       ("provider" -> "graph") ~
-      ("vertices" -> workerApi.aggregateAll(vertexAggregator)) ~
+      ("nodes" -> workerApi.aggregateAll(vertexAggregator)) ~
       ("edges" -> workerApi.aggregateAll(edgeAggregator)) 
     )
     return compact(render(graphData))
