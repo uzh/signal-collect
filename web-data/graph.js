@@ -12,13 +12,14 @@ scc.modules.graph = function() {
   this.requires = ["graph"]
   var s, svg, width, height, force;
   var color = d3.scale.category20();
+
   var nodes = [];
   var links = [];
   var nodeRefs = {};
   var linkRefs = {};
   var node;
   var link;
-  var query;
+  var order = {"provider": "graph"};
 
   this.layout = function() {
     $.each(scc.settings.get().graph.layout, function (key, value) {
@@ -50,10 +51,10 @@ scc.modules.graph = function() {
     link = svg.selectAll(".link");
 
     force.on("tick", function() {
-      /*link.attr("x1", function(d) { return d.source.x; })
+      link.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });*/
+          .attr("y2", function(d) { return d.target.y; });
 
       node.attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
@@ -67,7 +68,7 @@ scc.modules.graph = function() {
                + " scale(" + d3.event.scale + ")");
     }
 
-    scc.order({"provider": "graph"})
+    scc.order(order)
   }
    
   this.onmessage = function(j) {
@@ -108,6 +109,14 @@ scc.modules.graph = function() {
       }
     });
 
+    
+    link = link.data(force.links(), 
+              function (d) { return d.source.id + "-" + d.target.id; });
+    link.enter().append("line")
+        .attr("class", "link")
+    link.exit().remove();
+    link.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
     node = node.data(force.nodes(), 
               function (d) { return d.id; });
     node.enter().append("circle")
@@ -117,20 +126,12 @@ scc.modules.graph = function() {
     node.exit().remove();
     node.style("fill", function(d) { return color(d.state); })
 
-    link = svg.selectAll(".link")
-        .data(force.links(), 
-              function (d) { d.source + "-" + d.target; });
-    link.enter().append("line")
-        .attr("class", "link")
-    link.exit().remove();
-    link.style("stroke-width", function(d) { return Math.sqrt(d.value); });
-
-    /*node.append("title")
-        .text(function(d) { return d.id; });*/
+    node.append("title")
+        .text(function(d) { return d.id + ": " + d.state; });
 
     if (newNodes) {force.start(); }
 
-    scc.order({"provider": "graph"}, 1000)
+    scc.order(order, 10000)
 
   }
 
@@ -142,13 +143,31 @@ scc.modules.graph = function() {
 
   this.destroy = function() {
     $("#graph_canvas").empty()
+    nodes = []
+    links = []
+    nodeRefs = {};
+    linkRefs = {};
   }
 
   $("#searchById").click(function (e) {
     e.preventDefault();
-    scc.order({"provider": "graph", 
-               "search": "vicinity", 
-               "id": $("#searchId").val()}, 0)
+    scc.consumers.graph.destroy()
+    scc.consumers.graph.onopen()
+    order = {"provider": "graph", 
+             "search": "vicinity", 
+             "id": $("#searchId").val()}
+    scc.order(order)
     return false;
   });
+  $("#searchByTopk").click(function (e) {
+    e.preventDefault();
+    scc.consumers.graph.destroy()
+    scc.consumers.graph.onopen()
+    order = {"provider": "graph", 
+             "search": "topk", 
+             "property": parseFloat($("#topk").val())}
+    scc.order(order)
+    return false;
+  });
+
 }

@@ -127,7 +127,6 @@ $(document).ready(function() {
         console.log("cannot send message: " + j)
       }
     }, delay);
-    console.log(scc.orders)
   }
 
   enable_modules = function(modules) {

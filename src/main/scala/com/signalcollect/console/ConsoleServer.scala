@@ -31,6 +31,7 @@ import scala.collection.immutable.List.apply
 import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, 
                                       SystemInformation, Inspectable }
 import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.TopKFinder
 import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.AggregationOperation
@@ -211,7 +212,8 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
 case class GraphDataRequest(
   provider: String, 
   search: Option[String], 
-  id: Option[String]
+  id: Option[String],
+  property: Option[Int]
 )
 
 /*
@@ -224,11 +226,29 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   val workerApi = coordinator.getWorkerApi 
   def fetch(): String = {
     val request = (msg).extract[GraphDataRequest]
+    println(request)
     val graphData = request.search match {
       case Some("vicinity") => request.id match {
         case Some(id) =>
-          val vertexAggregator = new SearchAggregator(id)
-          val nodesEdges = workerApi.aggregateAll(vertexAggregator)
+          var vertexAggregator = new SearchAggregator(List(id))
+          var nodesEdges = workerApi.aggregateAll(vertexAggregator)
+          vertexAggregator = new SearchAggregator(nodesEdges._2(id))
+          val nodesEdges2 = workerApi.aggregateAll(vertexAggregator)
+          ("provider" -> "graph") ~
+          ("nodes" -> nodesEdges2._1) ~
+          ("edges" -> nodesEdges2._2)
+        case otherwise => 
+          ("provider" -> "graph") ~
+          ("nodes" -> "") ~
+          ("edges" -> "")
+      }
+      case Some("topk") => request.property match {
+        case Some(property) => 
+          println(property)
+          val topk = new TopKFinder[Int](property)
+          val nodes = workerApi.aggregateAll(topk)
+          var vertexAggregator = new SearchAggregator(nodes.toList.map(_._1.toString))
+          var nodesEdges = workerApi.aggregateAll(vertexAggregator)
           ("provider" -> "graph") ~
           ("nodes" -> nodesEdges._1) ~
           ("edges" -> nodesEdges._2)
@@ -246,7 +266,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       }
 
     }
-    println(compact(render(graphData)))
+    //println(compact(render(graphData)))
     return compact(render(graphData))
   }
 }
@@ -356,7 +376,7 @@ class AllEdgesAggregator
   }
 }
 
-class SearchAggregator(id: String)
+class SearchAggregator(ids: List[String])
       extends AggregationOperation[(Map[String,String],Map[String,List[String]])] {
   def extract(v: Vertex[_, _]): (Map[String,String],Map[String,List[String]]) = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
@@ -371,10 +391,11 @@ class SearchAggregator(id: String)
   }
 
   def vertexToSigmaAddCommand(v: Inspectable[_, _]): (Map[String,String],Map[String,List[String]]) = {
-    if (v.id.toString == id) {
-      val nodes = Map(v.id.toString -> v.state.toString)
+    if (ids.contains(v.id.toString)) {
+      var nodes = Map(v.id.toString -> v.state.toString)
       val edges = v.outgoingEdges.values
          .foldLeft(List[String]()) { (list, e) =>
+             nodes = nodes ++ Map(e.targetId.toString -> "unknown")
              list ++ List(e.targetId.toString)
          }
       return (nodes, Map(v.id.toString -> edges))
