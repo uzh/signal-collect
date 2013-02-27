@@ -19,14 +19,12 @@
 
 package com.signalcollect
 
-import scala.Predef.Map.apply
-import scala.Some.apply
-import scala.collection.immutable.List.apply
+import scala.collection.mutable.PriorityQueue
 import scala.reflect.ClassTag
+import scala.util.Sorting
+
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
-import scala.collection.mutable.PriorityQueue
-import scala.util.Sorting
 
 /**
  *  More modular interface for aggregation operations.
@@ -134,7 +132,7 @@ class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends ModularAggrega
   def extract(v: Vertex[_, _]): Long = {
     v match {
       case v: VertexType => 1l
-      case other         => 0l
+      case other => 0l
     }
   }
 
@@ -170,9 +168,9 @@ abstract class ReduceStatesOperation[ValueType: Manifest] extends StateExtractor
   def aggregate(a: Option[ValueType], b: Option[ValueType]): Option[ValueType] = {
     (a, b) match {
       case (Some(x), Some(y)) => Some(operation(x, y))
-      case (Some(x), None)    => Some(x)
-      case (None, Some(y))    => Some(y)
-      case (None, None)       => None
+      case (Some(x), None) => Some(x)
+      case (None, Some(y)) => Some(y)
+      case (None, None) => None
     }
   }
 
@@ -200,7 +198,7 @@ abstract class StateAggregator[StateType] extends ModularAggregationOperation[St
  * Finds the ids and states of the K vertices with the largest states.
  */
 class TopKFinder[State](k: Int)(implicit ord: Ordering[State])
-    extends ComplexAggregation[Iterable[(_, State)], Iterable[(_, State)]] {
+  extends ComplexAggregation[Iterable[(_, State)], Iterable[(_, State)]] {
 
   implicit val ordering = Ordering.by((value: (_, State)) => value._2)
 

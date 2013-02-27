@@ -19,7 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
 
 /**

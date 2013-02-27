@@ -21,16 +21,22 @@ package com.signalcollect.console
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import scala.language.postfixOps
+
 import scala.Array.canBuildFrom
-import scala.collection.immutable.List.apply
-import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, Inspectable }
-import com.signalcollect.messaging.AkkaProxy
-import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.AggregationOperation
-import com.signalcollect.Vertex
+import scala.language.postfixOps
 import scala.util.Random
+
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Inspectable
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.messaging.AkkaProxy
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import com.sun.net.httpserver.HttpServer
+
+import akka.actor.ActorRef
 
 class ConsoleServer(coordinatorActor: ActorRef, address: InetSocketAddress = new InetSocketAddress(8080)) {
   val server = HttpServer.create(address, 0)
@@ -91,7 +97,7 @@ class EdgeToStringAggregator extends AggregationOperation[String] {
   def vertexToSigmaAddCommand(v: Inspectable[_, _]): String = {
     val sb = new StringBuilder
     for (targetId <- v.getTargetIdsOfOutgoingEdges) {
-      sb.append(Template.addEdge(v.id.toString+targetId.toString, v.id.toString, targetId.toString))
+      sb.append(Template.addEdge(v.id.toString + targetId.toString, v.id.toString, targetId.toString))
     }
     sb.toString
   }
@@ -99,8 +105,8 @@ class EdgeToStringAggregator extends AggregationOperation[String] {
 
 class GraphInspectorRequestHandler(coordinatorActor: ActorRef) extends HttpHandler {
   val coordinator: Coordinator[_, _] = AkkaProxy.newInstance[Coordinator[_, _]](coordinatorActor)
-  val workerApi = coordinator.getWorkerApi 
-    
+  val workerApi = coordinator.getWorkerApi
+
   def handle(exchange: HttpExchange) {
     val requestMethod = exchange.getRequestMethod
     if (requestMethod.equalsIgnoreCase("GET")) {
@@ -132,7 +138,7 @@ function init() {
   var sigInst = sigma.init(document.getElementById('sigma-instance'));""" + {
       val vertexAggregator = new VertexToStringAggregator
       val edgeAggregator = new EdgeToStringAggregator
-     
+
       workerApi.aggregateAll(vertexAggregator) + workerApi.aggregateAll(edgeAggregator)
     } + """
   document.getElementById('rescale-graph').addEventListener('click',function(){

@@ -19,22 +19,23 @@
 
 package com.signalcollect.features
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.interfaces._
-import java.util.Map.Entry
-import com.signalcollect._
-import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.examples.SudokuCell
+import org.specs2.mutable.SpecificationWithJUnit
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.GlobalTerminationCondition
+import com.signalcollect.Graph
+import com.signalcollect.GraphBuilder
+import com.signalcollect.SumOfStates
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.interfaces.Config
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNode
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {

@@ -20,7 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import collection.JavaConversions._
 
 class ClusteringCoefficientVertex(id: Any) extends DataGraphVertex(id, 0.0) {
 

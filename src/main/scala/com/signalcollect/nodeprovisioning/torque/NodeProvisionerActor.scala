@@ -19,36 +19,10 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import com.signalcollect.nodeprovisioning.Node
-import scala.util.Random
-import java.io.File
-import scala.sys.process._
-import org.apache.commons.codec.binary.Base64
-import com.signalcollect.serialization.DefaultSerializer
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStream
-import ch.ethz.ssh2.StreamGobbler
-import java.io.FileInputStream
-import java.io.File
-import ch.ethz.ssh2.Connection
-import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.actor.Actor
-import com.typesafe.config.ConfigFactory
 import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration.Duration._
-import scala.concurrent.duration.Duration
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
-import scala.concurrent.Await
 import akka.actor.PoisonPill
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.configuration.AkkaConfig
+import akka.actor.actorRef2Scala
 
 class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
 

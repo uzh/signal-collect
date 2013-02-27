@@ -4,13 +4,13 @@ import org.apache.commons.codec.binary.Base64
 
 abstract class AbstractJobSubmitter(mailAddress: String) extends Serializable {
 
- def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
-      val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
-      val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
-      val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
-      executeCommandOnClusterManager(qsubCommand)
+  def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
+    val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
+    val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
+    val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
+    executeCommandOnClusterManager(qsubCommand)
   }
- 
+
   def executeCommandOnClusterManager(command: String): String
 
   def copyFileToCluster(localPath: String, targetPath: String = "")

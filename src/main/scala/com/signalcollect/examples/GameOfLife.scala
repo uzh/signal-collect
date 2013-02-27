@@ -21,7 +21,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.configuration.ExecutionMode
 
 /**

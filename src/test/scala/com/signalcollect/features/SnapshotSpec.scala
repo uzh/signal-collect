@@ -19,21 +19,16 @@
 
 package com.signalcollect.features
 
-import com.signalcollect._
-import com.signalcollect.configuration._
-import com.signalcollect.interfaces._
-import collection.JavaConversions._
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import com.signalcollect.nodeprovisioning.torque.LocalHost
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
-import com.signalcollect.nodeprovisioning.Node
-import com.signalcollect.nodeprovisioning.local.LocalNode
-import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
-import com.signalcollect.examples.PageRankVertex
+import org.specs2.mutable.SpecificationWithJUnit
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.GraphBuilder
+import com.signalcollect.ModularAggregationOperation
+import com.signalcollect.Vertex
+import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.factory.worker.DistributedWorker
+import com.signalcollect.examples.PageRankVertex
+import org.specs2.runner.JUnitRunner
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website

@@ -19,46 +19,24 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import com.signalcollect.nodeprovisioning.Node
-import scala.util.Random
-import java.io.File
-import scala.sys.process._
-import org.apache.commons.codec.binary.Base64
-import com.signalcollect.serialization.DefaultSerializer
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStream
-import ch.ethz.ssh2.StreamGobbler
-import java.io.FileInputStream
-import java.io.File
-import ch.ethz.ssh2.Connection
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.actor.Actor
-import com.typesafe.config.ConfigFactory
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration.Duration._
-import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
+
 import scala.concurrent.Await
-import akka.actor.PoisonPill
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.configuration.AkkaConfig
-import akka.serialization.SerializationExtension
-import akka.serialization.JavaSerializer
-import akka.actor.Address
-import akka.actor.ExtendedActorSystem
+import scala.concurrent.duration.Duration
+
+import com.signalcollect.configuration.ActorSystemRegistry
 import com.signalcollect.messaging.AkkaProxy
-import akka.japi.Creator
 import com.signalcollect.nodeprovisioning.AkkaHelper
+import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
-import com.signalcollect.configuration.ActorSystemRegistry
+
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.japi.Creator
+import akka.pattern.ask
+import akka.util.Timeout
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -90,7 +68,7 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParam
           val nodeController = system.actorOf(Props[NodeControllerActor].withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()
       }
-      jobs = new TorqueJob(jobId=jobId, execute=function, jvmParameters=jvmParameters) :: jobs
+      jobs = new TorqueJob(jobId = jobId, execute = function, jvmParameters = jvmParameters) :: jobs
     }
     torqueHost.executeJobs(jobs)
     val nodesFuture = nodeProvisioner ? "GetNodes"

@@ -20,19 +20,20 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import scala.sys.process._
-import ch.ethz.ssh2.Connection
 import java.io.File
-import ch.ethz.ssh2.StreamGobbler
-import org.apache.commons.codec.binary.Base64
+
 import scala.language.postfixOps
+import scala.sys.process.stringToProcess
+
+import ch.ethz.ssh2.Connection
+import ch.ethz.ssh2.StreamGobbler
 
 case class TorqueJobSubmitter(
-    username: String,
-    mailAddress: String = "",
-    hostname: String,
-    privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa",
-    port: Int = 22) extends AbstractJobSubmitter(mailAddress) {
+  username: String,
+  mailAddress: String = "",
+  hostname: String,
+  privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa",
+  port: Int = 22) extends AbstractJobSubmitter(mailAddress) {
 
   override def copyFileToCluster(localPath: String, targetPath: String = "") {
     val commandCopy = "scp -v " + localPath + " " + username + "@" + hostname + ":" + targetPath

@@ -19,11 +19,10 @@
 
 package com.signalcollect
 
-import scala.Some.apply
-import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.interfaces.AggregationOperation
-import com.signalcollect.interfaces.ComplexAggregation
 import scala.language.existentials
+
+import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.interfaces.ComplexAggregation
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object

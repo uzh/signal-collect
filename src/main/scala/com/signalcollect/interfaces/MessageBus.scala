@@ -19,11 +19,11 @@
 
 package com.signalcollect.interfaces
 
-import scala.concurrent.Future
-import akka.actor.ActorRef
-import com.signalcollect.GraphEditor
 import java.util.concurrent.atomic.AtomicInteger
-import com.signalcollect.coordinator.DefaultWorkerApi
+
+import com.signalcollect.GraphEditor
+
+import akka.actor.ActorRef
 
 /**
  *  A message bus is responsible for sending messages.
@@ -31,20 +31,21 @@ import com.signalcollect.coordinator.DefaultWorkerApi
  */
 trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
   def flush
-  
+
   def isInitialized: Boolean
-  
+
   def numberOfWorkers: Int
 
   def messagesSent: Array[Int]
+  
   def messagesReceived: Long
 
   def getReceivedMessagesCounter: AtomicInteger
 
-  def sendToActor(actor: ActorRef, m: Any) 
-  
+  def sendToActor(actor: ActorRef, m: Any)
+
   def sendToLogger(m: LogMessage)
-  
+
   def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 
   def sendToWorkerForVertexId(m: Any, vertexId: Id)
@@ -54,7 +55,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   def sendToWorkers(m: Any, messageCounting: Boolean)
 
   def sendToCoordinator(m: Any)
-  
+
   /**
    * Resets the message but does not touch the counters.
    */
@@ -71,7 +72,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 }
 
 trait MessageRecipientRegistry {
-  
+
   /**
    *  Registers a worker.
    *

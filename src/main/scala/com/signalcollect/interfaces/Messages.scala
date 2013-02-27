@@ -20,8 +20,6 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
-
 case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
 
 case class Heartbeat(maySignal: Boolean)
@@ -47,26 +45,26 @@ case class WorkerStatus(
   messagesReceived: Long)
 
 case class WorkerStatistics(
-    messagesSent: Array[Long],
-    workerId: Int = -1,
-    messagesReceived: Long = 0l,
-    toSignalSize: Long = 0l,
-    toCollectSize: Long = 0l,
-    collectOperationsExecuted: Long = 0l,
-    signalOperationsExecuted: Long = 0l,
-    numberOfVertices: Long = 0l,
-    verticesAdded: Long = 0l,
-    verticesRemoved: Long = 0l,
-    numberOfOutgoingEdges: Long = 0l,
-    outgoingEdgesAdded: Long = 0l,
-    outgoingEdgesRemoved: Long = 0l,
-    receiveTimeoutMessagesReceived: Long = 0l,
-    heartbeatMessagesReceived: Long = 0l,
-    signalMessagesReceived: Long = 0l,
-    bulkSignalMessagesReceived: Long = 0l,
-    continueMessagesReceived: Long = 0l,
-    requestMessagesReceived: Long = 0l,
-    otherMessagesReceived: Long = 0l) {
+  messagesSent: Array[Long],
+  workerId: Int = -1,
+  messagesReceived: Long = 0l,
+  toSignalSize: Long = 0l,
+  toCollectSize: Long = 0l,
+  collectOperationsExecuted: Long = 0l,
+  signalOperationsExecuted: Long = 0l,
+  numberOfVertices: Long = 0l,
+  verticesAdded: Long = 0l,
+  verticesRemoved: Long = 0l,
+  numberOfOutgoingEdges: Long = 0l,
+  outgoingEdgesAdded: Long = 0l,
+  outgoingEdgesRemoved: Long = 0l,
+  receiveTimeoutMessagesReceived: Long = 0l,
+  heartbeatMessagesReceived: Long = 0l,
+  signalMessagesReceived: Long = 0l,
+  bulkSignalMessagesReceived: Long = 0l,
+  continueMessagesReceived: Long = 0l,
+  requestMessagesReceived: Long = 0l,
+  otherMessagesReceived: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       { // Merges the sent messages arrays.
@@ -101,8 +99,7 @@ case class WorkerStatistics(
       bulkSignalMessagesReceived + other.bulkSignalMessagesReceived,
       continueMessagesReceived + other.continueMessagesReceived,
       requestMessagesReceived + other.requestMessagesReceived,
-      otherMessagesReceived + other.otherMessagesReceived
-    )
+      otherMessagesReceived + other.otherMessagesReceived)
   }
   override def toString: String = {
     "# messages \t\t" + messagesReceived + "\n" +

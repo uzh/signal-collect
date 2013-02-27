@@ -36,14 +36,14 @@ package com.signalcollect
 abstract class DataFlowVertex[Id, State](
   val id: Id,
   var state: State)
-    extends AbstractVertex[Id, State] {
+  extends AbstractVertex[Id, State] {
 
   type Signal
 
   def setState(s: State) {
     state = s
   }
-  
+
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
     setState(collect(signal.asInstanceOf[Signal]))
     true

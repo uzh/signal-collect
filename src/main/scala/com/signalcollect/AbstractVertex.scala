@@ -19,9 +19,9 @@
 
 package com.signalcollect
 
-import scala.Some.apply
+import scala.collection.JavaConversions.mapAsScalaMap
+
 import com.signalcollect.interfaces.Inspectable
-import scala.collection.JavaConversions._
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
 
@@ -35,7 +35,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.
    * It is a map so we can support fast edge removals.
-   * 
+   *
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */
@@ -136,7 +136,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
     } else {
       lastSignalState match {
         case Some(oldState) if oldState == state => 0
-        case noStateOrStateChanged               => 1
+        case noStateOrStateChanged => 1
       }
     }
   }

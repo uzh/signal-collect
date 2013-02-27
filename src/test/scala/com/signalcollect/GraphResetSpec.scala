@@ -1,12 +1,10 @@
 package com.signalcollect
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import com.signalcollect._
-import com.signalcollect.examples.PageRankVertex
+import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.examples.PageRankVertex
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class GraphResetSpec extends SpecificationWithJUnit {
@@ -26,7 +24,7 @@ class GraphResetSpec extends SpecificationWithJUnit {
         graph.addEdge(2, new PageRankEdge(3))
         graph.addEdge(3, new PageRankEdge(2))
       }
-      
+
       val graph = GraphBuilder.build
       graph.awaitIdle
       editGraph(graph)
@@ -44,7 +42,7 @@ class GraphResetSpec extends SpecificationWithJUnit {
       val thirdEI = graph.execute // Third execution (should in many aspects be similar to the first execution)
       graph.awaitIdle
       graph.shutdown
-      
+
       // Comparisons
 
       // Execution Information
@@ -66,7 +64,7 @@ class GraphResetSpec extends SpecificationWithJUnit {
       // Do not compare ES.jvmCpuTime
       // Do not compare ES.graphIdleWaitingTime
       // Do not compare ES.terminationReason
-      
+
       // Aggregated Worker Statistics
       val firstAWS = firstEI.aggregatedWorkerStatistics
       val secondAWS = secondEI.aggregatedWorkerStatistics
@@ -99,7 +97,7 @@ class GraphResetSpec extends SpecificationWithJUnit {
       // Do not compare AWS.continueMessagesReceived
       // Do not compare AWS.requestMessagesReceived
       // Do not compare AWS.otherMessagesReceived
-      
+
       // Do not compare the individual worker statistics
     }
   }

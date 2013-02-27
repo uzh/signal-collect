@@ -19,25 +19,26 @@
 
 package com.signalcollect.messaging
 
-import scala.concurrent.Await
-import com.signalcollect.interfaces._
 import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Proxy
-import com.signalcollect.interfaces._
 import java.lang.reflect.Method
-import akka.actor.ActorRef
-import akka.util.Timeout
-import scala.concurrent.duration.Duration._
-import scala.concurrent.duration.Duration
+import java.lang.reflect.Proxy
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
-import akka.pattern.ask
-import com.signalcollect.interfaces.LogMessage
+
+import scala.Array.canBuildFrom
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.language.postfixOps
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-import scala.language.postfixOps
+
+import com.signalcollect.interfaces.Request
+
+import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
+import akka.pattern.ask
+import akka.util.Timeout
 
 /**
  * Used to create proxies

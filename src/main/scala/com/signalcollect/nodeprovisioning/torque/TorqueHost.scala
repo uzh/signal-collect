@@ -20,27 +20,23 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import scala.util.Random
 import java.io.File
-import scala.sys.process._
-import org.apache.commons.codec.binary.Base64
-import com.signalcollect.serialization.DefaultSerializer
 import java.io.FileOutputStream
-import java.net.URI
-import scala.language.postfixOps
-import scala.concurrent.Future
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.concurrent.Future
-import scala.concurrent.future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.future
+import scala.language.postfixOps
+import scala.sys.process.stringToProcess
+import com.signalcollect.serialization.DefaultSerializer
+import scala.util.Random
 
 case class TorqueHost(
-    jobSubmitter: AbstractJobSubmitter,
-    localJarPath: String,
-    jarDescription: String = (Random.nextInt.abs % 1000).toString,
-    mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
-    priority: String = TorquePriority.superfast) extends ExecutionHost {
+  jobSubmitter: AbstractJobSubmitter,
+  localJarPath: String,
+  jarDescription: String = (Random.nextInt.abs % 1000).toString,
+  mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
+  priority: String = TorquePriority.superfast) extends ExecutionHost {
 
   val fileSeparator = System.getProperty("file.separator")
   val jarName = localJarPath.substring(localJarPath.lastIndexOf(fileSeparator) + 1, localJarPath.size)

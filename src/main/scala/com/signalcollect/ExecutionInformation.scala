@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit
 
 import scala.concurrent.duration.Duration
 
-import com.signalcollect.configuration.{ GraphConfiguration, TerminationReason }
+import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.interfaces.WorkerStatistics
 
 /**
@@ -39,13 +40,13 @@ import com.signalcollect.interfaces.WorkerStatistics
  *  @author Philip Stutz
  */
 case class ExecutionInformation(
-    config: GraphConfiguration,
-    numberOfWorkers: Int,
-    nodeDescriptions: List[String],
-    parameters: ExecutionConfiguration,
-    executionStatistics: ExecutionStatistics,
-    aggregatedWorkerStatistics: WorkerStatistics,
-    individualWorkerStatistics: List[WorkerStatistics]) {
+  config: GraphConfiguration,
+  numberOfWorkers: Int,
+  nodeDescriptions: List[String],
+  parameters: ExecutionConfiguration,
+  executionStatistics: ExecutionStatistics,
+  aggregatedWorkerStatistics: WorkerStatistics,
+  individualWorkerStatistics: List[WorkerStatistics]) {
 
   override def toString: String = {
     "------------------------\n" +
@@ -61,13 +62,13 @@ case class ExecutionInformation(
 }
 
 case class ExecutionStatistics(
-    var signalSteps: Long = 0,
-    var collectSteps: Long = 0,
-    var computationTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
-    var totalExecutionTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS), // should approximately equal computation time + idle waiting + garbage collection
-    var jvmCpuTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
-    var graphIdleWaitingTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
-    var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
+  var signalSteps: Long = 0,
+  var collectSteps: Long = 0,
+  var computationTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
+  var totalExecutionTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS), // should approximately equal computation time + idle waiting + garbage collection
+  var jvmCpuTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
+  var graphIdleWaitingTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
+  var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
 
   override def toString: String = {
     "# signal steps \t\t" + signalSteps + "\n" +

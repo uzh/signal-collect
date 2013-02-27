@@ -19,9 +19,9 @@
 
 package com.signalcollect.messaging
 
-import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.interfaces.BulkSignal
 import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
@@ -49,14 +49,14 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   flushThreshold: Int,
   val withSourceIds: Boolean,
   workerApiFactory: WorkerApiFactory)
-    extends AbstractMessageBus[Id, Signal] {
+  extends AbstractMessageBus[Id, Signal] {
 
   override def reset {
     super.reset
     pendingSignals = 0
     outgoingMessages foreach (_.clear)
   }
-  
+
   protected var pendingSignals = 0
 
   lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)

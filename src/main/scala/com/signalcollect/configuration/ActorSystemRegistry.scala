@@ -19,8 +19,6 @@
 
 package com.signalcollect.configuration
 
-import scala.Predef.Map.apply
-
 import akka.actor.ActorSystem
 
 object ActorSystemRegistry {

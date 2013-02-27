@@ -77,7 +77,7 @@ object ExecutionMode extends Enumeration with Serializable {
    *  Can be used for use cases such as continuous querying.
    */
   val ContinuousAsynchronous = Value
-  
+
   /**
    *  Execution mode that allows to control execution using the computation manager.
    *  The computation manager is enabled by initializing the graph with:

@@ -20,41 +20,49 @@
 package com.signalcollect
 
 import java.lang.management.ManagementFactory
-import java.util.concurrent.{ TimeUnit, TimeoutException }
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+
 import scala.Array.canBuildFrom
-import scala.Some.apply
 import scala.concurrent.Await
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
+import scala.language.postfixOps
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.{ ActorSystemRegistry, AkkaConfig, EventBased, ExecutionMode, GraphConfiguration, Pinned, TerminationReason }
+
+import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.configuration.AkkaConfig
+import com.signalcollect.configuration.EventBased
+import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.configuration.Pinned
+import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.console.ConsoleServer
 import com.signalcollect.coordinator.DefaultCoordinator
-import com.signalcollect.coordinator.IsIdle.apply
-import com.signalcollect.coordinator.OnIdle.apply
-import com.signalcollect.interfaces.{ AggregationOperation, Coordinator, EdgeId, LogMessage, MessageBusFactory, MessageRecipientRegistry }
-import com.signalcollect.interfaces.{ WorkerActor, WorkerFactory }
-import com.signalcollect.interfaces.Severe.apply
-import com.signalcollect.interfaces.WorkerStatistics.apply
+import com.signalcollect.coordinator.IsIdle
+import com.signalcollect.coordinator.OnIdle
+import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.MessageRecipientRegistry
+import com.signalcollect.interfaces.Severe
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.interfaces.WorkerFactory
+import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.logging.DefaultLogger
-import com.signalcollect.messaging.{ AkkaProxy, DefaultVertexToWorkerMapper }
+import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
-import ExecutionInformation.apply
-import ExecutionStatistics.apply
-import akka.actor.{ ActorRef, ActorSystem }
-import akka.actor.ActorSystem.apply
-import akka.actor.Props.apply
+
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
-import akka.util.Timeout.apply
-import akka.actor.Props
-import com.signalcollect.interfaces.Severe
-import com.signalcollect.interfaces.WorkerStatistics
 import akka.util.Timeout
-import com.signalcollect.coordinator.OnIdle
-import com.signalcollect.coordinator.IsIdle
-import scala.language.postfixOps
-import com.signalcollect.interfaces.ComplexAggregation
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -83,7 +91,7 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
-    val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
   override def toString: String = "DefaultGraph"
@@ -115,7 +123,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds, config.loggingLevel)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned     => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 
@@ -241,8 +249,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,
-                                               timeLimit: Option[Long],
-                                               globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
+    timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
     val startTime = System.nanoTime
     workerApi.signalStep
     stats.signalSteps += 1
@@ -469,5 +477,5 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
    * Deletes the worker snapshots if they exist.
    */
   private[signalcollect] def deleteSnapshot = workerApi.deleteSnapshot
-  
+
 }

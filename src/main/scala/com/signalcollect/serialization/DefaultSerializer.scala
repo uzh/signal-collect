@@ -18,7 +18,10 @@
 
 package com.signalcollect.serialization
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 /**
  * Companion object for DefaultSerializer

@@ -34,7 +34,7 @@ trait Vertex[+Id, State] extends Serializable {
   override def equals(other: Any): Boolean =
     other match {
       case v: Vertex[_, _] => v.id == id
-      case _               => false
+      case _ => false
     }
 
   /**

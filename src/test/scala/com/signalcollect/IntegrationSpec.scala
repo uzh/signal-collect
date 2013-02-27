@@ -20,14 +20,14 @@
 
 package com.signalcollect
 
-import com.signalcollect._
-import com.signalcollect.configuration._
-import com.signalcollect.interfaces._
-import com.signalcollect.examples._
-import com.signalcollect.logging.DefaultLogger
-import collection.JavaConversions._
-import org.specs2.mutable._
 import org.junit.runner.RunWith
+import org.specs2.mutable.SpecificationWithJUnit
+import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.examples.ColoredVertex
+import com.signalcollect.examples.Location
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.examples.Path
 import org.specs2.runner.JUnitRunner
 
 /**

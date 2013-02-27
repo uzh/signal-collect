@@ -18,12 +18,8 @@
 
 package com.signalcollect.storage
 
-import java.util.Set
-import com.signalcollect.interfaces._
-import com.signalcollect.serialization._
-import java.util.Set
-import com.signalcollect.Vertex
-import java.util.LinkedHashSet
+import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.VertexStore
 
 /**
  *  Storage backed by a custom-tailored open hash map implementation for vertices.

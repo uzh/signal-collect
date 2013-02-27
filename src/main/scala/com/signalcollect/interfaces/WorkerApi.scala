@@ -19,12 +19,11 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
-import akka.actor.Actor
-import scala.concurrent.Future
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
 
 trait WorkerApi[Id, Signal] {
-
   def addVertex(vertex: Vertex[Id, _])
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
@@ -74,7 +73,7 @@ trait WorkerApi[Id, Signal] {
   def restore
 
   /**
-   * Deletes the worker snapshots if they exist. 
+   * Deletes the worker snapshots if they exist.
    */
   def deleteSnapshot
 

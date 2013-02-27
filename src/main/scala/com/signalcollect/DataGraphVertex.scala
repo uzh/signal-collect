@@ -19,8 +19,7 @@
 
 package com.signalcollect
 
-import scala.Some.apply
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.mapAsScalaMap
 
 /**
  *  Vertex implementation that collects the most recent signals that have arrived on all edges.
@@ -34,8 +33,8 @@ import scala.collection.JavaConversions._
  *  @author Philip Stutz
  */
 abstract class DataGraphVertex[Id, State](
-    val id: Id,
-    var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
+  val id: Id,
+  var state: State) extends AbstractVertex[Id, State] with SumOfOutWeights[Id, State] {
 
   type Signal
 
@@ -59,7 +58,7 @@ abstract class DataGraphVertex[Id, State](
 
   /**
    *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
-   *  
+   *
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */

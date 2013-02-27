@@ -19,10 +19,10 @@
 
 package com.signalcollect.factory.workerapi
 
-import com.signalcollect.interfaces.WorkerApiFactory
-import com.signalcollect.interfaces.WorkerApi
-import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.coordinator.DefaultWorkerApi
+import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.interfaces.WorkerApi
+import com.signalcollect.interfaces.WorkerApiFactory
 
 object DefaultWorkerApiFactory extends WorkerApiFactory {
   override def createInstance[Id, Signal](

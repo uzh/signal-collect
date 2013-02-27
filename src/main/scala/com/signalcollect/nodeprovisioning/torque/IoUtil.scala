@@ -19,11 +19,9 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import java.io.InputStream
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.OutputStream
-import ch.ethz.ssh2.StreamGobbler
 
 object IoUtil {
 
@@ -48,5 +46,5 @@ object IoUtil {
       line = reader.readLine
     }
   }
-  
+
 }

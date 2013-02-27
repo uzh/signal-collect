@@ -19,17 +19,20 @@
 
 package com.signalcollect.features
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.interfaces._
-import java.util.Map.Entry
-import com.signalcollect._
-import com.signalcollect.examples.PageRankVertex
+import org.specs2.mutable.SpecificationWithJUnit
+import com.signalcollect.CountVertices
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.GraphBuilder
+import com.signalcollect.ProductOfStates
+import com.signalcollect.SampleVertexIds
+import com.signalcollect.SumOfStates
+import com.signalcollect.TopKFinder
 import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
