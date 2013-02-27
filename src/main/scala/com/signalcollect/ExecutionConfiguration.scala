@@ -23,6 +23,7 @@ import scala.Some.apply
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
+import scala.language.existentials
 
 /**
  *  An execution configuration specifies execution parameters for a computation. This object
@@ -44,12 +45,12 @@ object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.Optim
  *  @author Philip Stutz
  */
 case class ExecutionConfiguration(
-    executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
-    signalThreshold: Double = 0.01,
-    collectThreshold: Double = 0.0,
-    timeLimit: Option[Long] = None,
-    stepsLimit: Option[Long] = None,
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]] = None) {
+  executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
+  signalThreshold: Double = 0.01,
+  collectThreshold: Double = 0.0,
+  timeLimit: Option[Long] = None,
+  stepsLimit: Option[Long] = None,
+  globalTerminationCondition: Option[GlobalTerminationCondition[_]] = None) {
 
   /**
    *  Configures the execution mode used in a computation.
@@ -139,16 +140,10 @@ case class ExecutionConfiguration(
  *  @param aggregationOperation The aggregation operation used to compute the globally aggregated value
  *  @param aggregationInterval In a synchronous computation: aggregation interval in computation steps.
  *  						   In an asynchronous computation: aggregation interval in milliseconds
+ *  @param shouldTerminate Function that takes a global aggregate and returns true iff the computation should
+ *                         be terminated.
  */
-abstract class GlobalTerminationCondition[ResultType](
-    val aggregationOperation: ComplexAggregation[_, ResultType],
-    val aggregationInterval: Long = 1000l) {
-
-  /**
-   *  Determines if the computation should terminate when the aggregated value is `value`.
-   *
-   *   @param value The current value computed by `aggregationOperation`
-   *   @return If the computation should terminate
-   */
-  def shouldTerminate(aggregate: ResultType): Boolean
-}
+case class GlobalTerminationCondition[ResultType](
+  aggregationOperation: ComplexAggregation[_, ResultType],
+  aggregationInterval: Long = 1000,
+  shouldTerminate: ResultType => Boolean)

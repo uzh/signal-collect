@@ -103,11 +103,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for synchronous computations" in {
       val graph = createCircleGraph(30)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1) {
-        def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 20.0 && sum.get < 29.0
-        }
-      }
+      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1, (sum: Option[Double]) =>
+        sum.isDefined && sum.get > 20.0 && sum.get < 29.0)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
@@ -121,11 +118,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for asynchronous computations" in {
       val graph = createCircleGraph(100)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {
-        def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 20.0
-        }
-      }
+      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l, (sum: Option[Double]) =>
+        sum.isDefined && sum.get > 20.0)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
