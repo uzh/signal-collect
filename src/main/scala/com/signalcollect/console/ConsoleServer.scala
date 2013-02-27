@@ -163,8 +163,8 @@ class WebSocketConsoleServer(port: InetSocketAddress)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
-        case "graph" => new GraphDataProvider(c)
-        case "resources" => new ResourcesDataProvider(c)
+        case "graph" => new GraphDataProvider(c, j)
+        case "resources" => new ResourcesDataProvider(c, j)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => new NotReadyDataProvider(msg)
@@ -207,21 +207,46 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
   }
 }
 
-class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
+case class GraphDataRequest(
+  provider: String, 
+  search: Option[String], 
+  id: Option[String]
+)
+class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
+      extends DataProvider {
+  implicit val formats = DefaultFormats
   val workerApi = coordinator.getWorkerApi 
-  val vertexAggregator = new VertexToStringAggregator
-  val edgeAggregator = new EdgeToStringAggregator
   def fetch(): String = {
-    val graphData = (
-      ("provider" -> "graph") ~
-      ("nodes" -> workerApi.aggregateAll(vertexAggregator)) ~
-      ("edges" -> workerApi.aggregateAll(edgeAggregator)) 
-    )
+    val request = (msg).extract[GraphDataRequest]
+    val graphData = request.search match {
+      case Some("vicinity") => request.id match {
+/*        case Some(id) =>
+          val vertexAggregator = new VertexVicinityAggregator(id)
+          val edgeAggregator = new EdgeVicinityAggregator(id)
+          ("provider" -> "graph") ~
+          ("nodes" -> workerApi.aggregateAll(vertexAggregator)) ~
+          ("edges" -> workerApi.aggregateAll(edgeAggregator))*/
+        case otherwise => 
+          ("provider" -> "graph") ~
+          ("nodes" -> "") ~
+          ("edges" -> "")
+      }
+      case otherwise => {
+        val vertexAggregator = new AllVerticesAggregator
+        val edgeAggregator = new AllEdgesAggregator
+        ("provider" -> "graph") ~
+        ("nodes" -> workerApi.aggregateAll(vertexAggregator)) ~
+        ("edges" -> workerApi.aggregateAll(edgeAggregator)) 
+      }
+
+    }
     return compact(render(graphData))
   }
 }
 
-class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
+class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
+      extends DataProvider {
+  implicit val formats = DefaultFormats
   def fetch(): String = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
@@ -237,41 +262,42 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
       ("inboxSize" -> inboxSize) ~
       ("workerStatistics" ->
         /* from WorkerStatistics */
-        ("workerId" -> List(ws.map(_.workerId))) ~
-        ("messagesSent" -> List(ws.map(_.messagesSent.toList))) ~
-        ("messagesReceived" -> List(ws.map(_.messagesReceived))) ~
-        ("toSignalSize" -> List(ws.map(_.toSignalSize))) ~
-        ("toCollectSize" -> List(ws.map(_.toCollectSize))) ~
-        ("collectOperationsExecuted" -> List(ws.map(_.collectOperationsExecuted))) ~
-        ("signalOperationsExecuted" -> List(ws.map(_.signalOperationsExecuted))) ~
-        ("numberOfVertices" -> List(ws.map(_.numberOfVertices))) ~
-        ("verticesAdded" -> List(ws.map(_.verticesAdded))) ~
-        ("verticesRemoved" -> List(ws.map(_.verticesRemoved))) ~
-        ("numberOfOutgoingEdges" -> List(ws.map(_.numberOfOutgoingEdges))) ~
-        ("outgoingEdgesAdded" -> List(ws.map(_.outgoingEdgesAdded))) ~
-        ("outgoingEdgesRemoved" -> List(ws.map(_.outgoingEdgesRemoved))) ~
-        ("receiveTimeoutMessagesReceived" -> List(ws.map(_.receiveTimeoutMessagesReceived))) ~
-        ("heartbeatMessagesReceived" -> List(ws.map(_.heartbeatMessagesReceived))) ~
-        ("signalMessagesReceived" -> List(ws.map(_.signalMessagesReceived))) ~
-        ("bulkSignalMessagesReceived" -> List(ws.map(_.bulkSignalMessagesReceived))) ~
-        ("continueMessagesReceived" -> List(ws.map(_.continueMessagesReceived))) ~
-        ("requestMessagesReceived" -> List(ws.map(_.requestMessagesReceived))) ~
-        ("otherMessagesReceived" -> List(ws.map(_.otherMessagesReceived))) ~
+        ("workerId" -> ws.map(_.workerId)) ~
+        ("messagesSent" -> ws.map(_.messagesSent.toList)) ~
+        ("messagesReceived" -> ws.map(_.messagesReceived)) ~
+        ("toSignalSize" -> ws.map(_.toSignalSize)) ~
+        ("toCollectSize" -> ws.map(_.toCollectSize)) ~
+        ("collectOperationsExecuted" -> ws.map(_.collectOperationsExecuted)) ~
+        ("signalOperationsExecuted" -> ws.map(_.signalOperationsExecuted)) ~
+        ("numberOfVertices" -> ws.map(_.numberOfVertices)) ~
+        ("verticesAdded" -> ws.map(_.verticesAdded)) ~
+        ("verticesRemoved" -> ws.map(_.verticesRemoved)) ~
+        ("numberOfOutgoingEdges" -> ws.map(_.numberOfOutgoingEdges)) ~
+        ("outgoingEdgesAdded" -> ws.map(_.outgoingEdgesAdded)) ~
+        ("outgoingEdgesRemoved" -> ws.map(_.outgoingEdgesRemoved)) ~
+        ("receiveTimeoutMessagesReceived" -> ws.map(_.receiveTimeoutMessagesReceived)) ~
+        ("heartbeatMessagesReceived" -> ws.map(_.heartbeatMessagesReceived)) ~
+        ("signalMessagesReceived" -> ws.map(_.signalMessagesReceived)) ~
+        ("bulkSignalMessagesReceived" -> ws.map(_.bulkSignalMessagesReceived)) ~
+        ("continueMessagesReceived" -> ws.map(_.continueMessagesReceived)) ~
+        ("requestMessagesReceived" -> ws.map(_.requestMessagesReceived)) ~
+        ("otherMessagesReceived" -> ws.map(_.otherMessagesReceived)) ~
         /* from SystemInformation */
-        ("os" -> List(si.map(_.os))) ~
-        ("runtime_mem_total" -> List(si.map(_.runtime_mem_total))) ~
-        ("runtime_mem_max" -> List(si.map(_.runtime_mem_max))) ~
-        ("runtime_mem_free" -> List(si.map(_.runtime_mem_free))) ~
-        ("runtime_cores" -> List(si.map(_.runtime_cores))) ~
-        ("jmx_committed_vms" -> List(si.map(_.jmx_committed_vms))) ~
-        ("jmx_mem_free" -> List(si.map(_.jmx_mem_free))) ~
-        ("jmx_mem_total" -> List(si.map(_.jmx_mem_total))) ~
-        ("jmx_swap_free" -> List(si.map(_.jmx_swap_free))) ~
-        ("jmx_swap_total" ->List(si.map(_.jmx_swap_total))) ~
-        ("jmx_process_load" -> List(si.map(_.jmx_process_load))) ~
-        ("jmx_process_time" -> List(si.map(_.jmx_process_time))) ~
-        ("jmx_system_load" -> List(si.map(_.jmx_system_load)))) 
+        ("os" -> si.map(_.os))) ~
+        ("runtime_mem_total" -> si.map(_.runtime_mem_total)) ~
+        ("runtime_mem_max" -> si.map(_.runtime_mem_max)) ~
+        ("runtime_mem_free" -> si.map(_.runtime_mem_free)) ~
+        ("runtime_cores" -> si.map(_.runtime_cores)) ~
+        ("jmx_committed_vms" -> si.map(_.jmx_committed_vms)) ~
+        ("jmx_mem_free" -> si.map(_.jmx_mem_free)) ~
+        ("jmx_mem_total" -> si.map(_.jmx_mem_total)) ~
+        ("jmx_swap_free" -> si.map(_.jmx_swap_free)) ~
+        ("jmx_swap_total" ->si.map(_.jmx_swap_total)) ~
+        ("jmx_process_load" -> si.map(_.jmx_process_load)) ~
+        ("jmx_process_time" -> si.map(_.jmx_process_time)) ~
+        ("jmx_system_load" -> si.map(_.jmx_system_load)) 
     )
+    println(compact(render(resourceData)))
     return compact(render(resourceData))
 
     /* code kept for reference; use something like this to genericise?
@@ -281,7 +307,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _]) extends DataProvider
   }
 }
 
-class VertexToStringAggregator extends AggregationOperation[Map[String, String]] {
+class AllVerticesAggregator extends AggregationOperation[Map[String, String]] {
   def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
     case other => Map()
@@ -297,7 +323,7 @@ class VertexToStringAggregator extends AggregationOperation[Map[String, String]]
   }
 }
 
-class EdgeToStringAggregator
+class AllEdgesAggregator
       extends AggregationOperation[Map[String,List[String]]] {
 
   type EdgeMap = Map[String,List[String]]
