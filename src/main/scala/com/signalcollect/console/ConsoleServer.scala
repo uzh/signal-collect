@@ -158,8 +158,11 @@ class WebSocketConsoleServer(port: InetSocketAddress)
   }
 
   def onMessage(socket: WebSocket, msg: String) {
+    val j = parse(msg)
+    implicit val formats = DefaultFormats
+    val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
-      case Some(c) => msg match {
+      case Some(c) => p match {
         case "graph" => new GraphDataProvider(c)
         case "resources" => new ResourcesDataProvider(c)
         case otherwise => new InvalidDataProvider(msg)
@@ -208,7 +211,6 @@ class GraphDataProvider(coordinator: Coordinator[_, _]) extends DataProvider {
   val workerApi = coordinator.getWorkerApi 
   val vertexAggregator = new VertexToStringAggregator
   val edgeAggregator = new EdgeToStringAggregator
-  val content = new StringBuilder()
   def fetch(): String = {
     val graphData = (
       ("provider" -> "graph") ~

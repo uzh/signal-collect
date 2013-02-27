@@ -83,6 +83,7 @@ $(document).ready(function() {
     for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
   } 
   scc.webSocket.onmessage = function(e) {
+    console.log("[WebSocket] onmessage")
     j = JSON.parse(e.data)
     var provider = j["provider"]
     if (provider == "notready") {
@@ -103,9 +104,12 @@ $(document).ready(function() {
   }
   scc.webSocket.onerror = function(e) {
     console.log("[WebSocket] onerror");
+    console.log(e)
     for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
   }
   scc.order = function(msg, delay) {
+    msg = JSON.stringify(msg)
+    console.log("ordering " + msg)
     if (!delay) { delay = 0; }
     if (scc.orders[msg]) {
       clearTimeout(scc.orders[msg])

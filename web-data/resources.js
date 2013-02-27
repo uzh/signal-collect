@@ -290,7 +290,7 @@ scc.modules.resources = function() {
   
   
   this.onopen = function () {
-    scc.order("resources")
+    scc.order({"provider": "resources"})
   }
     
   this.onerror = function(e) { }
@@ -300,7 +300,7 @@ scc.modules.resources = function() {
     // update all graphs
     allGraphs.forEach(function(g) { g.update(j, j.timestamp); });
     
-    scc.order("resources", interval);
+    scc.order({"provider": "resources"}, interval)
   }
 
   this.onclose = function() { }

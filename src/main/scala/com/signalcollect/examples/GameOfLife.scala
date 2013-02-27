@@ -51,7 +51,7 @@ class GameOfLifeCell(id: Any, initialState: Int)
  * simulation on a random grid and executes it
  */
 object GameOfLife extends App {
-  val graph = GraphBuilder.withConsole(true, 8080).build
+  val graph = GraphBuilder.withConsole(true, 8096).build
 
   //Dimensions of the grid
   val columns = 10

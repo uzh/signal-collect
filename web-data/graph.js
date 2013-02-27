@@ -66,7 +66,7 @@ scc.modules.graph = function() {
                + " scale(" + d3.event.scale + ")");
     }
 
-    scc.order("graph")
+    scc.order({"provider": "graph"})
   }
    
   this.onmessage = function(j) {
@@ -129,7 +129,7 @@ scc.modules.graph = function() {
 
     if (newNodes) {force.start(); }
 
-    scc.order("graph", 1000)
+    scc.order({"provider": "graph"}, 1000)
 
   }
 
@@ -143,4 +143,7 @@ scc.modules.graph = function() {
     $("#graph_canvas").empty()
   }
 
+  $("searchById").click(function () {
+    
+  });
 }
