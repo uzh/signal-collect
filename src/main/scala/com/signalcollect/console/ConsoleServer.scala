@@ -297,8 +297,6 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
         ("jmx_process_time" -> si.map(_.jmx_process_time)) ~
         ("jmx_system_load" -> si.map({ s =>
           val v = s.jmx_system_load
-          println("NaN Candidate: ")
-          println(v)
           if (v.isNaN()) { 0 } 
           else {v}})) 
     )

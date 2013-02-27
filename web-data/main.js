@@ -88,7 +88,7 @@ $(document).ready(function() {
     var provider = j["provider"]
     if (provider == "notready") {
       var request = j["request"]
-      scc.order(request, 1000, true);
+      scc.order(request, 500);
     }
     for (var m in scc.consumers) { 
       var consumer = scc.consumers[m]
@@ -99,16 +99,20 @@ $(document).ready(function() {
   }
   scc.webSocket.onclose = function(e) {
     console.log("[WebSocket] onclose");
+    $.each(scc.orders, function(k, v) { clearTimeout(v); })
+    scc.orders = {}
     showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
     for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
   }
   scc.webSocket.onerror = function(e) {
     console.log("[WebSocket] onerror");
-    console.log(e)
     for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
   }
-  scc.order = function(msg, delay, forward) {
-    var id = msg.provider
+  scc.order = function(msg, delay) {
+    if (typeof(msg) == "string") {
+      msg = JSON.parse(msg)
+    }
+    id = msg.provider
     if (!delay) { var delay = 0; }
     if (scc.orders[id]) {
       clearTimeout(scc.orders[id])
@@ -117,11 +121,13 @@ $(document).ready(function() {
     scc.orders[id] = setTimeout(function() {
       var j = JSON.stringify(msg)
       try { 
-        if (forward) { scc.webSocket.send(msg); }
-        else {scc.webSocket.send(j); }
+        scc.webSocket.send(j); 
       }
-      catch(err) { scc.order(msg, 1000); }
+      catch(err) { 
+        console.log("cannot send message: " + j)
+      }
     }, delay);
+    console.log(scc.orders)
   }
 
   enable_modules = function(modules) {
