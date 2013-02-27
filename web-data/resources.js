@@ -69,6 +69,25 @@ scc.modules.resources = function() {
 //      },
     });
     
+    function getStackedData() {
+      var d = new Date;
+      var unixtime = parseInt(d.getTime() / 1000);
+      return [
+       {key:"Group1",value:Math.random()*40,date:unixtime-3000},
+       {key:"Group2",value:Math.random()*40,date:unixtime-3000},
+       {key:"Group3",value:Math.random()*40,date:unixtime-3000},
+       {key:"Group1",value:Math.random()*40,date:unixtime-2000},
+       {key:"Group2",value:Math.random()*40,date:unixtime-2000},
+       {key:"Group3",value:Math.random()*40,date:unixtime-2000},
+       {key:"Group1",value:Math.random()*40,date:unixtime-1000},
+       {key:"Group2",value:Math.random()*40,date:unixtime-1000},
+       {key:"Group3",value:Math.random()*40,date:unixtime-1000},
+       {key:"Group1",value:Math.random()*40,date:unixtime},
+       {key:"Group2",value:Math.random()*40,date:unixtime},
+       {key:"Group3",value:Math.random()*40,date:unixtime}
+      ];      
+    }
+    
     this.setup = function() {
       
       margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -91,14 +110,6 @@ scc.modules.resources = function() {
                     .tickSize(-width).tickFormat(tickFormatY).tickPadding(6)
                     ;
 
-      area = d3.svg.area()
-          .x(function(d,i) { return x(d[1]); })
-          .y0(height)
-          .y1(function(d) { return y(d[0]); })
-//          .y(function(d) { return y(d); })
-          .interpolate("linear") // basis or linear
-          ;
-
       graph = d3.select("div#" + this.conf.graphName).append("svg")
                     .attr("width", width + margin.left + margin.right)
                     .attr("height", height + margin.top + margin.bottom)
@@ -106,10 +117,13 @@ scc.modules.resources = function() {
                     .append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")")
                     ;
       
-      graph.append("path").attr("d", area(data)).attr("class", "area");
-      
       if (this.conf.stacked) {
-        z = d3.scale.category20c();
+        
+        area = d3.svg.area()
+                .interpolate("linear")
+                .x(function(d) { return x(d.date); })
+                .y0(function(d) { return y(d.y0); })
+                .y1(function(d) { return y(d.y0 + d.y); });
         
         stack = d3.layout.stack()
                   .offset("zero")
@@ -117,12 +131,29 @@ scc.modules.resources = function() {
                   .x(function(d) { return d.date; })
                   .y(function(d) { return d.value; });
 
+        // TODO Create 0 array first
+        var dataStacked = getStackedData();
         nest = d3.nest().key(function(d) { return d.key; });
+        layers = stack(nest.entries(dataStacked));
         
-//        layers = stack(nest.entries(data));
+        x.domain(d3.extent(dataStacked, function(d) { return d.date; }));
+        y.domain([0, d3.max(dataStacked, function(d) { return d.y0 + d.y; })]);
+        z = d3.scale.category20c();
+
+      } else {
+        
+        area = d3.svg.area()
+                .x(function(d,i) { return x(d[1]); })
+                .y0(height)
+                .y1(function(d) { return y(d[0]); })
+        //          .y(function(d) { return y(d); })
+                .interpolate("linear") // basis or linear
+                ;
+        
+        graph.append("path").attr("d", area(data)).attr("class", "area");
+        
       }
     
-
       
       // draw x axis
       graph.append("g")
@@ -191,6 +222,46 @@ scc.modules.resources = function() {
     
     
     this.update = function(newData, timestamp) {
+
+      // get new data
+      newData = this.conf.dataCallback(newData);
+      
+      if (this.conf.stacked) {
+        var dataStacked = getStackedData();
+        var layers = stack(nest.entries(dataStacked));
+        
+        var newDataArray = [];
+        newData.forEach(function(d, i) {
+          newDataArray.push({"key":"group"+i, "value":d, "data":timestamp});
+        });
+        data.forEach(function(d) {
+//          console.dir(d);
+//          if (d.values !== undefined) {
+//            d.values.forEach(function(d2) {
+              newDataArray.push({"key":d.key, "value":d.value, "data":d.data});
+//            });
+//          }
+        });
+        
+//        newData = newDataArray;
+//        console.debug("vorher");
+//        console.dir(newData);    
+        data = stack(nest.entries(newDataArray));
+//        console.debug("nachher");
+//        console.dir(newData);
+//        data.push(newData);
+        
+        // update data
+        graph.selectAll("path.layer").remove();
+        graph.selectAll(".layer").data(layers).enter()
+        .append("path")
+        .attr("class", "layer")
+        .attr("d", function(d) { return area(d.values); })
+        .style("fill", function(d, i) { return z(i); });
+        
+        return;
+      }
+      
       
       // pre-populate data array with 0s so that the graph starts on the right side
       if (data.length < numOfValues) {
@@ -199,13 +270,14 @@ scc.modules.resources = function() {
           data.push([0, timestamp - (minus*1000)]);
         }
       }
-      
+
       // delete first element and add a new one at the end
       data.shift();
       var newDataLength = data.push([
-          this.conf.dataCallback(newData) - Math.floor(Math.random()*(this.conf.dataCallback(newData)/15)),
-          timestamp / 1000 * 1000 // round to whole seconds
-          ]);
+                                     newData,// - Math.floor(Math.random()*(newData/15)),
+                                     timestamp / 1000 * 1000 // round to whole seconds
+                                     ]);
+      
 
       // update domains
       x.domain(d3.extent(data/*.slice(-numOfValues)*/, function(d) { return d[1]; }));
@@ -284,7 +356,7 @@ scc.modules.resources = function() {
                              false));
   allGraphs.push(createGraph("graphRamStacked",
                              "RAM (B)",
-                             function(newData) { return newData.jmx_mem_free[0]; },
+                             function(newData) { return newData.jmx_mem_free; },
                              true));
   allGraphs.forEach(function(g) { g.setup(); });
   
