@@ -35,6 +35,7 @@ import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.Vertex
+
 import scala.util.Random
 
 import org.java_websocket._
@@ -212,6 +213,11 @@ case class GraphDataRequest(
   search: Option[String], 
   id: Option[String]
 )
+
+/*
+  Nodes: Map[String,String]
+  Edges: Map[String,List[String]
+*/
 class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
       extends DataProvider {
   implicit val formats = DefaultFormats
@@ -220,12 +226,12 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val request = (msg).extract[GraphDataRequest]
     val graphData = request.search match {
       case Some("vicinity") => request.id match {
-/*        case Some(id) =>
-          val vertexAggregator = new VertexVicinityAggregator(id)
-          val edgeAggregator = new EdgeVicinityAggregator(id)
+        case Some(id) =>
+          val vertexAggregator = new SearchAggregator(id)
+          val nodesEdges = workerApi.aggregateAll(vertexAggregator)
           ("provider" -> "graph") ~
-          ("nodes" -> workerApi.aggregateAll(vertexAggregator)) ~
-          ("edges" -> workerApi.aggregateAll(edgeAggregator))*/
+          ("nodes" -> nodesEdges._1) ~
+          ("edges" -> nodesEdges._2)
         case otherwise => 
           ("provider" -> "graph") ~
           ("nodes" -> "") ~
@@ -240,6 +246,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       }
 
     }
+    println(compact(render(graphData)))
     return compact(render(graphData))
   }
 }
@@ -348,4 +355,33 @@ class AllEdgesAggregator
      Map(v.id.toString -> edges)
   }
 }
+
+class SearchAggregator(id: String)
+      extends AggregationOperation[(Map[String,String],Map[String,List[String]])] {
+  def extract(v: Vertex[_, _]): (Map[String,String],Map[String,List[String]]) = v match {
+    case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
+    case other => (Map(),Map())
+  }
+
+  def reduce(vertices: Stream[(Map[String,String],Map[String,List[String]])]): (Map[String,String],Map[String,List[String]]) = {
+    vertices.foldLeft(((Map[String,String](),Map[String,List[String]]())))((
+      acc:(Map[String,String],Map[String,List[String]]), 
+      v:(Map[String,String],Map[String,List[String]])) => 
+        (acc._1 ++ v._1, acc._2 ++ v._2))
+  }
+
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): (Map[String,String],Map[String,List[String]]) = {
+    if (v.id.toString == id) {
+      val nodes = Map(v.id.toString -> v.state.toString)
+      val edges = v.outgoingEdges.values
+         .foldLeft(List[String]()) { (list, e) =>
+             list ++ List(e.targetId.toString)
+         }
+      return (nodes, Map(v.id.toString -> edges))
+    }
+    return ((Map[String,String](),Map[String,List[String]]()))
+  }
+}
+
+
 
