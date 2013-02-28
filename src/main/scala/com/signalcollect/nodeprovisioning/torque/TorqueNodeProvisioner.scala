@@ -59,6 +59,9 @@ import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
 import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.configuration.AkkaConfigTemplate
+import akka.event.Logging
+
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -75,27 +78,35 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
 }
 
 class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParameters: String) extends NodeProvisioner {
-  def getNodes(akkaConfig: Config): List[Node] = {
+  def getNodes(akkaConfigTemplate: AkkaConfigTemplate): List[Node] = {
     val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
+    import system.dispatcher
+    val log = Logging(system, this.getClass)
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
     val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
+    log.debug(s"Created node provisioning actor @ $nodeProvisionerAddress.")
     var jobs = List[TorqueJob]()
     implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
     for (jobId <- 0 until numberOfNodes) {
       val function: () => Map[String, String] = {
         () =>
-          val system = ActorSystem("SignalCollect", akkaConfig)
+          val system = ActorSystem("SignalCollect", akkaConfigTemplate.instantiate)
           val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
           val nodeController = system.actorOf(Props[NodeControllerActor].withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
           Map[String, String]()
       }
-      jobs = new TorqueJob(jobId=jobId, execute=function, jvmParameters=jvmParameters) :: jobs
+      jobs = new TorqueJob(jobId = jobId, execute = function, jvmParameters = jvmParameters) :: jobs
     }
     torqueHost.executeJobs(jobs)
-    val nodesFuture = nodeProvisioner ? "GetNodes"
+    log.debug("Requested list of nodes from node provisioning actor.")
+    val nodesFuture = nodeProvisioner ? "GetNodes"// andThen {
+      //case Failure(exception) => log(exception)
+    //}
+    nodesFuture.onFailure{case x: Any => println(x)}
     val result = Await.result(nodesFuture, timeout.duration)
     val nodes: List[Node] = result.asInstanceOf[List[ActorRef]] map (AkkaProxy.newInstance[Node](_))
+    log.debug(s"Received list of nodes $nodes.")
     nodes
   }
 }

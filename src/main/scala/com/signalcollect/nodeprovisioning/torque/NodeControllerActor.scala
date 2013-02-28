@@ -49,6 +49,7 @@ import scala.concurrent.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
+import com.signalcollect.configuration.NetworkUtilities
 import com.signalcollect.configuration.EventBased
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
@@ -62,11 +63,13 @@ class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends A
   var nodeProvisioner: ActorRef = _
 
   def shutdown = context.system.shutdown
-  
+
+  def hostname = NetworkUtilities.getHostname
+
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
-      case EventBased => 
+      case EventBased =>
         val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>

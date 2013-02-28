@@ -49,8 +49,9 @@ import scala.concurrent.Await
 import akka.actor.PoisonPill
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.configuration.AkkaConfig
+import akka.actor.ActorLogging
 
-class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
+class NodeProvisionerActor(numberOfNodes: Int) extends Actor with ActorLogging {
 
   var nodeListRequestor: ActorRef = _
 
@@ -61,6 +62,7 @@ class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
       nodeListRequestor = sender
       sendNodesIfReady
     case "NodeReady" =>
+      log.debug("Node provisioner actor received registration from: " + sender)
       nodeControllers = sender :: nodeControllers
       sendNodesIfReady
   }
@@ -68,6 +70,7 @@ class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
   def sendNodesIfReady {
     if (nodeControllers.size == numberOfNodes) {
       nodeListRequestor ! nodeControllers
+      log.debug("All node controllers ready, shutting down node provisioner actor.")
       self ! PoisonPill
     }
   }

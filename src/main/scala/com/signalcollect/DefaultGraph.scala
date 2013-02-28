@@ -55,6 +55,7 @@ import com.signalcollect.coordinator.OnIdle
 import com.signalcollect.coordinator.IsIdle
 import scala.language.postfixOps
 import com.signalcollect.interfaces.ComplexAggregation
+import akka.event.Logging
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -83,31 +84,38 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
-    val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
+  val akkaConfigTemplate = AkkaConfig.getTemplate(config.akkaMessageCompression, config.loggingLevel)
+
   override def toString: String = "DefaultGraph"
 
-  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
+  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfigTemplate.instantiate)
+
+  val log = Logging(system, this.getClass)
+
   ActorSystemRegistry.register(system)
 
-  val nodes = config.nodeProvisioner.getNodes(akkaConfig)
+  val nodes = config.nodeProvisioner.getNodes(akkaConfigTemplate)
 
   val numberOfWorkers = nodes.par map (_.numberOfCores) sum
 
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   val workerActors: Array[ActorRef] = {
+    log.debug("Starting workers...")
     val actors = new Array[ActorRef](numberOfWorkers)
     var workerId = 0
     for (node <- nodes) {
       for (core <- 0 until node.numberOfCores) {
+        log.debug(s"Starting worker $workerId on node ${node.hostname}.")
         val workerCreator = WorkerCreator[Id, Signal](workerId, config.workerFactory, numberOfWorkers, config)
         val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
         actors(workerId) = system.actorFor(workerName)
         workerId += 1
       }
     }
+    log.debug("All workers initialized.")
     actors
   }
 
@@ -115,7 +123,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds, config.loggingLevel)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned     => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 
@@ -241,8 +249,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,
-                                               timeLimit: Option[Long],
-                                               globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
+    timeLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
     val startTime = System.nanoTime
     workerApi.signalStep
     stats.signalSteps += 1
@@ -469,5 +477,5 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
    * Deletes the worker snapshots if they exist.
    */
   private[signalcollect] def deleteSnapshot = workerApi.deleteSnapshot
-  
+
 }

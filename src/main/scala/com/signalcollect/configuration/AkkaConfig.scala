@@ -2,12 +2,62 @@ package com.signalcollect.configuration
 
 import com.signalcollect.configuration.LoggingLevel.Debug
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.Config
+import java.net.NetworkInterface
+import java.net.InetAddress
+import collection.JavaConversions._
+
+object NetworkUtilities {
+  /**
+   * Uses a heuristic to determine an externally reachable IP address.
+   * If it fails, it falls back to InetAddress.getLocalHost.getHostAddress
+   */
+  def getHostname: String = {
+    val nis = NetworkInterface.getNetworkInterfaces
+    val validAddresses = nis flatMap (_.getInetAddresses filter { addr: InetAddress =>
+      addr.getAddress.length == 4 && !addr.isLoopbackAddress && !addr.isLinkLocalAddress
+    })
+    val addressList = validAddresses.toList
+    if (!addressList.isEmpty) {
+      addressList.head.getHostName
+    } else {
+      InetAddress.getLocalHost.getHostAddress
+    }
+  }
+}
+
+case class AkkaConfigTemplate(wrappedTemplate: String => Config, hostname: Option[String] = None) {
+  /**
+   * Creates an instance of a configuration.
+   * If a hostname is specified that one is used, otherwise one is determined using a heuristic.
+   */
+  def instantiate: Config = {
+    if (hostname.isDefined) {
+      wrappedTemplate(hostname.get)
+    } else {
+      wrappedTemplate(NetworkUtilities.getHostname)
+    }
+  }
+}
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, loggingLevel)
-  )
-  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int) = """
+  /**
+   * Returns configuration template.
+   * The template takes the hostname as a parameter and returns a configuration.
+   */
+  def getTemplate(
+    akkaMessageCompression: Boolean,
+    loggingLevel: Int): AkkaConfigTemplate = {
+    AkkaConfigTemplate(get(akkaMessageCompression, loggingLevel))
+  }
+
+  def get(
+    akkaMessageCompression: Boolean,
+    loggingLevel: Int)(hostname: String) = ConfigFactory.parseString(
+    distributedConfig(akkaMessageCompression, loggingLevel)(hostname))
+  def distributedConfig(
+    akkaMessageCompression: Boolean,
+    loggingLevel: Int)(hostname: String) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
@@ -16,21 +66,22 @@ akka {
     """ +
     {
       if (loggingLevel == Debug) {
+        println("Using Akka with debug config.")
         """
   loglevel = DEBUG
   """
       } else ""
     } +
     """
-  # debug {
+  debug {
     # enable function of LoggingReceive, which is to log any received message at
     # DEBUG level
-    # receive = on
-    # log-config-on-start = on
-    # lifecycle = on
-    # log-sent-messages = on
-    # log-received-messages = on
-  # }
+    receive = on
+    log-config-on-start = on
+    lifecycle = on
+    log-sent-messages = on
+    log-received-messages = on
+  }
     
   actor {
     # serialize-messages = on
@@ -66,6 +117,7 @@ akka {
       "com.signalcollect.interfaces.Warning" = kryo
       "com.signalcollect.interfaces.Severe" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
+      "com.signalcollect.interfaces.Request" = kryo
     }
 
     deployment {
@@ -95,10 +147,10 @@ akka {
     }
     
     kryo  {  
-        # Possibles values for type are: graph or nograph  
+        # Possible values for type are: graph or nograph  
         # graph supports serialization of object graphs with shared nodes  
         # and cyclic references, but this comes at the expense of a small overhead  
-        # nograph does not support object grpahs with shared nodes, but is usually faster   
+        # nograph does not support object graphs with shared nodes, but is usually faster   
         type = "nograph"  
 
         # Possible values for idstrategy are:  
@@ -174,6 +226,7 @@ akka {
             "com.signalcollect.interfaces.Warning" = 41
             "com.signalcollect.interfaces.Severe" = 42
             "com.signalcollect.interfaces.WorkerStatistics" = 43
+          	"com.signalcollect.interfaces.Request" = 44
         }
 
         # Define a set of fully qualified class names for   
@@ -203,6 +256,7 @@ akka {
             "com.signalcollect.interfaces.Warning",
             "com.signalcollect.interfaces.Severe",
             "com.signalcollect.interfaces.WorkerStatistics"
+    		"com.signalcollect.interfaces.Request"
         ]
     }
   }
@@ -271,11 +325,11 @@ akka {
     
       # (I) The hostname or ip to bind the remoting to,
       # InetAddress.getLocalHost.getHostAddress is used if empty
-      hostname = ""
+      hostname = """" + hostname + """"
 
       # (I) The default remote server port clients should connect to.
       # Default is 2552 (AKKA), use 0 if you want a random available port
-      port = 0
+      port = 2552
 
       # (O) The address of a local network interface (IP Address) to bind to when creating
       # outbound connections. Set to "" or "auto" for automatic selection of local address.

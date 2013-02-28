@@ -28,6 +28,7 @@ import akka.actor.ExtendedActorSystem
 import com.signalcollect.interfaces.WorkerActor
 
 trait Node {
+  def hostname: String
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
   def numberOfCores: Int
   def shutdown

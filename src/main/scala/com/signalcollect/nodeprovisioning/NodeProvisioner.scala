@@ -20,7 +20,8 @@
 package com.signalcollect.nodeprovisioning
 
 import com.typesafe.config.Config
+import com.signalcollect.configuration.AkkaConfigTemplate
 
 trait NodeProvisioner extends Serializable {
-	def getNodes(akkaConfig: Config): List[Node]
+	def getNodes(akkaConfigTemplate: AkkaConfigTemplate): List[Node]
 }

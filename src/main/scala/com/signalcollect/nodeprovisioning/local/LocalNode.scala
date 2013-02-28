@@ -34,23 +34,26 @@ import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.signalcollect.configuration.ActorSystemRegistry
 import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.configuration.NetworkUtilities
 
 class LocalNode extends Node {
-  
+
+  def hostname = NetworkUtilities.getHostname
+
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("no actor systme with name \"SignalCollect\" found."))
-  
+
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
-      case EventBased=>
+      case EventBased =>
         val worker = system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
-      case Pinned=>
+      case Pinned =>
         val worker = system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         AkkaHelper.getRemoteAddress(worker, system)
     }
   }
-  
+
   def shutdown = {}
 
   def numberOfCores = Runtime.getRuntime.availableProcessors
