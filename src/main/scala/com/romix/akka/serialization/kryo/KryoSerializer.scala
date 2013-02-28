@@ -146,21 +146,21 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         throw e
       }
     }
-    kryo.register(classOf[scala.Enumeration#Value])
     kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Set[_]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.MapFactory[scala.collection.Map]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.SetFactory[scala.collection.Set]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
     kryo.addDefaultSerializer(classOf[ActorRef], new ActorRefSerializer(system))
+    kryo.addDefaultSerializer(None.getClass, new NoneSerializer)
+    kryo.register(classOf[scala.Enumeration#Value], 10)
+    kryo.register(None.getClass, 19)
     kryo.register(classOf[Array[Int]], 20)
     kryo.register(classOf[Array[Long]], 21)
     kryo.register(classOf[Array[Float]], 22)
     kryo.register(classOf[Array[Double]], 23)
     kryo.register(classOf[Array[Boolean]], 24)
-    
-    kryo.addDefaultSerializer(None.getClass, new NoneSerializer)
-
+       
     if (settings.KryoTrace)
       MiniLog.TRACE()
 

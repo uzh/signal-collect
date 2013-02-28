@@ -65,7 +65,6 @@ akka {
       "com.signalcollect.interfaces.Warning" = kryo
       "com.signalcollect.interfaces.Severe" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
-      "scala.None$" = kryo
     }
 
     deployment {
@@ -174,7 +173,6 @@ akka {
             "com.signalcollect.interfaces.Warning" = 41
             "com.signalcollect.interfaces.Severe" = 42
             "com.signalcollect.interfaces.WorkerStatistics" = 43
-    		"scala.None$" = 44
         }
 
         # Define a set of fully qualified class names for   
@@ -203,8 +201,7 @@ akka {
             "com.signalcollect.interfaces.Info",
             "com.signalcollect.interfaces.Warning",
             "com.signalcollect.interfaces.Severe",
-            "com.signalcollect.interfaces.WorkerStatistics",
-    		"scala.None$"
+            "com.signalcollect.interfaces.WorkerStatistics"
         ]
     }
   }
