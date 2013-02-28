@@ -227,37 +227,28 @@ scc.modules.resources = function() {
       newData = this.conf.dataCallback(newData);
       
       if (this.conf.stacked) {
-        var dataStacked = getStackedData();
-        var layers = stack(nest.entries(dataStacked));
-        
-        var newDataArray = [];
+
         newData.forEach(function(d, i) {
-          newDataArray.push({"key":"group"+i, "value":d, "data":timestamp});
+          data.push({"key":"group"+i, "value":d, "date":timestamp});
         });
-        data.forEach(function(d) {
-//          console.dir(d);
-//          if (d.values !== undefined) {
-//            d.values.forEach(function(d2) {
-              newDataArray.push({"key":d.key, "value":d.value, "data":d.data});
-//            });
-//          }
-        });
-        
-//        newData = newDataArray;
-//        console.debug("vorher");
-//        console.dir(newData);    
-        data = stack(nest.entries(newDataArray));
-//        console.debug("nachher");
-//        console.dir(newData);
-//        data.push(newData);
+
+        layers = stack(nest.entries(data));
         
         // update data
         graph.selectAll("path.layer").remove();
         graph.selectAll(".layer").data(layers).enter()
-        .append("path")
-        .attr("class", "layer")
-        .attr("d", function(d) { return area(d.values); })
-        .style("fill", function(d, i) { return z(i); });
+            .append("path")
+            .attr("class", "layer")
+            .attr("d", function(d) { return area(d.values); })
+            .style("fill", function(d, i) { return z(i); });
+        
+        // update domains
+        x.domain(d3.extent(data, function(d) { return d.date; }));
+        y.domain([0, d3.max(data, function(d) { return d.y0 + d.y; }) * 1.1]);
+
+        // redraw axis
+        d3.select("#" + this.conf.graphName + " g.y.axis").call(yAxis);
+        d3.select("#" + this.conf.graphName + " g.x.axis").call(xAxis);
         
         return;
       }
