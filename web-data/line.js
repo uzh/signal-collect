@@ -2,6 +2,7 @@
  * TODO
  * - add tool tips
  * - add auto update (with animation)
+ * - add lines for setting up, graph building, calculation
  */
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -11,17 +12,17 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
 var parseDate = d3.time.format("%d-%b-%y").parse;
 var data = [
             [
-             {date:parseDate("1-May-12"),value:500},
-             {date:parseDate("3-May-12"),value:450},
-             {date:parseDate("5-May-12"),value:600}
+             {date:parseDate("1-May-12"), value:500, id:"average"},
+             {date:parseDate("3-May-12"), value:450, id:"average"},
+             {date:parseDate("5-May-12"), value:600, id:"average"}
             ],
             [
-              {date:parseDate("2-May-12"),value:400},
-              {date:parseDate("3-May-12"),value:200}
+              {date:parseDate("2-May-12"), value:400, id:"Node1"},
+              {date:parseDate("3-May-12"), value:200, id:"Node1"}
             ],
             [
-             {date:parseDate("1-May-12"),value:400},
-             {date:parseDate("5-May-12"),value:200}
+             {date:parseDate("1-May-12"), value:400, id:"Node1"},
+             {date:parseDate("5-May-12"), value:200, id:"Node1"}
             ]
            ];
 
@@ -34,6 +35,7 @@ var y = d3.scale.linear()
 
 // add scale of the axes
 x.domain(d3.extent(data[0], function(d) { return d.date; }));
+x.domain([parseDate("30-Apr-12"), parseDate("6-May-12")]);
 y.domain([0, d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } )) * 1.1]);
 
 var xAxis = d3.svg.axis()
@@ -75,7 +77,7 @@ var lines = svgBox.selectAll("g").data(data);
 
 //for each array, create a 'g' line container
 var aLineContainer = lines
-  .enter().append("g"); 
+  .enter().append("g");
 
 aLineContainer.append("path").attr("class", "line");
 
@@ -92,6 +94,29 @@ svg.append("g")
     .style("text-anchor", "end")
     .text("Price ($)");
 
+// show scatter points and tooltips
+var formatTime = d3.time.format("%e %B");
+var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+aLineContainer.selectAll(".dot")
+.data( function(d, i) { return d; } )  // This is the nested data call
+.enter()
+  .append("circle")
+  .attr("class", "dot")
+  .attr("r", 3.5)
+  .on("mouseover", function(d) {      
+            div.transition()        
+               .duration(100)      
+               .style("opacity", .9);      
+            div.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
+               .style("left", (d3.event.pageX) + "px")     
+               .style("top", (d3.event.pageY - 28) + "px");    
+            })                  
+        .on("mouseout", function(d) {       
+            div.transition()        
+                .duration(500)      
+                .style("opacity", 0);   
+        });
+
 draw();
 
 function draw() {
@@ -99,5 +124,6 @@ function draw() {
   svg.select("g.y.axis").call(yAxis);
 //  svg.select("path.area").attr("d", area);
   svg.selectAll("path.line").attr("d", line);
+  aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
 //  d3.select("#footer span").text("U.S. Commercial Flights, " + x.domain().map(format).join("-"));
 }
