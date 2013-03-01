@@ -43,7 +43,9 @@ case class WorkerStatus(
   isIdle: Boolean,
   isPaused: Boolean,
   messagesSent: Array[Long],
-  messagesReceived: Long)
+  messagesReceived: Long,
+  workerStatistics: WorkerStatistics,
+  systemInformation: SystemInformation)
 
 case class WorkerStatistics(
   messagesSent: Array[Long],
@@ -101,13 +103,6 @@ case class WorkerStatistics(
       continueMessagesReceived + other.continueMessagesReceived,
       requestMessagesReceived + other.requestMessagesReceived,
       otherMessagesReceived + other.otherMessagesReceived)
-  }
-  override def toString: String = {
-    "# messages \t\t" + messagesReceived + "\n" +
-      "# collect operations \t" + collectOperationsExecuted + "\n" +
-      "# signal operations \t" + signalOperationsExecuted + "\n" +
-      "# vertices (add/remove) \t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
-      "# edges (add/remove) \t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }
 

@@ -38,6 +38,8 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.SystemInformation
 import com.sun.management.OperatingSystemMXBean
 
 import akka.actor.Actor
@@ -91,6 +93,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   }
 
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
+  def getWorkerStatus(): Array[WorkerStatus] = { return workerStatus }
 
   def receive = {
     case ws: WorkerStatus =>

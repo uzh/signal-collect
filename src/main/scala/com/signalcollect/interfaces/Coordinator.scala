@@ -37,6 +37,8 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with L
   def getGraphEditor: GraphEditor[Id, Signal]
 
   def getGlobalInboxSize: Long
+
+  def getWorkerStatus: Array[WorkerStatus]
 }
 
 object Coordinator {
