@@ -323,31 +323,31 @@ scc.modules.resources = function() {
   // add some graphs and set them up
   allGraphs.push(createGraph("graphMessagesSent",
                              "Messages Sent (#)",
-                             function(newData) { return newData.workerStatistics["messagesSent"][0][0]; },
+                             function(newData) { return newData.workerStatistics.messagesSent[0][0]; },
                              false));
   allGraphs.push(createGraph("graphMessagesReceived",
                              "Messages Received (#)",
-                             function(newData) { return newData.workerStatistics["messagesReceived"][0]; },
+                             function(newData) { return newData.workerStatistics.messagesReceived[0]; },
                              false));
   allGraphs.push(createGraph("graphOutgoingEdges",
                              "Outgoing Edges (#)",
-                             function(newData) { return newData.workerStatistics["numberOfOutgoingEdges"][0]; },
+                             function(newData) { return newData.workerStatistics.numberOfOutgoingEdges[0]; },
                              false));
   allGraphs.push(createGraph("graphToSignalSize",
                              "To Signal Size (#)",
-                             function(newData) { return newData.workerStatistics["toSignalSize"][0]; },
+                             function(newData) { return newData.workerStatistics.toSignalSize[0]; },
                              false));
   allGraphs.push(createGraph("graphRequestMessagesReceived",
                              "Request Messages Received (#)",
-                             function(newData) { return newData.workerStatistics["requestMessagesReceived"][0]; },
+                             function(newData) { return newData.workerStatistics.requestMessagesReceived[0]; },
                              false));
   allGraphs.push(createGraph("graphSignalOperationsExecuted",
                              "signalOperationsExecuted (#)",
-                             function(newData) { return newData.workerStatistics["signalOperationsExecuted"][0]; },
+                             function(newData) { return newData.workerStatistics.signalOperationsExecuted[0]; },
                              false));
   allGraphs.push(createGraph("graphRamStacked",
                              "RAM (B)",
-                             function(newData) { return newData.jmx_mem_free; },
+                             function(newData) { return newData.workerStatistics.jmx_mem_free; },
                              true));
   allGraphs.forEach(function(g) { g.setup(); });
   
