@@ -155,7 +155,7 @@ scc.modules.graph = function() {
     scc.consumers.graph.onopen()
     order = {"provider": "graph", 
              "search": "vicinity", 
-             "id": $("#searchId").val()}
+             "vicinity": $("#searchId").val()}
     scc.order(order)
     return false;
   });
@@ -165,7 +165,7 @@ scc.modules.graph = function() {
     scc.consumers.graph.onopen()
     order = {"provider": "graph", 
              "search": "topk", 
-             "property": parseFloat($("#topk").val())}
+             "topk": parseFloat($("#topk").val())}
     scc.order(order)
     return false;
   });
