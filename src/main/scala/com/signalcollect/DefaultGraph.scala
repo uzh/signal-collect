@@ -333,16 +333,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def awaitIdle {
-    implicit val timeout = Timeout(Duration.create(1000, TimeUnit.DAYS))
-    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
-    try {
-      val result = Await.result(resultFuture, timeout.duration)
-    }
+    awaitIdle(Duration.create(1000, TimeUnit.DAYS).toNanos)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
     if (timeoutNanoseconds > 1000000000) {
       implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
+      // Add a new "on idle" action to the coordinator actors. The action is to send a message back to ourselves.
       val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
       try {
         val result = Await.result(resultFuture, timeout.duration)

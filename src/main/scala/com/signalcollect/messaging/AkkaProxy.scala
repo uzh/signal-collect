@@ -58,7 +58,12 @@ object AkkaProxy {
 /**
  *  Proxy that does RPC over Akka
  */
-class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler with Serializable {
+class AkkaProxy[ProxiedClass](
+  actor: ActorRef,
+  sentMessagesCounter: AtomicInteger,
+  receivedMessagesCounter: AtomicInteger,
+  timeout: Timeout,
+  optimizeBlocking: Boolean = false) extends InvocationHandler with Serializable {
 
   override def toString = "ProxyFor" + actor.toString
 
@@ -67,16 +72,16 @@ class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicIntege
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
     val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.toString, arguments)
     try {
-      if (!method.getReturnType.equals(Void.TYPE)) {
+      if (optimizeBlocking && method.getReturnType.equals(Void.TYPE)) {
+        actor ! Request(command, returnResult = false)
+        sentMessagesCounter.incrementAndGet
+        null.asInstanceOf[AnyRef] // Return type of method is void.
+      } else {
         val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
         sentMessagesCounter.incrementAndGet
         val result = Await.result(resultFuture, timeout.duration)
         receivedMessagesCounter.incrementAndGet
         result.asInstanceOf[AnyRef]
-      } else {
-        actor ! Request(command, returnResult = false)
-        sentMessagesCounter.incrementAndGet
-        null.asInstanceOf[AnyRef] // Return type of method is void.
       }
     } catch {
       case e: Exception =>

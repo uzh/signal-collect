@@ -65,6 +65,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
+
   var lastHeartbeatTimestamp = 0l
 
   def shouldSendHeartbeat: Boolean = {
@@ -85,7 +86,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
     val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
     lastHeartbeatTimestamp = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(maySignal), false)
+    messageBus.sendToWorkers(Heartbeat(maySignal), false) 
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
@@ -110,14 +111,16 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
       context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
-      if (isIdle) {
-        onIdle
-      }
+      sendHeartbeat
     case Request(command, reply) =>
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
-          sender ! result
+          if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
+            sender ! None
+          } else {
+            sender ! result
+          }
         }
       } catch {
         case e: Exception =>
@@ -158,9 +161,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
    *
    * + numberOfWorkers, because the status message sent by the worker is not included in the stats yet.
    */
-  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers + initializationMessages
-
-  val initializationMessages = numberOfWorkers * (numberOfWorkers + 2) // +2 for registration of coordinator and logger
+  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers
 
   /**
    *  Returns a map with the worker id as the key and the number of messages sent as the value.
