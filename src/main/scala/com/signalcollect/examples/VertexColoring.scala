@@ -19,8 +19,9 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect._
 import scala.util.Random
+
+import com.signalcollect._
 
 /**
  * 	This algorithm attempts to find a vertex coloring.

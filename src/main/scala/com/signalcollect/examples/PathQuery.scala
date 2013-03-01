@@ -19,11 +19,11 @@
 
 package com.signalcollect.examples
 
-import com.signalcollect._
 import scala.collection.immutable.Queue
-import com.signalcollect.configuration._
-import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.LinkedList
+import scala.collection.mutable.ListBuffer
+
+import com.signalcollect._
 
 /**
  * Elements of a path query.

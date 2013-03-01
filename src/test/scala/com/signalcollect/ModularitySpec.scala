@@ -35,26 +35,25 @@ import org.specs2.specification.Analysis
  */
 @RunWith(classOf[JUnitRunner])
 class ModularitySpec extends SpecificationWithJUnit with Analysis with ClassycleDependencyFinder {
-    
+
   sequential
 
   "The modules" should {
-    
+
     " have no direct dependencies between each other" in {
-      
+
       // Prevents this test from being run if run with an older JVM version.
       System.getProperty("java.version") must startWith("1.7").orSkip("This test only works with java 1.7")
-      
-      // All except for configuration, factory and interfaces.  
+
+      // All except for configuration, factory, serialization and interfaces.  
       val layerStructure = layers(
         "console",
         "coordinator",
         "examples",
         "factory",
-        "logging", 
+        "logging",
         "messaging",
         "nodeprovisioning",
-        "serialization",
         "storage",
         "worker").withPrefix("com.signalcollect")
         .inTargetDir("target/scala-2.10")

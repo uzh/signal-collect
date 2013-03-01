@@ -19,10 +19,9 @@
 
 package com.signalcollect
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
+import org.specs2.mutable.SpecificationWithJUnit
 import org.specs2.runner.JUnitRunner
-import com.signalcollect._
 
 @RunWith(classOf[JUnitRunner])
 class GraphModificationSpec extends SpecificationWithJUnit {

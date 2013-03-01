@@ -20,6 +20,7 @@
 package com.signalcollect.interfaces
 
 import scala.reflect.ClassTag
+
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 

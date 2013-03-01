@@ -21,9 +21,12 @@ package com.signalcollect
 
 import scala.reflect.ClassTag
 
-import com.signalcollect.configuration.{ AkkaDispatcher, GraphConfiguration }
-import com.signalcollect.configuration.GraphConfiguration.apply
-import com.signalcollect.interfaces.{ LogMessage, MessageBusFactory, StorageFactory, WorkerFactory }
+import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 
 /**

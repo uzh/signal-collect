@@ -19,17 +19,12 @@
 
 package com.signalcollect.nodeprovisioning.local
 
-import akka.actor.ActorRef
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.nodeprovisioning.Node
-import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
-import com.signalcollect.configuration.AkkaConfig
+import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
 
 class LocalNodeProvisioner extends NodeProvisioner {
-  
+
   def getNodes(akkaConfig: Config): List[Node] = {
     List(new LocalNode())
   }

@@ -21,53 +21,62 @@
 
 package com.signalcollect.worker
 
-import com.signalcollect.configuration._
-import java.util.concurrent.TimeUnit
-import com.signalcollect.interfaces._
-import java.util.concurrent.BlockingQueue
-import java.util.HashSet
-import java.util.HashMap
-import java.util.LinkedHashSet
-import java.util.LinkedHashMap
-import java.util.Map
-import java.util.Set
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.Queue
 import java.lang.management.ManagementFactory
+import scala.Array.canBuildFrom
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
+import scala.language.reflectiveCalls
+import scala.reflect.ClassTag
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.BulkSignal
+import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.SystemInformation
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.interfaces.WorkerApi
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.serialization.DefaultSerializer
 import com.sun.management.OperatingSystemMXBean
-import com.signalcollect._
-import scala.concurrent.duration._
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
-import akka.actor.ActorRef
-import akka.actor.ActorLogging
-import akka.event.LoggingReceive
-import com.signalcollect.interfaces.LogMessage
-import scala.concurrent.Future
-import scala.concurrent.Promise
 import akka.dispatch.MessageQueue
-import scala.collection.mutable.IndexedSeq
-import collection.JavaConversions._
-import scala.reflect.ClassTag
-import scala.language.reflectiveCalls
-import java.util.Queue
-import language.postfixOps
 
 class WorkerOperationCounters(
-    var messagesReceived: Long = 0l,
-    var collectOperationsExecuted: Long = 0l,
-    var signalOperationsExecuted: Long = 0l,
-    var verticesAdded: Long = 0l,
-    var verticesRemoved: Long = 0l,
-    var outgoingEdgesAdded: Long = 0l,
-    var outgoingEdgesRemoved: Long = 0l,
-    var signalSteps: Long = 0l,
-    var collectSteps: Long = 0l,
-    var receiveTimeoutMessagesReceived: Long = 0l,
-    var heartbeatMessagesReceived: Long = 0l,
-    var signalMessagesReceived: Long = 0l,
-    var bulkSignalMessagesReceived: Long = 0l,
-    var continueMessagesReceived: Long = 0l,
-    var requestMessagesReceived: Long = 0l,
-    var otherMessagesReceived: Long = 0) {
+  var messagesReceived: Long = 0l,
+  var collectOperationsExecuted: Long = 0l,
+  var signalOperationsExecuted: Long = 0l,
+  var verticesAdded: Long = 0l,
+  var verticesRemoved: Long = 0l,
+  var outgoingEdgesAdded: Long = 0l,
+  var outgoingEdgesRemoved: Long = 0l,
+  var signalSteps: Long = 0l,
+  var collectSteps: Long = 0l,
+  var receiveTimeoutMessagesReceived: Long = 0l,
+  var heartbeatMessagesReceived: Long = 0l,
+  var signalMessagesReceived: Long = 0l,
+  var bulkSignalMessagesReceived: Long = 0l,
+  var continueMessagesReceived: Long = 0l,
+  var requestMessagesReceived: Long = 0l,
+  var otherMessagesReceived: Long = 0) {
   // Resets operation counters but not messages received/sent counters.
   def resetOperationCounters {
     collectOperationsExecuted = 0l
@@ -90,7 +99,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -192,7 +201,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         var i = 0
         if (bulkSignal.sourceIds != null) {
           while (i < size) {
-            var sourceId = bulkSignal.sourceIds(i)
+            val sourceId = bulkSignal.sourceIds(i)
             if (sourceId != null) {
               processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
             } else {
@@ -533,6 +542,58 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       jmx_process_time = osBean.getProcessCpuTime(),
       jmx_system_load = osBean.getSystemCpuLoad()
     )
+  }
+
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  def snapshot {
+    // Overwrites previous file if it should exist.
+    val snapshotFileOutput = new DataOutputStream(new FileOutputStream(s"$workerId.snapshot"))
+    vertexStore.vertices.foreach { vertex =>
+      val bytes = DefaultSerializer.write(vertex)
+      snapshotFileOutput.writeInt(bytes.length)
+      snapshotFileOutput.write(bytes)
+    }
+    snapshotFileOutput.close
+  }
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  def restore {
+    reset
+    val maxSerializedSize = 64768
+    val snapshotFile = new File(s"$workerId.snapshot")
+    val buffer = new Array[Byte](maxSerializedSize)
+    if (snapshotFile.exists) {
+      val snapshotFileInput = new DataInputStream(new FileInputStream(snapshotFile))
+      val buffer = new Array[Byte](maxSerializedSize)
+      while (snapshotFileInput.available > 0) {
+        val serializedLength = snapshotFileInput.readInt
+        assert(serializedLength <= maxSerializedSize)
+        val bytesRead = snapshotFileInput.read(buffer, 0, serializedLength)
+        assert(bytesRead == serializedLength)
+        val vertex = DefaultSerializer.read[Vertex[Id, _]](buffer)
+        addVertex(vertex)
+      }
+      snapshotFileInput.close
+    }
+  }
+
+  /**
+   * Deletes the worker snapshots if they exist.
+   */
+  def deleteSnapshot {
+    val snapshotFile = new File(s"$workerId.snapshot")
+    if (snapshotFile.exists) {
+      snapshotFile.delete
+    }
   }
 
 }

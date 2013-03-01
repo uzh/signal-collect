@@ -20,19 +20,31 @@
 package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
-import java.util.{ HashMap, Map }
+import java.util.HashMap
+import java.util.Map
+
 import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.immutable.List.apply
-import scala.concurrent.duration.{ Duration, DurationLong }
-import scala.reflect.ClassTag
-import com.signalcollect.interfaces.{ Logging, MessageBus, MessageBusFactory, MessageRecipientRegistry, Request, WorkerStatus }
-import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.Heartbeat.apply
-import com.sun.management.OperatingSystemMXBean
-import akka.actor.{ Actor, ActorLogging, ActorRef, ReceiveTimeout, actorRef2Scala }
-import com.signalcollect.interfaces.Heartbeat
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.DurationLong
 import scala.language.postfixOps
+import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.Logging
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.MessageRecipientRegistry
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.WorkerStatus
+import com.sun.management.OperatingSystemMXBean
+
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.ReceiveTimeout
+import akka.actor.actorRef2Scala
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)

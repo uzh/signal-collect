@@ -18,7 +18,8 @@
 
 package com.signalcollect.storage
 
-import com.signalcollect.interfaces._
+import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.VertexStore
 
 class JavaMapVertexStorage[Id] extends Storage[Id] {
   val vertices = vertexStoreFactory

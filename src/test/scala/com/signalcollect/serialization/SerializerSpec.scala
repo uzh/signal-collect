@@ -19,11 +19,10 @@
 
 package com.signalcollect.serialization
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
+import org.specs2.mutable.SpecificationWithJUnit
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class SerializerSpec extends SpecificationWithJUnit with Mockito {

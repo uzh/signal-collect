@@ -25,31 +25,38 @@ import java.util.concurrent.Executors
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.net._
-import scala.language.postfixOps
 import scala.Array.canBuildFrom
-import scala.collection.immutable.List.apply
-import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, 
-                                      SystemInformation, Inspectable }
+import scala.collection.JavaConversions._
+import scala.language.postfixOps
+import scala.language.postfixOps
+import scala.reflect._ 
+import scala.reflect.runtime.{universe => ru}
+import scala.util.Random
+
+import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Inspectable
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.SystemInformation
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.TopKFinder
-import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.Vertex
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import com.sun.net.httpserver.HttpServer
 
-import scala.util.Random
+import akka.actor.ActorRef
 
 import org.java_websocket._
 import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
-import scala.collection.JavaConversions._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
-class ConsoleServer(userHttpPort: Int) {
+class ConsoleServer[Id](userHttpPort: Int) {
 
-  val (server: HttpServer, sockets: WebSocketConsoleServer) = setupUserPorts(userHttpPort)
+  val (server: HttpServer, sockets: WebSocketConsoleServer[Id]) = setupUserPorts(userHttpPort)
   
   server.createContext("/", new FileServer("web-data"))
   server.createContext("/api", new ApiServer())
@@ -60,7 +67,7 @@ class ConsoleServer(userHttpPort: Int) {
   sockets.start();
   println("WebSocket - Server started on port: " + sockets.getPort())
 
-  def setupUserPorts(httpPort: Int) : (HttpServer, WebSocketConsoleServer) = {
+  def setupUserPorts(httpPort: Int) : (HttpServer, WebSocketConsoleServer[Id]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
       val defaultPort = 8080
@@ -87,7 +94,7 @@ class ConsoleServer(userHttpPort: Int) {
   
   def getNewServers(httpPort: Int) = {
     val server: HttpServer = HttpServer.create(new InetSocketAddress(httpPort), 0)
-    val sockets: WebSocketConsoleServer = new WebSocketConsoleServer(new InetSocketAddress(httpPort + 100));
+    val sockets: WebSocketConsoleServer[Id] = new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100));
     (server, sockets)
   }
   
@@ -144,13 +151,13 @@ class FileServer(folderName: String) extends HttpHandler {
   }
 }
 
-class WebSocketConsoleServer(port: InetSocketAddress)
+class WebSocketConsoleServer[Id](port: InetSocketAddress)
                              extends WebSocketServer(port) {
-  var coordinator: Option[Coordinator[_,_]] = None;
+  var coordinator: Option[Coordinator[Id,_]] = None;
 
   def setCoordinator(coordinatorActor: ActorRef) {
     println("ConsoleServer: got coordinator ActorRef")
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[_, _]]
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]]
                       (coordinatorActor))
   }
 
@@ -165,7 +172,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
-        case "graph" => new GraphDataProvider(c, j)
+        case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case otherwise => new InvalidDataProvider(msg)
       }
@@ -177,7 +184,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
   def onOpen(socket: WebSocket, handshake:ClientHandshake) {
     println("WebSocket - client connected: " + 
             socket.getRemoteSocketAddress.getAddress.getHostAddress)
-    }
+  }
 
   def onClose(socket: WebSocket, code: Int, reason: String, remote: Boolean) {
     println("WebSocket - client disconected: " + 
@@ -220,7 +227,7 @@ case class GraphDataRequest(
   Nodes: Map[String,String]
   Edges: Map[String,List[String]
 */
-class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
+class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
       extends DataProvider {
   implicit val formats = DefaultFormats
   val workerApi = coordinator.getWorkerApi 
@@ -230,13 +237,23 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val graphData = request.search match {
       case Some("vicinity") => request.id match {
         case Some(id) =>
-          var vertexAggregator = new SearchAggregator(List(id))
-          var nodesEdges = workerApi.aggregateAll(vertexAggregator)
-          vertexAggregator = new SearchAggregator(nodesEdges._2(id))
-          val nodesEdges2 = workerApi.aggregateAll(vertexAggregator)
+          var vertexAggregator = new FindVertexByIdAggregator[Id](id)
+          var result = workerApi.aggregateAll(vertexAggregator)
+          var nodes = result match {
+            case Some(vertex) => 
+              println(vertex)
+              println(vertex.id)
+              workerApi.forVertexWithId(vertex.id, { i: Inspectable[Id,_] =>
+                  (i.id, i.outgoingEdges.values.foldLeft(List[String]()){
+                    (list, e) => e.targetId.toString :: list
+                  })
+                })
+            case None => List[String]()
+          }
+          println(nodes)
           ("provider" -> "graph") ~
-          ("nodes" -> nodesEdges2._1) ~
-          ("edges" -> nodesEdges2._2)
+          ("nodes" -> "") ~
+          ("edges" -> "")
         case otherwise => 
           ("provider" -> "graph") ~
           ("nodes" -> "") ~
@@ -273,66 +290,46 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
 
 class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       extends DataProvider {
-  implicit val formats = DefaultFormats
+
+  def unpackObjectList[T: ClassTag: ru.TypeTag](obj: List[T]): List[JField] = {
+    val methods = ru.typeOf[T].members.filter { m =>
+      m.isMethod && m.asMethod.isStable 
+    }
+    methods.map { m =>
+      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
+      val values = obj.map { o =>
+        val im = mirror.reflect(o)
+        im.reflectField(m.asTerm).get match {
+          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
+          case x: Long => JInt(x)
+          case x: Int => JInt(x)
+          case x: String => JString(x)
+          case x: Double if x.isNaN => JDouble(0)
+          case x: Double => JDouble(0)
+        }
+      }
+      JField(m.name.toString, values)
+    }.toList
+  }
+
   def fetch(): String = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
     val ws: List[WorkerStatistics] = 
       (coordinator.getWorkerApi.getIndividualWorkerStatistics)
+    val wstats = unpackObjectList(ws)
 
     var si: List[SystemInformation] = 
       (coordinator.getWorkerApi.getIndividualSystemInformation)
+    val sstats = unpackObjectList(si)
 
     val resourceData = (
       ("provider" -> "resources") ~
       ("timestamp" -> System.currentTimeMillis) ~
       ("inboxSize" -> inboxSize) ~
-      ("workerStatistics" ->
-        /* from WorkerStatistics */
-        ("workerId" -> ws.map(_.workerId)) ~
-        ("messagesSent" -> ws.map(_.messagesSent.toList)) ~
-        ("messagesReceived" -> ws.map(_.messagesReceived)) ~
-        ("toSignalSize" -> ws.map(_.toSignalSize)) ~
-        ("toCollectSize" -> ws.map(_.toCollectSize)) ~
-        ("collectOperationsExecuted" -> ws.map(_.collectOperationsExecuted)) ~
-        ("signalOperationsExecuted" -> ws.map(_.signalOperationsExecuted)) ~
-        ("numberOfVertices" -> ws.map(_.numberOfVertices)) ~
-        ("verticesAdded" -> ws.map(_.verticesAdded)) ~
-        ("verticesRemoved" -> ws.map(_.verticesRemoved)) ~
-        ("numberOfOutgoingEdges" -> ws.map(_.numberOfOutgoingEdges)) ~
-        ("outgoingEdgesAdded" -> ws.map(_.outgoingEdgesAdded)) ~
-        ("outgoingEdgesRemoved" -> ws.map(_.outgoingEdgesRemoved)) ~
-        ("receiveTimeoutMessagesReceived" -> ws.map(_.receiveTimeoutMessagesReceived)) ~
-        ("heartbeatMessagesReceived" -> ws.map(_.heartbeatMessagesReceived)) ~
-        ("signalMessagesReceived" -> ws.map(_.signalMessagesReceived)) ~
-        ("bulkSignalMessagesReceived" -> ws.map(_.bulkSignalMessagesReceived)) ~
-        ("continueMessagesReceived" -> ws.map(_.continueMessagesReceived)) ~
-        ("requestMessagesReceived" -> ws.map(_.requestMessagesReceived)) ~
-        ("otherMessagesReceived" -> ws.map(_.otherMessagesReceived)) ~
-        /* from SystemInformation */
-        ("os" -> si.map(_.os))) ~
-        ("runtime_mem_total" -> si.map(_.runtime_mem_total)) ~
-        ("runtime_mem_max" -> si.map(_.runtime_mem_max)) ~
-        ("runtime_mem_free" -> si.map(_.runtime_mem_free)) ~
-        ("runtime_cores" -> si.map(_.runtime_cores)) ~
-        ("jmx_committed_vms" -> si.map(_.jmx_committed_vms)) ~
-        ("jmx_mem_free" -> si.map(_.jmx_mem_free)) ~
-        ("jmx_mem_total" -> si.map(_.jmx_mem_total)) ~
-        ("jmx_swap_free" -> si.map(_.jmx_swap_free)) ~
-        ("jmx_swap_total" ->si.map(_.jmx_swap_total)) ~
-        ("jmx_process_load" -> si.map(_.jmx_process_load)) ~
-        ("jmx_process_time" -> si.map(_.jmx_process_time)) ~
-        ("jmx_system_load" -> si.map({ s =>
-          val v = s.jmx_system_load
-          if (v.isNaN()) { 0 } 
-          else {v}})) 
+      ("workerStatistics" -> JObject(wstats) ~ JObject(sstats))
     )
-    return compact(render(resourceData))
-
-    /* code kept for reference; use something like this to genericise?
-    val srcVal: Any = w.getClass.getMethods.find(_.getName == h).get.invoke(w)
-    */
-
+    compact(render(resourceData))
   }
 }
 
@@ -378,19 +375,21 @@ class AllEdgesAggregator
 
 class SearchAggregator(ids: List[String])
       extends AggregationOperation[(Map[String,String],Map[String,List[String]])] {
-  def extract(v: Vertex[_, _]): (Map[String,String],Map[String,List[String]]) = v match {
+  type NodeMap = (Map[String,String],Map[String,List[String]])
+
+  def extract(v: Vertex[_, _]): NodeMap = v match {
     case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
     case other => (Map(),Map())
   }
 
-  def reduce(vertices: Stream[(Map[String,String],Map[String,List[String]])]): (Map[String,String],Map[String,List[String]]) = {
-    vertices.foldLeft(((Map[String,String](),Map[String,List[String]]())))((
-      acc:(Map[String,String],Map[String,List[String]]), 
-      v:(Map[String,String],Map[String,List[String]])) => 
+  def reduce(vertices: Stream[NodeMap]): NodeMap = {
+    vertices.foldLeft((Map[String,String](),Map[String,List[String]]()))(
+      (acc:NodeMap, 
+      v:NodeMap) => 
         (acc._1 ++ v._1, acc._2 ++ v._2))
   }
 
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): (Map[String,String],Map[String,List[String]]) = {
+  def vertexToSigmaAddCommand(v: Inspectable[_, _]): NodeMap = {
     if (ids.contains(v.id.toString)) {
       var nodes = Map(v.id.toString -> v.state.toString)
       val edges = v.outgoingEdges.values
@@ -402,6 +401,22 @@ class SearchAggregator(ids: List[String])
     }
     return ((Map[String,String](),Map[String,List[String]]()))
   }
+}
+
+class FindVertexByIdAggregator[Id](id: String)
+      extends AggregationOperation[Option[Vertex[Id,_]]] {
+  def extract(v: Vertex[_, _]): Option[Vertex[Id,_]] = v match {
+    case i: Inspectable[Id, _] => {
+      if (i.id.toString == id) { return Some(i) }
+      else { return None }
+    }
+    case other => None
+  }
+
+  def reduce(vertices: Stream[Option[Vertex[Id,_]]]): Option[Vertex[Id,_]] = {
+    vertices.flatten.headOption
+  }
+
 }
 
 

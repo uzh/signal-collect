@@ -131,7 +131,7 @@ scc.modules.graph = function() {
 
     if (newNodes) {force.start(); }
 
-    scc.order(order, 10000)
+    scc.order(order, 1000)
 
   }
 

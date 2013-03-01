@@ -19,9 +19,9 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
+import com.signalcollect.GraphEditor
+
 import akka.actor.Actor
-import com.signalcollect.coordinator.DefaultWorkerApi
 
 /**
  * Required because a Java Dynamic Proxy can only work with interfaces
@@ -33,9 +33,9 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with L
   def isIdle: Boolean
 
   def getWorkerApi: WorkerApi[Id, Signal]
-  
+
   def getGraphEditor: GraphEditor[Id, Signal]
-  
+
   def getGlobalInboxSize: Long
 }
 

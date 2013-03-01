@@ -20,12 +20,15 @@
 
 package com.signalcollect.configuration
 
-import com.signalcollect.interfaces.{ LogMessage, MessageBusFactory, StorageFactory, WorkerFactory }
+import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.factory.worker.LocalWorker
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import com.signalcollect.factory.storage.DefaultStorage
 
 /**

@@ -19,11 +19,12 @@
 
 package com.signalcollect.storage
 
-import java.util.Set
-import com.signalcollect.interfaces._
 import java.util.HashMap
-import com.signalcollect._
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaIterator
+
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.VertexStore
 
 /**
  * Stores all vertices in a in-memory HashMap data structure.

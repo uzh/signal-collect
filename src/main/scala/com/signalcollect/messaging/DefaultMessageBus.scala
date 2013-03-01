@@ -19,20 +19,10 @@
 
 package com.signalcollect.messaging
 
-import com.signalcollect.interfaces._
-import java.util.HashMap
-import com.signalcollect.logging.DefaultLogger
-import com.signalcollect.interfaces.LogMessage
-import java.util.concurrent.atomic.AtomicInteger
-import akka.actor.ActorRef
-import com.signalcollect.coordinator.DefaultWorkerApi
-import com.signalcollect.GraphEditor
-import com.signalcollect.Vertex
-import com.signalcollect.Edge
-import java.util.Random
+import com.signalcollect.interfaces.WorkerApiFactory
 
 class DefaultMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
-    val numberOfWorkers: Int,
-    workerApiFactory: WorkerApiFactory) extends AbstractMessageBus[Id, Signal] {
+  val numberOfWorkers: Int,
+  workerApiFactory: WorkerApiFactory) extends AbstractMessageBus[Id, Signal] {
   lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
 }

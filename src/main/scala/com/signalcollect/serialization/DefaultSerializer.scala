@@ -18,7 +18,10 @@
 
 package com.signalcollect.serialization
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 /**
  * Companion object for DefaultSerializer
@@ -38,7 +41,7 @@ trait DefaultSerializer {
    * @return serialized object as byte array
    */
   def write[A](inputObject: A): Array[Byte] = {
-    val barr = new ByteArrayOutputStream(512)
+    val barr = new ByteArrayOutputStream(8192)
     val out = new ObjectOutputStream(barr)
     out.writeObject(inputObject)
     out.close

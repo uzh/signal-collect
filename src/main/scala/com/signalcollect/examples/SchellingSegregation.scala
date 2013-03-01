@@ -20,7 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  Represents an agent in a Schelling-Segregation simulation

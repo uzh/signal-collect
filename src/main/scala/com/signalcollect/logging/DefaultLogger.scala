@@ -20,6 +20,7 @@
 package com.signalcollect.logging
 
 import com.signalcollect.interfaces.LogMessage
+
 import akka.actor.Actor
 
 object DefaultLogger {

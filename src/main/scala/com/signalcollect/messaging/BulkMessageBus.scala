@@ -19,9 +19,9 @@
 
 package com.signalcollect.messaging
 
-import com.signalcollect.interfaces.SignalMessage
-import com.signalcollect.interfaces.BulkSignal
 import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
@@ -35,7 +35,7 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     signals(itemCount) = signal
     targetIds(itemCount) = targetId
     if (sourceId.isDefined) {
-      targetIds(itemCount) = sourceId.get
+      sourceIds(itemCount) = sourceId.get
     }
     itemCount += 1
   }
@@ -49,14 +49,14 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   flushThreshold: Int,
   val withSourceIds: Boolean,
   workerApiFactory: WorkerApiFactory)
-    extends AbstractMessageBus[Id, Signal] {
+  extends AbstractMessageBus[Id, Signal] {
 
   override def reset {
     super.reset
     pendingSignals = 0
     outgoingMessages foreach (_.clear)
   }
-  
+
   protected var pendingSignals = 0
 
   lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
@@ -74,9 +74,9 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {
           if (withSourceIds) {
-            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, bulker.sourceIds))
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.slice(0, signalCount), bulker.targetIds.slice(0, signalCount), bulker.sourceIds.slice(0, signalCount)))
           } else {
-            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, null.asInstanceOf[Array[Id]]))
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.slice(0, signalCount), bulker.targetIds.slice(0, signalCount), null.asInstanceOf[Array[Id]]))
           }
           outgoingMessages(workerId).clear
         }

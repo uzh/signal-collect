@@ -19,21 +19,30 @@
 
 package com.signalcollect.messaging
 
-import com.signalcollect.interfaces._
-import java.util.HashMap
-import com.signalcollect.logging.DefaultLogger
-import com.signalcollect.interfaces.LogMessage
+import java.util.Random
 import java.util.concurrent.atomic.AtomicInteger
-import akka.actor.ActorRef
+
+import scala.Array.canBuildFrom
+
+import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
-import com.signalcollect.Edge
-import java.util.Random
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.LogMessage
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.interfaces.WorkerApi
+
+import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
 
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
-  def reset { }
+  def reset {}
 
   def numberOfWorkers: Int
 

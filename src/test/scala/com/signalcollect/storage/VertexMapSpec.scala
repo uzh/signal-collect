@@ -19,16 +19,12 @@
 
 package com.signalcollect.storage
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.interfaces._
-import com.signalcollect.messaging.DefaultMessageBus
+import org.specs2.mutable.SpecificationWithJUnit
+import org.specs2.runner.JUnitRunner
+
 import com.signalcollect.examples.PageRankVertex
-import java.io.File
-import com.signalcollect.examples.PageRankVertex$
 import com.signalcollect.examples.SudokuCell
 
 @RunWith(classOf[JUnitRunner])
