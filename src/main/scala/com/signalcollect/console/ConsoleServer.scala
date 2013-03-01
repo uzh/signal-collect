@@ -178,7 +178,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
       }
       case None => new NotReadyDataProvider(msg)
     }
-    socket.send(provider.fetch)
+    socket.send(compact(render(provider.fetch)))
   }
 
   def onOpen(socket: WebSocket, handshake:ClientHandshake) {
@@ -194,25 +194,21 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
 }
 
 trait DataProvider {
-  def fetch(): String
+  def fetch(): JObject
 }
 
 class InvalidDataProvider(msg: String) extends DataProvider {
-  def fetch(): String = {
-    return compact(render((
-      ("provider" -> "invalid") ~
-      ("msg" -> ("Received an invalid message: " + msg))
-    )))
+  def fetch(): JObject = {
+    ("provider" -> "invalid") ~
+    ("msg" -> ("Received an invalid message: " + msg))
   }
 }
 
 class NotReadyDataProvider(msg: String) extends DataProvider {
-  def fetch(): String = {
-    return compact(render((
-      ("provider" -> "notready") ~
-      ("msg" -> "The signal/collect computation is not ready yet") ~
-      ("request" -> msg)
-    )))
+  def fetch(): JObject = {
+    ("provider" -> "notready") ~
+    ("msg" -> "The signal/collect computation is not ready yet") ~
+    ("request" -> msg)
   }
 }
 
@@ -223,53 +219,50 @@ case class GraphDataRequest(
   property: Option[Int]
 )
 
-/*
-  Nodes: Map[String,String]
-  Edges: Map[String,List[String]
-*/
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
       extends DataProvider {
   implicit val formats = DefaultFormats
   val workerApi = coordinator.getWorkerApi 
-  def fetch(): String = {
+  def graphFor(vertexIds: List[Id]) = {
+
+  }
+  def findVicinity(vertexIds: List[Id], depth: Int = 3): List[Id] = {
+    if (depth == 0) { vertexIds }
+    else {
+      findVicinity(vertexIds.map { id =>
+        workerApi.forVertexWithId(id, { vertex: Inspectable[Id,_] =>
+          vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toList
+        })
+      }.flatten, depth - 1)
+    }
+  }
+  def fetch(): JObject = {
     val request = (msg).extract[GraphDataRequest]
-    println(request)
     val graphData = request.search match {
       case Some("vicinity") => request.id match {
         case Some(id) =>
-          var vertexAggregator = new FindVertexByIdAggregator[Id](id)
-          var result = workerApi.aggregateAll(vertexAggregator)
-          var nodes = result match {
-            case Some(vertex) => 
-              println(vertex)
-              println(vertex.id)
-              workerApi.forVertexWithId(vertex.id, { i: Inspectable[Id,_] =>
-                  (i.id, i.outgoingEdges.values.foldLeft(List[String]()){
-                    (list, e) => e.targetId.toString :: list
-                  })
-                })
-            case None => List[String]()
+          val vertex = workerApi.aggregateAll(
+                       new FindVertexByIdAggregator[Id](id))
+          val vicinity = vertex match {
+            case Some(v) => 
+              findVicinity(List(v.id))
+            case None => List[Id]()
           }
-          println(nodes)
-          ("provider" -> "graph") ~
-          ("nodes" -> "") ~
-          ("edges" -> "")
-        case otherwise => 
-          ("provider" -> "graph") ~
-          ("nodes" -> "") ~
-          ("edges" -> "")
+          val graph = workerApi.aggregateAll(
+                       new GraphAggregator[Id](vicinity))
+          ("provider" -> "graph") ~ 
+          graph
+        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch()
       }
       case Some("topk") => request.property match {
         case Some(property) => 
-          println(property)
           val topk = new TopKFinder[Int](property)
           val nodes = workerApi.aggregateAll(topk)
-          var vertexAggregator = new SearchAggregator(nodes.toList.map(_._1.toString))
-          var nodesEdges = workerApi.aggregateAll(vertexAggregator)
+          val graph = workerApi.aggregateAll(
+                      new GraphAggregator(nodes.toList.map(_._1)))
           ("provider" -> "graph") ~
-          ("nodes" -> nodesEdges._1) ~
-          ("edges" -> nodesEdges._2)
-        case otherwise => 
+          graph
+        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch()
           ("provider" -> "graph") ~
           ("nodes" -> "") ~
           ("edges" -> "")
@@ -283,8 +276,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       }
 
     }
-    //println(compact(render(graphData)))
-    return compact(render(graphData))
+    graphData
   }
 }
 
@@ -312,7 +304,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     }.toList
   }
 
-  def fetch(): String = {
+  def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
     val ws: List[WorkerStatistics] = 
@@ -329,7 +321,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       ("inboxSize" -> inboxSize) ~
       ("workerStatistics" -> JObject(wstats) ~ JObject(sstats))
     )
-    compact(render(resourceData))
+    resourceData
   }
 }
 
@@ -373,33 +365,29 @@ class AllEdgesAggregator
   }
 }
 
-class SearchAggregator(ids: List[String])
-      extends AggregationOperation[(Map[String,String],Map[String,List[String]])] {
-  type NodeMap = (Map[String,String],Map[String,List[String]])
-
-  def extract(v: Vertex[_, _]): NodeMap = v match {
-    case i: Inspectable[_, _] => vertexToSigmaAddCommand(i)
-    case other => (Map(),Map())
-  }
-
-  def reduce(vertices: Stream[NodeMap]): NodeMap = {
-    vertices.foldLeft((Map[String,String](),Map[String,List[String]]()))(
-      (acc:NodeMap, 
-      v:NodeMap) => 
-        (acc._1 ++ v._1, acc._2 ++ v._2))
-  }
-
-  def vertexToSigmaAddCommand(v: Inspectable[_, _]): NodeMap = {
-    if (ids.contains(v.id.toString)) {
-      var nodes = Map(v.id.toString -> v.state.toString)
-      val edges = v.outgoingEdges.values
-         .foldLeft(List[String]()) { (list, e) =>
-             nodes = nodes ++ Map(e.targetId.toString -> "unknown")
-             list ++ List(e.targetId.toString)
-         }
-      return (nodes, Map(v.id.toString -> edges))
+class GraphAggregator[Id](ids: List[Id])
+      extends AggregationOperation[JObject] {
+  def extract(v: Vertex[_, _]): JObject = v match {
+    case i: Inspectable[Id, _] => {
+      if (ids.contains(i.id)) {
+        val edges = i.outgoingEdges.values.filter { 
+          v => ids.contains(v.targetId)
+        }
+        JObject(List(
+          JField("nodes", JObject(List(JField(i.id.toString, i.state.toString)))),
+          JField("edges", JObject(List(JField(i.id.toString, JArray(
+            edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
+        ))
+      }
+      else { JObject(List()) }
     }
-    return ((Map[String,String](),Map[String,List[String]]()))
+    case other => JObject(List())
+  }
+
+  def reduce(vertices: Stream[JObject]): JObject = {
+    vertices.foldLeft(JObject(List())) { (acc, v) => 
+      acc merge v
+    }
   }
 }
 
@@ -418,6 +406,4 @@ class FindVertexByIdAggregator[Id](id: String)
   }
 
 }
-
-
 
