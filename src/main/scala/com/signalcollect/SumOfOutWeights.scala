@@ -37,7 +37,7 @@ trait SumOfOutWeights[Id, State] extends AbstractVertex[Id, State] {
   abstract override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
     val outgoingEdge = outgoingEdges.get(targetId)
     val weightToSubtract = outgoingEdge match {
-      case None       => 0
+      case None => 0
       case Some(edge) => edge.weight
     }
     val removed = super.removeEdge(targetId, graphEditor)

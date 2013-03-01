@@ -19,9 +19,6 @@
 
 package com.signalcollect
 
-import scala.Some.apply
-import com.signalcollect.interfaces.EdgeId.apply
-import com.signalcollect.interfaces.SignalMessage.apply
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.SignalMessage
 

@@ -26,7 +26,7 @@ package com.signalcollect
  *  @param targetId id of this edges's target vertex
  */
 class StateForwarderEdge[TargetIdType](targetId: TargetIdType)
-    extends DefaultEdge(targetId) {
+  extends DefaultEdge(targetId) {
 
   def signal = source.state.asInstanceOf[Signal]
 

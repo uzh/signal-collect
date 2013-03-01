@@ -18,11 +18,7 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
-import scala.collection.mutable.IndexedSeq
-import scala.collection.mutable.Iterable
-import java.util.Set
-import com.signalcollect.storage.VertexMap
+import com.signalcollect.Vertex
 
 /**
  * High level interface to abstract all vertex storage related implementations

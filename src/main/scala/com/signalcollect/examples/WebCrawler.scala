@@ -20,7 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.interfaces.MessageBus
 
 /**
  *  Regular expression to match links in Html strings

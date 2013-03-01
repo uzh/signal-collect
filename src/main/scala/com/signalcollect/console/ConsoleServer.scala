@@ -25,33 +25,38 @@ import java.util.concurrent.Executors
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.net._
-import scala.language.postfixOps
 import scala.Array.canBuildFrom
-import scala.collection.immutable.List.apply
-import com.signalcollect.interfaces.{ Coordinator, WorkerStatistics, 
-                                      SystemInformation, Inspectable }
+import scala.collection.JavaConversions._
+import scala.language.postfixOps
+import scala.language.postfixOps
+import scala.reflect._ 
+import scala.reflect.runtime.{universe => ru}
+import scala.util.Random
+
+import com.signalcollect.interfaces.AggregationOperation
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Inspectable
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.SystemInformation
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.TopKFinder
-import com.sun.net.httpserver.{ HttpExchange, HttpHandler, HttpServer }
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.Vertex
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import com.sun.net.httpserver.HttpServer
 
-import scala.util.Random
+import akka.actor.ActorRef
 
 import org.java_websocket._
 import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
-import scala.collection.JavaConversions._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
-import scala.reflect._ 
-import scala.reflect.runtime.{universe => ru}
 
-class ConsoleServer(userHttpPort: Int) {
+class ConsoleServer[Id](userHttpPort: Int) {
 
-  val (server: HttpServer, sockets: WebSocketConsoleServer) = setupUserPorts(userHttpPort)
+  val (server: HttpServer, sockets: WebSocketConsoleServer[Id]) = setupUserPorts(userHttpPort)
   
   server.createContext("/", new FileServer("web-data"))
   server.createContext("/api", new ApiServer())
@@ -62,7 +67,7 @@ class ConsoleServer(userHttpPort: Int) {
   sockets.start();
   println("WebSocket - Server started on port: " + sockets.getPort())
 
-  def setupUserPorts(httpPort: Int) : (HttpServer, WebSocketConsoleServer) = {
+  def setupUserPorts(httpPort: Int) : (HttpServer, WebSocketConsoleServer[Id]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
       val defaultPort = 8080
@@ -89,7 +94,7 @@ class ConsoleServer(userHttpPort: Int) {
   
   def getNewServers(httpPort: Int) = {
     val server: HttpServer = HttpServer.create(new InetSocketAddress(httpPort), 0)
-    val sockets: WebSocketConsoleServer = new WebSocketConsoleServer(new InetSocketAddress(httpPort + 100));
+    val sockets: WebSocketConsoleServer[Id] = new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100));
     (server, sockets)
   }
   
@@ -146,13 +151,13 @@ class FileServer(folderName: String) extends HttpHandler {
   }
 }
 
-class WebSocketConsoleServer(port: InetSocketAddress)
+class WebSocketConsoleServer[Id](port: InetSocketAddress)
                              extends WebSocketServer(port) {
-  var coordinator: Option[Coordinator[_,_]] = None;
+  var coordinator: Option[Coordinator[Id,_]] = None;
 
   def setCoordinator(coordinatorActor: ActorRef) {
     println("ConsoleServer: got coordinator ActorRef")
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[_, _]]
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]]
                       (coordinatorActor))
   }
 
@@ -167,7 +172,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
-        case "graph" => new GraphDataProvider(c, j)
+        case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case otherwise => new InvalidDataProvider(msg)
       }
@@ -179,7 +184,7 @@ class WebSocketConsoleServer(port: InetSocketAddress)
   def onOpen(socket: WebSocket, handshake:ClientHandshake) {
     println("WebSocket - client connected: " + 
             socket.getRemoteSocketAddress.getAddress.getHostAddress)
-    }
+  }
 
   def onClose(socket: WebSocket, code: Int, reason: String, remote: Boolean) {
     println("WebSocket - client disconected: " + 
@@ -222,7 +227,7 @@ case class GraphDataRequest(
   Nodes: Map[String,String]
   Edges: Map[String,List[String]
 */
-class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
+class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
       extends DataProvider {
   implicit val formats = DefaultFormats
   val workerApi = coordinator.getWorkerApi 
@@ -232,19 +237,20 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val graphData = request.search match {
       case Some("vicinity") => request.id match {
         case Some(id) =>
-          var vertexAggregator = new FindVertexByIdAggregator(id)
+          var vertexAggregator = new FindVertexByIdAggregator[Id](id)
           var result = workerApi.aggregateAll(vertexAggregator)
-          /*var nodes = result match {
+          var nodes = result match {
             case Some(vertex) => 
               println(vertex)
               println(vertex.id)
-              workerApi.forVertexWithId(vertex.id.asInstanceOf[Any], { i: Inspectable[Any,_] =>
+              workerApi.forVertexWithId(vertex.id, { i: Inspectable[Id,_] =>
                   (i.id, i.outgoingEdges.values.foldLeft(List[String]()){
                     (list, e) => e.targetId.toString :: list
                   })
                 })
             case None => List[String]()
-          }*/
+          }
+          println(nodes)
           ("provider" -> "graph") ~
           ("nodes" -> "") ~
           ("edges" -> "")
@@ -284,8 +290,6 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
 
 class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       extends DataProvider {
-
-  //implicit val formats = DefaultFormats
 
   def unpackObjectList[T: ClassTag: ru.TypeTag](obj: List[T]): List[JField] = {
     val methods = ru.typeOf[T].members.filter { m =>
@@ -399,17 +403,17 @@ class SearchAggregator(ids: List[String])
   }
 }
 
-class FindVertexByIdAggregator(id: String)
-      extends AggregationOperation[Option[Vertex[_,_]]] {
-  def extract(v: Vertex[_, _]): Option[Vertex[_,_]] = v match {
-    case i: Inspectable[_, _] => {
-      if (v.id.toString == id) { return Some(v) }
+class FindVertexByIdAggregator[Id](id: String)
+      extends AggregationOperation[Option[Vertex[Id,_]]] {
+  def extract(v: Vertex[_, _]): Option[Vertex[Id,_]] = v match {
+    case i: Inspectable[Id, _] => {
+      if (i.id.toString == id) { return Some(i) }
       else { return None }
     }
     case other => None
   }
 
-  def reduce(vertices: Stream[Option[Vertex[_,_]]]): Option[Vertex[_,_]] = {
+  def reduce(vertices: Stream[Option[Vertex[Id,_]]]): Option[Vertex[Id,_]] = {
     vertices.flatten.headOption
   }
 

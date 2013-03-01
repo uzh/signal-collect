@@ -19,9 +19,7 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
 import akka.actor.Actor
-import scala.concurrent.Future
 
 trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
   extends Actor

@@ -19,54 +19,29 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-import com.signalcollect.nodeprovisioning.Node
-import scala.util.Random
-import java.io.File
-import scala.sys.process._
-import org.apache.commons.codec.binary.Base64
-import com.signalcollect.serialization.DefaultSerializer
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStream
-import ch.ethz.ssh2.StreamGobbler
-import java.io.FileInputStream
-import java.io.File
-import ch.ethz.ssh2.Connection
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.actor.Actor
-import com.typesafe.config.ConfigFactory
-import akka.actor.ActorRef
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration.Duration._
-import scala.concurrent.duration.Duration
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
-import scala.concurrent.Await
-import akka.actor.PoisonPill
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.configuration.AkkaConfig
-import com.signalcollect.configuration.EventBased
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.configuration.Pinned
 import com.signalcollect.configuration.AkkaDispatcher
-import com.signalcollect.nodeprovisioning.AkkaHelper
-import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.configuration.EventBased
+import com.signalcollect.configuration.Pinned
 import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.nodeprovisioning.AkkaHelper
+import com.signalcollect.nodeprovisioning.Node
+
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Props
+import akka.actor.actorRef2Scala
 
 class NodeControllerActor(nodeId: Any, nodeProvisionerAddress: String) extends Actor with Node {
 
   var nodeProvisioner: ActorRef = _
 
   def shutdown = context.system.shutdown
-  
+
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     val workerName = "Worker" + workerId
     dispatcher match {
-      case EventBased => 
+      case EventBased =>
         val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>

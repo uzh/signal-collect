@@ -19,8 +19,11 @@
 
 package com.signalcollect.examples
 
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListMap
+import scala.collection.mutable.SynchronizedMap
+
 import com.signalcollect._
-import collection.mutable.{ ListMap, HashMap, SynchronizedMap }
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine
@@ -288,7 +291,7 @@ object SudokuHelper {
       for (k <- j to j + 8) {
         data.get(k) match {
           case Some(Some(v)) => print(" " + v + " ")
-          case v             => print("   ") //Empty or Error
+          case v => print("   ") //Empty or Error
         }
         if (k % 3 == 2) {
           print("II")

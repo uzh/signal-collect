@@ -19,22 +19,23 @@
 
 package com.signalcollect.features
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.interfaces._
-import java.util.Map.Entry
-import com.signalcollect._
-import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.examples.SudokuCell
+import org.specs2.mutable.SpecificationWithJUnit
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.GlobalTerminationCondition
+import com.signalcollect.Graph
+import com.signalcollect.GraphBuilder
+import com.signalcollect.SumOfStates
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.interfaces.Config
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNode
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
@@ -103,11 +104,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for synchronous computations" in {
       val graph = createCircleGraph(30)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1) {
-        def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 20.0 && sum.get < 29.0
-        }
-      }
+      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1, (sum: Option[Double]) =>
+        sum.isDefined && sum.get > 20.0 && sum.get < 29.0)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
@@ -121,11 +119,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for asynchronous computations" in {
       val graph = createCircleGraph(100)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l) {
-        def shouldTerminate(sum: Option[Double]): Boolean = {
-          sum.isDefined && sum.get > 20.0
-        }
-      }
+      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l, (sum: Option[Double]) =>
+        sum.isDefined && sum.get > 20.0)
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)

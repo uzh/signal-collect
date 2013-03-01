@@ -19,13 +19,10 @@
 
 package com.signalcollect
 
-import org.specs2.mutable._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.matcher.Matcher
 import org.specs2.mock.Mockito
-import com.signalcollect.interfaces._
-import java.util.Map.Entry
+import org.specs2.mutable.SpecificationWithJUnit
+import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {

@@ -19,12 +19,13 @@
 
 package com.signalcollect.factory.messagebus
 
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.messaging.DefaultMessageBus
-import com.signalcollect.messaging.BulkMessageBus
 import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.WorkerApiFactory
+import com.signalcollect.messaging.BulkMessageBus
+import com.signalcollect.messaging.DefaultMessageBus
 
 object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](

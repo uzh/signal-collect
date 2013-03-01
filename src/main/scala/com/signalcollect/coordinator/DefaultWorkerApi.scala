@@ -19,16 +19,25 @@
 
 package com.signalcollect.coordinator
 
-import scala.concurrent._
+import scala.Array.canBuildFrom
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.future
 import scala.language.postfixOps
-import scala.concurrent.duration._
 import scala.util.Random
-import com.signalcollect.{ Edge, GraphEditor, Vertex }
-import com.signalcollect.interfaces.{ AggregationOperation, EdgeId, VertexToWorkerMapper, WorkerApi, WorkerStatistics, SystemInformation }
-import com.signalcollect.interfaces.WorkerStatistics.apply
-import com.sun.org.apache.xml.internal.serializer.ToStream
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.interfaces.WorkerApi
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.WorkerStatistics.apply
+import com.signalcollect.interfaces.SystemInformation
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -36,7 +45,7 @@ import com.signalcollect.interfaces.ComplexAggregation
 class DefaultWorkerApi[Id, Signal](
   val workers: Array[WorkerApi[Id, Signal]],
   val mapper: VertexToWorkerMapper[Id])
-    extends WorkerApi[Id, Signal] {
+  extends WorkerApi[Id, Signal] {
 
   override def toString = "DefaultWorkerApi"
 
@@ -100,7 +109,7 @@ class DefaultWorkerApi[Id, Signal](
   override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
 
   override def setCollectThreshold(t: Double) = futures(_.setCollectThreshold(t)) foreach get
-  
+
   override def reset = futures(_.reset) foreach get
 
   //----------------GraphEditor, BLOCKING variant-------------------------
@@ -165,5 +174,9 @@ class DefaultWorkerApi[Id, Signal](
       workers(randomWorkerId).modifyGraph(graphLoader, vertexIdHint)
     }
   }
+
+  def snapshot = futures(_.snapshot) foreach get
+  def restore = futures(_.restore) foreach get
+  def deleteSnapshot = futures(_.deleteSnapshot) foreach get
 
 }

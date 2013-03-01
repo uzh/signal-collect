@@ -18,8 +18,11 @@
 
 package com.signalcollect.storage
 
-import com.signalcollect.interfaces.VertexStore
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import com.signalcollect.Vertex
+import com.signalcollect.interfaces.VertexStore
 
 // A special adaptation of IntHashMap[Vertex[_, _]].
 // We allow arbitrary types for the vertex id to make
@@ -268,7 +271,6 @@ class VertexMap[Id](
   }
 
   private[this] final def nextPowerOfTwo(x: Int): Int = {
-    assert(x > 0)
     var r = x - 1
     r |= r >> 1
     r |= r >> 2

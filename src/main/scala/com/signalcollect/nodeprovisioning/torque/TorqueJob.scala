@@ -23,6 +23,6 @@ case class TorqueJob(
   jobId: Int,
   execute: () => Map[String, String],
   submittedByUser: String = "",
-  jvmParameters:String = "",
+  jvmParameters: String = "",
   jobDescription: String = "",
   jdkBinPath: String = "")

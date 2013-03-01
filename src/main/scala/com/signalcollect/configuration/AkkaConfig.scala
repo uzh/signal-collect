@@ -5,8 +5,7 @@ import com.typesafe.config.ConfigFactory
 
 object AkkaConfig {
   def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, loggingLevel)
-  )
+    distributedConfig(akkaMessageCompression, loggingLevel))
   def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]

@@ -54,7 +54,7 @@ object Hamiltonian extends App {
 
   val stats = graph.execute
   println(stats)
-  graph.foreachVertex (println(_))
+  graph.foreachVertex(println(_))
   graph.shutdown
 }
 
@@ -62,9 +62,9 @@ object Hamiltonian extends App {
  * The state of a vertex is all the paths currently collected from the graph
  * Each path will be kept such that there will be no "revisiting" of vertices (each path will not have a repeated vertex id)
  * Implementation is rather inefficient since it keeps a map where the value is the weights sum and keys as lists
- * 
+ *
  * IMPORTANT CONSTRAINTS: This algorithm is ONLY correct if the graph is bidirectional and has no "dangling" vertices
- * 
+ *
  */
 class HamiltonianVertex(vertexId: String, initialState: Map[List[String], Int]) extends DataGraphVertex(vertexId, initialState) {
 
@@ -118,7 +118,7 @@ class HamiltonianEdge(t: Any, w: Int) extends OnlySignalOnChangeEdge(t) {
   override def weight: Double = w
 
   type Source = HamiltonianVertex
-  
+
   def signal = {
     // signals only paths that do not contain the target vertex id
     ((source.state.keySet) filterNot { x => x contains (id.targetId) }).map { k =>

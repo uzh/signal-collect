@@ -19,7 +19,6 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.SignalMessage.apply
 import com.signalcollect.interfaces.SignalMessage
 
 /**
@@ -33,7 +32,7 @@ import com.signalcollect.interfaces.SignalMessage
  *  @note Beware of modifying and signaling a referenced object, change detection fails in this case.
  */
 abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](targetId: TargetIdType)
-    extends DefaultEdge(targetId) {
+  extends DefaultEdge(targetId) {
 
   /** Last signal sent along this edge */
   var lastSignalSent: Option[Signal] = None

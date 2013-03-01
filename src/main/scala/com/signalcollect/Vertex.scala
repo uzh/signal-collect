@@ -24,7 +24,7 @@ package com.signalcollect
  *
  *  @author Philip Stutz
  */
-trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float) State] extends Serializable {
+trait Vertex[+Id, State] extends Serializable {
 
   override def hashCode = id.hashCode
 
@@ -34,7 +34,7 @@ trait Vertex[@specialized(Int, Long) +Id, @specialized(Int, Long, Double, Float)
   override def equals(other: Any): Boolean =
     other match {
       case v: Vertex[_, _] => v.id == id
-      case _               => false
+      case _ => false
     }
 
   /**

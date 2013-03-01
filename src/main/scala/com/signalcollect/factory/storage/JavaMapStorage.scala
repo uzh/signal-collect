@@ -19,8 +19,8 @@
 
 package com.signalcollect.factory.storage
 
-import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.storage.JavaMapVertexStorage
 
 /**

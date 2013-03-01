@@ -19,13 +19,13 @@
 
 package com.signalcollect.nodeprovisioning
 
-import akka.actor.ActorRef
-import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.interfaces.WorkerActor
+
+import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Address
 import akka.actor.ExtendedActorSystem
-import com.signalcollect.interfaces.WorkerActor
 
 trait Node {
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address

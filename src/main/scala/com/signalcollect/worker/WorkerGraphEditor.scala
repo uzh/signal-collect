@@ -20,8 +20,12 @@
 
 package com.signalcollect.worker
 
-import com.signalcollect._
-import com.signalcollect.interfaces._
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.WorkerActor
 
 /**
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
@@ -31,7 +35,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   workerId: Int,
   worker: WorkerActor[Id, Signal],
   messageBus: MessageBus[Id, Signal])
-    extends GraphEditor[Id, Signal] {
+  extends GraphEditor[Id, Signal] {
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
@@ -72,7 +76,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   }
 
   override def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean) {
-   if (blocking && vertexIdHint.isDefined && shouldHandleLocally(vertexIdHint.get)) {
+    if (blocking && vertexIdHint.isDefined && shouldHandleLocally(vertexIdHint.get)) {
       worker.modifyGraph(graphLoader, vertexIdHint)
     } else {
       graphEditor.modifyGraph(graphLoader, vertexIdHint, blocking)

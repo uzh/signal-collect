@@ -20,10 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.configuration._
-import com.signalcollect.nodeprovisioning.torque._
-import com.signalcollect.nodeprovisioning.local._
-import com.signalcollect.nodeprovisioning._
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -61,7 +57,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
   override def scoreSignal: Double = {
     lastSignalState match {
-      case None           => 1
+      case None => 1
       case Some(oldState) => (state - oldState).abs
     }
   }

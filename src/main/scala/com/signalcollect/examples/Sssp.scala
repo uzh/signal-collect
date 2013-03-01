@@ -20,8 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.interfaces.SignalMessage
-import scala.collection.mutable.IndexedSeq
 
 /**
  * Represents an edge in a Single-Source Shortest Path compute graph.
@@ -41,7 +39,7 @@ class Path(t: Any) extends OptionalSignalEdge(t) {
    */
   def signal = {
     source.state match {
-      case None                => None
+      case None => None
       case Some(distance: Int) => Some(distance + weight.toInt)
     }
   }
@@ -65,7 +63,7 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataFlow
    */
   def collect(signal: Int) = {
     state match {
-      case None                      => Some(signal)
+      case None => Some(signal)
       case Some(currentShortestPath) => Some(math.min(currentShortestPath, signal))
     }
   }

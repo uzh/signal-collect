@@ -19,12 +19,11 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect._
-import akka.actor.Actor
-import scala.concurrent.Future
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
 
 trait WorkerApi[Id, Signal] {
-
   def addVertex(vertex: Vertex[Id, _])
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
@@ -60,5 +59,25 @@ trait WorkerApi[Id, Signal] {
   
   def getSystemInformation: SystemInformation
   def getIndividualSystemInformation: List[SystemInformation]
+
+  /**
+   * Creates a snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   * Overwrites any previous snapshot that might exist.
+   */
+  def snapshot
+
+  /**
+   * Restores the last snapshot of all the vertices in all workers.
+   * Does not store the toSignal/toCollect collections or pending messages.
+   * Should only be used when the workers are idle.
+   */
+  def restore
+
+  /**
+   * Deletes the worker snapshots if they exist.
+   */
+  def deleteSnapshot
 
 }
