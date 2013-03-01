@@ -62,7 +62,7 @@ class AkkaProxySpec extends SpecificationWithJUnit {
       val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
       val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
 
-      val expectedSleepTime = 5000
+      val expectedSleepTime = 300
 
       val sleepStart = System.currentTimeMillis()
       sleeperProxy.sleep(expectedSleepTime)
