@@ -10,7 +10,6 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
 var now = new Date;
 var interval = 2000;
 
-var parseDate = d3.time.format("%d-%b-%y").parse;
 var data = [
             [
              {date:now, value:500, id:"average"}
@@ -24,37 +23,29 @@ var data = [
            ];
 
 
-var x = d3.time.scale()
-    .range([0, width]);
+// add ranges
+var x = d3.time.scale().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
 
-var y = d3.scale.linear()
-    .range([height, 0]);
-
-// add scale of the axes
-//x.domain(d3.extent(data[0], function(d) { return d.date; }));
-//x.domain([nowTimestamp-60, nowTimestamp+60]);
+// add default scale of the axes
 x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);
 y.domain([0, 1]);
 
-var xAxis = d3.svg.axis()
-    .scale(x)
+var xAxis = d3.svg.axis().scale(x)
     // add ticks (axis and vertical line)
-    .tickSize(-height).tickPadding(6).ticks(5)
-    .orient("bottom");
+    .tickSize(-height).tickPadding(6).ticks(5).orient("bottom");
 
 var tickFormatY = d3.format("s"); // add SI-postfix (like 2k instead of 2000)
-var yAxis = d3.svg.axis()
-    .scale(y)
+var yAxis = d3.svg.axis().scale(y)
     // add ticks (axis and vertical line)
-    .tickSize(-width).tickFormat(tickFormatY).tickPadding(6).ticks(5)
-    .orient("left");
+    .tickSize(-width).tickFormat(tickFormatY).tickPadding(6).ticks(5).orient("left");
 
 var line = d3.svg.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y(d.value); });
 
 var zoom = d3.behavior.zoom().x(x)
-            .scaleExtent([0.2, 5]) // allow zooming in/out five times each
+            .scaleExtent([0.005, 5]) // allow zooming in/out
             .on("zoom", draw);
 
 var svg = d3.select("body").append("svg")
@@ -74,15 +65,15 @@ var svgBox = svg.append("svg").attr("width", width).attr("height", height)
 var lines = svgBox.selectAll("g").data(data);
 
 //for each array, create a 'g' line container
-var aLineContainer = lines
-  .enter().append("g");
-
+var aLineContainer = lines.enter().append("g");
 aLineContainer.append("path").attr("class", "line");
 
+// add x axis to chart
 svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(0," + height + ")");
 
+// add y axis to chart
 svg.append("g")
     .attr("class", "y axis")
   .append("text")
@@ -137,7 +128,6 @@ function update() {
     // if new highest date is out of the domain, update the domain
     if (highestXDomain < newHighestDate) {
       x.domain([new Date(+(lowestXDomain)+(interval)), newHighestDate]);
-      console.log("update x domain");
 //      svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
     }
   }
@@ -145,7 +135,6 @@ function update() {
   newData.forEach(function(d, i) {
     data[i].push(d);
   });
-//  console.dir(data);
   
   aLineContainer
   .attr("d", line)
@@ -156,19 +145,11 @@ function update() {
 //  .attr("transform", "translate(" + x(0) + ")")
 //  .each("end", update);
   
-//  d3.selectAll("path.line").data({date:parseDate("4-May-12"), value:Math.random()*500, id:"Node1"}).enter();
-
   // update domains
-//  x.domain([parseDate("30-Apr-12"), parseDate("6-Jun-12")]);
   y.domain([0, d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } )) * 1.1]);
 //  xAxis.scale(x);
 //  yAxis.scale(y);
-  
 
-  
-//  lines = svgBox.selectAll("g").data([newData]);
-//  lines.enter().append("g");
-  
   draw();
 }
 
@@ -183,8 +164,6 @@ function draw() {
   svg.select("g.x.axis").call(xAxis);
   svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
 
-  
-  //  svg.select("path.area").attr("d", area);
   svg.selectAll("path.line").attr("d", line);
   aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
 //  d3.select("#footer span").text("U.S. Commercial Flights, " + x.domain().map(format).join("-"));
