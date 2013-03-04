@@ -83,28 +83,9 @@ svg.append("g")
     .style("text-anchor", "end")
     .text("Price ($)");
 
-// show scatter points and tooltips
-var formatTime = d3.time.format("%e %B");
+// show scatter points and tool tips
+var formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
 var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
-aLineContainer.selectAll(".dot")
-.data( function(d, i) { return d; } )  // This is the nested data call
-.enter()
-  .append("circle")
-  .attr("class", "dot")
-  .attr("r", 3.5)
-  .on("mouseover", function(d) {
-            div.transition()        
-               .duration(100)      
-               .style("opacity", .9);      
-            div.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
-               .style("left", (d3.event.pageX) + "px")     
-               .style("top", (d3.event.pageY - 28) + "px");    
-            })                  
-        .on("mouseout", function(d) {       
-            div.transition()        
-                .duration(500)      
-                .style("opacity", 0);   
-        });
 
 var currentDate = now;
 function update() {
@@ -152,6 +133,29 @@ function update() {
           .ease("linear")
           .attr("transform", "translate(" + x(transformVal) + ")");
     }
+    
+    // update scatter points
+    aLineContainer.selectAll(".dot")
+      .data( function(d, i) { return d; } )  // This is the nested data call
+      .enter()
+        .append("circle")
+        .attr("class", "dot")
+        .attr("r", 6)
+        .on("mouseover",
+            function(d) {
+              div.transition()        
+                 .duration(100)      
+                 .style("opacity", .9);      
+              div.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
+                 .style("left", (d3.event.pageX) + "px")     
+                 .style("top", (d3.event.pageY - 28) + "px");    
+            })                  
+            .on("mouseout",
+                function(d) {       
+                  div.transition()        
+                     .duration(500)      
+                     .style("opacity", 0);   
+                });
     
     // update x domains
     y.domain([0, d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } )) * 1.1]);
