@@ -8,17 +8,17 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
     height = 500 - margin.top - margin.bottom;
 
 var now = new Date;
-var interval = 2000;
+var interval = 1000;
 
 var data = [
             [
-             {date:now, value:500, id:"average"}
+             {date:now, value:300, id:"average"}
             ],
             [
-              {date:now, value:400, id:"Node1"}
+              {date:now, value:150, id:"Node1"}
             ],
             [
-             {date:now, value:400, id:"Node1"}
+             {date:now, value:500, id:"Node1"}
             ]
            ];
 
@@ -28,7 +28,7 @@ var x = d3.time.scale().range([0, width]);
 var y = d3.scale.linear().range([height, 0]);
 
 // add default scale of the axes
-x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);
+x.domain([new Date(+(now)-(5*1000)), new Date(+(now)+(120*1000))]);
 y.domain([0, 1]);
 
 var xAxis = d3.svg.axis().scale(x)
@@ -66,7 +66,7 @@ var lines = svgBox.selectAll("g").data(data);
 
 //for each array, create a 'g' line container
 var aLineContainer = lines.enter().append("g");
-aLineContainer.append("path").attr("class", "line");
+var path = aLineContainer.append("path").attr("class", "line");
 
 // add x axis to chart
 svg.append("g")
@@ -118,6 +118,7 @@ function update() {
                  {date:currentDate, value:(Math.random()+2)*200, id:"max"},
                 ];
   
+  var shiftRight         = false;
   var lowestXDomain      = x.domain()[0];
   var highestXDomain     = x.domain()[1];
   var currentHighestDate = d3.max(data[0], function(d) { return d.date });
@@ -127,30 +128,37 @@ function update() {
     var newHighestDate = d3.max(newData, function(d) { return d.date });
     // if new highest date is out of the domain, update the domain
     if (highestXDomain < newHighestDate) {
-      x.domain([new Date(+(lowestXDomain)+(interval)), newHighestDate]);
+      shiftRight = true;
 //      svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
     }
   }
-  
+
   newData.forEach(function(d, i) {
     data[i].push(d);
   });
   
-  aLineContainer
-  .attr("d", line)
-  .attr("transform", null)
-//  .transition()
-//  .duration(500)
-//  .ease("linear")
-//  .attr("transform", "translate(" + x(0) + ")")
-//  .each("end", update);
+  path.attr("d", line).attr("transform", null);
   
-  // update domains
-  y.domain([0, d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } )) * 1.1]);
-//  xAxis.scale(x);
-//  yAxis.scale(y);
+  // only perform animated transition when needed or we will have problems when dragging/zooming
+  d3.transition().ease("linear").duration((shiftRight ? interval : 0)).each(function() {
 
-  draw();
+    if (shiftRight) {
+      // update x domain
+      x.domain([new Date(+(lowestXDomain)+(interval)), newHighestDate]);
+      
+      // line transition
+      var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));
+      path.transition()
+          .ease("linear")
+          .attr("transform", "translate(" + x(transformVal) + ")");
+    }
+    
+    // update x domains
+    y.domain([0, d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } )) * 1.1]);
+  
+    draw();
+  });
+  
 }
 
 window.setInterval(function() {
