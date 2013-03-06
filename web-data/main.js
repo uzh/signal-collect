@@ -143,8 +143,9 @@ $(document).ready(function() {
       enable_modules([module]); 
       break;
     default:
-      enable_modules(["graph", "resources"]); break;
+      enable_modules(["graph", "resources", "controls"]); break;
   }
+
 });
 
 window.onbeforeunload = function() {

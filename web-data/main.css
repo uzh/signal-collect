@@ -359,6 +359,9 @@ body {
 .hidden {
   display: none;
 }
+.blocked {
+  opacity: 0.5;
+}
 #error {
   color: #eee;
   background-color: #a91c00;

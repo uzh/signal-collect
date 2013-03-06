@@ -37,6 +37,7 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
 import com.signalcollect.configuration.TerminationReason
+import com.signalcollect.console.Execution
 import com.signalcollect.console.ConsoleServer
 import com.signalcollect.coordinator.DefaultCoordinator
 import com.signalcollect.coordinator.IsIdle
@@ -204,7 +205,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        stats.terminationReason = TerminationReason.Ongoing
+        def execution = new InteractiveExecution[Id](console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
+        execution.run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -254,6 +256,96 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
     def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
   }
+
+  class InteractiveExecution[Id](
+          console: ConsoleServer[Id],
+          stats: ExecutionStatistics,
+          timeLimit: Option[Long],
+          stepsLimit: Option[Long],
+          globalTerminationCondition: Option[GlobalTerminationCondition[_]]
+        ) extends Execution {
+    if (console != null) { console.setExecution(this) }
+    var converged = false
+    var globalTermination = false
+    var interval = 0l
+    @volatile var steps = 0
+    val lock: AnyRef = new Object()    
+    if (globalTerminationCondition.isDefined) {
+      interval = globalTerminationCondition.get.aggregationInterval
+    }
+    val startTime = System.nanoTime
+    val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
+
+    def step() {
+      lock.synchronized {
+        steps = 1
+        lock.notify
+      }
+    }
+
+    def continue() {
+      lock.synchronized {
+        steps = -1
+        lock.notifyAll
+      }
+    }
+
+    def pause() {
+      steps = 0
+    }
+    def reset() { }
+
+    def terminate() { }
+
+    def run() {
+      lock.synchronized {
+        while (true) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+          while (steps == 0) { 
+            try { lock.wait } catch { 
+              case e: InterruptedException =>
+            }
+          }
+          // signal
+          workerApi.signalStep
+          awaitIdle
+          stats.signalSteps += 1
+          while (steps == 0) { 
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          // collect
+          converged = workerApi.collectStep
+          stats.collectSteps += 1
+          if (steps > 0) { steps -= 1 }
+          if (shouldCheckGlobalCondition) {
+            globalTermination = isGlobalTerminationConditionMet(globalTerminationCondition.get)
+          }
+        }
+      }
+
+      if (converged) {
+        stats.terminationReason = TerminationReason.Converged
+      } else if (globalTermination) {
+        stats.terminationReason = TerminationReason.GlobalConstraintMet
+      } else if (isStepsLimitReached) {
+        stats.terminationReason = TerminationReason.ComputationStepLimitReached
+      } else {
+        stats.terminationReason = TerminationReason.TimeLimitReached
+      }
+      def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
+      def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+        val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
+        gtc.shouldTerminate(globalAggregateValue)
+      }
+      def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+      def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
+      def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
+
+    }
+  }
+
+
 
   protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,
     timeLimit: Option[Long],

@@ -9,6 +9,7 @@
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
     <script type="text/javascript" src="layout.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="controls.js"></script>
     <script type="text/javascript" src="graph.js"></script>
     <script type="text/javascript" src="resources.js"></script>
   </head>
@@ -90,11 +91,14 @@
         </div>
       </div>
       <div id="controls">
-        <div id="reset" class="icon"></div>
-        <div id="step" class="icon"></div>
-        <div id="pause" class="icon hidden"></div>
-        <div id="continue" class="icon"></div>
-        <div id="terminate" class="icon"></div>
+        <div class="hidden blocker"></div>
+        <div id="reset" class="icon blocked"></div>
+        <div id="step" class="icon blocked"></div>
+        <div id="pause" class="icon blocked hidden"></div>
+        <div id="continue" class="icon blocked"></div>
+        <div id="terminate" class="icon blocked"></div>
+      </div>
+      <div id="status">
       </div>
     </div>
     <div id="content">

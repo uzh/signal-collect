@@ -129,7 +129,7 @@ scc.modules.graph = function() {
     node.append("title")
         .text(function(d) { return d.id + ": " + d.state; });
 
-    if (newNodes) {force.start(); }
+    if (newNodes) { force.start(); }
 
     scc.order(order, 1000)
 

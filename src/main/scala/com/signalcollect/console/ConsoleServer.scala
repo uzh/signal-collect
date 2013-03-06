@@ -21,6 +21,7 @@
 
 package com.signalcollect.console
 
+import akka.actor.Actor
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
 import java.io.BufferedInputStream
@@ -54,20 +55,27 @@ import org.java_websocket.server.WebSocketServer
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
+trait Execution {
+  var steps: Int
+  def step()
+  def continue()
+  def pause()
+  def reset()
+  def terminate()
+}
 class ConsoleServer[Id](userHttpPort: Int) {
 
   val (server: HttpServer, 
        sockets: WebSocketConsoleServer[Id]) = setupUserPorts(userHttpPort)
   
   server.createContext("/", new FileServer("web-data"))
-  server.createContext("/api", new ApiServer())
-  server.setExecutor(Executors.newCachedThreadPool())
+  server.setExecutor(Executors.newCachedThreadPool)
   server.start
   println("HTTP server started on http://localhost:" + 
-          server.getAddress().getPort() + "")
+          server.getAddress.getPort + "")
 
-  sockets.start()
-  println("WebSocket - Server started on port: " + sockets.getPort())
+  sockets.start
+  println("WebSocket - Server started on port: " + sockets.getPort)
 
   def setupUserPorts(httpPort: Int): 
       (HttpServer, WebSocketConsoleServer[Id]) = {
@@ -84,7 +92,7 @@ class ConsoleServer[Id](userHttpPort: Int) {
         } catch {
           case e: Exception => 
             println("Websocket - Starting server on port " + 
-                    port + " failed: " + e.getMessage())
+                    port + " failed: " + e.getMessage)
         }
       }
       println("Could not start server on ports " + defaultPort + 
@@ -95,7 +103,7 @@ class ConsoleServer[Id](userHttpPort: Int) {
         return getNewServers(httpPort)
       } catch {
         case e: Throwable => 
-          println("Could not start server: " + e.getMessage())
+          println("Could not start server: " + e.getMessage)
           sys.exit
       }
     }
@@ -109,22 +117,20 @@ class ConsoleServer[Id](userHttpPort: Int) {
     (server, sockets)
   }
   
-  def setCoordinator(coordinatorActor: ActorRef) {
+  def setCoordinator(coordinatorActor: ActorRef) = {
     sockets.setCoordinator(coordinatorActor)
   }
 
-  def shutdown {
+  def setExecution(e: Execution) = {
+    sockets.setExecution(e)
+  }
+
+  def shutdown = {
     server.stop(0)
     sockets.stop(0)
   }
 }
 
-class ApiServer() extends HttpHandler {
-  def handle(t: HttpExchange) {
-    var target = t.getRequestURI.getPath
-    println(target)
-  }
-}
 class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
 
@@ -167,16 +173,20 @@ class FileServer(folderName: String) extends HttpHandler {
 class WebSocketConsoleServer[Id](port: InetSocketAddress)
                              extends WebSocketServer(port) {
   var coordinator: Option[Coordinator[Id,_]] = None
+  var execution: Option[Execution] = None
 
-  def setCoordinator(coordinatorActor: ActorRef) {
-    println("ConsoleServer: got coordinator ActorRef")
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]]
-                      (coordinatorActor))
+  def setCoordinator(c: ActorRef) {
+    println("ConsoleServer: got coordinator " + c)
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]] (c))
+  }
+
+  def setExecution(e: Execution) {
+    execution = Some(e)
   }
 
   def onError(socket: WebSocket, ex: Exception) {
     println("WebSocket - an error occured: " + ex)
-    ex.printStackTrace()
+    ex.printStackTrace
   }
 
   def onMessage(socket: WebSocket, msg: String) {
@@ -187,9 +197,14 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
       case Some(c) => p match {
         case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
+        case "status" => new StatusDataProvider(this)
+        case "api" => new ApiProvider[Id](this, j)
         case otherwise => new InvalidDataProvider(msg)
       }
-      case None => new NotReadyDataProvider(msg)
+      case None => p match{
+        case "status" => new StatusDataProvider(this)
+        case otherwise => new NotReadyDataProvider(msg)
+      }
     }
     socket.send(compact(render(provider.fetch)))
   }
@@ -208,6 +223,9 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
 
 trait DataProvider {
   def fetch(): JObject
+  def fetchInvalid(msg: JValue = JString("")): JObject = {
+    new InvalidDataProvider(compact(render(msg))).fetch
+  }
 }
 
 class InvalidDataProvider(msg: String) extends DataProvider {
@@ -225,6 +243,73 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
   }
 }
 
+class StatusDataProvider[Id](socket: WebSocketConsoleServer[Id])
+                             extends DataProvider {
+  def fetch(): JObject = {
+    ("provider" -> "status") ~
+    ("interactive" -> (socket.execution match {
+      case None => false
+      case otherwise => true
+    }))
+  }
+}
+
+case class ApiRequest(
+  provider: String, 
+  control: Option[String]
+)
+
+class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
+                      msg: JValue) extends DataProvider {
+
+  implicit val formats = DefaultFormats
+  var execution: Option[Execution] = socket.execution
+
+  def computationStep(e: Execution): JObject = { 
+    e.step
+    ("state" -> "stepping") 
+  }
+  def computationPause(e: Execution): JObject = {
+    e.pause
+    ("state" -> "pausing") 
+  }
+  def computationContinue(e: Execution): JObject = {
+    e.continue
+    ("state" -> "continuing") 
+  }
+  def computationReset(e: Execution): JObject = {
+    e.reset
+    ("state" -> "resetting") 
+  }
+
+  def computationTerminate(e: Execution): JObject = {
+    e.terminate
+    ("state" -> "terminating") 
+  }
+
+
+
+  def fetch(): JObject = {
+    val request = (msg).extract[ApiRequest]
+    val reply = execution match {
+      case Some(e) => request.control match {
+        case Some(action) => action match {
+          case "step" => computationStep(e)
+          case "pause" => computationPause(e)
+          case "continue" => computationContinue(e)
+          case "reset" => computationReset(e)
+          case "terminate" => computationTerminate(e)
+          case otherwise => fetchInvalid(msg)
+        }
+        case None => fetchInvalid(msg)
+      }
+      case None => fetchInvalid(msg)
+    }
+    ("provider" -> "controls") ~ reply
+  }
+}
+
+
 case class GraphDataRequest(
   provider: String, 
   search: Option[String], 
@@ -233,7 +318,7 @@ case class GraphDataRequest(
 )
 
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
-      extends DataProvider {
+                            extends DataProvider {
 
   implicit val formats = DefaultFormats
 
@@ -248,10 +333,6 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         })
       }.flatten, depth - 1)
     }
-  }
-
-  def fetchInvalid(msg: JValue): JObject = {
-    new InvalidDataProvider(compact(render(msg))).fetch()
   }
 
   def fetchVicinity(id: String): JObject = {
@@ -272,7 +353,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   }
 
   def fetchAll(): JObject = {
-    workerApi.aggregateAll(new GraphAggregator())
+    workerApi.aggregateAll(new GraphAggregator)
   }
 
   def fetch(): JObject = {
@@ -284,9 +365,9 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       }
       case Some("topk") => request.topk match {
         case Some(n) => fetchTopk(n)
-        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch()
+        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch
       }
-      case otherwise => fetchAll()
+      case otherwise => fetchAll
     }
     
     ("provider" -> "graph") ~
