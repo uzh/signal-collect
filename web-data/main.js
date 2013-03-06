@@ -74,39 +74,47 @@ $(document).ready(function() {
   });
 
   /* WebSocket communication */
-  scc.webSocket = new ReconnectingWebSocket(
-                      "ws://" + document.domain + ":" + 
-                      (parseInt(window.location.port) + 100));
-  scc.webSocket.onopen = function(e) {
-    console.log("[WebSocket] onopen");
-    showMsg("#success", "WebSocket connection established", true);
-    for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
-  } 
-  scc.webSocket.onmessage = function(e) {
-    console.log("[WebSocket] onmessage")
-    j = JSON.parse(e.data)
-    var provider = j["provider"]
-    if (provider == "notready") {
-      var request = j["request"]
-      scc.order(request, 500);
-    }
-    for (var m in scc.consumers) { 
-      var consumer = scc.consumers[m]
-      if (consumer.requires.indexOf(provider) >= 0) {
-        consumer.onmessage(j)
+  function createWebSocket () {
+     scc.webSocket = new ReconnectingWebSocket(
+                         "ws://" + document.domain + ":" + 
+                         (parseInt(window.location.port) + 100));
+      scc.webSocket.onopen = function(e) {
+        console.log("[WebSocket] onopen");
+        showMsg("#success", "WebSocket connection established", true);
+        for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
+      } 
+      scc.webSocket.onmessage = function(e) {
+        console.log("[WebSocket] onmessage")
+        j = JSON.parse(e.data)
+        var provider = j["provider"]
+        if (provider == "notready") {
+          var request = j["request"]
+          scc.order(request, 500);
+        }
+        for (var m in scc.consumers) { 
+          var consumer = scc.consumers[m]
+          if (consumer.requires.indexOf(provider) >= 0) {
+            consumer.onmessage(j)
+          }
+        }
       }
-    }
+      scc.webSocket.onclose = function(e) {
+        console.log("[WebSocket] onclose");
+        $.each(scc.orders, function(k, v) { clearTimeout(v); })
+        scc.orders = {}
+        showMsg("#error", "Connection Lost. Reconnecting to WebSocket...")
+        for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
+      }
+      scc.webSocket.onerror = function(e) {
+        console.log("[WebSocket] onerror");
+        for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
+      }
   }
-  scc.webSocket.onclose = function(e) {
-    console.log("[WebSocket] onclose");
-    $.each(scc.orders, function(k, v) { clearTimeout(v); })
-    scc.orders = {}
-    showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
-    for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
-  }
-  scc.webSocket.onerror = function(e) {
-    console.log("[WebSocket] onerror");
-    for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
+  createWebSocket()
+  scc.terminate = function(type, msg) {
+    scc.webSocket.close()
+    showMsg(type, msg)
+    setTimeout(createWebSocket, 10000)
   }
   scc.order = function(msg, delay) {
     if (typeof(msg) == "string") {

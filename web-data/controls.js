@@ -39,6 +39,7 @@ scc.modules.controls = function() {
         this.onopen()
         break;
       case "terminating":
+        scc.terminate("#success", "Terminating...")
         break;
     }
 

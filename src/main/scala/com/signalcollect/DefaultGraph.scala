@@ -205,8 +205,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        def execution = new InteractiveExecution[Id](this, console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
-        execution.run()
+        new InteractiveExecution[Id](this, console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition).run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -271,6 +270,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     var globalTermination = false
     var interval = 0l
     @volatile var steps = 0
+    @volatile var userTermination = false
     val lock: AnyRef = new Object()    
     if (globalTerminationCondition.isDefined) {
       interval = globalTerminationCondition.get.aggregationInterval
@@ -301,11 +301,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       }
     }
     def terminate() { 
+      userTermination = true
+      pause
+      continue
     }
 
     def run() {
       lock.synchronized {
-        while (true) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+        while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
           while (steps == 0) { 
             try { lock.wait } catch { 
               case e: InterruptedException =>
@@ -332,6 +335,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
       if (converged) {
         stats.terminationReason = TerminationReason.Converged
+      } else if (userTermination) {
+        stats.terminationReason = TerminationReason.TerminatedByUser
       } else if (globalTermination) {
         stats.terminationReason = TerminationReason.GlobalConstraintMet
       } else if (isStepsLimitReached) {
@@ -347,11 +352,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
       def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
       def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
-
     }
   }
-
-
 
   protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,
     timeLimit: Option[Long],

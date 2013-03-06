@@ -126,8 +126,11 @@ class ConsoleServer[Id](userHttpPort: Int) {
   }
 
   def shutdown = {
-    server.stop(0)
-    sockets.stop(0)
+    println("Stopping http server...")
+    server.stop(5)
+    println("Stopping WebSocket...")
+    sockets.stop(5000)
+    sys.exit
   }
 }
 

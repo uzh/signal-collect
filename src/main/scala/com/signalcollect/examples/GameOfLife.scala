@@ -71,13 +71,9 @@ object GameOfLife extends App {
     }
   }
 
-  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive).withStepsLimit(1)
+  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
 
-  for (i <- 0 to generations) {
-    //    println(stringRepresentationOfGraph)
-    val stats = graph.execute(execConfig)
-  }
-  //  println(stringRepresentationOfGraph)
+  val stats = graph.execute(execConfig)
 
   graph.shutdown
 
