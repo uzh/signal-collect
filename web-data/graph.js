@@ -51,10 +51,16 @@ scc.modules.graph = function() {
     link = svg.selectAll(".link");
 
     force.on("tick", function() {
-      link.attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
+      if (force.alpha() < 0.03) {
+        link.style("display", "block")
+        link.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+      }
+      else {
+        link.style("display", "none")
+      }
 
       node.attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });

@@ -331,6 +331,7 @@ body {
 }
 
 .link {
+  display: none;
   stroke: #999;
   stroke-opacity: .6;
 }
