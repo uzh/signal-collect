@@ -6,7 +6,6 @@ scc.modules.controls = function() {
   var controls = ["step", "continue", "pause", "reset", "terminate"]
   controls.forEach(function (control) {
     $("#" + control).click(function (e) { 
-      console.log(this)
       scc.order({"provider": "api", "control": control}) 
       $("#controls").find(".icon").addClass("blocked");
     });
@@ -18,7 +17,6 @@ scc.modules.controls = function() {
 
   this.onmessage = function(j) {
     var newState = j.state
-    console.log(j)
     switch (newState) {
       case "stepping":
         $("#controls").find(".icon").removeClass("blocked");
@@ -37,6 +35,8 @@ scc.modules.controls = function() {
         $("#controls").find("#continue").addClass("hidden");
         break;
       case "resetting":
+        this.destroy()
+        this.onopen()
         break;
       case "terminating":
         break;

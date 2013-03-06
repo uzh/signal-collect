@@ -281,13 +281,10 @@ class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
     e.reset
     ("state" -> "resetting") 
   }
-
   def computationTerminate(e: Execution): JObject = {
     e.terminate
     ("state" -> "terminating") 
   }
-
-
 
   def fetch(): JObject = {
     val request = (msg).extract[ApiRequest]

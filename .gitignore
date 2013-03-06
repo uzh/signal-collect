@@ -1,4 +1,5 @@
 .*
+*.snapshot
 !/.gitignore
 !/.travis.yml
 project/target/

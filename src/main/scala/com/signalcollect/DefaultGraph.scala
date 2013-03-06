@@ -205,7 +205,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        def execution = new InteractiveExecution[Id](console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
+        def execution = new InteractiveExecution[Id](this, console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition)
         execution.run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
@@ -258,6 +258,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   class InteractiveExecution[Id](
+          graph: Graph[Id, Signal],
           console: ConsoleServer[Id],
           stats: ExecutionStatistics,
           timeLimit: Option[Long],
@@ -265,6 +266,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           globalTerminationCondition: Option[GlobalTerminationCondition[_]]
         ) extends Execution {
     if (console != null) { console.setExecution(this) }
+    graph.snapshot
     var converged = false
     var globalTermination = false
     var interval = 0l
@@ -282,20 +284,24 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         lock.notify
       }
     }
-
     def continue() {
       lock.synchronized {
         steps = -1
         lock.notifyAll
       }
     }
-
     def pause() {
       steps = 0
     }
-    def reset() { }
-
-    def terminate() { }
+    def reset() { 
+      pause
+      lock.synchronized {
+        graph.reset
+        graph.restore
+      }
+    }
+    def terminate() { 
+    }
 
     def run() {
       lock.synchronized {
