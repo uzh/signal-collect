@@ -64,10 +64,25 @@
       <div id="resources_panel_container">
         <div class="panel">
           <div class="panel_section">
-            <div id="cResourceViews" class="title expanded">Views</div>
+            <div id="cResourceViews" class="title expanded">Charts</div>
+            <div class="contents">
+              <input type="radio" name="rs" id="rs_overview"/>
+              <label for="rs_overview">Overview</label><br/>
+              <input type="radio" name="rs" id="rs_detailed"/>
+              <label for="rs_detailed">Detailed</label>
+            </div>
+          </div>
+          <div class="panel_section">
+            <div id="cResourceViews" class="title expanded">Problems</div>
+            <div class="contents">
+              <span class="sectionLink" id="rs_xy">Name Me</span><br/>
+            </div>
+          </div>
+          <div class="panel_section">
+            <div id="cResourceViews" class="title expanded">Old Views</div>
             <div class="contents">
               <span class="sectionLink" id="rs_overview">Overview</span><br/>
-              <span class="sectionLink" id="rs_detailed">Detailed Overview</span><br/>
+              <span class="sectionLink" id="rs_detailed">Detailed Overview</span>
               <span class="sectionLink" id="rs_logs">Logs and Errors</span><br/>
               <span class="sectionLink" id="rs_sc">Signal/Collect Statistics</span><br/>
             </div>
@@ -92,6 +107,7 @@
           <!-- content resource section overview -->
           <div id="crs_overview">
             <h1>Overview</h1>
+            <p>Charts with Max/Avg/Min</p>
             <div id="graphRamStacked" class="graphs"></div>
             <div id="graphMessagesSent" class="graphs"></div>
           </div>
@@ -99,6 +115,7 @@
           <!-- content resource section overview -->
           <div id="crs_detailed">
             <h1>Detailed</h1>
+            <div class="chartContainer"></div>
           </div>
         
           <!-- content resource section overview -->

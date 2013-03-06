@@ -7,8 +7,9 @@ scc.modules.resources = function() {
   this.requires = ["resources"]
 
   /* panel */
-  $(".sectionLink").click(function() {
-    section = $(this).attr("id").split("_")[1];
+  $("#resources_panel_container label").click(function() {
+    console.log("clicked");
+    section = $(this).attr("for").split("_")[1];
     show_section(section)
   });
   function show_section(s) {
@@ -28,13 +29,318 @@ scc.modules.resources = function() {
   
   
   
-  var interval = 1000;
-  /*
-   * TODO
-   * - fix animation
-   * - Drag timeline
-   * - add hover effects
-   */
+  var interval = 3000;
+  
+  
+  
+  
+  
+  
+  var LineChart = function()
+  {
+//    var private = "a private variable";
+//    this.public = "a public variable";
+//    var privatefn = function() { ... };
+//    this.publicfn = function() { ... };
+    
+    // default config
+    this.config = {
+        jsonName     : "",
+        prettyName   : "",
+        dataCallback : null,
+        numOfValues  : 100,
+        margin       : { top: 20, right: 20, bottom: 30, left: 50 },
+        width        : 550,
+        height       : 250,
+    };
+    
+    this.container = null;
+    
+    // data array for avg, min, max values
+    var data = [ [], [], [] ];
+    
+    // variables needed for the charts
+    var svg, xAxis, yAxis, line, aLineContainer, x, y, path;
+    
+    // variables needed for the tool tips
+    var div, formatTime;
+    
+    
+    
+    
+    /**
+     * Performs all actions needed for the LineChart setup
+     */
+    this.setup = function(config) {
+      
+      // replace default configuration
+      $.extend(this.config, config);
+
+      // set default data callback if needed
+      if (this.config.dataCallback == null) {
+        this.config.dataCallback = function(newData) {
+          var that = this; // access this
+          return newData.workerStatistics[that.jsonName];
+        };
+      }
+      
+      // set default prettyName to jsonName if needed
+      if (this.config.prettyName == "") {
+        this.config.prettyName = this.config.jsonName;
+      }
+      
+      // correct with and height
+      this.config.width  = this.config.width  - this.config.margin.left - this.config.margin.right,
+      this.config.height = this.config.height - this.config.margin.top  - this.config.margin.bottom;
+      
+      // start drawing actual chart
+      
+      // add ranges
+      x = d3.time.scale().range([0, this.config.width]);
+      y = d3.scale.linear().range([this.config.height, 0]);
+
+      // add default scale of the axes
+      var now = new Date();
+      x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);//new Date(+(now)+(5*1000))]);
+      y.domain([0, 1]);
+
+      xAxis = d3.svg.axis().scale(x)
+          // add ticks (axis and vertical line)
+          .tickSize(-this.config.height).tickPadding(6).ticks(5).orient("bottom");
+
+      var tickFormatY = d3.format("s"); // add SI-postfix (like 2k instead of 2000)
+      yAxis = d3.svg.axis().scale(y)
+          // add ticks (axis and vertical line)
+          .tickSize(-this.config.width).tickFormat(tickFormatY).tickPadding(6).ticks(5).orient("left");
+
+      line = d3.svg.line()
+          .x(function(d) { return x(d.date); })
+          .y(function(d) { return y(d.value); });
+
+      var zoom = d3.behavior.zoom().x(x)
+                  .scaleExtent([0.005, 5]) // allow zooming in/out
+                  .on("zoom", draw);
+
+      svg = d3.select(this.container).append("div").append("svg")
+          .attr("width", this.config.width + this.config.margin.left + this.config.margin.right)
+          .attr("height", this.config.height + this.config.margin.top + this.config.margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")")
+          .call(zoom);
+
+      // needed for zooming and dragging
+      var rect = svg.append("rect").attr("width", this.config.width).attr("height", this.config.height);
+
+      // avoid data lines to overlap with axis
+      var svgBox = svg.append("svg").attr("width", this.config.width).attr("height", this.config.height)
+                      .attr("viewBox", "0 0 " + this.config.width + " " + this.config.height);
+
+      var lines = svgBox.selectAll("g").data(data);
+      //lines.attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; });
+
+      //for each array, create a 'g' line container
+      aLineContainer = lines.enter().append("g");
+      path = aLineContainer.append("path").attr("class", "line");
+      path.style("stroke", function(d, i) {
+        switch (i) {
+          case 0: return "black";
+          case 1: return "blue";
+          case 2: return "red";
+        }
+      }).style("stroke-width", function(d, i) {
+        if (i == 0) {
+          return "3px";
+        }
+        return "1.5px";
+      });
+
+      // add x axis to chart
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + this.config.height + ")");
+
+      // add y axis to chart
+      svg.append("g")
+          .attr("class", "y axis")
+        .append("text")
+          .attr("y", this.config.height-10)
+          .attr("x", this.config.width-6)
+          .attr("dy", ".31em")
+          .style("text-anchor", "end")
+          .text(this.config.prettyName)
+          .style("font-size", "14px");;
+
+      // show scatter points and tool tips
+      formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
+      div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+      
+      draw();
+    };
+
+    
+    /**
+     * Helper function to update the axis and other stuff
+     */
+    function draw() {
+      svg.select("g.x.axis").call(xAxis);
+      svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
+
+      svg.selectAll("path.line").attr("d", line);
+      aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
+//      d3.select("#footer span").text("U.S. Commercial Flights, " + x.domain().map(format).join("-"));
+    }
+    
+    
+    /**
+     * Returns the minimum value and the corresponding index of an array
+     */
+    Array.min = function(array) {
+      var value = Infinity, index = 0;
+      array.forEach(function(v, i) {
+        if (v < value) {
+          value = v;
+          index = i;
+        }
+      });
+      return { value : value, index : index };
+    };
+    
+    /**
+     * Returns the maximum value and the corresponding index of an array
+     */
+    Array.max = function(array) {
+      var value = 0, index = 0;
+      array.forEach(function(v, i) {
+        if (v > value) {
+          value = v;
+          index = i;
+        }
+      });
+      return { value : value, index : index };
+    };
+    
+    /**
+     * Returns the average value of an array
+     */
+    Array.avg = function(array) {
+      var sum = 0, len = array.length;
+      if (len == 0) { return 0; }
+      array.forEach(function(v) { sum += v; });
+      return sum / len;
+    };
+    
+    /**
+     * Performs all actions needed for the LineChart update
+     */
+    this.update = function(newData) {
+      var currentDate = new Date(newData.timestamp);
+      newData = this.config.dataCallback(newData);
+      
+      var shiftRight         = false;
+      var lowestXDomain      = x.domain()[0];
+      var highestXDomain     = x.domain()[1];
+      var currentHighestDate = d3.max(data[0], function(d) { return d.date });
+      
+      // is current highest date currently being showed?
+      if (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain) {
+        // if new highest date is out of the domain, we have to shift the chart
+        if (highestXDomain < currentDate) {
+          shiftRight = true;
+        }
+      }
+
+      var newMin = Array.min(newData);
+      var newMax = Array.max(newData);
+      data[0].push({ date : currentDate, value : Array.avg(newData), id : "Average" });
+      data[1].push({ date : currentDate, value : newMin.value,       id : "min" });
+      data[2].push({ date : currentDate, value : newMax.value,       id : "max" });
+      
+      path.attr("d", line).attr("transform", null);
+      
+      // only perform animated transition when needed or we will have problems when dragging/zooming
+      d3.transition().ease("linear").duration((shiftRight ? interval : 0)).each(function() {
+
+        if (shiftRight) {
+          // update x domain
+          x.domain([new Date(+(lowestXDomain)+(interval)), currentDate]);
+          
+          // line transition
+          var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));
+          path.transition()
+              .ease("linear")
+              .attr("transform", "translate(" + x(transformVal) + ")");
+        }
+        
+        // update scatter points
+        aLineContainer.selectAll(".dot")
+          .data( function(d, i) { return d; } )  // This is the nested data call
+          .enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("r", 6)
+            .on("mouseover",
+                function(d) {
+                  div.transition()        
+                     .duration(100)      
+                     .style("opacity", .9);      
+                  div.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
+                     .style("left", (d3.event.pageX) + "px")     
+                     .style("top", (d3.event.pageY - 28) + "px");    
+                })                  
+                .on("mouseout",
+                    function(d) {       
+                      div.transition()        
+                         .duration(500)      
+                         .style("opacity", 0);   
+                    });
+        
+        // update x domains
+        var maxNewValue = d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } ));
+        if (maxNewValue * 1.05 > y.domain()[1]) {
+          y.domain([0, maxNewValue * 1.1]);
+        }
+      
+        draw();
+      });
+    };
+    
+  };
+
+//  var foo = new FooClass();
+//  foo.public = "bar";
+//  foo.publicfn();
+  
+  var chartConfig = [
+                     {jsonName : "signalMessagesReceived"},
+                     {jsonName : "messagesReceived"},
+                     {jsonName : "outgoingEdgesAdded"},
+                     {jsonName : "jmx_swap_total"},
+                     {jsonName : "runtime_mem_free", prettyName: "Free Runtime Memory (B)"},
+                    ];
+  var lineCharts = [];
+  
+  var ChartsCreate = function(config) {
+    var lineChart = new LineChart();
+    lineChart.container = "#crs_detailed .chartContainer";
+    lineChart.setup(config);
+    lineCharts.push(lineChart);    
+  }
+  
+  chartConfig.forEach(function(config) {
+    ChartsCreate(config);
+  });
+  
+ 
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   
@@ -358,10 +664,36 @@ scc.modules.resources = function() {
     
   this.onerror = function(e) { }
 
-  this.onmessage = function(j) {
+  var hasAddedNewCharts = false;
+  
+  var ChartsContains = function(key) {
+    var found = false;
+    lineCharts.forEach(function(c) {
+      if (c.config.jsonName == key) {
+        found = true;
+        return found;
+      }
+    });
+    return found;
+  }
+  
+  this.onmessage = function(msg) {
+    
+    // check if there is more data in the websockets
+    if (!hasAddedNewCharts) {
+      for (var key in msg.workerStatistics) {
+        if (msg.workerStatistics.hasOwnProperty(key) && key != "messagesSent" && key != "os") {
+          if (!ChartsContains(key)) {
+            ChartsCreate({jsonName : key});
+          }
+        }
+      }
+      hasAddedNewCharts = true;
+    }
     
     // update all graphs
-    allGraphs.forEach(function(g) { g.update(j, j.timestamp); });
+    allGraphs.forEach(function(g) { g.update(msg, msg.timestamp); });
+    lineCharts.forEach(function(g) { g.update(msg); });
     
     scc.order({"provider": "resources"}, interval)
   }
