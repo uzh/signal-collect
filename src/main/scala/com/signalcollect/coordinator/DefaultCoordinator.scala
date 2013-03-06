@@ -69,7 +69,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   var lastHeartbeatTimestamp = 0l
 
   def shouldSendHeartbeat: Boolean = {
-    (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
+    messageBus.isInitialized && (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
   }
 
   var globalQueueSizeLimitPreviousHeartbeat = 0l
