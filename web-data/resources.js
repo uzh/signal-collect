@@ -60,7 +60,7 @@ scc.modules.resources = function() {
     var data = [ [], [], [] ];
     
     // variables needed for the charts
-    var svg, xAxis, yAxis, line, aLineContainer, x, y, path;
+    var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0;
     
     // variables needed for the tool tips
     var div, formatTime;
@@ -200,6 +200,9 @@ scc.modules.resources = function() {
         if (v < value) {
           value = v;
           index = i;
+          if (value == 0) { // we do not have negative values
+            return;
+          }
         }
       });
       return { value : value, index : index };
@@ -239,7 +242,6 @@ scc.modules.resources = function() {
       var shiftRight         = false;
       var lowestXDomain      = x.domain()[0];
       var highestXDomain     = x.domain()[1];
-      var currentHighestDate = d3.max(data[0], function(d) { return d.date });
       
       // is current highest date currently being showed?
       if (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain) {
@@ -295,13 +297,17 @@ scc.modules.resources = function() {
                     });
         
         // update x domains
-        var maxNewValue = d3.max(data.map(function(d) { return d3.max(d, function(dm) { return dm.value; }); } ));
-        if (maxNewValue * 1.05 > y.domain()[1]) {
-          y.domain([0, maxNewValue * 1.1]);
+        if (newMax.value > maxYValue) {
+          maxYValue = newMax.value;
+        }
+        if (maxYValue * 1.05 > y.domain()[1]) {
+          y.domain([0, maxYValue * 1.1]);
         }
       
         draw();
       });
+
+      currentHighestDate = currentDate;
     };
     
   };
