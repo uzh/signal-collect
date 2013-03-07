@@ -236,41 +236,41 @@ body {
   float: left;
 }
 
+#controls .icon {
+  background-image: url('sprites.svg');
+}
+
 #controls #reset.icon {
-  background-image: url('reset.svg');
+  background-position: 0px 0px; 
 }
 #controls #reset.icon:hover {
-  background-image: url('hi_reset.svg');
+  background-position: 32px 0px; 
 }
 #controls #step.icon {
-  background-image: url('step.svg');
+  background-position: 0px -32px; 
 }
 #controls #step.icon:hover {
-  background-image: url('hi_step.svg');
+  background-position: 32px -32px; 
 }
 #controls #pause.icon {
-  background-image: url('pause.svg');
+  background-position: 0px -96px; 
 }
 #controls #pause.icon:hover {
-  background-image: url('hi_pause.svg');
+  background-position: 32px -96px; 
 }
 #controls #continue.icon {
-  background-image: url('continue.svg');
+  background-position: 0px -64px; 
 }
 #controls #continue.icon:hover {
-  background-image: url('hi_continue.svg');
+  background-position: 32px -64px; 
 }
 #controls #terminate.icon {
+  background-position: 0px -128px; 
   float:right;
-  background-image: url('terminate.svg');
 }
 #controls #terminate.icon:hover {
+  background-position: 32px -128px; 
   float:right;
-  background-image: url('hi_terminate.svg');
-}
-#controls #terminate.icon.disabled {
-  float:right;
-  background-image: url('na_terminate.svg');
 }
 
 #content {
