@@ -23,7 +23,7 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 libraryDependencies ++= Seq(
  "com.typesafe.akka" % "akka-actor_2.10" % "2.1.1" ,
  "com.typesafe.akka" % "akka-remote_2.10" % "2.1.1" ,
- "org.scala-lang" % "scala-library" % "2.10.0" % "compile",
+ "org.scala-lang" % "scala-library" % "2.10.1-RC3" % "compile",
  "com.esotericsoftware.kryo" % "kryo" % "2.20" % "compile",
  "ch.ethz.ganymed" % "ganymed-ssh2" % "build210"  % "compile",
  "commons-codec" % "commons-codec" % "1.7"  % "compile",
