@@ -86,7 +86,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
     val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
     lastHeartbeatTimestamp = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(maySignal), false) 
+    messageBus.sendToWorkers(Heartbeat(maySignal), false)
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
@@ -111,7 +111,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
       context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
-      sendHeartbeat
+      if (shouldSendHeartbeat) {
+        sendHeartbeat
+      }
     case Request(command, reply) =>
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
