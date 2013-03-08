@@ -26,13 +26,13 @@ import akka.actor.actorRef2Scala
 
 class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
 
-  var nodeListRequestor: ActorRef = _
+  var nodeListRequestor: Option[ActorRef] = None
 
   var nodeControllers = List[ActorRef]()
 
   def receive = {
     case "GetNodes" =>
-      nodeListRequestor = sender
+      nodeListRequestor = Some(sender)
       sendNodesIfReady
     case "NodeReady" =>
       nodeControllers = sender :: nodeControllers
@@ -40,8 +40,8 @@ class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
   }
 
   def sendNodesIfReady {
-    if (nodeControllers.size == numberOfNodes) {
-      nodeListRequestor ! nodeControllers
+    if (nodeControllers.size == numberOfNodes && nodeListRequestor.isDefined) {
+      nodeListRequestor.get ! nodeControllers
       self ! PoisonPill
     }
   }
