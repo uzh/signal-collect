@@ -29,7 +29,7 @@ scc.modules.resources = function() {
   
   
   
-  var interval = 3000;
+  var interval = 1000;
   
   
   
@@ -46,6 +46,7 @@ scc.modules.resources = function() {
     // default config
     this.config = {
         jsonName     : "",
+        skip         : false, // can be used to skip elements from the websocket (e.g. OS names)
         prettyName   : "",
         dataCallback : null,
         numOfValues  : 100,
@@ -226,10 +227,18 @@ scc.modules.resources = function() {
      * Returns the average value of an array
      */
     Array.avg = function(array) {
-      var sum = 0, len = array.length;
+      var len = array.length;
       if (len == 0) { return 0; }
+      return Array.sum(array) / len;
+    };
+    
+    /**
+     * Returns the sum of the values of an array
+     */
+    Array.sum = function(array) {
+      var sum = 0;
       array.forEach(function(v) { sum += v; });
-      return sum / len;
+      return sum;
     };
     
     /**
@@ -317,12 +326,20 @@ scc.modules.resources = function() {
 //  foo.public = "bar";
 //  foo.publicfn();
   
+  var sumSubArray = function(data) {
+    return data.workerStatistics.messagesSent.map(function(array) {
+      return Array.sum(array);
+    });
+  };
+  
   var chartConfig = [
                      {jsonName : "signalMessagesReceived"},
+                     {jsonName : "messagesSent", prettyName: "Messages Sent (#)", dataCallback: sumSubArray },
                      {jsonName : "messagesReceived"},
                      {jsonName : "outgoingEdgesAdded"},
                      {jsonName : "jmx_swap_total"},
                      {jsonName : "runtime_mem_free", prettyName: "Free Runtime Memory (B)"},
+                     {jsonName : "os", skip: true },
                     ];
   var lineCharts = [];
   
@@ -334,7 +351,9 @@ scc.modules.resources = function() {
   }
   
   chartConfig.forEach(function(config) {
-    ChartsCreate(config);
+    if (!config.skip) {
+      ChartsCreate(config);
+    }
   });
   
  
@@ -675,8 +694,8 @@ scc.modules.resources = function() {
   
   var ChartsContains = function(key) {
     var found = false;
-    lineCharts.forEach(function(c) {
-      if (c.config.jsonName == key) {
+    chartConfig.forEach(function(c) {
+      if (c.jsonName == key) {
         found = true;
         return found;
       }
@@ -689,10 +708,8 @@ scc.modules.resources = function() {
     // check if there is more data in the websockets
     if (!hasAddedNewCharts) {
       for (var key in msg.workerStatistics) {
-        if (msg.workerStatistics.hasOwnProperty(key) && key != "messagesSent" && key != "os") {
-          if (!ChartsContains(key)) {
-            ChartsCreate({jsonName : key});
-          }
+        if (msg.workerStatistics.hasOwnProperty(key) && !ChartsContains(key)) {
+          ChartsCreate({jsonName : key});
         }
       }
       hasAddedNewCharts = true;
