@@ -60,7 +60,7 @@ scc.modules.resources = function() {
     var data = [ [], [], [] ];
     
     // variables needed for the charts
-    var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0;
+    var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0, zoom;
     
     // variables needed for the tool tips
     var div, formatTime;
@@ -117,9 +117,9 @@ scc.modules.resources = function() {
           .x(function(d) { return x(d.date); })
           .y(function(d) { return y(d.value); });
 
-      var zoom = d3.behavior.zoom().x(x)
-                  .scaleExtent([0.005, 5]) // allow zooming in/out
-                  .on("zoom", draw);
+      zoom = d3.behavior.zoom().x(x)
+               .scaleExtent([0.005, 5]) // allow zooming in/out
+               .on("zoom", draw);
 
       svg = d3.select(this.container).append("div").append("svg")
           .attr("width", this.config.width + this.config.margin.left + this.config.margin.right)
@@ -265,6 +265,7 @@ scc.modules.resources = function() {
         if (shiftRight) {
           // update x domain
           x.domain([new Date(+(lowestXDomain)+(interval)), currentDate]);
+          zoom.x(x);
           
           // line transition
           var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));

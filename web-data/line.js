@@ -1,8 +1,3 @@
-/*
- * TODO
- * - add update animation
- */
-
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 900 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
@@ -126,6 +121,7 @@ function update() {
     if (shiftRight) {
       // update x domain
       x.domain([new Date(+(lowestXDomain)+(interval)), newHighestDate]);
+      zoom.x(x);
       
       // line transition
       var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));
@@ -162,7 +158,7 @@ function update() {
   
     draw();
   });
-  
+
 }
 
 window.setInterval(function() {
