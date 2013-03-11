@@ -280,15 +280,24 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       case (None, Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
         val interval = globalCondition.aggregationInterval * 1000000l
+        var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
+        var globalTermination = false
         while (!converged && !isGlobalTerminationConditionMet(globalCondition)) {
-          converged = awaitIdle(interval)
+          if (intervalHasPassed) {
+            lastAggregationOperationTime = System.nanoTime
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+          // waits for whichever remaining time interval/limit is shorter
+          converged = awaitIdle(remainingIntervalTime)
         }
         if (converged) {
           stats.terminationReason = TerminationReason.Converged
         } else {
           stats.terminationReason = TerminationReason.GlobalConstraintMet
         }
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
           workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
@@ -305,6 +314,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         var globalTermination = false
         while (!converged && !globalTermination && !isTimeLimitReached) {
           if (intervalHasPassed) {
+            lastAggregationOperationTime = System.nanoTime
             globalTermination = isGlobalTerminationConditionMet(globalCondition)
           }
           // waits for whichever remaining time interval/limit is shorter
