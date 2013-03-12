@@ -137,7 +137,6 @@ class ConsoleServer[Id](userHttpPort: Int) {
 class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
 
-    def root = "./" + folderName
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "") 
     if (List("", "graph", "resources").contains(target)) { 
       target = "main.html"
@@ -154,8 +153,7 @@ class FileServer(folderName: String) extends HttpHandler {
 
     def os = t.getResponseBody
     try {
-      val file = new BufferedInputStream(
-                 new FileInputStream(root + "/" + target))
+      val file = new BufferedInputStream(ClassLoader.getSystemResource(folderName + "/" + target).openStream())
       t.getResponseHeaders.set("Content-Type", fileType)
       t.sendResponseHeaders(200, 0)
       Iterator 
