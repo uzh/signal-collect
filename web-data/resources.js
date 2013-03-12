@@ -1,6 +1,6 @@
 scc.defaults.resources = {"layout":{
                             "cResourceViews":"show"},
-                          "section": "overview"
+                          "section": "statistics"
                          }
 
 scc.modules.resources = function() {
@@ -30,6 +30,9 @@ scc.modules.resources = function() {
   
   
   var interval = 1000;
+  var intervalStatistics = 1000;//*10; // update statistics less often
+  
+  var statisticsLastUpdated = new Date(0);
   
   
   
@@ -239,6 +242,45 @@ scc.modules.resources = function() {
       var sum = 0;
       array.forEach(function(v) { sum += v; });
       return sum;
+    };
+    
+    /**
+     * Allows to transform Dates by adding a specific amount of seconds
+     */
+    Date.prototype.addSecond = function(seconds) {
+      return (+this + seconds);
+    };
+    
+    /**
+     * Returns a pretty duration
+     */
+    Date.prototype.durationPretty = function() {
+      var ms = +this;
+      var duration  = "";
+      var durations = {h:60*60*1000, m:60*1000, s:1000, ms:1};
+      $.each(durations, function(k, v) {
+        if (ms / v >= 1) {
+          duration += " " + Math.floor(ms / v) + k;
+          ms = ms % v; // store the rest
+        }
+      });
+      return duration;
+    };
+    
+    /**
+     * Returns a pretty date time
+     */
+    Date.prototype.dateTime = function() {
+      function pad(i) {
+        if (i < 10) {
+          return "0" + i;
+        }
+        return "" + i;
+      }
+      var d = "";
+      d += this.getFullYear() + "/" + pad(this.getMonth()+1) + "/" + pad(this.getDate()) + " ";
+      d += pad(this.getHours()) + ":" + pad(this.getMinutes()) + ":" + pad(this.getSeconds());
+      return d;
     };
     
     /**
@@ -683,6 +725,8 @@ scc.modules.resources = function() {
                              true));
   allGraphs.forEach(function(g) { g.setup(); });
   
+  // update statistics for the first time
+  $("#resStatInterval").html(intervalStatistics / 1000);
   
   this.onopen = function () {
     scc.order({"provider": "resources"})
@@ -719,6 +763,17 @@ scc.modules.resources = function() {
     // update all graphs
     allGraphs.forEach(function(g) { g.update(msg, msg.timestamp); });
     lineCharts.forEach(function(g) { g.update(msg); });
+    
+    // update statistics
+    if (statisticsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
+      var resStatStartTime = $("#resStatStartTime");
+      if (resStatStartTime.html() == "?") {
+        resStatStartTime.html(new Date(msg.timestamp).dateTime());
+      }
+      $("#resStatRunTime").html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
+      $("#resStatWorkers").html(msg.workerStatistics.workerId.length);
+      statisticsLastUpdated = new Date(msg.timestamp);
+    }
     
     scc.order({"provider": "resources"}, interval)
   }

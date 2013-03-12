@@ -301,6 +301,8 @@ body {
   color:black;
 }
 
+div.panel label { cursor:pointer; }
+
 .structured {
 /*   height: 100%; */
   width: 100%;
@@ -453,3 +455,9 @@ div.tooltip {
 }
 
 .chartContainer > div { float:left; }
+
+#crs_statistics ul      { padding:0; margin:0; }
+#crs_statistics li      { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px;
+                          display:block; width:400px; height:20px; }
+#crs_statistics li:nth-child(odd)  { background:#ddd; }
+#crs_statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative; top:-20px; text-align:right }

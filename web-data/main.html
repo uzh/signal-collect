@@ -65,8 +65,10 @@
       <div id="resources_panel_container">
         <div class="panel">
           <div class="panel_section">
-            <div id="cResourceViews" class="title expanded">Charts</div>
+            <div id="cResourceViews" class="title expanded">Computation</div>
             <div class="contents">
+              <input type="radio" name="rs" id="rs_statistics"/>
+              <label for="rs_statistics">Statistics</label><br/>
               <input type="radio" name="rs" id="rs_overview"/>
               <label for="rs_overview">Overview</label><br/>
               <input type="radio" name="rs" id="rs_detailed"/>
@@ -119,9 +121,26 @@
             <div id="graphMessagesSent" class="graphs"></div>
           </div>
         
+          <!-- content resource section statistics -->
+          <div id="crs_statistics">
+            <h1>Statistics</h1>
+            <p><small>Updating every <span id="resStatInterval">?</span> second(s).</small></p>
+            <ul>
+              <li>Start Time: <span id="resStatStartTime">?</span></li>
+              <li>Running for: <span id="resStatRunTime">?</span></li>
+              <li>Mode: <span id="resStatMode">?</span></li>
+              <li>Number of Workers: <span id="resStatWorkers">?</span></li>
+              <li>Start Time: ?</li>
+              
+            </ul>
+          </div>
+        
           <!-- content resource section overview -->
           <div id="crs_detailed">
             <h1>Detailed</h1>
+            <p><strong style="color:blue;">min</strong>,
+               <strong>average</strong>,
+               <strong style="color:red;">max</strong> values over all worker nodes.</p> 
             <div class="chartContainer"></div>
           </div>
         
