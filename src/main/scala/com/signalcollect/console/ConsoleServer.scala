@@ -177,6 +177,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
                              extends WebSocketServer(port) {
   var coordinator: Option[Coordinator[Id,_]] = None
   var execution: Option[Execution] = None
+  implicit val formats = DefaultFormats
 
   def setCoordinator(c: ActorRef) {
     println("ConsoleServer: got coordinator " + c)
@@ -194,7 +195,6 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
 
   def onMessage(socket: WebSocket, msg: String) {
     val j = parse(msg)
-    implicit val formats = DefaultFormats
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
@@ -239,8 +239,12 @@ class InvalidDataProvider(msg: String) extends DataProvider {
 }
 
 class NotReadyDataProvider(msg: String) extends DataProvider {
+  implicit val formats = DefaultFormats
+  val j = parse(msg)
+  val p = (j \ "provider").extract[String]
   def fetch(): JObject = {
     ("provider" -> "notready") ~
+    ("targetProvider" -> p) ~
     ("msg" -> "The signal/collect computation is not ready yet") ~
     ("request" -> msg)
   }

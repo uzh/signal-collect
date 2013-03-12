@@ -51,7 +51,7 @@ scc.modules.graph = function() {
     link = svg.selectAll(".link");
 
     force.on("tick", function() {
-      if (force.alpha() < 0.03) {
+      if (force.alpha() < 0.02) {
         link.style("display", "block")
         link.attr("x1", function(d) { return d.source.x; })
             .attr("y1", function(d) { return d.source.y; })
@@ -78,6 +78,8 @@ scc.modules.graph = function() {
   }
    
   this.onmessage = function(j) {
+    $("#graph_notready").fadeOut();
+
     nodes = force.nodes();
     links = force.links();
     var newNodes = false;
@@ -142,6 +144,10 @@ scc.modules.graph = function() {
   }
 
   this.onerror = function(e) { }
+
+  this.notready = function() {
+    $("#graph_notready").fadeIn();
+  }
 
   this.onclose = function() {
     this.destroy()

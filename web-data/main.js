@@ -90,6 +90,8 @@ $(document).ready(function() {
         if (provider == "notready") {
           var request = j["request"]
           scc.order(request, 500);
+          var targetProvider = j["targetProvider"]
+          scc.consumers[targetProvider].notready(j)
         }
         for (var m in scc.consumers) { 
           var consumer = scc.consumers[m]

@@ -689,6 +689,7 @@ scc.modules.resources = function() {
   }
     
   this.onerror = function(e) { }
+  this.notready = function() { }
 
   var hasAddedNewCharts = false;
   

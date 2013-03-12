@@ -46,6 +46,7 @@ scc.modules.controls = function() {
   }
 
   this.onerror = function(e) { }
+  this.notready = function() { }
 
   this.onclose = function() {
     this.destroy()
