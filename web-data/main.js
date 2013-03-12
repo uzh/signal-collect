@@ -137,21 +137,24 @@ $(document).ready(function() {
     }, delay);
   }
 
-  enable_modules = function(modules) {
+  enableModules = function(modules) {
     for (var m in modules) {
-      module = modules[m];
+      var module = modules[m];
       scc.consumers[module] = new scc.modules[module]();
     }
-    layout(modules);
   }
+
   switch (window.location.pathname) {
     case "/resources": 
     case "/graph": 
-      module = window.location.pathname.slice(1);
-      enable_modules([module]); 
+      var module = window.location.pathname.slice(1);
+      scc.settings.set({"main": {"view": "resources"}});
+      enableModules([module, "controls"]); 
+      layout([module]);
       break;
     default:
-      enable_modules(["graph", "resources", "controls"]); break;
+      enableModules(["graph", "resources", "controls"]);
+      layout(["graph", "resources"]);
   }
 
 });

@@ -59,7 +59,7 @@ var showView = function(view) {
   $("#" + view + "_panel_container").show();
 }
 
-function layout (modules) {
+function layout(modules) {
   $("#modes span").css("width", (100/modules.length) + "%");
   for (var m in modules) {
     $("span#mode_" + modules[m]).show();
