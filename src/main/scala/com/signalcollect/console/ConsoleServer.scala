@@ -31,7 +31,7 @@ import scala.Array.canBuildFrom
 import scala.collection.JavaConversions._
 import scala.language.postfixOps
 import scala.language.postfixOps
-import scala.reflect._ 
+import scala.reflect._
 import scala.reflect.runtime.{universe => ru}
 import scala.util.Random
 
@@ -54,6 +54,8 @@ import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import java.io.File
+import java.io.InputStream
 
 trait Execution {
   var steps: Int
@@ -153,7 +155,16 @@ class FileServer(folderName: String) extends HttpHandler {
 
     def os = t.getResponseBody
     try {
-      val file = new BufferedInputStream(ClassLoader.getSystemResource(folderName + "/" + target).openStream())
+      val root = "./src/main/resources/" + folderName
+      var inputStream : InputStream = null
+      if ((new File(root)).exists()) {
+        // read from the filesystem
+        inputStream = new FileInputStream(root + "/" + target)
+      } else {
+        // read from the JAR
+        inputStream = ClassLoader.getSystemResource(folderName + "/" + target).openStream()
+      }
+      val file = new BufferedInputStream(inputStream.asInstanceOf[InputStream])
       t.getResponseHeaders.set("Content-Type", fileType)
       t.sendResponseHeaders(200, 0)
       Iterator 
