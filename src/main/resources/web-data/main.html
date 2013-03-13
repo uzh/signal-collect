@@ -69,8 +69,8 @@
             <div class="contents">
               <input type="radio" name="rs" id="rs_statistics"/>
               <label for="rs_statistics">Statistics</label><br/>
-              <input type="radio" name="rs" id="rs_overview"/>
-              <label for="rs_overview">Overview</label><br/>
+              <input type="radio" name="rs" id="rs_logs"/>
+              <label for="rs_logs">Logs</label><br/>
               <input type="radio" name="rs" id="rs_detailed"/>
               <label for="rs_detailed">Detailed</label>
             </div>
@@ -78,16 +78,12 @@
           <div class="panel_section">
             <div id="cResourceViews" class="title expanded">Problems</div>
             <div class="contents">
-              <span class="sectionLink" id="rs_xy">Name Me</span><br/>
-            </div>
-          </div>
-          <div class="panel_section">
-            <div id="cResourceViews" class="title expanded">Old Views</div>
-            <div class="contents">
-              <span class="sectionLink" id="rs_overview">Overview</span><br/>
-              <span class="sectionLink" id="rs_detailed">Detailed Overview</span>
-              <span class="sectionLink" id="rs_logs">Logs and Errors</span><br/>
-              <span class="sectionLink" id="rs_sc">Signal/Collect Statistics</span><br/>
+              <input type="radio" name="rs" id="rs_nostart"/>
+              <label for="rs_nostart">Computation does not seem to start</label><br/>
+              <input type="radio" name="rs" id="rs_noconvergence"/>
+              <label for="rs_noconvergence">Computation does not converge</label><br/>
+              <input type="radio" name="rs" id="rs_statistics"/>
+              <label for="rs_statistics">Statistics</label><br/>
             </div>
           </div>
         </div>
@@ -113,14 +109,6 @@
       <div class="view" id="resources">
         <div class="structured">
         
-          <!-- content resource section overview -->
-          <div id="crs_overview">
-            <h1>Overview</h1>
-            <p>Charts with Max/Avg/Min</p>
-            <div id="graphRamStacked" class="graphs"></div>
-            <div id="graphMessagesSent" class="graphs"></div>
-          </div>
-        
           <!-- content resource section statistics -->
           <div id="crs_statistics">
             <h1>Statistics</h1>
@@ -131,8 +119,12 @@
               <li>Mode: <span id="resStatMode">?</span></li>
               <li>Number of Workers: <span id="resStatWorkers">?</span></li>
               <li>Start Time: ?</li>
-              
             </ul>
+          </div>
+        
+          <!-- content resource section overview -->
+          <div id="crs_logs">
+            <h1>Logs</h1>
           </div>
         
           <!-- content resource section overview -->
@@ -142,21 +134,6 @@
                <strong>average</strong>,
                <strong style="color:red;">max</strong> values over all worker nodes.</p> 
             <div class="chartContainer"></div>
-          </div>
-        
-          <!-- content resource section overview -->
-          <div id="crs_logs">
-            <h1>Logs</h1>
-          </div>
-
-          <!-- content resource section statistics -->
-          <div id="crs_sc">
-            <h1>Signal/Collect Statistics</h1>
-            <div id="graphMessagesReceived" class="graphs"></div>
-            <div id="graphOutgoingEdges" class="graphs"></div>
-            <div id="graphToSignalSize" class="graphs"></div>
-            <div id="graphRequestMessagesReceived" class="graphs"></div>
-            <div id="graphSignalOperationsExecuted" class="graphs"></div>
           </div>
           
         </div>
