@@ -1,11 +1,17 @@
 scc.defaults.graph = {"layout": {
                         "cNodeSelection": "show",
-                        "cGraphLayout": "show"
+                        "cGraphLayout": "show",
+                        "cGraphDesign": "show"
                       },
                       "choices": {
                         "Node Selection": "topk", 
                         "TopK": "degree",
                         "Graph Layout": "forced"
+                      },
+                      "options": {
+                        "gd_nodeSize": "Node degree",
+                        "gd_nodeColor": "Node state",
+                        "gd_nodeBorder": "Node id"
                       }}
 
 scc.modules.graph = function() {
@@ -21,10 +27,49 @@ scc.modules.graph = function() {
   var link;
   var order = {"provider": "graph"};
 
+  var scale = d3.scale.linear()
+    .range([5, 12])
+    .clamp(true)
+
+  var normalize = function (s) {
+    var n = parseFloat(s.replace(/[^0-9.,]/g, ''));
+    return scale(n);
+  }
+
+  var nodeDesign = {
+    "gd_nodeColor": { "Node state": function(d) { return color(d.state); },
+                      "Node id": function(d) { return color(d.id); },
+                      "Node degree": function (d) { return color(d.weight); }},
+    "gd_nodeBorder": { "Node state": function(d) { return color(d.state); },
+                       "Node id": function(d) { return color(d.id); },
+                       "Node degree": function (d) { return color(d.weight); }},
+    "gd_nodeSize": { "Node state": function(d) { return normalize(d.state); },
+                     "Node degree": function(d) { return scale.copy().domain([1,20])(d.weight); }}
+  }
+
+  var nodeColor = nodeDesign["gd_nodeColor"]["Node state"]
+  var setNodeColor = function (s) {
+    nodeColor = s;
+    node.transition().style("fill", s);
+  }
+  var nodeBorder = nodeDesign["gd_nodeBorder"]["Node id"]
+  var setNodeBorder = function (s) {
+    nodeBorder = s;
+    node.transition().style("stroke", s);
+  }
+  var nodeSize = nodeDesign["gd_nodeSize"]["Node degree"]
+  var setNodeSize = function (s) {
+    nodeSize = s;
+    node.transition().attr("r", s);
+  }
+
   this.layout = function() {
     $.each(scc.settings.get().graph.layout, function (key, value) {
       if (value == "show") { $("#" + key).show(); }
-    })
+    });
+    $.each(scc.settings.get().graph.options, function (key, value) {
+      $("#" + key).val(value);
+    });
   }
   this.layout()
 
@@ -49,6 +94,10 @@ scc.modules.graph = function() {
 
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
+
+    $.each(scc.settings.get().graph.options, function (key, value) {
+      scc.consumers.graph.setNodeDesign(key, value);
+    });
 
     force.on("tick", function() {
       if (force.alpha() < 0.02) {
@@ -117,27 +166,28 @@ scc.modules.graph = function() {
       }
     });
 
+    if (newNodes) { force.start(); }
     
     link = link.data(force.links(), 
               function (d) { return d.source.id + "-" + d.target.id; });
     link.enter().append("line")
         .attr("class", "link")
     link.exit().remove();
-    link.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+    link.style("stroke-width", 1);
 
     node = node.data(force.nodes(), 
               function (d) { return d.id; });
     node.enter().append("circle")
         .attr("class", "node")
-        .attr("r", 5)
-        .call(force.drag);
+        .call(force.drag)
+        .style("fill", nodeColor)
+        .style("stroke", nodeBorder)
+        .attr("r", nodeSize)
     node.exit().remove();
-    node.style("fill", function(d) { return color(d.state); })
 
     node.append("title")
         .text(function(d) { return d.id + ": " + d.state; });
 
-    if (newNodes) { force.start(); }
 
     scc.order(order, 1000)
 
@@ -180,6 +230,28 @@ scc.modules.graph = function() {
              "topk": parseFloat($("#topk").val())}
     scc.order(order)
     return false;
+  });
+
+  this.setNodeDesign = function (property, metric) {
+    switch (property) {
+      case "gd_nodeSize": 
+          setNodeSize(nodeDesign["gd_nodeSize"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_nodeSize": metric}}});
+          break;
+      case "gd_nodeColor": 
+          setNodeColor(nodeDesign["gd_nodeColor"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_nodeColor": metric}}});
+          break;
+      case "gd_nodeBorder": 
+          setNodeBorder(nodeDesign["gd_nodeBorder"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_nodeBorder": metric}}});
+          break;
+    }
+  }
+
+  $("#cGraphDesign select").change(function (e) {
+    var property = $(this);
+    scc.consumers.graph.setNodeDesign(property.attr("id"), property.val());
   });
 
 }

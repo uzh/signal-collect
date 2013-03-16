@@ -2,8 +2,9 @@ var hidingTimeout;
 
 function toggleSection(view, title) {
   var title = $(title)
-  var id = $(title).attr("id")
-  if (title.next().is(":visible")) {
+  var section = title.next()
+  var id = title.parent().attr("id")
+  if (section.is(":visible")) {
     var l = {}
     l[view] = {"layout": {}}
     l[view]["layout"][id] = "hide"
@@ -17,7 +18,7 @@ function toggleSection(view, title) {
     scc.settings.set(l);
     title.addClass("expanded");
   }
-  title.next().toggle(200)
+  section.toggle(200)
 }
 
 /* Message bar at the top */
@@ -77,12 +78,12 @@ function layout(modules) {
     if (["graph", "resources"].indexOf(key) >= 0) { 
       $.each(value.layout, function (k, v) {
         if (v == "hide") {
-          $("#" + k).removeClass("expanded");
-          $("#" + k).next().hide();
+          $("#" + k + " .title").removeClass("expanded");
+          $("#" + k + " .contents").hide();
         }
         else {
-          $("#" + k).addClass("expanded");
-          $("#" + k).next().show();
+          $("#" + k + " .title").addClass("expanded");
+          $("#" + k + " .contents").show();
         }
       });
     }

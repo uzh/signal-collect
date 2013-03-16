@@ -187,6 +187,18 @@ body {
 
 }
 .panel .panel_section .contents {
+  font-size: 16px;
+}
+.panel h1 {
+  font-weight: normal;
+  font-size: 16px;
+  padding: 2px;
+  margin: 2px;
+  border-bottom: 1px solid #aaa;
+}
+
+.panel label {
+  padding-left: 5px;
 }
 
 .panel input[type="radio"] {
@@ -195,7 +207,6 @@ body {
 
 .panel input[type="radio"] + label {
   position: relative;
-  left: 5px;
   right: 0px;
   top: 0px;
   bottom: 0px;
@@ -212,6 +223,16 @@ body {
 .panel input[type="radio"]:checked + label:before {
   content: "●";
   font-size: 20px;
+}
+
+.panel select,
+.panel select option {
+  color: #59b6e8;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  border: none;
+  background: none;
+  -webkit-appearance: none;
 }
 
 #controls {
@@ -354,9 +375,11 @@ div.panel label { cursor:pointer; }
 .link {
   display: none;
   stroke: #999;
-  stroke-opacity: .6;
 }
 
+*:focus {
+  outline: none;
+}
 .hidden {
   display: none;
 }

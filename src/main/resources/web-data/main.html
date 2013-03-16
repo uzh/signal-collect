@@ -30,9 +30,8 @@
       </div>
       <div id="graph_panel_container">
         <div class="panel">
-          <div class="panel_section">
-            <div id="cNodeSelection" 
-                 class="title expanded">Select nodes to display</div>
+          <div id="cNodeSelection" class="panel_section">
+            <div class="title expanded">Select nodes to display</div>
             <div class="contents">
               <form>
                 <input type="radio" name="ns" id="ns_search"/>
@@ -46,9 +45,8 @@
               </form> 
             </div>
           </div>
-          <div class="panel_section">
-            <div id="cGraphLayout" 
-                 class="title expanded">Graph Layout</div>
+          <div id="cGraphLayout" class="panel_section">
+            <div class="title expanded">Graph Layout</div>
             <div class="contents">
               <form>
                 <input type="radio" name="gl" id="gl_grid"/>
@@ -60,12 +58,37 @@
               </form> 
             </div>
           </div>
+          <div id="cGraphDesign" class="panel_section">
+            <div class="title expanded">Graph Look and Feel</div>
+            <div class="contents">
+              <form>
+                <label for="gd_nodeSize">Node size from</label>
+                <select id="gd_nodeSize">
+                  <option>Node state</option>
+                  <option>Node degree</option>
+                </select><br/>
+                <label for="gd_nodeColor">Node color from</label>
+                <select id="gd_nodeColor">
+                  <option>Node state</option>
+                  <option>Node id</option>
+                  <option>Node degree</option>
+                </select><br/>
+                <label for="gd_nodeBorder">Node border from</label>
+                <select id="gd_nodeBorder">
+                  <option>Node state</option>
+                  <option>Node id</option>
+                  <option>Node degree</option>
+                </select><br/>
+              </form> 
+            </div>
+          </div>
+
         </div>
       </div>
       <div id="resources_panel_container">
         <div class="panel">
-          <div class="panel_section">
-            <div id="cResourceViews" class="title expanded">Computation</div>
+          <div id="cResourceComputation"  class="panel_section">
+            <div class="title expanded">Computation</div>
             <div class="contents">
               <input type="radio" name="rs" id="rs_statistics"/>
               <label for="rs_statistics">Statistics</label><br/>
@@ -75,8 +98,8 @@
               <label for="rs_detailed">Detailed</label>
             </div>
           </div>
-          <div class="panel_section">
-            <div id="cResourceViews" class="title expanded">Problems</div>
+          <div id="cResourceProblems" class="panel_section">
+            <div class="title expanded">Problems</div>
             <div class="contents">
               <input type="radio" name="rs" id="rs_nostart"/>
               <label for="rs_nostart">Computation does not seem to start</label><br/>

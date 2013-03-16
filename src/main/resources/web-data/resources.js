@@ -1,4 +1,9 @@
-scc.defaults.resources = {"layout":{"cResourceViews":"show"},"section":"statistics"}
+scc.defaults.resources = {"layout":{
+                            "cResourceComputation": "show",
+                            "cResourceProblems": "show"
+                          },
+                          "section": "statistics"
+                         }
 
 scc.modules.resources = function() {
   this.requires = ["resources"]
