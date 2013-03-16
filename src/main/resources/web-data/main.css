@@ -225,14 +225,15 @@ body {
   font-size: 20px;
 }
 
-.panel select,
-.panel select option {
+.panel select {
   color: #59b6e8;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 16px;
-  border: none;
-  background: none;
+  -moz-appearance: toolbox;
   -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
 }
 
 #controls {
