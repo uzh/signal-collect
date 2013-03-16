@@ -150,7 +150,7 @@ $(document).ready(function() {
     case "/resources": 
     case "/graph": 
       var module = window.location.pathname.slice(1);
-      scc.settings.set({"main": {"view": "resources"}});
+      scc.settings.set({"main": {"view": module}});
       enableModules([module, "controls"]); 
       layout([module]);
       break;
