@@ -143,9 +143,10 @@ body {
 .panel .panel_section .title {
   font-weight: bold;
   height: 21px;
-  padding-top: 4px;
   font-size: 13px;
+  padding-top: 6px;
   color: #666;
+  border-top: 1px solid #eee;
   text-shadow: 0 1px 0 #fff;
   background-image: -moz-linear-gradient(top,
                     rgba(245,245,245,1),
@@ -188,19 +189,76 @@ body {
 }
 .panel .panel_section .contents {
   font-size: 16px;
+  margin-bottom: 10px;
 }
+
+.panel h1:before {
+    content: "";
+    display: block;
+    border-top: solid 1px #111;
+    width: 100%;
+    height: 1px;
+    position: relative;
+    top: 12px;
+    z-index: 45;
+}
+
+.panel h1 span {
+    background: #F5F5F5;
+    padding: 0 8px;
+    position: relative;
+    z-index: 50;
+}
+
 .panel h1 {
   font-weight: normal;
   font-size: 16px;
+  text-align: center;
   padding: 2px;
-  margin: 2px;
-  border-bottom: 1px solid #aaa;
+  margin: 0;
+  margin-bottom: 5px;
+  margin-top: 10px;
 }
 
 .panel label {
   padding-left: 5px;
 }
 
+.panel input[type="text"] {
+  padding: 0;
+  margin: 0;
+  margin-left: 10px;
+  border: 1px solid #bbb;
+  height: 20px;
+  width: 70%;
+}
+
+.panel button {
+  border: 1px solid #bbb;
+  background-image: -moz-linear-gradient(top,
+                    rgba(255,255,255,.25),
+                    rgba(200,200,200,.11));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(0, rgba(255,255,255,.25)),
+                    color-stop(1, rgba(200,200,200,.11)));
+  background-image: -webkit-linear-gradient(
+                    rgba(255,255,255,.25),
+                    rgba(200,200,200,.11));
+}
+.panel button.active {
+  background-color: #59b6e8;
+}
+
+.panel select + button, 
+.panel input[type="text"] + button {
+  padding: 0;
+  margin: 0;
+  width: 20%;
+  height: 22px;
+  position: absolute;
+  right: 10px;
+}
+    
 .panel input[type="radio"] {
   display:none;
 }

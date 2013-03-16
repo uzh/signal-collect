@@ -63,6 +63,26 @@ scc.modules.graph = function() {
   }
 
   this.layout = function() {
+    for (var i = 20; i<=200; i+=20) {
+      $("#topAmount").append('<option value="' + i + '">' + i + '</option>')
+    }
+    for (var i = 1; i<=4; i++) {
+      $("#gc_drawDepth").append('<option value="' + i + '">' + i + '</option>')
+    }
+    $('input[type="text"]').val("Search and hit Enter to execute")
+    $('input[type="text"]').click(function(e) { $(this).select(); });
+    $('input[type="text"]').keypress(function(e) {
+      if ( e.which == 13 ) {
+        searchById();
+      }
+    });
+    window.addEventListener("keydown", function (e) {
+      if (e.ctrlKey && e.keyCode == 70) { 
+        $("#searchId").focus();
+        $("#searchId").select();
+        e.preventDefault();
+      }
+    });
     $.each(scc.settings.get().graph.layout, function (key, value) {
       if (value == "show") { $("#" + key).show(); }
     });
@@ -70,6 +90,7 @@ scc.modules.graph = function() {
       $("#" + key).val(value);
     });
   }
+
   this.layout()
 
   this.onopen = function() {
@@ -209,27 +230,36 @@ scc.modules.graph = function() {
     nodeRefs = {};
     linkRefs = {};
   }
-
-  $("#searchById").click(function (e) {
-    e.preventDefault();
+  var searchById = function (e) {
     scc.consumers.graph.destroy()
     scc.consumers.graph.onopen()
     order = {"provider": "graph", 
              "search": "vicinity", 
              "vicinity": $("#searchId").val()}
     scc.order(order)
+    $("button").removeClass("active");
+    $("#searchById").addClass("active");
     return false;
-  });
-  $("#searchByTopk").click(function (e) {
+  }
+
+  $("#searchById").click(searchById);
+          
+  var searchTop = function (e) {
     e.preventDefault();
     scc.consumers.graph.destroy()
     scc.consumers.graph.onopen()
     order = {"provider": "graph", 
-             "search": "topk", 
-             "topk": parseFloat($("#topk").val())}
+             "search": "top", 
+             "depth": parseInt($("#gc_drawDepth").val()),
+             "topAmount": parseFloat($("#topAmount").val()),
+             "topCriterium": $("#topCriterium").val()}
     scc.order(order)
+    $("button").removeClass("active");
+    $("#searchByTop").addClass("active");
     return false;
-  });
+  }
+
+  $("#searchByTop").click(searchTop);
 
   this.setNodeDesign = function (property, metric) {
     switch (property) {
@@ -252,5 +282,5 @@ scc.modules.graph = function() {
     var property = $(this);
     scc.consumers.graph.setNodeDesign(property.attr("id"), property.val());
   });
-
+    
 }

@@ -61,18 +61,6 @@ function Settings() {
 $(document).ready(function() {
   scc.settings = new Settings();
 
-  // add keyboard shortcuts to change between tabs
-  $(document).keypress(function(e) {
-    if (e.which == 103) { // g
-      e.preventDefault();
-      showView("graph");
-    }
-    if (e.which == 114) { // r
-      e.preventDefault();
-      showView("resources");
-    }
-  });
-
   /* WebSocket communication */
   function createWebSocket () {
      scc.webSocket = new ReconnectingWebSocket(

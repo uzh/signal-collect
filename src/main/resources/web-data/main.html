@@ -34,14 +34,20 @@
             <div class="title expanded">Select nodes to display</div>
             <div class="contents">
               <form>
-                <input type="radio" name="ns" id="ns_search"/>
-                <label for="ns_search">Search for vertex by ID</label><br/>
-                <input id="searchId" type="text">
-                <button id="searchById">Search</button><br/>
-                <input type="radio" name="ns" id="ns_topk"/>
-                <label for="ns_topk">Top K vertices</label><br/>
-                <input id="topk" type="text">
-                <button id="searchByTopk">Search</button><br/>
+                <h1><span>Search for vertex by ID</span></h1>
+                <input id="searchId" type="text" value="Search and hit Enter to execute">
+                <button id="searchById">Find</button><br/>
+                <h1><span>Show top vertices</span></h1>
+                <label>By Property:</label>
+                <select id="topCriterium">
+                  <option>State (Numerical)</option>
+                  <option>Degree (In)</option>
+                  <option>Degree (Out)</option>
+                  <option>Degree (Both)</option>
+                </select><br/>
+                <label>Number of vertices:</label>
+                <select id="topAmount"></select>
+                <button id="searchByTop">Find</button><br/>
               </form> 
             </div>
           </div>
@@ -49,23 +55,27 @@
             <div class="title expanded">Graph Look and Feel</div>
             <div class="contents">
               <form>
-                <label for="gd_nodeSize">Node size from</label>
+                <h1><span>Node styling</span></h1>
+                <label for="gd_nodeSize">Use as node size:</label>
                 <select id="gd_nodeSize">
                   <option>Node state</option>
                   <option>Node degree</option>
                 </select><br/>
-                <label for="gd_nodeColor">Node color from</label>
+                <label for="gd_nodeColor">Use as node color:</label>
                 <select id="gd_nodeColor">
                   <option>Node state</option>
                   <option>Node id</option>
                   <option>Node degree</option>
                 </select><br/>
-                <label for="gd_nodeBorder">Node border from</label>
+                <label for="gd_nodeBorder">Use as node strok color:</label>
                 <select id="gd_nodeBorder">
                   <option>Node state</option>
                   <option>Node id</option>
                   <option>Node degree</option>
                 </select><br/>
+                <h1><span>Graph Complexity</span></h1>
+                <label for="gc_nodeDepth">Maximum depth to draw</label>
+                <select id="gc_drawDepth"></select>
               </form> 
             </div>
           </div>

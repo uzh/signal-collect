@@ -3,6 +3,7 @@ package com.signalcollect.console
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
+import com.signalcollect.SampleVertexIds
 import scala.reflect._
 import scala.reflect.runtime.{universe => ru}
 import net.liftweb.json._
@@ -101,9 +102,11 @@ class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
 
 case class GraphDataRequest(
   provider: String, 
+  depth: Option[Int],
   search: Option[String], 
   vicinity: Option[String],
-  topk: Option[Int]
+  topAmount: Option[Int],
+  topCriterium: Option[String]
 )
 
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
@@ -124,21 +127,40 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     }
   }
 
-  def fetchVicinity(id: String): JObject = {
+  def fetchVicinity(id: String, depth: Int): JObject = {
     val vertex = workerApi.aggregateAll(
                  new FindVertexByIdAggregator[Id](id))
     val vicinity = vertex match {
       case Some(v) => 
-        findVicinity(List(v.id))
+        findVicinity(List(v.id), depth)
       case None => List[Id]()
     }
     workerApi.aggregateAll(new GraphAggregator[Id](vicinity))
   }
 
-  def fetchTopk(n: Int): JObject = {
+  def fetchTopStates(n: Int, depth: Int): JObject = {
     val topk = new TopKFinder[Int](n)
     val nodes = workerApi.aggregateAll(topk)
     workerApi.aggregateAll(new GraphAggregator(nodes.toList.map(_._1)))
+  }
+
+  def fetchTopDegree(n: Int, depth: Int, direction: String): JObject = {
+    val vertices = workerApi.aggregateAll(new TopDegreeAggregator[Id](n))
+    workerApi.aggregateAll(new GraphAggregator[Id](findVicinity(
+      vertices.foldLeft(List[Id]()){ (acc, m) => acc ++ m._2 }.take(n),
+      depth)))
+  }
+
+  def fetchSample(n: Int, depth: Int): JObject = {
+    val ids = workerApi.aggregateAll(new SampleVertexIds(n))
+    val nodes = ids.foldLeft(List[Id]()){ (acc, id) =>
+      workerApi.aggregateAll(new FindVertexByIdAggregator[Id](id.toString)) match {
+        case Some(v) => 
+          v.id :: acc
+        case None    => acc
+      }
+    }
+    workerApi.aggregateAll(new GraphAggregator[Id](findVicinity(nodes, depth)))
   }
 
   def fetchAll(): JObject = {
@@ -147,16 +169,23 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
 
   def fetch(): JObject = {
     val request = (msg).extract[GraphDataRequest]
-    val graphData = request.search match {
-      case Some("vicinity") => request.vicinity match {
-        case Some(id) => fetchVicinity(id)
-        case otherwise => fetchInvalid(msg)
+    val graphData = request.depth match {
+      case Some(d) => 
+        request.search match {
+        case Some("vicinity") => request.vicinity match {
+          case Some(id) => fetchVicinity(id, d)
+          case otherwise => fetchInvalid(msg)
+        }
+        case Some("top") => (request.topAmount, request.topCriterium) match {
+          case (Some(a), Some("State (Numerical)")) => fetchTopStates(a, d)
+          case (Some(a), Some("Degree (In)")) => fetchTopDegree(a, d, "in")
+          case (Some(a), Some("Degree (Out)")) => fetchTopDegree(a, d, "out")
+          case (Some(a), Some("Degree (Both)")) => fetchTopDegree(a, d, "both")
+          case otherwise => new InvalidDataProvider(compact(render(msg))).fetch
+        }
+        case otherwise => fetchSample(20, d)
       }
-      case Some("topk") => request.topk match {
-        case Some(n) => fetchTopk(n)
-        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch
-      }
-      case otherwise => fetchAll
+      case otherwise => fetchSample(10, 3)
     }
     
     ("provider" -> "graph") ~
