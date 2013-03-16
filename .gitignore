@@ -6,4 +6,5 @@ project/target/
 project/project/
 project/scala*/
 target/*
+.tags
 graph-data/
