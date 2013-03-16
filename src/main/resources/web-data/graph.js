@@ -1,6 +1,5 @@
 scc.defaults.graph = {"layout": {
                         "cNodeSelection": "show",
-                        "cGraphLayout": "show",
                         "cGraphDesign": "show"
                       },
                       "choices": {
