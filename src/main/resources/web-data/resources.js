@@ -114,7 +114,7 @@ scc.modules.resources = function() {
 
       // add default scale of the axes
       var now = new Date();
-      x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);//new Date(+(now)+(5*1000))]);
+      x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);
       y.domain([0, 1]);
 
       xAxis = d3.svg.axis().scale(x)
@@ -205,35 +205,16 @@ scc.modules.resources = function() {
     
     
     /**
-     * Returns the minimum value and the corresponding index of an array
+     * Returns the minimum and maximum value of an array
      */
-    Array.min = function(array) {
-      var value = Infinity, index = 0;
-      array.forEach(function(v, i) {
-        if (v < value) {
-          value = v;
-          index = i;
-          if (value == 0) { // we do not have negative values
-            return;
-          }
-        }
+    Array.getMinMax = function(array) {
+      var min = Infinity, max = 0;
+      array.forEach(function(v) {
+        if (v < min) { min = v; }
+        if (v > max) { max = v; }
       });
-      return { value : value, index : index };
-    };
-    
-    /**
-     * Returns the maximum value and the corresponding index of an array
-     */
-    Array.max = function(array) {
-      var value = 0, index = 0;
-      array.forEach(function(v, i) {
-        if (v > value) {
-          value = v;
-          index = i;
-        }
-      });
-      return { value : value, index : index };
-    };
+      return { "min": min, "max": max };
+    }
     
     /**
      * Returns the average value of an array
@@ -311,16 +292,15 @@ scc.modules.resources = function() {
         }
       }
 
-      var newMin = Array.min(newData);
-      var newMax = Array.max(newData);
+      var newMinMax = Array.getMinMax(newData);
       data[0].push({ date : currentDate, value : Array.avg(newData), id : "Average" });
-      data[1].push({ date : currentDate, value : newMin.value,       id : "min" });
-      data[2].push({ date : currentDate, value : newMax.value,       id : "max" });
+      data[1].push({ date : currentDate, value : newMinMax.min,      id : "min" });
+      data[2].push({ date : currentDate, value : newMinMax.max,      id : "max" });
       
       path.attr("d", line).attr("transform", null);
       
       // only perform animated transition when needed or we will have problems when dragging/zooming
-      d3.transition().ease("linear").duration((shiftRight ? interval : 0)).each(function() {
+      d3.transition().ease("linear").duration((shiftRight ? 300 : 0)).each(function() {
 
         if (shiftRight) {
           // update x domain
@@ -329,8 +309,7 @@ scc.modules.resources = function() {
           
           // line transition
           var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));
-          path.transition()
-              .ease("linear")
+          path.transition().ease("linear")
               .attr("transform", "translate(" + x(transformVal) + ")");
         }
         
@@ -358,8 +337,8 @@ scc.modules.resources = function() {
                     });
         
         // update x domains
-        if (newMax.value > maxYValue) {
-          maxYValue = newMax.value;
+        if (newMinMax.max > maxYValue) {
+          maxYValue = newMinMax.max;
         }
         if (maxYValue * 1.05 > y.domain()[1]) {
           y.domain([0, maxYValue * 1.1]);

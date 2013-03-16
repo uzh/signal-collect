@@ -461,3 +461,9 @@ div.tooltip {
                           display:block; width:400px; height:20px; }
 #crs_statistics li:nth-child(odd)  { background:#ddd; }
 #crs_statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative; top:-20px; text-align:right }
+
+#crs_logs ul { padding:0; }
+#crs_logs li { list-style:none; padding:5px; }
+#crs_logs li:nth-child(odd) { background:#ddd; }
+#crs_logs li.error { background:#FFC6BF; }
+#crs_logs li:nth-child(odd).error { background:#FAA49B; }
