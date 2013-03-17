@@ -8,27 +8,28 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
 import scalaz.Scalaz._
 
-class GraphAggregator[Id](ids: List[Id] = List[Id]())
+class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[Id] = List[Id]())
       extends AggregationOperation[JObject] {
 
-  val all = ids.size match {
-    case n if(n > 0) => false
-    case otherwise => true
+  def scanIds(l: List[Id], category: String, i: Inspectable[Id,_]): JObject = {
+    if (l.contains(i.id)) {
+      val edges = i.outgoingEdges.values.filter { 
+        v => l.contains(v.targetId)
+      }
+      JObject(List(
+        JField("nodes", JObject(List(JField(i.id.toString, 
+                        JObject(List(JField("s", i.state.toString),
+                                     JField("c", category))))))),
+        JField("edges", JObject(List(JField(i.id.toString, JArray(
+          edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
+      ))
+    }
+    else { JObject(List()) }
   }
 
   def extract(v: Vertex[_, _]): JObject = v match {
     case i: Inspectable[Id, _] => {
-      if (all || ids.contains(i.id)) {
-        val edges = i.outgoingEdges.values.filter { 
-          v => all || ids.contains(v.targetId)
-        }
-        JObject(List(
-          JField("nodes", JObject(List(JField(i.id.toString, i.state.toString)))),
-          JField("edges", JObject(List(JField(i.id.toString, JArray(
-            edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
-        ))
-      }
-      else { JObject(List()) }
+      scanIds(vicinityNodeIds, "v", i) merge scanIds(nodeIds, "n", i) 
     }
     case other => JObject(List())
   }
@@ -40,7 +41,7 @@ class GraphAggregator[Id](ids: List[Id] = List[Id]())
   }
 }
 
-class TopDegreeAggregator[Id](maxNodes: Int = 3)
+class TopDegreeAggregator[Id]()
       extends AggregationOperation[Map[Int,List[Id]]] {
 
   def extract(v: Vertex[_, _]): Map[Int,List[Id]] = v match {
@@ -55,6 +56,34 @@ class TopDegreeAggregator[Id](maxNodes: Int = 3)
     val result = degrees.foldLeft(Map[Int,List[Id]]()) { (acc, m) => 
       val merged = m.foldLeft(Map[Int,List[Id]]()) { (accL, l) =>
         accL |+| Map[Int,List[Id]](l._1 -> l._2)
+      }
+      acc |+| merged
+    }
+    result
+  }
+}
+
+class TopStateAggregator[Id]()
+      extends AggregationOperation[Map[Double,List[Id]]] {
+
+  def extract(v: Vertex[_, _]): Map[Double,List[Id]] = v match {
+    case i: Inspectable[Id, _] => 
+      val state: Option[Double] = try { Some(i.state.toString.toDouble) } 
+                                  catch { case _: Throwable => None }
+      state match {
+        case Some(number) => 
+          collection.immutable.TreeMap[Double,List[Id]](
+            number -> List[Id](i.id)
+          )(implicitly[Ordering[Double]].reverse)
+        case otherwise => Map[Double,List[Id]]()
+      }
+    case otherwise => Map[Double,List[Id]]()
+  }
+
+  def reduce(degrees: Stream[Map[Double,List[Id]]]): Map[Double,List[Id]] = {
+    val result = degrees.foldLeft(Map[Double,List[Id]]()) { (acc, m) => 
+      val merged = m.foldLeft(Map[Double,List[Id]]()) { (accL, l) =>
+        accL |+| Map[Double,List[Id]](l._1 -> l._2)
       }
       acc |+| merged
     }

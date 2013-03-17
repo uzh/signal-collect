@@ -106,16 +106,17 @@ $(document).ready(function() {
     showMsg(type, msg)
     setTimeout(createWebSocket, 10000)
   }
+  scc.resetOrders = function(provider) {
+    clearTimeout(scc.orders[provider])
+    delete scc.orders[provider];
+  }
   scc.order = function(msg, delay) {
     if (typeof(msg) == "string") {
       msg = JSON.parse(msg)
     }
     id = msg.provider
     if (!delay) { var delay = 0; }
-    if (scc.orders[id]) {
-      clearTimeout(scc.orders[id])
-      delete scc.orders[id];
-    }
+    if (scc.orders[id]) { scc.resetOrders(id); }
     scc.orders[id] = setTimeout(function() {
       var j = JSON.stringify(msg)
       try { 

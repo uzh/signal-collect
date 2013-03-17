@@ -35,19 +35,15 @@
             <div class="contents">
               <form>
                 <h1><span>Search for vertex by ID</span></h1>
-                <input id="searchId" type="text" value="Search and hit Enter to execute">
-                <button id="searchById">Find</button><br/>
+                <input id="gs_searchId" type="text">
+                <button id="gs_searchById">Find</button><br/>
                 <h1><span>Show top vertices</span></h1>
                 <label>By Property:</label>
-                <select id="topCriterium">
+                <select id="gs_topCriterium">
                   <option>State (Numerical)</option>
-                  <option>Degree (In)</option>
-                  <option>Degree (Out)</option>
                   <option>Degree (Both)</option>
-                </select><br/>
-                <label>Number of vertices:</label>
-                <select id="topAmount"></select>
-                <button id="searchByTop">Find</button><br/>
+                </select>
+                <button id="gs_searchByTop">Find</button><br/>
               </form> 
             </div>
           </div>
@@ -56,26 +52,30 @@
             <div class="contents">
               <form>
                 <h1><span>Node styling</span></h1>
-                <label for="gd_nodeSize">Use as node size:</label>
+                <label for="gd_nodeSize">Node size:</label>
                 <select id="gd_nodeSize">
                   <option>Node state</option>
                   <option>Node degree</option>
                 </select><br/>
-                <label for="gd_nodeColor">Use as node color:</label>
+                <label for="gd_nodeColor">Node color:</label>
                 <select id="gd_nodeColor">
                   <option>Node state</option>
                   <option>Node id</option>
                   <option>Node degree</option>
+                  <option>Is Vicinity</option>
                 </select><br/>
-                <label for="gd_nodeBorder">Use as node strok color:</label>
+                <label for="gd_nodeBorder">Node outline color:</label>
                 <select id="gd_nodeBorder">
                   <option>Node state</option>
                   <option>Node id</option>
                   <option>Node degree</option>
+                  <option>Is Vicinity</option>
                 </select><br/>
-                <h1><span>Graph Complexity</span></h1>
-                <label for="gc_nodeDepth">Maximum depth to draw</label>
-                <select id="gc_drawDepth"></select>
+                <h1><span>Performance &amp; Complexity</span></h1>
+                <label for="gc_vicinityRadius">Node vicinity radius:</label>
+                <select id="gc_vicinityRadius"></select><br/>
+                <label for="gc_maxVertices">Target node count (exkl. vicinity):</label>
+                <select id="gc_maxVertices"></select>
               </form> 
             </div>
           </div>
@@ -121,8 +121,8 @@
     </div>
     <div id="content">
       <div class="view" id="graph">
-        <div id="graph_notready_container">
-          <div id="graph_notready">The Computation is not ready, yet...</div>
+        <div id="graph_background_container">
+          <div id="graph_background">Loading...</div>
         </div>
         <div id="graph_canvas"></div>
       </div>
