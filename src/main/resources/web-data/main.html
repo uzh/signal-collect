@@ -96,14 +96,32 @@
             </div>
           </div>
           <div id="cResourceProblems" class="panel_section">
-            <div class="title expanded">Problems</div>
+            <div class="title expanded">Questions</div>
             <div class="contents">
+
               <input type="radio" name="rs" id="rs_nostart"/>
               <label for="rs_nostart">Computation does not seem to start</label><br/>
+
               <input type="radio" name="rs" id="rs_noconvergence"/>
               <label for="rs_noconvergence">Computation does not converge</label><br/>
+
               <input type="radio" name="rs" id="rs_crash"/>
               <label for="rs_crash">Computation crashes</label><br/>
+
+              <input type="radio" name="rs" id="rs_slow"/>
+              <label for="rs_slow">Computation takes very long</label><br/>
+
+              <input type="radio" name="rs" id="rs_maxgraphsize"/>
+              <label for="rs_maxgraphsize">Maximum graph size the infrastructure can handle</label><br/>
+
+              <input type="radio" name="rs" id="rs_unexpectedresults"/>
+              <label for="rs_unexpectedresults">Computation yields unexpected results</label><br/>
+
+              <input type="radio" name="rs" id="rs_phase"/>
+              <label for="rs_phase">Computation phases</label><br/>
+
+              <input type="radio" name="rs" id="rs_estimation"/>
+              <label for="rs_estimation">Graph loading speed and estimated completion</label><br/>
             </div>
           </div>
         </div>
@@ -143,30 +161,23 @@
           </div>
         
           <!-- content resource section overview -->
-          <div id="crs_logs">
-            <h1>Logs</h1>
-            <div class="scroll">
-              <ul>
-                <li>Log</li>
-                <li>Log</li>
-                <li class="error">Error</li>
-                <li class="error">Error</li>
-                <li class="error">Error</li>
-                <li>Log</li>
-                <li>Log</li>
-                <li>Log</li>
-                <li>Log</li>
-                <li>Log</li>
-                <li class="error">Error</li>
-                <li>Log</li>
-                <li class="error">Error</li>
-                <li class="error">Error</li>
-                <li class="error">Error</li>
-                <li class="error">Error</li>
-                <li>Log</li>
-                <li>Log</li>
-              </ul>
-            </div>
+          <div id="crs_logs"><h1>Logs</h1></div>
+
+          <div id="crs_nostart"><h1>Computation does not seem to start</h1></div>
+          <div id="crs_noconvergence">
+            <h1>Computation does not converge</h1>
+            <ul>
+              <li><a href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gc_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
+            </ul>
+          </div>
+          <div id="crs_crash"><h1>Computation crashes</h1></div>
+          <div id="crs_slow"><h1>Computation takes very long</h1></div>
+          <div id="crs_unexpectedresults">
+            <h1>Computation yields unexpected results</h1>
+            <ul>
+              <li>Set Breakpoints</li>
+              <li><a href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gc_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
+            </ul>
           </div>
         
           <!-- content resource section overview -->
@@ -176,6 +187,40 @@
                <strong>average</strong>,
                <strong style="color:red;">max</strong> values over all worker nodes.</p> 
             <div class="chartContainer"></div>
+          </div>
+          
+          <div id="resourceBoxes">
+          
+            <div id="signalCollectTitle" style="float:none; clear:left;"><h2>Signal/Collect</h2></div>
+            <div id="infrastructureTitle"><h2>Infrastructure</h2></div>
+        
+            <div id="statBox">Box: Stats</div>
+        
+            <div id="logBox">
+              <div class="scroll">
+                <ul>
+                  <li>Log</li>
+                  <li>Log</li>
+                  <li class="error">Error</li>
+                  <li class="error">Error</li>
+                  <li class="error">Error</li>
+                  <li>Log</li>
+                  <li>Log</li>
+                  <li>Log</li>
+                  <li>Log</li>
+                  <li>Log</li>
+                  <li class="error">Error</li>
+                  <li>Log</li>
+                  <li class="error">Error</li>
+                  <li class="error">Error</li>
+                  <li class="error">Error</li>
+                  <li class="error">Error</li>
+                  <li>Log</li>
+                  <li>Log</li>
+                </ul>
+              </div>
+            </div>
+          
           </div>
           
         </div>

@@ -8,6 +8,64 @@ scc.defaults.resources = {"layout":{
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
+  // configure which content box to show in which section
+  var resourceBoxes = {
+      "statistics": [ "statBox" ],
+      "logs"      : [ "logBox" ],
+      "detailed"  : [  ], // all charts will be added automatically
+      
+      "nostart"   : [ 
+        "signalCollectTitle",
+        "heartbeatMessagesReceivedChart",
+        "messagesSentChart",
+        "messagesReceivedChart",
+        "signalMessagesReceivedChart",
+        "signalOperationsExecuted",
+        "collectOperationsExecuted",
+        "toCollectSizeChart",
+        "toSignalSizeChart",
+        "infrastructureTitle",
+        "jmx_system_loadChart",
+        "jmx_process_timeChart",
+        "jmx_process_loadChart",
+        "jmx_swap_totalChart",
+        "jmx_swap_freeChart",
+        "jmx_mem_totalChart",
+        "jmx_mem_freeChart",
+        "jmx_commited_vmsChart",
+        "runtime_mem_freeChart",
+        "runtime_mem_maxChart",
+        "runtime_mem_totalChart"
+      ],
+      "noconvergence" : [
+        "signalCollectTitle",
+        "messagesSentChart",
+        "messagesReceivedChart",
+      ], 
+      "crash"     : [ "jmx_mem_freeChart", "logBox" ],
+      "slow" : [
+        "infrastructureTitle",
+        "jmx_system_loadChart",
+        "jmx_process_timeChart",
+        "jmx_process_loadChart",
+        "jmx_swap_totalChart",
+        "jmx_swap_freeChart",
+        "jmx_mem_totalChart",
+        "jmx_mem_freeChart",
+        "jmx_commited_vmsChart",
+        "runtime_mem_freeChart",
+        "runtime_mem_maxChart",
+        "runtime_mem_totalChart"
+      ],
+  };
+  
+  // fill detailed view with all the charts we have
+  setTimeout(function() {
+    $("#resourceBoxes div[id$='Chart']").each(function() {
+      resourceBoxes.detailed.push($(this).attr("id"));
+    });
+  }, 500);
+  
   /* panel */
   $("#resources_panel_container label").click(function() {
     console.log("clicked");
@@ -18,23 +76,38 @@ scc.modules.resources = function() {
     console.log("Section: " + s);
     if (s == "") { return; }
     // hide all sections
-    $("#resources .structured > div").hide();
+    $("#resources .structured > div[id^=\"crs\"]").hide();
     // show the appropriate section
     $("#crs_" + s).show();
+    show_boxes(s);
     // show change in the panel
     $("#resources_panel_container input").prop("checked", false);
     $("#resources_panel_container input#rs_" + s + "").prop("checked", true);
+    // change body class
+    $("body").attr("class", s);
     // set section to the hash tag
     var mod = {"resources": {"section": s }}
     scc.settings.set(mod);
+  }
+  function show_boxes(s) {
+    var boxes = "#resourceBoxes";
+    // first, hide all of them
+    $(boxes + " > div").attr("class", "hidden");
+    if (resourceBoxes[s] == null) { return; }
+    // then only show the ones that are needed
+    resourceBoxes[s].forEach(function(v) {
+      var resourceBox = boxes + " > #" + v;
+      $(resourceBox).removeClass("hidden");
+      $(resourceBox).appendTo(boxes); // change order
+    });
   }
   show_section(scc.settings.get().resources.section);
   
   
   
   // Intervals
-  var interval = 1000;
-  var intervalStatistics = 1000;//*10; // update statistics less often
+  var interval = 3000;
+  var intervalStatistics = 5000;//*10; // update statistics less often
   
   // statistics
   $("#resStatInterval").html(intervalStatistics / 1000);
@@ -139,7 +212,10 @@ scc.modules.resources = function() {
                .scaleExtent([0.005, 5]) // allow zooming in/out
                .on("zoom", draw);
 
-      svg = d3.select(this.container).append("div").append("svg")
+      svg = d3.select(this.container).append("div")
+          .attr("id", this.config.jsonName + "Chart")
+          .attr("class", "hidden")
+        .append("svg")
           .attr("width", this.config.width + this.config.margin.left + this.config.margin.right)
           .attr("height", this.config.height + this.config.margin.top + this.config.margin.bottom)
         .append("g")
@@ -380,6 +456,7 @@ scc.modules.resources = function() {
   var ChartsCreate = function(config) {
     var lineChart = new LineChart();
     lineChart.container = "#crs_detailed .chartContainer";
+    lineChart.container = "#resourceBoxes";
     lineChart.setup(config);
     lineCharts.push(lineChart);    
   }
@@ -389,6 +466,12 @@ scc.modules.resources = function() {
       ChartsCreate(config);
     }
   });
+  
+  // update boxes (needed to show the charts on reload)
+  setTimeout(function() {
+    show_boxes(scc.settings.get().resources.section);
+  }, 600);
+  
   
  
   
