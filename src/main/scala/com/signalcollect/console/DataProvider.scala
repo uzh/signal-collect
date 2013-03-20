@@ -1,6 +1,7 @@
 package com.signalcollect.console
 
 import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
@@ -9,6 +10,30 @@ import scala.reflect.runtime.{universe => ru}
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import com.signalcollect.interfaces.WorkerStatus
+
+object Toolkit {
+  def unpackObject[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
+    val methods = ru.typeOf[T].members.filter { m =>
+      m.isMethod && m.asMethod.isStable 
+    }
+    JObject(methods.map { m =>
+      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
+      val values = obj.toList.map { o =>
+        val im = mirror.reflect(o)
+        im.reflectField(m.asTerm).get match {
+          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
+          case x: Long => JInt(x)
+          case x: Int => JInt(x)
+          case x: String => JString(x)
+          case x: Double if x.isNaN => JDouble(0)
+          case x: Double => JDouble(0)
+          case other => JString(other.toString)
+        }
+      }
+      JField(m.name.toString, values)
+    }.toList)
+  }
+}
 
 trait DataProvider {
   def fetch(): JObject
@@ -44,6 +69,19 @@ class StatusDataProvider[Id](socket: WebSocketConsoleServer[Id])
       case None => false
       case otherwise => true
     }))
+  }
+}
+
+class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
+                              coordinator: Coordinator[Id, _],
+                              msg: JValue) extends DataProvider {
+  def fetch(): JObject = {
+    val executionConfiguration = socket.executionConfiguration match {
+      case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(Array(e))
+      case otherwise => JObject(List(JField("unknown", "unknown")))
+    }
+    ("provider" -> "executionConfiguration") ~ 
+    ("executionConfiguration" -> executionConfiguration)
   }
 }
 
@@ -193,39 +231,19 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
 class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
       extends DataProvider {
 
-  def unpackObjectList[T: ClassTag: ru.TypeTag](obj: Array[T]): List[JField] = {
-    val methods = ru.typeOf[T].members.filter { m =>
-      m.isMethod && m.asMethod.isStable 
-    }
-    methods.map { m =>
-      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
-      val values = obj.toList.map { o =>
-        val im = mirror.reflect(o)
-        im.reflectField(m.asTerm).get match {
-          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
-          case x: Long => JInt(x)
-          case x: Int => JInt(x)
-          case x: String => JString(x)
-          case x: Double if x.isNaN => JDouble(0)
-          case x: Double => JDouble(0)
-        }
-      }
-      JField(m.name.toString, values)
-    }.toList
-  }
 
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
     val ws: Array[WorkerStatus] = 
       (coordinator.getWorkerStatus)
-    val wstats = unpackObjectList(ws.map(_.workerStatistics))
-    val sstats = unpackObjectList(ws.map(_.systemInformation))
+    val wstats = Toolkit.unpackObject(ws.map(_.workerStatistics))
+    val sstats = Toolkit.unpackObject(ws.map(_.systemInformation))
 
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
-    ("workerStatistics" -> JObject(wstats) ~ JObject(sstats))
+    ("workerStatistics" -> wstats ~ sstats)
   }
 }
 

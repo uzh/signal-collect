@@ -28,6 +28,7 @@ import java.io.FileInputStream
 import scala.language.postfixOps
 
 import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
@@ -111,8 +112,12 @@ class ConsoleServer[Id](userHttpPort: Int) {
     sockets.setCoordinator(coordinatorActor)
   }
 
-  def setExecution(e: Execution) = {
+  def setInteractor(e: Execution) = {
     sockets.setExecution(e)
+  }
+
+  def setExecutionConfiguration(e: ExecutionConfiguration) = {
+    sockets.setExecutionConfiguration(e)
   }
 
   def shutdown = {
@@ -180,6 +185,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
                              extends WebSocketServer(port) {
   var coordinator: Option[Coordinator[Id,_]] = None
   var execution: Option[Execution] = None
+  var executionConfiguration: Option[ExecutionConfiguration] = None
   implicit val formats = DefaultFormats
 
   def setCoordinator(c: ActorRef) {
@@ -189,6 +195,10 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
 
   def setExecution(e: Execution) {
     execution = Some(e)
+  }
+
+  def setExecutionConfiguration(e: ExecutionConfiguration) {
+    executionConfiguration = Some(e)
   }
 
   def onError(socket: WebSocket, ex: Exception) {
@@ -201,6 +211,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
+        case "configuration" => new ConfigurationDataProvider(this, c, msg)
         case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case "status" => new StatusDataProvider(this)

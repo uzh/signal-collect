@@ -188,6 +188,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+    if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
     stats.graphIdleWaitingTime = measureTime(awaitIdle _)
@@ -264,7 +265,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           stepsLimit: Option[Long],
           globalTerminationCondition: Option[GlobalTerminationCondition[_]]
         ) extends Execution {
-    if (console != null) { console.setExecution(this) }
+    if (console != null) { console.setInteractor(this) }
     graph.snapshot
     var converged = false
     var globalTermination = false
