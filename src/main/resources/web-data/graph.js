@@ -14,7 +14,7 @@ scc.defaults.graph = {"layout": {
 
 scc.modules.graph = function() {
   this.requires = ["graph"]
-  var s, svg, width, height, force;
+  var s, svg, force;
   var color = d3.scale.category20();
   var colorCategories = d3.scale.ordinal()
     .domain(["n", "v"])
@@ -107,18 +107,15 @@ scc.modules.graph = function() {
   this.onopen = function() {
     $("#graph_background").text("Loading...").fadeIn();
 
-    width = $("#content").width()
-    height = $("#content").height()
-
     svg = d3.select("#graph_canvas").append("svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", "100%")
+        .attr("height", "100%")
         .call(d3.behavior.zoom().on("zoom", redraw))
         .append('svg:g')
         .append('svg:g');
 
     force = d3.layout.force()
-        .size([width, height])
+        .size([$("#content").width(), $("#content").height()])
         .nodes(nodes)
         .links(links)
         .linkDistance(30)
