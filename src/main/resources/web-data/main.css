@@ -538,11 +538,23 @@ div.tooltip {
 
 .chartContainer > div { float:left; }
 
-#crs_statistics ul      { padding:0; margin:0; }
-#crs_statistics li      { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px;
-                          display:block; width:400px; height:20px; }
-#crs_statistics li:nth-child(odd)  { background:#ddd; }
-#crs_statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative; top:-20px; text-align:right }
+
+
+/* resource box styling */
+div#resourceBoxes > div:not([id$='Title']) { display:inline; overflow:auto; }
+body.crash div#resourceBoxes > div#logBox,
+body.nostart div#resourceBoxes > div#logBox
+                      { max-width:1500px; min-width:1000px; max-height:500px; overflow:auto; display:block; float:left; }
+
+body.statistics div#resourceBoxes div[id$=StatBox] { float:left; margin-right:20px; }
+
+ul.statistics         { padding:0; margin:0; }
+ul.statistics li      { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px;
+                        display:block; width:400px; height:20px; }
+ul.statistics li:nth-child(odd) 
+                      { background:#ddd; }
+ul.statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative;
+                        top:-20px; text-align:right }
 
 #logBox ul { padding:0; }
 #logBox li { list-style:none; padding:5px; }
@@ -551,7 +563,3 @@ div.tooltip {
 #logBox li:nth-child(odd).error { background:#FAA49B; }
 
 
-
-/* resource section styling */
-div#resourceBoxes > div:not([id$='Title']) { display:inline; }
-body.crash div#resourceBoxes > div#logBox { max-width:800px; max-height:500px; overflow:auto; display:block; }

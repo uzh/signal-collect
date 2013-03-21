@@ -140,7 +140,10 @@ $(document).ready(function() {
     case "/graph": 
       var module = window.location.pathname.slice(1);
       scc.settings.set({"main": {"view": module}});
-      enableModules([module, "controls"]); 
+      enableModules([module, "controls"]);
+      if (module == "resources") {
+        enableModules(["configuration"]);
+      }
       layout([module]);
       break;
     default:

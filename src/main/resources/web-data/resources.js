@@ -3,19 +3,47 @@ scc.defaults.resources = {"layout":{
                             "cResourceProblems": "show"
                           },
                           "section": "statistics"
-                         }
+                         };
+
+scc.modules.configuration = function() {
+  this.requires = ["executionConfiguration"];
+  
+  this.onopen = function () {
+    scc.order({"provider": "configuration"});
+  }
+    
+  this.onerror = function(e) { }
+  this.notready = function() { }
+
+  this.onclose = function() { }
+  
+  this.onmessage = function(msg) {
+    $.each(msg.executionConfiguration, function(k,v) {
+      if (v instanceof Array) {
+        v = v.join(",");
+      }
+      $("#resStat" + k).html(v);
+    });
+    
+  }
+}
 
 scc.modules.resources = function() {
   this.requires = ["resources"]
 
   // configure which content box to show in which section
   var resourceBoxes = {
-      "statistics": [ "statBox" ],
+      "statistics": [
+        "computationStatBox",
+        "infrastructureStatBox",
+        "estimationStatBox"
+      ],
       "logs"      : [ "logBox" ],
       "detailed"  : [  ], // all charts will be added automatically
       
       "nostart"   : [ 
         "signalCollectTitle",
+        "logBox",
         "heartbeatMessagesReceivedChart",
         "messagesSentChart",
         "messagesReceivedChart",
@@ -107,7 +135,7 @@ scc.modules.resources = function() {
   
   // Intervals
   var interval = 3000;
-  var intervalStatistics = 5000;//*10; // update statistics less often
+  var intervalStatistics = 2*interval; // update statistics less often
   
   // statistics
   $("#resStatInterval").html(intervalStatistics / 1000);
