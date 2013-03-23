@@ -182,7 +182,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
-    stats.graphIdleWaitingTime = measureTime(awaitIdle _)
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
     val jvmCpuStartTime = getJVMCpuTime
