@@ -36,7 +36,7 @@ import com.signalcollect.configuration.ExecutionMode._
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientLoader extends App {
-  val g = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(50, false)).build
+  val g = new GraphBuilder[Int, Float].withMessageBusFactory(new BulkAkkaMessageBusFactory(50, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -57,7 +57,7 @@ object EfficientLoader extends App {
   println(stats)
   g.shutdown
 
-  def loadSplit(splitIndex: Int)(ge: GraphEditor[Any, Any]) {
+  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Float]) {
     val in = splits(splitIndex)
     var vertexId = CompactIntSet.readUnsignedVarInt(in)
     while (vertexId >= 0) {
