@@ -22,6 +22,8 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.logging.DefaultLogger
+import com.signalcollect.configuration.LoggingLevel
 
 /**
  *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
@@ -50,7 +52,10 @@ class GameOfLifeCell(id: Any, initialState: Int)
  * simulation on a random grid and executes it
  */
 object GameOfLife extends App {
-  val graph = GraphBuilder.withConsole(true, 8080).build
+  val graph = GraphBuilder.withConsole(true, 8090)
+                          //.withLogger(DefaultLogger.log)
+                          //.withLoggingLevel(LoggingLevel.Debug)
+                          .build
 
   //Dimensions of the grid
   val columns = 10
