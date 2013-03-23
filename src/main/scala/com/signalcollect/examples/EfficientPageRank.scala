@@ -24,6 +24,7 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import com.signalcollect.configuration.ExecutionMode._
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -48,7 +49,7 @@ object EfficientLoader extends App {
   g.awaitIdle
   println("done.")
   print("Running computation ...")
-  val stats = g.execute
+  val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous))
   println("done.")
   println(stats)
   g.shutdown
