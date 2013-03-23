@@ -29,8 +29,11 @@ import com.signalcollect.configuration.ExecutionMode._
 /**
  * Use GraphSplitter to download the graph and generate the splits.
  * 
- * Try running with JVM parameters:
- * -Xmx2000m -Xms2000m -XX:+UseCompressedOops -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:+UseNUMA -XX:+DoEscapeAnalysis -XX:MaxInlineSize=1024
+ * Run with JVM parameters:
+ * -Xmx2000m -Xms2000m
+ * 
+ * Computation ran in as little as 1276 milliseconds (best run) on a notebook
+ * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientLoader extends App {
   val g = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(50, false)).build
