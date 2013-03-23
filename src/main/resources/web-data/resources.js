@@ -318,11 +318,12 @@ scc.modules.resources = function() {
      */
     Array.getMinMax = function(array) {
       var min = Infinity, max = 0;
-      array.forEach(function(v) {
-        if (v < min) { min = v; }
-        if (v > max) { max = v; }
+      var minId = 0, maxId = 0;
+      array.forEach(function(v, k) {
+        if (v < min) { min = v; minId = k; }
+        if (v > max) { max = v; maxId = k; }
       });
-      return { "min": min, "max": max };
+      return { "min": { "v":min, "id":minId }, "max": { "v":max, "id":maxId } };
     }
     
     /**
@@ -387,6 +388,7 @@ scc.modules.resources = function() {
      */
     this.update = function(newData) {
       var currentDate = new Date(newData.timestamp);
+      var workerIds   = newData.workerStatistics.workerId;
       newData = this.config.dataCallback(newData);
       
       var shiftRight         = false;
@@ -402,9 +404,9 @@ scc.modules.resources = function() {
       }
 
       var newMinMax = Array.getMinMax(newData);
-      data[0].push({ date : currentDate, value : Array.avg(newData), id : "Average" });
-      data[1].push({ date : currentDate, value : newMinMax.min,      id : "min" });
-      data[2].push({ date : currentDate, value : newMinMax.max,      id : "max" });
+      data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average" });
+      data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id] });
+      data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id] });
       
       path.attr("d", line).attr("transform", null);
       
@@ -446,8 +448,8 @@ scc.modules.resources = function() {
                     });
         
         // update x domains
-        if (newMinMax.max > maxYValue) {
-          maxYValue = newMinMax.max;
+        if (newMinMax.max.v > maxYValue) {
+          maxYValue = newMinMax.max.v;
         }
         if (maxYValue * 1.05 > y.domain()[1]) {
           y.domain([0, maxYValue * 1.1]);

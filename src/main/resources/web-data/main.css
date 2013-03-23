@@ -522,7 +522,8 @@ rect { fill:white; cursor:move; }
 
 circle.dot { fill:transparent; }
 
-div.tooltip {   
+div.tooltip {
+  margin-left:10px;
   position: absolute;           
   text-align: left;           
   width: 120px;                  
