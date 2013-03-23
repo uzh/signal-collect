@@ -77,6 +77,7 @@ object EfficientLoader extends App {
 
 /**
  * A version of PageRank that performs faster and uses less memory than the standard version.
+ * This version signals only the deltas and collects upon signal delivery.
  */
 class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
   var state = 0.15f
@@ -86,39 +87,35 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
     state = s
   }
   protected var targetIdArray: Array[Byte] = null
-  override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
-    throw new UnsupportedOperationException
-  }
   def setTargetIds(numberOfEdges: Int, compactIntSet: Array[Byte]) = {
     outEdges = numberOfEdges
     targetIdArray = compactIntSet
   }
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
     val s = signal.asInstanceOf[Float]
+    // Do summation and multiplication with damping factor with double precision.
     val newState = (state + 0.85 * s).toFloat
+    // We check that the damped signal was smaller than the original signal.
+    // If not, then we ignore the signal, because adding it could prevent convergence.
     if ((newState - state) < s) {
       state = newState
     }
     true
   }
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
-    val tIds = targetIdArray
-    val tIdLength = outEdges
-    if (tIds.length != 0) {
-      val signal = (state - lastSignalState) / tIdLength
+    if (outEdges != 0) {
+      val signal = (state - lastSignalState) / outEdges
       CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(signal, _, None))
     }
     lastSignalState = state
   }
-  override def scoreSignal: Double = {
-    val score = state - lastSignalState
-    if (score > 0 && edgeCount > 0) score else 0
-  }
-  def scoreCollect = 0 // because signals are collected upon delivery
+  override def scoreSignal: Double = state - lastSignalState
+  def scoreCollect = 0 // Because signals are collected upon delivery.
   def edgeCount = outEdges
   def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {}
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
   def beforeRemoval(graphEditor: GraphEditor[Any, Any]) = {}
+  override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException("Use setTargetIds(...)")
   override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
   override def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int = throw new UnsupportedOperationException
 }
