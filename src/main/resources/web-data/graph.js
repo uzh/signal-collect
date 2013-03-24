@@ -50,12 +50,15 @@ scc.modules.graph = function() {
     "gd_nodeColor": { "Node state": function(d) { return color(d.state); },
                       "Node id": function(d) { return color(d.id); },
                       "Is Vicinity": function(d) { return colorCategories(d.category); },
+                      "All equal": function(d) { return "#17becf"; },
                       "Node degree": function (d) { return color(d.weight); }},
     "gd_nodeBorder": { "Node state": function(d) { return color(d.state); },
                        "Node id": function(d) { return color(d.id); },
+                       "All equal": function(d) { return "#9edae5"; },
                        "Is Vicinity": function(d) { return colorCategories(d.category); },
                        "Node degree": function (d) { return color(d.weight); }},
     "gd_nodeSize": { "Node state": function(d) { return normalize(d.state); },
+                     "All equal": function(d) { return 5; },
                      "Node degree": function(d) { return scale.copy().domain([1,20])(d.weight); }}
   }
 
