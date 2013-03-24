@@ -283,6 +283,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       lock.synchronized {
         steps = 1
         lock.notify
+        try { lock.wait } catch { 
+          case e: InterruptedException =>
+        }
       }
     }
     def continue() {
@@ -325,7 +328,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
             }
           }
           // collect
+          workerApi.signalStep
           converged = workerApi.collectStep
+          lock.notifyAll
           stats.collectSteps += 1
           if (steps > 0) { steps -= 1 }
           if (shouldCheckGlobalCondition) {

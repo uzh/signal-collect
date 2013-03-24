@@ -9,11 +9,13 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
                         "gc_vicinityRadius": "1",
-                        "gc_maxVertices": "20"
+                        "gc_maxVertices": "20",
+                        "gc_refreshRate": "5"
                       }}
 
 scc.modules.graph = function() {
-  this.requires = ["graph"]
+  this.requires = ["graph"];
+  this.autoRefresh = false;
   var s, svg, force;
   var color = d3.scale.category20();
   var colorCategories = d3.scale.ordinal()
@@ -27,7 +29,7 @@ scc.modules.graph = function() {
   var node;
   var link;
 
-  var order = {"provider": "graph"}
+  var orderTemplate = {"provider": "graph"}
 
   var completeOrder = function(o) { 
     o["vicinityRadius"] = parseInt($("#gc_vicinityRadius").val());
@@ -73,12 +75,21 @@ scc.modules.graph = function() {
     node.transition().attr("r", s);
   }
 
+  this.order = function() {
+    scc.order(completeOrder(orderTemplate))
+  }
   this.layout = function() {
     for (var i = 20; i<=200; i+=20) {
       $("#gc_maxVertices").append('<option value="' + i + '">' + i + '</option>')
     }
     for (var i = 0; i<=4; i++) {
       $("#gc_vicinityRadius").append('<option value="' + i + '">' + i + '</option>')
+    }
+    for (var i = 1; i<=10; i+=1) {
+      $("#gc_refreshRate").append('<option value="' + i + '">' + i + '</option>')
+    }
+    for (var i = 15; i<=60; i+=5) {
+      $("#gc_refreshRate").append('<option value="' + i + '">' + i + '</option>')
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('input[type="text"]').keypress(function(e) {
@@ -152,7 +163,7 @@ scc.modules.graph = function() {
                + " scale(" + d3.event.scale + ")");
     }
 
-    scc.order(completeOrder(order))
+    scc.consumers.graph.order()
   }
    
   this.onmessage = function(j) {
@@ -216,16 +227,18 @@ scc.modules.graph = function() {
     node.enter().append("circle")
         .attr("class", "node")
         .call(force.drag)
+    node.exit().remove();
+    node.transition(100)
         .style("fill", nodeColor)
         .style("stroke", nodeBorder)
         .attr("r", nodeSize)
-    node.exit().remove();
 
     node.append("title")
         .text(function(d) { return d.id + ": " + d.state; });
 
-
-    scc.order(completeOrder(order), 1000)
+    if (scc.consumers.graph.autoRefresh) {
+      scc.order(completeOrder(orderTemplate), parseInt($("#gc_refreshRate").val())*1000);
+    }
 
   }
 
@@ -262,10 +275,10 @@ scc.modules.graph = function() {
       $("#gs_searchId").val("Search and hit Enter to execute");
     }
     else {
-      order = {"provider": "graph", 
+      orderTemplate = {"provider": "graph", 
                "query": "id", 
                "id": id}
-      scc.order(completeOrder(order))
+      scc.order(completeOrder(orderTemplate))
       $("#gs_searchById").addClass("active");
     }
     return false;
@@ -276,10 +289,10 @@ scc.modules.graph = function() {
   var searchTop = function (e) {
     e.preventDefault();
     scc.consumers.graph.reset()
-    order = {"provider": "graph", 
+    orderTemplate = {"provider": "graph", 
              "query": "top", 
              "topCriterium": $("#gs_topCriterium").val()}
-    scc.order(completeOrder(order))
+    scc.order(completeOrder(orderTemplate))
     $("button").removeClass("active");
     $("#gs_searchByTop").addClass("active");
     return false;
@@ -326,14 +339,19 @@ scc.modules.graph = function() {
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gc_vicinityRadius": property.val() }}});
     scc.consumers.graph.reset();
-    scc.order(completeOrder(order)); 
+    scc.consumers.graph.order()
   });
   $("#gc_maxVertices").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gc_maxVertices": property.val() }}});
     scc.consumers.graph.reset();
-    scc.order(completeOrder(order)); 
+    scc.consumers.graph.order()
   });
+  $("#gc_refreshRate").change(function (e) { 
+    var property = $(this);
+    scc.settings.set({"graph": {"options": {"gc_refreshRate": property.val() }}});
+  });
+
 
     
 }
