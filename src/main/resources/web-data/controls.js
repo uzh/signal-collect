@@ -19,6 +19,7 @@ scc.modules.controls = function() {
 
   this.onmessage = function(j) {
     var newState = j.state
+    $('#resStatStatus').text(newState);
     switch (newState) {
       case "stepping":
         $("#controls").find(".icon").removeClass("blocked");
@@ -60,6 +61,7 @@ scc.modules.controls = function() {
     $("#controls").find(".icon").addClass("blocked");
     $("#controls").find(".icon").removeClass("hidden");
     $("#controls").find("#pause").addClass("hidden");
+    $('#resStatStatus').text('ended');
   }
   
 }

@@ -199,9 +199,8 @@
               <ul class="statistics">
                 <li>Start Time: <span id="resStatStartTime">?</span></li>
                 <li>Running for: <span id="resStatRunTime">?</span></li>
-                <li>Status: <span id="resStatStatus">?</span></li>
+                <li>Status: <span id="resStatStatus">waiting</span></li>
                 <li>Number of Workers: <span id="resStatWorkers">?</span></li>
-                <li>Scheduler/Message Bus: <span id="resStatScheduler">?</span></li>
                 <li>Execution Mode: <span id="resStatexecutionMode">?</span></li>
                 <li>Global Termination Condition: <span id="resStatglobalTerminationCondition">?</span></li>
                 <li>Steps Limit: <span id="resStatstepsLimit">?</span></li>
@@ -213,10 +212,12 @@
 
             <div id="infrastructureStatBox">
               <h3>Infrastructure</h3>
-              <ul class="statistics">
-                <li>JVM: <span id="resStatJvm">?</span></li>
-                <li>JVM Parameters: <span id="resStatJvmParam">?</span></li>
-              </ul>
+              <ul class="statistics free"></ul>
+            </div>
+
+            <div id="graphStatBox">
+              <h3>Graph</h3>
+              <ul class="statistics free"></ul>
             </div>
 
             <div id="estimationStatBox">

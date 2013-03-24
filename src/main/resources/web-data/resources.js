@@ -6,7 +6,7 @@ scc.defaults.resources = {"layout":{
                          };
 
 scc.modules.configuration = function() {
-  this.requires = ["executionConfiguration"];
+  this.requires = ["configuration"];
   
   this.onopen = function () {
     scc.order({"provider": "configuration"});
@@ -24,7 +24,16 @@ scc.modules.configuration = function() {
       }
       $("#resStat" + k).html(v);
     });
-    
+    var ul = $("#infrastructureStatBox ul");
+    $.each(msg.systemProperties, function(index) {
+      $.each(msg.systemProperties[index], function(k, v) {
+        ul.append('<li>' + k + ': ' + v + '</li>');
+      });
+    });
+    ul = $("#graphStatBox ul");
+    $.each(msg.graphConfiguration, function(k, v) {
+      ul.append('<li>' + k + ': ' + v[0] + '</li>');
+    });
   }
 }
 
@@ -34,8 +43,9 @@ scc.modules.resources = function() {
   // configure which content box to show in which section
   var resourceBoxes = {
       "statistics": [
-        "computationStatBox",
         "infrastructureStatBox",
+        "computationStatBox",
+        "graphStatBox",
         "estimationStatBox"
       ],
       "logs"      : [ "logBox" ],
