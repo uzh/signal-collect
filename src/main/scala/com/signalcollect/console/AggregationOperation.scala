@@ -6,7 +6,6 @@ import net.liftweb.json.JsonDSL._
 import com.signalcollect.TopKFinder
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
-import scalaz.Scalaz._
 
 class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[Id] = List[Id]())
       extends AggregationOperation[JObject] {
@@ -53,13 +52,7 @@ class TopDegreeAggregator[Id]()
   }
 
   def reduce(degrees: Stream[Map[Int,List[Id]]]): Map[Int,List[Id]] = {
-    val result = degrees.foldLeft(Map[Int,List[Id]]()) { (acc, m) => 
-      val merged = m.foldLeft(Map[Int,List[Id]]()) { (accL, l) =>
-        accL |+| Map[Int,List[Id]](l._1 -> l._2)
-      }
-      acc |+| merged
-    }
-    result
+    Toolkit.mergeMaps(degrees.toList)((v1, v2) => v1 ++ v2)
   }
 }
 
@@ -81,13 +74,7 @@ class TopStateAggregator[Id]()
   }
 
   def reduce(degrees: Stream[Map[Double,List[Id]]]): Map[Double,List[Id]] = {
-    val result = degrees.foldLeft(Map[Double,List[Id]]()) { (acc, m) => 
-      val merged = m.foldLeft(Map[Double,List[Id]]()) { (accL, l) =>
-        accL |+| Map[Double,List[Id]](l._1 -> l._2)
-      }
-      acc |+| merged
-    }
-    result
+    Toolkit.mergeMaps(degrees.toList)((v1, v2) => v1 ++ v2)
   }
 }
 

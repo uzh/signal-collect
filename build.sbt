@@ -35,7 +35,6 @@ libraryDependencies ++= Seq(
  "org.specs2" % "specs2_2.10" % "1.13"  % "test",
  "org.specs2" % "classycle" % "1.4.1" % "test",
  "org.mockito" % "mockito-all" % "1.9.0"  % "test",
- "org.scalaz" % "scalaz-core_2.10" % "6.0.4",
  "net.liftweb" % "lift-json_2.10" % "2.5-M4",
  "org.java_websocket" % "java_websocket" % "1.0.0-SNAPSHOT" % "compile" from "https://github.com/TooTallNate/Java-WebSocket/raw/master/dist/java_websocket.jar"
   )

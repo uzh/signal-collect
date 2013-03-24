@@ -26,6 +26,8 @@ import java.util.concurrent.Executors
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import scala.language.postfixOps
+import scala.reflect._
+import scala.reflect.runtime.{universe => ru}
 
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
@@ -238,5 +240,33 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
             socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
+}
+
+object Toolkit {
+  def unpackObject[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
+    val methods = ru.typeOf[T].members.filter { m =>
+      m.isMethod && m.asMethod.isStable 
+    }
+    JObject(methods.map { m =>
+      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
+      val values = obj.toList.map { o =>
+        val im = mirror.reflect(o)
+        im.reflectField(m.asTerm).get match {
+          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
+          case x: Long => JInt(x)
+          case x: Int => JInt(x)
+          case x: String => JString(x)
+          case x: Double if x.isNaN => JDouble(0)
+          case x: Double => JDouble(0)
+          case other => JString(other.toString)
+        }
+      }
+      JField(m.name.toString, values)
+    }.toList)
+  }
+  def mergeMaps[A, B](ms: List[Map[A, B]])(f: (B, B) => B): Map[A, B] =
+    (Map[A, B]() /: (for (m <- ms; kv <- m) yield kv)) { (a, kv) =>
+      a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
+  }
 }
 

@@ -7,35 +7,9 @@ import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
-import scala.reflect._
-import scala.reflect.runtime.{universe => ru}
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import com.signalcollect.interfaces.WorkerStatus
-
-object Toolkit {
-  def unpackObject[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
-    val methods = ru.typeOf[T].members.filter { m =>
-      m.isMethod && m.asMethod.isStable 
-    }
-    JObject(methods.map { m =>
-      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
-      val values = obj.toList.map { o =>
-        val im = mirror.reflect(o)
-        im.reflectField(m.asTerm).get match {
-          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
-          case x: Long => JInt(x)
-          case x: Int => JInt(x)
-          case x: String => JString(x)
-          case x: Double if x.isNaN => JDouble(0)
-          case x: Double => JDouble(0)
-          case other => JString(other.toString)
-        }
-      }
-      JField(m.name.toString, values)
-    }.toList)
-  }
-}
 
 trait DataProvider {
   def fetch(): JObject
