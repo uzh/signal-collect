@@ -32,11 +32,11 @@ import com.signalcollect.configuration.ExecutionMode._
  * Run with JVM parameters:
  * -Xmx2000m -Xms2000m
  *
- * Computation ran in as little as 1978 milliseconds (best run) on a notebook
+ * Computation ran in as little as 1276 milliseconds (best run) on a notebook
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
-object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Float].withMessageBusFactory(new BulkAkkaMessageBusFactory(512, false)).build
+object EfficientSsspLoader extends App {
+  val g = new GraphBuilder[Int, Int].withMessageBusFactory(new BulkAkkaMessageBusFactory(50, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -52,14 +52,15 @@ object EfficientPageRankLoader extends App {
   g.awaitIdle
   println("done.")
   print("Running computation ...")
-  val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous).withSignalThreshold(0.01))
+  val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous))
   println("done.")
   println(stats)
-  val top100 = g.aggregate(new TopKFinder[Float](100))
-  top100 foreach (println(_))
+  implicit val ord = Ordering[Int].reverse
+  val min1000 = g.aggregate(new TopKFinder[Int](1000))
+  min1000 foreach (println(_))
   g.shutdown
 
-  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Float]) {
+  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Int]) {
     val in = splits(splitIndex)
     var vertexId = CompactIntSet.readUnsignedVarInt(in)
     while (vertexId >= 0) {
@@ -69,7 +70,13 @@ object EfficientPageRankLoader extends App {
         val nextEdge = CompactIntSet.readUnsignedVarInt(in)
         edges += nextEdge
       }
-      val vertex = new EfficientPageRankVertex(vertexId)
+      val vertex = {
+        if (vertexId == 254913) { // Source vertex
+          new EfficientSsspVertex(vertexId, 0)
+        } else {
+          new EfficientSsspVertex(vertexId)
+        }
+      }
       vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
       ge.addVertex(vertex)
       vertexId = CompactIntSet.readUnsignedVarInt(in)
@@ -78,14 +85,13 @@ object EfficientPageRankLoader extends App {
 }
 
 /**
- * A version of PageRank that performs faster and uses less memory than the standard version.
- * This version signals only the deltas and collects upon signal delivery.
+ * A version of Sssp that performs faster and uses less memory than the standard version.
+ * This version collects upon signal delivery.
  */
-class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
-  var state = 0.15f
-  var lastSignalState = 0f
-  var outEdges = 0.0
-  def setState(s: Float) {
+class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Vertex[Int, Int] {
+  var lastSignalState = Int.MaxValue
+  var outEdges = 0
+  def setState(s: Int) {
     state = s
   }
   protected var targetIdArray: Array[Byte] = null
@@ -94,20 +100,19 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
     targetIdArray = compactIntSet
   }
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
-    val s = signal.asInstanceOf[Float]
-    state = (state + 0.85 * s).toFloat
+    val s = signal.asInstanceOf[Int]
+    state = math.min(s, state)
     true
   }
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
-      val signal = ((state.toDouble - lastSignalState.toDouble) / outEdges).toFloat
-      CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(signal, _, None))
+      CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(state + 1, _, None))
     }
     lastSignalState = state
   }
-  override def scoreSignal: Double = state - lastSignalState
+  override def scoreSignal: Double = lastSignalState - state
   def scoreCollect = 0 // Because signals are collected upon delivery.
-  def edgeCount = outEdges.toInt
+  def edgeCount = outEdges
   override def toString = s"${this.getClass.getName}(state=$state)"
   def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {}
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}

@@ -102,11 +102,11 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
       if (bulker.isFull) {
         pendingSignals -= bulker.numberOfItems
         if (withSourceIds) {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, bulker.sourceIds))
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, bulker.sourceIds.clone))
         } else {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, null.asInstanceOf[Array[Id]]))
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, null.asInstanceOf[Array[Id]]))
         }
-        outgoingMessages(workerId).clear
+        bulker.clear
       }
     }
   }
