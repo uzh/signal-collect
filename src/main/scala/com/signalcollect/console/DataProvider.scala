@@ -56,9 +56,9 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
       case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(Array(e))
       case otherwise => JObject(List(JField("unknown", "unknown")))
     }
-    ("provider" -> "executionConfiguration") ~ 
-    ("executionConfiguration" -> executionConfiguration)
-    ("graphConfiguration" -> Toolkit.unpackObject(Array(socket.graphConfiguration)))
+    ("provider" -> "configuration") ~ 
+    ("executionConfiguration" -> executionConfiguration) ~
+    ("graphConfiguration" -> Toolkit.unpackObject(Array(socket.graphConfiguration))) ~
     ("systemProperties" -> propertiesAsScalaMap(System.getProperties()))
   }
 }
