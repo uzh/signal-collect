@@ -32,11 +32,11 @@ import com.signalcollect.configuration.ExecutionMode._
  * Run with JVM parameters:
  * -Xmx2000m -Xms2000m
  *
- * Computation ran in as little as 1978 milliseconds (best run) on a notebook
+ * Computation ran in as little as 2177 milliseconds (best run) on a notebook
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Float].withMessageBusFactory(new BulkAkkaMessageBusFactory(512, false)).build
+  val g = new GraphBuilder[Int, Double].withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -55,11 +55,11 @@ object EfficientPageRankLoader extends App {
   val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous).withSignalThreshold(0.01))
   println("done.")
   println(stats)
-  val top100 = g.aggregate(new TopKFinder[Float](100))
+  val top100 = g.aggregate(new TopKFinder[Double](100))
   top100 foreach (println(_))
   g.shutdown
 
-  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Float]) {
+  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Double]) {
     val in = splits(splitIndex)
     var vertexId = CompactIntSet.readUnsignedVarInt(in)
     while (vertexId >= 0) {
@@ -81,11 +81,11 @@ object EfficientPageRankLoader extends App {
  * A version of PageRank that performs faster and uses less memory than the standard version.
  * This version signals only the deltas and collects upon signal delivery.
  */
-class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
-  var state = 0.15f
-  var lastSignalState = 0f
+class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Double] {
+  var state = 0.15
+  var lastSignalState = 0.0
   var outEdges = 0.0
-  def setState(s: Float) {
+  def setState(s: Double) {
     state = s
   }
   protected var targetIdArray: Array[Byte] = null
@@ -94,13 +94,13 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Float] {
     targetIdArray = compactIntSet
   }
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
-    val s = signal.asInstanceOf[Float]
-    state = (state + 0.85 * s).toFloat
+    val s = signal.asInstanceOf[Double]
+    state = state + 0.85 * s
     true
   }
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
-      val signal = ((state.toDouble - lastSignalState.toDouble) / outEdges).toFloat
+      val signal = (state - lastSignalState) / outEdges
       CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(signal, _, None))
     }
     lastSignalState = state
