@@ -29,6 +29,7 @@ import scala.language.postfixOps
 
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
@@ -54,10 +55,10 @@ trait Execution {
   def terminate()
 }
 
-class ConsoleServer[Id](userHttpPort: Int) {
+class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   val (server: HttpServer, 
-       sockets: WebSocketConsoleServer[Id]) = setupUserPorts(userHttpPort)
+       sockets: WebSocketConsoleServer[Id]) = setupUserPorts(graphConfiguration.consoleHttpPort)
   
   server.createContext("/", new FileServer("web-data"))
   server.setExecutor(Executors.newCachedThreadPool)
@@ -104,7 +105,7 @@ class ConsoleServer[Id](userHttpPort: Int) {
     val server: HttpServer = 
         HttpServer.create(new InetSocketAddress(httpPort), 0)
     val sockets: WebSocketConsoleServer[Id] = 
-        new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100))
+        new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100), graphConfiguration)
     (server, sockets)
   }
   
@@ -181,11 +182,12 @@ class FileServer(folderName: String) extends HttpHandler {
   }
 }
 
-class WebSocketConsoleServer[Id](port: InetSocketAddress)
+class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
                              extends WebSocketServer(port) {
   var coordinator: Option[Coordinator[Id,_]] = None
   var execution: Option[Execution] = None
   var executionConfiguration: Option[ExecutionConfiguration] = None
+  val graphConfiguration = config
   implicit val formats = DefaultFormats
 
   def setCoordinator(c: ActorRef) {

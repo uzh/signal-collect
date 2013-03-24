@@ -101,7 +101,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   val console = {
     if (config.consoleEnabled) {
-      new ConsoleServer[Id](config.consoleHttpPort)
+      new ConsoleServer[Id](config)
     } else {
       null
     }

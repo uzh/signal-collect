@@ -1,7 +1,9 @@
 package com.signalcollect.console
 
+import scala.collection.JavaConversions.propertiesAsScalaMap
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
@@ -82,6 +84,8 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
     }
     ("provider" -> "executionConfiguration") ~ 
     ("executionConfiguration" -> executionConfiguration)
+    ("graphConfiguration" -> Toolkit.unpackObject(Array(socket.graphConfiguration)))
+    ("systemProperties" -> propertiesAsScalaMap(System.getProperties()))
   }
 }
 
