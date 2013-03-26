@@ -58,17 +58,16 @@ class TorqueNodeProvisioner(torqueHost: TorqueHost, numberOfNodes: Int, jvmParam
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
     val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
-    var jobs = List[TorqueJob]()
+    var jobs = List[Job]()
     implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
     for (jobId <- 0 until numberOfNodes) {
-      val function: () => Map[String, String] = {
+      val function: () => Unit = {
         () =>
           val system = ActorSystem("SignalCollect", akkaConfig)
           val nodeControllerCreator = NodeControllerCreator(jobId, nodeProvisionerAddress)
           val nodeController = system.actorOf(Props[NodeControllerActor].withCreator(nodeControllerCreator.create), name = "NodeController" + jobId.toString)
-          Map[String, String]()
       }
-      jobs = new TorqueJob(jobId = jobId, execute = function, jvmParameters = jvmParameters) :: jobs
+      jobs = new Job(jobId = jobId, execute = function) :: jobs
     }
     torqueHost.executeJobs(jobs)
     val nodesFuture = nodeProvisioner ? "GetNodes"

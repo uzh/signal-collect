@@ -28,25 +28,22 @@ import java.io.FileInputStream
 import java.io.File
 
 object JobExecutor extends App {
-  var config: (TorqueJob,  List[ResultHandler]) = _
-  if (args.size > 0) {
-    try {
-      val jobId = args(0).toInt
-      val configFile = new File(jobId + ".config")
-      val jobArray = new Array[Byte](configFile.length.toInt)
-      val fileInputStream = new FileInputStream(configFile)
-      fileInputStream.read(jobArray)
-      config = DefaultSerializer.read[(TorqueJob,  List[ResultHandler])](jobArray)
-    } catch {
-      case e: Exception => throw new Exception("Could not load configuration: \n" + e.getMessage() + "\n" + e.getCause() + "\n" + e.getStackTrace)
-
+  val job: Job = {
+    if (args.size > 0) {
+      try {
+        val jobId = args(0).toInt
+        val configFile = new File(jobId + ".config")
+        val jobArray = new Array[Byte](configFile.length.toInt)
+        val fileInputStream = new FileInputStream(configFile)
+        fileInputStream.read(jobArray)
+        DefaultSerializer.read[Job](jobArray)
+      } catch {
+        case e: Exception => throw new Exception("Could not load configuration: \n" + e.getMessage() + "\n" + e.getCause() + "\n" + e.getStackTrace)
+      }
+    } else {
+      throw new Exception("No jobId specified.")
     }
-  } else {
-    throw new Exception("No jobId specified.")
   }
-  val executor = new LocalHost
-  executor.setResultHandlers(config._2)
-  
-  executor.executeJobs(List(config._1))
+  job.execute()
 }
 

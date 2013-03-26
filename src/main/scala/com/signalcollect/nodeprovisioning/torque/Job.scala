@@ -19,10 +19,8 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-case class TorqueJob(
-  jobId: Int,
-  execute: () => Map[String, String],
-  submittedByUser: String = "",
-  jvmParameters: String = "",
-  jobDescription: String = "",
-  jdkBinPath: String = "")
+import scala.util.Random
+
+case class Job(
+  execute: () => Unit,
+  jobId: Int = Random.nextInt.abs % 1000000)
