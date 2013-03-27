@@ -27,7 +27,7 @@ import akka.event.Logging.LogEvent
 /**
  * Required because a Java Dynamic Proxy can only work with interfaces
  */
-trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
+trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logger {
 
   override def toString = this.getClass.getSimpleName
 
@@ -40,8 +40,6 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
   def getGlobalInboxSize: Long
 
   def getWorkerStatus: Array[WorkerStatus]
-  
-  def getLogMessages(logLevel: LogLevel, numberOfMessages: Int): List[LogEvent]
 }
 
 object Coordinator {

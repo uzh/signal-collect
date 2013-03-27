@@ -37,6 +37,7 @@ import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
 import akka.event.Logging.LogLevel
 import akka.event.Logging
+import com.signalcollect.messaging.AkkaProxy
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -47,6 +48,7 @@ case class IsIdle(b: Boolean)
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   messageBusFactory: MessageBusFactory,
+  loggerRef: ActorRef,
   heartbeatIntervalInMilliseconds: Long)
   extends Actor with MessageRecipientRegistry
   with Coordinator[Id, Signal]
@@ -57,6 +59,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
    */
   context.setReceiveTimeout(Duration.Undefined)
 
+  val logger = AkkaProxy.newInstance[Logger](loggerRef)
+  
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers)
@@ -194,9 +198,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
     }
   }
-
+  
   def getLogMessages(logLevel: LogLevel, numberOfMessages: Int) = {
-    List()
+    logger.getLogMessages(logLevel, numberOfMessages)
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

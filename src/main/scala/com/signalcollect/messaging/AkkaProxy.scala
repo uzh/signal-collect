@@ -45,7 +45,11 @@ import akka.util.Timeout
  */
 object AkkaProxy {
 
-  def newInstance[T: ClassTag](actor: ActorRef, sentMessagesCounter: AtomicInteger = new AtomicInteger(0), receivedMessagesCounter: AtomicInteger = new AtomicInteger(0), timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+  def newInstance[T: ClassTag](
+    actor: ActorRef,
+    sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
     val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,

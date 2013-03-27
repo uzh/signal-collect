@@ -28,7 +28,6 @@ import java.io.FileInputStream
 import scala.language.postfixOps
 import scala.reflect._
 import scala.reflect.runtime.{universe => ru}
-
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.configuration.GraphConfiguration
@@ -36,9 +35,7 @@ import com.signalcollect.messaging.AkkaProxy
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
-
 import akka.actor.ActorRef
-
 import org.java_websocket._
 import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
@@ -47,6 +44,7 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import java.io.File
 import java.io.InputStream
+import akka.event.Logging
 
 trait Execution {
   var steps: Int
@@ -211,6 +209,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   }
 
   def onMessage(socket: WebSocket, msg: String) {
+    if (coordinator.isDefined) println(coordinator.get.getLogMessages(Logging.DebugLevel, 10))
     val j = parse(msg)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
