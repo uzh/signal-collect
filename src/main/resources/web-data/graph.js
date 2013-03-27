@@ -28,6 +28,7 @@ scc.modules.graph = function() {
   var linkRefs = {};
   var node;
   var link;
+  var fadeTimer;
 
   var orderTemplate = {"provider": "graph"}
 
@@ -128,6 +129,32 @@ scc.modules.graph = function() {
         .append('svg:g')
         .append('svg:g');
 
+    d3.select("#graph").on("mousemove", function (e) {
+      var coords = d3.mouse(this);
+      var target = d3.event.target;
+      var data = target.__data__;
+      var node = $(target);
+      $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
+      if (d3.event.target.tagName == "circle") {
+          $("#node_id").text(data.id);
+          $("#node_state").text(data.state);
+          clearTimeout(fadeTimer);
+          var tooltip = $("#graph_tooltip")
+          $("#graph_tooltip").fadeIn(200);
+      }
+      else {
+          $("#node_id").text("--");
+          $("#node_state").text("--");
+      }
+    });
+
+    d3.select("#graph").on("mouseout", function (e) {
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(function() {
+        $("#graph_tooltip").fadeOut(200);
+      }, 500);
+    });
+
     force = d3.layout.force()
         .size([$("#content").width(), $("#content").height()])
         .nodes(nodes)
@@ -167,6 +194,7 @@ scc.modules.graph = function() {
     }
 
     scc.consumers.graph.order()
+
   }
    
   this.onmessage = function(j) {
@@ -235,9 +263,6 @@ scc.modules.graph = function() {
         .style("fill", nodeColor)
         .style("stroke", nodeBorder)
         .attr("r", nodeSize)
-
-    node.append("title")
-        .text(function(d) { return d.id + ": " + d.state; });
 
     if (scc.consumers.graph.autoRefresh) {
       scc.order(completeOrder(orderTemplate), parseInt($("#gc_refreshRate").val())*1000);

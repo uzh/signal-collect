@@ -416,6 +416,23 @@ div.panel label { cursor:pointer; }
   text-shadow: 0 1px 1px #777;
 }
 
+#graph_tooltip {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  min-width: 20px;
+  min-height: 10px;
+  z-index: 5;
+  border-radius: 8px;           
+  background: #fafafa;
+  opacity: 0.9;
+}
+
+#graph_tooltip {
+  padding: 10px;
+}
+
 #graph_canvas {
   position: absolute;
   top: 0px;
