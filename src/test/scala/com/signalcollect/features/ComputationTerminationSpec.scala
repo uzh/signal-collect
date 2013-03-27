@@ -31,11 +31,11 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.interfaces.Config
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNode
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import org.specs2.runner.JUnitRunner
+import com.typesafe.config.Config
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
@@ -46,7 +46,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         GraphBuilder.build
       } else {
         GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-          def getNodes(akkaConfig: Config): List[Node] = {
+          override def getNodes(akkaConfig: Config): List[Node] = {
             List(new LocalNode {
               override def numberOfCores = numberOfWorkers.get
             })

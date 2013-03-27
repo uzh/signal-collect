@@ -45,14 +45,11 @@ import com.signalcollect.coordinator.OnIdle
 import com.signalcollect.interfaces.ComplexAggregation
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.Severe
 import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
@@ -73,22 +70,30 @@ import java.net.InetSocketAddress
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator[Id: ClassTag, Signal: ClassTag](workerId: Int, workerFactory: WorkerFactory, numberOfWorkers: Int, config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
-  def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](workerId, numberOfWorkers, config)
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
+  workerId: Int,
+  workerFactory: WorkerFactory,
+  numberOfWorkers: Int,
+  config: GraphConfiguration)
+  extends Creator[WorkerActor[Id, Signal]] {
+  def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](
+    workerId,
+    numberOfWorkers,
+    config)
 }
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
-  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](numberOfWorkers, messageBusFactory, heartbeatIntervalInMilliseconds, loggingLevel)
-}
-
-/**
- * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
- */
-case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[DefaultLogger] {
-  def create: DefaultLogger = new DefaultLogger(loggingFunction)
+case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
+  numberOfWorkers: Int,
+  messageBusFactory: MessageBusFactory,
+  heartbeatIntervalInMilliseconds: Long)
+  extends Creator[DefaultCoordinator[Id, Signal]] {
+  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
+    numberOfWorkers,
+    messageBusFactory,
+    heartbeatIntervalInMilliseconds)
 }
 
 /**
@@ -99,6 +104,12 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
+  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
+  override def toString: String = "DefaultGraph"
+
+  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
+  ActorSystemRegistry.register(system)
+
   val console = {
     if (config.consoleEnabled) {
       new ConsoleServer[Id](config)
@@ -106,12 +117,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       null
     }
   }
-
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
-  override def toString: String = "DefaultGraph"
-
-  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
-  ActorSystemRegistry.register(system)
 
   val nodes = config.nodeProvisioner.getNodes(akkaConfig)
 
@@ -134,7 +139,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds, config.loggingLevel)
+    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
       case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
@@ -143,10 +148,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
-  val loggerActor: ActorRef = {
-    val loggerCreator = LoggerCreator(config.logger)
-    system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
-  }
+  val loggerActor: ActorRef = system.actorFor("akka://SignalCollect/system/log1-ConsoleLogger")
 
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
@@ -159,7 +161,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       try {
         registry.registerCoordinator(coordinatorActor)
       } catch {
-        case e: Exception => loggerActor ! Severe("Exception in `initializeMessageBuses`:" + e.getCause + "\n" + e, this.toString)
+        case t: Throwable => system.log.error("Exception in `initializeMessageBuses`:" + t.getCause + "\n" + t, this.toString)
       }
       for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
@@ -206,7 +208,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        new InteractiveExecution[Id](this, console,stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition).run()
+        new InteractiveExecution[Id](this, console, stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition).run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -258,13 +260,12 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   class InteractiveExecution[Id](
-          graph: Graph[Id, Signal],
-          console: ConsoleServer[Id],
-          stats: ExecutionStatistics,
-          timeLimit: Option[Long],
-          stepsLimit: Option[Long],
-          globalTerminationCondition: Option[GlobalTerminationCondition[_]]
-        ) extends Execution {
+    graph: Graph[Id, Signal],
+    console: ConsoleServer[Id],
+    stats: ExecutionStatistics,
+    timeLimit: Option[Long],
+    stepsLimit: Option[Long],
+    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) extends Execution {
     if (console != null) { console.setInteractor(this) }
     graph.snapshot
     var converged = false
@@ -272,7 +273,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     var interval = 0l
     @volatile var steps = 0
     @volatile var userTermination = false
-    val lock: AnyRef = new Object()    
+    val lock: AnyRef = new Object()
     if (globalTerminationCondition.isDefined) {
       interval = globalTerminationCondition.get.aggregationInterval
     }
@@ -283,7 +284,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       lock.synchronized {
         steps = 1
         lock.notify
-        try { lock.wait } catch { 
+        try { lock.wait } catch {
           case e: InterruptedException =>
         }
       }
@@ -297,14 +298,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def pause() {
       steps = 0
     }
-    def reset() { 
+    def reset() {
       pause
       lock.synchronized {
         graph.reset
         graph.restore
       }
     }
-    def terminate() { 
+    def terminate() {
       userTermination = true
       pause
       continue
@@ -313,8 +314,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def run() {
       lock.synchronized {
         while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
-          while (steps == 0) { 
-            try { lock.wait } catch { 
+          while (steps == 0) {
+            try { lock.wait } catch {
               case e: InterruptedException =>
             }
           }
@@ -322,7 +323,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           workerApi.signalStep
           awaitIdle
           stats.signalSteps += 1
-          while (steps == 0) { 
+          while (steps == 0) {
             try { lock.wait } catch {
               case e: InterruptedException =>
             }

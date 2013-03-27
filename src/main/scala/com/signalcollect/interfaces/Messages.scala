@@ -140,14 +140,3 @@ case class SystemInformation(
         (jmx_system_load + other.jmx_system_load) / 2)
   }
 }
-
-sealed trait LogMessage {
-  def msg: Any
-  def from: Any
-}
-
-case class Debug(msg: Any, from: Any) extends LogMessage
-case class Config(msg: Any, from: Any) extends LogMessage
-case class Info(msg: Any, from: Any) extends LogMessage
-case class Warning(msg: Any, from: Any) extends LogMessage
-case class Severe(msg: Any, from: Any) extends LogMessage

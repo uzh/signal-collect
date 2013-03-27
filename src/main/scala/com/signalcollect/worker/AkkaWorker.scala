@@ -97,8 +97,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfWorkers: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val heartbeatIntervalInMilliseconds: Long,
-  val loggingLevel: Int)
+  val heartbeatIntervalInMilliseconds: Long)
   extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
@@ -193,6 +192,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
+        log.debug(s"Worker $workerId received signal $s.")
         counters.signalMessagesReceived += 1
         processSignal(s.signal, s.targetId, s.sourceId)
       case bulkSignal: BulkSignal[Id, Signal] =>
@@ -230,13 +230,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             }
           }
         } catch {
-          case e: Exception =>
-            severe(e)
-            throw e
+          case t: Throwable =>
+            log.error(t.toString)
+            throw t
         }
       case other =>
         counters.otherMessagesReceived += 1
-        warning("Could not handle message " + message)
+        log.warning("Could not handle message " + message)
     }
   }
 
@@ -250,7 +250,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
-      debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
+      log.debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
     }
   }
 
@@ -264,7 +264,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       }
     } else {
-      warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
+      log.warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
     }
   }
 
@@ -277,10 +277,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           vertexStore.toSignal.put(vertex)
         }
       } else {
-        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
+        log.warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
     } else {
-      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
+      log.warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
     }
   }
 
@@ -289,7 +289,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (vertex != null) {
       processRemoveVertex(vertex)
     } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
+      log.warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
     }
   }
 

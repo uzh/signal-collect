@@ -20,14 +20,13 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import akka.event.Logging.LogLevel
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -76,14 +75,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newLoggingLevel The logging level used by the graph.
    */
-  def withLoggingLevel(newLoggingLevel: Int) = newLocalBuilder(loggingLevel = newLoggingLevel)
-
-  /**
-   *  Configures the logger used by the graph.
-   *
-   *  @param logger The logger used by the graph.
-   */
-  def withLogger(logger: LogMessage => Unit) = newLocalBuilder(logger = logger)
+  def withLoggingLevel(newLoggingLevel: LogLevel) = newLocalBuilder(loggingLevel = newLoggingLevel)
 
   /**
    *  Configures the worker factory used by the graph to instantiate workers.
@@ -137,8 +129,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   protected def newLocalBuilder(
     consoleEnabled: Boolean = config.consoleEnabled,
     consoleHttpPort: Int = config.consoleHttpPort,
-    loggingLevel: Int = config.loggingLevel,
-    logger: LogMessage => Unit = config.logger,
+    loggingLevel: LogLevel = config.loggingLevel,
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,
@@ -152,7 +143,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
         consoleEnabled = consoleEnabled,
         consoleHttpPort = consoleHttpPort,
         loggingLevel = loggingLevel,
-        logger = logger,
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
         storageFactory = storageFactory,

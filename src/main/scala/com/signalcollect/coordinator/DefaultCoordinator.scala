@@ -22,31 +22,21 @@ package com.signalcollect.coordinator
 import java.lang.management.ManagementFactory
 import java.util.HashMap
 import java.util.Map
-
 import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationLong
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-
-import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.Heartbeat
-import com.signalcollect.interfaces.Logging
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.WorkerStatus
-import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.SystemInformation
+import com.signalcollect.interfaces._
 import com.sun.management.OperatingSystemMXBean
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
+import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -54,7 +44,13 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
+class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
+  numberOfWorkers: Int,
+  messageBusFactory: MessageBusFactory,
+  heartbeatIntervalInMilliseconds: Long)
+  extends Actor with MessageRecipientRegistry
+  with Coordinator[Id, Signal]
+  with ActorLogging {
 
   /**
    * Timeout for Akka actor idling
@@ -77,7 +73,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def sendHeartbeat {
-    debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+    log.debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -123,9 +119,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
           sender ! result
         }
       } catch {
-        case e: Exception =>
-          severe(e)
-          throw e
+        case t: Throwable =>
+          log.error(t.toString)
+          throw t
       }
   }
 
@@ -197,6 +193,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     } else {
       (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
     }
+  }
+
+  def getLogMessages(logLevel: LogLevel, numberOfMessages: Int) = {
+    List()
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

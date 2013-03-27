@@ -1,24 +1,31 @@
 package com.signalcollect.configuration
 
-import com.signalcollect.configuration.LoggingLevel.Debug
 import com.typesafe.config.ConfigFactory
+import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(
+  def get(akkaMessageCompression: Boolean, loggingLevel: LogLevel) = ConfigFactory.parseString(
     distributedConfig(akkaMessageCompression, loggingLevel))
-  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int) = """
+  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: LogLevel) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
-  logConfigOnStart=on
+  # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
+  event-handlers = ["com.signalcollect.console.ConsoleLogger"]
     
+  logConfigOnStart=on
     """ +
     {
-      if (loggingLevel == Debug) {
-        """
-  loglevel = DEBUG
+      val level = loggingLevel match {
+        case Logging.ErrorLevel => "ERROR"
+        case Logging.WarningLevel => "WARNING"
+        case Logging.InfoLevel => "INFO"
+        case Logging.DebugLevel => "DEBUG"
+      }
+      s"""
+  loglevel = $level
   """
-      } else ""
     } +
     """
   # debug {
@@ -58,13 +65,6 @@ akka {
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
-      "com.signalcollect.interfaces.LogMessage" = kryo
-      "com.signalcollect.interfaces.Debug" = kryo
-      "com.signalcollect.interfaces.Config" = kryo
-      "com.signalcollect.interfaces.Info" = kryo
-      "com.signalcollect.interfaces.Warning" = kryo
-      "com.signalcollect.interfaces.Severe" = kryo
-      "com.signalcollect.interfaces.WorkerStatistics" = kryo
     }
 
     deployment {
@@ -166,13 +166,7 @@ akka {
             "java.util.HashMap" = 34
             "com.signalcollect.interfaces.EdgeId" = 35
             "com.signalcollect.interfaces.WorkerStatus" = 36
-            "com.signalcollect.interfaces.LogMessage" = 37
-            "com.signalcollect.interfaces.Debug" = 38
-            "com.signalcollect.interfaces.Config" = 39
-            "com.signalcollect.interfaces.Info" = 40
-            "com.signalcollect.interfaces.Warning" = 41
-            "com.signalcollect.interfaces.Severe" = 42
-            "com.signalcollect.interfaces.WorkerStatistics" = 43
+            "com.signalcollect.interfaces.WorkerStatistics" = 37
         }
 
         # Define a set of fully qualified class names for   
@@ -195,12 +189,6 @@ akka {
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
-            "com.signalcollect.interfaces.LogMessage",
-            "com.signalcollect.interfaces.Debug",
-            "com.signalcollect.interfaces.Config",
-            "com.signalcollect.interfaces.Info",
-            "com.signalcollect.interfaces.Warning",
-            "com.signalcollect.interfaces.Severe",
             "com.signalcollect.interfaces.WorkerStatistics"
         ]
     }

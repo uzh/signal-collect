@@ -25,4 +25,3 @@ trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   extends Actor
   with WorkerApi[Id, Signal]
   with MessageRecipientRegistry
-  with Logging

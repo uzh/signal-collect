@@ -20,13 +20,14 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect.GraphEditor
-
 import akka.actor.Actor
+import akka.event.Logging.LogLevel
+import akka.event.Logging.LogEvent
 
 /**
  * Required because a Java Dynamic Proxy can only work with interfaces
  */
-trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logging {
+trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
 
   override def toString = this.getClass.getSimpleName
 
@@ -39,6 +40,8 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with L
   def getGlobalInboxSize: Long
 
   def getWorkerStatus: Array[WorkerStatus]
+  
+  def getLogMessages(logLevel: LogLevel, numberOfMessages: Int): List[LogEvent]
 }
 
 object Coordinator {

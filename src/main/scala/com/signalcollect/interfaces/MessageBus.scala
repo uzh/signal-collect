@@ -20,16 +20,17 @@
 package com.signalcollect.interfaces
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import com.signalcollect.GraphEditor
-
 import akka.actor.ActorRef
+import akka.event.Logging.LogEvent
 
 /**
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
+trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+  extends MessageRecipientRegistry
+  with VertexToWorkerMapper[Id] {
   def flush
 
   def isInitialized: Boolean
@@ -44,7 +45,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToActor(actor: ActorRef, m: Any)
 
-  def sendToLogger(m: LogMessage)
+  def sendToLogger(m: Any)
 
   def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 

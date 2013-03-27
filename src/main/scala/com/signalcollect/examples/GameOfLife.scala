@@ -22,8 +22,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.logging.DefaultLogger
-import com.signalcollect.configuration.LoggingLevel
+import akka.event.Logging
 
 /**
  *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
@@ -53,8 +52,8 @@ class GameOfLifeCell(id: Any, initialState: Int)
  */
 object GameOfLife extends App {
   val graph = GraphBuilder.withConsole(true, 8090)
-                          //.withLogger(DefaultLogger.log)
-                          //.withLoggingLevel(LoggingLevel.Debug)
+//                          .withLogger(DefaultLogger.log)
+                          .withLoggingLevel(Logging.DebugLevel)
                           .build
 
   //Dimensions of the grid
