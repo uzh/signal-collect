@@ -416,6 +416,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
    */
   def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean) {
     graphEditor.sendSignal(signal, targetId, sourceId, blocking)
+    graphEditor.flush
   }
 
   /**
@@ -458,6 +459,10 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     graphEditor.modifyGraph(graphModification, vertexIdHint, blocking)
+  }
+
+  private[signalcollect] def flush {
+    graphEditor.flush
   }
 
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {

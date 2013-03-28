@@ -147,6 +147,11 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
     modifyGraph(graphModification, vertexIdHint, false)
   }
 
+  /**
+   * Forces the underlying MessageBus to send all messages immediately.
+   */
+  private[signalcollect] def flush
+
   private[signalcollect] def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 
 }

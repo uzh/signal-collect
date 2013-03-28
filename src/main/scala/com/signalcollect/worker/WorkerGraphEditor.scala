@@ -87,6 +87,10 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     messageBus.getWorkerIdForVertexId(vertexId) == workerId
   }
 
+  private[signalcollect] def flush {
+    graphEditor.flush
+  }
+  
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }

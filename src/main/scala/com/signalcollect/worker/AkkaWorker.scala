@@ -476,6 +476,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
+      graphEditor.flush
     }
   }
 

@@ -155,6 +155,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   protected lazy val graphEditor = messageBus.getGraphEditor
   def getGraphEditor = graphEditor
+  
+  def getWorkerStatuses: Array[WorkerStatus] = workerStatus.clone
 
   /**
    * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers (eventually we will have received at least one status message per worker).
