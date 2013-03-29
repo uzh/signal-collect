@@ -384,8 +384,6 @@ body {
 div.panel label { cursor:pointer; }
 
 .structured {
-/*   height: 100%; */
-  width: 100%;
   padding-left: 20px;
 }
 
@@ -565,6 +563,7 @@ body.nostart div#resourceBoxes > div#logBox
                       { max-width:1500px; min-width:1000px; max-height:500px; overflow:auto; display:block; float:left; }
 
 body.statistics div#resourceBoxes div[id$=StatBox] { float:left; margin-right:20px; }
+body.statistics div#estimationStatBox { width:400px; }
 
 ul.statistics         { padding:0; margin:0; }
 ul.statistics li      { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px;

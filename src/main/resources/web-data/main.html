@@ -117,17 +117,17 @@
               <input type="radio" name="rs" id="rs_slow"/>
               <label for="rs_slow">Computation takes very long</label><br/>
 
-              <input type="radio" name="rs" id="rs_maxgraphsize"/>
-              <label for="rs_maxgraphsize">Maximum graph size the infrastructure can handle</label><br/>
+              <input type="radio" name="rs" id="rs_estimation"/>
+              <label for="rs_estimation">Maximum graph size estimation</label><br/>
 
               <input type="radio" name="rs" id="rs_unexpectedresults"/>
-              <label for="rs_unexpectedresults">Computation yields unexpected results</label><br/>
+              <label for="rs_unexpectedresults">Unexpected results</label><br/>
 
               <input type="radio" name="rs" id="rs_phase"/>
               <label for="rs_phase">Computation phases</label><br/>
 
-              <input type="radio" name="rs" id="rs_estimation"/>
-              <label for="rs_estimation">Graph loading speed and estimated completion</label><br/>
+              <input type="radio" name="rs" id="rs_loadingspeed"/>
+              <label for="rs_loadingspeed">Graph loading speed and estimated completion</label><br/>
             </div>
           </div>
         </div>
@@ -161,8 +161,10 @@
           <div id="crs_statistics">
             <h1>Statistics</h1>
             <p><small>Updating every <span id="resStatInterval">?</span> second(s).</small></p>
-
           </div>
+        
+          <!-- content resource section estimations -->
+          <div id="crs_estimation"><h1>Maximum Graph Size Estimation</h1></div>
         
           <!-- content resource section overview -->
           <div id="crs_logs"><h1>Logs</h1></div>
@@ -225,11 +227,8 @@
             </div>
 
             <div id="estimationStatBox">
-              <h3>Estimations</h3>
-              <ul class="statistics">
-                <li>Remaining Graph Loading Time: <span id="resStatEstimationGraphLoading">?</span></li>
-                <li>Operations per Second: <span id="resStatOperationsPS">?</span></li>
-              </ul>
+              <h3>Graph Size Estimation</h3>
+              <p>Waiting for more data.</p>
             </div>
         
             <div id="logBox">

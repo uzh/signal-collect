@@ -5,6 +5,7 @@ scc.defaults.resources = {"layout":{
                           "section": "statistics"
                          };
 
+// show information about the configuration (jvm etc.)
 scc.modules.configuration = function() {
   this.requires = ["configuration"];
   
@@ -14,7 +15,6 @@ scc.modules.configuration = function() {
     
   this.onerror = function(e) { }
   this.notready = function() { }
-
   this.onclose = function() { }
   
   this.onmessage = function(msg) {
@@ -47,7 +47,7 @@ scc.modules.resources = function() {
         "computationStatBox",
         "graphStatBox",
         "estimationStatBox"
-      ],
+        ],
       "logs"      : [ "logBox" ],
       "detailed"  : [  ], // all charts will be added automatically
       
@@ -80,6 +80,13 @@ scc.modules.resources = function() {
         "messagesSentChart",
         "messagesReceivedChart",
       ], 
+      "estimation" : [
+        "estimationStatBox",
+        "infrastructureTitle",
+        "runtime_mem_freeChart",
+        "runtime_mem_maxChart",
+        "runtime_mem_totalChart"
+      ],
       "crash"     : [ "jmx_mem_freeChart", "logBox" ],
       "slow" : [
         "infrastructureTitle",
@@ -152,6 +159,7 @@ scc.modules.resources = function() {
   var statisticsLastUpdated = new Date(0);
 
   var hasAddedNewCharts = false;
+  var estimationsLastUpdated = new Date(0);
 
   
   
@@ -193,6 +201,21 @@ scc.modules.resources = function() {
     
     // variables needed for the tool tips
     var div, formatTime;
+    
+    // returns the number of time points
+    this.dataLength = function() {
+      return data[0].length;
+    }
+    
+    // returns the average
+    this.dataAvg = function() {
+      return Array.avg($.map(data[0], function (e) { return e.value; }));
+    }
+    
+    // returns the latest data value
+    this.dataLatest = function() {
+      return data[2][data[2].length-1].value;
+    }
     
     
     
@@ -517,14 +540,13 @@ scc.modules.resources = function() {
                      {jsonName : "runtime_mem_total", prettyName : "Total Memory (B)"},
                      {jsonName : "os", skip: true },
                     ];
-  var lineCharts = [];
+  var lineCharts = {};
   
   var ChartsCreate = function(config) {
     var lineChart = new LineChart();
-    lineChart.container = "#crs_detailed .chartContainer";
     lineChart.container = "#resourceBoxes";
     lineChart.setup(config);
-    lineCharts.push(lineChart);    
+    lineCharts[lineChart.config.jsonName] = lineChart;
   }
   
   chartConfig.forEach(function(config) {
@@ -575,7 +597,7 @@ scc.modules.resources = function() {
     }
     
     // update all graphs
-    lineCharts.forEach(function(g) { g.update(msg); });
+    $.each(lineCharts, function(k,v) { v.update(msg); });
     
     // update statistics
     if (statisticsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
@@ -586,6 +608,23 @@ scc.modules.resources = function() {
       $("#resStatRunTime").html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
       $("#resStatWorkers").html(msg.workerStatistics.workerId.length);
       statisticsLastUpdated = new Date(msg.timestamp);
+    }
+    
+    // update estimations
+    if (estimationsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
+      if (lineCharts.runtime_mem_total.dataLength() >= 2) {
+        var maxMemory = lineCharts.runtime_mem_max.dataLatest();
+        var avgMemory = lineCharts.runtime_mem_total.dataAvg();
+        var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);
+        var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
+        var fraction  = maxMemory / avgMemory;
+        var message   = "The current graph has got " + vertices + " vertices and " + edges + " edges."
+          + "<br><br>Based on the current memory consumption, your infrastructure could "
+          + "handle a similar graph which is approximately " + Math.round(fraction) + " times bigger (i.e. ≈"
+          + Math.floor(fraction * vertices) + " vertices and ≈" + Math.floor(fraction * edges) + " edges).";
+        $("#estimationStatBox p").html(message);
+        estimationsLastUpdated = new Date(msg.timestamp);
+      }
     }
     
     scc.order({"provider": "resources"}, interval)
