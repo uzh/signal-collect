@@ -5,7 +5,80 @@ scc.defaults.resources = {"layout":{
                           "section": "statistics"
                          };
 
-// show information about the configuration (jvm etc.)
+// Intervals
+var interval = 3000;
+var intervalStatistics = 2*interval; // update statistics less often
+var intervalLogs = 5000;
+
+// configure which content box to show in which section
+var resourceBoxes = {
+    "statistics": [
+      "infrastructureStatBox",
+      "computationStatBox",
+      "graphStatBox",
+      "estimationStatBox"
+      ],
+    "logs"      : [ "logBox", "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox" ],
+    "detailed"  : [  ], // all charts will be added automatically
+    
+    "nostart"   : [ 
+      "signalCollectTitle",
+      "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox",
+      "heartbeatMessagesReceivedChart",
+      "messagesSentChart",
+      "messagesReceivedChart",
+      "signalMessagesReceivedChart",
+      "signalOperationsExecuted",
+      "collectOperationsExecuted",
+      "toCollectSizeChart",
+      "toSignalSizeChart",
+      "infrastructureTitle",
+      "jmx_system_loadChart",
+      "jmx_process_timeChart",
+      "jmx_process_loadChart",
+      "jmx_swap_totalChart",
+      "jmx_swap_freeChart",
+      "jmx_mem_totalChart",
+      "jmx_mem_freeChart",
+      "jmx_commited_vmsChart",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+    "noconvergence" : [
+      "signalCollectTitle",
+      "messagesSentChart",
+      "messagesReceivedChart",
+    ], 
+    "estimation" : [
+      "estimationStatBox",
+      "infrastructureTitle",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+    "crash" : [
+      "jmx_mem_freeChart",
+      "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox" ],
+    "slow" : [
+      "infrastructureTitle",
+      "jmx_system_loadChart",
+      "jmx_process_timeChart",
+      "jmx_process_loadChart",
+      "jmx_swap_totalChart",
+      "jmx_swap_freeChart",
+      "jmx_mem_totalChart",
+      "jmx_mem_freeChart",
+      "jmx_commited_vmsChart",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+};
+
+
+
+//show information about the configuration (jvm etc.)
 scc.modules.configuration = function() {
   this.requires = ["configuration"];
   
@@ -37,72 +110,35 @@ scc.modules.configuration = function() {
   }
 }
 
+//show log and error messages
+scc.modules.log = function() {
+  this.requires = ["log"];
+  
+  this.onopen = function () {
+    scc.order({"provider": "log"});
+  }
+    
+  this.onerror = function(e) { }
+  this.notready = function() { }
+  this.onclose = function() { }
+  
+  this.onmessage = function(msg) {
+    var resources = $("#resourceBoxes");
+    var box;
+    ["error", "warning", "info", "debug"].forEach(function(v) {
+      box = $(resources).find("#" + v + "LogBox div.scroll");
+      msg[v + "Messages"].forEach(function(l) {
+        $(box).find("ul").append("<li>" + l + "</li>");
+      });
+//      $(box).find("li:last-child").get(0).scrollIntoView();
+      $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+    });
+    scc.order({"provider": "log"}, intervalLogs);
+  }
+}
+
 scc.modules.resources = function() {
   this.requires = ["resources"]
-
-  // configure which content box to show in which section
-  var resourceBoxes = {
-      "statistics": [
-        "infrastructureStatBox",
-        "computationStatBox",
-        "graphStatBox",
-        "estimationStatBox"
-        ],
-      "logs"      : [ "logBox" ],
-      "detailed"  : [  ], // all charts will be added automatically
-      
-      "nostart"   : [ 
-        "signalCollectTitle",
-        "logBox",
-        "heartbeatMessagesReceivedChart",
-        "messagesSentChart",
-        "messagesReceivedChart",
-        "signalMessagesReceivedChart",
-        "signalOperationsExecuted",
-        "collectOperationsExecuted",
-        "toCollectSizeChart",
-        "toSignalSizeChart",
-        "infrastructureTitle",
-        "jmx_system_loadChart",
-        "jmx_process_timeChart",
-        "jmx_process_loadChart",
-        "jmx_swap_totalChart",
-        "jmx_swap_freeChart",
-        "jmx_mem_totalChart",
-        "jmx_mem_freeChart",
-        "jmx_commited_vmsChart",
-        "runtime_mem_freeChart",
-        "runtime_mem_maxChart",
-        "runtime_mem_totalChart"
-      ],
-      "noconvergence" : [
-        "signalCollectTitle",
-        "messagesSentChart",
-        "messagesReceivedChart",
-      ], 
-      "estimation" : [
-        "estimationStatBox",
-        "infrastructureTitle",
-        "runtime_mem_freeChart",
-        "runtime_mem_maxChart",
-        "runtime_mem_totalChart"
-      ],
-      "crash"     : [ "jmx_mem_freeChart", "logBox" ],
-      "slow" : [
-        "infrastructureTitle",
-        "jmx_system_loadChart",
-        "jmx_process_timeChart",
-        "jmx_process_loadChart",
-        "jmx_swap_totalChart",
-        "jmx_swap_freeChart",
-        "jmx_mem_totalChart",
-        "jmx_mem_freeChart",
-        "jmx_commited_vmsChart",
-        "runtime_mem_freeChart",
-        "runtime_mem_maxChart",
-        "runtime_mem_totalChart"
-      ],
-  };
   
   // fill detailed view with all the charts we have
   setTimeout(function() {
@@ -150,9 +186,7 @@ scc.modules.resources = function() {
   
   
   
-  // Intervals
-  var interval = 3000;
-  var intervalStatistics = 2*interval; // update statistics less often
+
   
   // statistics
   $("#resStatInterval").html(intervalStatistics / 1000);
@@ -612,7 +646,7 @@ scc.modules.resources = function() {
     
     // update estimations
     if (estimationsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
-      if (lineCharts.runtime_mem_total.dataLength() >= 2) {
+      if (lineCharts.runtime_mem_total.dataLength() >= 10) {
         var maxMemory = lineCharts.runtime_mem_max.dataLatest();
         var avgMemory = lineCharts.runtime_mem_total.dataAvg();
         var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);

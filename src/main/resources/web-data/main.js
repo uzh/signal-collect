@@ -142,12 +142,12 @@ $(document).ready(function() {
       scc.settings.set({"main": {"view": module}});
       enableModules([module, "controls"]);
       if (module == "resources") {
-        enableModules(["configuration"]);
+        enableModules(["configuration", "log"]);
       }
       layout([module]);
       break;
     default:
-      enableModules(["graph", "resources", "controls"]);
+      enableModules(["graph", "resources", "controls", "configuration", "log"]);
       layout(["graph", "resources"]);
   }
 

@@ -10,6 +10,9 @@ import com.signalcollect.SampleVertexIds
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import com.signalcollect.interfaces.WorkerStatus
+import akka.event.Logging
+import akka.event.Logging.LogLevel
+import akka.event.Logging.LogEvent
 
 trait DataProvider {
   def fetch(): JObject
@@ -60,6 +63,21 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
     ("executionConfiguration" -> executionConfiguration) ~
     ("graphConfiguration" -> Toolkit.unpackObject(Array(socket.graphConfiguration))) ~
     ("systemProperties" -> propertiesAsScalaMap(System.getProperties()))
+  }
+}
+
+class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
+  def fetch(): JObject = {
+    val numberOfMessages = 10
+    val errorMessages   = coordinator.getLogMessages(Logging.ErrorLevel, numberOfMessages).map(_.toString)
+    val warningMessages = coordinator.getLogMessages(Logging.WarningLevel, numberOfMessages).map(_.toString)
+    val infoMessages    = coordinator.getLogMessages(Logging.InfoLevel, numberOfMessages).map(_.toString)
+    val debugMessages   = coordinator.getLogMessages(Logging.DebugLevel, numberOfMessages).map(_.toString)
+    ("provider" -> "log") ~ 
+    ("errorMessages" -> errorMessages) ~  
+    ("warningMessages" -> warningMessages) ~  
+    ("infoMessages" -> infoMessages) ~
+    ("debugMessages" -> debugMessages) 
   }
 }
 

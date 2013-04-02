@@ -574,10 +574,21 @@ ul.statistics li:nth-child(odd)
 ul.statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative;
                         top:-20px; text-align:right }
 
-#logBox ul { padding:0; }
-#logBox li { list-style:none; padding:5px; }
-#logBox li:nth-child(odd) { background:#ddd; }
-#logBox li.error { background:#FFC6BF; }
-#logBox li:nth-child(odd).error { background:#FAA49B; }
+div[id$='LogBox'] div.scroll
+                    { overflow-y:auto; max-height:400px; }
+div[id$='LogBox'] ul{ padding:0; }
+div[id$='LogBox'] li{ list-style:none; padding:5px; }
+div[id$='LogBox'] li:nth-child(odd)
+                    { background:#ddd; }
+
+div#warningLogBox li,
+div#errorLogBox li  { background:#FFC6BF; }
+div#warningLogBox li:nth-child(odd),
+div#errorLogBox li:nth-child(odd)
+                    { background:#FAA49B; }
+body:not([class='logs']) div[id$='LogBox']
+                    { float:left; }
+body:not([class='logs']) div[id$='LogBox'] div.scroll
+                    { width:800px; }
 
 

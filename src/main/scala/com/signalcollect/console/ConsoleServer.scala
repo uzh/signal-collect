@@ -209,12 +209,13 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   }
 
   def onMessage(socket: WebSocket, msg: String) {
-    if (coordinator.isDefined) println(coordinator.get.getLogMessages(Logging.DebugLevel, 10))
+//    if (coordinator.isDefined) println(coordinator.get.getLogMessages(Logging.DebugLevel, 10))
     val j = parse(msg)
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
         case "configuration" => new ConfigurationDataProvider(this, c, msg)
+        case "log" => new LogDataProvider(c)
         case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case "status" => new StatusDataProvider(this)
