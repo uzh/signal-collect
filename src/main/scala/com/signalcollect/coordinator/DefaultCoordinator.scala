@@ -199,8 +199,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
   
-  def getLogMessages(logLevel: LogLevel, numberOfMessages: Int) = {
-    logger.getLogMessages(logLevel, numberOfMessages)
+  def getLogMessages(logLevel: LogLevel) = {
+    logger.getLogMessages(logLevel)
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

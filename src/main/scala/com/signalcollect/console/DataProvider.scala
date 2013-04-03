@@ -13,6 +13,7 @@ import com.signalcollect.interfaces.WorkerStatus
 import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
+import akka.actor.ActorLogging
 
 trait DataProvider {
   def fetch(): JObject
@@ -68,11 +69,10 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
 
 class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
   def fetch(): JObject = {
-    val numberOfMessages = 10
-    val errorMessages   = coordinator.getLogMessages(Logging.ErrorLevel, numberOfMessages).map(_.toString)
-    val warningMessages = coordinator.getLogMessages(Logging.WarningLevel, numberOfMessages).map(_.toString)
-    val infoMessages    = coordinator.getLogMessages(Logging.InfoLevel, numberOfMessages).map(_.toString)
-    val debugMessages   = coordinator.getLogMessages(Logging.DebugLevel, numberOfMessages).map(_.toString)
+    val errorMessages   = coordinator.getLogMessages(Logging.ErrorLevel).map(_.toString)
+    val warningMessages = coordinator.getLogMessages(Logging.WarningLevel).map(_.toString)
+    val infoMessages    = coordinator.getLogMessages(Logging.InfoLevel).map(_.toString)
+    val debugMessages   = coordinator.getLogMessages(Logging.DebugLevel).map(_.toString)
     ("provider" -> "log") ~ 
     ("errorMessages" -> errorMessages) ~  
     ("warningMessages" -> warningMessages) ~  

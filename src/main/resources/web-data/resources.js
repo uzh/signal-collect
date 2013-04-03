@@ -124,14 +124,21 @@ scc.modules.log = function() {
   
   this.onmessage = function(msg) {
     var resources = $("#resourceBoxes");
-    var box;
     ["error", "warning", "info", "debug"].forEach(function(v) {
-      box = $(resources).find("#" + v + "LogBox div.scroll");
+      var container = $(resources).find("#" + v + "LogBox");
+      var box = $(container).find("div.scroll");
+      var boxInner = $(box).find("div");
+      var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
       msg[v + "Messages"].forEach(function(l) {
         $(box).find("ul").append("<li>" + l + "</li>");
       });
-//      $(box).find("li:last-child").get(0).scrollIntoView();
-      $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+      // number of entries
+      var nr = $(container).find("h3 span");
+      $(nr).text(parseInt($(nr).text()) + msg[v + "Messages"].length);
+      // scroll
+      if (scrollDown) {
+        $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+      }
     });
     scc.order({"provider": "log"}, intervalLogs);
   }

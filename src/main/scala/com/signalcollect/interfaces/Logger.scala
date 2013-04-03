@@ -23,5 +23,5 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 
 trait Logger {
-  def getLogMessages(logLevel: LogLevel, numberOfMessages: Int): List[LogEvent]
+  def getLogMessages(logLevel: LogLevel): List[String]
 }
