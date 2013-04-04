@@ -26,7 +26,8 @@ import scala.collection.mutable.ArrayBuffer
  *  Edge additions and edge representations are not implemented.
  *
  *  Delivered signals get accumulated inside the state of this vertex. When the vertex signals,
- *  the `process` function is called for each item in FIFO order.
+ *  the `process` function is called for each item in LIFO order (List has better performance
+ *  than ArrayBuffer for this use case).
  *
  *  @param id Unique vertex id.
  *
@@ -34,21 +35,21 @@ import scala.collection.mutable.ArrayBuffer
  */
 abstract class ProcessingVertex[Id, SignalType](
   val id: Id,
-  var state: ArrayBuffer[SignalType] = ArrayBuffer[SignalType]())
-  extends Vertex[Id, ArrayBuffer[SignalType]] {
+  var state: List[SignalType] = List[SignalType]())
+  extends Vertex[Id, List[SignalType]] {
 
   def process(signal: SignalType, graphEditor: GraphEditor[Any, Any])
 
   def shouldProcess(signal: SignalType): Boolean = true
 
-  def setState(s: ArrayBuffer[SignalType]) {
+  def setState(s: List[SignalType]) {
     state = s
   }
 
   def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
     val item = signal.asInstanceOf[SignalType]
     if (shouldProcess(item)) {
-      state += item
+      state = item :: state
     }
     true
   }
@@ -57,7 +58,7 @@ abstract class ProcessingVertex[Id, SignalType](
     for (item <- state) {
       process(item, graphEditor)
     }
-    state.clear
+    state = List.empty
   }
 
   override def scoreSignal: Double = if (state.isEmpty) 0 else 1
