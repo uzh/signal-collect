@@ -11,6 +11,8 @@ organization := "com.signalcollect"
 
 scalaVersion := "2.10.1"
 
+scalacOptions ++= Seq("-optimize")
+
 assembleArtifact in packageScala := false
 
 parallelExecution in Test := false
