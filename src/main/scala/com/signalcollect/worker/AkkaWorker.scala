@@ -109,6 +109,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var continueSignalingReceived = true
   var awaitingContinueSignaling = false
 
+  var flushedAfterUndeliverableSignalHandler = true
+  
   /**
    * Timeout for Akka actor idling
    */
@@ -178,6 +180,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
       }
       messageBus.flush
+      flushedAfterUndeliverableSignalHandler = true
     }
   }
 
@@ -370,6 +373,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
+    flushedAfterUndeliverableSignalHandler = true
     vertexStore.toCollect.isEmpty
   }
 
@@ -421,7 +425,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   protected var vertexStore = storageFactory.createInstance[Id]
 
   protected def isConverged =
-    vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty
+    vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty && flushedAfterUndeliverableSignalHandler
 
   protected def getWorkerStatus: WorkerStatus = {
     WorkerStatus(
@@ -476,6 +480,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
+      flushedAfterUndeliverableSignalHandler = false
     }
   }
 
