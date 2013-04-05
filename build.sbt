@@ -15,6 +15,10 @@ scalacOptions ++= Seq("-optimize")
 
 assembleArtifact in packageScala := false
 
+excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
+  cp filter {_.data.getName == "minlog-1.2.jar"}
+}
+
 parallelExecution in Test := false
 
 EclipseKeys.withSource := true
