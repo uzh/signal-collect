@@ -231,20 +231,29 @@
               <p>Waiting for more data.</p>
             </div>
         
-            <div id="errorLogBox">
-              <h3>Errors (<span>0</span>)</h3>
-              <div class="scroll"><div><ul></ul></div></div>
-            </div>
-            <div id="warningLogBox">
-	            <h3>Warnings (<span>0</span>)</h3>
-	            <div class="scroll"><div><ul></ul></div></div>
-            </div>
-            <div id="infoLogBox">
-              <h3>Info Messages (<span>0</span>)</h3>
-              <div class="scroll"><div><ul></ul></div></div>
-            </div>
-            <div id="debugLogBox">
-              <h3>Debug Messages (<span>0</span>)</h3>
+            <div id="logBox">
+              <p class="filter level">
+                Level:
+                <span class="active">
+                  Error (<span>0</span>)
+                </span><span class="active">
+                  Warning (<span>0</span>)
+                </span><span class="active">
+                  Info (<span>0</span>)
+                </span><span>
+                  Debug (<span>0</span>)
+                </span>
+              </p>
+              <p class="filter source">
+                Source:
+                <span class="active">
+                  Akka
+                </span><span class="active">
+                  Signal/Collect
+                </span><span class="active">
+                  User
+                </span>
+              </p>
               <div class="scroll"><div><ul></ul></div></div>
             </div>
         

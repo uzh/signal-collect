@@ -37,38 +37,65 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import akka.actor.ActorLogging
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 case class Get(level: LogLevel, number: Int)
 
 class ConsoleLogger extends Actor with Logger with ActorLogging {
 //  println(context.self)
 
-  def getLogMessages(logLevel: LogLevel): List[String] = {
-    readLog(logLevel)
+  def logFileName = "log_messages.txt"
+      
+  def getLogMessages: List[String] = {
+    readLog
   }
   
-  def getLogFileName(logLevel: LogLevel): String = {
-    logLevel match {
-      case Logging.ErrorLevel   => "error_messages.txt"
-      case Logging.WarningLevel => "warning_messages.txt"
-      case Logging.InfoLevel    => "info_messages.txt"
-      case Logging.DebugLevel   => "debug_messages.txt"
-    }
-  }
-  
-  def writeLog(logLevel: LogLevel, message: String) {
-    val fileWriter = new FileWriter(getLogFileName(logLevel), true)
+  def writeLog(message: String) {
+    val fileWriter = new FileWriter(logFileName, true)
     try {
-      val date = (new SimpleDateFormat("YYYY-MM-dd HH:mm:ss:SS")).format(Calendar.getInstance().getTime())
-      fileWriter.write(date + " " + message + "\n")
+      fileWriter.write(message + "\n")
     }
     finally {
       fileWriter.close()
     }
   }
   
-  def resetLog(logLevel: LogLevel) {
-    val fileWriter = new FileWriter(getLogFileName(logLevel), false)
+  def createJsonString(
+      level: String,
+      cause: Throwable,
+      logSource: String,
+      logClass: Class[_],
+      message: Any): String = {
+    val causeStr = {
+      if (cause == null) ""
+      else cause.getMessage()
+    }
+    val logClassStr = logClass.toString()
+    val source = {
+      if (logClassStr.startsWith("class akka.")) {
+        "akka"
+      }
+      else if (logClassStr.startsWith("class com.signalcollect.")
+          && !logClassStr.startsWith("class com.signalcollect.examples.")) {
+        "sc"
+      } else {
+        "user"
+      }
+    }
+    val date = (new SimpleDateFormat("YYYY-MM-dd HH:mm:ss:SSS")).format(Calendar.getInstance().getTime())
+    val json = ("level" -> level) ~
+               ("source" -> source) ~
+               ("date" -> date) ~
+               ("cause" -> causeStr) ~
+               ("logSource" -> logSource) ~
+               ("logClass" -> logClassStr) ~ 
+               ("message" -> message.toString) 
+    compact(render(json))
+  }
+  
+  def resetLog {
+    val fileWriter = new FileWriter(logFileName, false)
     try {
       fileWriter.write((new String()))
     }
@@ -77,30 +104,33 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     }
   }
   
-  def readLog(logLevel: LogLevel): List[String] = {
+  def readLog: List[String] = {
     var logMessages: List[String] = List()
-    val fileName = getLogFileName(logLevel)
-    if (!(new File(fileName)).exists) {
+    if (!(new File(logFileName)).exists) {
       return logMessages
     }
     
-    for(line <- Source.fromFile(fileName).getLines()) {
+    for(line <- Source.fromFile(logFileName).getLines()) {
       if (line.length() > 0) {
         logMessages = logMessages ::: List(line)
       }
     }
     if (logMessages.size > 0) {
-      resetLog(logLevel)
+      resetLog
     }
     logMessages
   }
 
   def receive = {
     case InitializeLogger(_) => sender ! LoggerInitialized
-    case l @ Error(cause, logSource, logClass, message) => writeLog(Logging.ErrorLevel, l.toString)
-    case l @ Warning(logSource, logClass, message) => writeLog(Logging.WarningLevel, l.toString)
-    case l @ Info(logSource, logClass, message) => writeLog(Logging.InfoLevel, l.toString)
-    case l @ Debug(logSource, logClass, message) => writeLog(Logging.DebugLevel, l.toString)
+    case l @ Error(cause, logSource, logClass, message) =>
+      writeLog(createJsonString("Error", cause, logSource, logClass, message))
+    case l @ Warning(logSource, logClass, message) =>
+      writeLog(createJsonString("Warning", null, logSource, logClass, message))
+    case l @ Info(logSource, logClass, message) =>
+      writeLog(createJsonString("Info", null, logSource, logClass, message))
+    case l @ Debug(logSource, logClass, message) => 
+      writeLog(createJsonString("Debug", null, logSource, logClass, message))
     case Request(command, reply) =>
       try {
         val result = command.asInstanceOf[Logger => Any](this)

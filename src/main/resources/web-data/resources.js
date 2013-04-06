@@ -5,9 +5,9 @@ scc.defaults.resources = {"layout":{
                           "section": "statistics"
                          };
 
-// Intervals
+// Intervals (ms)
 var interval = 3000;
-var intervalStatistics = 2*interval; // update statistics less often
+var intervalStatistics = 6000;
 var intervalLogs = 5000;
 
 // configure which content box to show in which section
@@ -18,12 +18,12 @@ var resourceBoxes = {
       "graphStatBox",
       "estimationStatBox"
       ],
-    "logs"      : [ "logBox", "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox" ],
+    "logs"      : [ "logBox" ],
     "detailed"  : [  ], // all charts will be added automatically
     
     "nostart"   : [ 
       "signalCollectTitle",
-      "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox",
+      "logBox",
       "heartbeatMessagesReceivedChart",
       "messagesSentChart",
       "messagesReceivedChart",
@@ -59,7 +59,7 @@ var resourceBoxes = {
     ],
     "crash" : [
       "jmx_mem_freeChart",
-      "errorLogBox", "warningLogBox", "infoLogBox", "debugLogBox" ],
+      "logBox" ],
     "slow" : [
       "infrastructureTitle",
       "jmx_system_loadChart",
@@ -78,7 +78,11 @@ var resourceBoxes = {
 
 
 
-//show information about the configuration (jvm etc.)
+
+
+/**
+ * show information about the configuration (jvm etc.)
+ */
 scc.modules.configuration = function() {
   this.requires = ["configuration"];
   
@@ -110,12 +114,44 @@ scc.modules.configuration = function() {
   }
 }
 
-//show log and error messages
+
+
+
+
+/**
+ * show log and error messages
+ */
 scc.modules.log = function() {
   this.requires = ["log"];
   
+  var latest, identicalLogMessages = 0;
+  var container = $("#resourceBoxes #logBox");
+  var box = $(container).find("div.scroll");
+  var boxInner = $(box).find("div");
+  var logLevelIndex = { "error":1, "warning":2, "info":3, "debug":4 };
+  var filterLevel = $(container).find("p.filter.level");
+  var logSourceIndex = { "akka":1, "sc":2, "user":3 };
+  var filterSource = $(container).find("p.filter.source");
+  
   this.onopen = function () {
     scc.order({"provider": "log"});
+    
+    // hide and show log messages based on their level
+    $.each(logLevelIndex, function(v, k) {
+      $(filterLevel).find("> span:eq(" + (k-1) + ")").on("click", function() {
+        $(this).toggleClass("active");
+        $(box).find("li.level_" + v).toggleClass("hidden_level");
+      });
+    });
+
+    // hide and show log messages based on their level
+    $.each(logSourceIndex, function(v, k) {
+      $(filterSource).find("> span:eq(" + (k-1) + ")").on("click", function() {
+        $(this).toggleClass("active");
+        $(box).find("li.source_" + v).toggleClass("hidden_source");
+      });
+    });
+    
   }
     
   this.onerror = function(e) { }
@@ -123,23 +159,44 @@ scc.modules.log = function() {
   this.onclose = function() { }
   
   this.onmessage = function(msg) {
-    var resources = $("#resourceBoxes");
-    ["error", "warning", "info", "debug"].forEach(function(v) {
-      var container = $(resources).find("#" + v + "LogBox");
-      var box = $(container).find("div.scroll");
-      var boxInner = $(box).find("div");
-      var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
-      msg[v + "Messages"].forEach(function(l) {
-        $(box).find("ul").append("<li>" + l + "</li>");
-      });
-      // number of entries
-      var nr = $(container).find("h3 span");
-      $(nr).text(parseInt($(nr).text()) + msg[v + "Messages"].length);
-      // scroll
-      if (scrollDown) {
-        $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+    var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
+    msg["messages"].forEach(function(l) {
+      var json = $.parseJSON(l);
+      var filterLevelButton = $(filterLevel).find("> span:eq(" + (logLevelIndex[json.level.toLowerCase()]-1) + ")");
+      var filterSourceButton = $(filterSource).find("> span:eq(" + (logSourceIndex[json.source.toLowerCase()]-1) + ")");
+      if (latest != null &&
+          latest.level == json.level && 
+          latest.cause == json.cause &&
+          latest.logSource == json.logSource &&
+          latest.logClass == json.logClass &&
+          latest.message == json.message
+         ) {
+        identicalLogMessages += 1;
+        $(container).find("small.numberOfOccurences").last()
+                    .text(" (" + (identicalLogMessages+1) + " times)");
+      } else {
+        var log = json.date + " " + json.level + ": " + json.message;
+        if (json.cause != null && json.cause.length > 0) {
+          log += " (" + json.cause + ")";
+        }
+        log += " &lt;" + json.logSource + ", " + json.logClass + "&gt;";
+        var cls = "level_" + json.level.toLowerCase() + " source_" + json.source;
+        // check whether this message should be hidden
+        if (!$(filterLevelButton).hasClass("active"))  { cls += " hidden_level"; }
+        if (!$(filterSourceButton).hasClass("active")) { cls += " hidden_source"; }
+        $(box).find("ul")
+              .append("<li class=\"" + cls + "\">" + log + "<small class=\"numberOfOccurences\"></small></li>");
+        latest = json;
+        identicalLogMessages = 0;
       }
+      // number of entries
+      var nr = $(filterLevelButton).find("span");
+      $(nr).text(parseInt($(nr).text()) + 1);
     });
+    // scroll
+    if (scrollDown && msg.messages.length > 0) {
+      $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+    }
     scc.order({"provider": "log"}, intervalLogs);
   }
 }

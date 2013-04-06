@@ -77,6 +77,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def sendHeartbeat {
+//    log.error("error test")
+//    log.warning("warning test")
+//    log.info("info test")
     log.debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
@@ -199,8 +202,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
   
-  def getLogMessages(logLevel: LogLevel) = {
-    logger.getLogMessages(logLevel)
+  def getLogMessages = {
+    logger.getLogMessages
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

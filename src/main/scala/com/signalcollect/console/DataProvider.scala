@@ -69,15 +69,8 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
 
 class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
   def fetch(): JObject = {
-    val errorMessages   = coordinator.getLogMessages(Logging.ErrorLevel).map(_.toString)
-    val warningMessages = coordinator.getLogMessages(Logging.WarningLevel).map(_.toString)
-    val infoMessages    = coordinator.getLogMessages(Logging.InfoLevel).map(_.toString)
-    val debugMessages   = coordinator.getLogMessages(Logging.DebugLevel).map(_.toString)
     ("provider" -> "log") ~ 
-    ("errorMessages" -> errorMessages) ~  
-    ("warningMessages" -> warningMessages) ~  
-    ("infoMessages" -> infoMessages) ~
-    ("debugMessages" -> debugMessages) 
+    ("messages" -> coordinator.getLogMessages.map(_.toString)) 
   }
 }
 

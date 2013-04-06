@@ -8,7 +8,4 @@ project/scala*/
 target/*
 .tags
 graph-data/
-error_messages.txt
-warning_messages.txt
-info_messages.txt
-debug_messages.txt
+log_messages.txt
