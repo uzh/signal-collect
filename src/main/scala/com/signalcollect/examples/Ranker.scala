@@ -4,6 +4,7 @@ import com.signalcollect._
 import java.io.FileInputStream
 import org.semanticweb.yars.nx.parser.NxParser
 import akka.event.Logging
+import com.signalcollect.configuration.ExecutionMode
 
 class Publication(id: String, initialState: Double = 0.15)
     extends DataGraphVertex(id, initialState) {
@@ -27,6 +28,7 @@ object Ranker extends App {
   val graph = GraphBuilder.withConsole(true, 8091)
                           .withLoggingLevel(Logging.DebugLevel)
                           .build
+  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
   
   println("loading graph")
   
@@ -34,8 +36,7 @@ object Ranker extends App {
   
   println("executing")
   
-  val stats = graph.execute
-  println(stats)
+  val stats = graph.execute(execConfig)
   
 //  val topPublications = graph.aggregate(new TopKFinder[String, Double](10))
 //  
@@ -46,7 +47,9 @@ object Ranker extends App {
   def loadGraph {
     val is = new FileInputStream("./references.nt")
     val parser = new NxParser(is)
-    while (parser.hasNext) {
+    var i = 0
+    while (parser.hasNext && i < 50000) {
+      i += 1
       val triple = parser.next
       val citer = triple(0).toString
       val cited = triple(2).toString
