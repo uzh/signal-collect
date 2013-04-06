@@ -1,5 +1,6 @@
 .*
 *.snapshot
+lib/*
 !/.gitignore
 !/.travis.yml
 project/target/
