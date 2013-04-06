@@ -249,7 +249,7 @@ body {
   background-color: #59b6e8;
 }
 
-.panel select + button, 
+.panel button, 
 .panel input[type="text"] + button {
   padding: 0;
   margin: 0;
@@ -285,12 +285,13 @@ body {
 
 .panel select {
   color: #59b6e8;
+  padding-left: 10px;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 16px;
   -moz-appearance: toolbox;
   -webkit-appearance: none;
   appearance: none;
-  background: none;
+  background: url(select.png) no-repeat left #F5F5F5;
   border: none;
 }
 
@@ -380,8 +381,6 @@ body {
 .sectionLink.active { 
   color:black;
 }
-
-div.panel label { cursor:pointer; }
 
 .structured {
   padding-left: 20px;
