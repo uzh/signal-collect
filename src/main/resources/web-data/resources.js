@@ -136,6 +136,13 @@ scc.modules.log = function() {
   this.onopen = function () {
     scc.order({"provider": "log"});
     
+    // make it using the full height
+    onResize = (function() {
+      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 180) + "px");
+    });
+    $(document).ready(onResize);
+    $(window).resize(onResize);
+    
     // hide and show log messages based on their level
     $.each(logLevelIndex, function(v, k) {
       $(filterLevel).find("> span:eq(" + (k-1) + ")").on("click", function() {

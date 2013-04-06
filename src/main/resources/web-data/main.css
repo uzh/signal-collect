@@ -576,7 +576,11 @@ ul.statistics li span { display:block; margin-left:150px; font-weight:bold; posi
 
 /* logging */
 div#logBox div.scroll
-                    { overflow-y:auto; max-height:600px; }
+                    { overflow-y:auto; max-height:400px; max-width:900px; }
+body.logs div#resources .structured
+                    { height:100%; overflow:hidden; }
+body.logs div#logBox div.scroll
+                    { width:100%; max-width:100%; max-height:100%; }
 div#logBox ul       { padding:0; }
 div#logBox li       { list-style:none; padding:5px; margin:1px 0; }
 div#logBox li.hidden_level,
