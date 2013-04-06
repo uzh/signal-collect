@@ -1,5 +1,7 @@
 package com.signalcollect.console
 
+import java.io.StringWriter
+import java.io.PrintWriter
 import scala.collection.JavaConversions.propertiesAsScalaMap
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
@@ -19,6 +21,17 @@ trait DataProvider {
   def fetch(): JObject
   def fetchInvalid(msg: JValue = JString("")): JObject = {
     new InvalidDataProvider(compact(render(msg))).fetch
+  }
+}
+
+class ErrorDataProvider(e: Exception) extends DataProvider {
+  def fetch(): JObject = {
+    val sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    val stacktrace = sw.toString();
+    ("provider" -> "error") ~
+    ("msg" -> "A fatal exception occured") ~
+    ("stacktrace" -> stacktrace)
   }
 }
 

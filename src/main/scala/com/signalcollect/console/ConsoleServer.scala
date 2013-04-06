@@ -227,7 +227,14 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         case otherwise => new NotReadyDataProvider(msg)
       }
     }
-    socket.send(compact(render(provider.fetch)))
+
+    try {
+      socket.send(compact(render(provider.fetch)))
+    } 
+    catch {
+      case e: Exception =>
+        socket.send(compact(render(new ErrorDataProvider(e).fetch)))
+    } 
   }
 
   def onOpen(socket: WebSocket, handshake:ClientHandshake) {
