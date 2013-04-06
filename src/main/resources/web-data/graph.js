@@ -10,7 +10,8 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeBorder": "Is Vicinity",
                         "gc_vicinityRadius": "1",
                         "gc_maxVertices": "20",
-                        "gc_refreshRate": "5"
+                        "gc_refreshRate": "5",
+                        "gc_drawEdges": "When graph is still"
                       }}
 
 scc.modules.graph = function() {
@@ -159,8 +160,8 @@ scc.modules.graph = function() {
         .size([$("#content").width(), $("#content").height()])
         .nodes(nodes)
         .links(links)
-        .linkDistance(30)
-        .charge(-120)
+        .linkDistance(50)
+        .charge(-200)
 
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
@@ -170,7 +171,9 @@ scc.modules.graph = function() {
     });
 
     force.on("tick", function() {
-      if (force.alpha() < 0.02) {
+      var drawEdges = scc.settings.get().graph.options["gc_drawEdges"];
+      if (drawEdges == "Always" || 
+         (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
         link.style("display", "block")
         link.attr("x1", function(d) { return d.source.x; })
             .attr("y1", function(d) { return d.source.y; })
@@ -378,6 +381,17 @@ scc.modules.graph = function() {
   $("#gc_refreshRate").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gc_refreshRate": property.val() }}});
+  });
+  $("#gc_drawEdges").change(function (e) { 
+    var val = $(this).val();
+    switch (val) {
+        case "Always":
+        case "When graph is still":
+            link.style("display", "block"); break;
+        case "Never":
+            link.style("display", "none"); break;
+    }
+    scc.settings.set({"graph": {"options": {"gc_drawEdges": val }}});
   });
 
 

@@ -81,6 +81,10 @@ $(document).ready(function() {
           var targetProvider = j["targetProvider"]
           scc.consumers[targetProvider].notready(j)
         }
+        else if (provider == "error") {
+          console.log(j["stacktrace"]);
+          showMsg("#error", j["msg"]);
+        }
         for (var m in scc.consumers) { 
           var consumer = scc.consumers[m]
           if (consumer.requires.indexOf(provider) >= 0) {
