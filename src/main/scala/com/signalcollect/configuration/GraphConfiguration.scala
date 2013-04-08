@@ -43,7 +43,7 @@ case class GraphConfiguration(
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
-  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
+  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
   heartbeatIntervalInMilliseconds: Long = 100)
 
 object LoggingLevel {

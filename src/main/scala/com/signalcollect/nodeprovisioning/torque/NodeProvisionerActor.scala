@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2012 University of Zurich
  *      

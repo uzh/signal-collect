@@ -19,10 +19,9 @@
 
 package com.signalcollect.interfaces
 
-import akka.actor.ActorRef
+import akka.actor.Actor
+import com.signalcollect.nodeprovisioning.Node
 
-trait Node[Id, Signal] {
-
-  def localWorkers: Array[ActorRef]
-
-}
+trait NodeActor extends Actor
+  with Node
+  with MessageRecipientRegistry

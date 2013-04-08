@@ -97,18 +97,22 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
   ActorSystemRegistry.register(system)
 
-  val nodes = config.nodeProvisioner.getNodes(akkaConfig)
-  
-  val numberOfNodes = nodes.length
+  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
+  // Bootstrap => sent and received messages are not counted for termination detection. 
+  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_))
+  val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
+  val numberOfNodes = bootstrapNodeProxies.length
 
-  val numberOfWorkers = nodes.par map (_.numberOfCores) sum
+  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
+  
+  parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
 
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
     var workerId = 0
-    for (node <- nodes) {
+    for (node <- bootstrapNodeProxies) {
       for (core <- 0 until node.numberOfCores) {
         val workerCreator = WorkerCreator[Id, Signal](
           workerId,
@@ -142,13 +146,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
   }
 
+  // Bootstrap => sent and received messages are not counted for termination detection. 
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
 
   def initializeMessageBuses {
-    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
+    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
     for (registry <- registries.par) {
       try {
         registry.registerCoordinator(coordinatorActor)
@@ -159,8 +164,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         registry.registerWorker(workerId, workerActors(workerId))
       }
       for (nodeId <- (0 until numberOfNodes).par) {
-        // Register dummy nodes so message counts match.
-        registry.registerNode(nodeId, null.asInstanceOf[ActorRef])
+        registry.registerNode(nodeId, nodeActors(nodeId))
       }
       registry.registerLogger(loggerActor)
     }
@@ -207,8 +211,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
     stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
-    val workerStatistics = workerApi.getIndividualWorkerStatistics
-    ExecutionInformation(config, numberOfWorkers, nodes map (_.numberOfCores.toString), parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
+    val workerStatistics = workerApi.getIndividualWorkerStatistics  // TODO: Refactor to use cached values in order to reduce latency.
+    ExecutionInformation(config, numberOfWorkers, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
 
   protected def synchronousExecution(
@@ -386,7 +390,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def shutdown = {
     workerApi.shutdown
-    nodes.par.foreach(_.shutdown)
+    parallelBootstrapNodeProxies.foreach(_.shutdown)
     system.shutdown
     system.awaitTermination
   }

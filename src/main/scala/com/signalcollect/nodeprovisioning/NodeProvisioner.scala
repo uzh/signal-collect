@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -20,7 +21,8 @@
 package com.signalcollect.nodeprovisioning
 
 import com.typesafe.config.Config
+import akka.actor.ActorRef
 
 trait NodeProvisioner extends Serializable {
-  def getNodes(akkaConfig: Config): List[Node]
+  def getNodes(akkaConfig: Config): Array[ActorRef]
 }

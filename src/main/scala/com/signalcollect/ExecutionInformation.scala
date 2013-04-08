@@ -42,7 +42,6 @@ import com.signalcollect.interfaces.WorkerStatistics
 case class ExecutionInformation(
   config: GraphConfiguration,
   numberOfWorkers: Int,
-  nodeDescriptions: List[String],
   parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,

@@ -20,6 +20,8 @@
 
 package com.signalcollect.interfaces
 
+case object NodeReady
+
 case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
 
 case class Heartbeat(maySignal: Boolean)
