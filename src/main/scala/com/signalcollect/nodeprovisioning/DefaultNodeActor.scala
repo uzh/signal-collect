@@ -35,15 +35,20 @@ import com.signalcollect.interfaces.MessageBus
 import scala.reflect.ClassTag
 import akka.japi.Creator
 import com.signalcollect.interfaces.NodeReady
+import com.signalcollect.interfaces.NodeStatus
+import scala.language.postfixOps
+import scala.concurrent.duration.DurationInt
+import akka.actor.ReceiveTimeout
+import com.signalcollect.interfaces.Heartbeat
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-    jobId: Any,
+    nodeId: Int,
     nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
-    jobId,
+    nodeId,
     nodeProvisionerAddress)
 }
 
@@ -51,9 +56,61 @@ case class NodeActorCreator(
  * Class that controls a node on which Signal/Collect workers run.
  */
 class DefaultNodeActor(
-    nodeId: Any,
+    val nodeId: Int,
     val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
     ) extends NodeActor {
+
+  var statusReportingInterval = 10 // Report every 10 milliseconds.
+
+  var receivedMessagesCounter = 0
+
+  // To keep track of sent messages before the message bus is initialized.
+  var initializationMessageCounter = 0
+
+  def setStatusReportingInterval(interval: Int) {
+    this.statusReportingInterval = interval
+  }
+
+  /**
+   * Timeout for Akka actor idling
+   */
+  context.setReceiveTimeout(statusReportingInterval milliseconds)
+
+  def receive = {
+    /**
+     * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
+     */
+    case ReceiveTimeout =>
+      sendStatusToCoordinator
+    case Heartbeat(maySignal) =>
+      sendStatusToCoordinator
+    case Request(command, reply) =>
+      receivedMessagesCounter += 1
+      val result = command.asInstanceOf[Node => Any](this)
+      if (reply) {
+        if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
+          if (isInitialized) {
+            // MessageBus will take care of counting the replies.
+            messageBus.sendToActor(sender, None)
+          } else {
+            // We need to manually keep track of these sent messages.
+            initializationMessageCounter += 1
+            sender ! None
+          }
+        } else {
+          if (isInitialized) {
+            // MessageBus will take care of counting the replies.
+            messageBus.sendToActor(sender, result)
+          } else {
+            // We need to manually keep track of these sent messages.
+            initializationMessageCounter += 1
+            sender ! result
+          }
+        }
+      }
+    case other =>
+      println("Received unexpected message from " + sender + ": " + other)
+  }
 
   var messageBus: MessageBus[_, _] = _
 
@@ -63,7 +120,25 @@ class DefaultNodeActor(
     messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes)
   }
 
-  def shutdown = context.system.shutdown
+  protected var lastStatusUpdate = System.currentTimeMillis
+
+  protected def getNodeStatus: NodeStatus = {
+    NodeStatus(
+      nodeId = nodeId,
+      messagesSent = messageBus.messagesSent + initializationMessageCounter + 1, // +1 to account for the status message itself.
+      messagesReceived = receivedMessagesCounter)
+  }
+
+  protected def sendStatusToCoordinator {
+    val currentTime = System.currentTimeMillis
+    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
+      lastStatusUpdate = currentTime
+      val status = getNodeStatus
+      messageBus.sendToCoordinator(status)
+    }
+  }
+
+  def isInitialized = messageBus != null && messageBus.isInitialized
 
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     val workerName = "Worker" + workerId
@@ -86,19 +161,7 @@ class DefaultNodeActor(
     }
   }
 
-  def receive = {
-    case Request(command, reply) =>
-      val result = command.asInstanceOf[Node => Any](this)
-      if (reply) {
-        if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
-          sender ! None
-        } else {
-          sender ! result
-        }
-      }
-    case other =>
-      println("Received unexpected message from " + sender + ": " + other)
-  }
+  def shutdown = context.system.shutdown
 
   def registerWorker(workerId: Int, worker: ActorRef) {
     messageBus.registerWorker(workerId, worker)

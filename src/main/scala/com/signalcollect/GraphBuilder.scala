@@ -117,7 +117,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newHeartbeatIntervalInMilliseconds The interval with which the coordinator sends a heartbeat to the workers.
    */
-  def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Long) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
+  def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
 
   /**
    *  Internal function to create a new builder instance that has a configuration which defaults
@@ -133,7 +133,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
     akkaMessageCompression: Boolean = config.akkaMessageCompression,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner,
-    heartbeatIntervalInMilliseconds: Long = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
+    heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         loggingLevel = loggingLevel,

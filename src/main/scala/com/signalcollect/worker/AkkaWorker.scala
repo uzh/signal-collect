@@ -95,7 +95,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val heartbeatIntervalInMilliseconds: Long,
+  val heartbeatIntervalInMilliseconds: Int,
   val loggingLevel: Int)
     extends WorkerActor[Id, Signal] with ActorLogging {
 

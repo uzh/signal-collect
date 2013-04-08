@@ -31,7 +31,8 @@ import com.signalcollect.interfaces.MessageBusFactory
 trait Node {
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory)
-  def numberOfCores: Int
+  def setStatusReportingInterval(statusReportingInterval: Int)
+  def numberOfCores: Int 
   def shutdown
 }
 

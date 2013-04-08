@@ -46,6 +46,13 @@ case class WorkerStatus(
   messagesSent: Long,
   messagesReceived: Long)
 
+// Convergence/pause detection
+case class NodeStatus(
+  nodeId: Int,
+  messagesSent: Long,
+  messagesReceived: Long)
+
+  
 case class WorkerStatistics(
   messagesSent: Long = 0l,
   workerId: Int = -1,

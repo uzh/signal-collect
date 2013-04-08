@@ -102,11 +102,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_))
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
-
-  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
   
+  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
+
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
 
+  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
+  
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   val workerActors: Array[ActorRef] = {
@@ -155,18 +157,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
     for (registry <- registries.par) {
-      try {
-        registry.registerCoordinator(coordinatorActor)
-      } catch {
-        case e: Exception => loggerActor ! Severe("Exception in `initializeMessageBuses`:" + e.getCause + "\n" + e, this.toString)
-      }
+      registry.registerCoordinator(coordinatorActor)
+      registry.registerLogger(loggerActor)
       for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
       for (nodeId <- (0 until numberOfNodes).par) {
         registry.registerNode(nodeId, nodeActors(nodeId))
       }
-      registry.registerLogger(loggerActor)
     }
   }
 
@@ -211,7 +209,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
     stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
-    val workerStatistics = workerApi.getIndividualWorkerStatistics  // TODO: Refactor to use cached values in order to reduce latency.
+    val workerStatistics = workerApi.getIndividualWorkerStatistics // TODO: Refactor to use cached values in order to reduce latency.
     ExecutionInformation(config, numberOfWorkers, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
 
