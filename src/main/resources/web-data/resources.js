@@ -128,10 +128,12 @@ scc.modules.log = function() {
   var container = $("#resourceBoxes #logBox");
   var box = $(container).find("div.scroll");
   var boxInner = $(box).find("div");
-  var logLevelIndex = { "error":1, "warning":2, "info":3, "debug":4 };
-  var filterLevel = $(container).find("p.filter.level");
+  var maxDebugMessages = 2000;
+  
+  var logLevelIndex  = { "error":1, "warning":2, "info":3, "debug":4 };
+  var filterLevel    = $(container).find("p.filter.level");
   var logSourceIndex = { "akka":1, "sc":2, "user":3 };
-  var filterSource = $(container).find("p.filter.source");
+  var filterSource   = $(container).find("p.filter.source");
   
   this.onopen = function () {
     scc.order({"provider": "log"});
@@ -204,8 +206,19 @@ scc.modules.log = function() {
     if (scrollDown && msg.messages.length > 0) {
       $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
     }
+
+    // remove old debug messages when not viewing
+    if (!$(filterLevel).find("> span:eq(" + (logLevelIndex.debug-1) + ")").hasClass("active")) {
+      var debugMessages = $(box).find('li.level_debug')
+      var numDebugMessages = $(debugMessages).length;
+      if (numDebugMessages > maxDebugMessages) {
+        $(debugMessages).slice(0, numDebugMessages-maxDebugMessages).remove();
+      }
+    }
+
     scc.order({"provider": "log"}, intervalLogs);
   }
+  
 }
 
 scc.modules.resources = function() {
