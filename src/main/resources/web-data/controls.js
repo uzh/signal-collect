@@ -47,7 +47,9 @@ scc.modules.controls = function() {
         scc.terminate("#success", "Terminating...")
         break;
     }
-    scc.consumers.graph.order()
+    if (scc.consumers.graph != null) {
+      scc.consumers.graph.order();
+    }
   }
 
   this.onerror = function(e) { }
