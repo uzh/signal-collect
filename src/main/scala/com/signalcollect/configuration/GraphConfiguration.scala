@@ -35,7 +35,6 @@ import com.signalcollect.factory.storage.DefaultStorage
  * All the graph configuration parameters with their defaults.
  */
 case class GraphConfiguration(
-  consoleEnabled: Boolean = false,
   loggingLevel: Int = LoggingLevel.Warning,
   logger: LogMessage => Unit = DefaultLogger.log,
   workerFactory: WorkerFactory = LocalWorker,

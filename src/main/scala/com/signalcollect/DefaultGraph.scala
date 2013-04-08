@@ -28,26 +28,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.ActorSystemRegistry
-import com.signalcollect.configuration.AkkaConfig
-import com.signalcollect.configuration.EventBased
-import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.configuration.Pinned
-import com.signalcollect.configuration.TerminationReason
-import com.signalcollect.coordinator.DefaultCoordinator
-import com.signalcollect.coordinator.IsIdle
-import com.signalcollect.coordinator.OnIdle
-import com.signalcollect.interfaces.ComplexAggregation
-import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.LogMessage
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.Severe
-import com.signalcollect.interfaces.WorkerActor
-import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.configuration._
+import com.signalcollect.coordinator._
+import com.signalcollect.interfaces._
 import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
@@ -59,7 +42,6 @@ import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
-import com.signalcollect.console.ConsoleServer
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -164,14 +146,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
-
-  val console = {
-    if (config.consoleEnabled) {
-      new ConsoleServer(coordinatorActor)
-    } else {
-      null
-    }
-  }
 
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
@@ -411,9 +385,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   def isIdle = coordinatorProxy.isIdle
 
   def shutdown = {
-    if (config.consoleEnabled) {
-      console.shutdown
-    }
     workerApi.shutdown
     nodes.par.foreach(_.shutdown)
     system.shutdown

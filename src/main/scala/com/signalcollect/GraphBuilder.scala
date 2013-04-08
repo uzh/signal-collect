@@ -49,11 +49,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def build: Graph[Id, Signal] = new DefaultGraph[Id, Signal](config)
 
   /**
-   *  Configures if the console website on port 8080 is enabled.
-   */
-  def withConsole(newConsoleEnabled: Boolean) = newLocalBuilder(consoleEnabled = newConsoleEnabled)
-
-  /**
    *  Configures if Akka message compression is enabled.
    */
   def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) = newLocalBuilder(akkaMessageCompression = newAkkaMessageCompression)
@@ -129,7 +124,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
   protected def newLocalBuilder(
-    consoleEnabled: Boolean = config.consoleEnabled,
     loggingLevel: Int = config.loggingLevel,
     logger: LogMessage => Unit = config.logger,
     workerFactory: WorkerFactory = config.workerFactory,
@@ -142,7 +136,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     heartbeatIntervalInMilliseconds: Long = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
-        consoleEnabled = consoleEnabled,
         loggingLevel = loggingLevel,
         logger = logger,
         workerFactory = workerFactory,
