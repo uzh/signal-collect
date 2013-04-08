@@ -58,22 +58,22 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 
 class WorkerOperationCounters(
-  var messagesReceived: Long = 0l,
-  var collectOperationsExecuted: Long = 0l,
-  var signalOperationsExecuted: Long = 0l,
-  var verticesAdded: Long = 0l,
-  var verticesRemoved: Long = 0l,
-  var outgoingEdgesAdded: Long = 0l,
-  var outgoingEdgesRemoved: Long = 0l,
-  var signalSteps: Long = 0l,
-  var collectSteps: Long = 0l,
-  var receiveTimeoutMessagesReceived: Long = 0l,
-  var heartbeatMessagesReceived: Long = 0l,
-  var signalMessagesReceived: Long = 0l,
-  var bulkSignalMessagesReceived: Long = 0l,
-  var continueMessagesReceived: Long = 0l,
-  var requestMessagesReceived: Long = 0l,
-  var otherMessagesReceived: Long = 0) {
+    var messagesReceived: Long = 0l,
+    var collectOperationsExecuted: Long = 0l,
+    var signalOperationsExecuted: Long = 0l,
+    var verticesAdded: Long = 0l,
+    var verticesRemoved: Long = 0l,
+    var outgoingEdgesAdded: Long = 0l,
+    var outgoingEdgesRemoved: Long = 0l,
+    var signalSteps: Long = 0l,
+    var collectSteps: Long = 0l,
+    var receiveTimeoutMessagesReceived: Long = 0l,
+    var heartbeatMessagesReceived: Long = 0l,
+    var signalMessagesReceived: Long = 0l,
+    var bulkSignalMessagesReceived: Long = 0l,
+    var continueMessagesReceived: Long = 0l,
+    var requestMessagesReceived: Long = 0l,
+    var otherMessagesReceived: Long = 0) {
   // Resets operation counters but not messages received/sent counters.
   def resetOperationCounters {
     collectOperationsExecuted = 0l
@@ -92,16 +92,17 @@ object ContinueSignaling
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
+  val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int)
-  extends WorkerActor[Id, Signal] with ActorLogging {
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
   val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](numberOfWorkers)
+    messageBusFactory.createInstance[Id, Signal](numberOfWorkers, numberOfNodes)
   }
 
   var maySignal = true
@@ -110,7 +111,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var awaitingContinueSignaling = false
 
   var flushedAfterUndeliverableSignalHandler = true
-  
+
   /**
    * Timeout for Akka actor idling
    */
@@ -389,7 +390,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     WorkerStatistics(
       workerId = workerId,
       messagesReceived = counters.messagesReceived,
-      messagesSent = messageBus.messagesSent.map(c => c.toLong),
+      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
       toSignalSize = vertexStore.toSignal.size,
       toCollectSize = vertexStore.toCollect.size,
       collectOperationsExecuted = counters.collectOperationsExecuted,
@@ -432,7 +433,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       workerId = workerId,
       isIdle = isIdle,
       isPaused = isPaused,
-      messagesSent = messageBus.messagesSent,
+      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
       messagesReceived = counters.messagesReceived)
   }
 
@@ -486,6 +487,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def registerWorker(workerId: Int, worker: ActorRef) {
     messageBus.registerWorker(workerId, worker)
+  }
+
+  def registerNode(nodeId: Int, node: ActorRef) {
+    messageBus.registerNode(nodeId, node)
   }
 
   def registerCoordinator(coordinator: ActorRef) {

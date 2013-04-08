@@ -41,11 +41,11 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-  messagesSent: Array[Int],
+  messagesSent: Long,
   messagesReceived: Long)
 
 case class WorkerStatistics(
-  messagesSent: Array[Long],
+  messagesSent: Long = 0l,
   workerId: Int = -1,
   messagesReceived: Long = 0l,
   toSignalSize: Long = 0l,
@@ -67,20 +67,7 @@ case class WorkerStatistics(
   otherMessagesReceived: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
-      { // Merges the sent messages arrays.
-        if (messagesSent == null) other.messagesSent
-        else if (other.messagesSent == null) messagesSent
-        else if (messagesSent == null && other.messagesSent == null) null
-        else {
-          val merged = new Array[Long](messagesSent.length)
-          var i = 0
-          while (i < messagesSent.length) {
-            merged(i) = messagesSent(i) + other.messagesSent(i)
-            i += 1
-          }
-          merged
-        }
-      },
+      messagesSent + other.messagesSent,
       -1,
       messagesReceived + other.messagesReceived,
       toSignalSize + other.toSignalSize,

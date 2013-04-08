@@ -40,21 +40,21 @@ import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def reset {}
-
-  def numberOfWorkers: Int
 
   protected val registrations = new AtomicInteger()
 
   def flush = {}
 
-  def isInitialized = registrations.get == numberOfWorkers + 2
+  def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 2
 
   protected val mapper: VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
 
   protected val workers = new Array[ActorRef](numberOfWorkers)
+
+  protected val nodes = new Array[ActorRef](numberOfNodes)
 
   protected val workerIds = (0 until numberOfWorkers).toList
 
@@ -62,17 +62,20 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   protected var coordinator: ActorRef = _
 
-  val coordinatorId = Coordinator.getCoodinatorPosition(numberOfWorkers)
-  val otherRecipients = Coordinator.getOthersPosition(numberOfWorkers)
+  protected val sentWorkerMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfWorkers)
 
-  protected val sentMessagesCounters: Array[AtomicInteger] = {
-    val counters = new Array[AtomicInteger](numberOfWorkers + 2)
-    var i = 0
-    while (i < counters.length) {
-      counters(i) = new AtomicInteger(0)
-      i += 1
+  protected val sentNodeMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfNodes)
+
+  protected val sentCoordinatorMessageCounter = new AtomicInteger(0)
+
+  protected val sentOtherMessageCounter = new AtomicInteger(0)
+
+  protected def getInitializedAtomicArray(numberOfEntries: Int): Array[AtomicInteger] = {
+    val atomicInts = new Array[AtomicInteger](numberOfEntries)
+    for (i <- 0 until numberOfEntries) {
+      atomicInts(i) = new AtomicInteger(0)
     }
-    counters
+    atomicInts
   }
 
   protected val receivedMessagesCounter = new AtomicInteger(0)
@@ -83,7 +86,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   lazy val workerProxies: Array[WorkerApi[Id, Signal]] = {
     val result = new Array[WorkerApi[Id, Signal]](numberOfWorkers)
     for (workerId <- workerIds) {
-      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](workers(workerId), sentMessagesCounters(workerId), receivedMessagesCounter)
+      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](workers(workerId), sentWorkerMessageCounters(workerId), receivedMessagesCounter)
     }
     result
   }
@@ -93,7 +96,12 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   /**
    * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
    */
-  def messagesSent = sentMessagesCounters.map((c: AtomicInteger) => c.get)
+  def messagesSent: Long = {
+    sentWorkerMessageCounters.map((c: AtomicInteger) => c.get).sum +
+      sentNodeMessageCounters.map((c: AtomicInteger) => c.get).sum +
+      sentCoordinatorMessageCounter.get +
+      sentOtherMessageCounter.get
+  }
 
   def messagesReceived = receivedMessagesCounter.get
 
@@ -101,6 +109,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   override def registerWorker(workerId: Int, worker: ActorRef) {
     workers(workerId) = worker
+    registrations.incrementAndGet
+  }
+
+  override def registerNode(nodeId: Int, node: ActorRef) {
+    nodes(nodeId) = node
     registrations.incrementAndGet
   }
 
@@ -117,13 +130,8 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   //--------------------MessageBus--------------------
 
   override def sendToActor(actor: ActorRef, message: Any) {
-    sentMessagesCounters(otherRecipients).incrementAndGet()
+    sentOtherMessageCounter.incrementAndGet()
     actor ! message
-  }
-
-  override def sendToCoordinator(message: Any) {
-    sentMessagesCounters(coordinatorId).incrementAndGet
-    coordinator ! message
   }
 
   override def sendToLogger(message: LogMessage) {
@@ -145,17 +153,31 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   }
 
   override def sendToWorker(workerId: Int, message: Any) {
-    sentMessagesCounters(workerId).incrementAndGet
+    sentWorkerMessageCounters(workerId).incrementAndGet
     workers(workerId) ! message
   }
 
   override def sendToWorkers(message: Any, messageCounting: Boolean) {
     if (messageCounting) {
-      workerIds.foreach(sentMessagesCounters(_).incrementAndGet)
+      sentWorkerMessageCounters.foreach(_.incrementAndGet)
     }
     for (worker <- parallelWorkers) {
       worker ! message
     }
+  }
+
+  override def sendToNode(nodeId: Int, message: Any) {
+    sentNodeMessageCounters(nodeId).incrementAndGet
+    workers(nodeId) ! message
+  }
+
+  override def sendToNodes(m: Any) {
+
+  }
+
+  override def sendToCoordinator(message: Any) {
+    sentCoordinatorMessageCounter.incrementAndGet
+    coordinator ! message
   }
 
   override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)

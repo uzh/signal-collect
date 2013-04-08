@@ -183,7 +183,7 @@ class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
 
     // Actor stats
     val workerStatistics: List[WorkerStatistics] = coordinator.getWorkerApi.getIndividualWorkerStatistics
-    val senderStats: List[String] = coordinator.getWorkerApi.getWorkerStatistics.messagesSent map (_.toString) toList
+    val senderStats: List[String] = List() //coordinator.getWorkerApi.getWorkerStatistics.messagesSent map (_.toString) toList
     val workerNames: List[String] = (0 until senderStats.length - 2) map ("Worker " + _) toList
     val tableHeaders = List(
       "workerId",
@@ -207,7 +207,7 @@ class WorkerStateRequestHandler(coordinatorActor: ActorRef) extends HttpHandler 
       List(stats.workerId,
         stats.toSignalSize,
         stats.toCollectSize,
-        stats.messagesSent.sum,
+        stats.messagesSent,
         stats.messagesReceived,
         stats.collectOperationsExecuted,
         stats.signalOperationsExecuted,

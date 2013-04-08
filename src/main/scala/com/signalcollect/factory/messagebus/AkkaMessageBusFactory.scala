@@ -30,8 +30,12 @@ import com.signalcollect.messaging.DefaultMessageBus
 object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
+    numberOfNodes: Int,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
-    new DefaultMessageBus[Id, Signal](numberOfWorkers, workerApiFactory)
+    new DefaultMessageBus[Id, Signal](
+      numberOfWorkers,
+      numberOfNodes,
+      workerApiFactory)
   }
   override def toString = "AkkaMessageBusFactory"
 }
@@ -43,8 +47,14 @@ object AkkaMessageBusFactory extends MessageBusFactory {
 class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
+    numberOfNodes: Int,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
-    new BulkMessageBus[Id, Signal](numberOfWorkers, flushThreshold, withSourceIds, workerApiFactory)
+    new BulkMessageBus[Id, Signal](
+      numberOfWorkers,
+      numberOfNodes,
+      flushThreshold,
+      withSourceIds,
+      workerApiFactory)
   }
   override def toString = "BulkAkkaMessageBusFactory"
 }

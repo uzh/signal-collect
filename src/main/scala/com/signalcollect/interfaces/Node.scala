@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2012 University of Zurich
+ *  Copyright 2013 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,24 +19,10 @@
 
 package com.signalcollect.interfaces
 
-import com.signalcollect.GraphEditor
+import akka.actor.ActorRef
 
-import akka.actor.Actor
+trait Node[Id, Signal] {
 
-/**
- * Required because a Java Dynamic Proxy can only work with interfaces
- */
-trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logging {
+  def localWorkers: Array[ActorRef]
 
-  override def toString = this.getClass.getSimpleName
-
-  def isIdle: Boolean
-
-  def getWorkerApi: WorkerApi[Id, Signal]
-
-  def getGraphEditor: GraphEditor[Id, Signal]
-
-  def getGlobalInboxSize: Long
-  
-  def getWorkerStatuses: Array[WorkerStatus]
 }

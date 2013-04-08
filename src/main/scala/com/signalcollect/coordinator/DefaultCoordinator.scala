@@ -52,7 +52,16 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
-class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, messageBusFactory: MessageBusFactory, heartbeatIntervalInMilliseconds: Long, val loggingLevel: Int) extends Actor with MessageRecipientRegistry with Logging with Coordinator[Id, Signal] with ActorLogging {
+class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
+  numberOfWorkers: Int,
+  numberOfNodes: Int,
+  messageBusFactory: MessageBusFactory,
+  heartbeatIntervalInMilliseconds: Long,
+  val loggingLevel: Int) extends Actor
+    with MessageRecipientRegistry
+    with Logging
+    with Coordinator[Id, Signal]
+    with ActorLogging {
 
   /**
    * Timeout for Akka actor idling
@@ -61,7 +70,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
-      numberOfWorkers)
+      numberOfWorkers,
+      numberOfNodes)
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
@@ -77,6 +87,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   def sendHeartbeat {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+//    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
+//    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers")
+//    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers")
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -133,7 +146,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
     // Only update worker status if no status received so far or if the current status is newer.
-    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sum < ws.messagesSent.sum) {
+    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent < ws.messagesSent) {
       workerStatus(ws.workerId) = ws
     }
   }
@@ -155,17 +168,18 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   protected lazy val graphEditor = messageBus.getGraphEditor
   def getGraphEditor = graphEditor
-  
+
   def getWorkerStatuses: Array[WorkerStatus] = workerStatus.clone
 
   /**
-   * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers (eventually we will have received at least one status message per worker).
+   * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers
+   * (eventually we will have received at least one status message per worker).
    *
    * Initialization messages sent to the workers have to be added separately.
    *
    * + numberOfWorkers, because the status message sent by the worker is not included in the stats yet.
    */
-  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum + numberOfWorkers
+  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum
 
   /**
    *  Returns a map with the worker id as the key and the number of messages sent as the value.
@@ -175,13 +189,13 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
     var workerId = 0
     while (workerId < numberOfWorkers) {
       val status = workerStatus(workerId)
-      messagesPerWorker.put(workerId, if (status == null) 0 else status.messagesSent.sum)
+      messagesPerWorker.put(workerId, if (status == null) 0 else status.messagesSent)
       workerId += 1
     }
     messagesPerWorker
   }
 
-  def messagesSentByCoordinator = messageBus.messagesSent.sum
+  def messagesSentByCoordinator = messageBus.messagesSent
   def messagesReceivedByWorkers = workerStatus filter (_ != null) map (_.messagesReceived) sum
   def messagesReceivedByCoordinator = messageBus.messagesReceived
   def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByCoordinator
@@ -203,6 +217,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](numberOfWorkers: Int, m
 
   def registerWorker(workerId: Int, worker: ActorRef) {
     messageBus.registerWorker(workerId, worker)
+  }
+
+  def registerNode(nodeId: Int, node: ActorRef) {
+    messageBus.registerNode(nodeId, node)
   }
 
   def registerCoordinator(coordinator: ActorRef) {

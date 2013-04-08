@@ -46,6 +46,7 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
 class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val numberOfWorkers: Int,
+  val numberOfNodes: Int,
   flushThreshold: Int,
   val withSourceIds: Boolean,
   workerApiFactory: WorkerApiFactory)
