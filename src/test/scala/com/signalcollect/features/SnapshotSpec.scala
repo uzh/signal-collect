@@ -45,7 +45,7 @@ class SnapshotSpec extends SpecificationWithJUnit with Serializable {
         val state = v.state.asInstanceOf[Double]
         val correct = (state - expectedState).abs < 0.0001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
         correct
       }
