@@ -557,9 +557,6 @@ div.tooltip {
 
 /* resource box styling */
 div#resourceBoxes > div:not([id$='Title']) { display:inline; overflow:auto; }
-body.crash div#resourceBoxes > div#logBox,
-body.nostart div#resourceBoxes > div#logBox
-                      { max-width:1500px; min-width:1000px; max-height:500px; overflow:auto; display:block; float:left; }
 
 body.statistics div#resourceBoxes div[id$=StatBox] { float:left; margin-right:20px; }
 body.statistics div#estimationStatBox { width:400px; }
@@ -574,6 +571,9 @@ ul.statistics li span { display:block; margin-left:150px; font-weight:bold; posi
                         top:-20px; text-align:right }
 
 /* logging */
+body.crash div#resourceBoxes > div#logBox,
+body.nostart div#resourceBoxes > div#logBox
+                    { max-width:1500px; min-width:1000px; max-height:500px; overflow:hidden; display:block; float:left; }
 div#logBox div.scroll
                     { overflow-y:auto; max-height:400px; max-width:900px; }
 body.logs div#resources .structured

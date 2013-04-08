@@ -22,8 +22,8 @@ var resourceBoxes = {
     "detailed"  : [  ], // all charts will be added automatically
     
     "nostart"   : [ 
-      "signalCollectTitle",
       "logBox",
+      "signalCollectTitle",
       "heartbeatMessagesReceivedChart",
       "messagesSentChart",
       "messagesReceivedChart",
@@ -134,33 +134,32 @@ scc.modules.log = function() {
   var filterLevel    = $(container).find("p.filter.level");
   var logSourceIndex = { "akka":1, "sc":2, "user":3 };
   var filterSource   = $(container).find("p.filter.source");
+
+  // make it using the full height
+  onResize = (function() {
+    $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 180) + "px");
+  });
+  $(document).ready(onResize);
+  $(window).resize(onResize);
+  
+  // hide and show log messages based on their level
+  $.each(logLevelIndex, function(v, k) {
+    $(filterLevel).find("> span:eq(" + (k-1) + ")").on("click", function() {
+      $(this).toggleClass("active");
+      $(box).find("li.level_" + v).toggleClass("hidden_level");
+    });
+  });
+  
+  // hide and show log messages based on their level
+  $.each(logSourceIndex, function(v, k) {
+    $(filterSource).find("> span:eq(" + (k-1) + ")").on("click", function() {
+      $(this).toggleClass("active");
+      $(box).find("li.source_" + v).toggleClass("hidden_source");
+    });
+  });
   
   this.onopen = function () {
     scc.order({"provider": "log"});
-    
-    // make it using the full height
-    onResize = (function() {
-      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 180) + "px");
-    });
-    $(document).ready(onResize);
-    $(window).resize(onResize);
-    
-    // hide and show log messages based on their level
-    $.each(logLevelIndex, function(v, k) {
-      $(filterLevel).find("> span:eq(" + (k-1) + ")").on("click", function() {
-        $(this).toggleClass("active");
-        $(box).find("li.level_" + v).toggleClass("hidden_level");
-      });
-    });
-
-    // hide and show log messages based on their level
-    $.each(logSourceIndex, function(v, k) {
-      $(filterSource).find("> span:eq(" + (k-1) + ")").on("click", function() {
-        $(this).toggleClass("active");
-        $(box).find("li.source_" + v).toggleClass("hidden_source");
-      });
-    });
-    
   }
     
   this.onerror = function(e) { }
