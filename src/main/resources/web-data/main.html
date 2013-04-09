@@ -11,6 +11,7 @@
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="controls.js"></script>
     <script type="text/javascript" src="graph.js"></script>
+    <script type="text/javascript" src="linechart.js"></script>
     <script type="text/javascript" src="resources.js"></script>
   </head>
   <body>
@@ -210,7 +211,7 @@
               <h3>Computation</h3>
               <ul class="statistics">
                 <li>Start Time: <span id="resStatStartTime">?</span></li>
-                <li>Running for: <span id="resStatRunTime">?</span></li>
+                <li>Running for <small>(not accurate when stepping)</small>: <span id="resStatRunTime">?</span></li>
                 <li>Status: <span id="resStatStatus">waiting</span></li>
                 <li>Number of Workers: <span id="resStatWorkers">?</span></li>
                 <li>Execution Mode: <span id="resStatexecutionMode">?</span></li>
@@ -260,6 +261,7 @@
                   User
                 </span>
               </p>
+              <p><a href="/log_messages.txt" target="_blank">Download log file</a></p>
               <div class="scroll"><div><ul></ul></div></div>
             </div>
         

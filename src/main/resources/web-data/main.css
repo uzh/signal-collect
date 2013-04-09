@@ -222,6 +222,7 @@ body {
 
 .panel label {
   padding-left: 5px;
+  cursor:pointer;
 }
 
 .panel input[type="text"] {
@@ -370,16 +371,6 @@ body {
   height: 100%;
   overflow-y:scroll;
   overflow-x:hidden;
-}
-
-.sectionLink { 
-  color:blue; 
-  text-decoration:underline; 
-  padding:5px 0; 
-  cursor:pointer;
-}
-.sectionLink.active { 
-  color:black;
 }
 
 .structured {
