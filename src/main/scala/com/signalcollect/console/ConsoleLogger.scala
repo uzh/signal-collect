@@ -39,6 +39,8 @@ import java.util.Calendar
 import akka.actor.ActorLogging
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import java.io.BufferedReader
+import java.io.FileReader
 
 case class Get(level: LogLevel, number: Int)
 
@@ -46,6 +48,10 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
 //  println(context.self)
 
   def logFileName = "log_messages.txt"
+  val logReader = new BufferedReader(new FileReader(logFileName))
+
+  // number of lines to read per request
+  val maxReadLines = 5000;
       
   def getLogMessages: List[String] = {
     readLog
@@ -109,14 +115,10 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     if (!(new File(logFileName)).exists) {
       return logMessages
     }
-    
-    for(line <- Source.fromFile(logFileName).getLines()) {
-      if (line.length() > 0) {
-        logMessages = logMessages ::: List(line)
-      }
-    }
-    if (logMessages.size > 0) {
-      resetLog
+    var readLines = 0
+    while (logReader.ready() && readLines < maxReadLines) {
+      logMessages = logMessages ::: List(logReader.readLine())
+      readLines += 1
     }
     logMessages
   }

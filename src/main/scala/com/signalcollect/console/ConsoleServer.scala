@@ -132,6 +132,8 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
 class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
+    
+    var logFileName = "log_messages.txt"
 
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "") 
     if (List("", "graph", "resources").contains(target)) { 
@@ -153,13 +155,23 @@ class FileServer(folderName: String) extends HttpHandler {
       var inputStream : InputStream = null
       if ((new File(root)).exists()) {
         // read from the filesystem
-        inputStream = new FileInputStream(root + "/" + target)
+        val targetPath = {
+          if (target.endsWith(logFileName)) {
+            target
+          } else {
+            root + "/" + target
+          }
+        }
+        inputStream = new FileInputStream(targetPath)
       } else {
         // read from the JAR
         inputStream = ClassLoader.getSystemResource(folderName + "/" + target).openStream()
       }
       val file = new BufferedInputStream(inputStream.asInstanceOf[InputStream])
       t.getResponseHeaders.set("Content-Type", fileType)
+      if (target.endsWith(logFileName)) {
+        t.getResponseHeaders.set("Content-Disposition", "attachment; filename=" + logFileName)
+      }
       t.sendResponseHeaders(200, 0)
       Iterator 
         .continually (file.read)
