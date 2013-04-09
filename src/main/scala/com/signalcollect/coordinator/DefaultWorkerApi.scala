@@ -43,7 +43,9 @@ import com.signalcollect.interfaces.WorkerStatistics
 class DefaultWorkerApi[Id, Signal](
   val workers: Array[WorkerApi[Id, Signal]],
   val mapper: VertexToWorkerMapper[Id])
-  extends WorkerApi[Id, Signal] {
+    extends WorkerApi[Id, Signal] {
+
+  protected val random = new Random
 
   override def toString = "DefaultWorkerApi"
 
@@ -156,19 +158,32 @@ class DefaultWorkerApi[Id, Signal](
   /**
    * Runs a graph loading function on a worker
    */
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) {
-    if (vertexIdHint.isDefined) {
-      val workerId = vertexIdHint.get.hashCode % workers.length
-      workers(workerId).modifyGraph(graphLoader, vertexIdHint)
-    } else {
-      val rand = new Random
-      val randomWorkerId = rand.nextInt(workers.length)
-      workers(randomWorkerId).modifyGraph(graphLoader, vertexIdHint)
-    }
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) {
+    workers(workerIdForHint(vertexIdHint)).modifyGraph(graphModification)
+  }
+
+  /**
+   *  Loads a graph using the provided iterator of `graphModification` functions.
+   *
+   *  @note Does not block.
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    workers(workerIdForHint(vertexIdHint)).loadGraph(graphModifications)
   }
 
   def snapshot = futures(_.snapshot) foreach get
   def restore = futures(_.restore) foreach get
   def deleteSnapshot = futures(_.deleteSnapshot) foreach get
+
+  protected def workerIdForHint(vertexIdHint: Option[Id]): Int = {
+    if (vertexIdHint.isDefined) {
+      mapper.getWorkerIdForVertexId(vertexIdHint.get)
+    } else {
+      random.nextInt(workers.length)
+    }
+  }
 
 }

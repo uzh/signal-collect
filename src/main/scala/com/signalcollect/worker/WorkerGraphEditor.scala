@@ -35,7 +35,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   workerId: Int,
   worker: WorkerActor[Id, Signal],
   messageBus: MessageBus[Id, Signal])
-  extends GraphEditor[Id, Signal] {
+    extends GraphEditor[Id, Signal] {
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
@@ -83,6 +83,10 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
+  override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    graphEditor.loadGraph(graphModifications, vertexIdHint)
+  }
+
   protected def shouldHandleLocally(vertexId: Id): Boolean = {
     messageBus.getWorkerIdForVertexId(vertexId) == workerId
   }
@@ -90,7 +94,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   private[signalcollect] def flush {
     graphEditor.flush
   }
-  
+
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }
