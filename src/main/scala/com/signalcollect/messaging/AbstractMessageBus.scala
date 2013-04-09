@@ -244,11 +244,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     }
   }
 
-  override def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
+  override def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     if (blocking) {
-      workerApi.modifyGraph(graphLoader, vertexIdHint)
+      workerApi.modifyGraph(graphModification, vertexIdHint)
     } else {
-      val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphLoader)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphModification)), returnResult = false)
       if (vertexIdHint.isDefined) {
         val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
         sendToWorker(workerId, request)
@@ -257,7 +257,17 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
         sendToWorker(rand.nextInt(numberOfWorkers), request)
       }
     }
+  }
 
+  override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    val request = Request[WorkerApi[Id, Signal]]((_.loadGraph(graphModifications)))
+    if (vertexIdHint.isDefined) {
+      val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
+      sendToWorker(workerId, request)
+    } else {
+      val rand = new Random
+      sendToWorker(rand.nextInt(numberOfWorkers), request)
+    }
   }
 
   //--------------------Access to high-level messaging constructs--------------------

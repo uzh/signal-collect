@@ -102,13 +102,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_))
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
-  
+
   val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
 
   parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
-  
+
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   val workerActors: Array[ActorRef] = {
@@ -462,16 +462,36 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graphEditor.removeEdge(edgeId, blocking)
   }
 
+  /**
+   *  Loads a graph using the provided `graphModification` function.
+   *  Blocks until the operation has completed if `blocking` is true.
+   *
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     graphEditor.modifyGraph(graphModification, vertexIdHint, blocking)
   }
 
-  private[signalcollect] def flush {
-    graphEditor.flush
+  /**
+   *  Loads a graph using the provided iterator of `graphModification` functions.
+   *
+   *  @note Does not block.
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    graphEditor.loadGraph(graphModifications, vertexIdHint)
   }
 
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
+  }
+
+  private[signalcollect] def flush {
+    graphEditor.flush
   }
 
   /**

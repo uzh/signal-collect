@@ -87,7 +87,7 @@ class WorkerOperationCounters(
   }
 }
 
-object ContinueSignaling
+object ContinueOperations
 
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
@@ -105,12 +105,31 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers, numberOfNodes)
   }
 
+  // If the coordinator allows this worker to signal.
   var maySignal = true
+  // If operations such as a bulk graph modification or signaling was interrupted to be continued later.
+  var operationsOnHold = false
+  // If the worker is currently awaiting a continue message.
+  var awaitingContinue = false
 
-  var continueSignalingReceived = true
-  var awaitingContinueSignaling = false
+  /**
+   * The worker sends itself a continue message.
+   * This is used in order to keep the worker responsive while processing a lot of signaling/loading operations.
+   */
+  def continueLaterIfNecessary {
+    if (operationsOnHold && !awaitingContinue && !(vertexStore.toSignal.isEmpty && pendingModifications.isEmpty)) {
+      messageBus.sendToActor(self, ContinueOperations)
+      awaitingContinue = true
+    }
+  }
 
   var flushedAfterUndeliverableSignalHandler = true
+
+  /**
+   * How many graph modifications this worker will execute in one batch.
+   */
+  val graphModificationBatchProcessingSize = 100
+  var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = Iterator.empty
 
   /**
    * Timeout for Akka actor idling
@@ -155,6 +174,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       sendStatusToCoordinator
       process(msg) // process the message
       handlePauseAndContinue
+      applyPendingGraphModifications
       performComputations
   }
 
@@ -166,7 +186,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  val batchProcessSize = 10000
+  def applyPendingGraphModifications {
+    if (pendingModifications.hasNext) {
+      for (modification <- pendingModifications.take(graphModificationBatchProcessingSize)) {
+        modification(graphEditor)
+      }
+      continueLaterIfNecessary
+    }
+  }
 
   def scheduleOperations {
     if (messageQueue.isEmpty) {
@@ -216,9 +243,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             i += 1
           }
         }
-      case ContinueSignaling =>
-        continueSignalingReceived = true
-        awaitingContinueSignaling = false
+      case ContinueOperations =>
+        operationsOnHold = false
+        awaitingContinue = false
       case Request(command, reply) =>
         counters.requestMessagesReceived += 1
         try {
@@ -304,8 +331,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     vertexStore.toSignal.remove(vertex.id)
   }
 
-  def modifyGraph(graphLoader: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
-    graphLoader(graphEditor)
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
+    graphModification(graphEditor)
+  }
+
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    pendingModifications = pendingModifications ++ graphModifications
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
@@ -426,7 +457,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   protected var vertexStore = storageFactory.createInstance[Id]
 
   protected def isConverged =
-    vertexStore.toCollect.isEmpty && vertexStore.toSignal.isEmpty && flushedAfterUndeliverableSignalHandler
+    vertexStore.toCollect.isEmpty &&
+      vertexStore.toSignal.isEmpty &&
+      pendingModifications.isEmpty &&
+      flushedAfterUndeliverableSignalHandler
 
   protected def getWorkerStatus: WorkerStatus = {
     WorkerStatus(
@@ -515,8 +549,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def reset {
     maySignal = true
-    continueSignalingReceived = true
-    awaitingContinueSignaling = false
+    operationsOnHold = false
+    awaitingContinue = false
     shouldShutdown = false
     isIdle = false
     isPaused = true

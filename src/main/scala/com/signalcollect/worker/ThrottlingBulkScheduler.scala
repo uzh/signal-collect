@@ -20,18 +20,17 @@
 package com.signalcollect.worker
 
 trait ThrottlingBulkScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
+  val batchSignalingSize = 10000
+
   override def scheduleOperations {
     if (!vertexStore.toCollect.isEmpty) {
       vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     }
     if (!vertexStore.toSignal.isEmpty && messageQueue.isEmpty && maySignal) {
-      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(batchProcessSize))
+      vertexStore.toSignal.process(executeSignalOperationOfVertex(_), Some(batchSignalingSize))
       messageBus.flush
-      continueSignalingReceived = false
+      operationsOnHold = true
     }
-    if (!continueSignalingReceived && !awaitingContinueSignaling && !vertexStore.toSignal.isEmpty) {
-      messageBus.sendToActor(self, ContinueSignaling)
-      awaitingContinueSignaling = true
-    }
+    continueLaterIfNecessary
   }
 }
