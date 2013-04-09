@@ -23,15 +23,15 @@ function toggleSection(view, title) {
 
 /* Message bar at the top */
 function hideMsg(fast) {
-  if (fast) { $("#top").css("top", "-60px") }
-  else { $("#top").stop().animate({"top": "-60px"}); }
+  if (fast) { $("#top").css("top", "-85px"); $(".msg").empty(); }
+  else { $("#top").stop().animate({"top": "-85px"}, function () { $(".msg").empty(); }); }
 }
 hideMsg(true);
 
 function showMsg(type, msg, timeout) {
   clearTimeout(hidingTimeout);
   $(".msg").stop().addClass("hidden");
-  $(type).html(msg);
+  $(type).html(escapedHtmlWithNewlines(msg));
   $(type).removeClass("hidden");
   $("#top").animate({"top": "0px"});
 
@@ -88,4 +88,21 @@ function layout(modules) {
       });
     }
   });
+}
+
+function escapedHtmlWithNewlines(text) {
+    var htmls = [];
+    var lines = text.split(/\n/);
+    var tmpDiv = jQuery(document.createElement('div'));
+    for (var i = 0 ; i < lines.length ; i++) {
+        htmls.push(tmpDiv.text(lines[i]).html());
+    }
+    return htmls.join("<br>");
+}
+
+function shorten(s) {
+  if (s.length > 13) {
+    return "<span title=" + s + ">..." + s.substring(s.length - 10, s.length) + "</span>"
+  }
+  return s
 }

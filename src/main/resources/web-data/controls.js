@@ -8,7 +8,7 @@ scc.modules.controls = function() {
     $("#" + control).click(function (e) { 
       if ($(this).hasClass("blocked")) { return; }
       if ($(this).hasClass("hidden")) { return; }
-      scc.order({"provider": "api", "control": control}) 
+      scc.order({"provider": "controls", "control": control}) 
       $("#controls").find(".icon").addClass("blocked");
     });
   });

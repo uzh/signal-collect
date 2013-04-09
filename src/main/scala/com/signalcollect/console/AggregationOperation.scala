@@ -6,6 +6,7 @@ import net.liftweb.json.JsonDSL._
 import com.signalcollect.TopKFinder
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
+import BreakConditionName._
 
 class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[Id] = List[Id]())
       extends AggregationOperation[JObject] {
@@ -94,3 +95,52 @@ class FindVertexByIdAggregator[Id](id: String)
 
 }
 
+class BreakConditionsAggregator(conditions: Map[Int,BreakCondition]) 
+      extends AggregationOperation[Map[Int,String]] {
+  val nodeConditions = List(
+    ChangesState,
+    GoesUnderSignalThreshold,
+    GoesOverSignalThreshold,
+    GoesUnderCollectThreshold,
+    GoesOverCollectThreshold
+  )
+  val allNodeConditions = List(
+  )
+  def extract(v: Vertex[_, _]): Map[Int,String] = v match {
+    case i: Inspectable[_, _] => {
+      var results = Map[Int,String]()
+      conditions.foreach { case (id, c) => 
+        // conditions that need to be checked on a specific node
+        if (nodeConditions.contains(c.name)) {
+          if (i.id.toString == c.props("nodeId")) {
+            c.name match { case ReachesState =>
+                if (i.state.toString == c.props("expectedState"))
+                  results += (id -> i.state.toString)
+              case ChangesState =>
+                if (i.state.toString != c.props("currentState"))
+                  results += (id -> i.state.toString)
+              case GoesUnderSignalThreshold =>
+                if (i.scoreSignal < c.props("threshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case GoesOverSignalThreshold =>
+                if (i.scoreSignal > c.props("threshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case GoesUnderCollectThreshold =>
+                if (i.scoreCollect < c.props("threshold").toDouble)
+                  results += (id -> i.scoreCollect.toString)
+              case GoesOverCollectThreshold =>
+                if (i.scoreCollect > c.props("threshold").toDouble)
+                  results += (id -> i.scoreCollect.toString)
+            }
+          }
+        }
+        // conditions that need to be checked on every node
+        // else if (allNodeConditions.contains(c.name)) {  }
+      }
+      results
+    }
+  }
+  def reduce(results: Stream[Map[Int,String]]): Map[Int,String] = {
+    Toolkit.mergeMaps(results.toList)((v1, v2) => v1 + v2)
+  }
+}

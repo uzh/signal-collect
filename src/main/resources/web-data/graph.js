@@ -8,14 +8,19 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeSize": "Node degree",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
-                        "gc_vicinityRadius": "1",
-                        "gc_maxVertices": "20",
-                        "gc_refreshRate": "5",
-                        "gc_drawEdges": "When graph is still"
+                        "gp_vicinityRadius": "1",
+                        "gp_maxVertices": "20",
+                        "gp_refreshRate": "5",
+                        "gp_drawEdges": "When graph is still",
+                        "gc_nodeId": ""
                       }}
 
+STR = {"searchByID": "Search and hit Enter to execute",
+        "pickNode": "Enter ID or select using mouse"
+      }
+
 scc.modules.graph = function() {
-  this.requires = ["graph"];
+  this.requires = ["graph", "breakconditions"];
   this.autoRefresh = false;
   var s, svg, force;
   var color = d3.scale.category20();
@@ -34,8 +39,8 @@ scc.modules.graph = function() {
   var orderTemplate = {"provider": "graph"}
 
   var completeOrder = function(o) { 
-    o["vicinityRadius"] = parseInt($("#gc_vicinityRadius").val());
-    o["maxVertices"] = parseInt($("#gc_maxVertices").val());
+    o["vicinityRadius"] = parseInt($("#gp_vicinityRadius").val());
+    o["maxVertices"] = parseInt($("#gp_maxVertices").val());
     return o
   }
 
@@ -85,16 +90,16 @@ scc.modules.graph = function() {
   }
   this.layout = function() {
     for (var i = 20; i<=200; i+=20) {
-      $("#gc_maxVertices").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>')
     }
     for (var i = 0; i<=4; i++) {
-      $("#gc_vicinityRadius").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_vicinityRadius").append('<option value="' + i + '">' + i + '</option>')
     }
     for (var i = 1; i<=10; i+=1) {
-      $("#gc_refreshRate").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>')
     }
     for (var i = 15; i<=60; i+=5) {
-      $("#gc_refreshRate").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>')
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('input[type="text"]').keypress(function(e) {
@@ -114,7 +119,10 @@ scc.modules.graph = function() {
       $("#" + key).val(value);
     });
     if (scc.settings.get().graph.options["gs_searchId"] == "") {
-      $("#gs_searchId").val("Search and hit Enter to execute");
+      $("#gs_searchId").val(STR.searchByID);
+    }
+    if (scc.settings.get().graph.options["gc_nodeId"] == "") {
+      $("#gc_nodeId").val(STR.pickNode);
     }
   }
 
@@ -171,7 +179,7 @@ scc.modules.graph = function() {
     });
 
     force.on("tick", function() {
-      var drawEdges = scc.settings.get().graph.options["gc_drawEdges"];
+      var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       if (drawEdges == "Always" || 
          (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
         link.style("display", "block")
@@ -197,10 +205,20 @@ scc.modules.graph = function() {
     }
 
     scc.consumers.graph.order()
+    scc.order({"provider": "breakconditions"})
 
   }
    
   this.onmessage = function(j) {
+    if (j.provider == "breakconditions") {
+      $("#gc_conditionList").empty();
+      $.each(j.active, function (k, c) {
+        $("#gc_conditionList").append("<li>" + shorten(c.props[0].nodeId) + " " + 
+                                               c.name + " (from " + 
+                                               c.props[0].currentState + ")</li>");
+      });
+      return;
+    }
     nodes = force.nodes();
     links = force.links();
     var newNodes = false;
@@ -268,7 +286,7 @@ scc.modules.graph = function() {
         .attr("r", nodeSize)
 
     if (scc.consumers.graph.autoRefresh) {
-      scc.order(completeOrder(orderTemplate), parseInt($("#gc_refreshRate").val())*1000);
+      scc.order(completeOrder(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
     }
 
   }
@@ -366,23 +384,23 @@ scc.modules.graph = function() {
     var property = $(this);
     scc.consumers.graph.setNodeSelection(property.attr("id"), property.val());
   });
-  $("#gc_vicinityRadius").change(function (e) { 
+  $("#gp_vicinityRadius").change(function (e) { 
     var property = $(this);
-    scc.settings.set({"graph": {"options": {"gc_vicinityRadius": property.val() }}});
+    scc.settings.set({"graph": {"options": {"gp_vicinityRadius": property.val() }}});
     scc.consumers.graph.reset();
     scc.consumers.graph.order()
   });
-  $("#gc_maxVertices").change(function (e) { 
+  $("#gp_maxVertices").change(function (e) { 
     var property = $(this);
-    scc.settings.set({"graph": {"options": {"gc_maxVertices": property.val() }}});
+    scc.settings.set({"graph": {"options": {"gp_maxVertices": property.val() }}});
     scc.consumers.graph.reset();
     scc.consumers.graph.order()
   });
-  $("#gc_refreshRate").change(function (e) { 
+  $("#gp_refreshRate").change(function (e) { 
     var property = $(this);
-    scc.settings.set({"graph": {"options": {"gc_refreshRate": property.val() }}});
+    scc.settings.set({"graph": {"options": {"gp_refreshRate": property.val() }}});
   });
-  $("#gc_drawEdges").change(function (e) { 
+  $("#gp_drawEdges").change(function (e) { 
     var val = $(this).val();
     switch (val) {
         case "Always":
@@ -391,9 +409,43 @@ scc.modules.graph = function() {
         case "Never":
             link.style("display", "none"); break;
     }
-    scc.settings.set({"graph": {"options": {"gc_drawEdges": val }}});
+    scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });
-
-
+  $("#gc_useMouse").click(function (e) { 
+    e.preventDefault();
+    if ($("#graph_canvas").hasClass("picking")) {
+      $("#graph_canvas").removeClass("picking");
+      $("#gc_useMouse").removeClass("active");
+    }
+    else {
+      $("#graph_canvas").addClass("picking");
+      $("#gc_useMouse").addClass("active");
+    }
+  });
+  d3.select("#graph_canvas").on("click", function (e) {
+    if (!$("#graph_canvas").hasClass("picking")) { return; }
+    $("#graph_canvas").removeClass("picking");
+    $("#gc_useMouse").removeClass("active");
+    var target = d3.event.target;
+    var data = target.__data__;
+    var node = $(target);
+    if (data == undefined) {
+      $("#gc_nodeId").val(STR.pickNode);
+    }
+    else {
+      $("#gc_nodeId").val(data.id);
+      $("#gc_nodeId").focus();
+      $("#gc_nodeId").val($("#gc_nodeId").val());
+    }
+  });
+  $("#gc_addCondition").click(function (e) { 
+    e.preventDefault();
+    scc.order({
+        "provider": "breakconditions",
+        "action": "add",
+        "name": $("#gc_condition").val(),
+        "props": { "nodeId": $("#gc_nodeId").val() }
+    });
+  });
     
 }

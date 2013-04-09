@@ -21,6 +21,7 @@
 
 package com.signalcollect.console
 
+import scala.collection.JavaConversions._
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
 import java.io.BufferedInputStream
@@ -32,6 +33,7 @@ import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.interfaces.WorkerApi
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
@@ -42,24 +44,84 @@ import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import net.liftweb.json.Extraction._
 import java.io.File
 import java.io.InputStream
 import akka.event.Logging
 
 trait Execution {
   var steps: Int
+  var conditions: Map[Int,BreakCondition]
+  var conditionsReached: Map[Int,String]
   def step()
   def continue()
   def pause()
   def reset()
   def terminate()
+  def addCondition(condition: BreakCondition)
+  def removeCondition(id: Int)
+}
+
+object BreakConditionName extends Enumeration {
+  type BreakConditionName = Value
+  val ChangesState = Value("changes state")
+  val ReachesState = Value("reaches state")
+  val GoesAboveState = Value("goes above state")
+  val GoesUnderState = Value("goes under state")
+  val GoesUnderSignalThreshold = Value("goes under signal threshold") 
+  val GoesOverSignalThreshold = Value("goes over signal threshold") 
+  val GoesUnderCollectThreshold = Value("goes under collect threshold") 
+  val GoesOverCollectThreshold = Value("goes over collect threshold")
+}
+
+import BreakConditionName._
+class BreakCondition(val name: BreakConditionName, 
+                     val propsMap: Map[String,String], 
+                     workerApi: WorkerApi[_,_]) {
+
+  val props = collection.mutable.Map(propsMap.toSeq: _*)
+
+  require(name match { 
+    case ChangesState => 
+      if (props.contains("nodeId")) {
+        props("nodeId") match {
+          case id: String =>
+            val result = workerApi.aggregateAll(new FindVertexByIdAggregator(props("nodeId")))
+            result match {
+              case Some(v) =>
+                props += ("currentState" -> v.state.toString)
+                true
+              case None => false
+            }
+          case otherwise => false
+        }
+      }
+      else { false }
+    case otherwise => true
+  }, "Missing or unknown nodeId!")
+
+  require(name match { 
+      case ReachesState
+         | GoesAboveState
+         | GoesUnderState  => props.contains("id") && props.contains("expectedState")
+    case otherwise => true
+  }, "Missing nodeId or expectedState")
+
+  require(name match {
+      case GoesUnderSignalThreshold
+         | GoesOverSignalThreshold
+         | GoesUnderCollectThreshold
+         | GoesOverCollectThreshold => props.contains("id") && props.contains("threshold")
+    case otherwise => true
+  }, "Missing threshold")
+
 }
 
 class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   val (server: HttpServer, 
        sockets: WebSocketConsoleServer[Id]) = setupUserPorts(graphConfiguration.consoleHttpPort)
-  
+
   server.createContext("/", new FileServer("web-data"))
   server.setExecutor(Executors.newCachedThreadPool)
   server.start
@@ -187,6 +249,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   var coordinator: Option[Coordinator[Id,_]] = None
   var execution: Option[Execution] = None
   var executionConfiguration: Option[ExecutionConfiguration] = None
+  var breakConditions = List()
   val graphConfiguration = config
   implicit val formats = DefaultFormats
 
@@ -219,7 +282,8 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         case "graph" => new GraphDataProvider[Id](c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case "status" => new StatusDataProvider(this)
-        case "api" => new ApiProvider[Id](this, j)
+        case "controls" => new ControlsProvider[Id](this, j)
+        case "breakconditions" => new BreakConditionsProvider[Id](c, this, j)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => p match{
@@ -247,9 +311,19 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
             socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
+  def sendMsg(msg: JObject) {
+    val cs = connections().toList
+    cs.synchronized {
+      cs.foreach { c =>
+        c.send(compact(render(msg)));
+      }
+    }
+  }
+
 }
 
 object Toolkit {
+  implicit val formats = DefaultFormats
   def unpackObject[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
     val methods = ru.typeOf[T].members.filter { m =>
       m.isMethod && m.asMethod.isStable 
@@ -265,6 +339,7 @@ object Toolkit {
           case x: String => JString(x)
           case x: Double if x.isNaN => JDouble(0)
           case x: Double => JDouble(0)
+          case x: Map[_,_] => decompose(x)
           case other => JString(other.toString)
         }
       }
@@ -275,5 +350,6 @@ object Toolkit {
     (Map[A, B]() /: (for (m <- ms; kv <- m) yield kv)) { (a, kv) =>
       a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
   }
+
 }
 

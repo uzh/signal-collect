@@ -40,7 +40,7 @@ body {
 
 #top {
   position: fixed;
-  height: 60px;
+  min-height: 60px;
   left: 300px;
   right: 0px;
   top: 0px;
@@ -52,9 +52,8 @@ body {
 }
 
 .msg {
-  height: 60px;
+  padding: 25px;
   width: 100%;
-  line-height: 60px;
   text-align: center;
 }
 
@@ -68,7 +67,6 @@ body {
   background: #F5F5F5;
   z-index: 10;
   border-right: 1px solid #999;
-  cursor: default;
 }
 
 #modes {
@@ -228,12 +226,14 @@ body {
   padding: 0;
   margin: 0;
   margin-left: 10px;
+  margin-bottom: 5px;
   border: 1px solid #bbb;
   height: 20px;
   width: 73%;
 }
 
 .panel button {
+  cursor:inherit;
   border: 1px solid #bbb;
   background-image: -moz-linear-gradient(top,
                     rgba(255,255,255,.25),
@@ -293,6 +293,11 @@ body {
   appearance: none;
   background: url(select.png) no-repeat left #F5F5F5;
   border: none;
+}
+
+ul#gc_conditionList {
+  list-style-type: none;
+  padding: 5px;
 }
 
 #controls {
@@ -376,7 +381,6 @@ body {
   color:blue; 
   text-decoration:underline; 
   padding:5px 0; 
-  cursor:pointer;
 }
 .sectionLink.active { 
   color:black;
@@ -439,6 +443,9 @@ body {
   padding: 0;
   background-color: #444;
 }
+#graph_canvas.picking {
+  cursor: crosshair;
+}
 
 .node {
   stroke: #fff;
@@ -459,12 +466,19 @@ body {
 .blocked {
   opacity: 0.5;
 }
-#error {
+#error, #small_error, #success {
+  float: left;
+}
+#error, #small_error {
   color: #eee;
   background-color: #a91c00;
 }
-#error:before {
+#error:before, #small_error:before {
   content: "Error: "
+}
+#small_error {
+  font-size: 16px;
+  text-align: left;
 }
 #success {
   color: #eee;

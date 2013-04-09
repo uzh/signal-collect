@@ -21,6 +21,7 @@
     </div>
     <div id="top">
       <div id="error" class="msg">Javascript is required to run this Application.</div>
+      <div id="small_error" class="msg">Javascript is required to run this Application.</div>
       <div id="success" class="msg hidden"></div>
     </div>
     <div id="left">
@@ -76,18 +77,40 @@
                   <option>All equal</option>
                 </select><br/>
                 <h1><span>Performance &amp; Complexity</span></h1>
-                <label for="gc_vicinityRadius">Node vicinity radius:</label>
-                <select id="gc_vicinityRadius"></select><br/>
-                <label for="gc_maxVertices">Target node count (exkl. vicinity):</label>
-                <select id="gc_maxVertices"></select>
-                <label for="gc_refreshRate">Min. graph refresh rate (seconds):</label>
-                <select id="gc_refreshRate"></select>
-                <label for="gc_drawEdges">Draw edges:</label>
-                <select id="gc_drawEdges">
+                <label for="gp_vicinityRadius">Node vicinity radius:</label>
+                <select id="gp_vicinityRadius"></select><br/>
+                <label for="gp_maxVertices">Target node count (exkl. vicinity):</label>
+                <select id="gp_maxVertices"></select>
+                <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
+                <select id="gp_refreshRate"></select>
+                <label for="gp_drawEdges">Draw edges:</label>
+                <select id="gp_drawEdges">
                   <option>When graph is still</option>
                   <option>Always</option>
                   <option>Never</option>
                 </select>
+              </form> 
+            </div>
+          </div>
+          <div id="cGraphControl" class="panel_section">
+            <div class="title expanded">Graph Execution Control</div>
+            <div class="contents">
+              <form>
+                <h1><span>Breakpoint Conditions</span></h1>
+                <ul id="gc_conditionList"></ul>
+                <h1><span>Add New Condition</span></h1>
+                <label for="gc_nodeId">When Target node:</label><br/>
+                <input id="gc_nodeId" type="text">
+                <button id="gc_useMouse">Mouse</button><br/>
+                <select id="gc_condition">
+                  <option>changes state</option>
+                  <!--<option>reaches state</option>
+                  <option>goes under signal threshold</option>
+                  <option>goes over signal threshold</option>
+                  <option>goes under collect threshold</option>
+                  <option>goes over collect threshold</option>-->
+                </select>
+                <button id="gc_addCondition">Add</button><br/>
               </form> 
             </div>
           </div>
@@ -179,7 +202,7 @@
           <div id="crs_noconvergence">
             <h1>Computation does not converge</h1>
             <ul>
-              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gc_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
+              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
             </ul>
           </div>
           <div id="crs_crash"><h1>Computation crashes</h1></div>
@@ -188,7 +211,7 @@
             <h1>Computation yields unexpected results</h1>
             <ul>
               <li>Set Breakpoints</li>
-              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gc_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
+              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
             </ul>
           </div>
         

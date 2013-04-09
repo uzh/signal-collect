@@ -11,6 +11,7 @@ import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import net.liftweb.json.Extraction._
 import com.signalcollect.interfaces.WorkerStatus
 import akka.event.Logging
 import akka.event.Logging.LogLevel
@@ -19,26 +20,30 @@ import akka.actor.ActorLogging
 
 trait DataProvider {
   def fetch(): JObject
-  def fetchInvalid(msg: JValue = JString("")): JObject = {
-    new InvalidDataProvider(compact(render(msg))).fetch
+  def fetchInvalid(msg: JValue = JString(""), 
+                   comment: String = "No comment"): JObject = {
+    new InvalidDataProvider(msg, comment).fetch
   }
 }
 
 class ErrorDataProvider(e: Exception) extends DataProvider {
+  def fetchStacktrace(): String = {
+    val sw = new StringWriter()
+    e.printStackTrace(new PrintWriter(sw))
+    sw.toString()
+  }
   def fetch(): JObject = {
-    val sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    val stacktrace = sw.toString();
     ("provider" -> "error") ~
-    ("msg" -> "A fatal exception occured") ~
-    ("stacktrace" -> stacktrace)
+    ("msg" -> "An exception occured") ~
+    ("stacktrace" -> fetchStacktrace())
   }
 }
 
-class InvalidDataProvider(msg: String) extends DataProvider {
+class InvalidDataProvider(msg: JValue, comment: String = "No comment") extends DataProvider {
   def fetch(): JObject = {
     ("provider" -> "invalid") ~
-    ("msg" -> ("Received an invalid message: " + msg))
+    ("msg" -> compact(render(msg))) ~
+    ("comment" -> comment)
   }
 }
 
@@ -65,6 +70,7 @@ class StatusDataProvider[Id](socket: WebSocketConsoleServer[Id])
   }
 }
 
+
 class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
                               coordinator: Coordinator[Id, _],
                               msg: JValue) extends DataProvider {
@@ -83,17 +89,17 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
 class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
   def fetch(): JObject = {
     ("provider" -> "log") ~ 
-    ("messages" -> coordinator.getLogMessages.map(_.toString)) 
+    ("messages" -> "hello")
+    //("messages" -> coordinator.getLogMessages.map(_.toString)) 
   }
 }
 
-case class ApiRequest(
-  provider: String, 
+case class ControlsRequest(
   control: Option[String]
 )
 
-class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
-                      msg: JValue) extends DataProvider {
+class ControlsProvider[Id](socket: WebSocketConsoleServer[Id],
+                           msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
@@ -120,7 +126,7 @@ class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
   }
 
   def fetch(): JObject = {
-    val request = (msg).extract[ApiRequest]
+    val request = (msg).extract[ControlsRequest]
     val reply = execution match {
       case Some(e) => request.control match {
         case Some(action) => action match {
@@ -139,9 +145,74 @@ class ApiProvider[Id](socket: WebSocketConsoleServer[Id],
   }
 }
 
+case class BreakConditionsRequest(
+  action: Option[String],
+  name: Option[String],
+  id: Option[Int],
+  props: Option[Map[String,String]]
+)
+case class BreakConditionContainer(
+  id: Int,
+  name: String,
+  props: Map[String,String]
+)
+
+class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _], 
+                                  socket: WebSocketConsoleServer[Id],
+                                  msg: JValue) extends DataProvider {
+
+  implicit val formats = DefaultFormats
+  var execution: Option[Execution] = socket.execution
+  val workerApi = coordinator.getWorkerApi 
+
+  def fetchConditions(e: Execution): JObject = {
+    val active = e.conditions.map { case (id, c) =>
+      Toolkit.unpackObject(Array(BreakConditionContainer(id, c.name.toString, c.props.toMap)))
+    }.toList
+    val reached = decompose(e.conditionsReached)
+    ("provider" -> "breakconditions") ~
+    ("active" -> active) ~
+    ("reached" -> reached)
+  }
+
+  def fetch(): JObject = {
+    execution match {
+      case Some(e) => 
+        // add or remove conditions
+        val request = (msg).extract[BreakConditionsRequest]
+        request.action match {
+          case Some(action) => action match {
+            case "add" => request.name match {
+              case Some(name) => request.props match {
+                case Some(props) => 
+                  try {
+                    val condition = new BreakCondition(
+                                    BreakConditionName.withName(name), props, workerApi)
+                    e.addCondition(condition)
+                    fetchConditions(e)
+                  }
+                  catch { case e: IllegalArgumentException => 
+                    fetchInvalid(msg, new ErrorDataProvider(e).fetchStacktrace())
+                  } 
+                case None => fetchInvalid(msg, "Missing props!")
+              }
+              case None => fetchInvalid(msg, "Missing name!")
+            }
+            case "remove" => request.id match {
+              case Some(id) => 
+                e.removeCondition(id)
+                fetchConditions(e)
+              case None => fetchInvalid("Missing id!")
+            }
+          }
+          case None => fetchConditions(e)
+        }
+      case None => fetchInvalid(msg)
+    }
+  }
+}
 
 case class GraphDataRequest(
-  provider: String, 
   vicinityRadius: Option[Int],
   query: Option[String], 
   id: Option[String],
@@ -220,7 +291,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case Some("top") => request.topCriterium match {
         case Some("State (Numerical)") => fetchTopStates(m, r)
         case Some("Degree (Both)") => fetchTopDegree(m, r, "both")
-        case otherwise => new InvalidDataProvider(compact(render(msg))).fetch
+        case otherwise => new InvalidDataProvider(msg).fetch
       }
       case otherwise => fetchSample(m, r)
     }

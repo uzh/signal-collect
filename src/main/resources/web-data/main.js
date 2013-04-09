@@ -83,7 +83,11 @@ $(document).ready(function() {
         }
         else if (provider == "error") {
           console.log(j["stacktrace"]);
-          showMsg("#error", j["msg"]);
+          showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
+        }
+        else if (provider == "invalid") {
+          console.log(j["msg"]);
+          showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
         }
         for (var m in scc.consumers) { 
           var consumer = scc.consumers[m]
