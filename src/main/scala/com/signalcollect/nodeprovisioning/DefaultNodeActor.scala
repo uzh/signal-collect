@@ -67,6 +67,9 @@ class DefaultNodeActor(
   // To keep track of sent messages before the message bus is initialized.
   var initializationMessageCounter = 0
 
+  // To keep track of the workers this node is responsible for.
+  var workers: List[ActorRef] = List[ActorRef]()
+
   def setStatusReportingInterval(interval: Int) {
     this.statusReportingInterval = interval
   }
@@ -145,9 +148,11 @@ class DefaultNodeActor(
     dispatcher match {
       case EventBased =>
         val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
+        workers = worker :: workers
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>
         val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        workers = worker :: workers
         AkkaHelper.getRemoteAddress(worker, context.system)
     }
   }
