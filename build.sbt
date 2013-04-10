@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
  "org.specs2" % "specs2_2.10" % "1.13"  % "test",
  "org.specs2" % "classycle" % "1.4.1" % "test",
  "org.mockito" % "mockito-all" % "1.9.0"  % "test",
- "net.liftweb" % "lift-json_2.10" % "2.5-M4",
+ "net.liftweb" % "lift-json_2.10" % "2.5-RC4",
  "org.java-websocket" % "Java-WebSocket" % "1.3.0-SNAPSHOT"
   )
 

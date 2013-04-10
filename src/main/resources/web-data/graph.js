@@ -213,10 +213,17 @@ scc.modules.graph = function() {
     if (j.provider == "breakconditions") {
       $("#gc_conditionList").empty();
       $.each(j.active, function (k, c) {
-        $("#gc_conditionList").append("<li>" + shorten(c.props[0].nodeId) + " " + 
-                                               c.name + " (from " + 
-                                               c.props[0].currentState + ")</li>");
+        var s = c.props[0].nodeId
+        if (s.length > 23) {
+          s = s.substring(s.length - 25, s.length)
+        }
+        $("#gc_conditionList").append(
+          '<li>When Node with id: <span class="node_link" title=' + 
+          c.props[0].nodeId + '">...' + s + '</span><br/> ' + 
+          c.name + " from " + c.props[0].currentState + '<div class="delete" /></li>'
+        );
       });
+      $("#gc_conditionList li:last-child").addClass("last_child")
       return;
     }
     nodes = force.nodes();

@@ -5,17 +5,17 @@
  *  
  *  Copyright 2013 University of Zurich
  *      
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed below the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *  
  *         http://www.apache.org/licenses/LICENSE-2.0
  *  
  *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  distributed below the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  limitations below the License.
  *  
  */
 
@@ -51,27 +51,26 @@ import akka.event.Logging
 
 trait Execution {
   var steps: Int
-  var conditions: Map[Int,BreakCondition]
-  var conditionsReached: Map[Int,String]
+  var conditions: Map[String,BreakCondition]
+  var conditionsReached: Map[String,String]
   def step()
   def continue()
   def pause()
   def reset()
   def terminate()
   def addCondition(condition: BreakCondition)
-  def removeCondition(id: Int)
+  def removeCondition(id: String)
 }
 
 object BreakConditionName extends Enumeration {
   type BreakConditionName = Value
   val ChangesState = Value("changes state")
-  val ReachesState = Value("reaches state")
   val GoesAboveState = Value("goes above state")
-  val GoesUnderState = Value("goes under state")
-  val GoesUnderSignalThreshold = Value("goes under signal threshold") 
-  val GoesOverSignalThreshold = Value("goes over signal threshold") 
-  val GoesUnderCollectThreshold = Value("goes under collect threshold") 
-  val GoesOverCollectThreshold = Value("goes over collect threshold")
+  val GoesBelowState = Value("goes below state")
+  val GoesAboveSignalThreshold = Value("goes above signal threshold") 
+  val GoesBelowSignalThreshold = Value("goes below signal threshold") 
+  val GoesAboveCollectThreshold = Value("goes above collect threshold")
+  val GoesBelowCollectThreshold = Value("goes below collect threshold") 
 }
 
 import BreakConditionName._
@@ -101,17 +100,16 @@ class BreakCondition(val name: BreakConditionName,
   }, "Missing or unknown nodeId!")
 
   require(name match { 
-      case ReachesState
-         | GoesAboveState
-         | GoesUnderState  => props.contains("id") && props.contains("expectedState")
+      case GoesAboveState
+         | GoesBelowState  => props.contains("id") && props.contains("expectedState")
     case otherwise => true
   }, "Missing nodeId or expectedState")
 
   require(name match {
-      case GoesUnderSignalThreshold
-         | GoesOverSignalThreshold
-         | GoesUnderCollectThreshold
-         | GoesOverCollectThreshold => props.contains("id") && props.contains("threshold")
+      case GoesBelowSignalThreshold
+         | GoesAboveSignalThreshold
+         | GoesBelowCollectThreshold
+         | GoesAboveCollectThreshold => props.contains("id") && props.contains("threshold")
     case otherwise => true
   }, "Missing threshold")
 
@@ -296,6 +294,8 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
       socket.send(compact(render(provider.fetch)))
     } 
     catch {
+      case e: NumberFormatException =>
+        socket.send(compact(render(new InvalidDataProvider(msg).fetch)))
       case e: Exception =>
         socket.send(compact(render(new ErrorDataProvider(e).fetch)))
     } 

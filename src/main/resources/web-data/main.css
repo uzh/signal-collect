@@ -295,9 +295,35 @@ body {
   border: none;
 }
 
+.top_border {
+  box-shadow: inset 1px -5px 9px -6px #111; 
+}
 ul#gc_conditionList {
   list-style-type: none;
+  margin: 0;
   padding: 5px;
+  box-shadow: inset 1px 5px 9px -6px #111; 
+}
+ul#gc_conditionList li {
+  position: relative;
+  font-size: 12px;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #bbb;
+}
+ul#gc_conditionList li.last_child {
+  border: none;
+}
+ul#gc_conditionList li .delete {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  background-image: url('sprites_small.svg');
+}
+ul#gc_conditionList li .delete:hover {
+  background-position: 32px 0;
 }
 
 #controls {
@@ -485,6 +511,10 @@ ul#gc_conditionList {
   background-color: #00c742;
 }
 #success:before {
+}
+.node_link {
+  color: #59b6e8;
+  cursor: pointer;
 }
 
 /* D3 charts */

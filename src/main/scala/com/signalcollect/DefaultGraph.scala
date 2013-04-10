@@ -283,13 +283,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
     // user break condition management
     var conditionCounter = 0
-    var conditions = Map[Int,BreakCondition]()
-    var conditionsReached = Map[Int,String]()
+    var conditions = Map[String,BreakCondition]()
+    var conditionsReached = Map[String,String]()
     def addCondition(condition: BreakCondition) {
       conditionCounter += 1
-      conditions += (conditionCounter -> condition)
+      conditions += (conditionCounter.toString -> condition)
     }
-    def removeCondition(id: Int) {
+    def removeCondition(id: String) {
       conditions -= id
     }
 

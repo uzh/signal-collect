@@ -95,40 +95,49 @@ class FindVertexByIdAggregator[Id](id: String)
 
 }
 
-class BreakConditionsAggregator(conditions: Map[Int,BreakCondition]) 
-      extends AggregationOperation[Map[Int,String]] {
+class BreakConditionsAggregator(conditions: Map[String,BreakCondition]) 
+      extends AggregationOperation[Map[String,String]] {
+
   val nodeConditions = List(
     ChangesState,
-    GoesUnderSignalThreshold,
-    GoesOverSignalThreshold,
-    GoesUnderCollectThreshold,
-    GoesOverCollectThreshold
+    GoesAboveState,
+    GoesBelowState,
+    GoesAboveSignalThreshold,
+    GoesBelowSignalThreshold,
+    GoesAboveCollectThreshold,
+    GoesBelowCollectThreshold
   )
+
   val allNodeConditions = List(
   )
-  def extract(v: Vertex[_, _]): Map[Int,String] = v match {
+
+  def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => {
-      var results = Map[Int,String]()
+      var results = Map[String,String]()
       conditions.foreach { case (id, c) => 
         // conditions that need to be checked on a specific node
         if (nodeConditions.contains(c.name)) {
           if (i.id.toString == c.props("nodeId")) {
-            c.name match { case ReachesState =>
-                if (i.state.toString == c.props("expectedState"))
-                  results += (id -> i.state.toString)
+            c.name match { 
               case ChangesState =>
                 if (i.state.toString != c.props("currentState"))
                   results += (id -> i.state.toString)
-              case GoesUnderSignalThreshold =>
+              case GoesAboveState =>
+                if (i.state.toString.toDouble > c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case GoesBelowState =>
+                if (i.state.toString.toDouble < c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case GoesBelowSignalThreshold =>
                 if (i.scoreSignal < c.props("threshold").toDouble)
                   results += (id -> i.scoreSignal.toString)
-              case GoesOverSignalThreshold =>
+              case GoesAboveSignalThreshold =>
                 if (i.scoreSignal > c.props("threshold").toDouble)
                   results += (id -> i.scoreSignal.toString)
-              case GoesUnderCollectThreshold =>
+              case GoesBelowCollectThreshold =>
                 if (i.scoreCollect < c.props("threshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
-              case GoesOverCollectThreshold =>
+              case GoesAboveCollectThreshold =>
                 if (i.scoreCollect > c.props("threshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
             }
@@ -140,7 +149,7 @@ class BreakConditionsAggregator(conditions: Map[Int,BreakCondition])
       results
     }
   }
-  def reduce(results: Stream[Map[Int,String]]): Map[Int,String] = {
+  def reduce(results: Stream[Map[String,String]]): Map[String,String] = {
     Toolkit.mergeMaps(results.toList)((v1, v2) => v1 + v2)
   }
 }

@@ -100,9 +100,4 @@ function escapedHtmlWithNewlines(text) {
     return htmls.join("<br>");
 }
 
-function shorten(s) {
-  if (s.length > 13) {
-    return "<span title=" + s + ">..." + s.substring(s.length - 10, s.length) + "</span>"
-  }
-  return s
-}
+

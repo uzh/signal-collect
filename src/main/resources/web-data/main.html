@@ -97,18 +97,19 @@
             <div class="contents">
               <form>
                 <h1><span>Breakpoint Conditions</span></h1>
-                <ul id="gc_conditionList"></ul>
+                <div class="top_border"><ul id="gc_conditionList"></ul></div>
                 <h1><span>Add New Condition</span></h1>
-                <label for="gc_nodeId">When Target node:</label><br/>
+                <label for="gc_nodeId">When node with id:</label><br/>
                 <input id="gc_nodeId" type="text">
                 <button id="gc_useMouse">Mouse</button><br/>
                 <select id="gc_condition">
                   <option>changes state</option>
-                  <!--<option>reaches state</option>
-                  <option>goes under signal threshold</option>
+                  <option>goes over state</option>
+                  <option>goes under state</option>
                   <option>goes over signal threshold</option>
+                  <option>goes under signal threshold</option>
+                  <option>goes over collect threshold</option>
                   <option>goes under collect threshold</option>
-                  <option>goes over collect threshold</option>-->
                 </select>
                 <button id="gc_addCondition">Add</button><br/>
               </form> 

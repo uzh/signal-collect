@@ -148,11 +148,11 @@ class ControlsProvider[Id](socket: WebSocketConsoleServer[Id],
 case class BreakConditionsRequest(
   action: Option[String],
   name: Option[String],
-  id: Option[Int],
+  id: Option[String],
   props: Option[Map[String,String]]
 )
 case class BreakConditionContainer(
-  id: Int,
+  id: String,
   name: String,
   props: Map[String,String]
 )
@@ -169,7 +169,15 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
     val active = e.conditions.map { case (id, c) =>
       Toolkit.unpackObject(Array(BreakConditionContainer(id, c.name.toString, c.props.toMap)))
     }.toList
+    println(e.conditionsReached)
+    e.conditionsReached.foreach { case (k,v) =>
+      println(v)
+      println(v.getClass)
+      println(k)
+      println(k.getClass)
+    }
     val reached = decompose(e.conditionsReached)
+    println(reached)
     ("provider" -> "breakconditions") ~
     ("active" -> active) ~
     ("reached" -> reached)
