@@ -55,7 +55,6 @@ trait WorkerApi[Id, Signal] {
   def getWorkerStatistics: WorkerStatistics
   def getIndividualWorkerStatistics: List[WorkerStatistics]
 
-  def shutdown
   def reset
 
   /**
