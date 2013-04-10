@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  
  *  @author Francisco de Freitas
  *  @author Daniel Strebel
  *  
@@ -57,38 +58,13 @@ import akka.actor.PoisonPill
 import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 
-class WorkerOperationCounters(
-    var messagesReceived: Long = 0l,
-    var collectOperationsExecuted: Long = 0l,
-    var signalOperationsExecuted: Long = 0l,
-    var verticesAdded: Long = 0l,
-    var verticesRemoved: Long = 0l,
-    var outgoingEdgesAdded: Long = 0l,
-    var outgoingEdgesRemoved: Long = 0l,
-    var signalSteps: Long = 0l,
-    var collectSteps: Long = 0l,
-    var receiveTimeoutMessagesReceived: Long = 0l,
-    var heartbeatMessagesReceived: Long = 0l,
-    var signalMessagesReceived: Long = 0l,
-    var bulkSignalMessagesReceived: Long = 0l,
-    var continueMessagesReceived: Long = 0l,
-    var requestMessagesReceived: Long = 0l,
-    var otherMessagesReceived: Long = 0) {
-  // Resets operation counters but not messages received/sent counters.
-  def resetOperationCounters {
-    collectOperationsExecuted = 0l
-    signalOperationsExecuted = 0l
-    verticesAdded = 0l
-    verticesRemoved = 0l
-    outgoingEdgesAdded = 0l
-    outgoingEdgesRemoved = 0l
-    signalSteps = 0l
-    collectSteps = 0l
-  }
-}
-
 object ContinueOperations
 
+/**
+ * Class that interfaces the worker implementation with Akka messaging.
+ * Mainly responsible for translating received messages to function calls on a worker implementation.
+ * Also responsible for messages that are sent directly via message bus (low-level messaging).
+ */
 class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
@@ -105,31 +81,36 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers, numberOfNodes)
   }
 
-  // If the coordinator allows this worker to signal.
-  var maySignal = true
-  // If operations such as a bulk graph modification or signaling was interrupted to be continued later.
-  var operationsOnHold = false
-  // If the worker is currently awaiting a continue message.
-  var awaitingContinue = false
+  val worker = new WorkerImplementation(
+    workerId = workerId,
+    messageBus = messageBus,
+    log = log,
+    storageFactory = storageFactory,
+    maySignal = true, // If the coordinator allows this worker to signal.
+    operationsOnHold = false, // If operations such as a bulk graph modification or signaling was interrupted to be continued later.
+    awaitingContinue = false, // If the worker is currently awaiting a continue message.
+    flushedAfterUndeliverableSignalHandler = true,
+    isIdle = false,
+    isPaused = true,
+    signalThreshold = 0.001,
+    collectThreshold = 0.0,
+    undeliverableSignalHandler = (s, tId, sId, ge) => {})
 
   /**
    * The worker sends itself a continue message.
    * This is used in order to keep the worker responsive while processing a lot of signaling/loading operations.
    */
   def continueLaterIfNecessary {
-    if (operationsOnHold && !awaitingContinue && !(vertexStore.toSignal.isEmpty && pendingModifications.isEmpty)) {
+    if (worker.operationsOnHold && !worker.awaitingContinue && !(vertexStore.toSignal.isEmpty && pendingModifications.isEmpty)) {
       messageBus.sendToActor(self, ContinueOperations)
-      awaitingContinue = true
+      worker.awaitingContinue = true
     }
   }
-
-  var flushedAfterUndeliverableSignalHandler = true
-
+ 
   /**
    * How many graph modifications this worker will execute in one batch.
    */
   val graphModificationBatchProcessingSize = 100
-  var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = Iterator.empty
 
   /**
    * Timeout for Akka actor idling
@@ -138,58 +119,32 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def isInitialized = messageBus.isInitialized
 
-  /**
-   * This method gets executed when the Akka actor receives a message.
-   */
-  def receive = {
-
-    case PoisonPill =>
-      shutdown
-
-    /**
-     * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
-     */
-    case ReceiveTimeout =>
-      counters.receiveTimeoutMessagesReceived += 1
-      if (isConverged || isPaused) { // if the actor has nothing to compute and the mailbox is empty, then it is idle
-        setIdle(true)
-      } else {
-        handlePauseAndContinue
-        performComputations
-      }
-
-    case Heartbeat(maySignal) =>
-      counters.heartbeatMessagesReceived += 1
-      sendStatusToCoordinator
-      this.maySignal = maySignal
-      if (isConverged || isPaused) { // TODO: refactor code if this works
-        setIdle(true)
-      } else {
-        handlePauseAndContinue
-        performComputations
-      }
-
-    case msg =>
-      setIdle(false)
-      sendStatusToCoordinator
-      process(msg) // process the message
-      handlePauseAndContinue
-      applyPendingGraphModifications
-      performComputations
-  }
-
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
+
+  protected def handlePauseAndContinue {
+    if (shouldStart && worker.pendingModifications.isEmpty) {
+      shouldStart = false
+      isPaused = false
+      sendStatusToCoordinator
+    } else if (shouldPause) {
+      shouldPause = false
+      isPaused = true
+      sendStatusToCoordinator
+    }
+  }
 
   def performComputations {
     if (!isPaused) {
       scheduleOperations
+    } else {
+      applyPendingGraphModifications
     }
   }
 
   def applyPendingGraphModifications {
-    if (pendingModifications.hasNext) {
-      for (modification <- pendingModifications.take(graphModificationBatchProcessingSize)) {
-        modification(graphEditor)
+    if (worker.pendingModifications.hasNext) {
+      for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
+        modification(worker.graphEditor)
       }
       continueLaterIfNecessary
     }
@@ -208,23 +163,37 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
       }
       messageBus.flush
-      flushedAfterUndeliverableSignalHandler = true
+      worker.flushedAfterUndeliverableSignalHandler = true
     }
   }
 
-  protected val counters = new WorkerOperationCounters()
-  protected val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
-  protected val vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]] // Vertex graph edits are not typesafe.
   protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
 
+  /**
+   * This method gets executed when the Akka actor receives a message.
+   */
+  def receive = {
+    case msg =>
+      setIdle(false) // TODO: Move into code for each message
+      sendStatusToCoordinator
+      process(msg) // process the message
+      if (!worker.isConverged) {
+
+      } else {
+        handlePauseAndContinue
+        performComputations
+      }
+  }
+
   protected def process(message: Any) {
-    counters.messagesReceived += 1
+    worker.counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
-        counters.signalMessagesReceived += 1
+        worker.counters.signalMessagesReceived += 1
         processSignal(s.signal, s.targetId, s.sourceId)
+
       case bulkSignal: BulkSignal[Id, Signal] =>
-        counters.bulkSignalMessagesReceived += 1
+        worker.counters.bulkSignalMessagesReceived += 1
         val size = bulkSignal.signals.length
         var i = 0
         if (bulkSignal.sourceIds != null) {
@@ -243,13 +212,15 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             i += 1
           }
         }
+
       case ContinueOperations =>
-        operationsOnHold = false
-        awaitingContinue = false
+        worker.operationsOnHold = false
+        worker.awaitingContinue = false
+
       case Request(command, reply) =>
-        counters.requestMessagesReceived += 1
+        worker.counters.requestMessagesReceived += 1
         try {
-          val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](this)
+          val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
           if (reply) {
             if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
               messageBus.sendToActor(sender, None)
@@ -262,186 +233,35 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             severe(e)
             throw e
         }
+
+      case PoisonPill =>
+        shutdown
+
+      case ReceiveTimeout =>
+        worker.counters.receiveTimeoutMessagesReceived += 1
+        if (worker.isConverged || (isPaused && worker.pendingModifications.isEmpty)) { // if the actor has nothing to compute and the mailbox is empty, then it is idle
+          setIdle(true)
+        } else {
+          handlePauseAndContinue
+          performComputations
+        }
+
+      case Heartbeat(maySignal) =>
+        worker.counters.heartbeatMessagesReceived += 1
+        sendStatusToCoordinator
+        worker.maySignal = maySignal
+        if (worker.isConverged || (isPaused && worker.pendingModifications.isEmpty)) { // TODO: refactor code if this works
+          setIdle(true)
+        } else {
+          handlePauseAndContinue
+          performComputations
+        }
+
       case other =>
-        counters.otherMessagesReceived += 1
+        worker.counters.otherMessagesReceived += 1
         warning("Could not handle message " + message)
     }
   }
-
-  override def addVertex(vertex: Vertex[Id, _]) {
-    if (vertexStore.vertices.put(vertex)) {
-      counters.verticesAdded += 1
-      counters.outgoingEdgesAdded += vertex.edgeCount
-      vertex.afterInitialization(vertexGraphEditor)
-      if (vertex.scoreSignal > signalThreshold) {
-        vertexStore.toSignal.put(vertex)
-      }
-    } else {
-      val existing = vertexStore.vertices.get(vertex.id)
-      debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
-    }
-  }
-
-  override def addEdge(sourceId: Id, edge: Edge[Id]) {
-    val vertex = vertexStore.vertices.get(sourceId)
-    if (vertex != null) {
-      if (vertex.addEdge(edge, vertexGraphEditor)) {
-        counters.outgoingEdgesAdded += 1
-        if (vertex.scoreSignal > signalThreshold) {
-          vertexStore.toSignal.put(vertex)
-        }
-      }
-    } else {
-      warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
-    }
-  }
-
-  override def removeEdge(edgeId: EdgeId[Id]) {
-    val vertex = vertexStore.vertices.get(edgeId.sourceId)
-    if (vertex != null) {
-      if (vertex.removeEdge(edgeId.targetId, vertexGraphEditor)) {
-        counters.outgoingEdgesRemoved += 1
-        if (vertex.scoreSignal > signalThreshold) {
-          vertexStore.toSignal.put(vertex)
-        }
-      } else {
-        warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
-      }
-    } else {
-      warning("Source vertex not found found when trying to remove outgoing edge with id " + edgeId)
-    }
-  }
-
-  override def removeVertex(vertexId: Id) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      processRemoveVertex(vertex)
-    } else {
-      warning("Should remove vertex with id " + vertexId + ": could not find this vertex.")
-    }
-  }
-
-  protected def processRemoveVertex(vertex: Vertex[Id, _]) {
-    val edgesRemoved = vertex.removeAllEdges(vertexGraphEditor)
-    counters.outgoingEdgesRemoved += edgesRemoved
-    counters.verticesRemoved += 1
-    vertex.beforeRemoval(vertexGraphEditor)
-    vertexStore.vertices.remove(vertex.id)
-    vertexStore.toCollect.remove(vertex.id)
-    vertexStore.toSignal.remove(vertex.id)
-  }
-
-  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
-    graphModification(graphEditor)
-  }
-
-  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    pendingModifications = pendingModifications ++ graphModifications
-  }
-
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
-    undeliverableSignalHandler = h
-  }
-
-  def setSignalThreshold(st: Double) {
-    signalThreshold = st
-  }
-
-  def setCollectThreshold(ct: Double) {
-    collectThreshold = ct
-  }
-
-  def recalculateScores {
-    vertexStore.vertices.foreach(recalculateVertexScores(_))
-  }
-
-  def recalculateScoresForVertexWithId(vertexId: Id) {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      recalculateVertexScores(vertex)
-    }
-  }
-
-  protected def recalculateVertexScores(vertex: Vertex[Id, _]) {
-    if (vertex.scoreCollect > collectThreshold) {
-      vertexStore.toCollect.put(vertex)
-    }
-    if (vertex.scoreSignal > signalThreshold) {
-      vertexStore.toSignal.put(vertex)
-    }
-  }
-
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
-    val vertex = vertexStore.vertices.get(vertexId)
-    if (vertex != null) {
-      val result = f(vertex.asInstanceOf[VertexType])
-      result
-    } else {
-      throw new Exception("Vertex with id " + vertexId + " not found.")
-    }
-  }
-
-  def foreachVertex(f: Vertex[Id, _] => Unit) {
-    vertexStore.vertices.foreach(f)
-  }
-
-  override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
-    aggregationOperation.aggregationOnWorker(vertexStore.vertices.stream)
-  }
-
-  override def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult = {
-    throw new UnsupportedOperationException("AkkaWorker does not support this operation.")
-  }
-
-  def startComputation {
-    shouldStart = true
-  }
-
-  def pauseComputation {
-    shouldPause = true
-  }
-
-  def signalStep: Boolean = {
-    counters.signalSteps += 1
-    vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
-    messageBus.flush
-    flushedAfterUndeliverableSignalHandler = true
-    vertexStore.toCollect.isEmpty
-  }
-
-  def collectStep: Boolean = {
-    counters.collectSteps += 1
-    vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
-    vertexStore.toSignal.isEmpty
-  }
-
-  def getIndividualWorkerStatistics = List(getWorkerStatistics)
-
-  def getWorkerStatistics: WorkerStatistics = {
-    WorkerStatistics(
-      workerId = workerId,
-      messagesReceived = counters.messagesReceived,
-      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
-      toSignalSize = vertexStore.toSignal.size,
-      toCollectSize = vertexStore.toCollect.size,
-      collectOperationsExecuted = counters.collectOperationsExecuted,
-      signalOperationsExecuted = counters.signalOperationsExecuted,
-      numberOfVertices = vertexStore.vertices.size,
-      verticesAdded = counters.verticesAdded,
-      verticesRemoved = counters.verticesRemoved,
-      numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
-      outgoingEdgesAdded = counters.outgoingEdgesAdded,
-      outgoingEdgesRemoved = counters.outgoingEdgesRemoved,
-      receiveTimeoutMessagesReceived = counters.receiveTimeoutMessagesReceived,
-      heartbeatMessagesReceived = counters.heartbeatMessagesReceived,
-      signalMessagesReceived = counters.signalMessagesReceived,
-      bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
-      continueMessagesReceived = counters.continueMessagesReceived,
-      requestMessagesReceived = counters.requestMessagesReceived,
-      otherMessagesReceived = counters.otherMessagesReceived)
-  }
-
-  def shutdown {}
 
   protected var shouldShutdown = false
   protected var isIdle = false
@@ -456,26 +276,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   protected var vertexStore = storageFactory.createInstance[Id]
 
-  protected def isConverged =
-    vertexStore.toCollect.isEmpty &&
-      vertexStore.toSignal.isEmpty &&
-      pendingModifications.isEmpty &&
-      flushedAfterUndeliverableSignalHandler
-
-  protected def getWorkerStatus: WorkerStatus = {
-    WorkerStatus(
-      workerId = workerId,
-      isIdle = isIdle,
-      isPaused = isPaused,
-      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
-      messagesReceived = counters.messagesReceived)
-  }
-
   protected def sendStatusToCoordinator {
     val currentTime = System.currentTimeMillis
     if (isInitialized && currentTime - lastStatusUpdate > heartbeatIntervalInMilliseconds) {
       lastStatusUpdate = currentTime
-      val status = getWorkerStatus
+      val status = worker.getWorkerStatus
       messageBus.sendToCoordinator(status)
     }
   }
@@ -484,38 +289,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (isInitialized && isIdle != newIdleState) {
       isIdle = newIdleState
       sendStatusToCoordinator
-    }
-  }
-
-  protected def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
-    counters.collectOperationsExecuted += 1
-    vertex.executeCollectOperation(vertexGraphEditor)
-    if (addToSignal && vertex.scoreSignal > signalThreshold) {
-      vertexStore.toSignal.put(vertex)
-    }
-  }
-
-  protected def executeSignalOperationOfVertex(vertex: Vertex[Id, _]) {
-    counters.signalOperationsExecuted += 1
-    vertex.executeSignalOperation(vertexGraphEditor)
-  }
-
-  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
-    val vertex = vertexStore.vertices.get(targetId)
-    if (vertex != null) {
-      if (vertex.deliverSignal(signal, sourceId)) {
-        counters.collectOperationsExecuted += 1
-        if (vertex.scoreSignal > signalThreshold) {
-          vertexStore.toSignal.put(vertex)
-        }
-      } else {
-        if (vertex.scoreCollect > collectThreshold) {
-          vertexStore.toCollect.put(vertex)
-        }
-      }
-    } else {
-      undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
-      flushedAfterUndeliverableSignalHandler = false
     }
   }
 
@@ -533,85 +306,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def registerLogger(logger: ActorRef) {
     messageBus.registerLogger(logger)
-  }
-
-  protected def handlePauseAndContinue {
-    if (shouldStart) {
-      shouldStart = false
-      isPaused = false
-      sendStatusToCoordinator
-    } else if (shouldPause) {
-      shouldPause = false
-      isPaused = true
-      sendStatusToCoordinator
-    }
-  }
-
-  def reset {
-    maySignal = true
-    operationsOnHold = false
-    awaitingContinue = false
-    shouldShutdown = false
-    isIdle = false
-    isPaused = true
-    shouldPause = false
-    shouldStart = false
-    lastStatusUpdate = System.currentTimeMillis
-    counters.resetOperationCounters
-    vertexStore = storageFactory.createInstance[Id]
-    messageBus.reset
-  }
-
-  /**
-   * Creates a snapshot of all the vertices in all workers.
-   * Does not store the toSignal/toCollect collections or pending messages.
-   * Should only be used when the workers are idle.
-   * Overwrites any previous snapshot that might exist.
-   */
-  def snapshot {
-    // Overwrites previous file if it should exist.
-    val snapshotFileOutput = new DataOutputStream(new FileOutputStream(s"$workerId.snapshot"))
-    vertexStore.vertices.foreach { vertex =>
-      val bytes = DefaultSerializer.write(vertex)
-      snapshotFileOutput.writeInt(bytes.length)
-      snapshotFileOutput.write(bytes)
-    }
-    snapshotFileOutput.close
-  }
-
-  /**
-   * Restores the last snapshot of all the vertices in all workers.
-   * Does not store the toSignal/toCollect collections or pending messages.
-   * Should only be used when the workers are idle.
-   */
-  def restore {
-    reset
-    val maxSerializedSize = 64768
-    val snapshotFile = new File(s"$workerId.snapshot")
-    val buffer = new Array[Byte](maxSerializedSize)
-    if (snapshotFile.exists) {
-      val snapshotFileInput = new DataInputStream(new FileInputStream(snapshotFile))
-      val buffer = new Array[Byte](maxSerializedSize)
-      while (snapshotFileInput.available > 0) {
-        val serializedLength = snapshotFileInput.readInt
-        assert(serializedLength <= maxSerializedSize)
-        val bytesRead = snapshotFileInput.read(buffer, 0, serializedLength)
-        assert(bytesRead == serializedLength)
-        val vertex = DefaultSerializer.read[Vertex[Id, _]](buffer)
-        addVertex(vertex)
-      }
-      snapshotFileInput.close
-    }
-  }
-
-  /**
-   * Deletes the worker snapshots if they exist.
-   */
-  def deleteSnapshot {
-    val snapshotFile = new File(s"$workerId.snapshot")
-    if (snapshotFile.exists) {
-      snapshotFile.delete
-    }
   }
 
 }
