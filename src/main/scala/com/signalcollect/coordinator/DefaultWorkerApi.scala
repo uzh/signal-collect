@@ -77,8 +77,6 @@ class DefaultWorkerApi[Id, Signal](
     workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
   }
 
-  override def shutdown = futures(_.shutdown) foreach get
-
   override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }

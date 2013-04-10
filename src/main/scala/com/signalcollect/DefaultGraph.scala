@@ -149,7 +149,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_))
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
 
   initializeMessageBuses
@@ -387,7 +387,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   def isIdle = coordinatorProxy.isIdle
 
   def shutdown = {
-    workerApi.shutdown
     parallelBootstrapNodeProxies.foreach(_.shutdown)
     system.shutdown
     system.awaitTermination

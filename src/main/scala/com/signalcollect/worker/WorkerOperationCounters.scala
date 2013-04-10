@@ -23,7 +23,6 @@
 package com.signalcollect.worker
 
 class WorkerOperationCounters(
-    var messagesReceived: Long = 0l,
     var collectOperationsExecuted: Long = 0l,
     var signalOperationsExecuted: Long = 0l,
     var verticesAdded: Long = 0l,
@@ -32,7 +31,6 @@ class WorkerOperationCounters(
     var outgoingEdgesRemoved: Long = 0l,
     var signalSteps: Long = 0l,
     var collectSteps: Long = 0l,
-    var receiveTimeoutMessagesReceived: Long = 0l,
     var heartbeatMessagesReceived: Long = 0l,
     var signalMessagesReceived: Long = 0l,
     var bulkSignalMessagesReceived: Long = 0l,
@@ -50,4 +48,6 @@ class WorkerOperationCounters(
     signalSteps = 0l
     collectSteps = 0l
   }
+  // Only these messages are part of termination detection.
+  def messagesReceived = signalMessagesReceived + bulkSignalMessagesReceived + requestMessagesReceived + otherMessagesReceived
 }

@@ -38,6 +38,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerStatus
+import akka.actor.ActorRef
+import com.signalcollect.interfaces.MessageRecipientRegistry
+import com.signalcollect.interfaces.Worker
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -47,38 +50,69 @@ case class WorkerImplementation[Id, Signal](
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory,
-  var flushedAfterUndeliverableSignalHandler: Boolean,
   var signalThreshold: Double,
   var collectThreshold: Double,
-  var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit,
-  val counters: WorkerOperationCounters = new WorkerOperationCounters(),
-  var maySignal: Boolean = true, // If the coordinator allows this worker to signal.
-  var operationsOnHold: Boolean = false, // If operations such as a bulk graph modification or signaling was interrupted to be continued later.
-  var awaitingContinue: Boolean = false, // If the worker is currently awaiting a continue message.
-  var isIdle: Boolean = false,
-  var isPaused: Boolean = true,
-  var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = Iterator.empty)
-    extends WorkerApi[Id, Signal] {
+  var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
+  extends Worker[Id, Signal] {
 
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
 
-  reset
+  initialize
 
-  lastStatusUpdate = System.currentTimeMillis
-  var vertexStore: Storage[Id] = storageFactory.createInstance[Id]
+  var flushedAfterUndeliverableSignalHandler: Boolean = _
+  var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
+  var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
+  var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
+  var isPaused: Boolean = _
+  var lastStatusUpdate: Long = _
+  var vertexStore: Storage[Id] = _
+  var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = _
+  val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
-  def reset {
-    maySignal = true
-    operationsOnHold = false
-    awaitingContinue = false
-    shouldShutdown = false
+  def initialize {
+    flushedAfterUndeliverableSignalHandler = true
+    systemOverloaded = false
+    operationsScheduled = false
     isIdle = false
     isPaused = true
     lastStatusUpdate = System.currentTimeMillis
-    counters.resetOperationCounters
     vertexStore = storageFactory.createInstance[Id]
+    pendingModifications = Iterator.empty
+  }
+
+  /**
+   * Resets all state apart from that which is part of the constructor.
+   * Also does not reset the part of the counters which is part of
+   * termination detection.
+   */
+  def reset {
+    initialize
+    counters.resetOperationCounters
     messageBus.reset
+  }
+
+  def isAllWorkDone: Boolean = {
+    if (isPaused) {
+      pendingModifications.isEmpty
+    } else {
+      isConverged
+    }
+  }
+
+  def setIdle(newIdleState: Boolean) {
+    if (messageBus.isInitialized && isIdle != newIdleState) {
+      isIdle = newIdleState
+      sendStatusToCoordinator
+    }
+  }
+
+  def sendStatusToCoordinator {
+    val currentTime = System.currentTimeMillis
+    if (messageBus.isInitialized) {
+      val status = getWorkerStatus
+      messageBus.sendToCoordinator(status)
+    }
   }
 
   def isConverged = {
@@ -87,7 +121,7 @@ case class WorkerImplementation[Id, Signal](
       flushedAfterUndeliverableSignalHandler
   }
 
-  protected def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
+  def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
     counters.collectOperationsExecuted += 1
     vertex.executeCollectOperation(vertexGraphEditor)
     if (addToSignal && vertex.scoreSignal > signalThreshold) {
@@ -95,7 +129,7 @@ case class WorkerImplementation[Id, Signal](
     }
   }
 
-  protected def executeSignalOperationOfVertex(vertex: Vertex[Id, _]) {
+  def executeSignalOperationOfVertex(vertex: Vertex[Id, _]) {
     counters.signalOperationsExecuted += 1
     vertex.executeSignalOperation(vertexGraphEditor)
   }
@@ -120,11 +154,16 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def startComputation {
+    if (!pendingModifications.isEmpty) {
+      log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
+    }
     isPaused = false
+    sendStatusToCoordinator
   }
 
   def pauseComputation {
     isPaused = true
+    sendStatusToCoordinator
   }
 
   def signalStep: Boolean = {
@@ -344,13 +383,28 @@ case class WorkerImplementation[Id, Signal](
       numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
       outgoingEdgesAdded = counters.outgoingEdgesAdded,
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved,
-      receiveTimeoutMessagesReceived = counters.receiveTimeoutMessagesReceived,
       heartbeatMessagesReceived = counters.heartbeatMessagesReceived,
       signalMessagesReceived = counters.signalMessagesReceived,
       bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
       continueMessagesReceived = counters.continueMessagesReceived,
       requestMessagesReceived = counters.requestMessagesReceived,
       otherMessagesReceived = counters.otherMessagesReceived)
+  }
+
+  def registerWorker(workerId: Int, worker: ActorRef) {
+    messageBus.registerWorker(workerId, worker)
+  }
+
+  def registerNode(nodeId: Int, node: ActorRef) {
+    messageBus.registerNode(nodeId, node)
+  }
+
+  def registerCoordinator(coordinator: ActorRef) {
+    messageBus.registerCoordinator(coordinator)
+  }
+
+  def registerLogger(logger: ActorRef) {
+    messageBus.registerLogger(logger)
   }
 
 } 
