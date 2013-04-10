@@ -61,12 +61,13 @@ object EfficientPageRankLoader extends App {
 }
 
 case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Double] => Unit] {
-  def nextVertexId = CompactIntSet.readUnsignedVarInt(in)
-  def nextNumberOfEdges = CompactIntSet.readUnsignedVarInt(in)
+  var loaded = 0
+
+  def readNext: Int = CompactIntSet.readUnsignedVarInt(in)
   def nextEdges(length: Int): ArrayBuffer[Int] = {
     val edges = new ArrayBuffer[Int]
     while (edges.length < length) {
-      val nextEdge = CompactIntSet.readUnsignedVarInt(in)
+      val nextEdge = readNext
       edges += nextEdge
     }
     edges
@@ -78,11 +79,14 @@ case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Do
   var vertexId = Int.MinValue
 
   def hasNext = {
-    vertexId = nextVertexId
+    vertexId = readNext
+    println(vertexId >= 0)
     vertexId >= 0
   }
   def next: GraphEditor[Int, Double] => Unit = {
-    val numberOfEdges = nextNumberOfEdges
+    loaded += 1
+    println(loaded)
+    val numberOfEdges = readNext
     val edges = nextEdges(numberOfEdges)
     val vertex = new EfficientPageRankVertex(vertexId)
     vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
