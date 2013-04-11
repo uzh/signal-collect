@@ -42,7 +42,7 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 
-case class ScheduleOperations(allWorkDoneWhenSent: Boolean)
+object ScheduleOperations
 
 /**
  * Class that interfaces the worker implementation with Akka messaging.
@@ -80,17 +80,15 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def isInitialized = messageBus.isInitialized
 
-  val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
-
-  def performComputations {
-    if (!worker.isPaused && !worker.systemOverloaded && !worker.operationsScheduled) {
-      executeOperations
-      messageBus.flush
-      worker.flushedAfterUndeliverableSignalHandler = true
-    } else if (worker.isPaused && !worker.operationsScheduled) {
-      applyPendingGraphModifications
-    }
-  }
+  //  def performComputations {
+  //    if (!worker.isPaused && !worker.systemOverloaded && !worker.operationsScheduled) {
+  //      executeOperations
+  //      messageBus.flush
+  //      worker.flushedAfterUndeliverableSignalHandler = true
+  //    } else if (worker.isPaused && !worker.operationsScheduled) {
+  //      applyPendingGraphModifications
+  //    }
+  //  }
 
   def applyPendingGraphModifications {
     if (worker.pendingModifications.hasNext) {
@@ -104,22 +102,23 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    messageBus.sendToActor(self, ScheduleOperations(worker.isAllWorkDone))
+    worker.setIdle(false)
+    self ! ScheduleOperations
+    worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
   }
 
   def executeOperations {
-    if (messageQueue.isEmpty) {
-      val collected = worker.vertexStore.toCollect.process(
-        vertex => {
-          worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-          if (vertex.scoreSignal > worker.signalThreshold) {
-            worker.executeSignalOperationOfVertex(vertex)
-          }
-        })
-      if (!worker.vertexStore.toSignal.isEmpty && worker.vertexStore.toCollect.isEmpty && messageQueue.isEmpty) {
-        worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
-      }
+    val collected = worker.vertexStore.toCollect.process(
+      vertex => {
+        worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
+        if (vertex.scoreSignal > worker.signalThreshold) {
+          worker.executeSignalOperationOfVertex(vertex)
+        }
+      })
+    if (!worker.vertexStore.toSignal.isEmpty && worker.vertexStore.toCollect.isEmpty) {
+      worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
     }
+    messageBus.flush
   }
 
   protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
@@ -129,6 +128,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
    */
   def receive = {
     case s: SignalMessage[Id, Signal] =>
+      //log.debug(s"$workerId $s")
       worker.counters.signalMessagesReceived += 1
       worker.processSignal(s.signal, s.targetId, s.sourceId)
       if (!worker.operationsScheduled && !worker.isPaused) {
@@ -137,6 +137,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
+      //log.debug(s"$workerId $bulkSignal")
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
@@ -161,8 +162,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         worker.operationsScheduled = true
       }
 
-    case ScheduleOperations(allWorkDoneWhenSent) =>
-      if (allWorkDoneWhenSent && worker.isAllWorkDone) {
+    case ScheduleOperations =>
+      //log.debug(s"$workerId ScheduleOperations")
+      if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
         worker.setIdle(true)
         worker.operationsScheduled = false
       } else {
@@ -171,6 +173,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Request(command, reply) =>
+      //log.debug(s"$workerId $command")
       worker.counters.requestMessagesReceived += 1
       try {
         val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
@@ -186,17 +189,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           log.error(s"Problematic request on worker $workerId: ${e.getMessage}")
           throw e
       }
-      if (!worker.operationsScheduled && !worker.isAllWorkDone) {
+      if (!worker.operationsScheduled && (!worker.isAllWorkDone || !worker.isIdle)) {
         scheduleOperations
         worker.operationsScheduled = true
       }
 
     case Heartbeat(maySignal) =>
+      //log.debug(s"$workerId Heartbeat(maySignal=$maySignal) ${worker.getWorkerStatus}")
       worker.counters.heartbeatMessagesReceived += 1
       worker.sendStatusToCoordinator
       worker.systemOverloaded = !maySignal
 
     case other =>
+      //log.debug(s"$workerId Other: $other")
       worker.counters.otherMessagesReceived += 1
       log.error(s"Worker $workerId not handle message $other")
       throw new Exception(s"Unsupported message: $other")
