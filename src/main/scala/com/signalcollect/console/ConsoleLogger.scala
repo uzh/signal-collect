@@ -48,7 +48,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
 //  println(context.self)
 
   def logFileName = "log_messages.txt"
-  val logReader = new BufferedReader(new FileReader(logFileName))
+  var logReader: BufferedReader = null
 
   // number of lines to read per request
   val maxReadLines = 5000;
@@ -114,6 +114,9 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     var logMessages: List[String] = List()
     if (!(new File(logFileName)).exists) {
       return logMessages
+    }
+    if (logReader == null) {
+      logReader = new BufferedReader(new FileReader(logFileName))
     }
     var readLines = 0
     while (logReader.ready() && readLines < maxReadLines) {
