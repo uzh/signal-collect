@@ -21,22 +21,25 @@ package com.signalcollect.nodeprovisioning.torque
 import java.io.File
 import scala.sys.process._
 
-
 class LocalJobSubmitter(mailAddress: String = "") extends AbstractJobSubmitter(mailAddress) {
 
-  
   override def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
     val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
     val qsubCommand = """echo """ + script + """ | qsub"""
     Seq("echo", script) #| Seq("qsub")!!
   }
-  
+
   def executeCommandOnClusterManager(command: String): String = {
     println(command)
     command!!
   }
 
   def copyFileToCluster(localPath: String, targetPath: String = System.getProperty("user.home")) {
-    Seq("cp", localPath, targetPath).!!
-   }
+    try {
+      Seq("cp", localPath, targetPath).!!
+    }
+    catch {
+      case _: Throwable => 
+    }
+  }
 }
