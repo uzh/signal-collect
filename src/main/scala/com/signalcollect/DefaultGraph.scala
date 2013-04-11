@@ -283,7 +283,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
         var globalTermination = false
-        while (!converged && !isGlobalTerminationConditionMet(globalCondition)) {
+        while (!isGlobalTerminationConditionMet(globalCondition)) {
           if (intervalHasPassed) {
             lastAggregationOperationTime = System.nanoTime
             globalTermination = isGlobalTerminationConditionMet(globalCondition)
@@ -300,6 +300,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
           workerApi.pauseComputation
+          awaitIdle
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation
           gtc.shouldTerminate(globalAggregateValue)
@@ -312,7 +313,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
         var globalTermination = false
-        while (!converged && !globalTermination && !isTimeLimitReached) {
+        while (!globalTermination && !isTimeLimitReached) {
           if (intervalHasPassed) {
             lastAggregationOperationTime = System.nanoTime
             globalTermination = isGlobalTerminationConditionMet(globalCondition)
@@ -330,6 +331,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         def intervalHasPassed = remainingIntervalTime <= 0
         def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
           workerApi.pauseComputation
+          awaitIdle
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation
           gtc.shouldTerminate(globalAggregateValue)
