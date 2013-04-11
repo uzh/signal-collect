@@ -26,7 +26,7 @@ trait ThrottlingBulkScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
     if (!worker.vertexStore.toCollect.isEmpty) {
       worker.vertexStore.toCollect.process(worker.executeCollectOperationOfVertex(_))
     }
-    if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
+    if (!worker.vertexStore.toSignal.isEmpty) {
       worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_), Some(batchSignalingSize))
       if (!worker.vertexStore.toSignal.isEmpty) {
         scheduleOperations

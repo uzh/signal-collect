@@ -65,6 +65,7 @@ case class WorkerImplementation[Id, Signal](
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
   var isPaused: Boolean = _
+  var allWorkDoneWhenContinueSent: Boolean = _
   var lastStatusUpdate: Long = _
   var vertexStore: Storage[Id] = _
   var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = _
@@ -76,6 +77,7 @@ case class WorkerImplementation[Id, Signal](
     operationsScheduled = false
     isIdle = false
     isPaused = true
+    allWorkDoneWhenContinueSent = false
     lastStatusUpdate = System.currentTimeMillis
     vertexStore = storageFactory.createInstance[Id]
     pendingModifications = Iterator.empty
@@ -248,7 +250,11 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    pendingModifications = pendingModifications ++ graphModifications
+    for (graphModification <- graphModifications) {
+      graphModification(graphEditor)
+    }
+    // TODO: Implement properly
+    //pendingModifications = pendingModifications ++ graphModifications
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {

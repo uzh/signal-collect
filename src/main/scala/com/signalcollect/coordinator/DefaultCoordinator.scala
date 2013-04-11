@@ -80,7 +80,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBus.isInitialized && (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
   }
 
-  var globalQueueSizeLimitPreviousHeartbeat = 0l
+  var globalQueueSizeLimitPreviousHeartbeat = 100000l
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def sendHeartbeat {
