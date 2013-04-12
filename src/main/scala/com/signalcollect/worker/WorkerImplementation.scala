@@ -41,6 +41,7 @@ import com.signalcollect.interfaces.WorkerStatus
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.Worker
+import com.signalcollect.interfaces.SentMessagesStats
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -53,7 +54,7 @@ case class WorkerImplementation[Id, Signal](
   var signalThreshold: Double,
   var collectThreshold: Double,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-  extends Worker[Id, Signal] {
+    extends Worker[Id, Signal] {
 
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
@@ -118,7 +119,7 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def isConverged = {
-//    log.debug(s"toCollect.isEmpty=${vertexStore.toCollect.isEmpty} toSignal.isEmpty=${vertexStore.toSignal.isEmpty} flushedAfterUndeliverableSignalHandler=$flushedAfterUndeliverableSignalHandler")
+    //    log.debug(s"toCollect.isEmpty=${vertexStore.toCollect.isEmpty} toSignal.isEmpty=${vertexStore.toSignal.isEmpty} flushedAfterUndeliverableSignalHandler=$flushedAfterUndeliverableSignalHandler")
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
       flushedAfterUndeliverableSignalHandler
@@ -369,7 +370,11 @@ case class WorkerImplementation[Id, Signal](
       workerId = workerId,
       isIdle = isIdle,
       isPaused = isPaused,
-      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
+      messagesSent = SentMessagesStats(
+        messageBus.messagesSentToWorkers,
+        messageBus.messagesSentToNodes,
+        messageBus.messagesSentToCoordinator + 1, // +1 to account for the status message itself.
+        messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
   }
 
@@ -378,8 +383,6 @@ case class WorkerImplementation[Id, Signal](
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
       workerId = workerId,
-      messagesReceived = counters.messagesReceived,
-      messagesSent = messageBus.messagesSent + 1, // +1 to account for the status message itself.
       toSignalSize = vertexStore.toSignal.size,
       toCollectSize = vertexStore.toCollect.size,
       collectOperationsExecuted = counters.collectOperationsExecuted,
@@ -399,18 +402,22 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {
+    counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerWorker(workerId, worker)
   }
 
   def registerNode(nodeId: Int, node: ActorRef) {
+    counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerNode(nodeId, node)
   }
 
   def registerCoordinator(coordinator: ActorRef) {
+    counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerCoordinator(coordinator)
   }
 
   def registerLogger(logger: ActorRef) {
+    counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerLogger(logger)
   }
 

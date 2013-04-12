@@ -43,6 +43,8 @@ import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.NodeStatus
+import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.SentMessagesStats
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -85,9 +87,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def sendHeartbeat {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
-    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
-    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers sentByNodes=$messagesSentByNodes")
-    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers receivedByNodes=$messagesReceivedByNodes")
+//    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
+//    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers sentByNodes=$messagesSentByNodes")
+//    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers receivedByNodes=$messagesReceivedByNodes")
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -107,9 +109,14 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var nodeStatus: Array[NodeStatus] = new Array[NodeStatus](numberOfNodes)
 
+  var nodeStatusReceived = 0
+  var workerStatusReceived = 0
+  
   def receive = {
     case ws: WorkerStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
+      workerStatusReceived += 1
+      println(s"WorkerStatus received: $workerStatusReceived")
       updateWorkerStatusMap(ws)
       if (isIdle) {
         onIdle
@@ -119,6 +126,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
     case ns: NodeStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
+      nodeStatusReceived += 1
+      println(s"NodeStatus received: $nodeStatusReceived")
       updateNodeStatusMap(ns)
       if (shouldSendHeartbeat) {
         sendHeartbeat
@@ -153,14 +162,14 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
     // Only update worker status if no status received so far or if the current status is newer.
-    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent < ws.messagesSent) {
+    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant < ws.messagesSent.sumRelevant) {
       workerStatus(ws.workerId) = ws
     }
   }
 
   def updateNodeStatusMap(ns: NodeStatus) {
     // Only update node status if no status received so far or if the current status is newer.
-    if (nodeStatus(ns.nodeId) == null || nodeStatus(ns.nodeId).messagesSent < ns.messagesSent) {
+    if (nodeStatus(ns.nodeId) == null || nodeStatus(ns.nodeId).messagesSent.sumRelevant < ns.messagesSent.sumRelevant) {
       nodeStatus(ns.nodeId) = ns
     }
   }
@@ -185,56 +194,104 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def getWorkerStatuses: Array[WorkerStatus] = workerStatus.clone
 
-  /**
-   * The sent worker status messages were not counted yet within that status message, that's why we add config.numberOfWorkers
-   * (eventually we will have received at least one status message per worker).
-   */
-  def messagesSentByWorkers: Long = messagesSentPerWorker.values.sum
+  val messagesSentToWorkers: Array[Long] = new Array(numberOfWorkers)
+  val messagesSentToNodes: Array[Long] = new Array(numberOfNodes)
+  var messagesSentToCoordinator: Long = 0
 
-  /**
-   * The sent node status messages were not counted yet within that status message, that's why we add numberOfNodes
-   * (eventually we will have received at least one status message per node).
-   */
-  def messagesSentByNodes: Long = messagesSentPerNode.values.sum
-  
-  /**
-   *  Returns a map with the worker id as the key and the number of messages sent as the value.
-   */
-  def messagesSentPerWorker: Map[Int, Long] = { // TODO: Make this more efficient.
-    val messagesPerWorker = new HashMap[Int, Long]()
-    var workerId = 0
-    while (workerId < numberOfWorkers) {
+  def totalMessagesSent = messagesSentToWorkers.sum + messagesSentToNodes.sum + messagesSentToCoordinator
+
+  val messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
+  val messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
+  var messagesReceivedByCoordinator: Long = 0
+
+  def totalMessagesReceived = messagesReceivedByWorkers.sum + messagesReceivedByNodes.sum + messagesReceivedByCoordinator
+
+  def resetMessagingStats {
+    for (workerId <- 0 until numberOfWorkers) {
+      messagesSentToWorkers(workerId) = 0
+      messagesReceivedByWorkers(workerId) = 0
+    }
+    for (nodeId <- 0 until numberOfNodes) {
+      messagesSentToNodes(nodeId) = 0
+      messagesReceivedByNodes(nodeId) = 0
+    }
+    messagesSentToCoordinator = 0
+    messagesReceivedByCoordinator = 0
+  }
+
+  def allSentMessagesReceived: Boolean = {
+    computeMessagingStats
+    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+    println(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    println(s"Total sent         : ${totalMessagesSent}")
+    println(s"Total received     : ${totalMessagesReceived}")
+    println(s"Global inbox size  : ${getGlobalInboxSize}")
+    
+    for (workerId <- 0 until numberOfWorkers) {
+      if (messagesSentToWorkers(workerId) != messagesReceivedByWorkers(workerId)) {
+        return false
+      }
+    }
+    for (nodeId <- 0 until numberOfNodes) {
+      if (messagesSentToNodes(nodeId) != messagesReceivedByNodes(nodeId)) {
+        return false
+      }
+    }
+    if (messagesSentToCoordinator != messagesReceivedByCoordinator) {
+      return false
+    }
+    true
+  }
+
+  def computeMessagingStats {
+    resetMessagingStats
+    for (workerId <- 0 until numberOfWorkers) {
       val status = workerStatus(workerId)
-      messagesPerWorker.put(workerId, if (status == null) 0 else status.messagesSent)
-      workerId += 1
+      if (status != null) {
+        messagesReceivedByWorkers(workerId) = status.messagesReceived
+        updateSentMessages(status.messagesSent)
+      }
     }
-    messagesPerWorker
-  }
-
-  /**
-   *  Returns a map with the node id as the key and the number of messages sent as the value.
-   */
-  def messagesSentPerNode: Map[Int, Long] = { // TODO: Make this more efficient.
-    val messagesPerNode = new HashMap[Int, Long]()
-    var nodeId = 0
-    while (nodeId < numberOfNodes) {
+    for (nodeId <- 0 until numberOfNodes) {
       val status = nodeStatus(nodeId)
-      messagesPerNode.put(nodeId, if (status == null) 0 else status.messagesSent)
-      nodeId += 1
+      if (status != null) {
+        messagesReceivedByNodes(nodeId) = status.messagesReceived
+        updateSentMessages(status.messagesSent)
+      }
     }
-    messagesPerNode
+    messagesReceivedByCoordinator = messageBus.messagesReceived
+    val coordinatorMessagesSent = messagesSentByCoordinator
+    updateSentMessages(coordinatorMessagesSent)
   }
 
-  def messagesSentByCoordinator = messageBus.messagesSent
-  def messagesReceivedByWorkers = workerStatus filter (_ != null) map (_.messagesReceived) sum
-  def messagesReceivedByNodes = nodeStatus filter (_ != null) map (_.messagesReceived) sum
-  def messagesReceivedByCoordinator = messageBus.messagesReceived
-  def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByNodes + messagesSentByCoordinator
-  def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByNodes + messagesReceivedByCoordinator
+  def updateSentMessages(stats: SentMessagesStats) {
+    for (recipientId <- 0 until numberOfWorkers) {
+      messagesSentToWorkers(recipientId) += stats.workers(recipientId)
+    }
+    for (recipientId <- 0 until numberOfNodes) {
+      messagesSentToNodes(recipientId) += stats.nodes(recipientId)
+    }
+    messagesSentToCoordinator += stats.coordinator
+  }
+
+  def messagesSentByCoordinator = SentMessagesStats(
+    messageBus.messagesSentToWorkers,
+    messageBus.messagesSentToNodes,
+    messageBus.messagesSentToCoordinator,
+    messageBus.messagesSentToOthers)
+  //  def messagesReceivedByWorkers = workerStatus filter (_ != null) map (_.messagesReceived) sum
+  //  def messagesReceivedByNodes = nodeStatus filter (_ != null) map (_.messagesReceived) sum
+  //  def messagesReceivedByCoordinator = messageBus.messagesReceived
+  //  def totalMessagesSent: Long = messagesSentByWorkers + messagesSentByNodes + messagesSentByCoordinator.sumRelevant
+  //  def totalMessagesReceived: Long = messagesReceivedByWorkers + messagesReceivedByNodes + messagesReceivedByCoordinator
   def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
 
   def isIdle: Boolean = {
-    workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && totalMessagesSent == totalMessagesReceived
+    workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived //totalMessagesSent == totalMessagesReceived
   }
 
   def getJVMCpuTime = {

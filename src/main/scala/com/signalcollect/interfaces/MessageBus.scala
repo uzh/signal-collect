@@ -38,7 +38,13 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   
   def numberOfNodes: Int
 
-  def messagesSent: Long
+  def messagesSentToWorkers: Array[Int]
+
+  def messagesSentToNodes: Array[Int]
+
+  def messagesSentToCoordinator: Int
+
+  def messagesSentToOthers: Int
   
   def messagesReceived: Long
 
@@ -66,7 +72,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
    * Resets the message but does not touch the counters.
    */
   def reset
-
+  
   // Returns an api that treats all workers as if there were only one.
   def getWorkerApi: WorkerApi[Id, Signal]
 

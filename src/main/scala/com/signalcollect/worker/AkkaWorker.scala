@@ -112,11 +112,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             worker.executeSignalOperationOfVertex(vertex)
           }
         })
-//        println(s"Worker $workerId is signaling, ${worker.vertexStore.toSignal.size} signal operations to go")
+//        log.debug(s"Worker $workerId is signaling, ${worker.vertexStore.toSignal.size} signal operations to go")
       if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
         worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
       }
-//      println(s"Worker $workerId has ${worker.vertexStore.toSignal.size} vertices in toSignal left")
+//      log.debug(s"Worker $workerId has ${worker.vertexStore.toSignal.size} vertices in toSignal left")
       messageBus.flush
     }
   }
@@ -126,7 +126,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
    */
   def receive = {
     case s: SignalMessage[Id, Signal] =>
-      //log.debug(s"$workerId $s")
+      log.debug(s"$workerId $s")
       worker.counters.signalMessagesReceived += 1
       worker.processSignal(s.signal, s.targetId, s.sourceId)
       if (!worker.operationsScheduled && !worker.isPaused) {
@@ -135,7 +135,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
-      //log.debug(s"$workerId $bulkSignal")
+      log.debug(s"$workerId $bulkSignal")
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
@@ -161,7 +161,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case ScheduleOperations =>
-      //log.debug(s"$workerId ScheduleOperations")
+      log.debug(s"$workerId ScheduleOperations")
       if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
         worker.setIdle(true)
         worker.operationsScheduled = false
@@ -171,7 +171,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Request(command, reply) =>
-      //log.debug(s"$workerId $command")
+      log.debug(s"$workerId $command")
       worker.counters.requestMessagesReceived += 1
       try {
         val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
@@ -193,13 +193,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(maySignal) =>
-      //log.debug(s"$workerId Heartbeat(maySignal=$maySignal) ${worker.getWorkerStatus}")
+      log.debug(s"$workerId Heartbeat(maySignal=$maySignal) ${worker.getWorkerStatus}")
       worker.counters.heartbeatMessagesReceived += 1
       worker.sendStatusToCoordinator
       worker.systemOverloaded = !maySignal
 
     case other =>
-      //log.debug(s"$workerId Other: $other")
+      log.debug(s"$workerId Other: $other")
       worker.counters.otherMessagesReceived += 1
       log.error(s"Worker $workerId not handle message $other")
       throw new Exception(s"Unsupported message: $other")

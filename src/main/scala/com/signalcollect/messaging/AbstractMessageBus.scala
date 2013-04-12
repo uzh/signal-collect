@@ -48,6 +48,12 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   def flush = {}
 
+  protected var actorMessageIncrements = Map[ActorRef, () => Unit]().withDefaultValue({ () => sentOtherMessageCounter.incrementAndGet })
+
+  protected def incrementSentMessagesForActor(a: ActorRef) {
+    actorMessageIncrements(a)()
+  }
+
   def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 2
 
   protected val mapper: VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
@@ -69,6 +75,14 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   protected val sentCoordinatorMessageCounter = new AtomicInteger(0)
 
   protected val sentOtherMessageCounter = new AtomicInteger(0)
+
+  def messagesSentToWorkers: Array[Int] = sentWorkerMessageCounters.map((c: AtomicInteger) => c.get)
+
+  def messagesSentToNodes: Array[Int] = sentNodeMessageCounters.map((c: AtomicInteger) => c.get)
+
+  def messagesSentToCoordinator: Int = sentCoordinatorMessageCounter.get
+
+  def messagesSentToOthers: Int = sentOtherMessageCounter.get
 
   protected def getInitializedAtomicArray(numberOfEntries: Int): Array[AtomicInteger] = {
     val atomicInts = new Array[AtomicInteger](numberOfEntries)
@@ -93,32 +107,25 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   def workerApi: WorkerApi[Id, Signal]
 
-  /**
-   * Creates a copy of the message counters map and transforms the values from AtomicInteger to Long type.
-   */
-  def messagesSent: Long = {
-    sentWorkerMessageCounters.map((c: AtomicInteger) => c.get).sum +
-      sentNodeMessageCounters.map((c: AtomicInteger) => c.get).sum +
-      sentCoordinatorMessageCounter.get +
-      sentOtherMessageCounter.get
-  }
-
   def messagesReceived = receivedMessagesCounter.get
 
   //--------------------MessageRecipientRegistry--------------------
 
   override def registerWorker(workerId: Int, worker: ActorRef) {
     workers(workerId) = worker
+    actorMessageIncrements += worker -> { () => sentWorkerMessageCounters(workerId).incrementAndGet }
     registrations.incrementAndGet
   }
 
   override def registerNode(nodeId: Int, node: ActorRef) {
     nodes(nodeId) = node
+    actorMessageIncrements += node -> { () => sentNodeMessageCounters(nodeId).incrementAndGet }
     registrations.incrementAndGet
   }
 
   override def registerCoordinator(c: ActorRef) {
     coordinator = c
+    actorMessageIncrements += c -> { () => sentCoordinatorMessageCounter.incrementAndGet }
     registrations.incrementAndGet
   }
 
@@ -130,7 +137,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   //--------------------MessageBus--------------------
 
   override def sendToActor(actor: ActorRef, message: Any) {
-    sentOtherMessageCounter.incrementAndGet()
+    incrementSentMessagesForActor(actor)
     actor ! message
   }
 
