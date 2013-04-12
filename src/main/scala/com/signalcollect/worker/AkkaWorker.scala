@@ -64,14 +64,17 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](numberOfWorkers, numberOfNodes)
   }
 
-  val worker = new WorkerImplementation(
+  val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
     signalThreshold = 0.001,
     collectThreshold = 0.0,
-    undeliverableSignalHandler = (s, tId, sId, ge) => {})
+    undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
+      throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId")
+      Unit
+    })
 
   /**
    * How many graph modifications this worker will execute in one batch.
@@ -79,16 +82,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val graphModificationBatchProcessingSize = 100
 
   def isInitialized = messageBus.isInitialized
-
-  //  def performComputations {
-  //    if (!worker.isPaused && !worker.systemOverloaded && !worker.operationsScheduled) {
-  //      executeOperations
-  //      messageBus.flush
-  //      worker.flushedAfterUndeliverableSignalHandler = true
-  //    } else if (worker.isPaused && !worker.operationsScheduled) {
-  //      applyPendingGraphModifications
-  //    }
-  //  }
 
   def applyPendingGraphModifications {
     if (worker.pendingModifications.hasNext) {
@@ -107,21 +100,26 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
   }
 
-  def executeOperations {
-    val collected = worker.vertexStore.toCollect.process(
-      vertex => {
-        worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-        if (vertex.scoreSignal > worker.signalThreshold) {
-          worker.executeSignalOperationOfVertex(vertex)
-        }
-      })
-    if (!worker.vertexStore.toSignal.isEmpty && worker.vertexStore.toCollect.isEmpty) {
-      worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
-    }
-    messageBus.flush
-  }
+  val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
-  protected var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit = (s, tId, sId, ge) => {}
+  
+  def executeOperations {
+    if (messageQueue.isEmpty) {
+      val collected = worker.vertexStore.toCollect.process(
+        vertex => {
+          worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
+          if (vertex.scoreSignal > worker.signalThreshold) {
+            worker.executeSignalOperationOfVertex(vertex)
+          }
+        })
+//        println(s"Worker $workerId is signaling, ${worker.vertexStore.toSignal.size} signal operations to go")
+      if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
+        worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
+      }
+//      println(s"Worker $workerId has ${worker.vertexStore.toSignal.size} vertices in toSignal left")
+      messageBus.flush
+    }
+  }
 
   /**
    * This method gets executed when the Akka actor receives a message.

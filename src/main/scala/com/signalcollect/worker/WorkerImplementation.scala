@@ -118,6 +118,7 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def isConverged = {
+//    log.debug(s"toCollect.isEmpty=${vertexStore.toCollect.isEmpty} toSignal.isEmpty=${vertexStore.toSignal.isEmpty} flushedAfterUndeliverableSignalHandler=$flushedAfterUndeliverableSignalHandler")
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
       flushedAfterUndeliverableSignalHandler
