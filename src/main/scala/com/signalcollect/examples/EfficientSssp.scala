@@ -46,7 +46,7 @@ object EfficientSsspLoader extends App {
     s
   }
   for (i <- 0 until numberOfSplits) {
-    g.modifyGraph(loadSplit(i), Some(i))
+    g.modifyGraph(loadSplit(i) _, Some(i))
   }
   print("Loading graph ...")
   g.awaitIdle

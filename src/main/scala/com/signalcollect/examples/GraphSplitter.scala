@@ -34,9 +34,13 @@ object GraphSplitter extends App {
   val webGraphUrl = new URL("http://snap.stanford.edu/data/web-BerkStan.txt.gz")
   val webGraphZip = "web-BerkStan.txt.gz"
   val decompressedName = "web-BerkStan.txt"
+  println("Downloading ...")
   downloadFile(webGraphUrl, webGraphZip)
+  println("Decompressing ...")
   decompressGzip(webGraphZip, decompressedName)
+  println("Splitting ...")
   splitGraph(decompressedName, Runtime.getRuntime.availableProcessors)
+  println("Done")
 
   def downloadFile(url: URL, localFileName: String) {
     val in = Channels.newChannel(url.openStream)
@@ -66,6 +70,7 @@ object GraphSplitter extends App {
    * The ids are assumed to be unsigned Ints and written as VarInts.
    */
   def splitGraph(fileName: String, splitFactor: Int) {
+    var vertexMap = Map[Int, ArrayBuffer[Int]]()
     val outStreams = {
       val files = new Array[DataOutputStream](splitFactor)
       for (i <- 0 until files.length) {
@@ -75,31 +80,29 @@ object GraphSplitter extends App {
     }
     val in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)))
     var line = in.readLine
-    var verticesRead = 0
-    var currentVertex: Option[Int] = None
-    var currentTarget: Option[Int] = None
-    var currentEdges: ArrayBuffer[Int] = new ArrayBuffer[Int]
     while (line != null) {
       if (!line.startsWith("#")) {
         val edgeTuple = line.split("	")
-        val nextVertex = toInt(edgeTuple(0))
+        val nextSource = toInt(edgeTuple(0))
         val nextTarget = toInt(edgeTuple(1))
-        if (!currentVertex.isDefined) {
-          currentVertex = Some(nextVertex)
-          currentEdges += nextTarget
-        } else if (currentVertex.isDefined && currentVertex.get == nextVertex) {
-          currentEdges += nextTarget
+        if (vertexMap.contains(nextSource)) {
+          val existingEdges = vertexMap(nextSource)
+          existingEdges.append(nextTarget)
         } else {
-          write(currentVertex.get, currentEdges)
-          currentVertex = Some(nextVertex)
-          currentEdges = new ArrayBuffer[Int]
-          currentEdges += nextTarget
+          vertexMap += nextSource -> ArrayBuffer[Int](nextTarget)
         }
+        if (!vertexMap.contains(nextTarget)) {
+          vertexMap += nextTarget -> ArrayBuffer[Int]()
+        }
+      }
+      if (vertexMap.size % 10000 == 0) {
+        println(vertexMap.size + " vertices read ...")
       }
       line = in.readLine
     }
-    if (currentVertex.isDefined) {
-      write(currentVertex.get, currentEdges)
+    println("Writing ...")
+    for (vertexId <- vertexMap.keys) {
+      write(vertexId, vertexMap(vertexId))
     }
     in.close
     outStreams foreach (_.close)
