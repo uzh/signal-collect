@@ -40,6 +40,7 @@ import scala.language.postfixOps
 import scala.concurrent.duration.DurationInt
 import akka.actor.ReceiveTimeout
 import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.SentMessagesStats
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -60,17 +61,18 @@ class DefaultNodeActor(
     val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
     ) extends NodeActor {
 
+  // To keep track of sent messages before the message bus is initialized.
+  var bootstrapMessagesSentToCoordinator = 0
+
   var statusReportingInterval = 10 // Report every 10 milliseconds.
 
   var receivedMessagesCounter = 0
-
-  // To keep track of sent messages before the message bus is initialized.
-  var initializationMessageCounter = 0
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
 
   def setStatusReportingInterval(interval: Int) {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     this.statusReportingInterval = interval
   }
 
@@ -96,8 +98,7 @@ class DefaultNodeActor(
             // MessageBus will take care of counting the replies.
             messageBus.sendToActor(sender, None)
           } else {
-            // We need to manually keep track of these sent messages.
-            initializationMessageCounter += 1
+            // Bootstrap answers, not counted yet.
             sender ! None
           }
         } else {
@@ -105,8 +106,7 @@ class DefaultNodeActor(
             // MessageBus will take care of counting the replies.
             messageBus.sendToActor(sender, result)
           } else {
-            // We need to manually keep track of these sent messages.
-            initializationMessageCounter += 1
+            // Bootstrap answers, not counted yet.
             sender ! result
           }
         }
@@ -120,6 +120,7 @@ class DefaultNodeActor(
   var nodeProvisioner: ActorRef = _
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes)
   }
 
@@ -128,7 +129,11 @@ class DefaultNodeActor(
   protected def getNodeStatus: NodeStatus = {
     NodeStatus(
       nodeId = nodeId,
-      messagesSent = messageBus.messagesSent + initializationMessageCounter + 1, // +1 to account for the status message itself.
+      messagesSent = SentMessagesStats(
+        messageBus.messagesSentToWorkers,
+        messageBus.messagesSentToNodes,
+        messageBus.messagesSentToCoordinator + bootstrapMessagesSentToCoordinator + 1, // +1 to account for the status message itself.
+        messageBus.messagesSentToOthers),
       messagesReceived = receivedMessagesCounter)
   }
 
@@ -144,6 +149,7 @@ class DefaultNodeActor(
   def isInitialized = messageBus != null && messageBus.isInitialized
 
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased =>
@@ -157,7 +163,10 @@ class DefaultNodeActor(
     }
   }
 
-  def numberOfCores = Runtime.getRuntime.availableProcessors
+  def numberOfCores = {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
+    Runtime.getRuntime.availableProcessors
+  }
 
   override def preStart() = {
     if (nodeProvisionerAddress.isDefined) {
@@ -169,18 +178,22 @@ class DefaultNodeActor(
   def shutdown = context.system.shutdown
 
   def registerWorker(workerId: Int, worker: ActorRef) {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     messageBus.registerWorker(workerId, worker)
   }
 
   def registerNode(nodeId: Int, node: ActorRef) {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     messageBus.registerNode(nodeId, node)
   }
 
   def registerCoordinator(coordinator: ActorRef) {
+    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     messageBus.registerCoordinator(coordinator)
   }
 
   def registerLogger(logger: ActorRef) {
+    receivedMessagesCounter -= 1 // Registration messages are not counted.
     messageBus.registerLogger(logger)
   }
 
