@@ -24,6 +24,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
+import com.signalcollect.interfaces.NodeReady
 
 class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
 
@@ -35,7 +36,7 @@ class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
     case "GetNodes" =>
       nodeListRequestor = Some(sender)
       sendNodesIfReady
-    case "NodeReady" =>
+    case NodeReady =>
       nodeControllers = sender :: nodeControllers
       sendNodesIfReady
   }
