@@ -25,6 +25,7 @@ scc.modules.controls = function() {
         $("#controls").find(".icon").removeClass("blocked");
         break;
       case "pausing":
+        scc.consumers.breakconditions.onopen()
         scc.consumers.graph.autoRefresh = false;
         $("#controls").find(".icon").removeClass("blocked");
         $("#controls").find("#pause").addClass("hidden");

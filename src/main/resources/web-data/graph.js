@@ -13,14 +13,14 @@ scc.defaults.graph = {"layout": {
                         "gp_refreshRate": "5",
                         "gp_drawEdges": "When graph is still",
                         "gc_nodeId": ""
-                      }}
+                      }
+}
 
 STR = {"searchByID": "Search and hit Enter to execute",
-        "pickNode": "Enter ID or select using mouse"
-      }
+}
 
 scc.modules.graph = function() {
-  this.requires = ["graph", "breakconditions"];
+  this.requires = ["graph"];
   this.autoRefresh = false;
   var s, svg, force;
   var color = d3.scale.category20();
@@ -102,7 +102,7 @@ scc.modules.graph = function() {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>')
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
-    $('input[type="text"]').keypress(function(e) {
+    $('#gs_searchId').keypress(function(e) {
       if ( e.which == 13 ) { searchById(); }
     });
     window.addEventListener("keydown", function (e) {
@@ -205,27 +205,9 @@ scc.modules.graph = function() {
     }
 
     scc.consumers.graph.order()
-    scc.order({"provider": "breakconditions"})
-
   }
    
   this.onmessage = function(j) {
-    if (j.provider == "breakconditions") {
-      $("#gc_conditionList").empty();
-      $.each(j.active, function (k, c) {
-        var s = c.props[0].nodeId
-        if (s.length > 23) {
-          s = s.substring(s.length - 25, s.length)
-        }
-        $("#gc_conditionList").append(
-          '<li>When Node with id: <span class="node_link" title=' + 
-          c.props[0].nodeId + '">...' + s + '</span><br/> ' + 
-          c.name + " from " + c.props[0].currentState + '<div class="delete" /></li>'
-        );
-      });
-      $("#gc_conditionList li:last-child").addClass("last_child")
-      return;
-    }
     nodes = force.nodes();
     links = force.links();
     var newNodes = false;
@@ -387,7 +369,7 @@ scc.modules.graph = function() {
     var property = $(this);
     scc.consumers.graph.setGraphDesign(property.attr("id"), property.val());
   });
-  $("#cNodeSelection").find("select,input").change(function (e) {
+  $("#cNodeSelection").find("select,input").keyup(function (e) {
     var property = $(this);
     scc.consumers.graph.setNodeSelection(property.attr("id"), property.val());
   });
@@ -418,41 +400,4 @@ scc.modules.graph = function() {
     }
     scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });
-  $("#gc_useMouse").click(function (e) { 
-    e.preventDefault();
-    if ($("#graph_canvas").hasClass("picking")) {
-      $("#graph_canvas").removeClass("picking");
-      $("#gc_useMouse").removeClass("active");
-    }
-    else {
-      $("#graph_canvas").addClass("picking");
-      $("#gc_useMouse").addClass("active");
-    }
-  });
-  d3.select("#graph_canvas").on("click", function (e) {
-    if (!$("#graph_canvas").hasClass("picking")) { return; }
-    $("#graph_canvas").removeClass("picking");
-    $("#gc_useMouse").removeClass("active");
-    var target = d3.event.target;
-    var data = target.__data__;
-    var node = $(target);
-    if (data == undefined) {
-      $("#gc_nodeId").val(STR.pickNode);
-    }
-    else {
-      $("#gc_nodeId").val(data.id);
-      $("#gc_nodeId").focus();
-      $("#gc_nodeId").val($("#gc_nodeId").val());
-    }
-  });
-  $("#gc_addCondition").click(function (e) { 
-    e.preventDefault();
-    scc.order({
-        "provider": "breakconditions",
-        "action": "add",
-        "name": $("#gc_condition").val(),
-        "props": { "nodeId": $("#gc_nodeId").val() }
-    });
-  });
-    
 }

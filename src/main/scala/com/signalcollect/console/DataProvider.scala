@@ -21,7 +21,7 @@ import akka.actor.ActorLogging
 trait DataProvider {
   def fetch(): JObject
   def fetchInvalid(msg: JValue = JString(""), 
-                   comment: String = "No comment"): JObject = {
+                   comment: String): JObject = {
     new InvalidDataProvider(msg, comment).fetch
   }
 }
@@ -76,12 +76,12 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
                               msg: JValue) extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
-      case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(Array(e))
+      case Some(e: ExecutionConfiguration) => Toolkit.unpackObjects(Array(e))
       case otherwise => JObject(List(JField("unknown", "unknown")))
     }
     ("provider" -> "configuration") ~ 
     ("executionConfiguration" -> executionConfiguration) ~
-    ("graphConfiguration" -> Toolkit.unpackObject(Array(socket.graphConfiguration))) ~
+    ("graphConfiguration" -> Toolkit.unpackObjects(Array(socket.graphConfiguration))) ~
     ("systemProperties" -> propertiesAsScalaMap(System.getProperties()))
   }
 }
@@ -135,11 +135,11 @@ class ControlsProvider[Id](socket: WebSocketConsoleServer[Id],
           case "continue" => computationContinue(e)
           case "reset" => computationReset(e)
           case "terminate" => computationTerminate(e)
-          case otherwise => fetchInvalid(msg)
+          case otherwise => fetchInvalid(msg, "invalid control!")
         }
-        case None => fetchInvalid(msg)
+        case None => fetchInvalid(msg, "missing control!")
       }
-      case None => fetchInvalid(msg)
+      case None => fetchInvalid(msg, "interactive execution is unavailable!")
     }
     ("provider" -> "controls") ~ reply
   }
@@ -167,17 +167,9 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
 
   def fetchConditions(e: Execution): JObject = {
     val active = e.conditions.map { case (id, c) =>
-      Toolkit.unpackObject(Array(BreakConditionContainer(id, c.name.toString, c.props.toMap)))
+      Toolkit.unpackObject(BreakConditionContainer(id, c.name.toString, c.props.toMap))
     }.toList
-    println(e.conditionsReached)
-    e.conditionsReached.foreach { case (k,v) =>
-      println(v)
-      println(v.getClass)
-      println(k)
-      println(k.getClass)
-    }
     val reached = decompose(e.conditionsReached)
-    println(reached)
     ("provider" -> "breakconditions") ~
     ("active" -> active) ~
     ("reached" -> reached)
@@ -191,31 +183,44 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
         request.action match {
           case Some(action) => action match {
             case "add" => request.name match {
-              case Some(name) => request.props match {
-                case Some(props) => 
-                  try {
-                    val condition = new BreakCondition(
-                                    BreakConditionName.withName(name), props, workerApi)
-                    e.addCondition(condition)
-                    fetchConditions(e)
+              case Some(name) => 
+                try {
+                  val n = BreakConditionName.withName(name)
+                  request.props match {
+                    case Some(props) => 
+                      socket.executionConfiguration match {
+                        case Some(c) =>
+                          try {
+                            val condition = new BreakCondition(socket.graphConfiguration, 
+                                                               c, n, props, workerApi)
+                            e.addCondition(condition)
+                            fetchConditions(e)
+                          }
+                          catch { case e: IllegalArgumentException => 
+                            fetchInvalid(msg, new ErrorDataProvider(e).fetchStacktrace())
+                          } 
+                        case None => fetchInvalid(msg, "executionConfiguration unavailable!")
+                      }
+                    case None => fetchInvalid(msg, "missing props!")
                   }
-                  catch { case e: IllegalArgumentException => 
-                    fetchInvalid(msg, new ErrorDataProvider(e).fetchStacktrace())
-                  } 
-                case None => fetchInvalid(msg, "Missing props!")
-              }
-              case None => fetchInvalid(msg, "Missing name!")
+                }
+                catch { case e: NoSuchElementException =>
+                  fetchInvalid(msg, "invalid Name!")
+                }
+              case None => fetchInvalid(msg, "missing name!")
             }
             case "remove" => request.id match {
               case Some(id) => 
                 e.removeCondition(id)
                 fetchConditions(e)
-              case None => fetchInvalid("Missing id!")
+              case None => fetchInvalid(msg, "Missing id!")
             }
           }
           case None => fetchConditions(e)
         }
-      case None => fetchInvalid(msg)
+        case None => 
+          ("provider" -> "breakconditions") ~
+          ("status" -> "noExecution")
     }
   }
 }
@@ -294,7 +299,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     val graphData = request.query match {
       case Some("id") => request.id match {
         case Some(id) => fetchId(id, r)
-        case otherwise => fetchInvalid(msg)
+        case otherwise => fetchInvalid(msg, "missing id")
       }
       case Some("top") => request.topCriterium match {
         case Some("State (Numerical)") => fetchTopStates(m, r)
@@ -318,8 +323,8 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
 
     val ws: Array[WorkerStatus] = 
       (coordinator.getWorkerStatus)
-    val wstats = Toolkit.unpackObject(ws.map(_.workerStatistics))
-    val sstats = Toolkit.unpackObject(ws.map(_.systemInformation))
+    val wstats = Toolkit.unpackObjects(ws.map(_.workerStatistics))
+    val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
 
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~

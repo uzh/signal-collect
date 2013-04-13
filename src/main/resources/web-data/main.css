@@ -127,6 +127,7 @@ body {
 }
 
 .panel {
+  overflow: auto;
   position: absolute;
   top: 27px;
   bottom: 38px;
@@ -295,35 +296,54 @@ body {
   border: none;
 }
 
-.top_border {
+.bottom_border {
+  position: relative;
   box-shadow: inset 1px -5px 9px -6px #111; 
 }
-ul#gc_conditionList {
-  list-style-type: none;
+#gc_stateContainer {
+  display: none;
+}
+#gc_conditionList {
+  position: relative;
   margin: 0;
-  padding: 5px;
+  padding: 0;
   box-shadow: inset 1px 5px 9px -6px #111; 
 }
-ul#gc_conditionList li {
+#gc_conditionList .condition {
   position: relative;
   font-size: 12px;
   margin: 0;
-  padding: 0;
+  padding: 5px;
   border-bottom: 1px solid #bbb;
+  z-index -1;
 }
-ul#gc_conditionList li.last_child {
+#gc_conditionList .condition.none {
+  text-align: center;
+}
+#gc_conditionList .condition.new {
+  height: 30px;
+  background: #f5f5f5 url('loading.gif') no-repeat center 3px;
+}
+#gc_conditionList .condition.last_child {
   border: none;
 }
-ul#gc_conditionList li .delete {
+#gc_conditionList .condition .delete {
   width: 16px;
   height: 16px;
   position: absolute;
-  right: 7px;
-  top: 7px;
+  right: 3px;
+  top: 13px;
   background-image: url('sprites_small.svg');
 }
-ul#gc_conditionList li .delete:hover {
+#gc_conditionList .condition .delete:hover {
   background-position: 32px 0;
+}
+#gc_conditionList .condition.reached {
+  background : rgba(150,255,150,0.5);
+}
+#gc_conditionList .condition.reached .goal {
+  color : rgba(000,100,000,1);
+  font-weight: bold;
 }
 
 #controls {
@@ -331,6 +351,7 @@ ul#gc_conditionList li .delete:hover {
   position: absolute;
   bottom: 0px;
   height: 38px;
+  background-color: #fff;
   background-image: -moz-linear-gradient(top,
                     rgba(255,255,255,.25),
                     rgba(0,0,0,.11));
@@ -340,6 +361,7 @@ ul#gc_conditionList li .delete:hover {
   background-image: -webkit-linear-gradient(
                     rgba(255,255,255,.25),
                     rgba(0,0,0,.11));
+  z-index: 60;
 }
 #controls .icon {
   height: 32px;

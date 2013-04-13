@@ -74,44 +74,47 @@ object BreakConditionName extends Enumeration {
 }
 
 import BreakConditionName._
-class BreakCondition(val name: BreakConditionName, 
+class BreakCondition(val graphConfiguration: GraphConfiguration,
+                     val executionConfiguration: ExecutionConfiguration,
+                     val name: BreakConditionName, 
                      val propsMap: Map[String,String], 
                      workerApi: WorkerApi[_,_]) {
 
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
-  require(name match { 
-    case ChangesState => 
-      if (props.contains("nodeId")) {
-        props("nodeId") match {
-          case id: String =>
-            val result = workerApi.aggregateAll(new FindVertexByIdAggregator(props("nodeId")))
-            result match {
-              case Some(v) =>
-                props += ("currentState" -> v.state.toString)
-                true
-              case None => false
-            }
-          case otherwise => false
-        }
+  require( 
+    if (props.contains("nodeId")) {
+      props("nodeId") match {
+        case id: String =>
+          val result = workerApi.aggregateAll(new FindVertexByIdAggregator(props("nodeId")))
+          result match {
+            case Some(v) =>
+              props += ("currentState" -> v.state.toString)
+              true
+            case None => false
+          }
+        case otherwise => false
       }
-      else { false }
-    case otherwise => true
-  }, "Missing or unknown nodeId!")
+    }
+    else { 
+      false 
+    }, "Missing or invalid nodeId!")
 
   require(name match { 
       case GoesAboveState
-         | GoesBelowState  => props.contains("id") && props.contains("expectedState")
+         | GoesBelowState  => props.contains("expectedState")
     case otherwise => true
-  }, "Missing nodeId or expectedState")
+    }, "Missing expectedState")
 
-  require(name match {
-      case GoesBelowSignalThreshold
-         | GoesAboveSignalThreshold
-         | GoesBelowCollectThreshold
-         | GoesAboveCollectThreshold => props.contains("id") && props.contains("threshold")
+  name match { 
+    case GoesBelowSignalThreshold
+       | GoesAboveSignalThreshold =>
+      props += ("signalThreshold" -> executionConfiguration.signalThreshold.toString)
+    case GoesBelowCollectThreshold
+       | GoesAboveCollectThreshold => 
+      props += ("collectThreshold" -> executionConfiguration.collectThreshold.toString)
     case otherwise => true
-  }, "Missing threshold")
+  }
 
 }
 
@@ -324,26 +327,35 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
 object Toolkit {
   implicit val formats = DefaultFormats
-  def unpackObject[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
+  def unpackObjectToMap[T: ClassTag: ru.TypeTag](obj: T): Map[String,JValue] = {
     val methods = ru.typeOf[T].members.filter { m =>
       m.isMethod && m.asMethod.isStable 
     }
-    JObject(methods.map { m =>
-      val mirror = ru.runtimeMirror(obj.head.getClass.getClassLoader)
-      val values = obj.toList.map { o =>
-        val im = mirror.reflect(o)
-        im.reflectField(m.asTerm).get match {
-          case x: Array[Long] => JArray(x.toList.map(JInt(_)))
-          case x: Long => JInt(x)
-          case x: Int => JInt(x)
-          case x: String => JString(x)
-          case x: Double if x.isNaN => JDouble(0)
-          case x: Double => JDouble(0)
-          case x: Map[_,_] => decompose(x)
-          case other => JString(other.toString)
-        }
+    val mirror = ru.runtimeMirror(obj.getClass.getClassLoader)
+    val im = mirror.reflect(obj)
+    methods.map { m =>
+      val value = im.reflectField(m.asTerm).get match {
+        case x: Array[Long] => JArray(x.toList.map(JInt(_)))
+        case x: Long => JInt(x)
+        case x: Int => JInt(x)
+        case x: String => JString(x)
+        case x: Double if x.isNaN => JDouble(0)
+        case x: Double => JDouble(0)
+        case x: Map[_,_] => decompose(x)
+        case x: BreakConditionName.Value => JString(x.toString)
+        case other => JString(other.toString)
       }
-      JField(m.name.toString, values)
+      (m.name.toString -> value)
+    }.toMap
+  }
+  def unpackObject[T: ClassTag: ru.TypeTag](obj: T): JObject = {
+    val unpacked = unpackObjectToMap(obj)
+    JObject(unpacked.map { case (k, v) => JField(k, v) }.toList)
+  }
+  def unpackObjects[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
+    val unpacked = obj.toList.map(unpackObjectToMap)
+    JObject(unpacked.head.map { case (k, _) =>
+      JField(k, JArray(unpacked.map{ m => m(k) })) 
     }.toList)
   }
   def mergeMaps[A, B](ms: List[Map[A, B]])(f: (B, B) => B): Map[A, B] =

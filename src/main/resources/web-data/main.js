@@ -152,6 +152,9 @@ $(document).ready(function() {
       if (module == "resources") {
         enableModules(["configuration", "log"]);
       }
+      if (module == "graph") {
+        enableModules(["breakconditions"]);
+      }
       layout([module]);
       break;
     default:
