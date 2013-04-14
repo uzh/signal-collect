@@ -40,7 +40,7 @@ body {
 
 #top {
   position: fixed;
-  height: 60px;
+  min-height: 60px;
   left: 300px;
   right: 0px;
   top: 0px;
@@ -52,9 +52,8 @@ body {
 }
 
 .msg {
-  height: 60px;
+  padding: 25px;
   width: 100%;
-  line-height: 60px;
   text-align: center;
 }
 
@@ -68,7 +67,6 @@ body {
   background: #F5F5F5;
   z-index: 10;
   border-right: 1px solid #999;
-  cursor: default;
 }
 
 #modes {
@@ -129,6 +127,7 @@ body {
 }
 
 .panel {
+  overflow: auto;
   position: absolute;
   top: 27px;
   bottom: 38px;
@@ -229,12 +228,14 @@ body {
   padding: 0;
   margin: 0;
   margin-left: 10px;
+  margin-bottom: 5px;
   border: 1px solid #bbb;
   height: 20px;
   width: 73%;
 }
 
 .panel button {
+  cursor:inherit;
   border: 1px solid #bbb;
   background-image: -moz-linear-gradient(top,
                     rgba(255,255,255,.25),
@@ -296,11 +297,62 @@ body {
   border: none;
 }
 
+.bottom_border {
+  position: relative;
+  box-shadow: inset 1px -5px 9px -6px #111; 
+}
+#gc_stateContainer {
+  display: none;
+}
+#gc_conditionList {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  box-shadow: inset 1px 5px 9px -6px #111; 
+}
+#gc_conditionList .condition {
+  position: relative;
+  font-size: 12px;
+  margin: 0;
+  padding: 5px;
+  border-bottom: 1px solid #bbb;
+  z-index -1;
+}
+#gc_conditionList .condition.none {
+  text-align: center;
+}
+#gc_conditionList .condition.new {
+  height: 30px;
+  background: #f5f5f5 url('loading.gif') no-repeat center 3px;
+}
+#gc_conditionList .condition.last_child {
+  border: none;
+}
+#gc_conditionList .condition .delete {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 3px;
+  top: 13px;
+  background-image: url('sprites_small.svg');
+}
+#gc_conditionList .condition .delete:hover {
+  background-position: 32px 0;
+}
+#gc_conditionList .condition.reached {
+  background : rgba(150,255,150,0.5);
+}
+#gc_conditionList .condition.reached .goal {
+  color : rgba(000,100,000,1);
+  font-weight: bold;
+}
+
 #controls {
   width: 100%;
   position: absolute;
   bottom: 0px;
   height: 38px;
+  background-color: #fff;
   background-image: -moz-linear-gradient(top,
                     rgba(255,255,255,.25),
                     rgba(0,0,0,.11));
@@ -310,6 +362,7 @@ body {
   background-image: -webkit-linear-gradient(
                     rgba(255,255,255,.25),
                     rgba(0,0,0,.11));
+  z-index: 60;
 }
 #controls .icon {
   height: 32px;
@@ -373,6 +426,15 @@ body {
   overflow-x:hidden;
 }
 
+.sectionLink { 
+  color:blue; 
+  text-decoration:underline; 
+  padding:5px 0; 
+}
+.sectionLink.active { 
+  color:black;
+}
+
 .structured {
   padding-left: 20px;
 }
@@ -430,6 +492,9 @@ body {
   padding: 0;
   background-color: #444;
 }
+#graph_canvas.picking {
+  cursor: crosshair;
+}
 
 .node {
   stroke: #fff;
@@ -450,18 +515,29 @@ body {
 .blocked {
   opacity: 0.5;
 }
-#error {
+#error, #small_error, #success {
+  float: left;
+}
+#error, #small_error {
   color: #eee;
   background-color: #a91c00;
 }
-#error:before {
+#error:before, #small_error:before {
   content: "Error: "
+}
+#small_error {
+  font-size: 16px;
+  text-align: left;
 }
 #success {
   color: #eee;
   background-color: #00c742;
 }
 #success:before {
+}
+.node_link {
+  color: #59b6e8;
+  cursor: pointer;
 }
 
 /* D3 charts */

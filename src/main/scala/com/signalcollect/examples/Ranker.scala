@@ -48,7 +48,7 @@ object Ranker extends App {
     val is = new FileInputStream("./references.nt")
     val parser = new NxParser(is)
     var i = 0
-    while (parser.hasNext && i < 50000) {
+    while (parser.hasNext && i < 20000) {
       i += 1
       val triple = parser.next
       val citer = triple(0).toString

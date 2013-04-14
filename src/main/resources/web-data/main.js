@@ -6,6 +6,13 @@ scc.defaults.main = {"view": "graph",
                         "Graph Layout": "forced"
                     }}
 
+STR = {"searchByID": "Search and hit Enter to execute",
+       "pickNode": "Enter ID or select using mouse",
+       "enterState": "Enter state",
+       "noConditions": "No conditions specified",
+       "noExecution": "The interactive execution mode is unavailable, retrying..."
+}
+
 
 function Settings() {
   this.settings = loadSettings();
@@ -60,6 +67,7 @@ function Settings() {
 
 $(document).ready(function() {
   scc.settings = new Settings();
+  scc.callbacks = {};
 
   /* WebSocket communication */
   function createWebSocket () {
@@ -83,7 +91,15 @@ $(document).ready(function() {
         }
         else if (provider == "error") {
           console.log(j["stacktrace"]);
-          showMsg("#error", j["msg"]);
+          showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
+        }
+        else if (provider == "invalid") {
+          console.log(j["msg"]);
+          showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
+        }
+        if (scc.callbacks[id]) { 
+          scc.callbacks[id]();
+          delete scc.callbacks[id];
         }
         for (var m in scc.consumers) { 
           var consumer = scc.consumers[m]
@@ -113,14 +129,16 @@ $(document).ready(function() {
   scc.resetOrders = function(provider) {
     clearTimeout(scc.orders[provider])
     delete scc.orders[provider];
+    delete scc.callbacks[provider];
   }
-  scc.order = function(msg, delay) {
+  scc.order = function(msg, delay, cb) {
     if (typeof(msg) == "string") {
       msg = JSON.parse(msg)
     }
     id = msg.provider
     if (!delay) { var delay = 0; }
     if (scc.orders[id]) { scc.resetOrders(id); }
+    scc.callbacks[id] = cb;
     scc.orders[id] = setTimeout(function() {
       var j = JSON.stringify(msg)
       try { 
@@ -147,6 +165,9 @@ $(document).ready(function() {
       enableModules([module, "controls"]);
       if (module == "resources") {
         enableModules(["configuration", "log"]);
+      }
+      if (module == "graph") {
+        enableModules(["breakconditions"]);
       }
       layout([module]);
       break;

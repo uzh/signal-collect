@@ -6,6 +6,7 @@ import net.liftweb.json.JsonDSL._
 import com.signalcollect.TopKFinder
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
+import BreakConditionName._
 
 class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[Id] = List[Id]())
       extends AggregationOperation[JObject] {
@@ -18,7 +19,9 @@ class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[
       JObject(List(
         JField("nodes", JObject(List(JField(i.id.toString, 
                         JObject(List(JField("s", i.state.toString),
-                                     JField("c", category))))))),
+                                     JField("c", category),
+                                     JField("ss", i.scoreSignal),
+                                     JField("cs", i.scoreCollect))))))),
         JField("edges", JObject(List(JField(i.id.toString, JArray(
           edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
       ))
@@ -94,3 +97,61 @@ class FindVertexByIdAggregator[Id](id: String)
 
 }
 
+class BreakConditionsAggregator(conditions: Map[String,BreakCondition]) 
+      extends AggregationOperation[Map[String,String]] {
+
+  val nodeConditions = List(
+    ChangesState,
+    GoesAboveState,
+    GoesBelowState,
+    GoesAboveSignalThreshold,
+    GoesBelowSignalThreshold,
+    GoesAboveCollectThreshold,
+    GoesBelowCollectThreshold
+  )
+
+  val allNodeConditions = List(
+  )
+
+  def extract(v: Vertex[_, _]): Map[String,String] = v match {
+    case i: Inspectable[_, _] => {
+      var results = Map[String,String]()
+      conditions.foreach { case (id, c) => 
+        // conditions that need to be checked on a specific node
+        if (nodeConditions.contains(c.name)) {
+          if (i.id.toString == c.props("nodeId")) {
+            c.name match { 
+              case ChangesState =>
+                if (i.state.toString != c.props("currentState"))
+                  results += (id -> i.state.toString)
+              case GoesAboveState =>
+                if (i.state.toString.toDouble > c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case GoesBelowState =>
+                if (i.state.toString.toDouble < c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case GoesBelowSignalThreshold =>
+                if (i.scoreSignal < c.props("threshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case GoesAboveSignalThreshold =>
+                if (i.scoreSignal > c.props("threshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case GoesBelowCollectThreshold =>
+                if (i.scoreCollect < c.props("threshold").toDouble)
+                  results += (id -> i.scoreCollect.toString)
+              case GoesAboveCollectThreshold =>
+                if (i.scoreCollect > c.props("threshold").toDouble)
+                  results += (id -> i.scoreCollect.toString)
+            }
+          }
+        }
+        // conditions that need to be checked on every node
+        // else if (allNodeConditions.contains(c.name)) {  }
+      }
+      results
+    }
+  }
+  def reduce(results: Stream[Map[String,String]]): Map[String,String] = {
+    Toolkit.mergeMaps(results.toList)((v1, v2) => v1 + v2)
+  }
+}

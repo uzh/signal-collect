@@ -37,8 +37,7 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.Pinned
 import com.signalcollect.configuration.TerminationReason
-import com.signalcollect.console.Execution
-import com.signalcollect.console.ConsoleServer
+import com.signalcollect.console._
 import com.signalcollect.coordinator.DefaultCoordinator
 import com.signalcollect.coordinator.IsIdle
 import com.signalcollect.coordinator.OnIdle
@@ -53,6 +52,8 @@ import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
@@ -210,7 +211,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        new InteractiveExecution[Id](this, console, stats, parameters.timeLimit, parameters.stepsLimit, parameters.globalTerminationCondition).run()
+        new InteractiveExecution[Id](this, console, stats, parameters).run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -265,9 +266,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graph: Graph[Id, Signal],
     console: ConsoleServer[Id],
     stats: ExecutionStatistics,
-    timeLimit: Option[Long],
-    stepsLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) extends Execution {
+    parameters: ExecutionConfiguration) extends Execution {
     if (console != null) { console.setInteractor(this) }
     graph.snapshot
     var converged = false
@@ -276,11 +275,23 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     @volatile var steps = 0
     @volatile var userTermination = false
     val lock: AnyRef = new Object()
-    if (globalTerminationCondition.isDefined) {
-      interval = globalTerminationCondition.get.aggregationInterval
+    if (parameters.globalTerminationCondition.isDefined) {
+      interval = parameters.globalTerminationCondition.get.aggregationInterval
     }
     val startTime = System.nanoTime
-    val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
+    val nanosecondLimit = parameters.timeLimit.getOrElse(0l) * 1000000l
+
+    // user break condition management
+    var conditionCounter = 0
+    var conditions = Map[String,BreakCondition]()
+    var conditionsReached = Map[String,String]()
+    def addCondition(condition: BreakCondition) {
+      conditionCounter += 1
+      conditions += (conditionCounter.toString -> condition)
+    }
+    def removeCondition(id: String) {
+      conditions -= id
+    }
 
     def step() {
       lock.synchronized {
@@ -337,7 +348,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           stats.collectSteps += 1
           if (steps > 0) { steps -= 1 }
           if (shouldCheckGlobalCondition) {
-            globalTermination = isGlobalTerminationConditionMet(globalTerminationCondition.get)
+            globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
+          }
+          conditionsReached = workerApi.aggregateAll(
+              new BreakConditionsAggregator(conditions))
+          if (conditionsReached.size > 0) {
+            steps = 0
+            console.sockets.sendMsg(("provider" -> "controls") ~ ("state" -> "pausing"))
           }
         }
       }
@@ -359,8 +376,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         gtc.shouldTerminate(globalAggregateValue)
       }
       def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
-      def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
-      def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
+      def isTimeLimitReached = parameters.timeLimit.isDefined && remainingTimeLimit <= 0
+      def isStepsLimitReached = parameters.stepsLimit.isDefined && stats.collectSteps >= parameters.stepsLimit.get
     }
   }
 
