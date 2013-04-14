@@ -22,7 +22,11 @@ package com.signalcollect.interfaces
 
 case object NodeReady
 
-case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
+case class Request[ProxiedClass](
+  command: ProxiedClass => Any,
+  returnResult: Boolean = false,
+  incrementorForReply: MessageBus[_, _] => Unit // Answers go to temporary actor. This allows to assign the send count to the real recipient.
+  )
 
 case class Heartbeat(maySignal: Boolean)
 
@@ -61,24 +65,24 @@ case class SentMessagesStats(
 }
 
 case class WorkerStatistics(
-    workerId: Int = -1,
-    toSignalSize: Long = 0l,
-    toCollectSize: Long = 0l,
-    collectOperationsExecuted: Long = 0l,
-    signalOperationsExecuted: Long = 0l,
-    numberOfVertices: Long = 0l,
-    verticesAdded: Long = 0l,
-    verticesRemoved: Long = 0l,
-    numberOfOutgoingEdges: Long = 0l,
-    outgoingEdgesAdded: Long = 0l,
-    outgoingEdgesRemoved: Long = 0l,
-    receiveTimeoutMessagesReceived: Long = 0l,
-    heartbeatMessagesReceived: Long = 0l,
-    signalMessagesReceived: Long = 0l,
-    bulkSignalMessagesReceived: Long = 0l,
-    continueMessagesReceived: Long = 0l,
-    requestMessagesReceived: Long = 0l,
-    otherMessagesReceived: Long = 0l) {
+  workerId: Int = -1,
+  toSignalSize: Long = 0l,
+  toCollectSize: Long = 0l,
+  collectOperationsExecuted: Long = 0l,
+  signalOperationsExecuted: Long = 0l,
+  numberOfVertices: Long = 0l,
+  verticesAdded: Long = 0l,
+  verticesRemoved: Long = 0l,
+  numberOfOutgoingEdges: Long = 0l,
+  outgoingEdgesAdded: Long = 0l,
+  outgoingEdgesRemoved: Long = 0l,
+  receiveTimeoutMessagesReceived: Long = 0l,
+  heartbeatMessagesReceived: Long = 0l,
+  signalMessagesReceived: Long = 0l,
+  bulkSignalMessagesReceived: Long = 0l,
+  continueMessagesReceived: Long = 0l,
+  requestMessagesReceived: Long = 0l,
+  otherMessagesReceived: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       -1,

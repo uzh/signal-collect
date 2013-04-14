@@ -61,7 +61,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   override def toString = "Worker" + workerId
 
   val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](numberOfWorkers, numberOfNodes)
+    messageBusFactory.createInstance[Id, Signal](
+      numberOfWorkers,
+      numberOfNodes,
+      mb => mb.incrementMessagesSentToWorker(workerId))
   }
 
   val worker = new WorkerImplementation[Id, Signal](
@@ -102,7 +105,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
-  
   def executeOperations {
     if (messageQueue.isEmpty) {
       val collected = worker.vertexStore.toCollect.process(
@@ -112,11 +114,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             worker.executeSignalOperationOfVertex(vertex)
           }
         })
-//        log.debug(s"Worker $workerId is signaling, ${worker.vertexStore.toSignal.size} signal operations to go")
       if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
         worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
       }
-//      log.debug(s"Worker $workerId has ${worker.vertexStore.toSignal.size} vertices in toSignal left")
       messageBus.flush
     }
   }
@@ -126,7 +126,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
    */
   def receive = {
     case s: SignalMessage[Id, Signal] =>
-      log.debug(s"$workerId $s")
       worker.counters.signalMessagesReceived += 1
       worker.processSignal(s.signal, s.targetId, s.sourceId)
       if (!worker.operationsScheduled && !worker.isPaused) {
@@ -135,7 +134,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
-      log.debug(s"$workerId $bulkSignal")
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
@@ -161,7 +159,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case ScheduleOperations =>
-      log.debug(s"$workerId ScheduleOperations")
       if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
         worker.setIdle(true)
         worker.operationsScheduled = false
@@ -170,12 +167,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         scheduleOperations
       }
 
-    case Request(command, reply) =>
-      log.debug(s"$workerId $command")
+    case Request(command, reply, incrementor) =>
       worker.counters.requestMessagesReceived += 1
       try {
         val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
         if (reply) {
+          incrementor(messageBus)
           if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
             messageBus.sendToActor(sender, None)
           } else {
@@ -193,13 +190,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(maySignal) =>
-      log.debug(s"$workerId Heartbeat(maySignal=$maySignal) ${worker.getWorkerStatus}")
       worker.counters.heartbeatMessagesReceived += 1
       worker.sendStatusToCoordinator
       worker.systemOverloaded = !maySignal
 
     case other =>
-      log.debug(s"$workerId Other: $other")
       worker.counters.otherMessagesReceived += 1
       log.error(s"Worker $workerId not handle message $other")
       throw new Exception(s"Unsupported message: $other")

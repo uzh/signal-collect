@@ -47,11 +47,11 @@ import akka.util.Timeout
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
 case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
-    workerId: Int,
-    workerFactory: WorkerFactory,
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
+  workerId: Int,
+  workerFactory: WorkerFactory,
+  numberOfWorkers: Int,
+  numberOfNodes: Int,
+  config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
   def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](
     workerId,
     numberOfWorkers,
@@ -63,11 +63,11 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
 case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    messageBusFactory: MessageBusFactory,
-    heartbeatIntervalInMilliseconds: Long,
-    loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  numberOfWorkers: Int,
+  numberOfNodes: Int,
+  messageBusFactory: MessageBusFactory,
+  heartbeatIntervalInMilliseconds: Long,
+  loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
@@ -89,7 +89,7 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
-    val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
   override def toString: String = "DefaultGraph"
@@ -99,7 +99,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_))
+  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_, mb => Unit)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
 
@@ -149,8 +149,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_))
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, mb => Unit)) // MessageBus not initialized at this point.
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor, mb => Unit) // MessageBus not initialized at this point.
 
   initializeMessageBuses
 
