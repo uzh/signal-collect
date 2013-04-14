@@ -40,7 +40,7 @@ import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def reset {}
 
@@ -48,13 +48,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   def flush = {}
 
-  protected var actorMessageIncrements = Map[ActorRef, () => Unit]().withDefaultValue({ () => sentOtherMessageCounter.incrementAndGet })
-
-  protected def incrementSentMessagesForActor(a: ActorRef) {
-    actorMessageIncrements(a)()
-  }
-
   def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 2
+
+  // Results of requests are received using temporary actors, but for termination detection to work,
+  // the send count should be still credited to the actual recipient of the reply.
+  protected def sendCountIncrementorForRequests: MessageBus[_, _] => Unit
 
   protected val mapper: VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
 
@@ -68,20 +66,19 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   protected var coordinator: ActorRef = _
 
+  def incrementMessagesSentToWorker(workerId: Int) = sentWorkerMessageCounters(workerId).incrementAndGet
+  def incrementMessagesSentToNode(nodeId: Int) = sentNodeMessageCounters(nodeId).incrementAndGet
+  def incrementMessagesSentToCoordinator = sentCoordinatorMessageCounter.incrementAndGet
+  def incrementMessagesSentToOthers = sentOtherMessageCounter.incrementAndGet
+
   protected val sentWorkerMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfWorkers)
-
   protected val sentNodeMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfNodes)
-
   protected val sentCoordinatorMessageCounter = new AtomicInteger(0)
-
   protected val sentOtherMessageCounter = new AtomicInteger(0)
 
   def messagesSentToWorkers: Array[Int] = sentWorkerMessageCounters.map((c: AtomicInteger) => c.get)
-
   def messagesSentToNodes: Array[Int] = sentNodeMessageCounters.map((c: AtomicInteger) => c.get)
-
   def messagesSentToCoordinator: Int = sentCoordinatorMessageCounter.get
-
   def messagesSentToOthers: Int = sentOtherMessageCounter.get
 
   protected def getInitializedAtomicArray(numberOfEntries: Int): Array[AtomicInteger] = {
@@ -95,12 +92,14 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   protected val receivedMessagesCounter = new AtomicInteger(0)
   def getReceivedMessagesCounter: AtomicInteger = receivedMessagesCounter
 
-  lazy val parallelWorkers = workers.par
-
   lazy val workerProxies: Array[WorkerApi[Id, Signal]] = {
     val result = new Array[WorkerApi[Id, Signal]](numberOfWorkers)
     for (workerId <- workerIds) {
-      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](workers(workerId), sentWorkerMessageCounters(workerId), receivedMessagesCounter)
+      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](
+        workers(workerId),
+        sendCountIncrementorForRequests(_),
+        sentWorkerMessageCounters(workerId),
+        receivedMessagesCounter)
     }
     result
   }
@@ -113,19 +112,16 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   override def registerWorker(workerId: Int, worker: ActorRef) {
     workers(workerId) = worker
-    actorMessageIncrements += worker -> { () => sentWorkerMessageCounters(workerId).incrementAndGet }
     registrations.incrementAndGet
   }
 
   override def registerNode(nodeId: Int, node: ActorRef) {
     nodes(nodeId) = node
-    actorMessageIncrements += node -> { () => sentNodeMessageCounters(nodeId).incrementAndGet }
     registrations.incrementAndGet
   }
 
   override def registerCoordinator(c: ActorRef) {
     coordinator = c
-    actorMessageIncrements += c -> { () => sentCoordinatorMessageCounter.incrementAndGet }
     registrations.incrementAndGet
   }
 
@@ -137,7 +133,6 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   //--------------------MessageBus--------------------
 
   override def sendToActor(actor: ActorRef, message: Any) {
-    incrementSentMessagesForActor(actor)
     actor ! message
   }
 
@@ -160,30 +155,35 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   }
 
   override def sendToWorker(workerId: Int, message: Any) {
-    sentWorkerMessageCounters(workerId).incrementAndGet
+    incrementMessagesSentToWorker(workerId)
     workers(workerId) ! message
   }
 
   override def sendToWorkers(message: Any, messageCounting: Boolean) {
-    if (messageCounting) {
-      sentWorkerMessageCounters.foreach(_.incrementAndGet)
-    }
-    for (worker <- parallelWorkers) {
-      worker ! message
+    for (workerId <- 0 until numberOfWorkers) {
+      if (messageCounting) {
+        incrementMessagesSentToWorker(workerId)
+      }
+      workers(workerId) ! message
     }
   }
 
   override def sendToNode(nodeId: Int, message: Any) {
-    sentNodeMessageCounters(nodeId).incrementAndGet
+    incrementMessagesSentToNode(nodeId)
     workers(nodeId) ! message
   }
 
-  override def sendToNodes(m: Any) {
-
+  override def sendToNodes(message: Any, messageCounting: Boolean) {
+    for (nodeId <- 0 until numberOfNodes) {
+      if (messageCounting) {
+        incrementMessagesSentToNode(nodeId)
+      }
+      nodes(nodeId) ! message
+    }
   }
 
   override def sendToCoordinator(message: Any) {
-    sentCoordinatorMessageCounter.incrementAndGet
+    incrementMessagesSentToCoordinator
     coordinator ! message
   }
 
@@ -212,7 +212,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addVertex(vertex)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[WorkerApi[Id, Signal]]((_.addVertex(vertex)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]](
+        (_.addVertex(vertex)),
+        returnResult = false,
+        sendCountIncrementorForRequests(_))
       sendToWorkerForVertexId(request, vertex.id)
     }
   }
@@ -224,7 +227,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addEdge(sourceId, edge)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[WorkerApi[Id, Signal]]((_.addEdge(sourceId, edge)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]](
+        (_.addEdge(sourceId, edge)),
+        returnResult = false,
+        sendCountIncrementorForRequests(_))
       sendToWorkerForVertexId(request, sourceId)
     }
   }
@@ -235,7 +241,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.removeVertex(vertexId)
     } else {
       // manually send a fire & forget request
-      val request = Request[WorkerApi[Id, Signal]]((_.removeVertex(vertexId)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]](
+        (_.removeVertex(vertexId)),
+        returnResult = false,
+        sendCountIncrementorForRequests(_))
       sendToWorkerForVertexId(request, vertexId)
     }
   }
@@ -246,7 +255,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.removeEdge(edgeId)
     } else {
       // manually send a fire & forget request     
-      val request = Request[WorkerApi[Id, Signal]]((_.removeEdge(edgeId)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]](
+        (_.removeEdge(edgeId)),
+        returnResult = false,
+        sendCountIncrementorForRequests(_))
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
@@ -255,7 +267,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     if (blocking) {
       workerApi.modifyGraph(graphModification, vertexIdHint)
     } else {
-      val request = Request[WorkerApi[Id, Signal]]((_.modifyGraph(graphModification)), returnResult = false)
+      val request = Request[WorkerApi[Id, Signal]](
+        (_.modifyGraph(graphModification)),
+        returnResult = false,
+        sendCountIncrementorForRequests(_))
       if (vertexIdHint.isDefined) {
         val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
         sendToWorker(workerId, request)
@@ -267,7 +282,10 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   }
 
   override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    val request = Request[WorkerApi[Id, Signal]]((_.loadGraph(graphModifications)))
+    val request = Request[WorkerApi[Id, Signal]](
+      (_.loadGraph(graphModifications)),
+      false,
+      sendCountIncrementorForRequests(_))
     if (vertexIdHint.isDefined) {
       val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
       sendToWorker(workerId, request)

@@ -31,10 +31,12 @@ object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
     numberOfNodes: Int,
+    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
     new DefaultMessageBus[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
       workerApiFactory)
   }
   override def toString = "AkkaMessageBusFactory"
@@ -48,12 +50,14 @@ class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) ext
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
     numberOfNodes: Int,
+    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
     new BulkMessageBus[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
       flushThreshold,
       withSourceIds,
+      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
       workerApiFactory)
   }
   override def toString = "BulkAkkaMessageBusFactory"

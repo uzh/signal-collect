@@ -38,12 +38,16 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   
   def numberOfNodes: Int
 
+  def incrementMessagesSentToWorker(workerId: Int)
   def messagesSentToWorkers: Array[Int]
 
+  def incrementMessagesSentToNode(nodeId: Int)
   def messagesSentToNodes: Array[Int]
 
+  def incrementMessagesSentToCoordinator
   def messagesSentToCoordinator: Int
 
+  def incrementMessagesSentToOthers
   def messagesSentToOthers: Int
   
   def messagesReceived: Long
@@ -64,7 +68,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToNode(nodeId: Int, message: Any)
   
-  def sendToNodes(message: Any)
+  def sendToNodes(message: Any, messageCounting: Boolean)
   
   def sendToCoordinator(message: Any)
 

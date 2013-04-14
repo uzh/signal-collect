@@ -58,10 +58,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   messageBusFactory: MessageBusFactory,
   heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int) extends Actor
-    with MessageRecipientRegistry
-    with Logging
-    with Coordinator[Id, Signal]
-    with ActorLogging {
+  with MessageRecipientRegistry
+  with Logging
+  with Coordinator[Id, Signal]
+  with ActorLogging {
 
   /**
    * Timeout for Akka actor idling
@@ -71,7 +71,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
-      numberOfNodes)
+      numberOfNodes,
+      mb => mb.incrementMessagesSentToCoordinator)
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
@@ -85,11 +86,23 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var globalQueueSizeLimitPreviousHeartbeat = 0l
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
-  def sendHeartbeat {
+  def logMessages {
     debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
-//    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
-//    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers sentByNodes=$messagesSentByNodes")
-//    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers receivedByNodes=$messagesReceivedByNodes")
+    //    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
+    //    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers sentByNodes=$messagesSentByNodes")
+    //    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers receivedByNodes=$messagesReceivedByNodes")
+    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+    println(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    println(s"Total sent         : ${totalMessagesSent}")
+    println(s"Total received     : ${totalMessagesReceived}")
+    println(s"Global inbox size  : ${getGlobalInboxSize}")
+  }
+
+  def sendHeartbeat {
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -101,7 +114,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
-    debug(s"maySignal=$maySignal")
+    //    debug(s"maySignal=$maySignal")
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
@@ -111,12 +124,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   var nodeStatusReceived = 0
   var workerStatusReceived = 0
-  
+
   def receive = {
     case ws: WorkerStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
-      println(s"WorkerStatus received: $workerStatusReceived")
+      //      println(s"WorkerStatus received: $workerStatusReceived")
       updateWorkerStatusMap(ws)
       if (isIdle) {
         onIdle
@@ -127,7 +140,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     case ns: NodeStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
-      println(s"NodeStatus received: $nodeStatusReceived")
+      //      println(s"NodeStatus received: $nodeStatusReceived")
       updateNodeStatusMap(ns)
       if (shouldSendHeartbeat) {
         sendHeartbeat
@@ -143,10 +156,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       if (shouldSendHeartbeat) {
         sendHeartbeat
       }
-    case Request(command, reply) =>
+    case Request(command, reply, incrementor) =>
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
+          incrementor(messageBus)
           if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException 
             sender ! None
           } else {
@@ -221,16 +235,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def allSentMessagesReceived: Boolean = {
     computeMessagingStats
-    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-    println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-    println(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
-    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
-    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
-    println(s"Total sent         : ${totalMessagesSent}")
-    println(s"Total received     : ${totalMessagesReceived}")
-    println(s"Global inbox size  : ${getGlobalInboxSize}")
-    
     for (workerId <- 0 until numberOfWorkers) {
       if (messagesSentToWorkers(workerId) != messagesReceivedByWorkers(workerId)) {
         return false
@@ -291,6 +295,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
 
   def isIdle: Boolean = {
+    //logMessages
     workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived //totalMessagesSent == totalMessagesReceived
   }
 

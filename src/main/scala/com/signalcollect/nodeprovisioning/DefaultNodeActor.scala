@@ -89,7 +89,7 @@ class DefaultNodeActor(
       sendStatusToCoordinator
     case Heartbeat(maySignal) =>
       sendStatusToCoordinator
-    case Request(command, reply) =>
+    case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
       val result = command.asInstanceOf[Node => Any](this)
       if (reply) {
@@ -121,7 +121,7 @@ class DefaultNodeActor(
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes)
+    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mb => mb.incrementMessagesSentToNode(nodeId))
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis

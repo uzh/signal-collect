@@ -20,9 +20,9 @@
 package com.signalcollect.messaging
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
+import com.signalcollect.interfaces.MessageBus
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
   private var itemCount = 0
@@ -49,6 +49,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   val numberOfNodes: Int,
   flushThreshold: Int,
   val withSourceIds: Boolean,
+  val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
   extends AbstractMessageBus[Id, Signal] {
 

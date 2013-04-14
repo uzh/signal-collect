@@ -41,7 +41,7 @@ class AkkaProxySpec extends SpecificationWithJUnit {
         }
 
         def receive = {
-          case Request(command, reply) =>
+          case Request(command, reply, incrementor) =>
             try {
               val result = command.asInstanceOf[Sleeper => Any](this)
               if (reply) {
@@ -60,7 +60,7 @@ class AkkaProxySpec extends SpecificationWithJUnit {
 
       val system = ActorSystem("AkkaProxySpec")
       val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
-      val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
+      val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper, mb => Unit)
 
       val expectedSleepTime = 300
 
