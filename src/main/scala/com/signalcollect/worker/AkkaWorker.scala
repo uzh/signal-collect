@@ -192,7 +192,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     counters.messagesReceived += 1
     message match {
       case s: SignalMessage[Id, Signal] =>
-        log.debug(s"Worker $workerId received signal $s.")
         counters.signalMessagesReceived += 1
         processSignal(s.signal, s.targetId, s.sourceId)
       case bulkSignal: BulkSignal[Id, Signal] =>
@@ -250,7 +249,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
-      log.debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
     }
   }
 

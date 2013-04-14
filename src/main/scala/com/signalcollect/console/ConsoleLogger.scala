@@ -51,11 +51,16 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   var logReader: BufferedReader = null
 
   // number of lines to read per request
-  val maxReadLines = 5000;
-      
+  val maxReadLines = 1000;
+  
+  // reset log file
+  resetLog
+  
+  
   def getLogMessages: List[String] = {
     readLog
   }
+  
   
   def writeLog(message: String) {
     val fileWriter = new FileWriter(logFileName, true)
@@ -66,6 +71,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       fileWriter.close()
     }
   }
+  
   
   def createJsonString(
       level: String,
@@ -100,7 +106,11 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     compact(render(json))
   }
   
+  
   def resetLog {
+    if (!logFileExists) {
+      return
+    }
     val fileWriter = new FileWriter(logFileName, false)
     try {
       fileWriter.write((new String()))
@@ -110,9 +120,15 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     }
   }
   
+  
+  def logFileExists: Boolean = {
+    (new File(logFileName)).exists
+  }
+  
+  
   def readLog: List[String] = {
     var logMessages: List[String] = List()
-    if (!(new File(logFileName)).exists) {
+    if (!logFileExists) {
       return logMessages
     }
     if (logReader == null) {
@@ -126,6 +142,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     logMessages
   }
 
+  
   def receive = {
     case InitializeLogger(_) => sender ! LoggerInitialized
     case l @ Error(cause, logSource, logClass, message) =>

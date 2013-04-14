@@ -8,7 +8,7 @@ scc.defaults.resources = {"layout":{
 // Intervals (ms)
 var interval = 3000;
 var intervalStatistics = 6000;
-var intervalLogs = 5000;
+var intervalLogs = 2000;
 
 
 // configure which content box to show in which section
@@ -174,7 +174,7 @@ scc.modules.log = function() {
   var container = $("#resourceBoxes #logBox");
   var box = $(container).find("div.scroll");
   var boxInner = $(box).find("div");
-  var maxDebugMessages = 1000;
+  var maxDebugMessages = 200;
   
   var logLevelIndex  = { "error":1, "warning":2, "info":3, "debug":4 };
   var filterLevel    = $(container).find("p.filter.level");
