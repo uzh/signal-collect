@@ -172,7 +172,7 @@ $(document).ready(function() {
       layout([module]);
       break;
     default:
-      enableModules(["graph", "resources", "controls", "configuration", "log"]);
+      enableModules(["graph", "resources", "controls", "configuration", "log", "breakconditions"]);
       layout(["graph", "resources"]);
   }
 
