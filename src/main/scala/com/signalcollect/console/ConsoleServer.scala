@@ -361,13 +361,13 @@ object Toolkit {
     }.toMap
   }
   def unpackObject[T: ClassTag: ru.TypeTag](obj: T): JObject = {
-    val unpacked = unpackObjectToMap(obj)
+    val unpacked = unpackObjectToMap[T](obj)
     JObject(unpacked.map { case (k, v) => JField(k, v) }.toList)
   }
   def unpackObjects[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
-    val unpacked = obj.toList.map(unpackObjectToMap)
+    val unpacked = obj.toList.map(unpackObjectToMap[T])
     JObject(unpacked.head.map { case (k, _) =>
-      JField(k, JArray(unpacked.map{ m => m(k) })) 
+      JField(k, JArray(unpacked.map{ m =>  m(k) })) 
     }.toList)
   }
   def mergeMaps[A, B](ms: List[Map[A, B]])(f: (B, B) => B): Map[A, B] =
