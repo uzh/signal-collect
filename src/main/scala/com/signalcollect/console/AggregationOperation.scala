@@ -19,7 +19,9 @@ class GraphAggregator[Id](nodeIds: List[Id] = List[Id](), vicinityNodeIds: List[
       JObject(List(
         JField("nodes", JObject(List(JField(i.id.toString, 
                         JObject(List(JField("s", i.state.toString),
-                                     JField("c", category))))))),
+                                     JField("c", category),
+                                     JField("ss", i.scoreSignal),
+                                     JField("cs", i.scoreCollect))))))),
         JField("edges", JObject(List(JField(i.id.toString, JArray(
           edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
       ))

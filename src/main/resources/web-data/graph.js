@@ -16,9 +16,6 @@ scc.defaults.graph = {"layout": {
                       }
 }
 
-STR = {"searchByID": "Search and hit Enter to execute",
-}
-
 scc.modules.graph = function() {
   this.requires = ["graph"];
   this.autoRefresh = false;
@@ -147,6 +144,8 @@ scc.modules.graph = function() {
       if (d3.event.target.tagName == "circle") {
           $("#node_id").text(data.id);
           $("#node_state").text(data.state);
+          $("#node_ss").text(data.ss);
+          $("#node_cs").text(data.cs);
           clearTimeout(fadeTimer);
           var tooltip = $("#graph_tooltip")
           $("#graph_tooltip").fadeIn(200);
@@ -228,7 +227,8 @@ scc.modules.graph = function() {
 
       $.each(j.nodes, function(id, data) {
         if (nodeRefs[id] == undefined) {
-          nodes.push({"id": id, "state": data.s, "category": data.c});
+          nodes.push({"id": id, "state": data.s, "category": data.c, 
+                      "ss": data.ss, "cs": data.cs});
           nodeRefs[id] = nodes.length - 1;
           newNodes = true;
         }
@@ -300,6 +300,45 @@ scc.modules.graph = function() {
     links = []
     nodeRefs = {};
     linkRefs = {};
+  }
+  this.findExistingNode = function (id) {
+    var node = undefined;
+    d3.selectAll(".node").each(function () {
+      var data = this.__data__;
+      if (data.id == id) {
+        node = this;
+      }
+    });
+    return node;
+  }
+  this.highlightNode = function (id) {
+    var node = scc.consumers.graph.findExistingNode(id);
+    if (!node) { console.log("node is not present: " + id); return; }
+    var data = node.__data__;
+    var n = d3.select(node);
+    var r = n.attr("r")
+    var flash = function (count) {
+      n.transition().duration(120).ease("linear").attr("r", 20).each("end", function () {
+        n.transition().duration(120).ease("linear").attr("r", r).each("end", function () {
+          if (count > 0) { flash(count-1) }
+        });
+      });
+    }
+    flash(3);
+    $("#node_id").text(data.id);
+    $("#node_state").text(data.state);
+    $("#node_ss").text(data.ss);
+    $("#node_cs").text(data.cs);
+    $("#graph_tooltip").css({"left": $(node).attr("cx")+5 + "px", 
+                             "top": $(node).attr("cy")+5 + "px"});
+    $("#graph_tooltip").fadeIn(200);
+  }
+
+  this.loadNodeById = function (id, cb) {
+    orderTemplate = {"provider": "graph", 
+                     "query": "id", 
+                     "id": id}
+    scc.order(completeOrder(orderTemplate), 0, cb)
   }
 
   var searchById = function (e) {

@@ -1,11 +1,5 @@
 scc.defaults.breakconditions = {}
 
-STR = {"pickNode": "Enter ID or select using mouse",
-       "enterState": "Enter state",
-       "noConditions": "No conditions specified",
-       "noExecution": "The interactive execution mode is unavailable, retrying..."
-}
-
 CNAME = {"changesState": "changes state",
          "goesAboveState": "goes above state",
          "goesBelowState": "goes below state",
@@ -33,7 +27,6 @@ scc.modules.breakconditions = function () {
       scc.order({"provider": "breakconditions"}, 1000)
       return
     }
-    console.log(j.active.length)
     if (j.active.length == 0) {
       $("#gc_conditionList").append('<div class="condition none">' + STR.noConditions + '</div>');
     }
@@ -44,10 +37,8 @@ scc.modules.breakconditions = function () {
       }
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
-      item += ('">When Node with id: <span class="node_link" title=' + 
+      item += ('">When Node with id: <span class="node_link" title="' + 
                c.props.nodeId + '">...' + s + '</span><br/> ' + c.name)
-      console.log(c.name)
-      console.log(c.props)
       switch(c.name) {
         case CNAME.goesAboveState:
         case CNAME.goesBelowState:
@@ -69,16 +60,26 @@ scc.modules.breakconditions = function () {
         item += ': <span class="goal" title="' + j.reached[c.id] + '">' + goal + '</span>'
       }
       item += ('<div class="delete" data-id="' + c.id + '" /></div>')
-      console.log(item)
       $("#gc_conditionList").append(item);
     });
     $("#gc_conditionList .delete").click(function (e) { 
-      e.preventDefault();
       scc.order({
           "provider": "breakconditions",
           "action": "remove",
           "id": $(this).attr("data-id")
       });
+    });
+    $(".node_link").click(function (e) {
+      var id = $(this).attr("title");
+      var node = scc.consumers.graph.findExistingNode(id);
+      if (!node) {
+        scc.consumers.graph.loadNodeById(id, function () {
+          setTimeout(function () { scc.consumers.graph.highlightNode(id) }, 1000);
+        });
+      }
+      else {
+        scc.consumers.graph.highlightNode(id); 
+      }
     });
     $("#gc_conditionList li:last-child").addClass("last_child")
   }
@@ -115,7 +116,6 @@ scc.modules.breakconditions = function () {
   });
 
   $("#gc_nodeId").keyup(function(e) {
-    console.log($(this).val().length)
     if ($(this).val().length == 0 || $(this).val() == STR.pickNode) {
       $(this).val(STR.pickNode);
       $("#gc_addCondition").attr("disabled", true)
@@ -138,7 +138,6 @@ scc.modules.breakconditions = function () {
   $("#gc_addCondition").click(function (e) { 
     e.preventDefault();
     var name = $("#gc_condition").val().replace(/:/g,"");
-    console.log(name)
     var props = {}
     switch (name) {
       case CNAME.changesState:
@@ -187,9 +186,6 @@ scc.modules.breakconditions = function () {
     }
   });
 
-  $(".node_link").click(function (e) {
-    // TODO
-  });
 
 
 }
