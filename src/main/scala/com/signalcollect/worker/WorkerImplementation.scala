@@ -76,7 +76,7 @@ case class WorkerImplementation[Id, Signal](
     flushedAfterUndeliverableSignalHandler = true
     systemOverloaded = false
     operationsScheduled = false
-    isIdle = false
+    isIdle = true
     isPaused = true
     allWorkDoneWhenContinueSent = false
     lastStatusUpdate = System.currentTimeMillis
