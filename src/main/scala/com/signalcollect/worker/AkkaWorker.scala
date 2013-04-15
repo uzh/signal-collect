@@ -56,7 +56,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Int,
   val loggingLevel: Int)
-  extends WorkerActor[Id, Signal] with ActorLogging {
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
 
@@ -101,6 +101,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     worker.setIdle(false)
     self ! ScheduleOperations
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
+    worker.operationsScheduled = true
   }
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
@@ -130,7 +131,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       worker.processSignal(s.signal, s.targetId, s.sourceId)
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
-        worker.operationsScheduled = true
       }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
@@ -155,7 +155,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
-        worker.operationsScheduled = true
       }
 
     case ScheduleOperations =>
@@ -184,9 +183,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           log.error(s"Problematic request on worker $workerId: ${e.getMessage}")
           throw e
       }
-      if (!worker.operationsScheduled && (!worker.isAllWorkDone || !worker.isIdle)) {
+      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
         scheduleOperations
-        worker.operationsScheduled = true
       }
 
     case Heartbeat(maySignal) =>

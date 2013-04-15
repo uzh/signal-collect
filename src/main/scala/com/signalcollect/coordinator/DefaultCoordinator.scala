@@ -58,10 +58,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   messageBusFactory: MessageBusFactory,
   heartbeatIntervalInMilliseconds: Long,
   val loggingLevel: Int) extends Actor
-  with MessageRecipientRegistry
-  with Logging
-  with Coordinator[Id, Signal]
-  with ActorLogging {
+    with MessageRecipientRegistry
+    with Logging
+    with Coordinator[Id, Signal]
+    with ActorLogging {
 
   /**
    * Timeout for Akka actor idling
@@ -87,10 +87,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
   def logMessages {
-    debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+    //    debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
     //    debug(s"sent=$totalMessagesSent received=$totalMessagesReceived")
     //    debug(s"sentByCoordinator=$messagesSentByCoordinator sentByWorkers=$messagesSentByWorkers sentByNodes=$messagesSentByNodes")
     //    debug(s"receivedByCoordinator=$messagesReceivedByCoordinator sentByWorkers=$messagesReceivedByWorkers receivedByNodes=$messagesReceivedByNodes")
+    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
     println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
     println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
     println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
@@ -129,7 +130,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     case ws: WorkerStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
-      //      println(s"WorkerStatus received: $workerStatusReceived")
       updateWorkerStatusMap(ws)
       if (isIdle) {
         onIdle
@@ -140,7 +140,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     case ns: NodeStatus =>
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
-      //      println(s"NodeStatus received: $nodeStatusReceived")
       updateNodeStatusMap(ns)
       if (shouldSendHeartbeat) {
         sendHeartbeat
