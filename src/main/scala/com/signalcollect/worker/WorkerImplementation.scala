@@ -252,11 +252,7 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    for (graphModification <- graphModifications) {
-      graphModification(graphEditor)
-    }
-    // TODO: Implement properly
-    //pendingModifications = pendingModifications ++ graphModifications
+    pendingModifications = pendingModifications ++ graphModifications
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {

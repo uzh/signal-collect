@@ -37,7 +37,7 @@ import com.signalcollect.configuration.LoggingLevel
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Double].withLoggingLevel(LoggingLevel.Debug).build//withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build//
+  val g = new GraphBuilder[Int, Double].withLoggingLevel(LoggingLevel.Debug).build //withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build//
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -47,7 +47,7 @@ object EfficientPageRankLoader extends App {
     s
   }
   for (i <- 0 until numberOfSplits) {
-    g.modifyGraph(loadSplit(i) _, Some(i))
+    g.loadGraph(SplitLoader(splits(i)), Some(i))
   }
   print("Loading graph ...")
   g.awaitIdle
@@ -60,57 +60,64 @@ object EfficientPageRankLoader extends App {
   top100 foreach (println(_))
   g.shutdown
 
-  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Double]) {
-    val in = splits(splitIndex)
-    var vertexId = CompactIntSet.readUnsignedVarInt(in)
-    while (vertexId >= 0) {
-      val numberOfEdges = CompactIntSet.readUnsignedVarInt(in)
-      var edges = new ArrayBuffer[Int]
-      while (edges.length < numberOfEdges) {
-        val nextEdge = CompactIntSet.readUnsignedVarInt(in)
-        edges += nextEdge
-      }
-      val vertex = new EfficientPageRankVertex(vertexId)
-      vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
-      ge.addVertex(vertex)
-      vertexId = CompactIntSet.readUnsignedVarInt(in)
-    }
-  }
+  //  def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Double]) {
+  //    val in = splits(splitIndex)
+  //    var vertexId = CompactIntSet.readUnsignedVarInt(in)
+  //    while (vertexId >= 0) {
+  //      val numberOfEdges = CompactIntSet.readUnsignedVarInt(in)
+  //      var edges = new ArrayBuffer[Int]
+  //      while (edges.length < numberOfEdges) {
+  //        val nextEdge = CompactIntSet.readUnsignedVarInt(in)
+  //        edges += nextEdge
+  //      }
+  //      val vertex = new EfficientPageRankVertex(vertexId)
+  //      vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
+  //      ge.addVertex(vertex)
+  //      vertexId = CompactIntSet.readUnsignedVarInt(in)
+  //    }
+  //  }
 }
 
-//case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Double] => Unit] {
-//  var loaded = 0
-//
-//  def readNext: Int = CompactIntSet.readUnsignedVarInt(in)
-//  def nextEdges(length: Int): ArrayBuffer[Int] = {
-//    val edges = new ArrayBuffer[Int]
-//    while (edges.length < length) {
-//      val nextEdge = readNext
-//      edges += nextEdge
-//    }
-//    edges
-//  }
-//  def addVertex(vertex: Vertex[Int, Double])(graphEditor: GraphEditor[Int, Double]) {
-//    graphEditor.addVertex(vertex)
-//  }
-//
-//  var vertexId = Int.MinValue
-//
-//  def hasNext = {
-//    vertexId = readNext
-//    //println(vertexId >= 0)
-//    vertexId >= 0
-//  }
-//  def next: GraphEditor[Int, Double] => Unit = {
-//    loaded += 1
-//    //println(loaded)
-//    val numberOfEdges = readNext
-//    val edges = nextEdges(numberOfEdges)
-//    val vertex = new EfficientPageRankVertex(vertexId)
-//    vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
-//    addVertex(vertex)
-//  }
-//}
+case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Double] => Unit] {
+  var loaded = 0
+
+  def readNext: Int = CompactIntSet.readUnsignedVarInt(in)
+
+  def nextEdges(length: Int): ArrayBuffer[Int] = {
+    val edges = new ArrayBuffer[Int]
+    while (edges.length < length) {
+      val nextEdge = readNext
+      edges += nextEdge
+    }
+    edges
+  }
+
+  def addVertex(vertex: Vertex[Int, Double])(graphEditor: GraphEditor[Int, Double]) {
+    graphEditor.addVertex(vertex)
+  }
+
+  var vertexId = Int.MinValue
+
+  def hasNext = {
+    if (vertexId == Int.MinValue) {
+      vertexId = readNext
+    }
+    vertexId >= 0
+  }
+
+  def next: GraphEditor[Int, Double] => Unit = {
+    loaded += 1
+    if (loaded % 10000 == 0) {
+      println(loaded)
+    }
+    val numberOfEdges = readNext
+    val edges = nextEdges(numberOfEdges)
+    val vertex = new EfficientPageRankVertex(vertexId)
+    vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
+    vertexId = Int.MinValue
+    addVertex(vertex) _
+  }
+}
 
 /**
  * A version of PageRank that performs faster and uses less memory than the standard version.

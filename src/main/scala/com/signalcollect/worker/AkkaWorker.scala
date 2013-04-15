@@ -72,7 +72,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
-    signalThreshold = 0.001,
+    signalThreshold = 0.01,
     collectThreshold = 0.0,
     undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
       throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId")
@@ -87,12 +87,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   def isInitialized = messageBus.isInitialized
 
   def applyPendingGraphModifications {
-    if (worker.pendingModifications.hasNext) {
+    if (!worker.pendingModifications.isEmpty) {
       for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
         modification(worker.graphEditor)
-      }
-      if (worker.pendingModifications.hasNext) {
-        scheduleOperations
       }
     }
   }
@@ -162,7 +159,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         worker.setIdle(true)
         worker.operationsScheduled = false
       } else {
-        executeOperations
+        if (worker.isPaused) {
+          applyPendingGraphModifications
+        } else {
+          executeOperations
+        }
         scheduleOperations
       }
 
@@ -194,8 +195,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case other =>
       worker.counters.otherMessagesReceived += 1
-      log.error(s"Worker $workerId not handle message $other")
-      throw new Exception(s"Unsupported message: $other")
+      log.error(s"Worker $workerId could not handle message $other")
+      throw new UnsupportedOperationException(s"Unsupported message: $other")
   }
 
 }
