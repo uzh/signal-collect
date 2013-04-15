@@ -20,9 +20,13 @@ var resourceBoxes = {
       "estimationStatBox"
       ],
     "logs"      : [ "logBox" ],
-    "detailed"  : [  ], // all charts will be added automatically
+    "detailed" : [
+      "chartZoomer",
+      // all charts will be added automatically
+     ],
     
     "nostart"   : [ 
+      "chartZoomer",
       "logBox",
       "signalCollectTitle",
       "heartbeatMessagesReceivedChart",
@@ -47,11 +51,13 @@ var resourceBoxes = {
       "runtime_mem_totalChart"
     ],
     "noconvergence" : [
+      "chartZoomer",
       "signalCollectTitle",
       "messagesSentChart",
       "messagesReceivedChart",
     ], 
     "estimation" : [
+      "chartZoomer",
       "estimationStatBox",
       "infrastructureTitle",
       "runtime_mem_freeChart",
@@ -59,10 +65,12 @@ var resourceBoxes = {
       "runtime_mem_totalChart"
     ],
     "crash" : [
+      "chartZoomer",
       "jmx_mem_freeChart",
       "logBox"
     ],
     "slow" : [
+      "chartZoomer",
       "infrastructureTitle",
       "jmx_system_loadChart",
       "jmx_process_timeChart",
@@ -352,6 +360,42 @@ scc.modules.resources = function() {
     show_boxes(scc.settings.get().resources.section);
   }, 600);
   
+
+  // zooming buttons
+  $("#chartZoomer .zoomIn").click(function() {
+    console.log("Zoom: In");
+    zooming(1.2);
+  });
+  $("#chartZoomer .zoomOut").click(function() {
+    console.log("Zoom: Out");
+    zooming(0.8);
+  });
+  var zooming = function(scale) {
+    $.each(lineCharts, function(key, chart) {
+      chart.setZoom(scale);
+    });
+  }
+  
+
+  // moving buttons
+  $("#chartZoomer .moveLeft").click(function() {
+    console.log("Move: Left");
+    moving(-1);
+  });
+  $("#chartZoomer .moveRight").click(function() {
+    console.log("Move: Right");
+    moving(1);
+  });
+  $("#chartZoomer .moveOrigin").click(function() {
+    console.log("Move: Origin");
+    moving(0);
+  });
+  var moving = function(scale) {
+    $.each(lineCharts, function(key, chart) {
+      chart.setMove(scale);
+    });
+  }
+  
   
   // event handler
   
@@ -389,7 +433,7 @@ scc.modules.resources = function() {
     $.each(lineCharts, function(k,v) { v.update(msg); });
     
     // update statistics
-    if (statisticsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
+    if (statisticsLastUpdated.addMilliseconds(intervalStatistics) <= msg.timestamp) {
       var resStatStartTime = $("#resStatStartTime");
       if (resStatStartTime.html() == "?") {
         resStatStartTime.html(new Date(msg.timestamp).dateTime());
@@ -400,7 +444,7 @@ scc.modules.resources = function() {
     }
     
     // update estimations
-    if (estimationsLastUpdated.addSecond(intervalStatistics) <= msg.timestamp) {
+    if (estimationsLastUpdated.addMilliseconds(intervalStatistics) <= msg.timestamp) {
       if (lineCharts.runtime_mem_total.dataLength() >= 10) {
         var maxMemory = lineCharts.runtime_mem_max.dataLatest();
         var avgMemory = lineCharts.runtime_mem_total.dataAvg();

@@ -46,6 +46,49 @@ var LineChart = function()
     return data[2][data[2].length-1].value;
   }
   
+  // sets the zooming level
+  this.setZoom = function(scale) {
+    zoom.scale(zoom.scale() * scale);
+    var lowestXDomain  = x.domain()[0];
+    var highestXDomain = x.domain()[1];
+    
+    var currentDateInWindow   = (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain);
+    var dataComesAfterWindow  = (highestXDomain <= data[0][0].date);
+    var dataComesBeforeWindow = (lowestXDomain >= data[0][this.dataLength()-1].date);
+    if (dataComesAfterWindow || currentDateInWindow || dataComesBeforeWindow) {
+      var differenceMS      = highestXDomain - lowestXDomain;
+      var newHighestXDomain = new Date(+(currentHighestDate)+(interval));
+      var newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-1*differenceMS));
+      x.domain([newLowestXDomain, newHighestXDomain]);
+      zoom.x(x);
+    }
+    
+    drawAnimated(true);
+  }
+  
+  // moves the charts
+  this.setMove = function(scale) {
+    var lowestXDomain  = x.domain()[0];
+    var highestXDomain = x.domain()[1];
+    var differenceMS = highestXDomain - lowestXDomain;
+    var newLowestXDomain, newHighestXDomain;
+    
+    if (scale == 0) {
+      newHighestXDomain = new Date(currentHighestDate.addMilliseconds(interval));
+      newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-differenceMS));
+    } else {      
+      var moveMS       = scale * Math.round(differenceMS / 3);
+      newLowestXDomain  = new Date(lowestXDomain.addMilliseconds(moveMS));
+      newHighestXDomain = new Date(highestXDomain.addMilliseconds(moveMS));
+    }
+    
+    d3.transition().ease("linear").duration(300).each(function() {
+      x.domain([newLowestXDomain, newHighestXDomain]);
+      zoom.x(x);
+      drawAnimated(true);
+    });
+  }
+  
   
   
   
@@ -110,7 +153,8 @@ var LineChart = function()
         .attr("height", this.config.height + this.config.margin.top + this.config.margin.bottom)
       .append("g")
         .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")")
-        .call(zoom);
+        //.call(zoom) // un-comment to enable on hover dragging and zooming 
+        ;
 
     // needed for zooming and dragging
     var rect = svg.append("rect").attr("width", this.config.width).attr("height", this.config.height);
@@ -166,12 +210,18 @@ var LineChart = function()
    * Helper function to update the axis and other stuff
    */
   function draw() {
+    drawAnimated(false);
+  }
+  function drawAnimated(animation) {
     svg.select("g.x.axis").call(xAxis);
-    svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
+    svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis); // this should always be animated
 
-    svg.selectAll("path.line").attr("d", line);
+    if (animation) {
+      svg.selectAll("path.line").transition().duration(300).ease("linear").attr("d", line);
+    } else {
+      svg.selectAll("path.line").attr("d", line);
+    }
     aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
-//      d3.select("#footer span").text("U.S. Commercial Flights, " + x.domain().map(format).join("-"));
   }
   
   
@@ -209,7 +259,7 @@ var LineChart = function()
   /**
    * Allows to transform Dates by adding a specific amount of seconds
    */
-  Date.prototype.addSecond = function(seconds) {
+  Date.prototype.addMilliseconds = function(seconds) {
     return (+this + seconds);
   };
   

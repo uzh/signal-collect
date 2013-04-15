@@ -369,6 +369,7 @@ body {
   width: 32px;
   margin: 4px;
   float: left;
+  cursor: pointer;
 }
 
 #controls .icon {
@@ -599,7 +600,7 @@ body {
   stroke:red;
 }
 
-rect { fill:white; cursor:move; }
+rect { fill:white; /*cursor:move;*/ }
 
 circle.dot { fill:transparent; }
 
@@ -622,7 +623,25 @@ div.tooltip {
 
 
 
+/* chart zoomer/dragger */
+#chartZoomer        { position:fixed; top:15px; right:15px; text-align:center; z-index:10; overflow:hidden; min-height:200px; }
+#chartZoomer span   { background:white; border-color:black; border-style:solid; font-size:20px; /*position:absolute;*/
+                      padding:1px 6px; cursor:pointer; font-family:monospace; text-align:center; display:inline-block; }
+#chartZoomer span:active
+                    { padding:1px 5px 1px 7px; }
+#chartZoomer span.zoomIn
+                    { border-width:1px 1px 0 1px; border-radius:5px 5px 0 0; box-shadow:inset -1px 0 5px #888; }
+#chartZoomer span.moveLeft
+                    { border-width:1px 0 1px 1px; border-radius:5px 0 0 5px; box-shadow:inset -1px 0 5px #888; }
+#chartZoomer span.moveOrigin
+                    { border-width:1px; box-shadow:inset -1px 0 5px #888; }
+#chartZoomer span.moveRight
+                    { border-width:1px 1px 1px 0; border-radius:0 5px 5px 0; box-shadow:inset -1px 0 5px #888; }
+#chartZoomer span.zoomOut
+                    { border-width:0 1px 1px 1px; border-radius:0 0 5px 5px; box-shadow:inset -1px -1px 5px #888; }
+
 /* resource box styling */
+/* div#resourceBoxes svg rect { -moz-box-shadow: inset 0 0 10px #000000; } */
 div#resourceBoxes > div:not([id$='Title']) { display:inline; overflow:auto; }
 
 body.statistics div#resourceBoxes div[id$=StatBox] { float:left; margin-right:20px; }
