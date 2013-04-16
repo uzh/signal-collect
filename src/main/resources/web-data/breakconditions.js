@@ -20,6 +20,9 @@ scc.modules.breakconditions = function () {
 
   this.onclose = function() { }
 
+  $("#gc_state").val(STR.enterState); 
+  $("#gc_nodeId").val(STR.pickNode); 
+
   this.onmessage = function(j) {
     $("#gc_conditionList").empty();
     if (j["status"] == "noExecution" ) {
