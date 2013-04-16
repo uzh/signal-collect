@@ -26,7 +26,7 @@ var LineChart = function()
   var data = [ [], [], [] ];
   
   // variables needed for the charts
-  var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0, zoom;
+  var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0, zoom, zoomScale = 1.0;
   
   // variables needed for the tool tips
   var div, formatTime;
@@ -48,22 +48,26 @@ var LineChart = function()
   
   // sets the zooming level
   this.setZoom = function(scale) {
-    zoom.scale(zoom.scale() * scale);
+    var newZoomScale   = zoomScale * scale;
     var lowestXDomain  = x.domain()[0];
     var highestXDomain = x.domain()[1];
+
+    if (newZoomScale > 1.5) {
+      return;
+    }
     
-    var currentDateInWindow   = (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain);
+    zoom.scale(zoom.scale() * scale);
+    zoomScale = newZoomScale;
+    
+    var currentDateInWindow   = (lowestXDomain <= currentHighestDate
+                                 && currentHighestDate <= new Date(highestXDomain.addMilliseconds(interval)));
     var dataComesAfterWindow  = (highestXDomain <= data[0][0].date);
     var dataComesBeforeWindow = (lowestXDomain >= data[0][this.dataLength()-1].date);
     if (dataComesAfterWindow || currentDateInWindow || dataComesBeforeWindow) {
-      var differenceMS      = highestXDomain - lowestXDomain;
-      var newHighestXDomain = new Date(+(currentHighestDate)+(interval));
-      var newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-1*differenceMS));
-      x.domain([newLowestXDomain, newHighestXDomain]);
-      zoom.x(x);
+      this.setMove(0);
+    } else {
+      drawAnimated(true);
     }
-    
-    drawAnimated(true);
   }
   
   // moves the charts
@@ -110,7 +114,11 @@ var LineChart = function()
     
     // set default prettyName to jsonName if needed
     if (this.config.prettyName == "") {
-      this.config.prettyName = this.config.jsonName;
+      if (chartNames[this.config.jsonName] != null) {
+        this.config.prettyName = chartNames[this.config.jsonName];
+      } else {
+        this.config.prettyName = this.config.jsonName;
+      }
     }
     
     // correct with and height
