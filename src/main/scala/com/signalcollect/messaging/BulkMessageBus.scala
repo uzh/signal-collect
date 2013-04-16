@@ -71,7 +71,8 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   override def flush {
     if (pendingSignals > 0) {
       var workerId = 0
-      while (workerId < numberOfWorkers) {
+      while (workerId < numberOfWorkers) { 
+        //TODO: This could potentially be done in parallel. Evaluate. 
         val bulker = outgoingMessages(workerId)
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {

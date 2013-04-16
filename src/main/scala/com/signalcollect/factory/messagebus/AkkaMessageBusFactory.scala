@@ -20,12 +20,12 @@
 package com.signalcollect.factory.messagebus
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.messaging.BulkMessageBus
 import com.signalcollect.messaging.DefaultMessageBus
+import com.signalcollect.messaging.ParallelBulkMessageBus
 
 object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
@@ -61,4 +61,20 @@ class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) ext
       workerApiFactory)
   }
   override def toString = "BulkAkkaMessageBusFactory"
+}
+
+class ParallelBulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
+  def createInstance[Id: ClassTag, Signal: ClassTag](
+    numberOfWorkers: Int,
+    numberOfNodes: Int,
+    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
+    new ParallelBulkMessageBus[Id, Signal](
+      numberOfWorkers,
+      numberOfNodes,
+      flushThreshold,
+      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+      workerApiFactory)
+  }
+  override def toString = "ParallelBulkAkkaMessageBusFactory"
 }
