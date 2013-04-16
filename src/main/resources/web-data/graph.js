@@ -217,40 +217,43 @@ scc.modules.graph = function() {
       linkRefs[links[i].source + "-" + links[i].target] = i;
     }
 
-    if (j.nodes == undefined) {
+    if (j.nodes == undefined) { return; }
+
+    $("#graph_background").fadeOut(100);
+
+    $.each(j.nodes, function(id, data) {
+      if (nodeRefs[id] == undefined) {
+        nodes.push({"id": id, "state": data.s, "category": data.c, 
+                    "ss": data.ss, "cs": data.cs});
+        nodeRefs[id] = nodes.length - 1;
+        newNodes = true;
+      }
+      else {
+        nodes[nodeRefs[id]].state = data.s
+        nodes[nodeRefs[id]].category = data.c
+      }
+    });
+
+    $.each(j.edges, function (source, targets) {
+      for (var t = 0; t < targets.length; t++) {
+        linkID = source + "-" + targets[t]
+        if (linkRefs[linkID] == undefined) {
+          links.push({"source": nodes[nodeRefs[source]], 
+                      "target": nodes[nodeRefs[targets[t]]],
+                      "value": 5})
+          linkRefs[linkID] = links.length - 1;
+        }
+        else { 
+          links[linkRefs[linkID]].value = 5
+        }
+      }
+    });
+
+
+    if (nodes.length == 0) {
       $("#graph_background")
         .text("There are no nodes to display for the current criteria").fadeIn();
-    }
-    else { 
-      $("#graph_background").fadeOut(100);
-
-      $.each(j.nodes, function(id, data) {
-        if (nodeRefs[id] == undefined) {
-          nodes.push({"id": id, "state": data.s, "category": data.c, 
-                      "ss": data.ss, "cs": data.cs});
-          nodeRefs[id] = nodes.length - 1;
-          newNodes = true;
-        }
-        else {
-          nodes[nodeRefs[id]].state = data.s
-          nodes[nodeRefs[id]].category = data.c
-        }
-      });
-
-      $.each(j.edges, function (source, targets) {
-        for (var t = 0; t < targets.length; t++) {
-          linkID = source + "-" + targets[t]
-          if (linkRefs[linkID] == undefined) {
-            links.push({"source": nodes[nodeRefs[source]], 
-                        "target": nodes[nodeRefs[targets[t]]],
-                        "value": 5})
-            linkRefs[linkID] = links.length - 1;
-          }
-          else { 
-            links[linkRefs[linkID]].value = 5
-          }
-        }
-      });
+      return;
     }
 
     if (newNodes) { force.start(); }
@@ -304,7 +307,7 @@ scc.modules.graph = function() {
     var node = undefined;
     d3.selectAll(".node").each(function () {
       var data = this.__data__;
-      if (data.id == id) {
+      if (data.id.indexOf(id) !== -1) {
         node = this;
       }
     });
@@ -341,23 +344,21 @@ scc.modules.graph = function() {
   }
 
   var searchById = function (e) {
+    e.preventDefault();
     var id = $("#gs_searchId").val()
-    $("button").removeClass("active");
-    scc.consumers.graph.reset()
     if (id == "") {
-      scc.settings.set({"graph": {"options": {"gs_searchId": id }}});
-      $("#graph_background")
-        .text("There are no nodes to display for the current criteria").fadeIn();
       $("#gs_searchId").val("Search and hit Enter to execute");
+      return;
+    }
+    var node = scc.consumers.graph.findExistingNode(id);
+    if (!node) {
+      scc.consumers.graph.loadNodeById(id, function () {
+        setTimeout(function () { scc.consumers.graph.highlightNode(id) }, 1500);
+      });
     }
     else {
-      orderTemplate = {"provider": "graph", 
-               "query": "id", 
-               "id": id}
-      scc.order(completeOrder(orderTemplate))
-      $("#gs_searchById").addClass("active");
+      scc.consumers.graph.highlightNode(id); 
     }
-    return false;
   }
 
   $("#gs_searchById").click(searchById);
