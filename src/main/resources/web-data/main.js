@@ -35,8 +35,10 @@ function Settings() {
     settings = {}
     hash = top.location.hash.slice(1);
     if (hash) {
-      hash = JSON.parse(hash);
-      $.extend(true, settings, hash);
+      try {
+        hash = JSON.parse(hash);
+        $.extend(true, settings, hash);
+      } catch (e) {}
     }
     return settings
   }
