@@ -133,7 +133,7 @@ var LineChart = function()
 
     // add default scale of the axes
     var now = new Date();
-    x.domain([new Date(+(now)-(10*1000)), new Date(+(now)+(120*1000))]);
+    x.domain([new Date(now.addMilliseconds(-170*1000)), new Date(now.addMilliseconds(10*1000))]);
     y.domain([0, 1]);
 
     xAxis = d3.svg.axis().scale(x)
