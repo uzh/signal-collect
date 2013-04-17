@@ -1,4 +1,4 @@
-scc.defaults.breakconditions = {}
+scc.defaults.breakconditions = {};
 
 CNAME = {"changesState": "changes state",
          "goesAboveState": "goes above state",
@@ -7,13 +7,13 @@ CNAME = {"changesState": "changes state",
          "goesBelowSignalThreshold": "goes below signal threshold",
          "goesAboveCollectThreshold": "goes above collect threshold",
          "goesBelowCollectThreshold": "goes below collect threshold"
-}
+};
 
 scc.modules.breakconditions = function () {
-  this.requires = ["breakconditions"]
+  this.requires = ["breakconditions"];
 
   this.onopen = function() {
-    scc.order({"provider": "breakconditions"})
+    scc.order({"provider": "breakconditions"});
   }
 
   this.onerror = function(e) { }
@@ -27,16 +27,16 @@ scc.modules.breakconditions = function () {
     $("#gc_conditionList").empty();
     if (j["status"] == "noExecution" ) {
       $("#gc_conditionList").append('<div class="condition none">' + STR.noExecution + '</div>');
-      scc.order({"provider": "breakconditions"}, 1000)
-      return
+      scc.order({"provider": "breakconditions"}, 1000);
+      return;
     }
     if (j.active.length == 0) {
       $("#gc_conditionList").append('<div class="condition none">' + STR.noConditions + '</div>');
     }
     $.each(j.active, function (k, c) {
-      var s = c.props.nodeId
+      var s = c.props.nodeId;
       if (s.length > 23) {
-        s = s.substring(s.length - 25, s.length)
+        s = s.substring(s.length - 25, s.length);
       }
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
@@ -56,13 +56,13 @@ scc.modules.breakconditions = function () {
           item += " " + c.props.collectThreshold; break;
       }
       if (j.reached[c.id] != undefined) { 
-        var goal = j.reached[c.id]
+        var goal = j.reached[c.id];
         if (goal.length > 15) {
-          goal = goal.substring(0, 12) + "..."
+          goal = goal.substring(0, 12) + "...";
         }
-        item += ': <span class="goal" title="' + j.reached[c.id] + '">' + goal + '</span>'
+        item += ': <span class="goal" title="' + j.reached[c.id] + '">' + goal + '</span>';
       }
-      item += ('<div class="delete" data-id="' + c.id + '" /></div>')
+      item += ('<div class="delete" data-id="' + c.id + '" /></div>');
       $("#gc_conditionList").append(item);
     });
     $("#gc_conditionList .delete").click(function (e) { 
@@ -76,7 +76,7 @@ scc.modules.breakconditions = function () {
       var id = $(this).attr("title");
       scc.consumers.graph.searchById(id);
     });
-    $("#gc_conditionList li:last-child").addClass("last_child")
+    $("#gc_conditionList li:last-child").addClass("last_child");
   }
 
   $("#gc_useMouse").click(function (e) { 
@@ -100,33 +100,33 @@ scc.modules.breakconditions = function () {
     var node = $(target);
     if (data == undefined) {
       $("#gc_nodeId").val(STR.pickNode);
-      $("#gc_addCondition").attr("disabled", true)
+      $("#gc_addCondition").attr("disabled", true);
     }
     else {
       $("#gc_nodeId").val(data.id);
       $("#gc_nodeId").focus();
       $("#gc_nodeId").val($("#gc_nodeId").val());
-      $("#gc_addCondition").removeAttr("disabled")
+      $("#gc_addCondition").removeAttr("disabled");
     }
   });
 
   $("#gc_nodeId").keyup(function(e) {
     if ($(this).val().length == 0 || $(this).val() == STR.pickNode) {
       $(this).val(STR.pickNode);
-      $("#gc_addCondition").attr("disabled", true)
+      $("#gc_addCondition").attr("disabled", true);
     }
     else {
-      $("#gc_addCondition").removeAttr("disabled")
+      $("#gc_addCondition").removeAttr("disabled");
     }
   });
 
   $("#gc_state").keyup(function(e) {
     if ($(this).val().length == 0 || $(this).val() == STR.enterState) {
       $(this).val(STR.enterState); 
-      $("#gc_addCondition").attr("disabled", true)
+      $("#gc_addCondition").attr("disabled", true);
     }
     else {
-      $("#gc_addCondition").removeAttr("disabled")
+      $("#gc_addCondition").removeAttr("disabled");
     }
   });
 
@@ -136,18 +136,18 @@ scc.modules.breakconditions = function () {
     var props = {}
     switch (name) {
       case CNAME.changesState:
-        props["nodeId"] = $("#gc_nodeId").val()
+        props["nodeId"] = $("#gc_nodeId").val();
         break;
       case CNAME.goesAboveState:
       case CNAME.goesBelowState:
-        props["nodeId"] = $("#gc_nodeId").val()
-        props["expectedState"] = $("#gc_state").val()
+        props["nodeId"] = $("#gc_nodeId").val();
+        props["expectedState"] = $("#gc_state").val();
         break;
       case CNAME.goesAboveSignalThreshold:
       case CNAME.goesBelowSignalThreshold:
       case CNAME.goesAboveCollectThreshold:
       case CNAME.goesBelowCollectThreshold:
-        props["nodeId"] = $("#gc_nodeId").val()
+        props["nodeId"] = $("#gc_nodeId").val();
         break;
     }
     scc.order({
@@ -158,19 +158,19 @@ scc.modules.breakconditions = function () {
     });
     $("#gc_conditionList").children(".none").remove();
     $("#gc_conditionList").append('<div class="condition new last_child"></div>');
-    $("#gc_addCondition").attr("disabled", true)
+    $("#gc_addCondition").attr("disabled", true);
     $("#gc_state").val(STR.enterState); 
     $("#gc_nodeId").val(STR.pickNode); 
   });
 
   $("#gc_condition").change(function (e) {
-    conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"")
+    conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"");
     switch(conditionChoice) {
       case CNAME.goesAboveState:
       case CNAME.goesBelowState:
         $("#gc_state").val(STR.enterState); 
         $("#gc_stateContainer").show(); 
-        $("#gc_addCondition").attr("disabled", true)
+        $("#gc_addCondition").attr("disabled", true);
         break;
       case CNAME.changesState:
       case CNAME.goesAboveSignalThreshold:

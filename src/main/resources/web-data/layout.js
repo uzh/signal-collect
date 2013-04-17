@@ -1,24 +1,24 @@
 var hidingTimeout;
 
 function toggleSection(view, title) {
-  var title = $(title)
-  var section = title.next()
-  var id = title.parent().attr("id")
+  var title = $(title);
+  var section = title.next();
+  var id = title.parent().attr("id");
   if (section.is(":visible")) {
-    var l = {}
-    l[view] = {"layout": {}}
-    l[view]["layout"][id] = "hide"
+    var l = {};
+    l[view] = {"layout": {}};
+    l[view]["layout"][id] = "hide";
     scc.settings.set(l);
     title.removeClass("expanded");
   }
   else {
-    var l = {}
-    l[view] = {"layout": {}}
-    l[view]["layout"][id] = "show"
+    var l = {};
+    l[view] = {"layout": {}};
+    l[view]["layout"][id] = "show";
     scc.settings.set(l);
     title.addClass("expanded");
   }
-  section.toggle(200)
+  section.toggle(200);
 }
 
 /* Message bar at the top */
@@ -49,16 +49,16 @@ var clearViews = function(e) {
   $(".view").hide();
   $("#graph_panel_container").hide();
   $("#resources_panel_container").hide();
-}
+};
 
 var showView = function(view) {
   if ($("#" + view + ".view").is(":visible")) { return; }
   clearViews();
   scc.settings.set({"main": {"view": view}});
   $("#mode_" + view).addClass("selected");
-  $("#" + view + ".view").fadeIn()
+  $("#" + view + ".view").fadeIn();
   $("#" + view + "_panel_container").show();
-}
+};
 
 function layout(modules) {
   $("#modes span").css("width", (100/modules.length) + "%");
@@ -73,7 +73,7 @@ function layout(modules) {
   });
   $("#mode_resources").click(function () { showView("resources"); });
   $("#mode_graph").click(function () { showView("graph"); });
-  showView(scc.settings.get().main.view)
+  showView(scc.settings.get().main.view);
   $.each(scc.settings.get(), function (key, value) {
     if (["graph", "resources"].indexOf(key) >= 0) { 
       $.each(value.layout, function (k, v) {

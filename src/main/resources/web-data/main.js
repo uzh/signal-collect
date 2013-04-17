@@ -1,12 +1,8 @@
-var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}}
-scc.defaults.main = {"view": "graph",
-                      "choices": {
-                        "Node Selection": "topk", 
-                        "TopK": "degree",
-                        "Graph Layout": "forced"
-                    }}
+var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}};
+scc.defaults.main = {"view": "graph"};
 
-function Settings() {
+
+scc.Settings = function() {
   this.settings = loadSettings();
   this.set = function(modification) {
     if (typeof(modification) == "function") {
@@ -22,17 +18,17 @@ function Settings() {
       top.location.hash = JSON.stringify(this.settings);
     }
     else {
-      top.location.hash = ""
+      top.location.hash = "";
     }
   }
   this.get = function() {
-    var s = {}
+    var s = {};
     $.extend(true, s, scc.defaults);
     $.extend(true, s, this.settings);
     return s;
   }
   function loadSettings() {
-    settings = {}
+    settings = {};
     hash = top.location.hash.slice(1);
     if (hash) {
       try {
@@ -40,7 +36,7 @@ function Settings() {
         $.extend(true, settings, hash);
       } catch (e) {}
     }
-    return settings
+    return settings;
   }
   function hideDefaults(defaults, added) {
     if (typeof(added) == "object" ) {
@@ -55,12 +51,12 @@ function Settings() {
     else {
       if (defaults == added) { return null; }
     }
-    return added
+    return added;
   }
 }
 
 $(document).ready(function() {
-  scc.settings = new Settings();
+  scc.settings = new scc.Settings();
   scc.callbacks = {};
 
   /* WebSocket communication */
@@ -72,16 +68,16 @@ $(document).ready(function() {
         console.log("[WebSocket] onopen");
         showMsg("#success", "WebSocket connection established", true);
         for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
-      } 
+      }; 
       scc.webSocket.onmessage = function(e) {
-        console.log("[WebSocket] onmessage")
-        j = JSON.parse(e.data)
-        var provider = j["provider"]
+        console.log("[WebSocket] onmessage");
+        j = JSON.parse(e.data);
+        var provider = j["provider"];
         if (provider == "notready") {
-          var request = j["request"]
+          var request = j["request"];
           scc.order(request, 500);
-          var targetProvider = j["targetProvider"]
-          scc.consumers[targetProvider].notready(j)
+          var targetProvider = j["targetProvider"];
+          scc.consumers[targetProvider].notready(j);
         }
         else if (provider == "error") {
           console.log(j["stacktrace"]);
@@ -96,60 +92,60 @@ $(document).ready(function() {
           delete scc.callbacks[id];
         }
         for (var m in scc.consumers) { 
-          var consumer = scc.consumers[m]
+          var consumer = scc.consumers[m];
           if (consumer.requires.indexOf(provider) >= 0) {
-            consumer.onmessage(j)
+            consumer.onmessage(j);
           }
         }
-      }
+      };
       scc.webSocket.onclose = function(e) {
         console.log("[WebSocket] onclose");
-        $.each(scc.orders, function(k, v) { clearTimeout(v); })
-        scc.orders = {}
-        showMsg("#error", "Connection Lost. Reconnecting to WebSocket...")
+        $.each(scc.orders, function(k, v) { clearTimeout(v); });
+        scc.orders = {};
+        showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
         for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
-      }
+      };
       scc.webSocket.onerror = function(e) {
         console.log("[WebSocket] onerror");
         for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
-      }
+      };
   }
-  createWebSocket()
+  createWebSocket();
   scc.terminate = function(type, msg) {
-    scc.webSocket.close()
-    showMsg(type, msg)
-    setTimeout(createWebSocket, 10000)
-  }
+    scc.webSocket.close();
+    showMsg(type, msg);
+    setTimeout(createWebSocket, 10000);
+  };
   scc.resetOrders = function(provider) {
-    clearTimeout(scc.orders[provider])
+    clearTimeout(scc.orders[provider]);
     delete scc.orders[provider];
     delete scc.callbacks[provider];
-  }
+  };
   scc.order = function(msg, delay, cb) {
     if (typeof(msg) == "string") {
-      msg = JSON.parse(msg)
+      msg = JSON.parse(msg);
     }
-    id = msg.provider
+    id = msg.provider;
     if (!delay) { var delay = 0; }
     if (scc.orders[id]) { scc.resetOrders(id); }
     scc.callbacks[id] = cb;
     scc.orders[id] = setTimeout(function() {
-      var j = JSON.stringify(msg)
+      var j = JSON.stringify(msg);
       try { 
         scc.webSocket.send(j); 
       }
       catch(err) { 
-        console.log("cannot send message: " + j)
+        console.log("cannot send message: " + j);
       }
     }, delay);
-  }
+  };
 
   enableModules = function(modules) {
     for (var m in modules) {
       var module = modules[m];
       scc.consumers[module] = new scc.modules[module]();
     }
-  }
+  };
 
   switch (window.location.pathname) {
     case "/resources": 

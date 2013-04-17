@@ -1,31 +1,31 @@
-scc.defaults.controls = { }
+scc.defaults.controls = {};
 
 scc.modules.controls = function() {
-  this.requires = ["controls"]
+  this.requires = ["controls"];
 
-  var controls = ["step", "continue", "pause", "reset", "terminate"]
+  var controls = ["step", "continue", "pause", "reset", "terminate"];
   controls.forEach(function (control) {
     $("#" + control).click(function (e) { 
       if ($(this).hasClass("blocked")) { return; }
       if ($(this).hasClass("hidden")) { return; }
-      scc.order({"provider": "controls", "control": control}) 
+      scc.order({"provider": "controls", "control": control}); 
       $("#controls").find(".icon").addClass("blocked");
     });
   });
 
   this.onopen = function() {
     $("#controls").find(".icon").removeClass("blocked");
-  }
+  };
 
   this.onmessage = function(j) {
-    var newState = j.state
+    var newState = j.state;
     $('#resStatStatus').text(newState);
     switch (newState) {
       case "stepping":
         $("#controls").find(".icon").removeClass("blocked");
         break;
       case "pausing":
-        scc.consumers.breakconditions.onopen()
+        scc.consumers.breakconditions.onopen();
         scc.consumers.graph.autoRefresh = false;
         $("#controls").find(".icon").removeClass("blocked");
         $("#controls").find("#pause").addClass("hidden");
@@ -41,30 +41,30 @@ scc.modules.controls = function() {
         $("#controls").find("#continue").addClass("hidden");
         break;
       case "resetting":
-        this.destroy()
-        this.onopen()
+        this.destroy();
+        this.onopen();
         break;
       case "terminating":
-        scc.terminate("#success", "Terminating...")
+        scc.terminate("#success", "Terminating...");
         break;
     }
     if (scc.consumers.graph != null) {
       scc.consumers.graph.order();
     }
-  }
+  };
 
-  this.onerror = function(e) { }
-  this.notready = function() { }
+  this.onerror = function(e) {};
+  this.notready = function() {};
 
   this.onclose = function() {
-    this.destroy()
-  }
+    this.destroy();
+  };
 
   this.destroy = function() {
     $("#controls").find(".icon").addClass("blocked");
     $("#controls").find(".icon").removeClass("hidden");
     $("#controls").find("#pause").addClass("hidden");
     $('#resStatStatus').text('ended');
-  }
+  };
   
 }

@@ -3,7 +3,7 @@ STR = {"searchByID": "Search and hit Enter to execute",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying..."
-}
+};
 
 chartNames = {
     "messagesSent": "Messages Sent (#)",

@@ -13,7 +13,7 @@ scc.defaults.graph = {"layout": {
                         "gp_refreshRate": "5",
                         "gp_drawEdges": "When graph is still"
                       }
-}
+};
 
 scc.modules.graph = function() {
   this.requires = ["graph"];
@@ -22,7 +22,7 @@ scc.modules.graph = function() {
   var color = d3.scale.category20();
   var colorCategories = d3.scale.ordinal()
     .domain(["n", "v"])
-    .range(["#cc0000", "#00cc00"])
+    .range(["#cc0000", "#00cc00"]);
 
   var nodes = [];
   var links = [];
@@ -32,22 +32,22 @@ scc.modules.graph = function() {
   var link;
   var fadeTimer;
 
-  var orderTemplate = {"provider": "graph"}
+  var orderTemplate = {"provider": "graph"};
 
   var completeOrder = function(o) { 
     o["vicinityRadius"] = parseInt($("#gp_vicinityRadius").val());
     o["maxVertices"] = parseInt($("#gp_maxVertices").val());
-    return o
-  }
+    return o;
+  };
 
   var scale = d3.scale.linear()
     .range([5, 12])
-    .clamp(true)
+    .clamp(true);
 
   var normalize = function (s) {
     var n = parseFloat(s.replace(/[^0-9.,]/g, ''));
     return scale(n);
-  }
+  };
 
   var nodeDesign = {
     "gd_nodeColor": { "Node state": function(d) { return color(d.state); },
@@ -63,42 +63,42 @@ scc.modules.graph = function() {
     "gd_nodeSize": { "Node state": function(d) { return normalize(d.state); },
                      "All equal": function(d) { return 5; },
                      "Node degree": function(d) { return scale.copy().domain([1,20])(d.weight); }}
-  }
+  };
 
-  var nodeColor = nodeDesign["gd_nodeColor"]["Node state"]
+  var nodeColor = nodeDesign["gd_nodeColor"]["Node state"];
   var setNodeColor = function (s) {
     nodeColor = s;
     node.transition().style("fill", s);
-  }
-  var nodeBorder = nodeDesign["gd_nodeBorder"]["Node id"]
+  };
+  var nodeBorder = nodeDesign["gd_nodeBorder"]["Node id"];
   var setNodeBorder = function (s) {
     nodeBorder = s;
     node.transition().style("stroke", s);
-  }
-  var nodeSize = nodeDesign["gd_nodeSize"]["Node degree"]
+  };
+  var nodeSize = nodeDesign["gd_nodeSize"]["Node degree"];
   var setNodeSize = function (s) {
     nodeSize = s;
     node.transition().attr("r", s);
-  }
+  };
 
   this.order = function() {
-    scc.order(completeOrder(orderTemplate))
-  }
+    scc.order(completeOrder(orderTemplate));
+  };
   this.layout = function() {
     for (var i = 5; i<=15; i+=5) {
-      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 20; i<=200; i+=20) {
-      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 0; i<=4; i++) {
-      $("#gp_vicinityRadius").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_vicinityRadius").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 1; i<=10; i+=1) {
-      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 15; i<=60; i+=5) {
-      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>')
+      $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_searchId').keypress(function(e) {
@@ -125,7 +125,7 @@ scc.modules.graph = function() {
     }
   }
 
-  this.layout()
+  this.layout();
 
   this.onopen = function() {
     $("#graph_background").text("Loading...").fadeIn();
@@ -149,7 +149,7 @@ scc.modules.graph = function() {
           $("#node_ss").text(data.ss);
           $("#node_cs").text(data.cs);
           clearTimeout(fadeTimer);
-          var tooltip = $("#graph_tooltip")
+          var tooltip = $("#graph_tooltip");
           $("#graph_tooltip").fadeIn(200);
       }
       else {
@@ -170,7 +170,7 @@ scc.modules.graph = function() {
         .nodes(nodes)
         .links(links)
         .linkDistance(50)
-        .charge(-200)
+        .charge(-200);
 
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
@@ -183,14 +183,14 @@ scc.modules.graph = function() {
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       if (drawEdges == "Always" || 
          (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
-        link.style("display", "block")
+        link.style("display", "block");
         link.attr("x1", function(d) { return d.source.x; })
             .attr("y1", function(d) { return d.source.y; })
             .attr("x2", function(d) { return d.target.x; })
             .attr("y2", function(d) { return d.target.y; });
       }
       else {
-        link.style("display", "none")
+        link.style("display", "none");
       }
 
       node.attr("cx", function(d) { return d.x; })
@@ -205,7 +205,7 @@ scc.modules.graph = function() {
                + " scale(" + d3.event.scale + ")");
     }
 
-    scc.consumers.graph.order()
+    scc.consumers.graph.order();
   }
    
   this.onmessage = function(j) {
@@ -232,22 +232,22 @@ scc.modules.graph = function() {
         newNodes = true;
       }
       else {
-        nodes[nodeRefs[id]].state = data.s
-        nodes[nodeRefs[id]].category = data.c
+        nodes[nodeRefs[id]].state = data.s;
+        nodes[nodeRefs[id]].category = data.c;
       }
     });
 
     $.each(j.edges, function (source, targets) {
       for (var t = 0; t < targets.length; t++) {
-        linkID = source + "-" + targets[t]
+        linkID = source + "-" + targets[t];
         if (linkRefs[linkID] == undefined) {
           links.push({"source": nodes[nodeRefs[source]], 
                       "target": nodes[nodeRefs[targets[t]]],
-                      "value": 5})
+                      "value": 5});
           linkRefs[linkID] = links.length - 1;
         }
         else { 
-          links[linkRefs[linkID]].value = 5
+          links[linkRefs[linkID]].value = 5;
         }
       }
     });
@@ -264,7 +264,7 @@ scc.modules.graph = function() {
     link = link.data(force.links(), 
               function (d) { return d.source.id + "-" + d.target.id; });
     link.enter().append("line")
-        .attr("class", "link")
+        .attr("class", "link");
     link.exit().remove();
     link.style("stroke-width", 1);
 
@@ -272,12 +272,12 @@ scc.modules.graph = function() {
               function (d) { return d.id; });
     node.enter().append("circle")
         .attr("class", "node")
-        .call(force.drag)
+        .call(force.drag);
     node.exit().remove();
     node.transition(100)
         .style("fill", nodeColor)
         .style("stroke", nodeBorder)
-        .attr("r", nodeSize)
+        .attr("r", nodeSize);
 
     if (scc.consumers.graph.autoRefresh) {
       scc.order(completeOrder(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
@@ -285,27 +285,27 @@ scc.modules.graph = function() {
 
   }
 
-  this.onerror = function(e) { }
+  this.onerror = function(e) { };
 
   this.notready = function() {
     $("#graph_background").text("Loading...").fadeIn();
-  }
+  };
 
   this.onclose = function() {
-    this.destroy()
-  }
+    this.destroy();
+  };
   this.reset = function() {
-    this.destroy()
-    scc.consumers.graph.onopen()
-  }
+    this.destroy();
+    scc.consumers.graph.onopen();
+  };
   this.destroy = function() {
     scc.resetOrders("graph");
-    $("#graph_canvas").empty()
-    nodes = []
-    links = []
+    $("#graph_canvas").empty();
+    nodes = [];
+    links = [];
     nodeRefs = {};
     linkRefs = {};
-  }
+  };
   this.findExistingNode = function (id) {
     var node = undefined;
     d3.selectAll(".node").each(function () {
@@ -315,20 +315,20 @@ scc.modules.graph = function() {
       }
     });
     return node;
-  }
+  };
   this.highlightNode = function (id) {
     var node = scc.consumers.graph.findExistingNode(id);
     if (!node) { console.log("node is not present: " + id); return; }
     var data = node.__data__;
     var n = d3.select(node);
-    var r = n.attr("r")
+    var r = n.attr("r");
     var flash = function (count) {
       n.transition().duration(120).ease("linear").attr("r", 20).each("end", function () {
         n.transition().duration(120).ease("linear").attr("r", r).each("end", function () {
           if (count > 0) { flash(count-1) }
         });
       });
-    }
+    };
     flash(3);
     $("#node_id").text(data.id);
     $("#node_state").text(data.state);
@@ -337,13 +337,13 @@ scc.modules.graph = function() {
     $("#graph_tooltip").css({"left": $(node).attr("cx")+5 + "px", 
                              "top": $(node).attr("cy")+5 + "px"});
     $("#graph_tooltip").fadeIn(200);
-  }
+  };
 
   this.loadNodeById = function (id, cb) {
     orderTemplate = {"provider": "graph", 
                      "query": "id", 
-                     "id": id}
-    scc.order(completeOrder(orderTemplate), 0, cb)
+                     "id": id};
+    scc.order(completeOrder(orderTemplate), 0, cb);
   }
 
   this.searchById = function (id) {
@@ -365,21 +365,21 @@ scc.modules.graph = function() {
 
   $("#gs_searchById").click(function (e) {
     e.preventDefault();
-    var id = $("#gs_searchId").val()
+    var id = $("#gs_searchId").val();
     scc.consumers.graph.searchById(id);
   });
           
   var searchTop = function (e) {
     e.preventDefault();
-    scc.consumers.graph.reset()
+    scc.consumers.graph.reset();
     orderTemplate = {"provider": "graph", 
              "query": "top", 
-             "topCriterium": $("#gs_topCriterium").val()}
-    scc.order(completeOrder(orderTemplate))
+             "topCriterium": $("#gs_topCriterium").val()};
+    scc.order(completeOrder(orderTemplate));
     $("button").removeClass("active");
     $("#gs_searchByTop").addClass("active");
     return false;
-  }
+  };
 
   $("#gs_searchByTop").click(searchTop);
 
@@ -398,7 +398,7 @@ scc.modules.graph = function() {
           scc.settings.set({"graph": {"options": {"gd_nodeBorder": metric}}});
           break;
     }
-  }
+  };
   this.setNodeSelection = function (property, choice) {
     switch (property) {
       case "gs_searchId": 
@@ -408,7 +408,7 @@ scc.modules.graph = function() {
           scc.settings.set({"graph": {"options": {"gs_topCriterium": choice}}});
           break;
     }
-  }
+  };
 
   $("#cGraphDesign select").change(function (e) {
     var property = $(this);
@@ -422,13 +422,13 @@ scc.modules.graph = function() {
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gp_vicinityRadius": property.val() }}});
     scc.consumers.graph.reset();
-    scc.consumers.graph.order()
+    scc.consumers.graph.order();
   });
   $("#gp_maxVertices").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gp_maxVertices": property.val() }}});
     scc.consumers.graph.reset();
-    scc.consumers.graph.order()
+    scc.consumers.graph.order();
   });
   $("#gp_refreshRate").change(function (e) { 
     var property = $(this);
@@ -445,4 +445,4 @@ scc.modules.graph = function() {
     }
     scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });
-}
+};
