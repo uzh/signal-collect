@@ -641,21 +641,23 @@ div.tooltip {
                     { border-width:0 1px 1px 1px; border-radius:0 0 5px 5px; box-shadow:inset -1px -1px 5px #888; }
 
 /* resource box styling */
-p.teaser            { font-size:21px; margin-right:100px; }
-/* div#resourceBoxes svg rect { -moz-box-shadow: inset 0 0 10px #000000; } */
-div#resourceBoxes > div:not([id$='Title']) { display:inline; overflow:auto; }
+p.teaser            { font-size:20px; margin-right:100px; }
+div#resourceBoxes > div:not([id$='Title'])
+                    { display:inline; overflow:auto; }
 
-body.statistics div#resourceBoxes div[id$=StatBox] { float:left; margin-right:20px; }
-body.statistics div#estimationStatBox { width:400px; }
+body.statistics div#resourceBoxes div[id$=StatBox]
+                    { float:left; margin-right:20px; }
+body.statistics div#estimationStatBox
+                    { width:400px; }
 
-ul.statistics         { padding:0; margin:0; }
-ul.statistics li      { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px;
-                        display:block; width:400px; height:20px; }
-ul.statistics.free li { height:auto; word-wrap:break-word;  }
+ul.statistics       { padding:0; margin:0; }
+ul.statistics li    { clear:left; float:left; list-style:none; padding:5px 5px 5px 5px; display:block; width:400px; height:20px; }
+ul.statistics.free li
+                    { height:auto; word-wrap:break-word;  }
 ul.statistics li:nth-child(odd) 
-                      { background:#ddd; }
-ul.statistics li span { display:block; margin-left:150px; font-weight:bold; position:relative;
-                        top:-20px; text-align:right }
+                    { background:#ddd; }
+ul.statistics li span
+                    { display:block; margin-left:150px; font-weight:bold; position:relative; top:-20px; text-align:right }
 
 /* logging */
 body.crash div#resourceBoxes > div#logBox,
