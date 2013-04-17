@@ -64,7 +64,7 @@ scc.modules.controls = function() {
         this.onopen();
         break;
       case "terminating":
-        scc.terminate("#success", "Terminating...");
+        this.terminate("#success", "Terminating...");
         break;
     }
     if (scc.consumers.graph != null) {
@@ -85,5 +85,11 @@ scc.modules.controls = function() {
     $("#controls").find("#pause").addClass("hidden");
     $('#resStatStatus').text('ended');
   };
-  
+
+  this.terminate = function(type, msg) {
+    scc.webSocket.close();
+    showMsg(type, msg);
+    setTimeout(scc.createWebSocket, 10000);
+  };
+ 
 }
