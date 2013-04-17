@@ -6,9 +6,9 @@ scc.defaults.resources = {"layout":{
                          };
 
 // Intervals (ms)
-var interval = 3000;
+var intervalCharts     = 3000;
 var intervalStatistics = 6000;
-var intervalLogs = 2000;
+var intervalLogs       = 2000;
 
 
 // configure which content box to show in which section
@@ -27,6 +27,7 @@ var resourceBoxes = {
     
     "nostart"   : [ 
       "chartZoomer",
+      "logTitle",
       "logBox",
       "signalCollectTitle",
       "heartbeatMessagesReceivedChart",
@@ -66,8 +67,13 @@ var resourceBoxes = {
     ],
     "crash" : [
       "chartZoomer",
+      "logTitle",
+      "logBox",
+      "infrastructureTitle",
       "jmx_mem_freeChart",
-      "logBox"
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
     ],
     "slow" : [
       "chartZoomer",
@@ -460,7 +466,7 @@ scc.modules.resources = function() {
       }
     }
     
-    scc.order({"provider": "resources"}, interval)
+    scc.order({"provider": "resources"}, intervalCharts)
   }
 
 }

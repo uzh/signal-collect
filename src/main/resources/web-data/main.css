@@ -641,6 +641,7 @@ div.tooltip {
                     { border-width:0 1px 1px 1px; border-radius:0 0 5px 5px; box-shadow:inset -1px -1px 5px #888; }
 
 /* resource box styling */
+p.teaser            { font-size:21px; margin-right:100px; }
 /* div#resourceBoxes svg rect { -moz-box-shadow: inset 0 0 10px #000000; } */
 div#resourceBoxes > div:not([id$='Title']) { display:inline; overflow:auto; }
 
@@ -659,7 +660,7 @@ ul.statistics li span { display:block; margin-left:150px; font-weight:bold; posi
 /* logging */
 body.crash div#resourceBoxes > div#logBox,
 body.nostart div#resourceBoxes > div#logBox
-                    { max-width:1500px; min-width:1000px; max-height:500px; overflow:hidden; display:block; float:left; }
+                    { max-width:1500px; min-width:1000px; overflow:hidden; display:block; float:left; margin-bottom:25px; }
 div#logBox div.scroll
                     { overflow-y:auto; max-height:400px; max-width:900px; }
 body.logs div#resources .structured

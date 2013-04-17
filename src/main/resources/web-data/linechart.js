@@ -60,7 +60,7 @@ var LineChart = function()
     zoomScale = newZoomScale;
     
     var currentDateInWindow   = (lowestXDomain <= currentHighestDate
-                                 && currentHighestDate <= new Date(highestXDomain.addMilliseconds(interval)));
+                                 && currentHighestDate <= new Date(highestXDomain.addMilliseconds(intervalCharts)));
     var dataComesAfterWindow  = (highestXDomain <= data[0][0].date);
     var dataComesBeforeWindow = (lowestXDomain >= data[0][this.dataLength()-1].date);
     if (dataComesAfterWindow || currentDateInWindow || dataComesBeforeWindow) {
@@ -78,7 +78,7 @@ var LineChart = function()
     var newLowestXDomain, newHighestXDomain;
     
     if (scale == 0) {
-      newHighestXDomain = new Date(currentHighestDate.addMilliseconds(interval));
+      newHighestXDomain = new Date(currentHighestDate.addMilliseconds(intervalCharts));
       newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-differenceMS));
     } else {      
       var moveMS       = scale * Math.round(differenceMS / 3);
@@ -335,11 +335,11 @@ var LineChart = function()
 
       if (shiftRight) {
         // update x domain
-        x.domain([new Date(+(lowestXDomain)+(interval)), currentDate]);
+        x.domain([new Date(+(lowestXDomain)+(intervalCharts)), currentDate]);
         zoom.x(x);
         
         // line transition
-        var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + interval));
+        var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + intervalCharts));
         path.transition().ease("linear")
             .attr("transform", "translate(" + x(transformVal) + ")");
       }

@@ -207,13 +207,26 @@
           <!-- content resource section overview -->
           <div id="crs_logs"><h1>Logs</h1></div>
 
-          <div id="crs_nostart"><h1>Computation does not seem to start</h1></div>
+          <div id="crs_nostart">
+            <h1>Computation does not seem to start</h1>
+            <p class="teaser">
+              When a computation does not seem to start, it might have crashed. The log messages below might indicate such a problem.
+              However, as long as the charts below are still updating, a crash is unlikely. In such cases, the graph might take a lot
+              of time to load. You can observe the graph loading stage by having a look at the charts regarding the infrastructure.
+            </p>
+          </div>
           <div id="crs_noconvergence">
             <h1>Computation does not converge</h1>
+            <p class="teaser">
+              When a computation does not converge, there might be cyclic signal and collect messages so that might <em>never</em>
+              converge. You can observe the charts below to see whethere there are any messages sent or received. Additionally, 
+              you could observe the graph with a state visualization. 
+            </p>
             <ul>
               <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
             </ul>
           </div>
+          
           <div id="crs_crash"><h1>Computation crashes</h1></div>
           <div id="crs_slow"><h1>Computation takes very long</h1></div>
           <div id="crs_unexpectedresults">
@@ -245,6 +258,7 @@
           
             <div id="signalCollectTitle" style="float:none; clear:left;"><h2>Signal/Collect</h2></div>
             <div id="infrastructureTitle"><h2>Infrastructure</h2></div>
+            <div id="logTitle"><h2>Log Messages</h2></div>
         
             <div id="computationStatBox">
               <h3>Computation</h3>
