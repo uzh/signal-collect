@@ -91,6 +91,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
         modification(worker.graphEditor)
       }
+      messageBus.flush
+      worker.messageBusFlushed = true
     }
   }
 

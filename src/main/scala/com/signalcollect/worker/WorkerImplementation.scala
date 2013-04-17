@@ -61,7 +61,7 @@ case class WorkerImplementation[Id, Signal](
 
   initialize
 
-  var flushedAfterUndeliverableSignalHandler: Boolean = _
+  var messageBusFlushed: Boolean = _
   var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
@@ -73,7 +73,7 @@ case class WorkerImplementation[Id, Signal](
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
   def initialize {
-    flushedAfterUndeliverableSignalHandler = true
+    messageBusFlushed = true
     systemOverloaded = false
     operationsScheduled = false
     isIdle = true
@@ -122,7 +122,7 @@ case class WorkerImplementation[Id, Signal](
     //    log.debug(s"toCollect.isEmpty=${vertexStore.toCollect.isEmpty} toSignal.isEmpty=${vertexStore.toSignal.isEmpty} flushedAfterUndeliverableSignalHandler=$flushedAfterUndeliverableSignalHandler")
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
-      flushedAfterUndeliverableSignalHandler
+      messageBusFlushed
   }
 
   def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
@@ -153,7 +153,7 @@ case class WorkerImplementation[Id, Signal](
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
-      flushedAfterUndeliverableSignalHandler = false
+      messageBusFlushed = false
     }
   }
 
@@ -174,7 +174,7 @@ case class WorkerImplementation[Id, Signal](
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
-    flushedAfterUndeliverableSignalHandler = true
+    messageBusFlushed = true
     vertexStore.toCollect.isEmpty
   }
 
@@ -189,6 +189,7 @@ case class WorkerImplementation[Id, Signal](
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
       vertex.afterInitialization(vertexGraphEditor)
+      messageBusFlushed = false
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
@@ -249,6 +250,7 @@ case class WorkerImplementation[Id, Signal](
 
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
     graphModification(graphEditor)
+    messageBusFlushed = false
   }
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
@@ -303,6 +305,7 @@ case class WorkerImplementation[Id, Signal](
 
   override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
     vertexStore.vertices.foreach(f(graphEditor))
+    messageBusFlushed = false
   }
 
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
