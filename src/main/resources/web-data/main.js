@@ -18,12 +18,45 @@
  *  
  */
 
-var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}};
+/**
+ * The project container variable scc which appears in the global namespace
+ * @namespace
+ * @property {object} modules - The module classes that can be instantiated.
+ * @property {object} consumers - The instantiated modules
+ * @property {object} defaults - The default settings of each module
+ * @property {object} orders - The pending orders, zero or one for each consumer
+ * @property {object} callbacks - Zero or one callback for each consumer to be
+       called once a reply has been received from the server
+ */
+var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, "callbacks": {}};
+
+/**
+ * The default settings for the main module.
+ */
 scc.defaults.main = {"view": "graph"};
 
-
+/**
+ * The Settings class can be used to store and retrieve settings. The settings
+ * are stored in the hash tag of the URL. Each module provides a set of default
+ * settings (stored in scc.defaults.*) and the Settings object automatically
+ * removes default settings from the hash. This means that the settings hash is
+ * basically a 'diff' between the defaults and the things the user changed.
+ * @constructor
+ */
 scc.Settings = function() {
+  /**
+   * JS object representation of the settings stored in the hash
+   * TODO: provider an example
+   * @type {object}
+   */
   this.settings = loadSettings();
+
+  /**
+   * Applies a modification to the existing settings.
+   * @param modification {function|object} - Either a function that acts on the
+   *     existing settings object to return a modified settings object or a new
+   *     settings object that will be merged with the existing settings object.
+   */
   this.set = function(modification) {
     if (typeof(modification) == "function") {
       modification(this.settings);
@@ -41,12 +74,23 @@ scc.Settings = function() {
       top.location.hash = "";
     }
   }
+
+  /**
+   * Retrieves the settings object. This is the function that should be used to
+   *     retrieve settings.
+   * @return {object} - The settings object (with all default values added)
+   */
   this.get = function() {
     var s = {};
     $.extend(true, s, scc.defaults);
     $.extend(true, s, this.settings);
     return s;
   }
+
+  /**
+   * Reads the URL hashtag and parses it as JSON. 
+   * @return {object} - The settings object (without any default values added)
+   */
   function loadSettings() {
     settings = {};
     hash = top.location.hash.slice(1);
@@ -58,6 +102,16 @@ scc.Settings = function() {
     }
     return settings;
   }
+
+  /**
+   * Removes any defaults from a given settings object or sub-object
+   * @param defaults {object} - The object containing the properties that will
+   *     be removed from the other object
+   * @param added {object} - The object containing the new settings. The
+   *     defaults will be removed from this object
+   * @return {object} - The settings object containing only the non-default
+   *     properties
+   */
   function hideDefaults(defaults, added) {
     if (typeof(added) == "object" ) {
       $.each(added, function(k, v) {
@@ -77,70 +131,117 @@ scc.Settings = function() {
 
 $(document).ready(function() {
   scc.settings = new scc.Settings();
-  scc.callbacks = {};
 
-  /* WebSocket communication */
-  function createWebSocket () {
-     scc.webSocket = new ReconnectingWebSocket(
-                         "ws://" + document.domain + ":" + 
-                         (parseInt(window.location.port) + 100));
-      scc.webSocket.onopen = function(e) {
-        console.log("[WebSocket] onopen");
-        showMsg("#success", "WebSocket connection established", true);
-        for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
-      }; 
-      scc.webSocket.onmessage = function(e) {
-        console.log("[WebSocket] onmessage");
-        j = JSON.parse(e.data);
-        var provider = j["provider"];
-        if (provider == "notready") {
-          var request = j["request"];
-          scc.order(request, 500);
-          var targetProvider = j["targetProvider"];
-          scc.consumers[targetProvider].notready(j);
+  /** 
+   * Instantiates scc.webSocket with a ReconnectingWebSocket and overrides
+   * its onopen, onmessage, onclose and onerror functions. Much of the
+   * inbound de-multiplexing is happening here, such as forwarding incoming
+   * messages or processing error messages.
+   */
+  scc.createWebSocket = function () {
+    scc.webSocket = new ReconnectingWebSocket(
+                        "ws://" + document.domain + ":" + 
+                        (parseInt(window.location.port) + 100));
+
+    /**
+     * Function that is called when a new WebSocket connection is established.
+     * It calls the onopen function on all active modules.
+     * @param e {Event} - The event that triggered the call.
+     */
+    scc.webSocket.onopen = function(e) {
+      showMsg("#success", "WebSocket connection established", true);
+      for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
+    }; 
+
+    /**
+     * Function that is called when a message is received from the WebSocket.
+     * Depending on the provider of the message, it will be forwarded to the
+     * consumers that requires messages by that provider, or the message may
+     * be processed as an error.
+     * @param e {Event} - The event that triggered the call. Most importantly,
+     *     it contains the message from the server inside the e.data property.
+     */
+    scc.webSocket.onmessage = function(e) {
+      j = JSON.parse(e.data);
+      var provider = j["provider"];
+      // When a 'notready' message is received, the request that caused this
+      // message is re-sent after waiting 500ms.
+      if (provider == "notready") {
+        var request = j["request"];
+        scc.order(request, 500);
+        var targetProvider = j["targetProvider"];
+        scc.consumers[targetProvider].notready(j);
+      }
+      // Error messages are printed to the error pop-up, including the stack-
+      // trace that caused the error. These errors are generally considered to
+      // be fatal and the computation and console may not function properly
+      // after such an occurence.
+      else if (provider == "error") {
+        console.log(j["stacktrace"]);
+        showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
+      }
+      // If the server receives a request that it considers invalid, it sends
+      // back this message. The error will be printed to the error pop-up
+      else if (provider == "invalid") {
+        showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
+      }
+      // Callees ordering information using scc.order can specify a callback
+      // which will be called here
+      if (scc.callbacks[id]) { 
+        scc.callbacks[id]();
+        delete scc.callbacks[id];
+      }
+      // Any remaining messages are forwarded to their respective consumers
+      for (var m in scc.consumers) { 
+        var consumer = scc.consumers[m];
+        if (consumer.requires.indexOf(provider) >= 0) {
+          consumer.onmessage(j);
         }
-        else if (provider == "error") {
-          console.log(j["stacktrace"]);
-          showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
-        }
-        else if (provider == "invalid") {
-          console.log(j["msg"]);
-          showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
-        }
-        if (scc.callbacks[id]) { 
-          scc.callbacks[id]();
-          delete scc.callbacks[id];
-        }
-        for (var m in scc.consumers) { 
-          var consumer = scc.consumers[m];
-          if (consumer.requires.indexOf(provider) >= 0) {
-            consumer.onmessage(j);
-          }
-        }
-      };
-      scc.webSocket.onclose = function(e) {
-        console.log("[WebSocket] onclose");
-        $.each(scc.orders, function(k, v) { clearTimeout(v); });
-        scc.orders = {};
-        showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
-        for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
-      };
-      scc.webSocket.onerror = function(e) {
-        console.log("[WebSocket] onerror");
-        for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
-      };
+      }
+    };
+
+    /**
+     * Function that is called when a new WebSocket connection breaks down. All
+     * existing orders are cancelled and the onclose function is called on each
+     * consumer.
+     * @param e {Event} - The event that triggered the call.
+     */
+    scc.webSocket.onclose = function(e) {
+      $.each(scc.orders, function(k, v) { clearTimeout(v); });
+      scc.orders = {};
+      showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
+      for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
+    };
+
+    /**
+     * Function that is called when a WebSocket error is encountered. In 
+     * this case, the onerrror function is called on each consumer.
+     * @param e {Event} - The event that triggered the call.
+     */
+    scc.webSocket.onerror = function(e) {
+      for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
+    };
   }
-  createWebSocket();
-  scc.terminate = function(type, msg) {
-    scc.webSocket.close();
-    showMsg(type, msg);
-    setTimeout(createWebSocket, 10000);
-  };
+
+  /**
+   * Delete all pending orders and callbacks for the given message provider.
+   * @param provider {string} - The name of the provider
+   */
   scc.resetOrders = function(provider) {
     clearTimeout(scc.orders[provider]);
     delete scc.orders[provider];
     delete scc.callbacks[provider];
   };
+
+  /**
+   * Order new data from the server. Messages need to adhere to the protocol.
+   * and when an order is issued, any previous pending orders are overriden.
+   * @param msg {string|object} - The message to be sent to the server. If a
+   *     string is supplied, it will first be parsed as JSON. 
+   * @param delay {int} - Milliseconds to wait before ordering the data.
+   * @param cb {function} - Callback function to be called upon receiving the
+         reply from the server
+   */
   scc.order = function(msg, delay, cb) {
     if (typeof(msg) == "string") {
       msg = JSON.parse(msg);
@@ -160,6 +261,12 @@ $(document).ready(function() {
     }, delay);
   };
 
+  /**
+   * Enable any number of modules. Enabling a module causes it to be
+   * instantiated and to receive incoming messages of the types the module
+   * specifies in its own this.requires property.
+   * @param modules {Array.<string>} - The names of the modules to be enabled.
+   */
   enableModules = function(modules) {
     for (var m in modules) {
       var module = modules[m];
@@ -167,6 +274,8 @@ $(document).ready(function() {
     }
   };
 
+  // Create the WebSocket and activate modules depending on the URL path
+  scc.createWebSocket();
   switch (window.location.pathname) {
     case "/resources": 
     case "/graph": 
@@ -188,6 +297,9 @@ $(document).ready(function() {
 
 });
 
+/**
+ * Ensure that the websocket is closed when leaving/closing the page
+ */
 window.onbeforeunload = function() {
   ws.onclose = function () {}; 
   ws.close();
