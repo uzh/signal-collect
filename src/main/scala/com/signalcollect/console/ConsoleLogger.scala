@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Silvan Troxler
  *  
  *  Copyright 2013 University of Zurich
  *      
