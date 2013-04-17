@@ -22,7 +22,6 @@ import java.io.File
 import scala.sys.process._
 import language.postfixOps
 
-
 class LocalJobSubmitter(mailAddress: String = "") extends AbstractJobSubmitter(mailAddress) {
 
   override def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
@@ -36,12 +35,17 @@ class LocalJobSubmitter(mailAddress: String = "") extends AbstractJobSubmitter(m
     command!!
   }
 
-  def copyFileToCluster(localPath: String, targetPath: String = System.getProperty("user.home")) {
-    try {
-      Seq("cp", localPath, targetPath).!!
+  def copyFileToCluster(localPath: String, targetDir: String = System.getProperty("user.home")) {
+    val localParentDir = new File(localPath)
+
+    if (localParentDir.getAbsolutePath() != targetDir) {
+      try {
+        Seq("cp", localPath, targetDir).!!
+      } catch {
+        case _: Throwable =>
+      }
+
     }
-    catch {
-      case _: Throwable => 
-    }
+
   }
 }
