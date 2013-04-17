@@ -141,7 +141,17 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
   def foreachVertex(f: Vertex[Id, _] => Unit)
-
+  
+  /**
+   *  The worker passes a GraphEditor to function `f`, and then executes the resulting function on all vertices.
+   *
+   *  @note The resulting function may be executed in multiple other threads, beware of race conditions.
+   *
+   *  @note The resulting function may be executed on other machines and references
+   *  		to objects that are not reachable from the vertex-parameter may not be accessible.
+   */
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
+  
   /**
    *  Applies an aggregation operation to the graph and returns the result.
    *

@@ -287,7 +287,7 @@ case class WorkerImplementation[Id, Signal](
     }
   }
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       val result = f(vertex.asInstanceOf[VertexType])
@@ -297,8 +297,12 @@ case class WorkerImplementation[Id, Signal](
     }
   }
 
-  def foreachVertex(f: Vertex[Id, _] => Unit) {
+  override def foreachVertex(f: Vertex[Id, _] => Unit) {
     vertexStore.vertices.foreach(f)
+  }
+
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
+    vertexStore.vertices.foreach(f(graphEditor))
   }
 
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
@@ -315,7 +319,7 @@ case class WorkerImplementation[Id, Signal](
    * Should only be used when the workers are idle.
    * Overwrites any previous snapshot that might exist.
    */
-  def snapshot {
+  override def snapshot {
     // Overwrites previous file if it should exist.
     val snapshotFileOutput = new DataOutputStream(new FileOutputStream(s"$workerId.snapshot"))
     vertexStore.vertices.foreach { vertex =>
@@ -331,7 +335,7 @@ case class WorkerImplementation[Id, Signal](
    * Does not store the toSignal/toCollect collections or pending messages.
    * Should only be used when the workers are idle.
    */
-  def restore {
+  override def restore {
     reset
     val maxSerializedSize = 64768
     val snapshotFile = new File(s"$workerId.snapshot")

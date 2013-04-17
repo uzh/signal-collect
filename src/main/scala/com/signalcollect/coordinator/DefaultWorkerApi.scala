@@ -83,6 +83,8 @@ class DefaultWorkerApi[Id, Signal](
 
   override def foreachVertex(f: (Vertex[Id, _]) => Unit) = futures(_.foreachVertex(f)) foreach get
 
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
+  
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
     throw new UnsupportedOperationException("DefaultWorkerApi does not support this operation.")
   }

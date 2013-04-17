@@ -397,6 +397,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
+  
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = workerApi.foreachVertexWithGraphEditor(f) 
 
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)
