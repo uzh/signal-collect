@@ -18,7 +18,21 @@
  *  
  */
 
+/**
+ * The project container variable scc which appears in the global namespace
+ * @namespace
+ * @property {object} modules - The module classes that can be instantiated.
+ * @property {object} consumers - The instantiated modules
+ * @property {object} defaults - The default settings of each module
+ * @property {object} orders - The pending orders, zero or one for each consumer
+ * @property {object} callbacks - Zero or one callback for each consumer to be
+       called once a reply has been received from the server
+ */
 var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, "callbacks": {}};
+
+/**
+ * The default settings for the main module.
+ */
 scc.defaults.main = {"view": "graph"};
 
 /**
@@ -283,6 +297,9 @@ $(document).ready(function() {
 
 });
 
+/**
+ * Ensure that the websocket is closed when leaving/closing the page
+ */
 window.onbeforeunload = function() {
   ws.onclose = function () {}; 
   ws.close();
