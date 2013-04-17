@@ -100,6 +100,8 @@ class ParallelBulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(
   workerApiFactory: WorkerApiFactory)
     extends AbstractMessageBus[Id, Signal] {
 
+  var pendingSinceLastFlush = new AtomicInteger(0)
+
   override def reset {
     super.reset
     outgoingMessages foreach (_.reset)
@@ -111,10 +113,13 @@ class ParallelBulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(
   for (workerId <- 0 until numberOfWorkers) {
     outgoingMessages(workerId) = new ParallelSignalBulker[Id, Signal](flushThreshold, this, workerId)
   }
-  
+
   //WARNING: This method is not thread-safe!
   override def flush {
-    outgoingMessages foreach (_.flush)
+    if (pendingSinceLastFlush.get > 0) {
+      outgoingMessages foreach (_.flush)
+      pendingSinceLastFlush.set(0)
+    }
   }
 
   override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
@@ -122,6 +127,7 @@ class ParallelBulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(
       // Use proxy.
       workerApi.processSignal(signal, targetId, sourceId)
     } else {
+      pendingSinceLastFlush.incrementAndGet
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)
       bulker.addSignal(signal, targetId)
