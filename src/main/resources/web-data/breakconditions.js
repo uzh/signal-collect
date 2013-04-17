@@ -74,15 +74,7 @@ scc.modules.breakconditions = function () {
     });
     $(".node_link").click(function (e) {
       var id = $(this).attr("title");
-      var node = scc.consumers.graph.findExistingNode(id);
-      if (!node) {
-        scc.consumers.graph.loadNodeById(id, function () {
-          setTimeout(function () { scc.consumers.graph.highlightNode(id) }, 1000);
-        });
-      }
-      else {
-        scc.consumers.graph.highlightNode(id); 
-      }
+      scc.consumers.graph.searchById(id);
     });
     $("#gc_conditionList li:last-child").addClass("last_child")
   }

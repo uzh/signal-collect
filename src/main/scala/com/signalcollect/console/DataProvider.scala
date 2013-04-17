@@ -97,7 +97,7 @@ case class ControlsRequest(
   control: Option[String]
 )
 
-class ControlsProvider[Id](socket: WebSocketConsoleServer[Id],
+class ControlsProvider(socket: WebSocketConsoleServer[_],
                            msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -156,8 +156,8 @@ case class BreakConditionContainer(
   props: Map[String,String]
 )
 
-class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _], 
-                                  socket: WebSocketConsoleServer[Id],
+class BreakConditionsProvider(coordinator: Coordinator[_, _], 
+                                  socket: WebSocketConsoleServer[_],
                                   msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -232,57 +232,56 @@ case class GraphDataRequest(
   topCriterium: Option[String]
 )
 
-class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
+class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
                             extends DataProvider {
 
   implicit val formats = DefaultFormats
 
   val workerApi = coordinator.getWorkerApi 
 
-  def findVicinity(vertexIds: List[Id], radius: Int = 3): List[Id] = {
+  def findVicinity(vertexIds: List[String], radius: Int = 3): List[String] = {
     if (radius == 0) { vertexIds }
     else {
-      findVicinity(vertexIds.map { id =>
-        workerApi.forVertexWithId(id, { vertex: Inspectable[Id,_] =>
-          vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toList
-        })
-      }.flatten, radius - 1)
+      val nodes = workerApi.aggregateAll(new FindNodeVicinitiesByIdsAggregator(vertexIds))
+                             .map{ _._2 }
+                             .flatten
+                             .toList
+      vertexIds ++ findVicinity(nodes, radius - 1)
     }
   }
 
   def fetchId(id: String, radius: Int): JObject = {
     val result = workerApi.aggregateAll(
-                 new FindVertexByIdAggregator[Id](id))
-    val (vertex, vicinity) = result match {
-      case Some(v) => (List[Id](v.id), findVicinity(List(v.id), radius))
-      case None => (List[Id](), List[Id]())
+                 new FindNodeVicinitiesByIdsAggregator(List(id)))
+    val (vertices, vicinity) = result.size match {
+      case 0 => (List[String](), List[String]())
+      case otherwise => 
+        val nodeIds = result.map { _._1 }.toList
+        (nodeIds, findVicinity(nodeIds, radius))
     }
-    workerApi.aggregateAll(new GraphAggregator[Id](vertex, vicinity))
+    workerApi.aggregateAll(new GraphAggregator(vertices, vicinity))
   }
 
   def fetchTopStates(n: Int, radius: Int): JObject = {
-    val topState = workerApi.aggregateAll(new TopStateAggregator[Id]())
-    val nodes = topState.foldLeft(List[Id]()){ (acc, m) => acc ++ m._2 }.take(n)
+    val topState = workerApi.aggregateAll(new TopStateAggregator(n)).take(n)
+    val nodes = topState.foldLeft(List[String]()){ (acc, m) => m._2 :: acc }
     val vicinity = findVicinity(nodes, radius)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
 
   def fetchTopDegree(n: Int, radius: Int, direction: String): JObject = {
-    val topDegree = workerApi.aggregateAll(new TopDegreeAggregator[Id]())
-    val nodes = topDegree.foldLeft(List[Id]()){ (acc, m) => acc ++ m._2 }.take(n)
+    val nodes = workerApi.aggregateAll(new TopDegreeAggregator(n))
+                             .toSeq.sortBy(-_._2)
+                             .take(n)
+                             .map{ _._1 }
+                             .toList
     val vicinity = findVicinity(nodes, radius)
-    workerApi.aggregateAll(new GraphAggregator[Id](nodes, vicinity))
+    workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
 
   def fetchSample(n: Int, radius: Int): JObject = {
-    val ids = workerApi.aggregateAll(new SampleVertexIds(n))
-    val nodes = ids.foldLeft(List[Id]()){ (acc, id) =>
-      workerApi.aggregateAll(new FindVertexByIdAggregator[Id](id.toString)) match {
-        case Some(v) => v.id :: acc
-        case None    => acc
-      }
-    }
-    workerApi.aggregateAll(new GraphAggregator[Id](nodes, findVicinity(nodes, radius)))
+    val nodes = workerApi.aggregateAll(new SampleVertexIds(n)).map{ _.toString }
+    workerApi.aggregateAll(new GraphAggregator(nodes, findVicinity(nodes, radius)))
   }
 
   def fetch(): JObject = {

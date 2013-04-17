@@ -9,7 +9,7 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
                         "gp_vicinityRadius": "1",
-                        "gp_maxVertices": "20",
+                        "gp_maxVertices": "10",
                         "gp_refreshRate": "5",
                         "gp_drawEdges": "When graph is still"
                       }
@@ -85,6 +85,9 @@ scc.modules.graph = function() {
     scc.order(completeOrder(orderTemplate))
   }
   this.layout = function() {
+    for (var i = 5; i<=15; i+=5) {
+      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>')
+    }
     for (var i = 20; i<=200; i+=20) {
       $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>')
     }
@@ -99,7 +102,7 @@ scc.modules.graph = function() {
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_searchId').keypress(function(e) {
-      if ( e.which == 13 ) { searchById(); }
+      if ( e.which == 13 ) { scc.consumers.graph.searchById($("#gs_searchId").val()); }
     });
     window.addEventListener("keydown", function (e) {
       if (e.ctrlKey && e.keyCode == 70) { 
@@ -343,15 +346,14 @@ scc.modules.graph = function() {
     scc.order(completeOrder(orderTemplate), 0, cb)
   }
 
-  var searchById = function (e) {
-    e.preventDefault();
-    var id = $("#gs_searchId").val()
+  this.searchById = function (id) {
     if (id == "") {
       $("#gs_searchId").val("Search and hit Enter to execute");
       return;
     }
     var node = scc.consumers.graph.findExistingNode(id);
     if (!node) {
+      $("#graph_tooltip").fadeOut(200);
       scc.consumers.graph.loadNodeById(id, function () {
         setTimeout(function () { scc.consumers.graph.highlightNode(id) }, 1500);
       });
@@ -361,7 +363,11 @@ scc.modules.graph = function() {
     }
   }
 
-  $("#gs_searchById").click(searchById);
+  $("#gs_searchById").click(function (e) {
+    e.preventDefault();
+    var id = $("#gs_searchId").val()
+    scc.consumers.graph.searchById(id);
+  });
           
   var searchTop = function (e) {
     e.preventDefault();

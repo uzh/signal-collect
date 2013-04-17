@@ -87,11 +87,11 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
       props("nodeId") match {
         case id: String =>
           val result = workerApi.aggregateAll(new FindVertexByIdAggregator(props("nodeId")))
-          result match {
-            case Some(v) =>
-              props += ("currentState" -> v.state.toString)
+          result.size match {
+            case 0 => false
+            case otherwise =>
+              props += ("currentState" -> result.head.state.toString)
               true
-            case None => false
           }
         case otherwise => false
       }
@@ -292,11 +292,11 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
       case Some(c) => p match {
         case "configuration" => new ConfigurationDataProvider(this, c, msg)
         case "log" => new LogDataProvider(c)
-        case "graph" => new GraphDataProvider[Id](c, j)
+        case "graph" => new GraphDataProvider(c, j)
         case "resources" => new ResourcesDataProvider(c, j)
         case "status" => new StatusDataProvider(this)
-        case "controls" => new ControlsProvider[Id](this, j)
-        case "breakconditions" => new BreakConditionsProvider[Id](c, this, j)
+        case "controls" => new ControlsProvider(this, j)
+        case "breakconditions" => new BreakConditionsProvider(c, this, j)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => p match{
