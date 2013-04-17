@@ -118,6 +118,13 @@ var resourceBoxes = {
 /**
  * Panel functionality
  */
+$(window).on('hashchange', function() {
+  scc.settings.reload();
+  var settings = scc.settings.get();
+  if (settings.resources.section != null) {
+    show_section(settings.resources.section);
+  }
+});
 function show_section(s) {
   console.log("Section: " + s);
   if (s == "") { return; }
@@ -133,7 +140,6 @@ function show_section(s) {
   $("body").attr("class", s);
   // set section to the hash tag
   var mod = {"resources": {"section": s }}
-  scc.settings.set(mod);
 }
 function show_boxes(s) {
   var boxes = "#resourceBoxes";
@@ -149,9 +155,8 @@ function show_boxes(s) {
 }
 $(document).ready(function() {
   $("#resources_panel_container label").click(function() {
-    console.log("clicked");
     section = $(this).attr("for").split("_")[1];
-    show_section(section)
+    scc.settings.set({'resources':{'section':section}});
   });
 });
 
@@ -233,7 +238,7 @@ scc.modules.log = function() {
   this.onopen = function () {
     // make it using the full height
     onResize = (function() {
-      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 210) + "px");
+      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 280) + "px");
     });
     $(document).ready(onResize);
     $(window).resize(onResize);

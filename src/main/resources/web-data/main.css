@@ -38,6 +38,10 @@ body {
   font-weight: bold;
 }
 
+.break {
+	clear: both;
+}
+
 #top {
   position: fixed;
   min-height: 60px;

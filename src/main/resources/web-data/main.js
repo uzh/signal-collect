@@ -52,6 +52,13 @@ scc.Settings = function() {
   this.settings = loadSettings();
 
   /**
+   * Reloads the settings from the (updated) hash tag
+   */
+  this.reload = function() {
+    this.settings = loadSettings();
+  }
+
+  /**
    * Applies a modification to the existing settings.
    * @param modification {function|object} - Either a function that acts on the
    *     existing settings object to return a modified settings object or a new

@@ -216,14 +216,25 @@
           <!-- content resource section statistics -->
           <div id="crs_statistics">
             <h1>Statistics</h1>
+            <p class="teaser">
+              Here you can see statistics about the JVM (Java Virtual Machine) settings and parameters as well as the computation that
+              is currently being processed.
+            </p>
             <p><small>Updating every <span id="resStatInterval">?</span> second(s).</small></p>
           </div>
         
-          <!-- content resource section estimations -->
-          <div id="crs_estimation"><h1>Maximum Graph Size Estimation</h1></div>
+          <div id="crs_estimation">
+            <h1>Maximum Graph Size Estimation</h1>
+            <p class="teaser">
+              Here we try to estimate how large a data set might be at most to still be processable by your current infrastructure.
+              This estimation, however, is quite vague and should not be taken for granted.
+            </p>
+          </div>
         
-          <!-- content resource section overview -->
-          <div id="crs_logs"><h1>Logs</h1></div>
+          <div id="crs_logs">
+            <h1>Logs</h1>
+            <p class="teaser">These are logging messages the system emitted while processing your data set.</p>
+          </div>
 
           <div id="crs_nostart">
             <h1>Computation does not seem to start</h1>
@@ -233,34 +244,55 @@
               of time to load. You can observe the graph loading stage by having a look at the charts regarding the infrastructure.
             </p>
           </div>
+          
           <div id="crs_noconvergence">
             <h1>Computation does not converge</h1>
             <p class="teaser">
-              When a computation does not converge, there might be cyclic signal and collect messages so that might <em>never</em>
+              When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
               converge. You can observe the charts below to see whethere there are any messages sent or received. Additionally, 
-              you could observe the graph with a state visualization. 
+              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>observe
+              the graph with a state visualization</a>.
             </p>
-            <ul>
-              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
-            </ul>
           </div>
           
-          <div id="crs_crash"><h1>Computation crashes</h1></div>
-          <div id="crs_slow"><h1>Computation takes very long</h1></div>
+          <div id="crs_crash">
+            <h1>Computation crashes</h1>
+            <p class="teaser">
+              A computation can crash for various reasons. There might be a problem in the the code (e.g. a
+              <code>NullPointerException</code>) in which case you might see an error message in the list of log messages below.
+              Another reason for a crash could be an infrastructure that is too weak to process the current data set. In this case, you might
+              see an error message as well but could also observe the memory usage in the charts below.
+            </p>
+          </div>
+          
+          <div id="crs_slow">
+            <h1>Computation takes very long</h1>
+            <p class="teaser">
+              A computation on a large data set, or even a complex computation on a small data set, might take hours,
+              days or even longer to compute. Please be patient. However, there might be other reasons that a computation takes very
+              long. First, <a href='#{"main":{"view":"resources"},"resources":{"section":"noconvergence"}}'>not every computation
+              converges at all</a>. Second, a high CPU usage shows that the computation is still running and you have to wait for it to
+              end.
+            </p>
+          </div>
+          
           <div id="crs_unexpectedresults">
             <h1>Computation yields unexpected results</h1>
-            <ul>
-              <li>Set Breakpoints</li>
-              <li><a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>Show Graph with State Visualization</a></li>
-            </ul>
+            <p class="teaser">
+              There can be various reasons for when a computation yields unexpected results. To find potential problems, you can
+              <a target="_blank" href='/graph'>set breakpoints on the graph</a> and step through different phases of the computation.
+              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>view
+              the graph with state visualization enabled</a>.
+            </p>
           </div>
         
-          <!-- content resource section overview -->
           <div id="crs_detailed">
             <h1>Detailed</h1>
-            <p><strong style="color:blue;">min</strong>,
-               <strong>average</strong>,
-               <strong style="color:red;">max</strong> values over all worker nodes.</p> 
+            <p class="teaser">
+              Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
+              represent the <strong style="color:blue;">min</strong>, <strong>average</strong>, and
+              <strong style="color:red;">max</strong> values over all worker nodes. You can hover the lines to get more information.
+            </p> 
             <div class="chartContainer"></div>
           </div>
           
@@ -275,7 +307,7 @@
             </div>
           
             <div id="signalCollectTitle" style="float:none; clear:left;"><h2>Signal/Collect</h2></div>
-            <div id="infrastructureTitle"><h2>Infrastructure</h2></div>
+            <div id="infrastructureTitle"><h2 class="break">Infrastructure</h2></div>
             <div id="logTitle"><h2>Log Messages</h2></div>
         
             <div id="computationStatBox">
