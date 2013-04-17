@@ -135,7 +135,7 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Double] {
     outEdges = numberOfEdges
     targetIdArray = compactIntSet
   }
-  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     val s = signal.asInstanceOf[Double]
     state = state + 0.85 * s
     true

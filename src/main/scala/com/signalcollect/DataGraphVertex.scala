@@ -38,7 +38,7 @@ abstract class DataGraphVertex[Id, State](
 
   type Signal
 
-  def setState(s: State) {
+  override def setState(s: State) {
     state = s
   }
 
@@ -64,7 +64,7 @@ abstract class DataGraphVertex[Id, State](
    */
   protected val mostRecentSignalMap: collection.mutable.Map[Any, Signal] = new java.util.HashMap[Any, Signal](0)
 
-  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+  override def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
     mostRecentSignalMap.put(sourceId.get, signal.asInstanceOf[Signal])
     false
@@ -88,7 +88,7 @@ abstract class DataGraphVertex[Id, State](
    *
    * @return the score value. The meaning of this value depends on the thresholds set in the framework.
    */
-  def scoreCollect: Double = {
+  override def scoreCollect: Double = {
     if (!mostRecentSignalMap.isEmpty) {
       1.0
     } else if (edgesModifiedSinceCollectOperation) {

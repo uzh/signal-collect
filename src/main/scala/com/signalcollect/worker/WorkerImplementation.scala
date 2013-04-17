@@ -141,7 +141,7 @@ case class WorkerImplementation[Id, Signal](
   def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
     val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
-      if (vertex.deliverSignal(signal, sourceId)) {
+      if (vertex.deliverSignal(signal, sourceId, vertexGraphEditor)) {
         counters.collectOperationsExecuted += 1
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
@@ -153,8 +153,8 @@ case class WorkerImplementation[Id, Signal](
       }
     } else {
       undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
-      messageBusFlushed = false
     }
+    messageBusFlushed = false
   }
 
   def startComputation {

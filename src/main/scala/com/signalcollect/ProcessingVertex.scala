@@ -46,7 +46,7 @@ abstract class ProcessingVertex[Id, SignalType](
     state = s
   }
 
-  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     val item = signal.asInstanceOf[SignalType]
     if (shouldProcess(item)) {
       state = item :: state

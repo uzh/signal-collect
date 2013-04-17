@@ -66,11 +66,12 @@ trait Vertex[+Id, State] extends Serializable {
    *  Delivers signals that are addressed to this specific vertex
    *
    *  @param signal the the signal to deliver to this vertex
+   *  @param sourceId optional: the id of the vertex from which this signal was sent
    *
    *  @return true if the vertex decided to collect immediately.
    */
-  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean
-
+  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean
+  
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
