@@ -91,8 +91,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
         modification(worker.graphEditor)
       }
-      messageBus.flush
-      worker.messageBusFlushed = true
+      worker.messageBusFlushed = false
     }
   }
 
@@ -106,17 +105,20 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def executeOperations {
-    val collected = worker.vertexStore.toCollect.process(
-      vertex => {
-        worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-        if (vertex.scoreSignal > worker.signalThreshold) {
-          worker.executeSignalOperationOfVertex(vertex)
-        }
-      })
+    if (!worker.vertexStore.toCollect.isEmpty) {
+      val collected = worker.vertexStore.toCollect.process(
+        vertex => {
+          worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
+          if (vertex.scoreSignal > worker.signalThreshold) {
+            worker.executeSignalOperationOfVertex(vertex)
+          }
+        })
+      worker.messageBusFlushed = false
+    }
     if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
       worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
+      worker.messageBusFlushed = false
     }
-    messageBus.flush
   }
 
   /**
@@ -164,6 +166,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             applyPendingGraphModifications
           } else {
             executeOperations
+          }
+          if (!worker.messageBusFlushed) {
+            messageBus.flush
+            worker.messageBusFlushed = true
           }
           scheduleOperations
         }
