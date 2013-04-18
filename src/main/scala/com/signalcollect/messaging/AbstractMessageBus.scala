@@ -170,7 +170,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   override def sendToNode(nodeId: Int, message: Any) {
     incrementMessagesSentToNode(nodeId)
-    workers(nodeId) ! message
+    nodes(nodeId) ! message
   }
 
   override def sendToNodes(message: Any, messageCounting: Boolean) {
