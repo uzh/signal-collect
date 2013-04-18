@@ -25,6 +25,7 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="d3.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src="configuration.js"></script>
     <script type="text/javascript" src="strings.js"></script>
     <script type="text/javascript" src="layout.js"></script>
     <script type="text/javascript" src="main.js"></script>
@@ -290,8 +291,8 @@
             <h1>Detailed</h1>
             <p class="teaser">
               Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
-              represent the <strong style="color:blue;">min</strong>, <strong>average</strong>, and
-              <strong style="color:red;">max</strong> values over all worker nodes. You can hover the lines to get more information.
+              represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
+              <strong style="color:red;">maximum</strong> values over all worker nodes. You can hover the lines to get more information.
             </p> 
             <div class="chartContainer"></div>
           </div>
@@ -306,9 +307,9 @@
               <span class="zoomOut" title="Zoom out all charts">-</span>
             </div>
           
-            <div id="signalCollectTitle" style="float:none; clear:left;"><h2>Signal/Collect</h2></div>
+            <div id="signalCollectTitle"><h2 class="break">Signal/Collect</h2></div>
             <div id="infrastructureTitle"><h2 class="break">Infrastructure</h2></div>
-            <div id="logTitle"><h2>Log Messages</h2></div>
+            <div id="logTitle"><h2 class="break">Log Messages</h2></div>
         
             <div id="computationStatBox">
               <h3>Computation</h3>

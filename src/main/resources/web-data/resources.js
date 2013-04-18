@@ -24,11 +24,6 @@ scc.defaults.resources = {"layout":{
                           "section": "statistics"
                          };
 
-// Intervals (ms)
-var intervalCharts     = 3000;
-var intervalStatistics = 6000;
-var intervalLogs       = 2000;
-
 
 // configure which content box to show in which section
 var resourceBoxes = {
@@ -297,7 +292,7 @@ scc.modules.log = function() {
       $(debugMessages).slice(0, numDebugMessages-maxDebugMessages).remove();
     }
 
-    scc.order({"provider": "log"}, intervalLogs);
+    scc.order({"provider": "log"}, scc.conf.resources.intervalLogs);
   }
   
 }
@@ -322,7 +317,7 @@ scc.modules.resources = function() {
   
     
   // statistics
-  $("#resStatInterval").html(intervalStatistics / 1000);
+  $("#resStatInterval").html(scc.conf.resources.intervalStatistics / 1000);
   var statisticsLastUpdated = new Date(0);
 
   var hasAddedNewCharts = false;
@@ -463,7 +458,7 @@ scc.modules.resources = function() {
     $.each(lineCharts, function(k,v) { v.update(msg); });
     
     // update statistics
-    if (statisticsLastUpdated.addMilliseconds(intervalStatistics) <= msg.timestamp) {
+    if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
       var resStatStartTime = $("#resStatStartTime");
       if (resStatStartTime.html() == "?") {
         resStatStartTime.html(new Date(msg.timestamp).dateTime());
@@ -474,7 +469,7 @@ scc.modules.resources = function() {
     }
     
     // update estimations
-    if (estimationsLastUpdated.addMilliseconds(intervalStatistics) <= msg.timestamp) {
+    if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
       if (lineCharts.runtime_mem_total.dataLength() >= 10) {
         var maxMemory = lineCharts.runtime_mem_max.dataLatest();
         var avgMemory = lineCharts.runtime_mem_total.dataAvg();
@@ -490,7 +485,7 @@ scc.modules.resources = function() {
       }
     }
     
-    scc.order({"provider": "resources"}, intervalCharts)
+    scc.order({"provider": "resources"}, scc.conf.resources.intervalCharts);
   }
 
 }
