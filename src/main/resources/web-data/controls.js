@@ -19,7 +19,7 @@
 
 scc.defaults.controls = {};
 
-scc.modules.controls = function() {
+scc.modules.Controls = function() {
   this.requires = ["controls"];
 
   var controls = ["step", "continue", "pause", "reset", "terminate"];
@@ -44,14 +44,14 @@ scc.modules.controls = function() {
         $("#controls").find(".icon").removeClass("blocked");
         break;
       case "pausing":
-        scc.consumers.breakconditions.onopen();
-        scc.consumers.graph.autoRefresh = false;
+        scc.consumers.Breakconditions.onopen();
+        scc.consumers.Graph.autoRefresh = false;
         $("#controls").find(".icon").removeClass("blocked");
         $("#controls").find("#pause").addClass("hidden");
         $("#controls").find("#continue").removeClass("hidden");
         break;
       case "continuing":
-        scc.consumers.graph.autoRefresh = true;
+        scc.consumers.Graph.autoRefresh = true;
         $("#controls").find(".icon").addClass("blocked");
         $("#controls").find("#pause").removeClass("blocked");
         $("#controls").find("#pause").removeClass("hidden");
@@ -67,8 +67,8 @@ scc.modules.controls = function() {
         this.terminate("#success", "Terminating...");
         break;
     }
-    if (scc.consumers.graph != null) {
-      scc.consumers.graph.order();
+    if (scc.consumers.Graph != null) {
+      scc.consumers.Graph.order();
     }
   };
 

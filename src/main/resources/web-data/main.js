@@ -268,9 +268,17 @@ $(document).ready(function() {
   enableModules = function(modules) {
     for (var m in modules) {
       var module = modules[m];
+      console.log(module);
       scc.consumers[module] = new scc.modules[module]();
     }
   };
+  
+  /**
+   * Capitalizes the first letter of a String and returns the new String
+   */
+  String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+  }
 
   // Create the WebSocket and activate modules depending on the URL path
   scc.createWebSocket();
@@ -279,9 +287,9 @@ $(document).ready(function() {
     case "/graph": 
       var module = window.location.pathname.slice(1);
       scc.settings.set({"main": {"view": module}});
-      enableModules([module, "controls"]);
+      enableModules([module.capitalize(), "Controls"]);
       if (module == "resources") {
-        enableModules(["configuration", "log"]);
+        enableModules(["Configuration", "Log"]);
       }
       if (module == "graph") {
         enableModules(["BreakConditions"]);
@@ -289,7 +297,7 @@ $(document).ready(function() {
       layout([module]);
       break;
     default:
-      enableModules(["graph", "resources", "controls", "configuration", "log", "BreakConditions"]);
+      enableModules(["Graph", "Resources", "Controls", "Configuration", "Log", "BreakConditions"]);
       layout(["graph", "resources"]);
   }
 

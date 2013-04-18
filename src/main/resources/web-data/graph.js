@@ -34,7 +34,7 @@ scc.defaults.graph = {"layout": {
                       }
 };
 
-scc.modules.graph = function() {
+scc.modules.Graph = function() {
   this.requires = ["graph"];
   this.autoRefresh = false;
   var s, svg, force;
@@ -121,7 +121,7 @@ scc.modules.graph = function() {
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_searchId').keypress(function(e) {
-      if ( e.which == 13 ) { scc.consumers.graph.searchById($("#gs_searchId").val()); }
+      if ( e.which == 13 ) { scc.consumers.Graph.searchById($("#gs_searchId").val()); }
     });
     window.addEventListener("keydown", function (e) {
       if (e.ctrlKey && e.keyCode == 70) { 
@@ -195,7 +195,7 @@ scc.modules.graph = function() {
     link = svg.selectAll(".link");
 
     $.each(scc.settings.get().graph.options, function (key, value) {
-      scc.consumers.graph.setGraphDesign(key, value);
+      scc.consumers.Graph.setGraphDesign(key, value);
     });
 
     force.on("tick", function() {
@@ -224,7 +224,7 @@ scc.modules.graph = function() {
                + " scale(" + d3.event.scale + ")");
     }
 
-    scc.consumers.graph.order();
+    scc.consumers.Graph.order();
   }
    
   this.onmessage = function(j) {
@@ -298,7 +298,7 @@ scc.modules.graph = function() {
         .style("stroke", nodeBorder)
         .attr("r", nodeSize);
 
-    if (scc.consumers.graph.autoRefresh) {
+    if (scc.consumers.Graph.autoRefresh) {
       scc.order(completeOrder(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
     }
 
@@ -315,7 +315,7 @@ scc.modules.graph = function() {
   };
   this.reset = function() {
     this.destroy();
-    scc.consumers.graph.onopen();
+    scc.consumers.Graph.onopen();
   };
   this.destroy = function() {
     scc.resetOrders("graph");
@@ -336,7 +336,7 @@ scc.modules.graph = function() {
     return node;
   };
   this.highlightNode = function (id) {
-    var node = scc.consumers.graph.findExistingNode(id);
+    var node = scc.consumers.Graph.findExistingNode(id);
     if (!node) { console.log("node is not present: " + id); return; }
     var data = node.__data__;
     var n = d3.select(node);
@@ -370,27 +370,27 @@ scc.modules.graph = function() {
       $("#gs_searchId").val("Search and hit Enter to execute");
       return;
     }
-    var node = scc.consumers.graph.findExistingNode(id);
+    var node = scc.consumers.Graph.findExistingNode(id);
     if (!node) {
       $("#graph_tooltip").fadeOut(200);
-      scc.consumers.graph.loadNodeById(id, function () {
-        setTimeout(function () { scc.consumers.graph.highlightNode(id) }, 1500);
+      scc.consumers.Graph.loadNodeById(id, function () {
+        setTimeout(function () { scc.consumers.Graph.highlightNode(id) }, 1500);
       });
     }
     else {
-      scc.consumers.graph.highlightNode(id); 
+      scc.consumers.Graph.highlightNode(id); 
     }
   }
 
   $("#gs_searchById").click(function (e) {
     e.preventDefault();
     var id = $("#gs_searchId").val();
-    scc.consumers.graph.searchById(id);
+    scc.consumers.Graph.searchById(id);
   });
           
   var searchTop = function (e) {
     e.preventDefault();
-    scc.consumers.graph.reset();
+    scc.consumers.Graph.reset();
     orderTemplate = {"provider": "graph", 
              "query": "top", 
              "topCriterium": $("#gs_topCriterium").val()};
@@ -431,23 +431,23 @@ scc.modules.graph = function() {
 
   $("#cGraphDesign select").change(function (e) {
     var property = $(this);
-    scc.consumers.graph.setGraphDesign(property.attr("id"), property.val());
+    scc.consumers.Graph.setGraphDesign(property.attr("id"), property.val());
   });
   $("#cNodeSelection").find("select,input").keyup(function (e) {
     var property = $(this);
-    scc.consumers.graph.setNodeSelection(property.attr("id"), property.val());
+    scc.consumers.Graph.setNodeSelection(property.attr("id"), property.val());
   });
   $("#gp_vicinityRadius").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gp_vicinityRadius": property.val() }}});
-    scc.consumers.graph.reset();
-    scc.consumers.graph.order();
+    scc.consumers.Graph.reset();
+    scc.consumers.Graph.order();
   });
   $("#gp_maxVertices").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gp_maxVertices": property.val() }}});
-    scc.consumers.graph.reset();
-    scc.consumers.graph.order();
+    scc.consumers.Graph.reset();
+    scc.consumers.Graph.order();
   });
   $("#gp_refreshRate").change(function (e) { 
     var property = $(this);

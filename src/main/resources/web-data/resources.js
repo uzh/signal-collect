@@ -339,7 +339,7 @@ scc.modules.Log = function() {
 /**
  * Show statistics and draw charts
  */
-scc.modules.resources = function() {
+scc.modules.Resources = function() {
   this.requires = ["resources"];
   show_section(scc.settings.get().resources.section);
   
