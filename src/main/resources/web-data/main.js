@@ -168,7 +168,11 @@ $(document).ready(function() {
         var request = j["request"];
         scc.order(request, 500);
         var targetProvider = j["targetProvider"];
-        scc.consumers[targetProvider].notready(j);
+        if (scc.consumers[targetProvider].notready != null) {
+          scc.consumers[targetProvider].notready(j);
+        } else {
+          console.log("Consumer '" + targetProvider + "' no has notready() method");
+        }
       }
       // Error messages are printed to the error pop-up, including the stack-
       // trace that caused the error. These errors are generally considered to
@@ -208,7 +212,13 @@ $(document).ready(function() {
       $.each(scc.orders, function(k, v) { clearTimeout(v); });
       scc.orders = {};
       showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
-      for (var m in scc.consumers) { scc.consumers[m].onclose(e) }
+      for (var m in scc.consumers) {
+        if (scc.consumers[m].onclose != null) {
+          scc.consumers[m].onclose(e);
+        } else {
+          console.log("Consumer '" + m + "' no has onclose() method");
+        }
+      }
     };
 
     /**
@@ -217,7 +227,13 @@ $(document).ready(function() {
      * @param e {Event} - The event that triggered the call.
      */
     scc.webSocket.onerror = function(e) {
-      for (var m in scc.consumers) { scc.consumers[m].onerror(e) }
+      for (var m in scc.consumers) {
+        if (scc.consumers[m].onerror != null) {
+          scc.consumers[m].onerror(e);
+        } else {
+          console.log("Consumer '" + m + "' no has onerror() method");
+        }
+      }
     };
   }
 
