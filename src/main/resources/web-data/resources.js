@@ -17,12 +17,15 @@
  *  
  */
 
+/**
+ * The default settings for the graph module.
+ */
 scc.defaults.resources = {"layout":{
                             "cResourceComputation": "show",
                             "cResourceProblems": "show"
                           },
                           "section": "statistics"
-                         };
+};
 
 
 // configure which content box to show in which section
@@ -155,24 +158,49 @@ $(document).ready(function() {
   });
 });
 
-
-
-
-
 /**
- * show information about the configuration (jvm etc.)
+ * The Configuration module ...
+ * TODO: elaborate (see graph.js or breakconditions.js for example intro text)
+ * @constructor
  */
-scc.modules.configuration = function() {
+scc.modules.Configuration = function() {
   this.requires = ["configuration"];
-  
+
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * is established. Requests data from the ConfigurationProvider.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onopen = function () {
     scc.order({"provider": "configuration"});
   }
     
+  /**
+   * Function that is called by the main module when a WebSocket error is
+   * encountered. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onerror = function(e) { }
+
+  /**
+   * Function that is called by the main module when a requested piece of data
+   * is not (yet) available from the server. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.notready = function() { }
+
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * breaks down. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onclose = function() { }
-  
+
+  /**
+   * Function that is called by the main module when a message is received
+   * from the WebSocket. TODO: elaborate
+   * @param j {object} - The message object received from the server.
+   */
   this.onmessage = function(msg) {
     $.each(msg.executionConfiguration, function(k,v) {
       if (v instanceof Array) {
@@ -196,11 +224,12 @@ scc.modules.configuration = function() {
 
 
 
-
 /**
- * show log and error messages
+ * The Log module ...
+ * TODO: elaborate (see graph.js or breakconditions.js for example intro text)
+ * @constructor
  */
-scc.modules.log = function() {
+scc.modules.Log = function() {
   this.requires = ["log"];
   
   var latest, identicalLogMessages = 0;
@@ -229,7 +258,12 @@ scc.modules.log = function() {
       $(box).find("li.source_" + v).toggleClass("hidden_source");
     });
   });
-  
+
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * is established. Requests data from the ConfigurationProvider.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onopen = function () {
     // make it using the full height
     onResize = (function() {
@@ -240,11 +274,12 @@ scc.modules.log = function() {
 
     scc.order({"provider": "log"});
   }
-    
-  this.onerror = function(e) { }
-  this.notready = function() { }
-  this.onclose = function() { }
-  
+
+  /**
+   * Function that is called by the main module when a message is received
+   * from the WebSocket. TODO: elaborate
+   * @param j {object} - The message object received from the server.
+   */
   this.onmessage = function(msg) {
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
     msg["messages"].forEach(function(l) {
@@ -427,9 +462,33 @@ scc.modules.resources = function() {
   this.onopen = function () {
     scc.order({"provider": "resources"})
   }
+
+  /**
+   * Function that is called by the main module when a WebSocket error is
+   * encountered. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onerror = function(e) { }
+
+  /**
+   * Function that is called by the main module when a requested piece of data
+   * is not (yet) available from the server. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.notready = function() { }
+
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * breaks down. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onclose = function() { }
+
+  /**
+   * Function that is called by the main module when a message is received
+   * from the WebSocket. TODO: elaborate
+   * @param j {object} - The message object received from the server.
+   */
 
   var ChartsContains = function(key) {
     var found = false;
@@ -441,7 +500,12 @@ scc.modules.resources = function() {
     });
     return found;
   }
-  
+
+  /**
+   * Function that is called by the main module when a message is received
+   * from the WebSocket. TODO: elaborate
+   * @param j {object} - The message object received from the server.
+   */
   this.onmessage = function(msg) {
     
     // check if there is more data in the websockets

@@ -17,8 +17,17 @@
  *  
  */
 
+/**
+ * The default settings for the breakconditions module.
+ */
 scc.defaults.breakconditions = {};
 
+/**
+ * A mapping from shortened names to full names of the condition types.
+ * @constant
+ * @default
+ * @type {object}
+ */
 CNAME = {"changesState": "changes state",
          "goesAboveState": "goes above state",
          "goesBelowState": "goes below state",
@@ -28,35 +37,71 @@ CNAME = {"changesState": "changes state",
          "goesBelowCollectThreshold": "goes below collect threshold"
 };
 
-scc.modules.breakconditions = function () {
+/**
+ * The BreakConditions module allows setting new break conditions on the 
+ * computation as well as loading the existing break conditions from the
+ * server.
+ * @constructor
+ */
+scc.modules.BreakConditions = function () {
+  /**
+   * Messages from the specified provider are routed to this module by the
+   * main module.
+   * @type {Array.<string>}
+   */
   this.requires = ["breakconditions"];
 
-  this.onopen = function() {
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * is established. Requests the list of break conditions currently specified.
+   * @param e {Event} - The event that triggered the call.
+   */
+  this.onopen = function(e) {
     scc.order({"provider": "breakconditions"});
   }
 
+  /**
+   * Function that is called by the main module when a WebSocket error is
+   * encountered. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
   this.onerror = function(e) { }
 
-  this.onclose = function() { }
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * breaks down. Does nothing.
+   * @param e {Event} - The event that triggered the call.
+   */
+  this.onclose = function(e) { }
 
-  $("#gc_state").val(STR.enterState); 
-  $("#gc_nodeId").val(STR.pickNode); 
-
+    /**
+     * Function that is called by the main module when a message is received
+     * from the WebSocket. Rebuilds the list of conditions, possibly
+     * highlighting any number of them.
+     * @param j {object} - The message object received from the server.
+     */
   this.onmessage = function(j) {
     $("#gc_conditionList").empty();
+    // It can happen that the Console is started without the interactive
+    // execution mode or that the execution mode object cannot be retrieved.
+    // In this case, another order is issued after a certain delay.
     if (j["status"] == "noExecution" ) {
       $("#gc_conditionList").append('<div class="condition none">' + STR.noExecution + '</div>');
       scc.order({"provider": "breakconditions"}, 1000);
       return;
     }
+    // If there are no conditions specified, display a placeholder
     if (j.active.length == 0) {
       $("#gc_conditionList").append('<div class="condition none">' + STR.noConditions + '</div>');
     }
+    // Add each of the conditions to the list of conditions
     $.each(j.active, function (k, c) {
+      // Shorten long node ids
       var s = c.props.nodeId;
       if (s.length > 23) {
         s = s.substring(s.length - 25, s.length);
       }
+      // Build the div element to be added...
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
       item += ('">When Node with id: <span class="node_link" title="' + 
@@ -82,8 +127,11 @@ scc.modules.breakconditions = function () {
         item += ': <span class="goal" title="' + j.reached[c.id] + '">' + goal + '</span>';
       }
       item += ('<div class="delete" data-id="' + c.id + '" /></div>');
+      // Finally append the item to the list
       $("#gc_conditionList").append(item);
     });
+
+    // Delete button handler
     $("#gc_conditionList .delete").click(function (e) { 
       scc.order({
           "provider": "breakconditions",
@@ -91,13 +139,26 @@ scc.modules.breakconditions = function () {
           "id": $(this).attr("data-id")
       });
     });
+
+ /**
+   * Handler called upon clicking on a node id. It highlights the appropriate
+   * node in the graph or loads the node if it's not yet represented in the
+   * graph. This is done simply by using the searchById function provided by
+   * the graph module
+   */
     $(".node_link").click(function (e) {
       var id = $(this).attr("title");
       scc.consumers.graph.searchById(id);
     });
+
+    // The last child in the list doesn't have a bottom border
     $("#gc_conditionList li:last-child").addClass("last_child");
   }
 
+  /**
+   * Handler that allows the user to pick a node from the graph to fill in the
+   * id of the node which the break condition shall be applied to
+   */
   $("#gc_useMouse").click(function (e) { 
     e.preventDefault();
     if ($("#graph_canvas").hasClass("picking")) {
@@ -110,7 +171,12 @@ scc.modules.breakconditions = function () {
     }
   });
 
-  d3.select("#graph_canvas").on("click", function (e) {
+  /**
+   * Handler that is added to the #graph_canvas for when the user picks a node
+   * using the mouse. It only applies when the #graph_canas has the "picking"
+   * class.
+   */
+  d3.select("#graph_canvas").on("click.breakconditions", function (e) {
     if (!$("#graph_canvas").hasClass("picking")) { return; }
     $("#graph_canvas").removeClass("picking");
     $("#gc_useMouse").removeClass("active");
@@ -129,6 +195,10 @@ scc.modules.breakconditions = function () {
     }
   });
 
+  /**
+   * Handler that resets the nodeId field and disables the 'add condition'
+   * button in case the field is left empty.
+   */
   $("#gc_nodeId").keyup(function(e) {
     if ($(this).val().length == 0 || $(this).val() == STR.pickNode) {
       $(this).val(STR.pickNode);
@@ -139,6 +209,10 @@ scc.modules.breakconditions = function () {
     }
   });
 
+  /**
+   * Handler that resets the state field and disables the 'add condition'
+   * button in case the field is left empty.
+   */
   $("#gc_state").keyup(function(e) {
     if ($(this).val().length == 0 || $(this).val() == STR.enterState) {
       $(this).val(STR.enterState); 
@@ -149,6 +223,10 @@ scc.modules.breakconditions = function () {
     }
   });
 
+  /**
+   * Handler that is called when clicking on 'add condition'. The input fields
+   * are parsed and the data is ordered from the server.
+   */
   $("#gc_addCondition").click(function (e) { 
     e.preventDefault();
     var name = $("#gc_condition").val().replace(/:/g,"");
@@ -182,6 +260,10 @@ scc.modules.breakconditions = function () {
     $("#gc_nodeId").val(STR.pickNode); 
   });
 
+  /**
+   * Handler that determines which sub-fields are displayed when the user
+   * selects the condition type.
+   */
   $("#gc_condition").change(function (e) {
     conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"");
     switch(conditionChoice) {
@@ -200,6 +282,8 @@ scc.modules.breakconditions = function () {
     }
   });
 
-
+  // set the default text on the text fields
+  $("#gc_state").val(STR.enterState); 
+  $("#gc_nodeId").val(STR.pickNode); 
 
 }

@@ -20,6 +20,9 @@
 
 /**
  * The default settings for the main module.
+ * @constant
+ * @default
+ * @type {object}
  */
 scc.defaults.main = {"view": "graph"};
 
@@ -281,12 +284,12 @@ $(document).ready(function() {
         enableModules(["configuration", "log"]);
       }
       if (module == "graph") {
-        enableModules(["breakconditions"]);
+        enableModules(["BreakConditions"]);
       }
       layout([module]);
       break;
     default:
-      enableModules(["graph", "resources", "controls", "configuration", "log", "breakconditions"]);
+      enableModules(["graph", "resources", "controls", "configuration", "log", "BreakConditions"]);
       layout(["graph", "resources"]);
   }
 
