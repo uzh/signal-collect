@@ -268,7 +268,6 @@ $(document).ready(function() {
   enableModules = function(modules) {
     for (var m in modules) {
       var module = modules[m];
-      console.log(module);
       scc.consumers[module] = new scc.modules[module]();
     }
   };
