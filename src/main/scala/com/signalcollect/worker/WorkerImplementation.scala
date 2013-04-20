@@ -144,7 +144,10 @@ case class WorkerImplementation[Id, Signal](
       if (vertex.deliverSignal(signal, sourceId, vertexGraphEditor)) {
         counters.collectOperationsExecuted += 1
         if (vertex.scoreSignal > signalThreshold) {
-          vertexStore.toSignal.put(vertex)
+          //vertexStore.toSignal.put(vertex)
+          // TODO: Unify scheduling related code. The policy here should be pluggable and the same as
+          // the one in AkkaWorker.executeOperations.
+          executeSignalOperationOfVertex(vertex)
         }
       } else {
         if (vertex.scoreCollect > collectThreshold) {

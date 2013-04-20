@@ -105,19 +105,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def executeOperations {
-    if (!worker.vertexStore.toCollect.isEmpty) {
-      val collected = worker.vertexStore.toCollect.process(
-        vertex => {
-          worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-          if (vertex.scoreSignal > worker.signalThreshold) {
-            worker.executeSignalOperationOfVertex(vertex)
-          }
-        })
-      worker.messageBusFlushed = false
-    }
-    if (!worker.vertexStore.toSignal.isEmpty && messageQueue.isEmpty) {
-      worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
-      worker.messageBusFlushed = false
+    if (messageQueue.isEmpty) {
+      if (!worker.vertexStore.toCollect.isEmpty) {
+        val collected = worker.vertexStore.toCollect.process(
+          vertex => {
+            worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
+            if (vertex.scoreSignal > worker.signalThreshold) {
+              worker.executeSignalOperationOfVertex(vertex)
+            }
+          })
+        worker.messageBusFlushed = false
+      }
+      if (!worker.vertexStore.toSignal.isEmpty) {
+        worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
+        worker.messageBusFlushed = false
+      }
     }
   }
 
