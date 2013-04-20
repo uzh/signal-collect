@@ -37,21 +37,19 @@ class ParallelSignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(In
   protected final val targetIds = new Array[Id](size)
   protected final val signals = new Array[Signal](size)
   def addSignal(signal: Signal, targetId: Id) {
-    val itemIndex = writePermissionsGranted.getAndIncrement
-    if (itemIndex > maxIndex) { //TODO: Verify!
+    var itemIndex = writePermissionsGranted.getAndIncrement
+    while (itemIndex > maxIndex) {
       //Buffer is full, need to flush. 
       flushIfNecessary
-      addSignal(signal, targetId)
-    } else {
-      //We have permission to write to a valid index.
-      signals(itemIndex) = signal
-      targetIds(itemIndex) = targetId
-      val written = successfulWrites.incrementAndGet
-      if (written == size) {
-        flushIfNecessary
-      }
+      itemIndex = writePermissionsGranted.getAndIncrement
     }
-
+    //We have permission to write to a valid index.
+    signals(itemIndex) = signal
+    targetIds(itemIndex) = targetId
+    val written = successfulWrites.incrementAndGet
+    if (written == size) {
+      flushIfNecessary
+    }
   }
   protected def flushIfNecessary {
     synchronized {
