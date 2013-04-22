@@ -171,7 +171,7 @@ $(document).ready(function() {
         if (scc.consumers[targetProvider].notready != null) {
           scc.consumers[targetProvider].notready(j);
         } else {
-          console.log("Consumer '" + targetProvider + "' no has notready() method");
+          console.log("Consumer '" + targetProvider + "' has no notready() method");
         }
       }
       // Error messages are printed to the error pop-up, including the stack-
@@ -216,7 +216,7 @@ $(document).ready(function() {
         if (scc.consumers[m].onclose != null) {
           scc.consumers[m].onclose(e);
         } else {
-          console.log("Consumer '" + m + "' no has onclose() method");
+          console.log("Consumer '" + m + "' has no onclose() method");
         }
       }
     };
@@ -231,7 +231,7 @@ $(document).ready(function() {
         if (scc.consumers[m].onerror != null) {
           scc.consumers[m].onerror(e);
         } else {
-          console.log("Consumer '" + m + "' no has onerror() method");
+          console.log("Consumer '" + m + "' has no onerror() method");
         }
       }
     };
