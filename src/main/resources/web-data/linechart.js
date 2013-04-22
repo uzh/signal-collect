@@ -29,7 +29,7 @@ var LineChart = function()
   
   // default config
   this.config = {
-      jsonName     : "",
+      jsonName     : "",    // the name that is used in JSON 
       skip         : false, // can be used to skip elements from the websocket (e.g. OS names)
       prettyName   : "",
       dataCallback : null,
@@ -85,7 +85,7 @@ var LineChart = function()
     if (dataComesAfterWindow || currentDateInWindow || dataComesBeforeWindow) {
       this.setMove(0);
     } else {
-      drawAnimated(true);
+      draw();
     }
   }
   
@@ -108,7 +108,7 @@ var LineChart = function()
     d3.transition().ease("linear").duration(300).each(function() {
       x.domain([newLowestXDomain, newHighestXDomain]);
       zoom.x(x);
-      drawAnimated(true);
+      draw();
     });
   }
   
@@ -191,7 +191,6 @@ var LineChart = function()
                     .attr("viewBox", "0 0 " + this.config.width + " " + this.config.height);
 
     var lines = svgBox.selectAll("g").data(data);
-    //lines.attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; });
 
     //for each array, create a 'g' line container
     aLineContainer = lines.enter().append("g");
@@ -223,7 +222,7 @@ var LineChart = function()
         .attr("dy", ".31em")
         .style("text-anchor", "end")
         .text(this.config.prettyName)
-        .style("font-size", "14px");;
+        .style("font-size", "14px");
 
     // show scatter points and tool tips
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
@@ -237,17 +236,9 @@ var LineChart = function()
    * Helper function to update the axis and other stuff
    */
   function draw() {
-    drawAnimated(false);
-  }
-  function drawAnimated(animation) {
     svg.select("g.x.axis").call(xAxis);
-    svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis); // this should always be animated
-
-    if (animation) {
-      svg.selectAll("path.line").transition().duration(300).ease("linear").attr("d", line);
-    } else {
-      svg.selectAll("path.line").attr("d", line);
-    }
+    svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
+    path.transition().duration(300).ease("linear").attr("d", line);
     aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
   }
   
@@ -346,8 +337,7 @@ var LineChart = function()
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average" });
     data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id] });
     data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id] });
-    
-    path.attr("d", line).attr("transform", null);
+    path.attr("transform", null); // needed to avoid shifting scatter points
     
     // only perform animated transition when needed or we will have problems when dragging/zooming
     d3.transition().ease("linear").duration((shiftRight ? 300 : 0)).each(function() {
