@@ -270,6 +270,17 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     }
   }
 
+  /*def findVicinity(vertexIds: List[Id], radius: Int = 3): List[Id] = {
+    if (radius == 0) { vertexIds }
+    else {
+      findVicinity(vertexIds.map { id =>
+        workerApi.forVertexWithId(id, { vertex: Inspectable[Id,_] =>
+          vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toList
+        })
+      }.flatten, radius - 1)
+    }
+  }*/
+
   def fetchId(id: String, radius: Int): JObject = {
     val result = workerApi.aggregateAll(
                  new FindNodeVicinitiesByIdsAggregator(List(id)))

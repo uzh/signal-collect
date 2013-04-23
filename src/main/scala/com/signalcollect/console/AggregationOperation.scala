@@ -122,18 +122,8 @@ class FindNodeVicinitiesByIdsAggregator(ids: List[String])
   def reduce(vertices: Stream[Map[String,List[String]]]): Map[String,List[String]] = {
     Toolkit.mergeMaps(vertices.toList)((v1, v2) => v1 ++ v2)
   }
-  /*def extract(v: Vertex[_, _]): Map[String,Int] = v match {
-    case i: Inspectable[_, _] => 
-      Map(i.id.toString -> i.outgoingEdges.size) ++
-      (for(v <- i.outgoingEdges.values) yield (v.targetId.toString -> 1)).toMap
-    case other => Map[String,Int]()
-  }
-
-  def reduce(degrees: Stream[Map[String,Int]]): Map[String,Int] = {
-    Toolkit.mergeMaps(degrees.toList)((v1, v2) => v1 + v2)
-  }*/
-
 }
+
 class FindVertexByIdAggregator(id: String)
       extends AggregationOperation[Option[Vertex[_,_]]] {
   def extract(v: Vertex[_, _]): Option[Vertex[_,_]] = v match {
@@ -198,8 +188,6 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
             }
           }
         }
-        // conditions that need to be checked on every node
-        // else if (allNodeConditions.contains(c.name)) {  }
       }
       results
     }
