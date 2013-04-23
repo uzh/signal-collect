@@ -18,54 +18,161 @@
  */
 
 /**
- * Object that encapsulates a complete graph.
- * 
- * This object includes all data that needs to be stored about a graph, as well as the data
- * that is visualized in the graph. This object also offers methods to set up and update a
- * graph.
+ * Class that encapsulates a complete graph; it includes all data that needs to 
+ * be stored about a graph, as well as the data that is visualized in the graph.
+ * This class also offers methods to set up and update a graph.
+ * @constructor
  */
-var LineChart = function()
-{
+var LineChart = function() {
   
-  // default config
+  /**
+   * Default configuration of a chart. This can be overriden by recreating a
+   * similar object with other values.
+   * @type {Object}
+   */ 
   this.config = {
       jsonName     : "",    // the name that is used in JSON 
       skip         : false, // can be used to skip elements from the websocket (e.g. OS names)
-      prettyName   : "",
-      dataCallback : null,
-      numOfValues  : 100,
+      prettyName   : "",    // name that will be shown on the chart
+      dataCallback : null,  // callback to get the data from JSON
+      numOfValues  : 100,   // number of values to show without zooming
       margin       : { top: 20, right: 20, bottom: 30, left: 50 },
-      width        : 550,
-      height       : 250,
+      width        : 550,   // the width of a chart
+      height       : 250,   // the height of a chart
   };
   
+  /**
+   * The DOM container of the current chart.
+   * @type {Object}
+   */
   this.container = null;
   
-  // data array for avg, min, max values
+  /**
+   * The array which stores all the data (minimum, average, and maximum) that is
+   * visualized in a chart.
+   * @type {Array}
+   */ 
   var data = [ [], [], [] ];
   
-  // variables needed for the charts
-  var svg, xAxis, yAxis, line, aLineContainer, x, y, path, currentHighestDate = 0, maxYValue = 0, zoom, zoomScale = 1.0;
+  /**
+   * The container of the {@code <svg>} element.
+   * @type {Object}
+   */
+  var svg;
+  
+  /**
+   * DOM selector to the x-axis.
+   * @type {Object}
+   */
+  var xAxis;
+  
+  /**
+   * DOM selector to the y-axis.
+   * @type {Object}
+   */
+  var yAxis;
+  
+  /**
+   * The line object which offers accessors to x and y values.
+   * @type {Object}
+   */
+  var line;
+  
+  /**
+   * DOM selector of the lines and scatter points of a chart.
+   * @type {Object}
+   */
+  var aLineContainer;
+  
+  /**
+   * Object holding information about the x-axis including range and domain.
+   * @type {Object}
+   */
+  var x;
+  
+  /**
+   * Object holding information about the y-axis including range and domain.
+   * @type {Object}
+   */
+  var y;
+  
+  /**
+   * Selector for the path that contains all the chart lines.
+   * @type {Object}
+   */
+  var path;
+  
+  /**
+   * Stores the highest date that is being visualized in the chart.
+   * @type {Date}
+   */
+  var currentHighestDate = 0;
+  
+  /**
+   * Contains the the highest Y-value in the chart, this is used to expand the
+   * domain when needed.
+   * @type {number}
+   */
+  var maxYValue = 0;
+  
+  /**
+   * Object that contains the D3 zooming object.
+   * @type {Object}
+   */
+  var zoom;
+  
+  /**
+   * Value of the current zoom scale, only changes when zooming in or out.
+   * @type {number}
+   */
+  var zoomScale = 1.0;
   
   // variables needed for the tool tips
-  var div, formatTime;
+  /**
+   * Selector for the container of tool-tips over the charts.
+   * @type {Object}
+   */
+  var divTooltip;
+
+  /**
+   * Defines the date format used in the tool-tips over the charts.
+   * @type {Object}
+   */
+  var formatTime;
   
-  // returns the number of time points
+  /**
+   * Get the number of time points the chart is showing.
+   * @return {number} - The number of time points the chart is showing.
+   */
   this.dataLength = function() {
     return data[0].length;
   }
   
-  // returns the average
+  /**
+   * Get the average value over the whole chart.
+   * @return {number} - The average y-value over the whole chart. 
+   */
   this.dataAvg = function() {
     return Array.avg($.map(data[0], function (e) { return e.value; }));
   }
   
-  // returns the latest data value
+  /**
+   * Get the latest data value of the maximum chart.
+   * @return {number} - The latest data value of the maximum chart. 
+   */
   this.dataLatest = function() {
     return data[2][data[2].length-1].value;
   }
   
   // sets the zooming level
+  /**
+   * Sets the zooming level of the chart. There is a limit for zooming in but no
+   * limit for zooming out. When the latest data value is currently in the view,
+   * it will be shifted to the right to be able to see a big enough part of the 
+   * chart after zooming.
+   * @param {number} scale - The scale to which the chart zooms. A positive
+   *     scale zooms the chart in, a negative scale zooms the chart out.
+   */
   this.setZoom = function(scale) {
     var newZoomScale   = zoomScale * scale;
     var lowestXDomain  = x.domain()[0];
@@ -89,7 +196,14 @@ var LineChart = function()
     }
   }
   
-  // moves the charts
+  /**
+   * Shifts the chart content to the left, to the right, or to the newest data
+   * value in the chart.
+   * @param {Integer} scale - The scale to which the chart shifts. A positive
+   *     scale shifts the chart to the right, a negative scale shifts the chart
+   *     to the left, and a scale of zero moves the chart to the newest data
+   *     value.
+   */
   this.setMove = function(scale) {
     var lowestXDomain  = x.domain()[0];
     var highestXDomain = x.domain()[1];
@@ -116,7 +230,10 @@ var LineChart = function()
   
   
   /**
-   * Performs all actions needed for the LineChart setup
+   * Creates the chart with the given configuration, sets up all the HTML
+   * elements and adds first dummy data.
+   * @param {Object} config - Object of the configuration.
+   * @see this.config
    */
   this.setup = function(config) {
     
@@ -226,14 +343,15 @@ var LineChart = function()
 
     // show scatter points and tool tips
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
-    div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+    divTooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
     
     draw();
   };
 
   
   /**
-   * Helper function to update the axis and other stuff
+   * Helper function to update the axis and the chart content when new data is
+   * added or when an animation occurs.
    */
   function draw() {
     svg.select("g.x.axis").call(xAxis);
@@ -244,7 +362,11 @@ var LineChart = function()
   
   
   /**
-   * Returns the minimum and maximum value of an array
+   * Creates a helper function which returns the minimum and the maximum value
+   * of the given data object.
+   * @param {Array} array - The array to find the minimum and maximum value in.
+   * @return {Object} - An object containing the value and the id of both, the
+   *     minimum and the maximum value of the given array.
    */
   Array.getMinMax = function(array) {
     var min = Infinity, max = 0;
@@ -257,7 +379,11 @@ var LineChart = function()
   }
   
   /**
-   * Returns the average value of an array
+   * Creates a helper function which returns the average value of the elements
+   * contained in the given array.
+   * @param {Array} array - The array to find the average value of.
+   * @return {number} - The average value of the elements contained in the given
+   *     array.
    */
   Array.avg = function(array) {
     var len = array.length;
@@ -266,7 +392,10 @@ var LineChart = function()
   };
   
   /**
-   * Returns the sum of the values of an array
+   * Creates a helper function which returns the sum of the elements contained
+   * in the given array.
+   * @param {Array} array - The array to find the sum.
+   * @return {number} - The sum of the elements contained in the given array.
    */
   Array.sum = function(array) {
     var sum = 0;
@@ -275,14 +404,20 @@ var LineChart = function()
   };
   
   /**
-   * Allows to transform Dates by adding a specific amount of seconds
+   * Extends the Date class with a method to add (or subtract) a given amount of
+   * milliseconds.
+   * @param {number} ms - The amount of milliseconds to add to the date, or when
+   *     {@code ms} is negative, to substract from the date.
+   * @return {number} - The transformed date in Unix time in milliseconds.
    */
-  Date.prototype.addMilliseconds = function(seconds) {
-    return (+this + seconds);
+  Date.prototype.addMilliseconds = function(ms) {
+    return (+this + ms);
   };
   
   /**
-   * Returns a pretty duration
+   * Calculates the duration in the format "1h 2m 3s" given a {@code Date}
+   * object.
+   * @return {String} - Pretty printed duration in the format "1h 2m 3s". 
    */
   Date.prototype.durationPretty = function() {
     var ms = +this;
@@ -298,7 +433,10 @@ var LineChart = function()
   };
   
   /**
-   * Returns a pretty date time
+   * Extends a {@code Date} object with a method to returns a pretty-print date
+   * time.
+   * @return {String} Pretty printed date time in the format
+   *     "YYYY/MM/DD HH:mm:SS".
    */
   Date.prototype.dateTime = function() {
     function pad(i) {
@@ -313,8 +451,13 @@ var LineChart = function()
     return d;
   };
   
+  
+  
   /**
-   * Performs all actions needed for the LineChart update
+   * Eventhandler to perform all actions needed for the LineChart to update.
+   * This stores the new data, adds it to the chart and shifts it the left (if
+   * necessary).
+   * @param {object} newData - Object containing the new data from JSON.
    */
   this.update = function(newData) {
     var currentDate = new Date(newData.timestamp);
@@ -362,16 +505,16 @@ var LineChart = function()
           .attr("r", 6)
           .on("mouseover",
               function(d) {
-                div.transition()        
+                divTooltip.transition()        
                    .duration(100)      
                    .style("opacity", .9);      
-                div.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
+                divTooltip.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
                    .style("left", (d3.event.pageX) + "px")     
                    .style("top", (d3.event.pageY - 28) + "px");    
               })                  
               .on("mouseout",
                   function(d) {       
-                    div.transition()        
+                    divTooltip.transition()        
                        .duration(500)      
                        .style("opacity", 0);   
                   });
