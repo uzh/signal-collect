@@ -51,7 +51,7 @@ scc.Settings = function() {
 
   /**
    * Applies a modification to the existing settings.
-   * @param modification {function|object} - Either a function that acts on the
+   * @param {function|object} modification - Either a function that acts on the
    *     existing settings object to return a modified settings object or a new
    *     settings object that will be merged with the existing settings object.
    */
@@ -103,10 +103,10 @@ scc.Settings = function() {
 
   /**
    * Removes any defaults from a given settings object or sub-object
-   * @param defaults {object} - The object containing the properties that will
+   * @param {object} defaults - The object containing the properties that will
    *     be removed from the other object
-   * @param added {object} - The object containing the new settings. The
-   *     defaults will be removed from this object
+   * @param {object} added - The object containing the new settings. The
+   *     defaults will be removed from this object.
    * @return {object} - The settings object containing only the non-default
    *     properties
    */
@@ -144,7 +144,7 @@ $(document).ready(function() {
     /**
      * Function that is called when a new WebSocket connection is established.
      * It calls the onopen function on all active modules.
-     * @param e {Event} - The event that triggered the call.
+     * @param {Event} e - The event that triggered the call
      */
     scc.webSocket.onopen = function(e) {
       showMsg("#success", "WebSocket connection established", true);
@@ -156,7 +156,7 @@ $(document).ready(function() {
      * Depending on the provider of the message, it will be forwarded to the
      * consumers that requires messages by that provider, or the message may
      * be processed as an error.
-     * @param e {Event} - The event that triggered the call. Most importantly,
+     * @param {Event} e - The event that triggered the call. Most importantly,
      *     it contains the message from the server inside the e.data property.
      */
     scc.webSocket.onmessage = function(e) {
@@ -206,7 +206,7 @@ $(document).ready(function() {
      * Function that is called when a new WebSocket connection breaks down. All
      * existing orders are cancelled and the onclose function is called on each
      * consumer.
-     * @param e {Event} - The event that triggered the call.
+     * @param {Event} e - The event that triggered the call
      */
     scc.webSocket.onclose = function(e) {
       $.each(scc.orders, function(k, v) { clearTimeout(v); });
@@ -224,7 +224,7 @@ $(document).ready(function() {
     /**
      * Function that is called when a WebSocket error is encountered. In 
      * this case, the onerrror function is called on each consumer.
-     * @param e {Event} - The event that triggered the call.
+     * @param {Event} e - The event that triggered the call
      */
     scc.webSocket.onerror = function(e) {
       for (var m in scc.consumers) {
@@ -239,7 +239,7 @@ $(document).ready(function() {
 
   /**
    * Delete all pending orders and callbacks for the given message provider.
-   * @param provider {string} - The name of the provider
+   * @param {string} provider - The name of the provider
    */
   scc.resetOrders = function(provider) {
     clearTimeout(scc.orders[provider]);
@@ -250,11 +250,11 @@ $(document).ready(function() {
   /**
    * Order new data from the server. Messages need to adhere to the protocol.
    * and when an order is issued, any previous pending orders are overriden.
-   * @param msg {string|object} - The message to be sent to the server. If a
+   * @param {string|object} msg - The message to be sent to the server. If a
    *     string is supplied, it will first be parsed as JSON. 
-   * @param delay {int} - Milliseconds to wait before ordering the data.
-   * @param cb {function} - Callback function to be called upon receiving the
-         reply from the server
+   * @param {int} delay - Milliseconds to wait before ordering the data
+   * @param {function} cb - Callback function to be called upon receiving the
+   *     reply from the server
    */
   scc.order = function(msg, delay, cb) {
     if (typeof(msg) == "string") {
@@ -279,7 +279,7 @@ $(document).ready(function() {
    * Enable any number of modules. Enabling a module causes it to be
    * instantiated and to receive incoming messages of the types the module
    * specifies in its own this.requires property.
-   * @param modules {Array.<string>} - The names of the modules to be enabled.
+   * @param {Array.<string>} modules - The names of the modules to be enabled
    */
   enableModules = function(modules) {
     for (var m in modules) {
@@ -300,16 +300,16 @@ $(document).ready(function() {
   switch (window.location.pathname) {
     case "/resources": 
     case "/graph": 
-      var module = window.location.pathname.slice(1);
-      scc.settings.set({"main": {"view": module}});
-      enableModules([module.capitalize(), "Controls"]);
-      if (module == "resources") {
+      var view = window.location.pathname.slice(1);
+      scc.settings.set({"main": {"view": view}});
+      enableModules([view.capitalize(), "Controls"]);
+      if (view == "resources") {
         enableModules(["Configuration", "Log"]);
       }
-      if (module == "graph") {
-        enableModules(["BreakConditions"]);
+      if (view == "graph") {
+        enableModules(["Graph", "BreakConditions"]);
       }
-      layout([module]);
+      layout([view]);
       break;
     default:
       enableModules(["Graph", "Resources", "Controls", "Configuration", "Log", "BreakConditions"]);

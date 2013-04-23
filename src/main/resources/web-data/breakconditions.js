@@ -54,7 +54,7 @@ scc.modules.BreakConditions = function () {
   /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Requests the list of break conditions currently specified.
-   * @param e {Event} - The event that triggered the call.
+   * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
     scc.order({"provider": "breakconditions"});
@@ -63,23 +63,30 @@ scc.modules.BreakConditions = function () {
   /**
    * Function that is called by the main module when a WebSocket error is
    * encountered. Does nothing.
-   * @param e {Event} - The event that triggered the call.
+   * @param {Event} e - The event that triggered the call
    */
-  this.onerror = function(e) { }
+  this.onerror = function(e) { };
 
   /**
    * Function that is called by the main module when a new WebSocket connection
    * breaks down. Does nothing.
-   * @param e {Event} - The event that triggered the call.
+   * @param {Event} e - The event that triggered the call
    */
-  this.onclose = function(e) { }
+  this.onclose = function(e) { };
 
-    /**
-     * Function that is called by the main module when a message is received
-     * from the WebSocket. Rebuilds the list of conditions, possibly
-     * highlighting any number of them.
-     * @param j {object} - The message object received from the server.
-     */
+  /**
+   * Function that is called by the main module when a requested piece of data
+   * is not (yet) available from the server. Does nothing.
+   * @param {Event} e - The event that triggered the call
+   */
+  this.notready = function() { };
+
+  /**
+   * Function that is called by the main module when a message is received
+   * from the WebSocket. Rebuilds the list of conditions, possibly
+   * highlighting any number of them.
+   * @param {object} j - The message object received from the server
+   */
   this.onmessage = function(j) {
     $("#gc_conditionList").empty();
     // It can happen that the Console is started without the interactive
@@ -140,15 +147,15 @@ scc.modules.BreakConditions = function () {
       });
     });
 
- /**
-   * Handler called upon clicking on a node id. It highlights the appropriate
-   * node in the graph or loads the node if it's not yet represented in the
-   * graph. This is done simply by using the searchById function provided by
-   * the graph module
-   */
+    /**
+     * Handler called upon clicking on a node id. It highlights the appropriate
+     * node in the graph or loads the node if it's not yet represented in the
+     * graph. This is done simply by using the searchById function provided by
+     * the graph module
+     */
     $(".node_link").click(function (e) {
       var id = $(this).attr("title");
-      scc.consumers.graph.searchById(id);
+      scc.consumers.Graph.searchById(id);
     });
 
     // The last child in the list doesn't have a bottom border
@@ -230,7 +237,7 @@ scc.modules.BreakConditions = function () {
   $("#gc_addCondition").click(function (e) { 
     e.preventDefault();
     var name = $("#gc_condition").val().replace(/:/g,"");
-    var props = {}
+    var props = {};
     switch (name) {
       case CNAME.changesState:
         props["nodeId"] = $("#gc_nodeId").val();
