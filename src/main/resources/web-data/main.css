@@ -61,6 +61,18 @@ body {
   text-align: center;
 }
 
+#close_msgs {
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  right: 10px;
+  top: 10px;
+  background-image: url('sprites_small.svg');
+  background-position: 0px 0px;
+}
+#close_msgs:hover {
+  background-position: 16px 0px;
+}
 
 #left {
   position: fixed;
@@ -339,9 +351,10 @@ body {
   right: 3px;
   top: 13px;
   background-image: url('sprites_small.svg');
+  background-position: 32px 16px;
 }
 #gc_conditionList .condition .delete:hover {
-  background-position: 32px 0;
+  background-position: 32px 16px;
 }
 #gc_conditionList .condition.reached {
   background : rgba(150,255,150,0.5);
