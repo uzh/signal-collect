@@ -141,3 +141,56 @@ scc.conf.resources.resourceBoxes = {
       "runtime_mem_totalChart"
     ],
 };
+
+/**
+ * Specific dataCallback function for messageSent to change the data format.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {number} - The sum of the given array.
+ */
+var sumSubArray = function(data) {
+  return data.workerStatistics.messagesSent.map(function(array) {
+    return Array.sum(array);
+  });
+};
+
+/**
+ * Configures the main chart types. This is not mandatory, but they load faster
+ * if you add them here. You can also add different data callbacks or skip
+ * entire objects.
+ * @type {Array.<Objects>}
+ */
+scc.conf.resources.chartConfig = [
+                   {jsonName : "messagesSent", dataCallback: sumSubArray },
+                   {jsonName : "messagesReceived"},
+                   {jsonName : "signalMessagesReceived"},
+                   {jsonName : "otherMessagesReceived"},
+                   {jsonName : "requestMessagesReceived"},
+                   {jsonName : "continueMessagesReceived"},
+                   {jsonName : "bulkSignalMessagesReceived"},
+                   {jsonName : "heartbeatMessagesReceived"},
+                   {jsonName : "receiveTimeoutMessagesReceived"},
+                   {jsonName : "outgoingEdgesAdded"},
+                   {jsonName : "outgoingEdgesRemoved"},
+                   {jsonName : "numberOfOutgoingEdges"},
+                   {jsonName : "verticesRemoved"},
+                   {jsonName : "verticesAdded"},
+                   {jsonName : "numberOfVertices"},
+                   {jsonName : "signalOperationsExecuted"},
+                   {jsonName : "collectOperationsExecuted"},
+                   {jsonName : "toCollectSize"},
+                   {jsonName : "toSignalSize"},
+                   {jsonName : "workerId"},
+                   {jsonName : "runtime_cores"},
+                   {jsonName : "jmx_system_load"},
+                   {jsonName : "jmx_process_time"},
+                   {jsonName : "jmx_process_load"},
+                   {jsonName : "jmx_swap_free"},
+                   {jsonName : "jmx_swap_total"},
+                   {jsonName : "jmx_mem_total"},
+                   {jsonName : "jmx_mem_free"},
+                   {jsonName : "jmx_committed_vms"},
+                   {jsonName : "runtime_mem_max"},
+                   {jsonName : "runtime_mem_free"},
+                   {jsonName : "runtime_mem_total"},
+                   {jsonName : "os", skip: true },
+                  ];

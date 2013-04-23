@@ -19,6 +19,9 @@
 
 /**
  * The default settings for the graph module.
+ * @constant
+ * @default
+ * @type {Object}
  */
 scc.defaults.resources = {"layout":{
                             "cResourceComputation": "show",
@@ -28,9 +31,8 @@ scc.defaults.resources = {"layout":{
 };
 
 
-
 /**
- * Panel functionality
+ * Event handler to catch onHashChange events to update the current section.
  */
 $(window).on('hashchange', function() {
   scc.settings.reload();
@@ -39,6 +41,11 @@ $(window).on('hashchange', function() {
     show_section(settings.resources.section);
   }
 });
+
+/**
+ * Hides all sections and shows only the given section.
+ * @param {string} s - The name of the section to show.
+ */
 function show_section(s) {
   console.log("Section: " + s);
   if (s == "") { return; }
@@ -55,6 +62,12 @@ function show_section(s) {
   // set section to the hash tag
   var mod = {"resources": {"section": s }}
 }
+
+/**
+ * Hides all resource boxes and only show the ones that are needed for the
+ * given section.
+ * @param {string} s - The name of the section to show the resource boxes for.
+ */
 function show_boxes(s) {
   var boxes = "#resourceBoxes";
   // first, hide all of them
@@ -67,6 +80,10 @@ function show_boxes(s) {
     $(resourceBox).appendTo(boxes); // change order
   });
 }
+
+/**
+ * Event handler that gets called when the DOM is ready.
+ */
 $(document).ready(function() {
   $("#resources_panel_container label").click(function() {
     section = $(this).attr("for").split("_")[1];
@@ -75,8 +92,9 @@ $(document).ready(function() {
 });
 
 /**
- * The Configuration module ...
- * TODO: elaborate (see graph.js or breakconditions.js for example intro text)
+ * The Configuration module retrieves data about different configuration and
+ * parameter statistics from the console server. The module shows the JVM
+ * parameters, the computation statistics as well as the graph statistics.
  * @constructor
  */
 scc.modules.Configuration = function() {
@@ -85,7 +103,6 @@ scc.modules.Configuration = function() {
   /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Requests data from the ConfigurationProvider.
-   * @param e {Event} - The event that triggered the call.
    */
   this.onopen = function () {
     scc.order({"provider": "configuration"});
@@ -94,28 +111,27 @@ scc.modules.Configuration = function() {
   /**
    * Function that is called by the main module when a WebSocket error is
    * encountered. Does nothing.
-   * @param e {Event} - The event that triggered the call.
+   * @param {Event} e - The event that triggered the call.
    */
   this.onerror = function(e) { }
 
   /**
    * Function that is called by the main module when a requested piece of data
    * is not (yet) available from the server. Does nothing.
-   * @param e {Event} - The event that triggered the call.
    */
   this.notready = function() { }
 
   /**
    * Function that is called by the main module when a new WebSocket connection
    * breaks down. Does nothing.
-   * @param e {Event} - The event that triggered the call.
    */
   this.onclose = function() { }
 
   /**
-   * Function that is called by the main module when a message is received
-   * from the WebSocket. TODO: elaborate
-   * @param j {object} - The message object received from the server.
+   * Function that is called by the main module when a message is received from
+   * the WebSocket. It populates the given information about the JVM,
+   * computation and the graph in the proper elements.
+   * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
     $.each(msg.executionConfiguration, function(k,v) {
@@ -141,23 +157,79 @@ scc.modules.Configuration = function() {
 
 
 /**
- * The Log module ...
- * TODO: elaborate (see graph.js or breakconditions.js for example intro text)
+ * The Log module retrieves log modules from the console server. Fetched log
+ * messages are populated into the HTML. When there are too many messages, the
+ * old debug messages will be deleted from the DOM. It also handles the filter
+ * to show or hide messages according to their level and source.
  * @constructor
  */
 scc.modules.Log = function() {
   this.requires = ["log"];
   
-  var latest, identicalLogMessages = 0;
+  /**
+   * Stores the latest log message to test whether a new one is exactly the same
+   * and to not show it again.
+   * @type {Object}
+   */
+  var latest;
+  
+  /**
+   * Stores the number of identical log messages which occurred directly after
+   * each other to not show anyone of these but only one occurrence and add the
+   * number of occurrences to the end.
+   * @type {number}
+   */
+  var identicalLogMessages = 0;
+  
+  /**
+   * Selector of the log resource box.
+   * @type {Object}
+   */
   var container = $("#resourceBoxes #logBox");
+  
+  /**
+   * Selector of the scrollable container of the log messages.
+   * @type {Object}
+   */
   var box = $(container).find("div.scroll");
+
+  /**
+   * Selector of the inner container of the log messages, this is necessary for
+   * formatting purposes.
+   * @type {Object}
+   */
   var boxInner = $(box).find("div");
+  
+  /**
+   * Defines the maximum number of debug messages that will be stored in the
+   * DOM. When there are more, old debug messages will be deleted from the DOM.
+   * @type {number}
+   */
   var maxDebugMessages = 200;
   
-  var logLevelIndex  = { "error":1, "warning":2, "info":3, "debug":4 };
-  var filterLevel    = $(container).find("p.filter.level");
+  /**
+   * Object that stores the different levels of the log messages.
+   * @type {Object}
+   */
+  var logLevelIndex = { "error":1, "warning":2, "info":3, "debug":4 };
+
+  /**
+   * Selector of the log level filter.
+   * @type {Object}
+   */
+  var filterLevel = $(container).find("p.filter.level");
+
+  /**
+   * Object that stores the different sources of the log messages.
+   * @type {Object}
+   */
   var logSourceIndex = { "akka":1, "sc":2, "user":3 };
-  var filterSource   = $(container).find("p.filter.source");
+
+  /**
+   * Selector of the log source filter.
+   * @type {Object}
+   */
+  var filterSource = $(container).find("p.filter.source");
   
   // hide and show log messages based on their level
   $.each(logLevelIndex, function(v, k) {
@@ -167,7 +239,7 @@ scc.modules.Log = function() {
     });
   });
   
-  // hide and show log messages based on their level
+  // hide and show log messages based on their source
   $.each(logSourceIndex, function(v, k) {
     $(filterSource).find("> span:eq(" + (k-1) + ")").on("click", function() {
       $(this).toggleClass("active");
@@ -178,9 +250,8 @@ scc.modules.Log = function() {
   /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Requests data from the ConfigurationProvider.
-   * @param e {Event} - The event that triggered the call.
    */
-  this.onopen = function () {
+  this.onopen = function() {
     // make it using the full height
     onResize = (function() {
       $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 280) + "px");
@@ -192,9 +263,11 @@ scc.modules.Log = function() {
   }
 
   /**
-   * Function that is called by the main module when a message is received
-   * from the WebSocket. TODO: elaborate
-   * @param j {object} - The message object received from the server.
+   * Function that is called by the main module when a message is received from
+   * the WebSocket. It adds the new messages, scrolls the container to the
+   * bottom if needed, deletes old debug messages if needed and retrieves another
+   * set of log messages.
+   * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
@@ -250,10 +323,11 @@ scc.modules.Log = function() {
 
 
 
-
-
 /**
- * Show statistics and draw charts
+ * The Resources module handles the chart drawing and all actions which can be
+ * done on charts (e.g. zooming and shifting). It also handles the calculation
+ * of the data set size estimation, and some statistics about the computation.
+ * @constructor
  */
 scc.modules.Resources = function() {
   this.requires = ["resources"];
@@ -266,58 +340,40 @@ scc.modules.Resources = function() {
     });
   }, 500);
   
-    
-  // statistics
+  // show the number of seconds after which the statistics will be updated
   $("#resStatInterval").html(scc.conf.resources.intervalStatistics / 1000);
+  
+  /**
+   * The statistics are only updated every x seconds; this variable stores the
+   * Date of the last update.
+   * @type {Date}
+   */
   var statisticsLastUpdated = new Date(0);
 
+  /**
+   * On the first message, we check whether there are any new objects which we
+   * did not know about before and for which we should draw a chart. These
+   * objects will be added to the DOM and stored in the necessary variables
+   * @type {boolean}
+   */
   var hasAddedNewCharts = false;
+  
+  /**
+   * Stores the date of the last update of the data set size estimation.
+   * @type {Date}
+   */
   var estimationsLastUpdated = new Date(0);
   
-  
-  var sumSubArray = function(data) {
-    return data.workerStatistics.messagesSent.map(function(array) {
-      return Array.sum(array);
-    });
-  };
-  
-  var chartConfig = [
-                     {jsonName : "messagesSent", dataCallback: sumSubArray },
-                     {jsonName : "messagesReceived"},
-                     {jsonName : "signalMessagesReceived"},
-                     {jsonName : "otherMessagesReceived"},
-                     {jsonName : "requestMessagesReceived"},
-                     {jsonName : "continueMessagesReceived"},
-                     {jsonName : "bulkSignalMessagesReceived"},
-                     {jsonName : "heartbeatMessagesReceived"},
-                     {jsonName : "receiveTimeoutMessagesReceived"},
-                     {jsonName : "outgoingEdgesAdded"},
-                     {jsonName : "outgoingEdgesRemoved"},
-                     {jsonName : "numberOfOutgoingEdges"},
-                     {jsonName : "verticesRemoved"},
-                     {jsonName : "verticesAdded"},
-                     {jsonName : "numberOfVertices"},
-                     {jsonName : "signalOperationsExecuted"},
-                     {jsonName : "collectOperationsExecuted"},
-                     {jsonName : "toCollectSize"},
-                     {jsonName : "toSignalSize"},
-                     {jsonName : "workerId"},
-                     {jsonName : "runtime_cores"},
-                     {jsonName : "jmx_system_load"},
-                     {jsonName : "jmx_process_time"},
-                     {jsonName : "jmx_process_load"},
-                     {jsonName : "jmx_swap_free"},
-                     {jsonName : "jmx_swap_total"},
-                     {jsonName : "jmx_mem_total"},
-                     {jsonName : "jmx_mem_free"},
-                     {jsonName : "jmx_committed_vms"},
-                     {jsonName : "runtime_mem_max"},
-                     {jsonName : "runtime_mem_free"},
-                     {jsonName : "runtime_mem_total"},
-                     {jsonName : "os", skip: true },
-                    ];
+  /**
+   * Object container that encapsulates all chart objects.
+   * @type {Object}
+   */
   var lineCharts = {};
   
+  /**
+   * Helper function to create a chart and store it to the chart container.
+   * @param {Object} config - The configuration to use to create the chart.
+   */
   var ChartsCreate = function(config) {
     var lineChart = new LineChart();
     lineChart.container = "#resourceBoxes";
@@ -325,7 +381,7 @@ scc.modules.Resources = function() {
     lineCharts[lineChart.config.jsonName] = lineChart;
   }
   
-  chartConfig.forEach(function(config) {
+  scc.conf.resources.chartConfig.forEach(function(config) {
     if (!config.skip) {
       ChartsCreate(config);
     }
@@ -346,6 +402,11 @@ scc.modules.Resources = function() {
     console.log("Zoom: Out");
     zooming(0.8);
   });
+  
+  /**
+   * Helper function to zoom all charts in or out.
+   * @param {number} scale - The scale to which to zoom in or out.
+   */
   var zooming = function(scale) {
     $.each(lineCharts, function(key, chart) {
       chart.setZoom(scale);
@@ -366,6 +427,11 @@ scc.modules.Resources = function() {
     console.log("Move: Origin");
     moving(0);
   });
+
+  /**
+   * Helper function to shift all charts left, right, or to the origin.
+   * @param {number} scale - The scale to which to shift to.
+   */
   var moving = function(scale) {
     $.each(lineCharts, function(key, chart) {
       chart.setMove(scale);
@@ -373,8 +439,10 @@ scc.modules.Resources = function() {
   }
   
   
-  // event handler
-  
+  /**
+   * Function that is called by the main module when a new WebSocket connection
+   * is established. Requests data from the ResourceProvider.
+   */
   this.onopen = function () {
     scc.order({"provider": "resources"})
   }
@@ -382,33 +450,31 @@ scc.modules.Resources = function() {
   /**
    * Function that is called by the main module when a WebSocket error is
    * encountered. Does nothing.
-   * @param e {Event} - The event that triggered the call.
+   * @param {Event} e - The event that triggered the call.
    */
   this.onerror = function(e) { }
 
   /**
    * Function that is called by the main module when a requested piece of data
    * is not (yet) available from the server. Does nothing.
-   * @param e {Event} - The event that triggered the call.
    */
   this.notready = function() { }
 
   /**
    * Function that is called by the main module when a new WebSocket connection
    * breaks down. Does nothing.
-   * @param e {Event} - The event that triggered the call.
    */
   this.onclose = function() { }
 
   /**
-   * Function that is called by the main module when a message is received
-   * from the WebSocket. TODO: elaborate
-   * @param j {object} - The message object received from the server.
+   * Helper function to check whether {@code chartConfig} contains a chart with
+   * the given key.
+   * @param {object} key - The key name to check whether there is such a chart
+   *     stored already.
    */
-
   var ChartsContains = function(key) {
     var found = false;
-    chartConfig.forEach(function(c) {
+    scc.conf.resources.chartConfig.forEach(function(c) {
       if (c.jsonName == key) {
         found = true;
         return found;
@@ -419,8 +485,10 @@ scc.modules.Resources = function() {
 
   /**
    * Function that is called by the main module when a message is received
-   * from the WebSocket. TODO: elaborate
-   * @param j {object} - The message object received from the server.
+   * from the WebSocket. A new message is distributed to the several charts
+   * which then update their visualization. This function also updates the
+   * statistics and recalculates the data set size estimation from time to time.
+   * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
     
