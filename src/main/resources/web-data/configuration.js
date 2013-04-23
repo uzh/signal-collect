@@ -40,15 +40,104 @@ scc.conf = {"graph": {}, "resources": {}};
 
 /**
  * Interval in milliseconds between two consecutive chart updates.
+ * @type {number}
  */
 scc.conf.resources.intervalCharts = 3000;
 
 /**
  * Interval in milliseconds between two consecutive statistic updates.
+ * @type {number}
  */
 scc.conf.resources.intervalStatistics = 6000;
 
 /**
  * Interval in milliseconds between two consecutive log message updates.
+ * @type {number}
  */
 scc.conf.resources.intervalLogs = 2000;
+
+/**
+ * Configures which resource box to show in which section.
+ * @type {Object}
+ */
+scc.conf.resources.resourceBoxes = {
+    "statistics": [
+      "infrastructureStatBox",
+      "computationStatBox",
+      "graphStatBox",
+      "estimationStatBox"
+      ],
+    "logs" : [
+      "logBox"
+    ],
+    "detailed" : [
+      "chartZoomer",
+      // all charts will be added automatically to this section
+     ],
+    
+    "nostart" : [ 
+      "chartZoomer",
+      "logTitle",
+      "logBox",
+      "signalCollectTitle",
+      "heartbeatMessagesReceivedChart",
+      "messagesSentChart",
+      "messagesReceivedChart",
+      "signalMessagesReceivedChart",
+      "signalOperationsExecuted",
+      "collectOperationsExecuted",
+      "toCollectSizeChart",
+      "toSignalSizeChart",
+      "infrastructureTitle",
+      "jmx_system_loadChart",
+      "jmx_process_timeChart",
+      "jmx_process_loadChart",
+      "jmx_swap_totalChart",
+      "jmx_swap_freeChart",
+      "jmx_mem_totalChart",
+      "jmx_mem_freeChart",
+      "jmx_commited_vmsChart",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+    "noconvergence" : [
+      "chartZoomer",
+      "signalCollectTitle",
+      "messagesSentChart",
+      "messagesReceivedChart",
+    ], 
+    "estimation" : [
+      "chartZoomer",
+      "estimationStatBox",
+      "infrastructureTitle",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+    "crash" : [
+      "chartZoomer",
+      "logTitle",
+      "logBox",
+      "infrastructureTitle",
+      "jmx_mem_freeChart",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+    "slow" : [
+      "chartZoomer",
+      "infrastructureTitle",
+      "jmx_system_loadChart",
+      "jmx_process_timeChart",
+      "jmx_process_loadChart",
+      "jmx_swap_totalChart",
+      "jmx_swap_freeChart",
+      "jmx_mem_totalChart",
+      "jmx_mem_freeChart",
+      "jmx_commited_vmsChart",
+      "runtime_mem_freeChart",
+      "runtime_mem_maxChart",
+      "runtime_mem_totalChart"
+    ],
+};

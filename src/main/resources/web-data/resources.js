@@ -28,90 +28,6 @@ scc.defaults.resources = {"layout":{
 };
 
 
-// configure which content box to show in which section
-var resourceBoxes = {
-    "statistics": [
-      "infrastructureStatBox",
-      "computationStatBox",
-      "graphStatBox",
-      "estimationStatBox"
-      ],
-    "logs"      : [ "logBox" ],
-    "detailed" : [
-      "chartZoomer",
-      // all charts will be added automatically
-     ],
-    
-    "nostart"   : [ 
-      "chartZoomer",
-      "logTitle",
-      "logBox",
-      "signalCollectTitle",
-      "heartbeatMessagesReceivedChart",
-      "messagesSentChart",
-      "messagesReceivedChart",
-      "signalMessagesReceivedChart",
-      "signalOperationsExecuted",
-      "collectOperationsExecuted",
-      "toCollectSizeChart",
-      "toSignalSizeChart",
-      "infrastructureTitle",
-      "jmx_system_loadChart",
-      "jmx_process_timeChart",
-      "jmx_process_loadChart",
-      "jmx_swap_totalChart",
-      "jmx_swap_freeChart",
-      "jmx_mem_totalChart",
-      "jmx_mem_freeChart",
-      "jmx_commited_vmsChart",
-      "runtime_mem_freeChart",
-      "runtime_mem_maxChart",
-      "runtime_mem_totalChart"
-    ],
-    "noconvergence" : [
-      "chartZoomer",
-      "signalCollectTitle",
-      "messagesSentChart",
-      "messagesReceivedChart",
-    ], 
-    "estimation" : [
-      "chartZoomer",
-      "estimationStatBox",
-      "infrastructureTitle",
-      "runtime_mem_freeChart",
-      "runtime_mem_maxChart",
-      "runtime_mem_totalChart"
-    ],
-    "crash" : [
-      "chartZoomer",
-      "logTitle",
-      "logBox",
-      "infrastructureTitle",
-      "jmx_mem_freeChart",
-      "runtime_mem_freeChart",
-      "runtime_mem_maxChart",
-      "runtime_mem_totalChart"
-    ],
-    "slow" : [
-      "chartZoomer",
-      "infrastructureTitle",
-      "jmx_system_loadChart",
-      "jmx_process_timeChart",
-      "jmx_process_loadChart",
-      "jmx_swap_totalChart",
-      "jmx_swap_freeChart",
-      "jmx_mem_totalChart",
-      "jmx_mem_freeChart",
-      "jmx_commited_vmsChart",
-      "runtime_mem_freeChart",
-      "runtime_mem_maxChart",
-      "runtime_mem_totalChart"
-    ],
-};
-
-
-
-
 
 /**
  * Panel functionality
@@ -143,9 +59,9 @@ function show_boxes(s) {
   var boxes = "#resourceBoxes";
   // first, hide all of them
   $(boxes + " > div").attr("class", "hidden");
-  if (resourceBoxes[s] == null) { return; }
+  if (scc.conf.resources.resourceBoxes[s] == null) { return; }
   // then only show the ones that are needed
-  resourceBoxes[s].forEach(function(v) {
+  scc.conf.resources.resourceBoxes[s].forEach(function(v) {
     var resourceBox = boxes + " > #" + v;
     $(resourceBox).removeClass("hidden");
     $(resourceBox).appendTo(boxes); // change order
@@ -346,7 +262,7 @@ scc.modules.Resources = function() {
   // fill detailed view with all the charts we have
   setTimeout(function() {
     $("#resourceBoxes div[id$='Chart']").each(function() {
-      resourceBoxes.detailed.push($(this).attr("id"));
+      scc.conf.resources.resourceBoxes.detailed.push($(this).attr("id"));
     });
   }, 500);
   
