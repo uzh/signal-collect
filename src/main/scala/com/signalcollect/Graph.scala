@@ -107,6 +107,8 @@ trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) S
    */
   def awaitIdle
 
+  def gc
+  
   /**
    *  Shuts down the compute graph and frees associated resources.
    *

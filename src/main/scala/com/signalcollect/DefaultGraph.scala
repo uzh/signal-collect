@@ -107,7 +107,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
 
-  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
+  parallelBootstrapNodeProxies foreach (_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
 
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
@@ -213,6 +213,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     ExecutionInformation(config, numberOfWorkers, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
 
+  def gc = parallelBootstrapNodeProxies foreach (_.gc)
+  
   protected def synchronousExecution(
     stats: ExecutionStatistics,
     timeLimit: Option[Long],

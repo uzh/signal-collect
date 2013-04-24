@@ -175,6 +175,8 @@ class DefaultNodeActor(
     }
   }
 
+  def gc = System.gc
+  
   def shutdown = context.system.shutdown
 
   def registerWorker(workerId: Int, worker: ActorRef) {
