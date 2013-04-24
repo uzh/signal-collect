@@ -37,7 +37,6 @@ import net.liftweb.json.JsonDSL._
 import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.interfaces._
-import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
@@ -77,27 +76,12 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
-  heartbeatIntervalInMilliseconds: Long,
-  loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
-  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
-    numberOfWorkers,
-    numberOfNodes,
-    messageBusFactory,
-    heartbeatIntervalInMilliseconds,
-    loggingLevel)
-}
-
-/**
- * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
- */
-case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
-  numberOfWorkers: Int,
-  messageBusFactory: MessageBusFactory,
   logger: ActorRef,
   heartbeatIntervalInMilliseconds: Long)
   extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
+    numberOfNodes,
     messageBusFactory,
     logger,
     heartbeatIntervalInMilliseconds)
@@ -165,8 +149,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       numberOfWorkers,
       numberOfNodes,
       config.messageBusFactory,
-      config.heartbeatIntervalInMilliseconds,
-      config.loggingLevel)
+      loggerActor,
+      config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
       case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")

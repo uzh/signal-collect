@@ -20,7 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.configuration.LoggingLevel
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -67,7 +66,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.withLoggingLevel(LoggingLevel.Debug).build
+  val graph = GraphBuilder.build
   //  graph.addEdge(2, new PageRankEdge(3))
   //  graph.addEdge(3, new PageRankEdge(2))
 

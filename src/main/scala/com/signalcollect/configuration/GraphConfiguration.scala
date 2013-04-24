@@ -37,8 +37,7 @@ import akka.event.Logging
 case class GraphConfiguration(
   consoleEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
-  loggingLevel: Int = LoggingLevel.Warning,
-  logger: LogMessage => Unit = DefaultLogger.log,
+  loggingLevel: LogLevel = Logging.WarningLevel,
   workerFactory: WorkerFactory = LocalWorker,
   messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
   storageFactory: StorageFactory = DefaultStorage,

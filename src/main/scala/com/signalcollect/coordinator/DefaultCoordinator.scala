@@ -30,7 +30,6 @@ import scala.language.postfixOps
 import scala.reflect.ClassTag
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.Heartbeat
-import com.signalcollect.interfaces.Logging
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
@@ -48,6 +47,7 @@ import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.Logger
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -60,10 +60,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
   loggerRef: ActorRef,
-  heartbeatIntervalInMilliseconds: Long,
-  val loggingLevel: Int) extends Actor
+  heartbeatIntervalInMilliseconds: Long) extends Actor
     with MessageRecipientRegistry
-    with Logging
     with Coordinator[Id, Signal]
     with ActorLogging {
 
@@ -72,7 +70,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
    */
   context.setReceiveTimeout(Duration.Undefined)
 
-  val logger = AkkaProxy.newInstance[Logger](loggerRef)
+  val logger = AkkaProxy.newInstance[Logger](loggerRef, mb => ())
   
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](

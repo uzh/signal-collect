@@ -133,19 +133,6 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     actor ! message
   }
 
-  override def sendToCoordinator(message: Any) {
-    sentMessagesCounters(coordinatorId).incrementAndGet
-    coordinator ! message
-  }
-
-  override def sendToLogger(message: LogMessage) {
-    if (logger != null) {
-      logger ! message
-    } else {
-      println("Could not log message: " + message)
-    }
-  }
-
   override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
     val workerId = mapper.getWorkerIdForVertexId(recipientId)
     sendToWorker(workerId, message)

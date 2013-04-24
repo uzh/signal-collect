@@ -27,6 +27,7 @@ import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -129,8 +130,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   protected def newLocalBuilder(
     consoleEnabled: Boolean = config.consoleEnabled,
     consoleHttpPort: Int = config.consoleHttpPort,
-    loggingLevel: Int = config.loggingLevel,
-    logger: LogMessage => Unit = config.logger,
+    loggingLevel: Logging.LogLevel = config.loggingLevel,
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,

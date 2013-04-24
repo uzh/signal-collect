@@ -57,8 +57,6 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToActor(actor: ActorRef, message: Any)
 
-  def sendToLogger(message: LogMessage)
-
   def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
 
   def sendToWorkerForVertexId(message: Any, vertexId: Id)

@@ -56,8 +56,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val heartbeatIntervalInMilliseconds: Int,
-  val loggingLevel: Int)
+  val heartbeatIntervalInMilliseconds: Int)
     extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
@@ -125,7 +124,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  /**
+/**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
@@ -135,10 +134,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
       }
-    } else {
-      log.warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
-    }
-  }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
       worker.counters.bulkSignalMessagesReceived += 1
