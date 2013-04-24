@@ -69,6 +69,7 @@ body {
   top: 10px;
   background-image: url('sprites_small.svg');
   background-position: 0px 0px;
+  cursor: pointer;
 }
 #close_msgs:hover {
   background-position: 16px 0px;
