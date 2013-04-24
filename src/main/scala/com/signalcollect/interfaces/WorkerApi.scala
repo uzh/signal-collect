@@ -30,6 +30,7 @@ trait WorkerApi[Id, Signal] {
   def removeEdge(edgeId: EdgeId[Id])
   def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None)
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id] = None)
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
 
@@ -41,6 +42,7 @@ trait WorkerApi[Id, Signal] {
 
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
   def foreachVertex(f: Vertex[Id, _] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
 
   def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult
   def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult
@@ -54,11 +56,11 @@ trait WorkerApi[Id, Signal] {
   def getWorkerStatistics: WorkerStatistics
   def getIndividualWorkerStatistics: List[WorkerStatistics]
 
-  def shutdown
   def reset
   
-  def getSystemInformation: SystemInformation
-  def getIndividualSystemInformation: List[SystemInformation]
+  //TODO: Implement system information accessors on node instead.
+//  def getSystemInformation: SystemInformation
+//  def getIndividualSystemInformation: List[SystemInformation]
 
   /**
    * Creates a snapshot of all the vertices in all workers.

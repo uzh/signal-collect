@@ -30,12 +30,15 @@ trait WorkerFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
+    numberOfNodes: Int,
     config: GraphConfiguration): WorkerActor[Id, Signal]
 }
 
 trait MessageBusFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
+    numberOfNodes: Int,
+    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory = DefaultWorkerApiFactory): MessageBus[Id, Signal]
 }
 

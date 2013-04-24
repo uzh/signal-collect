@@ -44,7 +44,7 @@ abstract class DataFlowVertex[Id, State](
     state = s
   }
 
-  def deliverSignal(signal: Any, sourceId: Option[Any]): Boolean = {
+  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     setState(collect(signal.asInstanceOf[Signal]))
     true
   }

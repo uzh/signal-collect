@@ -1,8 +1,7 @@
 /*
  *  @author Philip Stutz
- *  @author Thomas Keller
  *  
- *  Copyright 2012 University of Zurich
+ *  Copyright 2013 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,11 +17,11 @@
  *  
  */
 
-package com.signalcollect.nodeprovisioning
+package com.signalcollect.interfaces
 
-import com.typesafe.config.Config
-import akka.actor.ActorRef
+import akka.actor.Actor
+import com.signalcollect.nodeprovisioning.Node
 
-trait NodeProvisioner extends Serializable {
-  def getNodes(akkaConfig: Config): Array[ActorRef]
-}
+trait NodeActor extends Actor
+  with Node
+  with MessageRecipientRegistry

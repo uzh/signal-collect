@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *  
- *  Copyright 2011 University of Zurich
+ *  Copyright 2010 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@
  *  
  */
 
-package com.signalcollect.nodeprovisioning.torque
+package com.signalcollect.interfaces
 
-case class TorqueJob(
-  jobId: Int,
-  execute: () => Map[String, String],
-  submittedByUser: String = "",
-  jvmParameters: String = "",
-  jobDescription: String = "",
-  jdkBinPath: String = "")
+import akka.actor.Actor
+
+trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+  extends WorkerApi[Id, Signal]
+  with MessageRecipientRegistry

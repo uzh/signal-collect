@@ -154,7 +154,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       writeLog(createJsonString("Info", null, logSource, logClass, message))
     case l @ Debug(logSource, logClass, message) => 
       writeLog(createJsonString("Debug", null, logSource, logClass, message))
-    case Request(command, reply) =>
+    case Request(command, reply, incrementor) =>
+      // TODO: Call incrementor with message bus as parameter.
       try {
         val result = command.asInstanceOf[Logger => Any](this)
         if (reply) {

@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -21,15 +22,17 @@ package com.signalcollect.nodeprovisioning
 
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.interfaces.WorkerActor
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Address
 import akka.actor.ExtendedActorSystem
+import com.signalcollect.interfaces.MessageBusFactory
 
 trait Node {
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
-  def numberOfCores: Int
+  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory)
+  def setStatusReportingInterval(statusReportingInterval: Int)
+  def numberOfCores: Int 
   def shutdown
 }
 

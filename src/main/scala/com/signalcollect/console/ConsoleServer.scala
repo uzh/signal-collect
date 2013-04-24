@@ -268,7 +268,8 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
   def setCoordinator(c: ActorRef) {
     println("ConsoleServer: got coordinator " + c)
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]] (c))
+    // TODO: Pass proper incrementor.
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]] (c, mb => ()))
   }
 
   def setExecution(e: Execution) {

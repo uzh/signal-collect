@@ -35,15 +35,17 @@ case class TorqueHost(
   jobSubmitter: AbstractJobSubmitter,
   localJarPath: String,
   jarDescription: String = (Random.nextInt.abs % 1000).toString,
+  jvmParameters: String = "-Xmx63000m -Xms63000m",
+  jdkBinPath: String = "",
   mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
   priority: String = TorquePriority.superfast) extends ExecutionHost {
 
   val fileSeparator = System.getProperty("file.separator")
   val jarName = localJarPath.substring(localJarPath.lastIndexOf(fileSeparator) + 1, localJarPath.size)
 
-  def executeJobs(jobs: List[TorqueJob]) = executeJobs(jobs, true)
+  def executeJobs(jobs: List[Job]) = executeJobs(jobs, true)
 
-  def executeJobs(jobs: List[TorqueJob], copyExecutable: Boolean = true) = {
+  def executeJobs(jobs: List[Job], copyExecutable: Boolean = true) = {
     /** COPY EVAL JAR TO TORQUE HOME DIRECTORY */
     if (copyExecutable) {
       jobSubmitter.copyFileToCluster(localJarPath)
@@ -54,7 +56,7 @@ case class TorqueHost(
       job =>
         future {
           println("Submitting job " + job.jobId + " ...")
-          val config = DefaultSerializer.write((job, resultHandlers))
+          val config = DefaultSerializer.write(job)
           val folder = new File("." + fileSeparator + "config-tmp")
           if (!folder.exists) {
             folder.mkdir
@@ -66,7 +68,7 @@ case class TorqueHost(
           jobSubmitter.copyFileToCluster(configPath)
           val deleteConfig = "rm " + configPath
           deleteConfig !!
-          val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, job.jvmParameters, job.jdkBinPath)
+          val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, jvmParameters, jdkBinPath)
           println("Job " + job.jobId + " has been submitted.")
           result
         }

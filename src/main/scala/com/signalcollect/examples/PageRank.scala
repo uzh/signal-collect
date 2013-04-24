@@ -67,16 +67,23 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
   val graph = GraphBuilder.build
+  //  graph.addEdge(2, new PageRankEdge(3))
+  //  graph.addEdge(3, new PageRankEdge(2))
+
+  graph.awaitIdle
+  println("IDLE 1")
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
-  graph.addVertex(new PageRankVertex(3))
+  //  graph.addVertex(new PageRankVertex(3))
   graph.addEdge(1, new PageRankEdge(2))
   graph.addEdge(2, new PageRankEdge(1))
-  graph.addEdge(2, new PageRankEdge(3))
-  graph.addEdge(3, new PageRankEdge(2))
+
+  graph.awaitIdle
+  println("IDLE 2")
 
   val stats = graph.execute
   println(stats)
+
   graph.foreachVertex(println(_))
   graph.shutdown
 }

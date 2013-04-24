@@ -34,10 +34,12 @@ object LocalWorker extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
+    numberOfNodes: Int,
     config: GraphConfiguration): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
+      numberOfNodes,
       config.messageBusFactory,
       config.storageFactory,
       config.heartbeatIntervalInMilliseconds)
@@ -52,10 +54,12 @@ object DistributedWorker extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
+    numberOfNodes: Int,
     config: GraphConfiguration): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
+      numberOfNodes,
       config.messageBusFactory,
       config.storageFactory,
       config.heartbeatIntervalInMilliseconds) with ThrottlingBulkScheduler[Id, Signal]

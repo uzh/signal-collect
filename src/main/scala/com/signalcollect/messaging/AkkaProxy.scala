@@ -24,7 +24,6 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-
 import scala.Array.canBuildFrom
 import scala.concurrent.Await
 import scala.concurrent.Future
@@ -32,13 +31,12 @@ import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-
 import com.signalcollect.interfaces.Request
-
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
 import akka.util.Timeout
+import com.signalcollect.interfaces.MessageBus
 
 /**
  * Used to create proxies
@@ -47,6 +45,7 @@ object AkkaProxy {
 
   def newInstance[T: ClassTag](
     actor: ActorRef,
+    incrementor: MessageBus[_, _] => Unit,
     sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
     receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
     timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
@@ -54,7 +53,11 @@ object AkkaProxy {
     Proxy.newProxyInstance(
       c.getClassLoader,
       Array[Class[_]](c),
-      new AkkaProxy(actor, sentMessagesCounter, receivedMessagesCounter, timeout)).asInstanceOf[T]
+      new AkkaProxy(actor,
+        incrementor,
+        sentMessagesCounter,
+        receivedMessagesCounter,
+        timeout)).asInstanceOf[T]
   }
 
 }
@@ -62,7 +65,13 @@ object AkkaProxy {
 /**
  *  Proxy that does RPC over Akka
  */
-class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicInteger, receivedMessagesCounter: AtomicInteger, timeout: Timeout) extends InvocationHandler with Serializable {
+class AkkaProxy[ProxiedClass](
+  actor: ActorRef,
+  incrementor: MessageBus[_, _] => Unit,
+  sentMessagesCounter: AtomicInteger,
+  receivedMessagesCounter: AtomicInteger,
+  timeout: Timeout,
+  optimizeBlocking: Boolean = false) extends InvocationHandler with Serializable {
 
   override def toString = "ProxyFor" + actor.toString
 
@@ -71,16 +80,16 @@ class AkkaProxy[ProxiedClass](actor: ActorRef, sentMessagesCounter: AtomicIntege
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
     val command = new Command[ProxiedClass](method.getDeclaringClass.getName, method.toString, arguments)
     try {
-      if (!method.getReturnType.equals(Void.TYPE)) {
-        val resultFuture: Future[Any] = actor ? Request(command, returnResult = true)
+      if (optimizeBlocking && method.getReturnType.equals(Void.TYPE)) {
+        actor ! Request(command, returnResult = false, incrementor)
+        sentMessagesCounter.incrementAndGet
+        null.asInstanceOf[AnyRef] // Return type of method is void.
+      } else {
+        val resultFuture: Future[Any] = actor ? Request(command, returnResult = true, incrementor)
         sentMessagesCounter.incrementAndGet
         val result = Await.result(resultFuture, timeout.duration)
         receivedMessagesCounter.incrementAndGet
         result.asInstanceOf[AnyRef]
-      } else {
-        actor ! Request(command, returnResult = false)
-        sentMessagesCounter.incrementAndGet
-        null.asInstanceOf[AnyRef] // Return type of method is void.
       }
     } catch {
       case e: Exception =>
