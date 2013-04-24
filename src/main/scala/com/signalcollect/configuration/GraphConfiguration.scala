@@ -37,15 +37,16 @@ import akka.event.Logging
 case class GraphConfiguration(
   consoleEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
-  loggingLevel: LogLevel = Logging.WarningLevel,
+  loggingLevel: Int = LoggingLevel.Warning,
+  logger: LogMessage => Unit = DefaultLogger.log,
   workerFactory: WorkerFactory = LocalWorker,
   messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
   storageFactory: StorageFactory = DefaultStorage,
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
-  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner,
-  heartbeatIntervalInMilliseconds: Long = 100)
+  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
+  heartbeatIntervalInMilliseconds: Int = 100)
 
 sealed trait AkkaDispatcher
 case object EventBased extends AkkaDispatcher

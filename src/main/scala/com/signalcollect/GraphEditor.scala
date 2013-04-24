@@ -126,7 +126,7 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   }
 
   /**
-   *  Loads a graph using the provided graphLoader function.
+   *  Loads a graph using the provided `graphModification` function.
    *  Blocks until the operation has completed if `blocking` is true.
    *
    *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
@@ -136,7 +136,7 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id], blocking: Boolean)
 
   /**
-   *  Loads a graph using the provided graphLoader function.
+   *  Loads a graph using the provided `graphModification` function.
    *
    *  @note Does not block.
    *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
@@ -146,6 +146,23 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
     modifyGraph(graphModification, vertexIdHint, false)
   }
+
+  /**
+   *  Loads a graph using the provided iterator of `graphModification` functions.
+   *
+   *  @note IMPORTANT: Only works while the computation is not yet executing.
+   *  @note IMPORTANT: Need to call `awaitIdle` after all load commands are submitted and before executing.
+   *  @note Does not block.
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id])
+
+  /**
+   * Forces the underlying MessageBus to send all messages immediately.
+   */
+  private[signalcollect] def flush
 
   private[signalcollect] def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 

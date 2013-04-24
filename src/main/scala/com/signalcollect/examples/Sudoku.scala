@@ -226,7 +226,6 @@ object SudokuHelper {
   //All possible numbers for a cell
   val legalNumbers = {
     var numbers = (1 to 9).toSet
-    println
     numbers
   }
 

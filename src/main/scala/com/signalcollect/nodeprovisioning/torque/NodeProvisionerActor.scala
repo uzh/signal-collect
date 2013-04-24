@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -23,25 +24,26 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
+import com.signalcollect.interfaces.NodeReady
 
 class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
 
-  var nodeListRequestor: ActorRef = _
+  var nodeListRequestor: Option[ActorRef] = None
 
   var nodeControllers = List[ActorRef]()
 
   def receive = {
     case "GetNodes" =>
-      nodeListRequestor = sender
+      nodeListRequestor = Some(sender)
       sendNodesIfReady
-    case "NodeReady" =>
+    case NodeReady =>
       nodeControllers = sender :: nodeControllers
       sendNodesIfReady
   }
 
   def sendNodesIfReady {
-    if (nodeControllers.size == numberOfNodes) {
-      nodeListRequestor ! nodeControllers
+    if (nodeControllers.size == numberOfNodes && nodeListRequestor.isDefined) {
+      nodeListRequestor.get ! nodeControllers
       self ! PoisonPill
     }
   }

@@ -21,7 +21,4 @@ package com.signalcollect.interfaces
 
 import akka.actor.Actor
 
-trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-  extends Actor
-  with WorkerApi[Id, Signal]
-  with MessageRecipientRegistry
+trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends Actor

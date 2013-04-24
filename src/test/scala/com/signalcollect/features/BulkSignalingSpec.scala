@@ -48,7 +48,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.0001
         if (!correct) {
-          System.out.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
         correct
       }
@@ -80,7 +80,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.0001
         if (!correct) {
-          println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
         correct
       }

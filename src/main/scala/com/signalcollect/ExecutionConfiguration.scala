@@ -28,7 +28,7 @@ import com.signalcollect.interfaces.ComplexAggregation
  *  An execution configuration specifies execution parameters for a computation. This object
  *  represents an ExecutionConfiguration that is initialized with the default parameters.
  */
-object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.OptimizedAsynchronous, 0.01, 0.0, None, None, None)
+object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.PureAsynchronous, 0.01, 0.0, None, None, None)
 
 /**
  *  This configuration specifies execution parameters for a computation.
@@ -44,7 +44,7 @@ object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.Optim
  *  @author Philip Stutz
  */
 case class ExecutionConfiguration(
-  executionMode: ExecutionMode.Value = ExecutionMode.OptimizedAsynchronous,
+  executionMode: ExecutionMode.Value = ExecutionMode.PureAsynchronous,
   signalThreshold: Double = 0.01,
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,

@@ -20,9 +20,9 @@
 package com.signalcollect.messaging
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
+import com.signalcollect.interfaces.MessageBus
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
   private var itemCount = 0
@@ -46,8 +46,10 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
 class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val numberOfWorkers: Int,
+  val numberOfNodes: Int,
   flushThreshold: Int,
   val withSourceIds: Boolean,
+  val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
   extends AbstractMessageBus[Id, Signal] {
 
@@ -69,7 +71,8 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   override def flush {
     if (pendingSignals > 0) {
       var workerId = 0
-      while (workerId < numberOfWorkers) {
+      while (workerId < numberOfWorkers) { 
+        //TODO: This could potentially be done in parallel. Evaluate. 
         val bulker = outgoingMessages(workerId)
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {
@@ -102,11 +105,11 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
       if (bulker.isFull) {
         pendingSignals -= bulker.numberOfItems
         if (withSourceIds) {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, bulker.sourceIds))
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, bulker.sourceIds.clone))
         } else {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals, bulker.targetIds, null.asInstanceOf[Array[Id]]))
+          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, null.asInstanceOf[Array[Id]]))
         }
-        outgoingMessages(workerId).clear
+        bulker.clear
       }
     }
   }

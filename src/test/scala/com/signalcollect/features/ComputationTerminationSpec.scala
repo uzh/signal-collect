@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2011 University of Zurich
  *      
@@ -32,10 +33,14 @@ import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.nodeprovisioning.Node
-import com.signalcollect.nodeprovisioning.local.LocalNode
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import org.specs2.runner.JUnitRunner
 import com.typesafe.config.Config
+import akka.actor.ActorRef
+import com.signalcollect.configuration.ActorSystemRegistry
+import akka.actor.Props
+import com.signalcollect.nodeprovisioning.NodeActorCreator
+import com.signalcollect.nodeprovisioning.DefaultNodeActor
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
@@ -46,10 +51,15 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         GraphBuilder.build
       } else {
         GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-          override def getNodes(akkaConfig: Config): List[Node] = {
-            List(new LocalNode {
-              override def numberOfCores = numberOfWorkers.get
-            })
+          def getNodes(akkaConfig: Config): Array[ActorRef] = {
+            val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
+            if (system != null) {
+              val nodeControllerCreator = NodeActorCreator(0, None)
+              val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
+              Array[ActorRef](nodeController)
+            } else {
+              Array[ActorRef]()
+            }
           }
         }).build
       }

@@ -23,9 +23,9 @@ import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationWithJUnit
 import org.specs2.runner.JUnitRunner
-
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
+import com.signalcollect.Vertex
 
 @RunWith(classOf[JUnitRunner])
 class VertexMapSpec extends SpecificationWithJUnit with Mockito {
@@ -127,6 +127,31 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.get(Int.MaxValue).id.asInstanceOf[Int] must_== Int.MaxValue
     }
 
+    "fail to retrieve a vertex with the same hash code and different object" in {
+      case class Ab(a: Int, b: Int) {
+        override def hashCode = a.hashCode
+      }
+      val vm = new VertexMap[Any](8, 0.99f)
+      val v1 = new PageRankVertex(Ab(1, 100))
+      val v2 = new PageRankVertex(Ab(1, 101))
+      vm.put(v1)
+      vm.get(v1.id).asInstanceOf[Vertex[Any, Float]] === v1
+      vm.get(v2.id).asInstanceOf[Vertex[Any, Float]] === null
+    }
+
+    "handle hash collisions correctly" in {
+      case class Ab(a: Int, b: Int) {
+        override def hashCode = a.hashCode
+      }
+      val vm = new VertexMap[Any](8, 0.99f)
+      val v1 = new PageRankVertex(Ab(1, 100))
+      val v2 = new PageRankVertex(Ab(1, 101))
+      vm.put(v1)
+      vm.put(v2)
+      vm.get(v1.id).asInstanceOf[Vertex[Any, Float]] === v1
+      vm.get(v2.id).asInstanceOf[Vertex[Any, Float]] === v2
+    }
+    
     "stream vertices" in {
       val vm = new VertexMap[Int](8, 0.99f)
       vm.put(new SudokuCell(0)) === true

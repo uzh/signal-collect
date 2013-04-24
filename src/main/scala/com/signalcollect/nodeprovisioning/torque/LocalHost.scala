@@ -21,30 +21,32 @@
 package com.signalcollect.nodeprovisioning.torque
 
 class LocalHost extends ExecutionHost {
-  def executeJobs(jobs: List[TorqueJob]) = {
-    for (job <- jobs) {
-      var statsMap = Map[String, String]()
-      try {
-        statsMap = job.execute()
-        statsMap += (("evaluationDescription", job.jobDescription))
-        statsMap += (("submittedByUser", job.submittedByUser))
-        statsMap += (("jobId", job.jobId.toString))
-        statsMap += (("executionHostname", java.net.InetAddress.getLocalHost.getHostName))
-        statsMap += (("java.runtime.version", System.getProperties.get("java.runtime.version").toString))
-        if (!resultHandlers.isEmpty) {
-          for (resultHandler <- resultHandlers) {
-            resultHandler.addEntry(statsMap)
-          }
-        } else {
-          println(statsMap)
-        }
-        System.gc
-      } catch {
-        case e: Exception =>
-          println(statsMap)
-          println("resultHandlers" + resultHandlers)
-          sys.error(e.getMessage + "\n" + e.getStackTraceString)
-      }
-    }
+  def executeJobs(jobs: List[Job]) = {
+    println("local host will execute jobs now ...")
+    jobs foreach (_.execute())
   }
+//  {
+//    for (job <- jobs) {
+//      var statsMap = Map[String, String]()
+//      try {
+//        job.execute()
+//        statsMap += (("jobId", job.jobId.toString))
+//        statsMap += (("executionHostname", java.net.InetAddress.getLocalHost.getHostName))
+//        statsMap += (("java.runtime.version", System.getProperties.get("java.runtime.version").toString))
+//        if (!resultHandlers.isEmpty) {
+//          for (resultHandler <- resultHandlers) {
+//            resultHandler.addEntry(statsMap)
+//          }
+//        } else {
+//          println(statsMap)
+//        }
+//        System.gc
+//      } catch {
+//        case e: Exception =>
+//          println(statsMap)
+//          println("resultHandlers" + resultHandlers)
+//          sys.error(e.getMessage + "\n" + e.getStackTraceString)
+//      }
+//    }
+//  }
 }

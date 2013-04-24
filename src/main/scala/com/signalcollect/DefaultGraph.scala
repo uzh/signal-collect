@@ -22,39 +22,25 @@ package com.signalcollect
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-
 import scala.Array.canBuildFrom
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-
-import com.signalcollect.configuration.ActorSystemRegistry
-import com.signalcollect.configuration.AkkaConfig
-import com.signalcollect.configuration.EventBased
-import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.configuration.Pinned
-import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.console._
-import com.signalcollect.coordinator.DefaultCoordinator
-import com.signalcollect.coordinator.IsIdle
-import com.signalcollect.coordinator.OnIdle
-import com.signalcollect.interfaces.ComplexAggregation
-import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.WorkerActor
-import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
-
+import com.signalcollect.configuration._
+import com.signalcollect.coordinator._
+import com.signalcollect.interfaces._
+import com.signalcollect.logging.DefaultLogger
+import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.messaging.DefaultVertexToWorkerMapper
+import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -75,12 +61,30 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   workerId: Int,
   workerFactory: WorkerFactory,
   numberOfWorkers: Int,
-  config: GraphConfiguration)
-  extends Creator[WorkerActor[Id, Signal]] {
+  numberOfNodes: Int,
+  config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
   def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](
     workerId,
     numberOfWorkers,
+    numberOfNodes,
     config)
+}
+
+/**
+ * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
+ */
+case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
+  numberOfWorkers: Int,
+  numberOfNodes: Int,
+  messageBusFactory: MessageBusFactory,
+  heartbeatIntervalInMilliseconds: Long,
+  loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
+    numberOfWorkers,
+    numberOfNodes,
+    messageBusFactory,
+    heartbeatIntervalInMilliseconds,
+    loggingLevel)
 }
 
 /**
@@ -121,18 +125,31 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     }
   }
 
-  val nodes = config.nodeProvisioner.getNodes(akkaConfig)
+  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
+  // Bootstrap => sent and received messages are not counted for termination detection. 
+  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_, mb => Unit)) // MessageBus not initialized at this point.
+  val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
+  val numberOfNodes = bootstrapNodeProxies.length
 
-  val numberOfWorkers = nodes.par map (_.numberOfCores) sum
+  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
+
+  parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
+
+  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
 
   val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
     var workerId = 0
-    for (node <- nodes) {
+    for (node <- bootstrapNodeProxies) {
       for (core <- 0 until node.numberOfCores) {
-        val workerCreator = WorkerCreator[Id, Signal](workerId, config.workerFactory, numberOfWorkers, config)
+        val workerCreator = WorkerCreator[Id, Signal](
+          workerId,
+          config.workerFactory,
+          numberOfWorkers,
+          numberOfNodes,
+          config)
         val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
         actors(workerId) = system.actorFor(workerName)
         workerId += 1
@@ -144,7 +161,12 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val loggerActor: ActorRef = system.actorFor("akka://SignalCollect/system/log1-ConsoleLogger")
 
   val coordinatorActor: ActorRef = {
-    val coordinatorCreator = CoordinatorCreator[Id, Signal](numberOfWorkers, config.messageBusFactory, loggerActor, config.heartbeatIntervalInMilliseconds)
+    val coordinatorCreator = CoordinatorCreator[Id, Signal](
+      numberOfWorkers,
+      numberOfNodes,
+      config.messageBusFactory,
+      config.heartbeatIntervalInMilliseconds,
+      config.loggingLevel)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
       case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
@@ -153,23 +175,23 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[WorkerActor[Id, Signal]](_))
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor)
+  // Bootstrap => sent and received messages are not counted for termination detection. 
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, mb => Unit)) // MessageBus not initialized at this point.
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor, mb => Unit) // MessageBus not initialized at this point.
 
   initializeMessageBuses
 
   def initializeMessageBuses {
-    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList
+    val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
     for (registry <- registries.par) {
-      try {
-        registry.registerCoordinator(coordinatorActor)
-      } catch {
-        case t: Throwable => system.log.error("Exception in `initializeMessageBuses`:" + t.getCause + "\n" + t, this.toString)
-      }
+      registry.registerCoordinator(coordinatorActor)
+      registry.registerLogger(loggerActor)
       for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
-      registry.registerLogger(loggerActor)
+      for (nodeId <- (0 until numberOfNodes).par) {
+        registry.registerNode(nodeId, nodeActors(nodeId))
+      }
     }
   }
 
@@ -196,7 +218,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
-    stats.graphIdleWaitingTime = measureTime(awaitIdle _)
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
     val jvmCpuStartTime = getJVMCpuTime
@@ -216,8 +237,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
     stats.totalExecutionTime = new FiniteDuration(executionStopTime - executionStartTime, TimeUnit.NANOSECONDS)
-    val workerStatistics = workerApi.getIndividualWorkerStatistics
-    ExecutionInformation(config, numberOfWorkers, nodes map (_.numberOfCores.toString), parameters, stats, workerStatistics.fold(WorkerStatistics(null))(_ + _), workerStatistics)
+    val workerStatistics = workerApi.getIndividualWorkerStatistics // TODO: Refactor to use cached values in order to reduce latency.
+    ExecutionInformation(config, numberOfWorkers, parameters, stats, workerStatistics.fold(WorkerStatistics())(_ + _), workerStatistics)
   }
 
   protected def synchronousExecution(
@@ -413,15 +434,24 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       case (None, Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
         val interval = globalCondition.aggregationInterval * 1000000l
+        var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
+        var globalTermination = false
         while (!converged && !isGlobalTerminationConditionMet(globalCondition)) {
-          converged = awaitIdle(interval)
+          if (intervalHasPassed) {
+            lastAggregationOperationTime = System.nanoTime
+            globalTermination = isGlobalTerminationConditionMet(globalCondition)
+          }
+          // waits for whichever remaining time interval/limit is shorter
+          converged = awaitIdle(remainingIntervalTime)
         }
         if (converged) {
           stats.terminationReason = TerminationReason.Converged
         } else {
           stats.terminationReason = TerminationReason.GlobalConstraintMet
         }
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
         def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
           workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
@@ -438,6 +468,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         var globalTermination = false
         while (!converged && !globalTermination && !isTimeLimitReached) {
           if (intervalHasPassed) {
+            lastAggregationOperationTime = System.nanoTime
             globalTermination = isGlobalTerminationConditionMet(globalCondition)
           }
           // waits for whichever remaining time interval/limit is shorter
@@ -466,16 +497,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def awaitIdle {
-    implicit val timeout = Timeout(Duration.create(1000, TimeUnit.DAYS))
-    val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
-    try {
-      val result = Await.result(resultFuture, timeout.duration)
-    }
+    awaitIdle(Duration.create(1000, TimeUnit.DAYS).toNanos)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
     if (timeoutNanoseconds > 1000000000) {
       implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
+      // Add a new "on idle" action to the coordinator actors. The action is to send a message back to ourselves.
       val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
       try {
         val result = Await.result(resultFuture, timeout.duration)
@@ -506,11 +534,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   def isIdle = coordinatorProxy.isIdle
 
   def shutdown = {
-    if (config.consoleEnabled) {
-      console.shutdown
-    }
-    workerApi.shutdown
-    nodes.par.foreach(_.shutdown)
+    parallelBootstrapNodeProxies.foreach(_.shutdown)
     system.shutdown
     system.awaitTermination
   }
@@ -520,6 +544,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
+  
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = workerApi.foreachVertexWithGraphEditor(f) 
 
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)
@@ -543,6 +569,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
    */
   def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean) {
     graphEditor.sendSignal(signal, targetId, sourceId, blocking)
+    graphEditor.flush
   }
 
   /**
@@ -583,12 +610,36 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     graphEditor.removeEdge(edgeId, blocking)
   }
 
+  /**
+   *  Loads a graph using the provided `graphModification` function.
+   *  Blocks until the operation has completed if `blocking` is true.
+   *
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None, blocking: Boolean = false) {
     graphEditor.modifyGraph(graphModification, vertexIdHint, blocking)
   }
 
+  /**
+   *  Loads a graph using the provided iterator of `graphModification` functions.
+   *
+   *  @note Does not block.
+   *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
+   *        the loading function will be able to exploit locality.
+   *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
+   */
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    graphEditor.loadGraph(graphModifications, vertexIdHint)
+  }
+
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
+  }
+
+  private[signalcollect] def flush {
+    graphEditor.flush
   }
 
   /**

@@ -20,7 +20,13 @@
 
 package com.signalcollect.interfaces
 
-case class Request[ProxiedClass](command: ProxiedClass => Any, returnResult: Boolean = false)
+case object NodeReady
+
+case class Request[ProxiedClass](
+  command: ProxiedClass => Any,
+  returnResult: Boolean = false,
+  incrementorForReply: MessageBus[_, _] => Unit // Answers go to temporary actor. This allows to assign the send count to the real recipient.
+  )
 
 case class Heartbeat(maySignal: Boolean)
 
@@ -42,15 +48,27 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-  messagesSent: Array[Long],
-  messagesReceived: Long,
   workerStatistics: WorkerStatistics,
   systemInformation: SystemInformation)
+  messagesSent: SentMessagesStats,
+  messagesReceived: Long)
+
+// Convergence/pause detection
+case class NodeStatus(
+  nodeId: Int,
+  messagesSent: SentMessagesStats,
+  messagesReceived: Long)
+
+case class SentMessagesStats(
+  workers: Array[Int],
+  nodes: Array[Int],
+  coordinator: Int,
+  other: Int) {
+  def sumRelevant = 0l + workers.sum + nodes.sum + coordinator
+}
 
 case class WorkerStatistics(
-  messagesSent: Array[Long],
   workerId: Int = -1,
-  messagesReceived: Long = 0l,
   toSignalSize: Long = 0l,
   toCollectSize: Long = 0l,
   collectOperationsExecuted: Long = 0l,
@@ -70,22 +88,7 @@ case class WorkerStatistics(
   otherMessagesReceived: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
-      { // Merges the sent messages arrays.
-        if (messagesSent == null) other.messagesSent
-        else if (other.messagesSent == null) messagesSent
-        else if (messagesSent == null && other.messagesSent == null) null
-        else {
-          val merged = new Array[Long](messagesSent.length)
-          var i = 0
-          while (i < messagesSent.length) {
-            merged(i) = messagesSent(i) + other.messagesSent(i)
-            i += 1
-          }
-          merged
-        }
-      },
       -1,
-      messagesReceived + other.messagesReceived,
       toSignalSize + other.toSignalSize,
       toCollectSize + other.toCollectSize,
       collectOperationsExecuted + other.collectOperationsExecuted,
@@ -103,6 +106,12 @@ case class WorkerStatistics(
       continueMessagesReceived + other.continueMessagesReceived,
       requestMessagesReceived + other.requestMessagesReceived,
       otherMessagesReceived + other.otherMessagesReceived)
+  }
+  override def toString: String = {
+    "# collect operations\t" + collectOperationsExecuted + "\n" +
+      "# signal operations\t" + signalOperationsExecuted + "\n" +
+      "# vertices (add/remove)\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
+      "# edges (add/remove)\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
 }
 

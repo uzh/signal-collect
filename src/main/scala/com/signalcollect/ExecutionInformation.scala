@@ -42,7 +42,6 @@ import com.signalcollect.interfaces.WorkerStatistics
 case class ExecutionInformation(
   config: GraphConfiguration,
   numberOfWorkers: Int,
-  nodeDescriptions: List[String],
   parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,
@@ -67,15 +66,13 @@ case class ExecutionStatistics(
   var computationTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
   var totalExecutionTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS), // should approximately equal computation time + idle waiting + garbage collection
   var jvmCpuTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
-  var graphIdleWaitingTime: Duration = Duration.create(0, TimeUnit.MILLISECONDS),
   var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
 
   override def toString: String = {
     "# signal steps \t\t" + signalSteps + "\n" +
-      "# collect steps \t\t" + collectSteps + "\n" +
+      "# collect steps \t" + collectSteps + "\n" +
       "Computation time \t" + computationTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
       "JVM CPU time \t\t" + jvmCpuTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
-      "Graph loading time \t" + graphIdleWaitingTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
       "Termination reason \t" + terminationReason
   }
 

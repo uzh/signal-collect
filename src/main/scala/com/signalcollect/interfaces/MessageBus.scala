@@ -36,32 +36,48 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   def isInitialized: Boolean
 
   def numberOfWorkers: Int
+  
+  def numberOfNodes: Int
 
-  def messagesSent: Array[Long]
+  def incrementMessagesSentToWorker(workerId: Int)
+  def messagesSentToWorkers: Array[Int]
 
+  def incrementMessagesSentToNode(nodeId: Int)
+  def messagesSentToNodes: Array[Int]
+
+  def incrementMessagesSentToCoordinator
+  def messagesSentToCoordinator: Int
+
+  def incrementMessagesSentToOthers
+  def messagesSentToOthers: Int
+  
   def messagesReceived: Long
 
   def getReceivedMessagesCounter: AtomicInteger
 
-  def sendToActor(actor: ActorRef, m: Any)
+  def sendToActor(actor: ActorRef, message: Any)
 
-  def sendToLogger(m: Any)
+  def sendToLogger(message: LogMessage)
 
-  def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
+  def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
 
-  def sendToWorkerForVertexId(m: Any, vertexId: Id)
+  def sendToWorkerForVertexId(message: Any, vertexId: Id)
 
-  def sendToWorker(workerId: Int, m: Any)
+  def sendToWorker(workerId: Int, message: Any)
 
-  def sendToWorkers(m: Any, messageCounting: Boolean)
+  def sendToWorkers(message: Any, messageCounting: Boolean)
 
-  def sendToCoordinator(m: Any)
+  def sendToNode(nodeId: Int, message: Any)
+  
+  def sendToNodes(message: Any, messageCounting: Boolean)
+  
+  def sendToCoordinator(message: Any)
 
   /**
    * Resets the message but does not touch the counters.
    */
   def reset
-
+  
   // Returns an api that treats all workers as if there were only one.
   def getWorkerApi: WorkerApi[Id, Signal]
 
@@ -82,6 +98,14 @@ trait MessageRecipientRegistry {
    */
   def registerWorker(workerId: Int, worker: ActorRef)
 
+  /**
+   *  Registers a node.
+   *
+   *  @param nodeId is the node id
+   *  @param node is the node to be registered
+   */
+  def registerNode(nodeId: Int, node: ActorRef)
+  
   /**
    *  Registers a coordinator.
    *

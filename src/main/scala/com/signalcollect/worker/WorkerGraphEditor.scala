@@ -20,12 +20,8 @@
 
 package com.signalcollect.worker
 
-import com.signalcollect.Edge
-import com.signalcollect.GraphEditor
-import com.signalcollect.Vertex
-import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect._
+import com.signalcollect.interfaces._
 
 /**
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
@@ -33,9 +29,9 @@ import com.signalcollect.interfaces.WorkerActor
  */
 class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
   workerId: Int,
-  worker: WorkerActor[Id, Signal],
+  worker: WorkerApi[Id, Signal],
   messageBus: MessageBus[Id, Signal])
-  extends GraphEditor[Id, Signal] {
+    extends GraphEditor[Id, Signal] {
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
@@ -83,8 +79,16 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
+  override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+    graphEditor.loadGraph(graphModifications, vertexIdHint)
+  }
+
   protected def shouldHandleLocally(vertexId: Id): Boolean = {
     messageBus.getWorkerIdForVertexId(vertexId) == workerId
+  }
+
+  private[signalcollect] def flush {
+    graphEditor.flush
   }
 
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {

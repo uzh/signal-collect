@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -22,10 +23,24 @@ package com.signalcollect.nodeprovisioning.local
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
+import akka.actor.ActorRef
+import com.signalcollect.configuration.ActorSystemRegistry
+import akka.actor.Props
+import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import com.signalcollect.nodeprovisioning.NodeActorCreator
+import com.signalcollect.interfaces.MessageBusFactory
+import scala.reflect.ClassTag
 
-class LocalNodeProvisioner extends NodeProvisioner {
-
-  def getNodes(akkaConfig: Config): List[Node] = {
-    List(new LocalNode())
+class LocalNodeProvisioner()
+    extends NodeProvisioner {
+  def getNodes(akkaConfig: Config): Array[ActorRef] = {
+    val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
+    if (system != null) {
+      val nodeControllerCreator = NodeActorCreator(0, None)
+      val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
+      Array[ActorRef](nodeController)
+    } else {
+      Array[ActorRef]()
+    }
   }
 }
