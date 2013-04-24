@@ -36,32 +36,31 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
   sequential
 
   "ConsoleServer" should {
-
+    
     "start successfully" in {
       val port = 8098
       val socketAddress = new InetSocketAddress(InetAddress.getByName(null), port)
       val timeoutInMilliseconds = 5000
       val socket = new Socket
-      var online = false
+      var isServerOnline = false
 
       val graph = GraphBuilder.withConsole(true, port).build
       
       try {
         socket.connect(socketAddress, timeoutInMilliseconds)
-        online = true
+        isServerOnline = true
       } catch {
-        case _ : Throwable => online = false
+        case _ : Throwable => 
       } finally {
         try {
             socket.close();
         } catch { case _ : Throwable => }
       }
 
-      graph.shutdown
-      
-      online === true
+      isServerOnline === true
     }
 
   }
+
 
 }
