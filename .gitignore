@@ -11,3 +11,6 @@ target/*
 graph-data/
 log_messages.txt
 references.nt
+web-BerkStan.txt
+web-BerkStan.txt.gz
+web-split-*

@@ -350,15 +350,17 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
-    val ws: Array[WorkerStatus] = 
-      (coordinator.getWorkerStatus)
-    val wstats = Toolkit.unpackObjects(ws.map(_.workerStatistics))
-    val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
-
+    // TODO: Replace placeholder code.
+//    val ws: Array[WorkerStatus] = 
+//      (coordinator.getWorkerStatus)
+//    val wstats = Toolkit.unpackObjects(ws.map(_.workerStatistics))
+//    val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
+    
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
-    ("workerStatistics" -> wstats ~ sstats)
+//    ("workerStatistics" -> wstats ~ sstats)
+    ("workerStatistics" -> List())
   }
 }
 

@@ -110,13 +110,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
       def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.001
+        val correct = (state - expectedState).abs < 0.01
         if (!correct) {
           System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
-      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.00001) must_== true
+      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.001) must_== true
     }
 
     "deliver correct results on a 5-star graph" in {
@@ -138,13 +138,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
       def pageRankTwoOnTwoGridVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.001
+        val correct = (state - expectedState).abs < 0.01
         if (!correct) {
           System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
-      test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges), signalThreshold = 0.0001) must_== true
+      test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges), signalThreshold = 0.001) must_== true
     }
 
     "deliver correct results on a 5*5 torus" in {
@@ -152,13 +152,13 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
       def pageRankTorusVerifier(v: Vertex[_, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.001
+        val correct = (state - expectedState).abs < 0.01
         if (!correct) {
           System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
         }
         correct
       }
-      test(verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.0001) must_== true
+      test(verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) must_== true
     }
   }
 

@@ -1,8 +1,7 @@
 /*
  *  @author Philip Stutz
- *  @author Thomas Keller
  *  
- *  Copyright 2012 University of Zurich
+ *  Copyright 2011 University of Zurich
  *      
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,11 +17,10 @@
  *  
  */
 
-package com.signalcollect.nodeprovisioning
+package com.signalcollect.nodeprovisioning.torque
 
-import com.typesafe.config.Config
-import akka.actor.ActorRef
+import scala.util.Random
 
-trait NodeProvisioner extends Serializable {
-  def getNodes(akkaConfig: Config): Array[ActorRef]
-}
+case class Job(
+  execute: () => Unit,
+  jobId: Int = Random.nextInt.abs % 1000000)
