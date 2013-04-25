@@ -146,9 +146,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
     case ReceiveTimeout =>
       if (shouldSendHeartbeat) {
+        logMessages
         sendHeartbeat
       }
     case OnIdle(action) =>
+      println("Coordinator on-idle triggered, setting receive timeout.")
       context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
@@ -294,7 +296,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
 
   def isIdle: Boolean = {
-    //logMessages
+    logMessages
     workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived //totalMessagesSent == totalMessagesReceived
   }
 

@@ -24,7 +24,7 @@ import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 
-class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
+class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) extends Serializable {
   private var itemCount = 0
   def numberOfItems = itemCount
   def isFull: Boolean = itemCount == size
@@ -51,7 +51,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
-  extends AbstractMessageBus[Id, Signal] {
+  extends AbstractMessageBus[Id, Signal] with Serializable {
 
   override def reset {
     super.reset

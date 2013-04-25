@@ -43,9 +43,7 @@ import com.signalcollect.interfaces.WorkerStatistics
 class DefaultWorkerApi[Id, Signal](
   val workers: Array[WorkerApi[Id, Signal]],
   val mapper: VertexToWorkerMapper[Id])
-    extends WorkerApi[Id, Signal] {
-
-  protected val random = new Random
+    extends WorkerApi[Id, Signal] with Serializable {
 
   override def toString = "DefaultWorkerApi"
 
@@ -84,7 +82,7 @@ class DefaultWorkerApi[Id, Signal](
   override def foreachVertex(f: (Vertex[Id, _]) => Unit) = futures(_.foreachVertex(f)) foreach get
 
   override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
-  
+
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
     throw new UnsupportedOperationException("DefaultWorkerApi does not support this operation.")
   }
@@ -97,6 +95,7 @@ class DefaultWorkerApi[Id, Signal](
   }
 
   override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
+    println("Worker API delegating `setUndeliverableSignalHandler`")
     futures(_.setUndeliverableSignalHandler(h)) foreach get
   }
 
@@ -182,7 +181,7 @@ class DefaultWorkerApi[Id, Signal](
     if (vertexIdHint.isDefined) {
       mapper.getWorkerIdForVertexId(vertexIdHint.get)
     } else {
-      random.nextInt(workers.length)
+      Random.nextInt(workers.length)
     }
   }
 

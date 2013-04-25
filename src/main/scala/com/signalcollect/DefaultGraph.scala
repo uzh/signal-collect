@@ -152,17 +152,19 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, mb => Unit)) // MessageBus not initialized at this point.
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor, mb => Unit) // MessageBus not initialized at this point.
 
+  println("Initializing message buses.")
   initializeMessageBuses
+  println("Done initializing message buses.")
 
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
-    for (registry <- registries.par) {
+    for (registry <- registries) {
       registry.registerCoordinator(coordinatorActor)
       registry.registerLogger(loggerActor)
-      for (workerId <- (0 until numberOfWorkers).par) {
+      for (workerId <- 0 until numberOfWorkers) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
-      for (nodeId <- (0 until numberOfNodes).par) {
+      for (nodeId <- 0 until numberOfNodes) {
         registry.registerNode(nodeId, nodeActors(nodeId))
       }
     }
@@ -406,7 +408,10 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     workerApi.aggregateAll(aggregationOperation)
   }
 
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
+    println("Default graph delegating `setUndeliverableSignalHandler`")
+    workerApi.setUndeliverableSignalHandler(h)
+  }
 
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.

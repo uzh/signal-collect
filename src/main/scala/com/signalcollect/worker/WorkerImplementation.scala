@@ -261,6 +261,7 @@ case class WorkerImplementation[Id, Signal](
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
+    println("Worker implementation is setting a new undeliverable signal handler.")
     undeliverableSignalHandler = h
   }
 
