@@ -32,7 +32,7 @@ import com.signalcollect.SampleVertexIds
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Extraction._
-import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.interfaces.WorkerStatistics
 import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
@@ -350,17 +350,16 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
-    // TODO: Replace placeholder code.
-//    val ws: Array[WorkerStatus] = 
-//      (coordinator.getWorkerStatus)
-//    val wstats = Toolkit.unpackObjects(ws.map(_.workerStatistics))
-//    val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
+    val ws: Array[WorkerStatistics] = 
+      (coordinator.getWorkerApi.getIndividualWorkerStatistics).toArray
+    val wstats = Toolkit.unpackObjects(ws)
+    //TODO: Implement sstats.
+    //val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
     
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
-//    ("workerStatistics" -> wstats ~ sstats)
-    ("workerStatistics" -> List())
+    ("workerStatistics" -> wstats) // ~ sstats)
   }
 }
 
