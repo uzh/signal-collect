@@ -201,6 +201,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(maySignal) =>
+      println(s"Worker $workerId has received a heartbeat from the coordinator.")
       worker.counters.heartbeatMessagesReceived += 1
       worker.sendStatusToCoordinator
       worker.systemOverloaded = !maySignal

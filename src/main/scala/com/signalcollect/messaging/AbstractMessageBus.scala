@@ -183,6 +183,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   }
 
   override def sendToCoordinator(message: Any) {
+    println(s"Message bus sending $message to coordinator.")
     incrementMessagesSentToCoordinator
     coordinator ! message
   }

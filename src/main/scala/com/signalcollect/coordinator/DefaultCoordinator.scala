@@ -128,6 +128,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def receive = {
     case ws: WorkerStatus =>
+      println(s"Coordinator received worker status: $ws")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
@@ -173,6 +174,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
           severe(e)
           throw e
       }
+    case other =>
+      throw new UnsupportedOperationException(s"Coordinator cannot handle message $other.")
   }
 
   def updateWorkerStatusMap(ws: WorkerStatus) {

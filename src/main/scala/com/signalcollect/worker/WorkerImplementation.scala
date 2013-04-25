@@ -115,6 +115,8 @@ case class WorkerImplementation[Id, Signal](
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)
+    } else {
+      println(s"Worker $workerId : Message bus not initialized, not sending worker status to coordinator.")
     }
   }
 
