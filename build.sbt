@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
  "org.specs2" % "classycle" % "1.4.1" % "test",
  "org.mockito" % "mockito-all" % "1.9.0"  % "test",
  "net.liftweb" % "lift-json_2.10" % "2.5-RC4",
- "org.java-websocket" % "Java-WebSocket" % "1.3.0-SNAPSHOT"
+ "org.java-websocket" % "Java-WebSocket" % "1.3.0"
   )
 
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"
