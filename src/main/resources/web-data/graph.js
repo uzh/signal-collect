@@ -27,7 +27,7 @@ scc.defaults.graph = {"layout": {
                       "options": {
                         "gs_searchId": "",
                         "gs_topCriterium": "Degree",
-                        "gd_nodeSize": "Node degree",
+                        "gd_nodeSize": "Node state",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
                         "gp_vicinityIncoming": "No",
@@ -116,8 +116,7 @@ scc.modules.Graph = function() {
                        "Node degree": function (d) { return color(d.weight); }},
     // functions returning a radius
     "gd_nodeSize": { "Node state": function(d) { return scale(d.state.replace(/[^0-9.,]/g, '')); },
-                     "All equal": function(d) { return 5; },
-                     "Node degree": function(d) { return scale.copy().domain([1,20])(d.weight); }}
+                     "All equal": function(d) { return 5; }}
   };
 
   /**
@@ -161,7 +160,7 @@ scc.modules.Graph = function() {
   /**
    * The default node radius
    */
-  var nodeSize = nodeDesign["gd_nodeSize"]["Node degree"];
+  var nodeSize = nodeDesign["gd_nodeSize"]["Node state"];
 
   /**
    * Order graph data using the options set in the GUI. This function may be
@@ -606,7 +605,7 @@ scc.modules.Graph = function() {
   /**
    * Set the design of the given node property to the given node metric.
    * For example, set the size ("gd_nodeSize") to be depending on the node
-   * node degree ("Node degree").
+   * node state ("Node state").
    * @param {string} property - The visual node property to change
    * @param {string} metric - The node metric on which the visual
    *     representation should depend.
