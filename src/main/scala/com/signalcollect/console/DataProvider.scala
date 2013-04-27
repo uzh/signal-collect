@@ -261,7 +261,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   val workerApi = coordinator.getWorkerApi 
 
   def findVicinity(vertexIds: List[Id], radius: Int = 3, 
-                   onlyOutward: Boolean = true): List[Id] = {
+                   onlyOutgoing: Boolean = true): List[Id] = {
     if (radius == 0) { vertexIds }
     else {
       findVicinity(vertexIds.map { id =>

@@ -307,7 +307,7 @@ $(document).ready(function() {
         enableModules(["Configuration", "Log"]);
       }
       if (view == "graph") {
-        enableModules(["Graph", "BreakConditions"]);
+        enableModules(["BreakConditions"]);
       }
       layout([view]);
       break;

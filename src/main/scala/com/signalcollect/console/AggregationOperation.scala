@@ -127,7 +127,7 @@ class TopStateAggregator[Id](n: Int)
 
   def reduce(degrees: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
     degrees.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
-           .sortWith({ (t1, t2) => t1._1 < t2._1 })
+           .sortWith({ (t1, t2) => t1._1 > t2._1 })
            .take(n)
   }
 }
