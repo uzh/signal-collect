@@ -267,9 +267,6 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     else {
       if (incoming) {
         val nodes = workerApi.aggregateAll(new FindNodeVicinitiesByIdsAggregator[Id](vertexIds))
-                               .map{ _._2 }
-                               .flatten
-                               .toList
         findVicinity(nodes, radius - 1, true)
       }
       else {
@@ -336,11 +333,11 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case otherwise => fetchInvalid(msg, "missing id")
       }
       case Some("top") => request.topCriterium match {
-        case Some("State (Numerical)") => fetchTopStates(m, r, i)
-        case Some("Degree (Both)") => fetchTopDegree(m, r, i)
+        case Some("State") => fetchTopStates(m, r, i)
+        case Some("Degree") => fetchTopDegree(m, r, i)
         case otherwise => new InvalidDataProvider(msg).fetch
       }
-      case otherwise => fetchSample(m, r, i)
+      case otherwise => fetchTopDegree(m, r, i)
     }
     
     ("provider" -> "graph") ~

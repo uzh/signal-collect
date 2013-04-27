@@ -26,7 +26,7 @@ scc.defaults.graph = {"layout": {
                       },
                       "options": {
                         "gs_searchId": "",
-                        "gs_topCriterium": "State (Numerical)",
+                        "gs_topCriterium": "Degree",
                         "gd_nodeSize": "Node degree",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",

@@ -59,16 +59,16 @@
             <div class="title expanded">Select nodes to display</div>
             <div class="contents">
               <form>
-                <h1><span>Search for vertex by ID</span></h1>
-                <input id="gs_searchId" type="text">
-                <button id="gs_searchById">Find</button><br/>
                 <h1><span>Show top vertices</span></h1>
                 <label>By:</label>
                 <select id="gs_topCriterium">
-                  <option>State (Numerical)</option>
-                  <option>Degree (Both)</option>
+                  <option>Degree</option>
+                  <option>State</option>
                 </select>
                 <button id="gs_searchByTop">Find</button><br/>
+                <h1><span>Search for vertex by ID</span></h1>
+                <input id="gs_searchId" type="text">
+                <button id="gs_searchById">Find</button><br/>
               </form> 
             </div>
           </div>
@@ -100,12 +100,6 @@
                   <option>All equal</option>
                 </select><br/>
                 <h1><span>Performance &amp; Complexity</span></h1>
-                <label for="gp_vicinityIncoming">Also compute incoming edges:</label>
-                <select id="gp_vicinityIncoming">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
-                <br/>
                 <label for="gp_vicinityRadius">Node vicinity radius:</label>
                 <select id="gp_vicinityRadius"></select><br/>
                 <label for="gp_maxVertices">Target node count (exkl. vicinity):</label>
@@ -117,6 +111,11 @@
                   <option>When graph is still</option>
                   <option>Always</option>
                   <option>Never</option>
+                </select><br/>
+                <label for="gp_vicinityIncoming">Also compute incoming edges:</label>
+                <select id="gp_vicinityIncoming">
+                  <option>No</option>
+                  <option>Yes</option>
                 </select>
               </form> 
             </div>

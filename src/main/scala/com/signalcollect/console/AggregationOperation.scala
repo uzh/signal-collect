@@ -133,25 +133,28 @@ class TopStateAggregator[Id](n: Int)
 }
 
 class FindNodeVicinitiesByIdsAggregator[Id](idsList: List[Id])
-      extends AggregationOperation[Map[Id,List[Id]]] {
+      extends AggregationOperation[List[Id]] {
 
   def ids = idsList.toSet
 
-  def extract(v: Vertex[_,_]): Map[Id,List[Id]] = v match {
+  def extract(v: Vertex[_,_]): List[Id] = v match {
     case i: Inspectable[Id,_] =>
-      ((if (ids.contains(i.id)) {
-          Map(i.id -> i.outgoingEdges.values.map{ case v: Edge[Id] => v.targetId }.toList)
-        }
-      else { Map() } )
-      ++ 
-      i.outgoingEdges.values.map { 
-        case v: Edge[Id] => (v.targetId -> List[Id](i.id)) 
-      })
-    case otherwise => Map()
+      // if this node is the target of a primary node, it's a vicinity node
+      if(i.outgoingEdges.values.view.map { 
+        case v: Edge[Id] if (ids.contains(v.targetId)) => true
+        case otherwise => false
+      }.toList.contains(true)) { return  List(i.id) }
+      // if this node is a primary node, all its targets are vicinity nodes
+      if (ids.contains(i.id)) {
+        return i.outgoingEdges.values.map{ case v: Edge[Id] => v.targetId }.toList
+      }
+      // if neither is true, this node is irrelevant
+      return List()
+    case otherwise => List()
   }
 
-  def reduce(vertices: Stream[Map[Id,List[Id]]]): Map[Id,List[Id]] = {
-    Toolkit.mergeMaps(vertices.toList)((v1, v2) => v1 ++ v2)
+  def reduce(vertices: Stream[List[Id]]): List[Id] = {
+    vertices.toList.flatten
   }
 }
 
