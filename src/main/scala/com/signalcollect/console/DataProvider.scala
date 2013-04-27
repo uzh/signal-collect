@@ -270,7 +270,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
                                .map{ _._2 }
                                .flatten
                                .toList
-        vertexIds ++ findVicinity(nodes, radius - 1, true)
+        findVicinity(nodes, radius - 1, true)
       }
       else {
         findVicinity(vertexIds.map { id =>
@@ -289,7 +289,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case 0 => (List[Id](), List[Id]())
       case otherwise => 
         val nodeIds = result.map { _.id }.toList
-        (nodeIds, findVicinity(nodeIds, radius, incoming))
+        (nodeIds, findVicinity(nodeIds, radius, incoming).diff(nodeIds))
     }
     workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
   }
@@ -297,7 +297,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   def fetchTopStates(n: Int, radius: Int, incoming: Boolean = false): JObject = {
     val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n)).take(n)
     val nodes = topState.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
-    val vicinity = findVicinity(nodes, radius, incoming)
+    val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
 

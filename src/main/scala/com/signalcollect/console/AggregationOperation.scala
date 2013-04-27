@@ -37,30 +37,30 @@ class GraphAggregator[Id](nodeIdsList: List[Id] = List[Id](),
   def nodeIds = nodeIdsList.toSet
   def vicinityNodeIds = vicinityNodeIdsList.toSet
 
-  def scanIds(l: Set[Id], category: String, i: Inspectable[Id,_]): JObject = {
+  def scanIds(l: Set[Id], l2: Set[Id], category: String, i: Inspectable[Id,_]): JObject = {
     if (l.contains(i.id)) {
       val edges = i.outgoingEdges.values.filter { value =>
         value match {
-          case v: Edge[Id] => l.contains(v.targetId)
+          case v: Edge[Id] => l.contains(v.targetId) || l2.contains(v.targetId)
           case otherwise => false
         }
-      }
-      JObject(List(
-        JField("nodes", JObject(List(JField(i.id.toString, 
+      }.map{ e => ( JString(e.targetId.toString))}.toList
+      def nodesObj = ("nodes", JObject(List(JField(i.id.toString, 
                         JObject(List(JField("s", i.state.toString),
                                      JField("c", category),
                                      JField("ss", i.scoreSignal),
-                                     JField("cs", i.scoreCollect))))))),
-        JField("edges", JObject(List(JField(i.id.toString, JArray(
-          edges.map{ e => ( JString(e.targetId.toString))}.toList)))))
-      ))
+                                     JField("cs", i.scoreCollect)))))))
+      def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(edges)))))
+      if (edges.size > 0) { nodesObj ~ edgesObj } else { nodesObj }
     }
     else { JObject(List()) }
   }
 
   def extract(v: Vertex[_,_]): JObject = v match {
     case i: Inspectable[Id,_] => {
-      scanIds(vicinityNodeIds, "v", i) merge scanIds(nodeIds, "n", i) 
+      (scanIds(vicinityNodeIds, nodeIds, "v", i)
+      merge
+      scanIds(nodeIds, vicinityNodeIds, "n", i))
     }
     case other => JObject(List())
   }
