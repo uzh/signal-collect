@@ -83,7 +83,11 @@ case class WorkerStatistics(
   bulkSignalMessagesReceived: Long = 0l,
   continueMessagesReceived: Long = 0l,
   requestMessagesReceived: Long = 0l,
-  otherMessagesReceived: Long = 0l) {
+  otherMessagesReceived: Long = 0l,
+  messagesSentToWorkers: Long = 0l,
+  messagesSentToNodes: Long = 0l,
+  messagesSentToCoordinator: Long = 0l,
+  messagesSentToOthers: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       -1,
@@ -103,7 +107,11 @@ case class WorkerStatistics(
       bulkSignalMessagesReceived + other.bulkSignalMessagesReceived,
       continueMessagesReceived + other.continueMessagesReceived,
       requestMessagesReceived + other.requestMessagesReceived,
-      otherMessagesReceived + other.otherMessagesReceived)
+      otherMessagesReceived + other.otherMessagesReceived,
+      messagesSentToWorkers + other.messagesSentToWorkers,
+      messagesSentToNodes + other.messagesSentToNodes,
+      messagesSentToCoordinator + other.messagesSentToCoordinator,
+      messagesSentToOthers + other.messagesSentToOthers)
   }
   override def toString: String = {
     "# collect operations\t" + collectOperationsExecuted + "\n" +

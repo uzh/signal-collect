@@ -407,7 +407,11 @@ case class WorkerImplementation[Id, Signal](
       bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
       continueMessagesReceived = counters.continueMessagesReceived,
       requestMessagesReceived = counters.requestMessagesReceived,
-      otherMessagesReceived = counters.otherMessagesReceived)
+      otherMessagesReceived = counters.otherMessagesReceived,
+      messagesSentToWorkers = messageBus.messagesSentToWorkers.sum,
+      messagesSentToNodes = messageBus.messagesSentToNodes.sum,
+      messagesSentToCoordinator = messageBus.messagesSentToCoordinator,
+      messagesSentToOthers = messageBus.messagesSentToOthers)
   }
 
   def getIndividualSystemInformation = List(getSystemInformation)
