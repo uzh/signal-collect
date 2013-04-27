@@ -263,6 +263,10 @@ scc.modules.Graph = function() {
           clearTimeout(fadeTimer);
           var tooltip = $("#graph_tooltip");
           $("#graph_tooltip").fadeIn(200);
+          link.attr("class", function(o) {
+            if (o.target.id === data.id) { return "link outgoing"; }
+            return "link"
+          });
       }
       else {
           $("#node_id").text("-");
@@ -273,7 +277,7 @@ scc.modules.Graph = function() {
           fadeTimer = setTimeout(function() {
             $("#graph_tooltip").fadeOut(200);
           }, 500);
-
+          link.attr("class", "link");
       }
     });
 
@@ -433,7 +437,6 @@ scc.modules.Graph = function() {
     link.enter().append("line")
         .attr("class", "link");
     link.exit().remove();
-    link.style("stroke-width", 1);
 
     node = svg.selectAll(".node");
     node = node.data(nodes)

@@ -535,6 +535,11 @@ body {
 .link {
   display: none;
   stroke: #999;
+  stroke-width: 1;
+}
+.link.outgoing {
+  stroke: #009900;
+  stroke-width: 2;
 }
 
 *:focus {
