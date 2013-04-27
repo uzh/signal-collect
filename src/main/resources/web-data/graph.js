@@ -30,6 +30,7 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeSize": "Node degree",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
+                        "gp_vicinityIncoming": "No",
                         "gp_vicinityRadius": "1",
                         "gp_maxVertices": "10",
                         "gp_refreshRate": "5",
@@ -92,6 +93,7 @@ scc.modules.Graph = function() {
    */
   var addOptionsToOrder = function(o) { 
     o["vicinityRadius"] = parseInt($("#gp_vicinityRadius").val());
+    o["vicinityIncoming"] = ($("#gp_vicinityIncoming").val() == "Yes");
     o["maxVertices"] = parseInt($("#gp_maxVertices").val());
     return o;
   };
@@ -652,7 +654,20 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler called when the vicinity raidus option changes. Persists the 
+   * Handler called when the vicinity 'incoming' option changes. Persists the 
+   * choice to the settings hash and re-orders the graph with the new setting
+   * @param {Event} e - The event that triggered the call
+   */
+  $("#gp_vicinityIncoming").change(function (e) { 
+    var property = $(this);
+    scc.settings.set({"graph": {"options": {"gp_vicinityIncoming": property.val() }}});
+    scc.consumers.Graph.reset();
+    scc.consumers.Graph.order();
+  });
+
+
+  /**
+   * Handler called when the vicinity radius option changes. Persists the 
    * choice to the settings hash and re-orders the graph with the new setting
    * @param {Event} e - The event that triggered the call
    */

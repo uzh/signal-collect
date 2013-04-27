@@ -132,26 +132,25 @@ class TopStateAggregator[Id](n: Int)
   }
 }
 
-class FindNodeVicinitiesByIdsAggregator(idsList: List[String])
-      extends AggregationOperation[Map[String,List[String]]] {
+class FindNodeVicinitiesByIdsAggregator[Id](idsList: List[Id])
+      extends AggregationOperation[Map[Id,List[Id]]] {
 
   def ids = idsList.toSet
 
-  def extract(v: Vertex[_,_]): Map[String,List[String]] = v match {
-    case i: Inspectable[_,_] =>
-      ((if (ids.contains(i.id.toString)) {
-          Map(i.id.toString -> i.outgoingEdges.values.map{_.targetId.toString}.toList)
+  def extract(v: Vertex[_,_]): Map[Id,List[Id]] = v match {
+    case i: Inspectable[Id,_] =>
+      ((if (ids.contains(i.id)) {
+          Map(i.id -> i.outgoingEdges.values.map{ case v: Edge[Id] => v.targetId }.toList)
         }
       else { Map() } )
-      ++
-      (for(v <- i.outgoingEdges.values if (ids.contains(v.targetId.toString)))
-       yield (v.targetId.toString -> List(i.id.toString))).toMap)
-
-    case otherwise => 
-      Map()
+      ++ 
+      i.outgoingEdges.values.map { 
+        case v: Edge[Id] => (v.targetId -> List[Id](i.id)) 
+      })
+    case otherwise => Map()
   }
 
-  def reduce(vertices: Stream[Map[String,List[String]]]): Map[String,List[String]] = {
+  def reduce(vertices: Stream[Map[Id,List[Id]]]): Map[Id,List[Id]] = {
     Toolkit.mergeMaps(vertices.toList)((v1, v2) => v1 ++ v2)
   }
 }
