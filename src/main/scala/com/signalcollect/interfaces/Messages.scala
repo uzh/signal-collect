@@ -48,8 +48,6 @@ case class WorkerStatus(
   workerId: Int,
   isIdle: Boolean,
   isPaused: Boolean,
-//  workerStatistics: WorkerStatistics,
-//  systemInformation: SystemInformation,
   messagesSent: SentMessagesStats,
   messagesReceived: Long)
 

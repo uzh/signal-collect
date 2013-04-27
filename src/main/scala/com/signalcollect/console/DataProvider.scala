@@ -33,6 +33,7 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Extraction._
 import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.SystemInformation
 import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
@@ -176,8 +177,8 @@ case class BreakConditionContainer(
   props: Map[String,String]
 )
 
-class BreakConditionsProvider(coordinator: Coordinator[_, _], 
-                                  socket: WebSocketConsoleServer[_],
+class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _], 
+                                  socket: WebSocketConsoleServer[Id],
                                   msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -252,25 +253,15 @@ case class GraphDataRequest(
   topCriterium: Option[String]
 )
 
-class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue) 
+class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
                             extends DataProvider {
 
   implicit val formats = DefaultFormats
 
   val workerApi = coordinator.getWorkerApi 
 
-  def findVicinity(vertexIds: List[String], radius: Int = 3): List[String] = {
-    if (radius == 0) { vertexIds }
-    else {
-      val nodes = workerApi.aggregateAll(new FindNodeVicinitiesByIdsAggregator(vertexIds))
-                             .map{ _._2 }
-                             .flatten
-                             .toList
-      vertexIds ++ findVicinity(nodes, radius - 1)
-    }
-  }
-
-  /*def findVicinity(vertexIds: List[Id], radius: Int = 3): List[Id] = {
+  def findVicinity(vertexIds: List[Id], radius: Int = 3, 
+                   onlyOutward: Boolean = true): List[Id] = {
     if (radius == 0) { vertexIds }
     else {
       findVicinity(vertexIds.map { id =>
@@ -279,29 +270,30 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
         })
       }.flatten, radius - 1)
     }
-  }*/
+    // TODO implement inward search
+  }
 
   def fetchId(id: String, radius: Int): JObject = {
     val result = workerApi.aggregateAll(
-                 new FindNodeVicinitiesByIdsAggregator(List(id)))
+                 new FindVerticesByIdsAggregator[Id](List(id)))
     val (vertices, vicinity) = result.size match {
-      case 0 => (List[String](), List[String]())
+      case 0 => (List[Id](), List[Id]())
       case otherwise => 
-        val nodeIds = result.map { _._1 }.toList
+        val nodeIds = result.map { _.id }.toList
         (nodeIds, findVicinity(nodeIds, radius))
     }
-    workerApi.aggregateAll(new GraphAggregator(vertices, vicinity))
+    workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
   }
 
   def fetchTopStates(n: Int, radius: Int): JObject = {
-    val topState = workerApi.aggregateAll(new TopStateAggregator(n)).take(n)
-    val nodes = topState.foldLeft(List[String]()){ (acc, m) => m._2 :: acc }
+    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n)).take(n)
+    val nodes = topState.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
     val vicinity = findVicinity(nodes, radius)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
 
   def fetchTopDegree(n: Int, radius: Int, direction: String): JObject = {
-    val nodes = workerApi.aggregateAll(new TopDegreeAggregator(n))
+    val nodes = workerApi.aggregateAll(new TopDegreeAggregator[Id](n))
                              .toSeq.sortBy(-_._2)
                              .take(n)
                              .map{ _._1 }
@@ -311,7 +303,7 @@ class GraphDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   }
 
   def fetchSample(n: Int, radius: Int): JObject = {
-    val nodes = workerApi.aggregateAll(new SampleVertexIds(n)).map{ _.toString }
+    val nodes = workerApi.aggregateAll(new SampleAggregator[Id](n))
     workerApi.aggregateAll(new GraphAggregator(nodes, findVicinity(nodes, radius)))
   }
 
@@ -353,13 +345,14 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val ws: Array[WorkerStatistics] = 
       (coordinator.getWorkerApi.getIndividualWorkerStatistics).toArray
     val wstats = Toolkit.unpackObjects(ws)
-    //TODO: Implement sstats.
-    //val sstats = Toolkit.unpackObjects(ws.map(_.systemInformation))
+    val ss: Array[SystemInformation] = 
+      (coordinator.getWorkerApi.getIndividualSystemInformation).toArray
+    val sstats = Toolkit.unpackObjects(ss)
     
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
-    ("workerStatistics" -> wstats) // ~ sstats)
+    ("workerStatistics" -> wstats ~ sstats)
   }
 }
 

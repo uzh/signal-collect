@@ -86,7 +86,7 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
     if (props.contains("nodeId")) {
       props("nodeId") match {
         case id: String =>
-          val result = workerApi.aggregateAll(new FindVertexByIdAggregator(props("nodeId")))
+          val result = workerApi.aggregateAll(new FindVerticesByIdsAggregator(List(props("nodeId"))))
           result.size match {
             case 0 => false
             case otherwise =>

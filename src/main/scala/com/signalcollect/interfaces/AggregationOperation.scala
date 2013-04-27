@@ -57,3 +57,30 @@ trait ComplexAggregation[WorkerResult, EndResult] extends Serializable {
   def aggregationOnCoordinator(workerResults: Iterable[WorkerResult]): EndResult
 
 }
+
+/**
+ *  More modular interface for aggregation operations.
+ */
+trait ModularAggregationOperation[ValueType] extends AggregationOperation[ValueType] {
+
+  /**
+   * Reduces an arbitrary number of elements to one element.
+   */
+  def reduce(elements: Stream[ValueType]): ValueType = {
+    elements.foldLeft(neutralElement)(aggregate)
+  }
+
+  /**
+   *  Aggregates all the values extracted by the `extract` function.
+   *
+   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
+   */
+  def aggregate(a: ValueType, b: ValueType): ValueType
+
+  /**
+   *  Neutral element of the `aggregate` function:
+   *  `aggregate(x, neutralElement) == x`
+   */
+  def neutralElement: ValueType
+}
+

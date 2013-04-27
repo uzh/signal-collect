@@ -30,6 +30,7 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.WorkerApi
 import akka.event.LoggingAdapter
 import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.SystemInformation
 import java.io.DataInputStream
 import com.signalcollect.serialization.DefaultSerializer
 import java.io.DataOutputStream
@@ -42,6 +43,8 @@ import akka.actor.ActorRef
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.Worker
 import com.signalcollect.interfaces.SentMessagesStats
+import com.sun.management.OperatingSystemMXBean
+import java.lang.management.ManagementFactory
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -405,6 +408,29 @@ case class WorkerImplementation[Id, Signal](
       continueMessagesReceived = counters.continueMessagesReceived,
       requestMessagesReceived = counters.requestMessagesReceived,
       otherMessagesReceived = counters.otherMessagesReceived)
+  }
+
+  def getIndividualSystemInformation = List(getSystemInformation)
+
+  def getSystemInformation: SystemInformation = {
+    val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
+    val runtime: Runtime = Runtime.getRuntime()
+    SystemInformation(
+      workerId = workerId,
+      os = System.getProperty("os.name"),
+      runtime_mem_total = runtime.totalMemory(),
+      runtime_mem_max = runtime.maxMemory(),
+      runtime_mem_free = runtime.freeMemory(),
+      runtime_cores = runtime.availableProcessors(),
+      jmx_committed_vms = osBean.getCommittedVirtualMemorySize(),
+      jmx_mem_free = osBean.getFreePhysicalMemorySize(),
+      jmx_mem_total = osBean.getTotalPhysicalMemorySize(),
+      jmx_swap_free = osBean.getFreeSwapSpaceSize(),
+      jmx_swap_total = osBean.getTotalSwapSpaceSize(),
+      jmx_process_load = osBean.getProcessCpuLoad(),
+      jmx_process_time = osBean.getProcessCpuTime(),
+      jmx_system_load = osBean.getSystemCpuLoad()
+    )
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

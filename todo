@@ -1,6 +1,0 @@
-use sets instead of lists (contains)
-Don't use in-degree for top-degree
-top state: don't cast to string to double, use match on types
-top state: use priorityqueue for ordering
-don't match on boolean
-break conditions: check id first
