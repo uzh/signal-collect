@@ -108,7 +108,6 @@ function layout(modules) {
     }
   });
   $("#close_msgs").click(function () {
-    console.log("test");
     hideMsg();
   });
 }

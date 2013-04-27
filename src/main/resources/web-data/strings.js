@@ -26,8 +26,12 @@ STR = {"searchByID": "Search and hit Enter to execute",
 };
 
 chartNames = {
-    "messagesSent": "Messages Sent (#)",
-    "messagesReceived": "Messages Received (#)",
+    "messagesSent": "Messages Sent in Total (#)",
+    "messagesSentToNodes": "Messages Sent to Nodes(#)",
+    "messagesSentToWorkers": "Messages Sent to Workers (#)",
+    "messagesSentToCoordinator": "Messages Sent to Coordinator (#)",
+    "messagesSentToOthers": "Messages Sent to Others (#)",
+    "messagesReceived": "Messages Received in Total (#)",
     "signalMessagesReceived": "Signal Messages Received (#)",
     "otherMessagesReceived": "Other Messages Received (#)",
     "requestMessagesReceived": "Request Messages Received (#)",

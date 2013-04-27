@@ -143,25 +143,18 @@ scc.conf.resources.resourceBoxes = {
 };
 
 /**
- * Specific dataCallback function for messageSent to change the data format.
- * @param {Object} data - The data object that will be looked at.
- * @return {number} - The sum of the given array.
- */
-var sumSubArray = function(data) {
-  return data.workerStatistics.messagesSent.map(function(array) {
-    return Array.sum(array);
-  });
-};
-
-/**
  * Configures the main chart types. This is not mandatory, but they load faster
  * if you add them here. You can also add different data callbacks or skip
  * entire objects.
  * @type {Array.<Objects>}
  */
 scc.conf.resources.chartConfig = [
-                   {jsonName : "messagesSent", dataCallback: sumSubArray },
-                   {jsonName : "messagesReceived"},
+                   {jsonName : "messagesSent", dataCallback: sumMessageSent },
+                   {jsonName : "messagesSentToNodes"},
+                   {jsonName : "messagesSentToWorkers"},
+                   {jsonName : "messagesSentToCoordinator"},
+                   {jsonName : "messagesSentToOthers"},
+                   {jsonName : "messagesReceived", dataCallback: sumMessageReceived },
                    {jsonName : "signalMessagesReceived"},
                    {jsonName : "otherMessagesReceived"},
                    {jsonName : "requestMessagesReceived"},
