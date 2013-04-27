@@ -80,14 +80,17 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
   }
 }
 
-class StatusDataProvider[Id](socket: WebSocketConsoleServer[Id])
+class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
                              extends DataProvider {
   def fetch(): JObject = {
-    ("provider" -> "status") ~
-    ("interactive" -> (socket.execution match {
-      case None => false
-      case otherwise => true
-    }))
+    val reply: JObject = socket.execution match {
+      case Some(e) => 
+        ("state" -> e.state) ~ 
+        ("steps" -> e.steps) ~ 
+        ("iteration" -> e.iteration)
+      case None => ("state" -> "non-interactive")
+    }
+    ("provider" -> "state") ~ reply
   }
 }
 
@@ -124,25 +127,15 @@ class ControlsProvider(socket: WebSocketConsoleServer[_],
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
 
-  def computationStep(e: Execution): JObject = { 
-    e.step
-    ("state" -> "stepping") 
-  }
-  def computationPause(e: Execution): JObject = {
-    e.pause
-    ("state" -> "pausing") 
-  }
-  def computationContinue(e: Execution): JObject = {
-    e.continue
-    ("state" -> "continuing") 
-  }
-  def computationReset(e: Execution): JObject = {
-    e.reset
-    ("state" -> "resetting") 
-  }
-  def computationTerminate(e: Execution): JObject = {
-    e.terminate
-    ("state" -> "terminating") 
+  def command(e: Execution, command: String): JObject = { 
+    command match {
+      case "step" => e.step
+      case "pause" => e.pause
+      case "continue" => e.continue
+      case "reset" => e.reset
+      case "terminate" => e.terminate
+    }
+    ("msg" -> "command accepted")
   }
 
   def fetch(): JObject = {
@@ -150,18 +143,16 @@ class ControlsProvider(socket: WebSocketConsoleServer[_],
     val reply = execution match {
       case Some(e) => request.control match {
         case Some(action) => action match {
-          case "step" => computationStep(e)
-          case "pause" => computationPause(e)
-          case "continue" => computationContinue(e)
-          case "reset" => computationReset(e)
-          case "terminate" => computationTerminate(e)
+          case "step" | "pause" | "continue" | "reset" | "terminate" =>
+            command(e, action)
           case otherwise => fetchInvalid(msg, "invalid control!")
         }
-        case None => fetchInvalid(msg, "missing control!")
+        case None => fetchInvalid(msg, "missing command!")
       }
       case None => fetchInvalid(msg, "interactive execution is unavailable!")
     }
-    ("provider" -> "controls") ~ reply
+    ("provider" -> "controls") ~
+    reply
   }
 }
 

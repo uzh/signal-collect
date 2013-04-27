@@ -311,7 +311,7 @@ scc.modules.Graph = function() {
          (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
         link.style("display", "block");
         var test = true;
-        link.attr("x1", function(d) { if (!test) { test = true; console.log(d);} return d.source.x; })
+        link.attr("x1", function(d) { if (!test) { test = true; } return d.source.x; })
             .attr("y1", function(d) { return d.source.y; })
             .attr("x2", function(d) { return d.target.x; })
             .attr("y2", function(d) { return d.target.y; });

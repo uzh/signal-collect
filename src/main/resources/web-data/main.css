@@ -149,7 +149,7 @@ body {
   overflow: auto;
   position: absolute;
   top: 27px;
-  bottom: 38px;
+  bottom: 56px;
   left: 0;
   right: 0;
 }
@@ -380,7 +380,7 @@ body {
 #controls {
   width: 100%;
   position: absolute;
-  bottom: 0px;
+  bottom: 18px;
   height: 38px;
   background-color: #fff;
   background-image: -moz-linear-gradient(top,
@@ -438,6 +438,47 @@ body {
   background-position: 32px -128px; 
   float: right;
 }
+#controls #pending_command {
+  display: none;
+  float: left;
+  margin: 8px 6px 4px 6px;
+  height: 24px;
+  width: 24px;
+  background: transparent url('loading.gif') no-repeat center 0;
+}
+#stateContainer {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 11px;
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  padding-top: 2px;
+  height: 15px;
+  border-top: 1px solid #bbb;
+  background-color: #fff;
+  background-image: -moz-linear-gradient(top,
+                    rgba(0,0,0,.11),
+                    rgba(255,255,255,.25));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(1, rgba(0,0,0,.11)),
+                    color-stop(0, rgba(255,255,255,.25)));
+  background-image: -webkit-linear-gradient(
+                    rgba(0,0,0,.11),
+                    rgba(255,255,255,.25));
+  z-index: 60;
+}
+#stateContainer .right {
+  width: 60px;
+  padding-right: 3px;
+  float: right;
+  text-align: right;
+}
+#stateContainer .left {
+  padding-left: 3px;
+  float: left;
+}
+
+
 
 #content {
   position: fixed;
@@ -568,8 +609,6 @@ body {
 #success {
   color: #eee;
   background-color: #00c742;
-}
-#success:before {
 }
 .node_link {
   color: #59b6e8;

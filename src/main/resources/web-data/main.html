@@ -29,12 +29,12 @@
     <script type="text/javascript" src="configuration.js"></script>
     <script type="text/javascript" src="strings.js"></script>
     <script type="text/javascript" src="layout.js"></script>
-    <script type="text/javascript" src="main.js"></script>
-    <script type="text/javascript" src="controls.js"></script>
+    <script type="text/javascript" src="state.js"></script>
     <script type="text/javascript" src="graph.js"></script>
     <script type="text/javascript" src="linechart.js"></script>
     <script type="text/javascript" src="resources.js"></script>
     <script type="text/javascript" src="breakconditions.js"></script>
+    <script type="text/javascript" src="main.js"></script>
   </head>
   <body>
     <div id="title">
@@ -197,12 +197,15 @@
       <div id="controls">
         <div class="hidden blocker"></div>
         <div id="reset" class="icon blocked"></div>
+        <div id="pause" class="icon blocked"></div>
         <div id="step" class="icon blocked"></div>
-        <div id="pause" class="icon blocked hidden"></div>
         <div id="continue" class="icon blocked"></div>
         <div id="terminate" class="icon blocked"></div>
+        <div id="pending_command"></div>
       </div>
-      <div id="status">
+      <div id="stateContainer">
+        <div class="left"><span id="state"></span></div>
+        <div class="right">It. #<span id="iteration"></span></div>
       </div>
     </div>
     <div id="content">

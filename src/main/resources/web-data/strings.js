@@ -18,11 +18,22 @@
  *  
  */
 
-STR = {"searchByID": "Search and hit Enter to execute",
+STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-object
        "pickNode": "Enter ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",
-       "noExecution": "The interactive execution mode is unavailable, retrying..."
+       "noExecution": "The interactive execution mode is unavailable, retrying...",
+       "State": {
+         "pausedBeforeSignal": "Paused before signalling",
+         "pausedBeforeCollect": "Paused before collecting",
+         "pausedBeforeConditionChecks": "Paused before condition checks",
+         "breakConditionCheck": "Checking break conditions...",
+         "signalling": "Signalling...",
+         "collecting": "Collecting...",
+         "resetting": "Resetting graph...",
+         "terminating": "Terminating Signal/Collect..."
+       }
+       
 };
 
 chartNames = {

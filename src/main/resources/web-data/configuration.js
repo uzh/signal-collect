@@ -29,7 +29,8 @@
  *     called once a reply has been received from the server
  * @property {object} conf - Container for the configurable parameters
  */
-var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, "callbacks": {}, "conf": {}};
+var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, 
+           "callbacks": {}, "conf": {}};
 
 /**
  * Container for the configurable parameters
