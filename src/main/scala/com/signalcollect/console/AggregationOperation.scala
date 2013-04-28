@@ -132,6 +132,27 @@ class TopStateAggregator[Id](n: Int)
   }
 }
 
+class TopScoreAggregator[Id](n: Int, scoreType: String)
+      extends AggregationOperation[List[(Double,Id)]] {
+
+  def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
+    case i: Inspectable[Id, _] => 
+      val score = scoreType match {
+        case "signal" => i.scoreSignal
+        case "collect" => i.scoreCollect
+      }
+      List[(Double,Id)]((score, i.id))
+    case otherwise => List[(Double,Id)]()
+  }
+
+  def reduce(degrees: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
+    degrees.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
+           .sortWith({ (t1, t2) => t1._1 > t2._1 })
+           .take(n)
+  }
+
+}
+
 class FindNodeVicinitiesByIdsAggregator[Id](idsList: List[Id])
       extends AggregationOperation[List[Id]] {
 

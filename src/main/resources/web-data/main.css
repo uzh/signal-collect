@@ -97,8 +97,8 @@ body {
 #modes span {
   height: 19px;
   display: none;
-  padding-top: 2px;
-  padding-bottom: 6px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   float: left;
   font-weight: bold;
   font-size: 17px;

@@ -282,7 +282,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
   }
 
-  def fetchTopStates(n: Int, radius: Int, incoming: Boolean = false): JObject = {
+  def fetchTopState(n: Int, radius: Int, incoming: Boolean = false): JObject = {
     val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n)).take(n)
     val nodes = topState.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
     val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
@@ -296,6 +296,14 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
                              .map{ _._1 }
                              .toList
     val vicinity = findVicinity(nodes, radius, incoming)
+    workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
+  }
+
+  def fetchTopScore(scoreType: String, 
+                     n: Int, radius: Int, incoming: Boolean = false): JObject = {
+    val topScore = workerApi.aggregateAll(new TopScoreAggregator[Id](n, scoreType)).take(n)
+    val nodes = topScore.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
+    val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
 
@@ -324,8 +332,10 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case otherwise => fetchInvalid(msg, "missing id")
       }
       case Some("top") => request.topCriterium match {
-        case Some("State") => fetchTopStates(m, r, i)
+        case Some("State") => fetchTopState(m, r, i)
         case Some("Degree") => fetchTopDegree(m, r, i)
+        case Some("Signal score") => fetchTopScore("signal", m, r, i)
+        case Some("Collect score") => fetchTopScore("collect", m, r, i)
         case otherwise => new InvalidDataProvider(msg).fetch
       }
       case otherwise => fetchTopDegree(m, r, i)
