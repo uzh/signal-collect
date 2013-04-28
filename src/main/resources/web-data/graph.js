@@ -65,7 +65,7 @@ scc.modules.Graph = function() {
     .domain(["n", "v"])
     .range(["#cc0000", "#00cc00"]);
   var scale = d3.scale.linear()
-    .range([5, 12])
+    .range([5, 25])
     .clamp(true);
   var nodes = [];
   var links = [];
@@ -286,7 +286,7 @@ scc.modules.Graph = function() {
         .nodes(nodes)
         .links(links)
         .linkDistance(50)
-        .charge(-200);
+        .charge(function (d) { return nodeSize(d) * -40; });
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
 
