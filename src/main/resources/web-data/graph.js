@@ -381,14 +381,6 @@ scc.modules.Graph = function() {
 
     $.each(j.nodes, function(id, data) {
       if (nodeRefs[id] == undefined) {
-        // Determine maximum and minimum state to determine color gradient
-        var state = parseFloat(data.s);
-        if (gradientDomain[0] == null || gradientDomain[0] < state) { 
-          gradientDomain[0] = state;
-        }
-        if (gradientDomain[1] == null || gradientDomain[1] > state) { 
-          gradientDomain[1] = state;
-        }
         // Update d3's node array
         nodes.push({"id": id, "state": data.s, "category": data.c, 
                     "ss": data.ss, "cs": data.cs});
@@ -402,6 +394,18 @@ scc.modules.Graph = function() {
         nodes[nodeRefs[id]].category = data.c;
         nodes[nodeRefs[id]].ss = data.ss;
         nodes[nodeRefs[id]].cs = data.cs;
+      }
+    });
+
+    // Determine maximum and minimum state to determine color gradient
+    gradientDomain = [null,null];
+    $.each(nodes, function(id, data) {
+      var state = parseFloat(data.state);
+      if (gradientDomain[0] == null || gradientDomain[0] < state) { 
+        gradientDomain[0] = state;
+      }
+      if (gradientDomain[1] == null || gradientDomain[1] > state) { 
+        gradientDomain[1] = state;
       }
     });
 
