@@ -111,7 +111,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     "return valid API result for provider 'resources'" in {
       websocket.sendJsonOrderWithProvider("resources")
       val json = websocket.getJsonResponse
-      val requiredResourceResults = Array(
+      val requiredProviderResults = Array(
         "messagesSentToNodes",
         "messagesSentToWorkers",
         "messagesSentToCoordinator",
@@ -148,11 +148,123 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "runtime_mem_total"    
       );
 
-      val workerStatistics = (json \\ "workerStatistics").children
-      val map = createMapFromJValueList(workerStatistics);
-      requiredResourceResults.foreach {
-        res =>
-          map.contains(res) === true
+      val providerResults = (json \\ "workerStatistics").children
+      val providerResultsMap = createMapFromJValueList(providerResults);
+      requiredProviderResults.foreach {
+        result => providerResultsMap.contains(result) === true
+      }
+    }
+    
+    
+    
+    "return valid API result for provider 'configuration.executionConfiguration'" in {
+      // as we have no execution running, this test will only check whether we get
+      // any 'executionConfiguration' result
+      websocket.sendJsonOrderWithProvider("configuration")
+      val json = websocket.getJsonResponse
+      val requiredProviderResults = Array(
+        "unknown"
+      );
+      val providerResults = (json \\ "executionConfiguration").children
+      val providerResultsMap = createMapFromJValueList(providerResults);
+      requiredProviderResults.foreach {
+        result => providerResultsMap.contains(result) === true
+      }
+    }
+    
+    "return valid API result for provider 'configuration.graphConfiguration'" in {
+      websocket.sendJsonOrderWithProvider("configuration")
+      val json = websocket.getJsonResponse
+      val requiredProviderResults = Array(
+        "messageBusFactory",
+        "statusUpdateIntervalInMilliseconds",
+        "workerFactory",
+        "loggingLevel",
+        "akkaMessageCompression",
+        "storageFactory",
+        "consoleEnabled",
+        "heartbeatIntervalInMilliseconds",
+        "nodeProvisioner",
+        "consoleHttpPort",
+        "akkaDispatcher"
+      );
+      val providerResults = (json \\ "graphConfiguration").children
+      val providerResultsMap = createMapFromJValueList(providerResults);
+      requiredProviderResults.foreach {
+        result => providerResultsMap.contains(result) === true
+      }
+    }
+    
+    "return valid API result for provider 'configuration.systemProperties'" in {
+      websocket.sendJsonOrderWithProvider("configuration")
+      val json = websocket.getJsonResponse
+      val requiredProviderResults = Array(
+        "java.runtime.name",
+        "sun.boot.library.path",
+        "java.vm.version",
+        "user.country.format",
+        "gopherProxySet",
+        "java.vm.vendor",
+        "java.vendor.url",
+        "path.separator",
+        "java.vm.name",
+        "file.encoding.pkg",
+        "user.country",
+        "sun.java.launcher",
+        "sun.os.patch.level",
+        "java.vm.specification.name",
+        "user.dir",
+        "java.runtime.version",
+        "java.awt.graphicsenv",
+        "java.endorsed.dirs",
+        "os.arch",
+        "java.io.tmpdir",
+        "line.separator",
+        "java.vm.specification.vendor",
+        "os.name",
+        "sun.jnu.encoding",
+        "java.library.path",
+        "sun.nio.ch.bugLevel",
+        "java.specification.name",
+        "java.class.version",
+        "sun.management.compiler",
+        "os.version",
+        "http.nonProxyHosts",
+        "user.home",
+        "user.timezone",
+        "java.awt.printerjob",
+        "file.encoding",
+        "java.specification.version",
+        "java.class.path",
+        "user.name",
+        "java.vm.specification.version",
+        "sun.java.command",
+        "java.home",
+        "sun.arch.data.model",
+        "user.language",
+        "java.specification.vendor",
+        "awt.toolkit",
+        "java.vm.info",
+        "java.version",
+        "java.ext.dirs",
+        "sun.boot.class.path",
+        "java.vendor",
+        "file.separator",
+        "java.vendor.url.bug",
+        "sun.io.unicode.encoding",
+        "sun.cpu.endian",
+        "socksNonProxyHosts",
+        "ftp.nonProxyHosts",
+        "sun.cpu.isalist"
+      );
+      val providerResults = (json \\ "systemProperties").children
+      var providerResultsMap: Map[String, Any] = Map()
+      providerResults.foreach {
+        v: JValue =>
+          providerResultsMap = providerResultsMap ++ createMapFromJValueList(v.children)
+      }
+      requiredProviderResults.foreach {
+        result => providerResultsMap.contains(result) === true
       }
     }
     
@@ -188,10 +300,11 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
   
   
   def createMapFromJValueList(json : List[JValue]) = {
-    var map: Map[String, List[Any]] = Map()
+    var map: Map[String, Any] = Map()
     json.foreach {
       s: JValue =>
-        val (name: String, values: List[Any]) = s.values
+        val (name: String, values: Any) = s.values
+//        println("\"" + name + "\",")
         map += (name -> values)
     }
     map
