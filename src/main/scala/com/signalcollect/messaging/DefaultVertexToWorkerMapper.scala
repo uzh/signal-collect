@@ -30,7 +30,12 @@ class DefaultVertexToWorkerMapper[Id](numberOfWorkers: Int) extends VertexToWork
     if (workerId >= 0) {
       workerId
     } else {
-      -workerId
+      if (workerId == Int.MinValue) {
+        // Special case,-Int.MinValue == Int.MinValue
+        0
+      } else {
+        -workerId
+      }
     }
   }
 }
