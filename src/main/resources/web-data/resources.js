@@ -167,21 +167,6 @@ scc.modules.Log = function() {
   this.requires = ["log"];
   
   /**
-   * Stores the latest log message to test whether a new one is exactly the same
-   * and to not show it again.
-   * @type {Object}
-   */
-  var latest;
-  
-  /**
-   * Stores the number of identical log messages which occurred directly after
-   * each other to not show anyone of these but only one occurrence and add the
-   * number of occurrences to the end.
-   * @type {number}
-   */
-  var identicalLogMessages = 0;
-  
-  /**
    * Selector of the log resource box.
    * @type {Object}
    */
@@ -270,9 +255,16 @@ scc.modules.Log = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
+    console.dir(msg.messages);
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
+    var fragments = [];
+    var latest = null; // TODO replace latest with fragments[fragments.length-1]
     msg["messages"].forEach(function(l) {
+      console.log(l);
       var json = $.parseJSON(l);
+      json.occurrences = 1;
+      json.cls = "";
+      // TODO do not update in every iteration
       var filterLevelButton = $(filterLevel).find("> span:eq(" + (logLevelIndex[json.level.toLowerCase()]-1) + ")");
       var filterSourceButton = $(filterSource).find("> span:eq(" + (logSourceIndex[json.source.toLowerCase()]-1) + ")");
       if (latest != null &&
@@ -282,28 +274,39 @@ scc.modules.Log = function() {
           latest.logClass == json.logClass &&
           latest.message == json.message
          ) {
-        identicalLogMessages += 1;
-        $(container).find("small.numberOfOccurences").last()
-                    .text(" (" + (identicalLogMessages+1) + " times)");
+        fragments[fragments.lenght-1].occurrences = fragments[fragments.lenght-1].occurrences + 1; 
       } else {
-        var log = json.date + " " + json.level + ": " + json.message;
-        if (json.cause != null && json.cause.length > 0) {
-          log += " (" + json.cause + ")";
-        }
-        log += " &lt;" + json.logSource + ", " + json.logClass + "&gt;";
+
         var cls = "level_" + json.level.toLowerCase() + " source_" + json.source;
         // check whether this message should be hidden
         if (!$(filterLevelButton).hasClass("active"))  { cls += " hidden_level"; }
         if (!$(filterSourceButton).hasClass("active")) { cls += " hidden_source"; }
-        $(box).find("ul")
-              .append("<li class=\"" + cls + "\">" + log + "<small class=\"numberOfOccurences\"></small></li>");
+        json.cls = cls;
+        
         latest = json;
-        identicalLogMessages = 0;
+        fragments.push(json);
       }
-      // number of entries
+      // number of entries in the filter
+      // TODO do not update in every iteration
       var nr = $(filterLevelButton).find("span");
       $(nr).text(parseInt($(nr).text()) + 1);
     });
+    
+    // convert fragments to HTML and append to the DOM
+    var fragmentsHtml = "";
+    fragments.forEach(function(json) {
+      fragmentsHtml += "<li class=\"" + json.cls + "\">" + json.date + " " + json.level + ": " + json.message;
+      if (json.cause != null && json.cause.length > 0) {
+        fragmentsHtml += " (" + json.cause + ")";
+      }
+      fragmentsHtml += " &lt;" + json.logSource + ", " + json.logClass + "&gt;";
+      if (json.occurrences > 1) {
+        fragmentsHtml += "<small class=\"numberOfOccurences\">" + json.occurrences + "</small>";        
+      }
+      fragmentsHtml += "</li>";
+    });
+    $(box).find("ul").append(fragmentsHtml);
+
     // scroll
     if (scrollDown && msg.messages.length > 0) {
       $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
