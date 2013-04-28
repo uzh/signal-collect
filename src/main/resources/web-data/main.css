@@ -424,11 +424,17 @@ body {
 #controls #pause.icon:hover {
   background-position: 32px -96px; 
 }
-#controls #continue.icon {
+#controls #collect.icon {
   background-position: 0px -64px; 
 }
-#controls #continue.icon:hover {
+#controls #collect.icon:hover {
   background-position: 32px -64px; 
+}
+#controls #continue.icon {
+  background-position: 0px -160px; 
+}
+#controls #continue.icon:hover {
+  background-position: 32px -160px; 
 }
 #controls #terminate.icon {
   background-position: 0px -128px; 

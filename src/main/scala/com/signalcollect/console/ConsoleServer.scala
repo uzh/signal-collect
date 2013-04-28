@@ -56,6 +56,7 @@ trait Execution {
   var state: String
   var iteration: Int
   def step()
+  def collect()
   def continue()
   def pause()
   def reset()

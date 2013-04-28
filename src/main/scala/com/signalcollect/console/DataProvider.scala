@@ -130,6 +130,7 @@ class ControlsProvider(socket: WebSocketConsoleServer[_],
   def command(e: Execution, command: String): JObject = { 
     command match {
       case "step" => e.step
+      case "collect" => e.collect
       case "pause" => e.pause
       case "continue" => e.continue
       case "reset" => e.reset
@@ -143,7 +144,7 @@ class ControlsProvider(socket: WebSocketConsoleServer[_],
     val reply = execution match {
       case Some(e) => request.control match {
         case Some(action) => action match {
-          case "step" | "pause" | "continue" | "reset" | "terminate" =>
+          case "step" | "collect" | "pause" | "continue" | "reset" | "terminate" =>
             command(e, action)
           case otherwise => fetchInvalid(msg, "invalid control!")
         }

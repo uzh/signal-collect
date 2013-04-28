@@ -38,7 +38,7 @@ scc.modules.State = function() {
   this.stateCount = 0;
   this.state = "uninizialized";
   var pendingCommand = false;
-  var controls = ["step", "continue", "pause", "reset", "terminate"];
+  var controls = ["step", "collect", "continue", "pause", "reset", "terminate"];
 
   /**
    * Add an event handler to each of the control buttons. Clicking a button
@@ -101,7 +101,7 @@ scc.modules.State = function() {
       case "pausedBeforeSignal":
       case "pausedBeforeCollect":
       case "pausedBeforeConditionChecks":
-        enabledButtons(["reset", "step", "continue", "terminate"])
+        enabledButtons(["reset", "step", "collect", "continue", "terminate"])
         if (scc.consumers.Graph != undefined) {
           scc.consumers.Graph.autoRefresh = false;
           scc.consumers.Graph.order();
