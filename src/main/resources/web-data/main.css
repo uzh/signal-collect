@@ -97,8 +97,8 @@ body {
 #modes span {
   height: 19px;
   display: none;
-  padding-top: 2px;
-  padding-bottom: 6px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   float: left;
   font-weight: bold;
   font-size: 17px;
@@ -149,7 +149,7 @@ body {
   overflow: auto;
   position: absolute;
   top: 27px;
-  bottom: 38px;
+  bottom: 56px;
   left: 0;
   right: 0;
 }
@@ -380,7 +380,7 @@ body {
 #controls {
   width: 100%;
   position: absolute;
-  bottom: 0px;
+  bottom: 18px;
   height: 38px;
   background-color: #fff;
   background-image: -moz-linear-gradient(top,
@@ -424,11 +424,17 @@ body {
 #controls #pause.icon:hover {
   background-position: 32px -96px; 
 }
-#controls #continue.icon {
+#controls #collect.icon {
   background-position: 0px -64px; 
 }
-#controls #continue.icon:hover {
+#controls #collect.icon:hover {
   background-position: 32px -64px; 
+}
+#controls #continue.icon {
+  background-position: 0px -160px; 
+}
+#controls #continue.icon:hover {
+  background-position: 32px -160px; 
 }
 #controls #terminate.icon {
   background-position: 0px -128px; 
@@ -438,6 +444,47 @@ body {
   background-position: 32px -128px; 
   float: right;
 }
+#controls #pending_command {
+  display: none;
+  float: left;
+  margin: 8px 6px 4px 6px;
+  height: 24px;
+  width: 24px;
+  background: transparent url('loading.gif') no-repeat center 0;
+}
+#stateContainer {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 11px;
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  padding-top: 2px;
+  height: 15px;
+  border-top: 1px solid #bbb;
+  background-color: #fff;
+  background-image: -moz-linear-gradient(top,
+                    rgba(0,0,0,.11),
+                    rgba(255,255,255,.25));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(1, rgba(0,0,0,.11)),
+                    color-stop(0, rgba(255,255,255,.25)));
+  background-image: -webkit-linear-gradient(
+                    rgba(0,0,0,.11),
+                    rgba(255,255,255,.25));
+  z-index: 60;
+}
+#stateContainer .right {
+  width: 60px;
+  padding-right: 3px;
+  float: right;
+  text-align: right;
+}
+#stateContainer .left {
+  padding-left: 3px;
+  float: left;
+}
+
+
 
 #content {
   position: fixed;
@@ -538,7 +585,7 @@ body {
   stroke-width: 1;
 }
 .link.outgoing {
-  stroke: #009900;
+  stroke: #00dd00;
   stroke-width: 2;
 }
 
@@ -568,8 +615,6 @@ body {
 #success {
   color: #eee;
   background-color: #00c742;
-}
-#success:before {
 }
 .node_link {
   color: #59b6e8;

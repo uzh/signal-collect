@@ -53,7 +53,10 @@ trait Execution {
   var steps: Int
   var conditions: Map[String,BreakCondition]
   var conditionsReached: Map[String,String]
+  var state: String
+  var iteration: Int
   def step()
+  def collect()
   def continue()
   def pause()
   def reset()
@@ -295,13 +298,13 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         case "log" => new LogDataProvider(c)
         case "graph" => new GraphDataProvider(c, j)
         case "resources" => new ResourcesDataProvider(c, j)
-        case "status" => new StatusDataProvider(this)
+        case "state" => new StateDataProvider(this)
         case "controls" => new ControlsProvider(this, j)
         case "breakconditions" => new BreakConditionsProvider(c, this, j)
         case otherwise => new InvalidDataProvider(msg)
       }
       case None => p match{
-        case "status" => new StatusDataProvider(this)
+        case "state" => new StateDataProvider(this)
         case otherwise => new NotReadyDataProvider(msg)
       }
     }
@@ -327,11 +330,12 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
             socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
-  def sendMsg(msg: JObject) {
+  def updateClientState() {
+    val data = new StateDataProvider(this).fetch
     val cs = connections().toList
     cs.synchronized {
       cs.foreach { c =>
-        c.send(compact(render(msg)));
+        c.send(compact(render(data)))
       }
     }
   }

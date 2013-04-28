@@ -27,7 +27,7 @@ scc.defaults.graph = {"layout": {
                       "options": {
                         "gs_searchId": "",
                         "gs_topCriterium": "Degree",
-                        "gd_nodeSize": "Node degree",
+                        "gd_nodeSize": "Node state",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
                         "gp_vicinityIncoming": "No",
@@ -65,7 +65,7 @@ scc.modules.Graph = function() {
     .domain(["n", "v"])
     .range(["#cc0000", "#00cc00"]);
   var scale = d3.scale.linear()
-    .range([5, 12])
+    .range([5, 25])
     .clamp(true);
   var nodes = [];
   var links = [];
@@ -116,8 +116,7 @@ scc.modules.Graph = function() {
                        "Node degree": function (d) { return color(d.weight); }},
     // functions returning a radius
     "gd_nodeSize": { "Node state": function(d) { return scale(d.state.replace(/[^0-9.,]/g, '')); },
-                     "All equal": function(d) { return 5; },
-                     "Node degree": function(d) { return scale.copy().domain([1,20])(d.weight); }}
+                     "All equal": function(d) { return 5; }}
   };
 
   /**
@@ -161,7 +160,7 @@ scc.modules.Graph = function() {
   /**
    * The default node radius
    */
-  var nodeSize = nodeDesign["gd_nodeSize"]["Node degree"];
+  var nodeSize = nodeDesign["gd_nodeSize"]["Node state"];
 
   /**
    * Order graph data using the options set in the GUI. This function may be
@@ -287,7 +286,7 @@ scc.modules.Graph = function() {
         .nodes(nodes)
         .links(links)
         .linkDistance(50)
-        .charge(-200);
+        .charge(function (d) { return nodeSize(d) * -40; });
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
 
@@ -311,7 +310,7 @@ scc.modules.Graph = function() {
          (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
         link.style("display", "block");
         var test = true;
-        link.attr("x1", function(d) { if (!test) { test = true; console.log(d);} return d.source.x; })
+        link.attr("x1", function(d) { if (!test) { test = true; } return d.source.x; })
             .attr("y1", function(d) { return d.source.y; })
             .attr("x2", function(d) { return d.target.x; })
             .attr("y2", function(d) { return d.target.y; });
@@ -382,14 +381,6 @@ scc.modules.Graph = function() {
 
     $.each(j.nodes, function(id, data) {
       if (nodeRefs[id] == undefined) {
-        // Determine maximum and minimum state to determine color gradient
-        var state = parseFloat(data.s);
-        if (gradientDomain[0] == null || gradientDomain[0] < state) { 
-          gradientDomain[0] = state;
-        }
-        if (gradientDomain[1] == null || gradientDomain[1] > state) { 
-          gradientDomain[1] = state;
-        }
         // Update d3's node array
         nodes.push({"id": id, "state": data.s, "category": data.c, 
                     "ss": data.ss, "cs": data.cs});
@@ -403,6 +394,18 @@ scc.modules.Graph = function() {
         nodes[nodeRefs[id]].category = data.c;
         nodes[nodeRefs[id]].ss = data.ss;
         nodes[nodeRefs[id]].cs = data.cs;
+      }
+    });
+
+    // Determine maximum and minimum state to determine color gradient
+    gradientDomain = [null,null];
+    $.each(nodes, function(id, data) {
+      var state = parseFloat(data.state);
+      if (gradientDomain[0] == null || gradientDomain[0] < state) { 
+        gradientDomain[0] = state;
+      }
+      if (gradientDomain[1] == null || gradientDomain[1] > state) { 
+        gradientDomain[1] = state;
       }
     });
 
@@ -606,7 +609,7 @@ scc.modules.Graph = function() {
   /**
    * Set the design of the given node property to the given node metric.
    * For example, set the size ("gd_nodeSize") to be depending on the node
-   * node degree ("Node degree").
+   * node state ("Node state").
    * @param {string} property - The visual node property to change
    * @param {string} metric - The node metric on which the visual
    *     representation should depend.

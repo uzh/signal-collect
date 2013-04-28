@@ -302,17 +302,18 @@ $(document).ready(function() {
     case "/graph": 
       var view = window.location.pathname.slice(1);
       scc.settings.set({"main": {"view": view}});
-      enableModules([view.capitalize(), "Controls"]);
+      enableModules(["State"]);
       if (view == "resources") {
-        enableModules(["Configuration", "Log"]);
+        enableModules(["Resources", "Configuration", "Log"]);
       }
       if (view == "graph") {
-        enableModules(["BreakConditions"]);
+        enableModules(["Graph", "BreakConditions"]);
       }
       layout([view]);
       break;
     default:
-      enableModules(["Graph", "Resources", "Controls", "Configuration", "Log", "BreakConditions"]);
+      enableModules(["Resources", "Configuration" , "Log", 
+                     "Graph", "BreakConditions", "State"]);
       layout(["graph", "resources"]);
   }
 

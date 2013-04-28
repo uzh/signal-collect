@@ -272,6 +272,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     console: ConsoleServer[Id],
     stats: ExecutionStatistics,
     parameters: ExecutionConfiguration) extends Execution {
+    var state = "initExecution"
+    var iteration = 0
     if (console != null) { console.setInteractor(this) }
     graph.snapshot
     var converged = false
@@ -279,6 +281,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     var interval = 0l
     @volatile var steps = 0
     @volatile var userTermination = false
+    var resetting = false
     val lock: AnyRef = new Object()
     if (parameters.globalTerminationCondition.isDefined) {
       interval = parameters.globalTerminationCondition.get.aggregationInterval
@@ -301,10 +304,17 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def step() {
       lock.synchronized {
         steps = 1
-        lock.notify
-        try { lock.wait } catch {
-          case e: InterruptedException =>
+        lock.notifyAll
+      }
+    }
+    def collect() {
+      lock.synchronized {
+        steps = state match {
+          case "pausedBeforeSignal" => 2
+          case "pausedBeforeCollect" => 1
+          case "pausedBeforeConditionChecks" => 3
         }
+        lock.notifyAll
       }
     }
     def continue() {
@@ -319,47 +329,80 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def reset() {
       pause
       lock.synchronized {
+        setState("resetting")
+        resetting = true
+        steps = 0
         graph.reset
         graph.restore
+        lock.notifyAll
       }
     }
     def terminate() {
       userTermination = true
+      setState("terminating")
+      resetting = true
       pause
       continue
     }
 
+    def setState(s: String) {
+      state = s
+      console.sockets.updateClientState()
+    }
     def run() {
       lock.synchronized {
         while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
-          while (steps == 0) {
+          iteration += 1
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeSignal")
             try { lock.wait } catch {
               case e: InterruptedException =>
             }
           }
-          // signal
-          workerApi.signalStep
-          awaitIdle
-          stats.signalSteps += 1
-          while (steps == 0) {
+          if (!resetting) {
+            setState("signalling")
+            // signal
+            workerApi.signalStep
+            awaitIdle
+            stats.signalSteps += 1
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeCollect")
             try { lock.wait } catch {
               case e: InterruptedException =>
             }
           }
-          // collect
-          workerApi.signalStep
-          converged = workerApi.collectStep
-          lock.notifyAll
-          stats.collectSteps += 1
-          if (steps > 0) { steps -= 1 }
-          if (shouldCheckGlobalCondition) {
-            globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
+          if (!resetting) {
+            // collect
+            setState("collecting")
+            converged = workerApi.collectStep
+            lock.notifyAll
+            stats.collectSteps += 1
+            if (steps > 0) { steps -= 1 }
           }
-          conditionsReached = workerApi.aggregateAll(
-              new BreakConditionsAggregator(conditions))
-          if (conditionsReached.size > 0) {
-            steps = 0
-            console.sockets.sendMsg(("provider" -> "controls") ~ ("state" -> "pausing"))
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeConditionChecks")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            if (shouldCheckGlobalCondition) {
+              setState("globalTerminationCheck")
+              globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
+            }
+            setState("breakConditionCheck")
+            conditionsReached = workerApi.aggregateAll(
+                new BreakConditionsAggregator(conditions))
+            if (conditionsReached.size > 0) {
+              steps = 0
+              setState("pausing")
+            }
+            if (steps > 0) { steps -= 1 }
+          }
+          else {
+            resetting = false
           }
         }
       }

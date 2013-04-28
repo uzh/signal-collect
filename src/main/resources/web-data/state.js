@@ -1,5 +1,6 @@
 /*
  *  @author Carol Alexandru
+ *  //TODO: renew comments in this file!
  *  
  *  Copyright 2013 University of Zurich
  *      
@@ -17,18 +18,27 @@
  *  
  */
 
-scc.defaults.controls = {};
+scc.defaults.state = {};
 
-scc.modules.Controls = function() {
+/**
+ * The State module provides insight into the state of the server during a 
+ * computation (paused, signaling, collecting, ...). It's also responsible
+ * for the graph execution controls in the UI.
+ * @constructor
+ */
+scc.modules.State = function() {
   /**
    * Messages from the specified provider are routed to this module by the
    * main module.
    * @type {Array.<string>}
    */
-  this.requires = ["controls"];
+  this.requires = ["state", "controls"];
 
-  // Object-scope variables
-  var controls = ["step", "continue", "pause", "reset", "terminate"];
+  // Variables
+  this.stateCount = 0;
+  this.state = "uninizialized";
+  var pendingCommand = false;
+  var controls = ["step", "collect", "continue", "pause", "reset", "terminate"];
 
   /**
    * Add an event handler to each of the control buttons. Clicking a button
@@ -37,7 +47,8 @@ scc.modules.Controls = function() {
   controls.forEach(function (control) {
     $("#" + control).click(function (e) { 
       if ($(this).hasClass("blocked")) { return; }
-      if ($(this).hasClass("hidden")) { return; }
+      pendingCommand = true;
+      $("#pending_command").show();
       scc.order({"provider": "controls", "control": control}); 
       $("#controls").find(".icon").addClass("blocked");
     });
@@ -45,11 +56,24 @@ scc.modules.Controls = function() {
 
   /**
    * Function that is called by the main module when a new WebSocket connection
-   * is established. Activate the buttons.
+   * is established. Orders state information for the first time.
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function() {
-    $("#controls").find(".icon").removeClass("blocked");
+    scc.order({"provider": "state"}); 
+  };
+
+  /**
+   * Disable all buttons and then re-enable the ones supplied. The buttons will
+   * only be activated if there is no command pending on the server.
+   * @param {Array<string>} buttons - The buttons to activate
+   */
+  var enabledButtons = function (buttons) {
+    if (pendingCommand) { return; }
+    $("#controls").find(".icon").addClass("blocked")
+    $.each(buttons, function (k, button) {
+      $("#" + button).removeClass("blocked")
+    });
   };
 
   /**
@@ -60,38 +84,56 @@ scc.modules.Controls = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
-    var newState = j.state;
-    $('#resStatStatus').text(newState);
-    switch (newState) {
-      case "stepping":
-        $("#controls").find(".icon").removeClass("blocked");
-        break;
-      case "pausing":
-        scc.consumers.Breakconditions.onopen();
-        scc.consumers.Graph.autoRefresh = false;
-        $("#controls").find(".icon").removeClass("blocked");
-        $("#controls").find("#pause").addClass("hidden");
-        $("#controls").find("#continue").removeClass("hidden");
-        break;
-      case "continuing":
-        scc.consumers.Graph.autoRefresh = true;
-        $("#controls").find(".icon").addClass("blocked");
-        $("#controls").find("#pause").removeClass("blocked");
-        $("#controls").find("#pause").removeClass("hidden");
-        $("#controls").find("#terminate").removeClass("blocked");
-        $("#controls").find("#terminate").removeClass("hidden");
-        $("#controls").find("#continue").addClass("hidden");
-        break;
-      case "resetting":
-        this.destroy();
-        this.onopen();
-        break;
-      case "terminating":
-        this.terminate("#success", "Terminating...");
+    // Receiving a message from controls means that the command was received.
+    if (j.provider == "controls") { 
+      pendingCommand = false;
+      return;
+    }
+    // If there are no pending commands, remove the loading gif.
+    if (!pendingCommand) {
+      $("#pending_command").hide();
+    }
+    // Update the state information in the GUI
+    $('#iteration').text(j.iteration);
+    $('#resStatStatus').text(STR.State[j.state]);
+    $('#state').text(STR.State[j.state])
+    switch (j.state) {
+      case "pausedBeforeSignal":
+      case "pausedBeforeCollect":
+      case "pausedBeforeConditionChecks":
+        enabledButtons(["reset", "step", "collect", "continue", "terminate"])
+        if (scc.consumers.Graph != undefined) {
+          scc.consumers.Graph.autoRefresh = false;
+          scc.consumers.Graph.order();
+        }
         break;
     }
-    if (scc.consumers.Graph != null) {
-      scc.consumers.Graph.order();
+    // If the computation is continuing, it's only possible to pause or terminate
+    if (j.steps != 0) {
+      if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
+        scc.consumers.Graph.autoRefresh = true;
+        scc.consumers.Graph.order();
+      }
+      enabledButtons(["pause", "terminate"])
+    }
+    // Else there are more choices:
+    else {
+      if (scc.consumers.Graph != undefined) {
+        scc.consumers.Graph.order();
+      }
+      switch (j.state) {
+        case "signalling":
+        case "collecting":
+          enabledButtons(["terminate"])
+          break;
+        case "resetting":
+          this.destroy();
+          this.onopen();
+          break;
+        case "terminating":
+          this.terminate("#success", "Terminating...");
+          break;
+      }
     }
   };
 
@@ -123,8 +165,6 @@ scc.modules.Controls = function() {
    */
   this.destroy = function() {
     $("#controls").find(".icon").addClass("blocked");
-    $("#controls").find(".icon").removeClass("hidden");
-    $("#controls").find("#pause").addClass("hidden");
     $('#resStatStatus').text('ended');
   };
 

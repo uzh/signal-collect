@@ -29,12 +29,12 @@
     <script type="text/javascript" src="configuration.js"></script>
     <script type="text/javascript" src="strings.js"></script>
     <script type="text/javascript" src="layout.js"></script>
-    <script type="text/javascript" src="main.js"></script>
-    <script type="text/javascript" src="controls.js"></script>
+    <script type="text/javascript" src="state.js"></script>
     <script type="text/javascript" src="graph.js"></script>
     <script type="text/javascript" src="linechart.js"></script>
     <script type="text/javascript" src="resources.js"></script>
     <script type="text/javascript" src="breakconditions.js"></script>
+    <script type="text/javascript" src="main.js"></script>
   </head>
   <body>
     <div id="title">
@@ -65,6 +65,8 @@
                 <select id="gs_topCriterium">
                   <option>Degree</option>
                   <option>State</option>
+                  <option>Signal score</option>
+                  <option>Collect score</option>
                 </select>
                 <button id="gs_searchByTop">Find</button><br/>
                 <h1><span>Search for vertex by ID</span></h1>
@@ -81,7 +83,6 @@
                 <label for="gd_nodeSize">Node size:</label>
                 <select id="gd_nodeSize">
                   <option>Node state</option>
-                  <option>Node degree</option>
                   <option>All equal</option>
                 </select><br/>
                 <label for="gd_nodeColor">Node color:</label>
@@ -197,12 +198,16 @@
       <div id="controls">
         <div class="hidden blocker"></div>
         <div id="reset" class="icon blocked"></div>
+        <div id="pause" class="icon blocked"></div>
         <div id="step" class="icon blocked"></div>
-        <div id="pause" class="icon blocked hidden"></div>
+        <div id="collect" class="icon blocked"></div>
         <div id="continue" class="icon blocked"></div>
         <div id="terminate" class="icon blocked"></div>
+        <div id="pending_command"></div>
       </div>
-      <div id="status">
+      <div id="stateContainer">
+        <div class="left"><span id="state"></span></div>
+        <div class="right">It. #<span id="iteration"></span></div>
       </div>
     </div>
     <div id="content">
