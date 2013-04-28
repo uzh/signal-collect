@@ -53,6 +53,12 @@ case class NodeActorCreator(
     nodeProvisionerAddress)
 }
 
+case class IncrementorForNode(nodeId: Int) {
+  def increment(messageBus: MessageBus[_, _]) = {
+    messageBus.incrementMessagesSentToNode(nodeId)
+  }
+}
+
 /**
  * Class that controls a node on which Signal/Collect workers run.
  */
@@ -121,7 +127,7 @@ class DefaultNodeActor(
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mb => mb.incrementMessagesSentToNode(nodeId))
+    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, IncrementorForNode(nodeId).increment)
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis

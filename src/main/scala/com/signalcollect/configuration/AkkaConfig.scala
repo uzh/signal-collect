@@ -4,23 +4,23 @@ import com.signalcollect.configuration.LoggingLevel.Debug
 import com.typesafe.config.ConfigFactory
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, loggingLevel: Int) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, loggingLevel))
-  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int) = """
+  def get(akkaMessageCompression: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = ConfigFactory.parseString(
+    distributedConfig(akkaMessageCompression, loggingLevel, kryoRegistrations))
+  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
   logConfigOnStart=on
     
     """ +
-    {
-      if (loggingLevel == Debug) {
-        """
+      {
+        if (loggingLevel == Debug) {
+          """
   loglevel = DEBUG
   """
-      } else ""
-    } +
-    """
+        } else ""
+      } +
+      """
   # debug {
     # enable function of LoggingReceive, which is to log any received message at
     # DEBUG level
@@ -66,6 +66,19 @@ akka {
       "com.signalcollect.interfaces.Severe" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
+    """ +
+      {
+        if (!kryoRegistrations.isEmpty) {
+          var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+            s"""
+             "$kryoRegistration" = kryo"""
+          }
+          bindingsBlock.foldLeft("")(_ + _)
+        } else {
+          ""
+        }
+      } +
+      """
     }
 
     deployment {
@@ -175,6 +188,21 @@ akka {
             "com.signalcollect.interfaces.Severe" = 42
             "com.signalcollect.interfaces.WorkerStatistics" = 43
             "com.signalcollect.interfaces.SentMessagesStats" = 44
+    """ +
+      {
+        if (!kryoRegistrations.isEmpty) {
+          var highestUsedKryoId = 44
+          var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+            highestUsedKryoId += 1
+            s"""
+             "$kryoRegistration" = $highestUsedKryoId"""
+          }
+          bindingsBlock.foldLeft("")(_ + _)
+        } else {
+          ""
+        }
+      } +
+      """
         }
 
         # Define a set of fully qualified class names for   
@@ -205,21 +233,36 @@ akka {
             "com.signalcollect.interfaces.Severe",
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.SentMessagesStats"
+    """ +
+      {
+        if (!kryoRegistrations.isEmpty) {
+          var highestUsedKryoId = 44
+          var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+            highestUsedKryoId += 1
+            s""",
+             "$kryoRegistration""""
+          }
+          bindingsBlock.foldLeft("")(_ + _)
+        } else {
+          ""
+        }
+      } +
+      """
         ]
     }
   }
 
   remote {
     """ +
-    {
-      if (akkaMessageCompression) {
-        """
+      {
+        if (akkaMessageCompression) {
+          """
       # Options: "zlib" (lzf to come), leave out for no compression
       compression-scheme = "zlib"
       """
-      } else ""
-    } +
-    """
+        } else ""
+      } +
+      """
     # Options: 0-9 (1 being fastest and 9 being the most compressed), default is 6
     # zlib-compression-level = 9
     

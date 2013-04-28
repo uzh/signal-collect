@@ -25,7 +25,7 @@ import com.signalcollect.interfaces.MessageBus
 class DefaultMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
-  val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+  override val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory) extends AbstractMessageBus[Id, Signal] {
   lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
 }

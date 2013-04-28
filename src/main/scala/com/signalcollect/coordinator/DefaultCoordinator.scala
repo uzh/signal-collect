@@ -128,7 +128,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def receive = {
     case ws: WorkerStatus =>
-      println(s"Coordinator received worker status: $ws")
+      //println(s"Coordinator received worker status: $ws")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
@@ -299,7 +299,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def getGlobalInboxSize: Long = totalMessagesSent - totalMessagesReceived
 
   def isIdle: Boolean = {
-    logMessages
+//    logMessages
     workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived //totalMessagesSent == totalMessagesReceived
   }
 

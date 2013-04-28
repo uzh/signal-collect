@@ -91,7 +91,7 @@ case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[De
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
+  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel, config.kryoRegistrations)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)

@@ -94,7 +94,7 @@ class ParallelBulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   flushThreshold: Int,
-  val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+  override val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
     extends AbstractMessageBus[Id, Signal] {
 

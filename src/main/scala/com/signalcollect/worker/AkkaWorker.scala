@@ -44,6 +44,12 @@ import akka.actor.Actor
 
 object ScheduleOperations
 
+case class IncrementorForWorker(workerId: Int) {
+  def increment(messageBus: MessageBus[_, _]) = {
+    messageBus.incrementMessagesSentToWorker(workerId)
+  }
+}
+
 /**
  * Class that interfaces the worker implementation with Akka messaging.
  * Mainly responsible for translating received messages to function calls on a worker implementation.
@@ -60,12 +66,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   override def toString = "Worker" + workerId
 
-  val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](
-      numberOfWorkers,
-      numberOfNodes,
-      mb => mb.incrementMessagesSentToWorker(workerId))
-  }
+  val messageBus: MessageBus[Id, Signal] = messageBusFactory.createInstance[Id, Signal](
+    numberOfWorkers,
+    numberOfNodes,
+    IncrementorForWorker(workerId).increment _)
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
@@ -201,7 +205,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(maySignal) =>
-      println(s"Worker $workerId has received a heartbeat from the coordinator.")
+//      println(s"Worker $workerId has received a heartbeat from the coordinator.")
       worker.counters.heartbeatMessagesReceived += 1
       worker.sendStatusToCoordinator
       worker.systemOverloaded = !maySignal

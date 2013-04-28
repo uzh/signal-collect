@@ -49,7 +49,7 @@ class BulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Lon
   val numberOfNodes: Int,
   flushThreshold: Int,
   val withSourceIds: Boolean,
-  val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+  override val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
   extends AbstractMessageBus[Id, Signal] with Serializable {
 
