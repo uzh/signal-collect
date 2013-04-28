@@ -166,7 +166,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "unknown"
       );
       val providerResults = (json \\ "executionConfiguration").children
-      val providerResultsMap = createMapFromJValueList(providerResults);
+      val providerResultsMap = createMapFromJValueList(providerResults)
       requiredProviderResults.foreach {
         result => providerResultsMap.contains(result) === true
       }
@@ -189,7 +189,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "akkaDispatcher"
       );
       val providerResults = (json \\ "graphConfiguration").children
-      val providerResultsMap = createMapFromJValueList(providerResults);
+      val providerResultsMap = createMapFromJValueList(providerResults)
       requiredProviderResults.foreach {
         result => providerResultsMap.contains(result) === true
       }
@@ -270,6 +270,59 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     
+    "return valid API result for provider 'log'" in {
+      websocket.sendJsonOrderWithProvider("log")
+      val json = websocket.getJsonResponse
+      val providerResults = (json \\ "messages").children
+      // there won't be any messages, just checking whether the format is right
+      createMapFromJValueList(providerResults).size == 0
+    }
+    
+    
+    
+    "return valid API result for provider 'graph'" in {
+      websocket.sendJsonOrderWithProvider("graph")
+      val json = websocket.getJsonResponse
+      // the graph provider offers a lot of different API calls, we do not test them all
+      (json \\ "provider").values === "graph"
+    }
+    
+    
+    
+    "return valid API result for provider 'state'" in {
+      websocket.sendJsonOrderWithProvider("state")
+      val json = websocket.getJsonResponse
+      (json \\ "state").values === "non-interactive"
+    }
+    
+    
+    
+    "return valid API result for provider 'controly'" in {
+      websocket.sendJsonOrder("{\"provider\": \"controls\", \"control\": \"step\"}")
+      val json = websocket.getJsonResponse
+      // we do not compute anything so we can't actually control anything.
+      // As long as we get back a result, it's OK.
+      true === true
+    }
+    
+    
+    
+    "return valid API result for provider 'breakconditions'" in {
+      websocket.sendJsonOrderWithProvider("breakconditions")
+      val json = websocket.getJsonResponse
+      (json \\ "status").values === "noExecution"
+    }
+    
+    
+    
+    "return valid API result for provider 'invalidDataProvider'" in {
+      websocket.sendJsonOrderWithProvider("invalidDataProviderWhichDoesNotActuallyExist")
+      val json = websocket.getJsonResponse
+      (json \\ "provider").values === "invalid"
+    }
+    
+    
+    
     "close websocket connection" in {
       try {
         websocket.close()
@@ -317,8 +370,10 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
   var response = ""
   
   def sendJsonOrderWithProvider(provider : String) {
-    val json = "{\"provider\":\"" + provider + "\"}"
-    println("Client sending: " + json)
+    sendJsonOrder("{\"provider\":\"" + provider + "\"}")
+  }
+  def sendJsonOrder(json : String) {
+//    println("Client sending: " + json)
     try {
       send(json)
     } catch {
@@ -335,7 +390,7 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
     println("Client onOpen")
   }
   def onMessage(message : String) {
-    println("Client received: " + message)
+//    println("Client received: " + message)
     while (response.length() > 0) { Thread.sleep(100) }
     response = message
   }
