@@ -125,6 +125,11 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withKryoRegistrations(newKryoRegistrations: List[String]) = newLocalBuilder(kryoRegistrations = newKryoRegistrations)
 
   /**
+   *  If true forces Akka message serialization even in local settings. For debugging purposes only.
+   */
+  def withMessageSerialization(newSerializeMessages: Boolean) = newLocalBuilder(serializeMessages = newSerializeMessages)
+
+  /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
@@ -139,7 +144,8 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     akkaMessageCompression: Boolean = config.akkaMessageCompression,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner,
     heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds,
-    kryoRegistrations: List[String] = config.kryoRegistrations): GraphBuilder[Id, Signal] = {
+    kryoRegistrations: List[String] = config.kryoRegistrations,
+    serializeMessages: Boolean = config.serializeMessages): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         loggingLevel = loggingLevel,
@@ -152,7 +158,8 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
         akkaMessageCompression = akkaMessageCompression,
         nodeProvisioner = nodeProvisioner,
         heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds,
-        kryoRegistrations = kryoRegistrations))
+        kryoRegistrations = kryoRegistrations,
+        serializeMessages = serializeMessages))
   }
 
 }

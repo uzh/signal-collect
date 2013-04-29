@@ -4,9 +4,9 @@ import com.signalcollect.configuration.LoggingLevel.Debug
 import com.typesafe.config.ConfigFactory
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, loggingLevel, kryoRegistrations))
-  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = """
+  def get(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = ConfigFactory.parseString(
+    distributedConfig(akkaMessageCompression, serializeMessages, loggingLevel, kryoRegistrations))
+  def distributedConfig(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
@@ -32,7 +32,15 @@ akka {
   # }
     
   actor {
-    # serialize-messages = on
+    """ +
+    {
+      if (serializeMessages) {
+        """
+    serialize-messages = on
+  """
+      } else ""
+    } +
+    """
     provider = "akka.remote.RemoteActorRefProvider"
     
   	pinned-dispatcher {

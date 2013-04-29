@@ -42,7 +42,7 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 
-object ScheduleOperations
+case object ScheduleOperations
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
