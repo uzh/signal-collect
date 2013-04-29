@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.TimeUnit
 import scala.util.Success
 import scala.util.Failure
+import com.signalcollect.triplerush.PatternQuery
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
@@ -146,11 +147,11 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         throw e
       }
     }
-    kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
+//    kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Set[_]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.MapFactory[scala.collection.Map]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.SetFactory[scala.collection.Set]], classOf[ScalaSetSerializer])
-    kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
+//    kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
     kryo.addDefaultSerializer(classOf[ActorRef], new ActorRefSerializer(system))
     kryo.addDefaultSerializer(None.getClass, new NoneSerializer)
     kryo.register(classOf[scala.Enumeration#Value], 10)
@@ -160,6 +161,7 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     kryo.register(classOf[Array[Float]], 22)
     kryo.register(classOf[Array[Double]], 23)
     kryo.register(classOf[Array[Boolean]], 24)
+    kryo.register(classOf[Array[Object]], 25)
        
     if (settings.KryoTrace)
       MiniLog.TRACE()
