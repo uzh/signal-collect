@@ -1,24 +1,31 @@
 package com.signalcollect.configuration
 
-import com.signalcollect.configuration.LoggingLevel.Debug
 import com.typesafe.config.ConfigFactory
+import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = ConfigFactory.parseString(
+  def get(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = ConfigFactory.parseString(
     distributedConfig(akkaMessageCompression, serializeMessages, loggingLevel, kryoRegistrations))
-  def distributedConfig(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: Int, kryoRegistrations: List[String]) = """
+  def distributedConfig(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
-  logConfigOnStart=on
+  # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
+  event-handlers = ["com.signalcollect.console.ConsoleLogger"]
     
+  logConfigOnStart=on
     """ +
     {
-      if (loggingLevel == Debug) {
-        """
-  loglevel = DEBUG
+      val level = loggingLevel match {
+        case Logging.ErrorLevel => "ERROR"
+        case Logging.WarningLevel => "WARNING"
+        case Logging.InfoLevel => "INFO"
+        case Logging.DebugLevel => "DEBUG"
+      }
+      s"""
+  loglevel = $level
   """
-      } else ""
     } +
     """
   # debug {
@@ -66,13 +73,8 @@ akka {
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
-      "com.signalcollect.interfaces.LogMessage" = kryo
-      "com.signalcollect.interfaces.Debug" = kryo
-      "com.signalcollect.interfaces.Config" = kryo
-      "com.signalcollect.interfaces.Info" = kryo
-      "com.signalcollect.interfaces.Warning" = kryo
-      "com.signalcollect.interfaces.Severe" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
+      "com.signalcollect.interfaces.SystemInformation" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
       "scala.collection.immutable.Map$EmptyMap$" = kryo
       "scala.collection.immutable.$colon$colon"= kryo
@@ -192,22 +194,17 @@ akka {
             "java.util.HashMap" = 36
             "com.signalcollect.interfaces.EdgeId" = 37
             "com.signalcollect.interfaces.WorkerStatus" = 38
-            "com.signalcollect.interfaces.LogMessage" = 39
-            "com.signalcollect.interfaces.Debug" = 40
-            "com.signalcollect.interfaces.Config" = 41
-            "com.signalcollect.interfaces.Info" = 42
-            "com.signalcollect.interfaces.Warning" = 43
-            "com.signalcollect.interfaces.Severe" = 44
-            "com.signalcollect.interfaces.WorkerStatistics" = 45
-            "com.signalcollect.interfaces.SentMessagesStats" = 46
-            "scala.collection.immutable.Map$EmptyMap$" = 47
-            "scala.collection.immutable.$colon$colon"= 48
-            "scala.collection.immutable.Nil$" = 49
-            "scala.collection.immutable.Map$Map1" = 50
+            "com.signalcollect.interfaces.WorkerStatistics" = 39
+            "com.signalcollect.interfaces.SystemInformation" = 40
+            "com.signalcollect.interfaces.SentMessagesStats" = 41
+            "scala.collection.immutable.Map$EmptyMap$" = 42
+            "scala.collection.immutable.$colon$colon"= 43
+            "scala.collection.immutable.Nil$" = 44
+            "scala.collection.immutable.Map$Map1" = 45
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 50
+        var highestUsedKryoId = 45
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -242,13 +239,8 @@ akka {
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
-            "com.signalcollect.interfaces.LogMessage",
-            "com.signalcollect.interfaces.Debug",
-            "com.signalcollect.interfaces.Config",
-            "com.signalcollect.interfaces.Info",
-            "com.signalcollect.interfaces.Warning",
-            "com.signalcollect.interfaces.Severe",
             "com.signalcollect.interfaces.WorkerStatistics",
+            "com.signalcollect.interfaces.SystemInformation",
             "com.signalcollect.interfaces.SentMessagesStats",
             "scala.collection.immutable.Map$EmptyMap$",
             "scala.collection.immutable.$colon$colon",

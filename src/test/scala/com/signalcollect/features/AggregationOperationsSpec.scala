@@ -124,7 +124,7 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       vertexSample.size === 0
     }
 
-    "sample 50 vertex ids correclty" in {
+    "sample 50 vertex ids correctly" in {
       val graph = createGraph
       val vertexSample = graph.aggregate(new SampleVertexIds(50))
       graph.shutdown
@@ -132,7 +132,7 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
     }
 
-    "sample 50 vertex ids correclty" in {
+    "sample 50 vertex ids correctly" in {
       val graph = createGraph
       val vertexSample = graph.aggregate(new SampleVertexIds(1000))
       graph.shutdown

@@ -22,6 +22,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
+import akka.event.Logging
 
 /**
  *  Represents a cell in a "Conway's Game of Life" (http://en.wikipedia.org/wiki/Conway's_Game_of_Life) simulation
@@ -50,12 +51,13 @@ class GameOfLifeCell(id: Any, initialState: Int)
  * simulation on a random grid and executes it
  */
 object GameOfLife extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8090)
+                          .withLoggingLevel(Logging.DebugLevel)
+                          .build
 
   //Dimensions of the grid
-  val columns = 100
-  val rows = 100
-  val generations = 10000
+  val columns = 10
+  val rows = 10
 
   println("Adding vertices ...") //Create all cells.
   for (column <- 0 to columns; row <- 0 to rows) {
@@ -71,13 +73,9 @@ object GameOfLife extends App {
     }
   }
 
-  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withStepsLimit(1)
+  val execConfig = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
 
-  for (i <- 0 to generations) {
-    //    println(stringRepresentationOfGraph)
-    val stats = graph.execute(execConfig)
-  }
-  //  println(stringRepresentationOfGraph)
+  val stats = graph.execute(execConfig)
 
   graph.shutdown
 

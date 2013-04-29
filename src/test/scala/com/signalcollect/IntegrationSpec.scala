@@ -29,6 +29,7 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.Path
 import org.specs2.runner.JUnitRunner
+import com.signalcollect.interfaces.ModularAggregationOperation
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website

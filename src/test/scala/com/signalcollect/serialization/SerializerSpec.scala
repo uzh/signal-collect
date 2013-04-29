@@ -31,11 +31,11 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
 
   "DefaultSerializer" should {
 
-    "correclty serialize/deserialize a Double" in {
+    "correctly serialize/deserialize a Double" in {
       DefaultSerializer.read[Double](DefaultSerializer.write(1024.0)) === 1024.0
     }
 
-    "correclty serialize/deserialize a job configuration" in {
+    "correctly serialize/deserialize a job configuration" in {
       val job = new Job(
         100,
         Some(SpreadsheetConfiguration("some.emailAddress@gmail.com", "somePasswordHere", "someSpreadsheetNameHere", "someWorksheetNameHere")),

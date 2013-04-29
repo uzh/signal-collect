@@ -47,8 +47,8 @@ import com.signalcollect.interfaces.SentMessagesStats
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-  nodeId: Int,
-  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+    nodeId: Int,
+    nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     nodeProvisionerAddress)

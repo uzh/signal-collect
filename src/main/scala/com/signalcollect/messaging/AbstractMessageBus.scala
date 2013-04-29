@@ -22,23 +22,20 @@ package com.signalcollect.messaging
 
 import java.util.Random
 import java.util.concurrent.atomic.AtomicInteger
-
 import scala.Array.canBuildFrom
-
 import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
-
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
+import akka.event.Logging.LogEvent
 
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
   extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
@@ -135,14 +132,6 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 
   override def sendToActor(actor: ActorRef, message: Any) {
     actor ! message
-  }
-
-  override def sendToLogger(message: LogMessage) {
-    if (logger != null) {
-      logger ! message
-    } else {
-      println("Could not log message: " + message)
-    }
   }
 
   override def sendToWorkerForVertexId(message: Any, recipientId: Id) {

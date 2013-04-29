@@ -23,11 +23,12 @@ import scala.reflect.ClassTag
 
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
+import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -49,6 +50,17 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def build: Graph[Id, Signal] = new DefaultGraph[Id, Signal](config)
 
   /**
+   *  Configures if the console website on port 8080 is enabled.
+   */
+  def withConsole(newConsoleEnabled: Boolean) = newLocalBuilder(consoleEnabled = newConsoleEnabled)
+
+  /**
+   *  Configures if the console website on a configurable port is enabled.
+   */
+  def withConsole(newConsoleEnabled: Boolean, newConsoleHttpPort: Int) =
+      newLocalBuilder(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort)
+
+  /**
    *  Configures if Akka message compression is enabled.
    */
   def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) = newLocalBuilder(akkaMessageCompression = newAkkaMessageCompression)
@@ -65,14 +77,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newLoggingLevel The logging level used by the graph.
    */
-  def withLoggingLevel(newLoggingLevel: Int) = newLocalBuilder(loggingLevel = newLoggingLevel)
-
-  /**
-   *  Configures the logger used by the graph.
-   *
-   *  @param logger The logger used by the graph.
-   */
-  def withLogger(logger: LogMessage => Unit) = newLocalBuilder(logger = logger)
+  def withLoggingLevel(newLoggingLevel: LogLevel) = newLocalBuilder(loggingLevel = newLoggingLevel)
 
   /**
    *  Configures the worker factory used by the graph to instantiate workers.
@@ -120,22 +125,18 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
 
   /**
-   *  Specifies additional Kryo serialization registrations.
-   */
-  def withKryoRegistrations(newKryoRegistrations: List[String]) = newLocalBuilder(kryoRegistrations = newKryoRegistrations)
-
-  /**
    *  If true forces Akka message serialization even in local settings. For debugging purposes only.
    */
   def withMessageSerialization(newSerializeMessages: Boolean) = newLocalBuilder(serializeMessages = newSerializeMessages)
-
+  
   /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
   protected def newLocalBuilder(
-    loggingLevel: Int = config.loggingLevel,
-    logger: LogMessage => Unit = config.logger,
+    consoleEnabled: Boolean = config.consoleEnabled,
+    consoleHttpPort: Int = config.consoleHttpPort,
+    loggingLevel: Logging.LogLevel = config.loggingLevel,
     workerFactory: WorkerFactory = config.workerFactory,
     messageBusFactory: MessageBusFactory = config.messageBusFactory,
     storageFactory: StorageFactory = config.storageFactory,
@@ -148,8 +149,9 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     serializeMessages: Boolean = config.serializeMessages): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
+        consoleEnabled = consoleEnabled,
+        consoleHttpPort = consoleHttpPort,
         loggingLevel = loggingLevel,
-        logger = logger,
         workerFactory = workerFactory,
         messageBusFactory = messageBusFactory,
         storageFactory = storageFactory,

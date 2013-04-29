@@ -21,6 +21,8 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 parallelExecution in Test := false
 
+scalacOptions += "-deprecation"
+
 EclipseKeys.withSource := true
 
 jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
@@ -36,5 +38,12 @@ libraryDependencies ++= Seq(
  "junit" % "junit" % "4.8.2"  % "test",
  "org.specs2" % "specs2_2.10" % "1.13"  % "test",
  "org.specs2" % "classycle" % "1.4.1" % "test",
- "org.mockito" % "mockito-all" % "1.9.0"  % "test"
+ "org.mockito" % "mockito-all" % "1.9.0"  % "test",
+ "net.liftweb" % "lift-json_2.10" % "2.5-RC4",
+ "org.java-websocket" % "Java-WebSocket" % "1.3.0"
   )
+
+resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"
+
+resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
+

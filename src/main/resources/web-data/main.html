@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- 
+  @author Carol Alexandru
+  @author Silvan Troxler
+  
+  Copyright 2013 University of Zurich
+      
+  Licensed below the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+         http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed below the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations below the License.
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>Console - Signal/Collect</title>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="d3.js"></script>
+    <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src="util.js"></script>
+    <script type="text/javascript" src="configuration.js"></script>
+    <script type="text/javascript" src="strings.js"></script>
+    <script type="text/javascript" src="layout.js"></script>
+    <script type="text/javascript" src="state.js"></script>
+    <script type="text/javascript" src="graph.js"></script>
+    <script type="text/javascript" src="linechart.js"></script>
+    <script type="text/javascript" src="resources.js"></script>
+    <script type="text/javascript" src="breakconditions.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+  </head>
+  <body>
+    <div id="title">
+        <img src="sc.png" alt="Signal/Collect Logo">
+        <div id="title_text">Signal/Collect</div>
+        <div id="title_subtext">Console</div>
+    </div>
+    <div id="top">
+      <div id="error" class="msg">Javascript is required to run this Application.</div>
+      <div id="small_error" class="msg hidden">Javascript is required to run this Application.</div>
+      <div id="success" class="msg hidden"></div>
+      <div id="close_msgs" title="Hide message"></div>
+    </div>
+    <div id="left">
+
+      <div id="modes">
+        <span id="mode_graph" class="leftmost selected">Graph</span>
+        <span id="mode_resources">Resources</span>
+      </div>
+      <div id="graph_panel_container">
+        <div class="panel">
+          <div id="cNodeSelection" class="panel_section">
+            <div class="title expanded">Select nodes to display</div>
+            <div class="contents">
+              <form>
+                <h1><span>Show top vertices</span></h1>
+                <label>By:</label>
+                <select id="gs_topCriterium">
+                  <option>Degree</option>
+                  <option>State</option>
+                  <option>Signal score</option>
+                  <option>Collect score</option>
+                </select>
+                <button id="gs_searchByTop">Find</button><br/>
+                <h1><span>Search for vertex by ID</span></h1>
+                <input id="gs_searchId" type="text">
+                <button id="gs_searchById">Find</button><br/>
+              </form> 
+            </div>
+          </div>
+          <div id="cGraphDesign" class="panel_section">
+            <div class="title expanded">Graph Look and Feel</div>
+            <div class="contents">
+              <form>
+                <h1><span>Node styling</span></h1>
+                <label for="gd_nodeSize">Node size:</label>
+                <select id="gd_nodeSize">
+                  <option>Node state</option>
+                  <option>All equal</option>
+                </select><br/>
+                <label for="gd_nodeColor">Node color:</label>
+                <select id="gd_nodeColor">
+                  <option>Node state</option>
+                  <option>Node id</option>
+                  <option>Node degree</option>
+                  <option>Is Vicinity</option>
+                  <option>All equal</option>
+                </select><br/>
+                <label for="gd_nodeBorder">Node outline color:</label>
+                <select id="gd_nodeBorder">
+                  <option>Node state</option>
+                  <option>Node id</option>
+                  <option>Node degree</option>
+                  <option>Is Vicinity</option>
+                  <option>All equal</option>
+                </select><br/>
+                <h1><span>Performance &amp; Complexity</span></h1>
+                <label for="gp_vicinityRadius">Node vicinity radius:</label>
+                <select id="gp_vicinityRadius"></select><br/>
+                <label for="gp_maxVertices">Target node count (exkl. vicinity):</label>
+                <select id="gp_maxVertices"></select><br/>
+                <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
+                <select id="gp_refreshRate"></select><br/>
+                <label for="gp_drawEdges">Draw edges:</label>
+                <select id="gp_drawEdges">
+                  <option>When graph is still</option>
+                  <option>Always</option>
+                  <option>Never</option>
+                </select><br/>
+                <label for="gp_vicinityIncoming">Also compute incoming edges:</label>
+                <select id="gp_vicinityIncoming">
+                  <option>No</option>
+                  <option>Yes</option>
+                </select>
+              </form> 
+            </div>
+          </div>
+          <div id="cGraphControl" class="panel_section">
+            <div class="title expanded">Graph Execution Control</div>
+            <div class="contents">
+              <form>
+                <h1><span>Breakpoint Conditions</span></h1>
+                <div class="bottom_border"><div id="gc_conditionList"></div></div>
+                <h1><span>Add New Condition</span></h1>
+                <label for="gc_nodeId">When node with id:</label><br/>
+                <input id="gc_nodeId" type="text">
+                <button id="gc_useMouse">Mouse</button><br/>
+                <select id="gc_condition">
+                  <option>changes state</option>
+                  <option>goes above state:</option>
+                  <option>goes below state:</option>
+                  <option>goes above signal threshold</option>
+                  <option>goes below signal threshold</option>
+                  <option>goes above collect threshold</option>
+                  <option>goes below collect threshold</option>
+                </select>
+                <span id="gc_stateContainer">
+                  <input id="gc_state" type="text">
+                </span>
+                <button disabled="disabled" id="gc_addCondition">Add</button><br/>
+              </form> 
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div id="resources_panel_container">
+        <div class="panel">
+          <div id="cResourceComputation"  class="panel_section">
+            <div class="title expanded">Computation</div>
+            <div class="contents">
+              <input type="radio" name="rs" id="rs_statistics"/>
+              <label for="rs_statistics">Statistics</label><br/>
+              <input type="radio" name="rs" id="rs_logs"/>
+              <label for="rs_logs">Logs</label><br/>
+              <input type="radio" name="rs" id="rs_detailed"/>
+              <label for="rs_detailed">Detailed</label>
+            </div>
+          </div>
+          <div id="cResourceProblems" class="panel_section">
+            <div class="title expanded">Questions</div>
+            <div class="contents">
+
+              <input type="radio" name="rs" id="rs_nostart"/>
+              <label for="rs_nostart">Computation does not seem to start</label><br/>
+
+              <input type="radio" name="rs" id="rs_noconvergence"/>
+              <label for="rs_noconvergence">Computation does not converge</label><br/>
+
+              <input type="radio" name="rs" id="rs_crash"/>
+              <label for="rs_crash">Computation crashes</label><br/>
+
+              <input type="radio" name="rs" id="rs_slow"/>
+              <label for="rs_slow">Computation takes very long</label><br/>
+
+              <input type="radio" name="rs" id="rs_estimation"/>
+              <label for="rs_estimation">Maximum graph size estimation</label><br/>
+
+              <input type="radio" name="rs" id="rs_unexpectedresults"/>
+              <label for="rs_unexpectedresults">Unexpected results</label><br/>
+
+              <input type="radio" name="rs" id="rs_phase"/>
+              <label for="rs_phase">Computation phases</label><br/>
+
+              <input type="radio" name="rs" id="rs_loadingspeed"/>
+              <label for="rs_loadingspeed">Graph loading speed and estimated completion</label><br/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="controls">
+        <div class="hidden blocker"></div>
+        <div id="reset" title="Reset graph to initial state" class="icon blocked"></div>
+        <div id="pause" title="Pause computation" class="icon blocked"></div>
+        <div id="step" title="Partial step (until next signal, collect or condition check)" class="icon blocked"></div>
+        <div id="collect" title="Full step (until next signal)" class="icon blocked"></div>
+        <div id="continue" title="Continue computation until a break condition applies" class="icon blocked"></div>
+        <div id="terminate" title="Terminate Signal/Collect" class="icon blocked"></div>
+        <div id="pending_command"></div>
+      </div>
+      <div id="stateContainer">
+        <div class="left"><span id="state"></span></div>
+        <div class="right">It. #<span id="iteration"></span></div>
+      </div>
+    </div>
+    <div id="content">
+      <div class="view" id="graph">
+        <div id="graph_background_container">
+          <div id="graph_background">Loading...</div>
+        </div>
+        <div id="graph_tooltip">
+          <div class="graph_tooltip_item">Id: <span id="node_id"></span></div>
+          <div class="graph_tooltip_item">State: <span id="node_state"></span></div>
+          <div class="graph_tooltip_item">Signal Score: <span id="node_ss"></span></div>
+          <div class="graph_tooltip_item">Collect Score: <span id="node_cs"></span></div>
+        </div>
+        <div id="graph_canvas"></div>
+      </div>
+      <div class="view" id="resources">
+        <div class="structured">
+        
+          <!-- content resource section statistics -->
+          <div id="crs_statistics">
+            <h1>Statistics</h1>
+            <p class="teaser">
+              Here you can see statistics about the JVM (Java Virtual Machine) settings and parameters as well as the computation that
+              is currently being processed.
+            </p>
+            <p><small>Updating every <span id="resStatInterval">?</span> second(s).</small></p>
+          </div>
+        
+          <div id="crs_estimation">
+            <h1>Maximum Graph Size Estimation</h1>
+            <p class="teaser">
+              Here we try to estimate how large a data set might be at most to still be processable by your current infrastructure.
+              This estimation, however, is quite vague and should not be taken for granted.
+            </p>
+          </div>
+        
+          <div id="crs_logs">
+            <h1>Logs</h1>
+            <p class="teaser">These are logging messages the system emitted while processing your data set.</p>
+          </div>
+
+          <div id="crs_nostart">
+            <h1>Computation does not seem to start</h1>
+            <p class="teaser">
+              When a computation does not seem to start, it might have crashed. The log messages below might indicate such a problem.
+              However, as long as the charts below are still updating, a crash is unlikely. In such cases, the graph might take a lot
+              of time to load. You can observe the graph loading stage by having a look at the charts regarding the infrastructure.
+            </p>
+          </div>
+          
+          <div id="crs_noconvergence">
+            <h1>Computation does not converge</h1>
+            <p class="teaser">
+              When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
+              converge. You can observe the charts below to see whethere there are any messages sent or received. Additionally, 
+              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>observe
+              the graph with a state visualization</a>.
+            </p>
+          </div>
+          
+          <div id="crs_crash">
+            <h1>Computation crashes</h1>
+            <p class="teaser">
+              A computation can crash for various reasons. There might be a problem in the the code (e.g. a
+              <code>NullPointerException</code>) in which case you might see an error message in the list of log messages below.
+              Another reason for a crash could be an infrastructure that is too weak to process the current data set. In this case, you might
+              see an error message as well but could also observe the memory usage in the charts below.
+            </p>
+          </div>
+          
+          <div id="crs_slow">
+            <h1>Computation takes very long</h1>
+            <p class="teaser">
+              A computation on a large data set, or even a complex computation on a small data set, might take hours,
+              days or even longer to compute. Please be patient. However, there might be other reasons that a computation takes very
+              long. First, <a href='#{"main":{"view":"resources"},"resources":{"section":"noconvergence"}}'>not every computation
+              converges at all</a>. Second, a high CPU usage shows that the computation is still running and you have to wait for it to
+              end.
+            </p>
+          </div>
+          
+          <div id="crs_unexpectedresults">
+            <h1>Computation yields unexpected results</h1>
+            <p class="teaser">
+              There can be various reasons for when a computation yields unexpected results. To find potential problems, you can
+              <a target="_blank" href='/graph'>set breakpoints on the graph</a> and step through different phases of the computation.
+              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>view
+              the graph with state visualization enabled</a>.
+            </p>
+          </div>
+        
+          <div id="crs_detailed">
+            <h1>Detailed</h1>
+            <p class="teaser">
+              Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
+              represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
+              <strong style="color:red;">maximum</strong> values over all worker nodes. You can hover the lines to get more information.
+            </p> 
+            <div class="chartContainer"></div>
+          </div>
+          
+          <div id="resourceBoxes">
+          
+            <div id="chartZoomer">
+              <span class="zoomIn" title="Zoom in all charts">+</span><br />
+              <span class="moveLeft" title="Move all charts to the right">&laquo;</span><span
+              class="moveOrigin" title="Move all charts to the origin">&middot;</span><span
+              class="moveRight" title="Move all charts to the left">&raquo;</span><br />
+              <span class="zoomOut" title="Zoom out all charts">-</span>
+            </div>
+          
+            <div id="signalCollectTitle"><h2 class="break">Signal/Collect</h2></div>
+            <div id="infrastructureTitle"><h2 class="break">Infrastructure</h2></div>
+            <div id="logTitle"><h2 class="break">Log Messages</h2></div>
+        
+            <div id="computationStatBox">
+              <h3>Computation</h3>
+              <ul class="statistics">
+                <li>Start Time: <span id="resStatStartTime">?</span></li>
+                <li>Running for <small>(not accurate when stepping)</small>: <span id="resStatRunTime">?</span></li>
+                <li>Status: <span id="resStatStatus">waiting</span></li>
+                <li>Number of Workers: <span id="resStatWorkers">?</span></li>
+                <li>Execution Mode: <span id="resStatexecutionMode">?</span></li>
+                <li>Global Termination Condition: <span id="resStatglobalTerminationCondition">?</span></li>
+                <li>Steps Limit: <span id="resStatstepsLimit">?</span></li>
+                <li>Time Limit: <span id="resStattimeLimit">?</span></li>
+                <li>Signal Threshold: <span id="resStatsignalThreshold">?</span></li>
+                <li>Collect Threshold: <span id="resStatcollectThreshold">?</span></li>
+              </ul>
+            </div>
+
+            <div id="infrastructureStatBox">
+              <h3>Infrastructure</h3>
+              <ul class="statistics free"><li>loading...</li></ul>
+            </div>
+
+            <div id="graphStatBox">
+              <h3>Graph</h3>
+              <ul class="statistics free"><li>loading...</li></ul>
+            </div>
+
+            <div id="estimationStatBox">
+              <h3>Graph Size Estimation</h3>
+              <p>Waiting for more data.</p>
+            </div>
+        
+            <div id="logBox">
+              <p class="filter level">
+                Level:
+                <span class="active">
+                  Error (<span>0</span>)
+                </span><span class="active">
+                  Warning (<span>0</span>)
+                </span><span class="active">
+                  Info (<span>0</span>)
+                </span><span>
+                  Debug (<span>0</span>)
+                </span>
+              </p>
+              <p class="filter source">
+                Source:
+                <span class="active">
+                  Akka
+                </span><span class="active">
+                  Signal/Collect
+                </span><span class="active">
+                  User
+                </span>
+              </p>
+              <p><a href="/log_messages.txt" target="_blank">Download entire log file</a></p>
+              <div class="scroll"><div><ul></ul></div></div>
+            </div>
+        
+          
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

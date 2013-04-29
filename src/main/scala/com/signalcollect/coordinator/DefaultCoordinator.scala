@@ -31,7 +31,6 @@ import scala.language.postfixOps
 import scala.reflect.ClassTag
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.Heartbeat
-import com.signalcollect.interfaces.Logging
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
@@ -43,9 +42,13 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
+import akka.event.Logging.LogLevel
+import akka.event.Logging
+import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.Logger
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -67,10 +70,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
-  heartbeatIntervalInMilliseconds: Long,
-  val loggingLevel: Int) extends Actor
+  loggerRef: ActorRef,
+  heartbeatIntervalInMilliseconds: Long) extends Actor
     with MessageRecipientRegistry
-    with Logging
     with Coordinator[Id, Signal]
     with ActorLogging {
 
@@ -79,6 +81,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
    */
   context.setReceiveTimeout(Duration.Undefined)
 
+  val logger = AkkaProxy.newInstance[Logger](loggerRef, mb => ())
+  
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
@@ -178,9 +182,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
           }
         }
       } catch {
-        case e: Exception =>
-          severe(e)
-          throw e
+        case t: Throwable =>
+          log.error(t.toString)
+          throw t
       }
   }
 
@@ -316,6 +320,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     } else {
       (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
     }
+  }
+  
+  def getLogMessages = {
+    logger.getLogMessages
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

@@ -25,7 +25,6 @@ import scala.collection.mutable.ArrayBuffer
 import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
-import com.signalcollect.configuration.LoggingLevel
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -37,7 +36,7 @@ import com.signalcollect.configuration.LoggingLevel
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Double].withLoggingLevel(LoggingLevel.Debug).build //withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build//
+  val g = new GraphBuilder[Int, Double].withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)

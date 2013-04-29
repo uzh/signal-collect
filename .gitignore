@@ -1,10 +1,16 @@
 .*
+*.snapshot
+lib/*
 !/.gitignore
 !/.travis.yml
 project/target/
 project/project/
 project/scala*/
 target/*
+.tags
+graph-data/
+log_messages.txt
+references.nt
 web-BerkStan.txt
 
 web-BerkStan.txt.gz
