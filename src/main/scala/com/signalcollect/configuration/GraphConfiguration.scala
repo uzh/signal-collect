@@ -44,7 +44,8 @@ case class GraphConfiguration(
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
-  heartbeatIntervalInMilliseconds: Int = 100)
+  heartbeatIntervalInMilliseconds: Int = 100,
+  kryoRegistrations: List[String] = List())
 
 object LoggingLevel {
   val Debug = 0

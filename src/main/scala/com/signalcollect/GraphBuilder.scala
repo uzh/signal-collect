@@ -120,6 +120,11 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
 
   /**
+   *  Specifies additional Kryo serialization registrations.
+   */
+  def withKryoRegistrations(newKryoRegistrations: List[String]) = newLocalBuilder(kryoRegistrations = newKryoRegistrations)
+
+  /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
@@ -133,7 +138,8 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
     akkaMessageCompression: Boolean = config.akkaMessageCompression,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner,
-    heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
+    heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds,
+    kryoRegistrations: List[String] = config.kryoRegistrations): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         loggingLevel = loggingLevel,
@@ -145,7 +151,8 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
         akkaDispatcher = akkaDispatcher,
         akkaMessageCompression = akkaMessageCompression,
         nodeProvisioner = nodeProvisioner,
-        heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds))
+        heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds,
+        kryoRegistrations = kryoRegistrations))
   }
 
 }
