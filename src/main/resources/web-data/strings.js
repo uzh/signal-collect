@@ -24,19 +24,45 @@ STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
        "State": {
-         "pausedBeforeChecksBeforeSignal": "Paused before signal checks",
-         "checksBeforeSignal": "Checking pre-signal conditions...",
-         "pausedBeforeSignal": "Paused before signalling",
-         "signalling": "Signalling...",
-         "pausedBeforeChecksBeforeCollect": "Paused before collect checks",
-         "checksBeforeCollect": "Checking pre-collect conditions...",
-         "pausedBeforeCollect": "Paused before collecting",
-         "collecting": "Collecting...",
-         "pausedBeforeGlobalChecks": "Paused before global checks",
-         "globalChecks": "Checking global conditions...",
-         "resetting": "Resetting graph...",
-         "terminating": "Terminating Signal/Collect...",
-         "pausing": "Pausing..."
+         "pausedBeforeChecksBeforeSignal": [
+           "Paused before signal/checks",
+           "Paused - The next partial step triggers a break condition check"],
+         "checksBeforeSignal": [
+           "Checking pre-signal conditions...",
+           "Checking conditions before the next signal step..."],
+         "pausedBeforeSignal": [
+           "Paused before signalling",
+           "Paused - The next partial step will perform the signalling step of the computation"],
+         "signalling": [
+           "Signalling...",
+           "Performing the signalling step of the computation..."],
+         "pausedBeforeChecksBeforeCollect": [
+           "Paused before collect/checks",
+           "Paused - The next partial step triggers a break condition check"],
+         "checksBeforeCollect": [
+           "Checking pre-collect conditions...",
+           "Checking conditions before the next collect step..."],
+         "pausedBeforeCollect": [
+           "Paused before collecting",
+           "Paused - The next partial step will perform the collecting step of the computation"],
+         "collecting": [
+           "Collecting...",
+           "Performing the collecting step of the computation..."],
+         "pausedBeforeGlobalChecks": [
+           "Paused before global checks",
+           "Paused - The next partial step triggers the global break condition check"],
+         "globalChecks": [
+           "Checking global conditions...",
+           "Checking global termination conditions..."],
+         "resetting": [
+           "Resetting graph...",
+           "Resetting the graph to its initial state"],
+         "terminating": [
+           "Terminating Signal/Collect...",
+           "Terminating the Signal/Collect application"],
+         "pausing": [
+           "Pausing...",
+           "Pausing the computation, waiting for tasks to finish"]
        }
        
 };

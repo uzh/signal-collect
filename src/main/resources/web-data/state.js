@@ -96,7 +96,8 @@ scc.modules.State = function() {
     // Update the state information in the GUI
     $('#iteration').text(j.iteration);
     $('#resStatStatus').text(STR.State[j.state]);
-    $('#state').text(STR.State[j.state])
+    $('#state').text(STR.State[j.state][0])
+    $('#state').attr("title", STR.State[j.state][1])
     switch (j.state) {
       case "pausedBeforeChecksBeforeSignal":
       case "pausedBeforeSignal":
