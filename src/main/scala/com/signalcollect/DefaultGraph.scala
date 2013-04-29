@@ -310,9 +310,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def collect() {
       lock.synchronized {
         steps = state match {
-          case "pausedBeforeSignal" => 2
-          case "pausedBeforeCollect" => 1
-          case "pausedBeforeConditionChecks" => 3
+          case "pausedBeforeSignal" => 3
+          case "pausedBeforeCollect" => 2
+          case "pausedBeforeConditionChecks" => 1
         }
         lock.notifyAll
       }
