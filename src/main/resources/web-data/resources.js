@@ -274,7 +274,7 @@ scc.modules.Log = function() {
           latest.logClass == json.logClass &&
           latest.message == json.message
          ) {
-        fragments[fragments.lenght-1].occurrences = fragments[fragments.lenght-1].occurrences + 1; 
+        fragments[fragments.length-1].occurrences += 1;
       } else {
 
         var cls = "level_" + json.level.toLowerCase() + " source_" + json.source;
@@ -301,7 +301,7 @@ scc.modules.Log = function() {
       }
       fragmentsHtml += " &lt;" + json.logSource + ", " + json.logClass + "&gt;";
       if (json.occurrences > 1) {
-        fragmentsHtml += "<small class=\"numberOfOccurences\">" + json.occurrences + "</small>";        
+        fragmentsHtml += " <small class=\"numberOfOccurences\">(" + json.occurrences + " occurrences)</small>";        
       }
       fragmentsHtml += "</li>";
     });
