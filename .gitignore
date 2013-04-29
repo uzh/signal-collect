@@ -1,5 +1,6 @@
 .*
 *.snapshot
+*.orig
 lib/*
 !/.gitignore
 !/.travis.yml
