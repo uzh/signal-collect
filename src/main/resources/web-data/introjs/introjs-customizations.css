@@ -1,0 +1,14 @@
+.introjs-overlay {
+  background-color: transparent;
+}
+
+.introjs-helperLayer {
+  position: absolute;
+  z-index: 9999998;
+  background-color: transparent;
+  border: 3px solid red;
+}
+
+.introjs-helperNumberLayer {
+  display: none;
+}

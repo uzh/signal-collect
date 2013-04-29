@@ -255,7 +255,6 @@ scc.modules.Log = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
-    console.dir(msg.messages);
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
     var fragments = [];
     var latest = null; // TODO replace latest with fragments[fragments.length-1]

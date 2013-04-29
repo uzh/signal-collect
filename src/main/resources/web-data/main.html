@@ -22,6 +22,8 @@
     <meta charset="utf-8">
     <title>Console - Signal/Collect</title>
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="introjs/introjs.min.css">
+    <link rel="stylesheet" href="introjs/introjs-customizations.css">
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="d3.js"></script>
     <script type="text/javascript" src="reconnecting-websocket.min.js"></script>
@@ -34,11 +36,14 @@
     <script type="text/javascript" src="linechart.js"></script>
     <script type="text/javascript" src="resources.js"></script>
     <script type="text/javascript" src="breakconditions.js"></script>
+    <script type="text/javascript" src="introjs/intro.min.js"></script>
     <script type="text/javascript" src="main.js"></script>
   </head>
   <body>
     <div id="title">
-        <img src="sc.png" alt="Signal/Collect Logo">
+        <img src="sc.png" alt="Signal/Collect Logo"
+          data-intro="Welcome! This is a guided tour through the user interface of the Console Server."
+          data-step="1">
         <div id="title_text">Signal/Collect</div>
         <div id="title_subtext">Console</div>
     </div>
@@ -51,8 +56,10 @@
     <div id="left">
 
       <div id="modes">
-        <span id="mode_graph" class="leftmost selected">Graph</span>
-        <span id="mode_resources">Resources</span>
+        <span id="mode_graph" class="leftmost selected"
+          data-intro="The Console Server consists of two main views: The 'Graph View' ..."
+          data-step="2">Graph</span>
+        <span id="mode_resources" data-intro="... and the 'Resource View'." data-step="3">Resources</span>
       </div>
       <div id="graph_panel_container">
         <div class="panel">
@@ -165,7 +172,7 @@
             </div>
           </div>
           <div id="cResourceProblems" class="panel_section">
-            <div class="title expanded">Questions</div>
+            <div class="title expanded" data-intro="Use Cases" data-step="100" id="questions">Questions</div>
             <div class="contents">
 
               <input type="radio" name="rs" id="rs_nostart"/>
