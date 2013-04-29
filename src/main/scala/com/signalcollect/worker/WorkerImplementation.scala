@@ -201,7 +201,6 @@ case class WorkerImplementation[Id, Signal](
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
-      log.debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
     }
   }
 
