@@ -24,11 +24,11 @@ STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
        "State": {
-         "pausedBeforeChecksBeforeSignal": "Paused before condition check",
+         "pausedBeforeChecksBeforeSignal": "Paused before signal checks",
          "checksBeforeSignal": "Checking pre-signal conditions...",
          "pausedBeforeSignal": "Paused before signalling",
          "signalling": "Signalling...",
-         "pausedBeforeChecksBeforeCollect": "Paused before condition check",
+         "pausedBeforeChecksBeforeCollect": "Paused before collect checks",
          "checksBeforeCollect": "Checking pre-collect conditions...",
          "pausedBeforeCollect": "Paused before collecting",
          "collecting": "Collecting...",

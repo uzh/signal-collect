@@ -310,9 +310,11 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def collect() {
       lock.synchronized {
         steps = state match {
-          case "pausedBeforeSignal" => 3
+          case "pausedBeforeChecksBeforeSignal" => 5
+          case "pausedBeforeSignal" => 4
+          case "pausedBeforeChecksBeforeCollect" => 3
           case "pausedBeforeCollect" => 2
-          case "pausedBeforeConditionChecks" => 1
+          case "pausedBeforeGlobalChecks" => 1
         }
         lock.notifyAll
       }
@@ -425,6 +427,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
               setState("globalTerminationCheck")
               globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
             }
+            if (steps > 0) { steps -= 1 }
           }
           else {
             resetting = false
