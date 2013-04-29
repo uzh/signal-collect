@@ -36,6 +36,7 @@ case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
   def removeTargetId: EdgeId[Id] = EdgeId(sourceId, null.asInstanceOf[Id])
   def removeSourceId: EdgeId[Id] = EdgeId(null.asInstanceOf[Id], targetId)
+  override def toString(): String = sourceId.toString + targetId.toString
 }
 
 case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val signals: Array[Signal], val targetIds: Array[Id], val sourceIds: Array[Id])
@@ -82,7 +83,11 @@ case class WorkerStatistics(
   bulkSignalMessagesReceived: Long = 0l,
   continueMessagesReceived: Long = 0l,
   requestMessagesReceived: Long = 0l,
-  otherMessagesReceived: Long = 0l) {
+  otherMessagesReceived: Long = 0l,
+  messagesSentToWorkers: Long = 0l,
+  messagesSentToNodes: Long = 0l,
+  messagesSentToCoordinator: Long = 0l,
+  messagesSentToOthers: Long = 0l) {
   def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       -1,
@@ -102,7 +107,11 @@ case class WorkerStatistics(
       bulkSignalMessagesReceived + other.bulkSignalMessagesReceived,
       continueMessagesReceived + other.continueMessagesReceived,
       requestMessagesReceived + other.requestMessagesReceived,
-      otherMessagesReceived + other.otherMessagesReceived)
+      otherMessagesReceived + other.otherMessagesReceived,
+      messagesSentToWorkers + other.messagesSentToWorkers,
+      messagesSentToNodes + other.messagesSentToNodes,
+      messagesSentToCoordinator + other.messagesSentToCoordinator,
+      messagesSentToOthers + other.messagesSentToOthers)
   }
   override def toString: String = {
     "# collect operations\t" + collectOperationsExecuted + "\n" +
@@ -112,13 +121,37 @@ case class WorkerStatistics(
   }
 }
 
-sealed trait LogMessage {
-  def msg: Any
-  def from: Any
+case class SystemInformation(
+    workerId: Int = -1,
+    os: String = "",
+    runtime_mem_total: Long = 0l,
+    runtime_mem_max: Long = 0l,
+    runtime_mem_free: Long = 0l,
+    runtime_cores: Long = 0l,
+    jmx_committed_vms: Long = 0l,
+    jmx_mem_free: Long = 0l,
+    jmx_mem_total: Long = 0l,
+    jmx_swap_free: Long = 0l,
+    jmx_swap_total: Long = 0l,
+    jmx_process_load: Double = 0.0,
+    jmx_process_time: Double = 0.0,
+    jmx_system_load: Double = 0.0
+) {
+  def +(other: SystemInformation): SystemInformation = {
+    SystemInformation(
+        -1,
+        os + other.os,
+        runtime_mem_total + other.runtime_mem_total,
+        runtime_mem_max + other.runtime_mem_max,
+        runtime_mem_free + other.runtime_mem_free,
+        runtime_cores + other.runtime_cores,
+        jmx_committed_vms + other.jmx_committed_vms,
+        jmx_mem_free + other.jmx_mem_free,
+        jmx_mem_total + other.jmx_mem_total,
+        jmx_swap_free + other.jmx_swap_free,
+        jmx_swap_total + other.jmx_swap_total,
+        (jmx_process_load + other.jmx_process_load) / 2,
+        jmx_process_time + other.jmx_process_time,
+        (jmx_system_load + other.jmx_system_load) / 2)
+  }
 }
-
-case class Debug(msg: Any, from: Any) extends LogMessage
-case class Config(msg: Any, from: Any) extends LogMessage
-case class Info(msg: Any, from: Any) extends LogMessage
-case class Warning(msg: Any, from: Any) extends LogMessage
-case class Severe(msg: Any, from: Any) extends LogMessage

@@ -28,10 +28,15 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
+import com.signalcollect.console._
+import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.messaging.DefaultVertexToWorkerMapper
+import com.sun.management.OperatingSystemMXBean
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.interfaces._
-import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
@@ -42,6 +47,11 @@ import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
+import com.signalcollect.coordinator.OnIdle
+import com.signalcollect.coordinator.IsIdle
+import scala.language.postfixOps
+import com.signalcollect.interfaces.ComplexAggregation
+import java.net.InetSocketAddress
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -66,21 +76,15 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
-  heartbeatIntervalInMilliseconds: Long,
-  loggingLevel: Int) extends Creator[DefaultCoordinator[Id, Signal]] {
+  logger: ActorRef,
+  heartbeatIntervalInMilliseconds: Long)
+  extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
     messageBusFactory,
-    heartbeatIntervalInMilliseconds,
-    loggingLevel)
-}
-
-/**
- * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
- */
-case class LoggerCreator(loggingFunction: LogMessage => Unit) extends Creator[DefaultLogger] {
-  def create: DefaultLogger = new DefaultLogger(loggingFunction)
+    logger,
+    heartbeatIntervalInMilliseconds)
 }
 
 /**
@@ -96,6 +100,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
   ActorSystemRegistry.register(system)
+
+  val console = {
+    if (config.consoleEnabled) {
+      new ConsoleServer[Id](config)
+    } else {
+      null
+    }
+  }
 
   val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
   // Bootstrap => sent and received messages are not counted for termination detection. 
@@ -130,23 +142,22 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     actors
   }
 
+  val loggerActor: ActorRef = system.actorFor("akka://SignalCollect/system/log1-ConsoleLogger")
+
   val coordinatorActor: ActorRef = {
     val coordinatorCreator = CoordinatorCreator[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
       config.messageBusFactory,
-      config.heartbeatIntervalInMilliseconds,
-      config.loggingLevel)
+      loggerActor,
+      config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
       case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 
-  val loggerActor: ActorRef = {
-    val loggerCreator = LoggerCreator(config.logger)
-    system.actorOf(Props[DefaultLogger].withCreator(loggerCreator.create()), name = "Logger")
-  }
+  if (console != null) { console.setCoordinator(coordinatorActor) }
 
   // Bootstrap => sent and received messages are not counted for termination detection. 
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, mb => Unit)) // MessageBus not initialized at this point.
@@ -188,6 +199,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+    if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
     workerApi.setSignalThreshold(parameters.signalThreshold)
@@ -204,7 +216,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        stats.terminationReason = TerminationReason.Ongoing
+        new InteractiveExecution[Id](this, console, stats, parameters).run()
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -253,6 +265,196 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
     def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
     def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
+  }
+
+  class InteractiveExecution[Id](
+    graph: Graph[Id, Signal],
+    console: ConsoleServer[Id],
+    stats: ExecutionStatistics,
+    parameters: ExecutionConfiguration) extends Execution {
+    var state = "initExecution"
+    var iteration = 0
+    if (console != null) { console.setInteractor(this) }
+    graph.snapshot
+    var converged = false
+    var globalTermination = false
+    var interval = 0l
+    @volatile var steps = 0
+    @volatile var userTermination = false
+    var resetting = false
+    val lock: AnyRef = new Object()
+    if (parameters.globalTerminationCondition.isDefined) {
+      interval = parameters.globalTerminationCondition.get.aggregationInterval
+    }
+    val startTime = System.nanoTime
+    val nanosecondLimit = parameters.timeLimit.getOrElse(0l) * 1000000l
+
+    // user break condition management
+    var conditionCounter = 0
+    var conditions = Map[String,BreakCondition]()
+    var conditionsReached = Map[String,String]()
+    def addCondition(condition: BreakCondition) {
+      conditionCounter += 1
+      conditions += (conditionCounter.toString -> condition)
+    }
+    def removeCondition(id: String) {
+      conditions -= id
+    }
+
+    def step() {
+      lock.synchronized {
+        steps = 1
+        lock.notifyAll
+      }
+    }
+    def collect() {
+      lock.synchronized {
+        steps = state match {
+          case "pausedBeforeChecksBeforeSignal" => 5
+          case "pausedBeforeSignal" => 4
+          case "pausedBeforeChecksBeforeCollect" => 3
+          case "pausedBeforeCollect" => 2
+          case "pausedBeforeGlobalChecks" => 1
+        }
+        lock.notifyAll
+      }
+    }
+    def continue() {
+      lock.synchronized {
+        steps = -1
+        lock.notifyAll
+      }
+    }
+    def pause() {
+      steps = 0
+    }
+    def reset() {
+      pause
+      lock.synchronized {
+        setState("resetting")
+        resetting = true
+        steps = 0
+        iteration = 0
+        graph.reset
+        graph.restore
+        lock.notifyAll
+      }
+    }
+    def terminate() {
+      userTermination = true
+      setState("terminating")
+      resetting = true
+      pause
+      continue
+    }
+
+    def setState(s: String) {
+      state = s
+      console.sockets.updateClientState()
+    }
+    def run() {
+      lock.synchronized {
+        while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+          iteration += 1
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeChecksBeforeSignal")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            setState("checksBeforeSignal")
+            conditionsReached = workerApi.aggregateAll(
+                new BreakConditionsAggregator(conditions))
+            if (conditionsReached.size > 0) {
+              steps = 0
+              setState("pausing")
+            }
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeSignal")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            setState("signalling")
+            // signal
+            workerApi.signalStep
+            awaitIdle
+            stats.signalSteps += 1
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeChecksBeforeCollect")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            setState("checksBeforeCollect")
+            conditionsReached = workerApi.aggregateAll(
+                new BreakConditionsAggregator(conditions))
+            if (conditionsReached.size > 0) {
+              steps = 0
+              setState("pausing")
+            }
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeCollect")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            // collect
+            setState("collecting")
+            converged = workerApi.collectStep
+            lock.notifyAll
+            stats.collectSteps += 1
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeGlobalChecks")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            if (shouldCheckGlobalCondition) {
+              setState("globalTerminationCheck")
+              globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
+            }
+            if (steps > 0) { steps -= 1 }
+          }
+          else {
+            resetting = false
+          }
+        }
+      }
+
+      if (converged) {
+        stats.terminationReason = TerminationReason.Converged
+      } else if (userTermination) {
+        stats.terminationReason = TerminationReason.TerminatedByUser
+      } else if (globalTermination) {
+        stats.terminationReason = TerminationReason.GlobalConstraintMet
+      } else if (isStepsLimitReached) {
+        stats.terminationReason = TerminationReason.ComputationStepLimitReached
+      } else {
+        stats.terminationReason = TerminationReason.TimeLimitReached
+      }
+      def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
+      def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+        val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
+        gtc.shouldTerminate(globalAggregateValue)
+      }
+      def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+      def isTimeLimitReached = parameters.timeLimit.isDefined && remainingTimeLimit <= 0
+      def isStepsLimitReached = parameters.stepsLimit.isDefined && stats.collectSteps >= parameters.stepsLimit.get
+    }
   }
 
   protected def optimizedAsynchronousExecution(stats: ExecutionStatistics,

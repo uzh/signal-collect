@@ -31,11 +31,14 @@ import scala.util.Random
 import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
+import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.WorkerStatistics.apply
+import com.signalcollect.interfaces.SystemInformation
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -61,6 +64,13 @@ class DefaultWorkerApi[Id, Signal](
 
   override def getWorkerStatistics: WorkerStatistics = {
     getIndividualWorkerStatistics.fold(WorkerStatistics())(_ + _)
+  }
+
+  // TODO: Move to node.
+  def getIndividualSystemInformation: List[SystemInformation] = futures(_.getSystemInformation) map get toList
+
+  override def getSystemInformation: SystemInformation = {
+    getIndividualSystemInformation.fold(SystemInformation())(_ + _)
   }
 
   override def signalStep: Boolean = futures(_.signalStep) forall get

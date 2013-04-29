@@ -25,32 +25,7 @@ import scala.util.Sorting
 
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
-
-/**
- *  More modular interface for aggregation operations.
- */
-trait ModularAggregationOperation[ValueType] extends AggregationOperation[ValueType] {
-
-  /**
-   * Reduces an arbitrary number of elements to one element.
-   */
-  def reduce(elements: Stream[ValueType]): ValueType = {
-    elements.foldLeft(neutralElement)(aggregate)
-  }
-
-  /**
-   *  Aggregates all the values extracted by the `extract` function.
-   *
-   *  @note There is no guarantee about the order in which this function gets executed on the extracted values.
-   */
-  def aggregate(a: ValueType, b: ValueType): ValueType
-
-  /**
-   *  Neutral element of the `aggregate` function:
-   *  `aggregate(x, neutralElement) == x`
-   */
-  def neutralElement: ValueType
-}
+import com.signalcollect.interfaces.ModularAggregationOperation
 
 /**
  *  Builds a map with the vertex ids as keys and the vertex states as values.

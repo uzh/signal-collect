@@ -52,4 +52,9 @@ object TerminationReason extends Enumeration with Serializable {
    */
   val Ongoing = Value
 
+  /**
+   *  Computation was terminated by the user
+   */
+  val TerminatedByUser = Value
+
 }

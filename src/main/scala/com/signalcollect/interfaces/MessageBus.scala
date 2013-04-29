@@ -20,10 +20,9 @@
 package com.signalcollect.interfaces
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import com.signalcollect.GraphEditor
-
 import akka.actor.ActorRef
+import akka.event.Logging.LogEvent
 
 /**
  *  A message bus is responsible for sending messages.
@@ -55,8 +54,6 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
   def getReceivedMessagesCounter: AtomicInteger
 
   def sendToActor(actor: ActorRef, message: Any)
-
-  def sendToLogger(message: LogMessage)
 
   def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
 

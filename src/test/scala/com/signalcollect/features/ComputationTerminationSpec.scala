@@ -32,10 +32,10 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.interfaces.Config
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import org.specs2.runner.JUnitRunner
+import com.typesafe.config.Config
 import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
@@ -51,7 +51,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         GraphBuilder.build
       } else {
         GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-          def getNodes(akkaConfig: Config): Array[ActorRef] = {
+          override def getNodes(akkaConfig: Config): Array[ActorRef] = {
             val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
             if (system != null) {
               val nodeControllerCreator = NodeActorCreator(0, None)

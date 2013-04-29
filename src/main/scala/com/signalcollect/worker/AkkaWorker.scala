@@ -28,6 +28,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Queue
+import java.lang.management.ManagementFactory
 import scala.Array.canBuildFrom
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -36,6 +37,7 @@ import scala.reflect.ClassTag
 import com.signalcollect._
 import com.signalcollect.interfaces._
 import com.signalcollect.serialization.DefaultSerializer
+import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
@@ -64,9 +66,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
-  val heartbeatIntervalInMilliseconds: Int,
-  val loggingLevel: Int)
-  extends WorkerActor[Id, Signal] with ActorLogging {
+  val heartbeatIntervalInMilliseconds: Int)
+    extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
   
@@ -133,7 +134,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-  /**
+/**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {

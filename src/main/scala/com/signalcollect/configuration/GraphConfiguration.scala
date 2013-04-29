@@ -20,23 +20,24 @@
 
 package com.signalcollect.configuration
 
-import com.signalcollect.interfaces.LogMessage
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
-import com.signalcollect.logging.DefaultLogger
 import com.signalcollect.factory.worker.LocalWorker
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
 import com.signalcollect.factory.storage.DefaultStorage
+import akka.event.Logging.LogLevel
+import akka.event.Logging
 
 /**
  * All the graph configuration parameters with their defaults.
  */
 case class GraphConfiguration(
-  loggingLevel: Int = LoggingLevel.Warning,
-  logger: LogMessage => Unit = DefaultLogger.log,
+  consoleEnabled: Boolean = false,
+  consoleHttpPort: Int = -1,
+  loggingLevel: LogLevel = Logging.WarningLevel,
   workerFactory: WorkerFactory = LocalWorker,
   messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
   storageFactory: StorageFactory = DefaultStorage,
@@ -47,14 +48,6 @@ case class GraphConfiguration(
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),
   serializeMessages: Boolean = false)
-
-object LoggingLevel {
-  val Debug = 0
-  val Config = 100
-  val Info = 200
-  val Warning = 300
-  val Severe = 400
-}
 
 sealed trait AkkaDispatcher
 case object EventBased extends AkkaDispatcher

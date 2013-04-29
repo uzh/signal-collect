@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.TimeUnit
 import scala.util.Success
 import scala.util.Failure
-import com.signalcollect.triplerush.PatternQuery
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 

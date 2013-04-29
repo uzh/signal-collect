@@ -42,8 +42,7 @@ object LocalWorker extends WorkerFactory {
       numberOfNodes,
       config.messageBusFactory,
       config.storageFactory,
-      config.heartbeatIntervalInMilliseconds,
-      config.loggingLevel)
+      config.heartbeatIntervalInMilliseconds)
   }
   override def toString = "LocalWorkerFactory"
 }
@@ -63,8 +62,7 @@ object DistributedWorker extends WorkerFactory {
       numberOfNodes,
       config.messageBusFactory,
       config.storageFactory,
-      config.heartbeatIntervalInMilliseconds,
-      config.loggingLevel) with ThrottlingBulkScheduler[Id, Signal]
+      config.heartbeatIntervalInMilliseconds) with ThrottlingBulkScheduler[Id, Signal]
   }
   override def toString = "DistributedWorkerFactory"
 }
