@@ -332,6 +332,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         setState("resetting")
         resetting = true
         steps = 0
+        iteration = 0
         graph.reset
         graph.restore
         lock.notifyAll
@@ -354,6 +355,22 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
           iteration += 1
           while (steps == 0 && !resetting) {
+            setState("pausedBeforeChecksBeforeSignal")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            setState("checksBeforeSignal")
+            conditionsReached = workerApi.aggregateAll(
+                new BreakConditionsAggregator(conditions, "signal"))
+            if (conditionsReached.size > 0) {
+              steps = 0
+              setState("pausing")
+            }
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
             setState("pausedBeforeSignal")
             try { lock.wait } catch {
               case e: InterruptedException =>
@@ -365,6 +382,22 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
             workerApi.signalStep
             awaitIdle
             stats.signalSteps += 1
+            if (steps > 0) { steps -= 1 }
+          }
+          while (steps == 0 && !resetting) {
+            setState("pausedBeforeChecksBeforeCollect")
+            try { lock.wait } catch {
+              case e: InterruptedException =>
+            }
+          }
+          if (!resetting) {
+            setState("checksBeforeCollect")
+            conditionsReached = workerApi.aggregateAll(
+                new BreakConditionsAggregator(conditions, "collect"))
+            if (conditionsReached.size > 0) {
+              steps = 0
+              setState("pausing")
+            }
             if (steps > 0) { steps -= 1 }
           }
           while (steps == 0 && !resetting) {
@@ -382,7 +415,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
             if (steps > 0) { steps -= 1 }
           }
           while (steps == 0 && !resetting) {
-            setState("pausedBeforeConditionChecks")
+            setState("pausedBeforeGlobalChecks")
             try { lock.wait } catch {
               case e: InterruptedException =>
             }
@@ -392,14 +425,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
               setState("globalTerminationCheck")
               globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
             }
-            setState("breakConditionCheck")
-            conditionsReached = workerApi.aggregateAll(
-                new BreakConditionsAggregator(conditions))
-            if (conditionsReached.size > 0) {
-              steps = 0
-              setState("pausing")
-            }
-            if (steps > 0) { steps -= 1 }
           }
           else {
             resetting = false

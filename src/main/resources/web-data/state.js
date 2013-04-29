@@ -98,9 +98,11 @@ scc.modules.State = function() {
     $('#resStatStatus').text(STR.State[j.state]);
     $('#state').text(STR.State[j.state])
     switch (j.state) {
+      case "pausedBeforeChecksBeforeSignal":
       case "pausedBeforeSignal":
+      case "pausedBeforeChecksBeforeCollect":
       case "pausedBeforeCollect":
-      case "pausedBeforeConditionChecks":
+      case "pausedBeforeGlobalChecks":
         enabledButtons(["reset", "step", "collect", "continue", "terminate"])
         if (scc.consumers.Graph != undefined) {
           scc.consumers.Graph.autoRefresh = false;

@@ -24,14 +24,19 @@ STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
        "State": {
+         "pausedBeforeChecksBeforeSignal": "Paused before condition check",
+         "checksBeforeSignal": "Checking pre-signal conditions...",
          "pausedBeforeSignal": "Paused before signalling",
-         "pausedBeforeCollect": "Paused before collecting",
-         "pausedBeforeConditionChecks": "Paused before condition checks",
-         "breakConditionCheck": "Checking break conditions...",
          "signalling": "Signalling...",
+         "pausedBeforeChecksBeforeCollect": "Paused before condition check",
+         "checksBeforeCollect": "Checking pre-collect conditions...",
+         "pausedBeforeCollect": "Paused before collecting",
          "collecting": "Collecting...",
+         "pausedBeforeGlobalChecks": "Paused before global checks",
+         "globalChecks": "Checking global conditions...",
          "resetting": "Resetting graph...",
-         "terminating": "Terminating Signal/Collect..."
+         "terminating": "Terminating Signal/Collect...",
+         "pausing": "Pausing..."
        }
        
 };

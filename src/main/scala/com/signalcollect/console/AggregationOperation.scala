@@ -198,7 +198,8 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
 }
 
-class BreakConditionsAggregator(conditions: Map[String,BreakCondition]) 
+class BreakConditionsAggregator(conditions: Map[String,BreakCondition], 
+                                conditionType: String) 
       extends AggregationOperation[Map[String,String]] {
 
   val nodeConditions = List(
@@ -217,8 +218,8 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
   def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => {
       var results = Map[String,String]()
+      // TODO implement condition type check
       conditions.foreach { case (id, c) => 
-        // conditions that need to be checked on a specific node
         if (nodeConditions.contains(c.name)) {
           if (i.id.toString == c.props("nodeId")) {
             c.name match { 
