@@ -156,13 +156,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
-    for (registry <- registries.par) {
+    for (registry <- registries) {
       registry.registerCoordinator(coordinatorActor)
       registry.registerLogger(loggerActor)
-      for (workerId <- (0 until numberOfWorkers).par) {
+      for (workerId <- 0 until numberOfWorkers) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
-      for (nodeId <- (0 until numberOfNodes).par) {
+      for (nodeId <- 0 until numberOfNodes) {
         registry.registerNode(nodeId, nodeActors(nodeId))
       }
     }
