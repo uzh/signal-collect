@@ -365,7 +365,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           if (!resetting) {
             setState("checksBeforeSignal")
             conditionsReached = workerApi.aggregateAll(
-                new BreakConditionsAggregator(conditions, "signal"))
+                new BreakConditionsAggregator(conditions))
             if (conditionsReached.size > 0) {
               steps = 0
               setState("pausing")
@@ -395,7 +395,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           if (!resetting) {
             setState("checksBeforeCollect")
             conditionsReached = workerApi.aggregateAll(
-                new BreakConditionsAggregator(conditions, "collect"))
+                new BreakConditionsAggregator(conditions))
             if (conditionsReached.size > 0) {
               steps = 0
               setState("pausing")
