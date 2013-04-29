@@ -1,5 +1,6 @@
 /*
  *  @author Philip Stutz
+ *  @author Mihaela Verman
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -52,6 +53,16 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
+/**
+ * Incrementor function needs to be defined in its own class to prevent unnecessary
+ * closure capture when serialized.
+ */
+case object IncrementorForCoordinator {
+  def increment(messageBus: MessageBus[_, _]) = {
+    messageBus.incrementMessagesSentToCoordinator
+  }
+}
+
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
@@ -72,7 +83,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
-      mb => mb.incrementMessagesSentToCoordinator)
+      IncrementorForCoordinator.increment _)
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds

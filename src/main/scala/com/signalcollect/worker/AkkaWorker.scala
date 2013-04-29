@@ -1,6 +1,6 @@
 /*
  *  @author Philip Stutz
- *  
+ *  @author Mihaela Verman
  *  @author Francisco de Freitas
  *  @author Daniel Strebel
  *  
@@ -45,6 +45,16 @@ import akka.actor.Actor
 object ScheduleOperations
 
 /**
+ * Incrementor function needs to be defined in its own class to prevent unnecessary
+ * closure capture when serialized.
+ */
+case class IncrementorForWorker(workerId: Int) {
+  def increment(messageBus: MessageBus[_, _]) = {
+    messageBus.incrementMessagesSentToWorker(workerId)
+  }
+}
+
+/**
  * Class that interfaces the worker implementation with Akka messaging.
  * Mainly responsible for translating received messages to function calls on a worker implementation.
  */
@@ -56,15 +66,15 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Int,
   val loggingLevel: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
-
+  
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
-      mb => mb.incrementMessagesSentToWorker(workerId))
+      IncrementorForWorker(workerId).increment _)
   }
 
   val worker = new WorkerImplementation[Id, Signal](

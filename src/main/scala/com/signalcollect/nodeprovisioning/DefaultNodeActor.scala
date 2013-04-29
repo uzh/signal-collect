@@ -1,6 +1,7 @@
 /*
  *  @author Philip Stutz
  *  @author Thomas Keller
+ *  @author Mihaela Verman
  *  
  *  Copyright 2012 University of Zurich
  *      
@@ -46,21 +47,31 @@ import com.signalcollect.interfaces.SentMessagesStats
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-    nodeId: Int,
-    nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+  nodeId: Int,
+  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     nodeProvisionerAddress)
 }
 
 /**
+ * Incrementor function needs to be defined in its own class to prevent unnecessary
+ * closure capture when serialized.
+ */
+case class IncrementorForNode(nodeId: Int) {
+  def increment(messageBus: MessageBus[_, _]) = {
+    messageBus.incrementMessagesSentToNode(nodeId)
+  }
+}
+
+/**
  * Class that controls a node on which Signal/Collect workers run.
  */
 class DefaultNodeActor(
-    val nodeId: Int,
-    val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
-    ) extends NodeActor {
-
+  val nodeId: Int,
+  val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
+  ) extends NodeActor {
+  
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
@@ -121,7 +132,7 @@ class DefaultNodeActor(
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mb => mb.incrementMessagesSentToNode(nodeId))
+    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, IncrementorForNode(nodeId).increment _)
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis
