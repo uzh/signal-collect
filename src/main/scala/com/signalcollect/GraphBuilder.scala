@@ -58,7 +58,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *  Configures if the console website on a configurable port is enabled.
    */
   def withConsole(newConsoleEnabled: Boolean, newConsoleHttpPort: Int) =
-      newLocalBuilder(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort)
+    newLocalBuilder(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort)
 
   /**
    *  Configures if Akka message compression is enabled.
@@ -125,10 +125,15 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
 
   /**
+   *  Specifies additional Kryo serialization registrations.
+   */
+  def withKryoRegistrations(newKryoRegistrations: List[String]) = newLocalBuilder(kryoRegistrations = newKryoRegistrations)
+
+  /**
    *  If true forces Akka message serialization even in local settings. For debugging purposes only.
    */
   def withMessageSerialization(newSerializeMessages: Boolean) = newLocalBuilder(serializeMessages = newSerializeMessages)
-  
+
   /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
