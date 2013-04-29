@@ -30,7 +30,10 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.WorkerApi
 import akka.event.LoggingAdapter
 import com.signalcollect.interfaces.WorkerStatistics
+<<<<<<< HEAD
 import com.signalcollect.interfaces.SystemInformation
+=======
+>>>>>>> upstream/master
 import java.io.DataInputStream
 import com.signalcollect.serialization.DefaultSerializer
 import java.io.DataOutputStream
@@ -43,8 +46,11 @@ import akka.actor.ActorRef
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.Worker
 import com.signalcollect.interfaces.SentMessagesStats
+<<<<<<< HEAD
 import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
+=======
+>>>>>>> upstream/master
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -201,7 +207,10 @@ case class WorkerImplementation[Id, Signal](
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
+<<<<<<< HEAD
+=======
       log.debug("Vertex with id " + vertex.id + " could not be added, vertex with the same id exists already: " + existing)
+>>>>>>> upstream/master
     }
   }
 
@@ -407,6 +416,7 @@ case class WorkerImplementation[Id, Signal](
       bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
       continueMessagesReceived = counters.continueMessagesReceived,
       requestMessagesReceived = counters.requestMessagesReceived,
+<<<<<<< HEAD
       otherMessagesReceived = counters.otherMessagesReceived,
       messagesSentToWorkers = messageBus.messagesSentToWorkers.sum,
       messagesSentToNodes = messageBus.messagesSentToNodes.sum,
@@ -435,6 +445,9 @@ case class WorkerImplementation[Id, Signal](
       jmx_process_time = osBean.getProcessCpuTime(),
       jmx_system_load = osBean.getSystemCpuLoad()
     )
+=======
+      otherMessagesReceived = counters.otherMessagesReceived)
+>>>>>>> upstream/master
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {
@@ -459,4 +472,8 @@ case class WorkerImplementation[Id, Signal](
 
 } 
 
+<<<<<<< HEAD
   
+=======
+  
+>>>>>>> upstream/master

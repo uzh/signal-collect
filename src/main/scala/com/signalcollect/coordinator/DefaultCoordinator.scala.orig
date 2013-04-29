@@ -42,6 +42,7 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
+<<<<<<< HEAD
 import akka.event.Logging.LogLevel
 import akka.event.Logging
 import com.signalcollect.messaging.AkkaProxy
@@ -49,6 +50,11 @@ import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.Logger
+=======
+import com.signalcollect.interfaces.NodeStatus
+import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.SentMessagesStats
+>>>>>>> upstream/master
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -56,6 +62,8 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
+<<<<<<< HEAD
+=======
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
@@ -66,13 +74,21 @@ case object IncrementorForCoordinator {
   }
 }
 
+>>>>>>> upstream/master
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
+<<<<<<< HEAD
   loggerRef: ActorRef,
   heartbeatIntervalInMilliseconds: Long) extends Actor
     with MessageRecipientRegistry
+=======
+  heartbeatIntervalInMilliseconds: Long,
+  val loggingLevel: Int) extends Actor
+    with MessageRecipientRegistry
+    with Logging
+>>>>>>> upstream/master
     with Coordinator[Id, Signal]
     with ActorLogging {
 
@@ -87,7 +103,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+<<<<<<< HEAD
+      mb => mb.incrementMessagesSentToCoordinator)
+=======
       IncrementorForCoordinator.increment _)
+>>>>>>> upstream/master
   }
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
@@ -119,6 +139,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def sendHeartbeat {
+<<<<<<< HEAD
+    log.debug("idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers + ", global inbox: " + getGlobalInboxSize)
+=======
+>>>>>>> upstream/master
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.

@@ -28,7 +28,9 @@ import akka.event.Logging.LogEvent
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
+trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+  extends MessageRecipientRegistry
+  with VertexToWorkerMapper[Id] {
   def flush
 
   def isInitialized: Boolean
@@ -39,10 +41,17 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def incrementMessagesSentToWorker(workerId: Int)
   def messagesSentToWorkers: Array[Int]
+<<<<<<< HEAD
 
   def incrementMessagesSentToNode(nodeId: Int)
   def messagesSentToNodes: Array[Int]
 
+=======
+
+  def incrementMessagesSentToNode(nodeId: Int)
+  def messagesSentToNodes: Array[Int]
+
+>>>>>>> upstream/master
   def incrementMessagesSentToCoordinator
   def messagesSentToCoordinator: Int
 
@@ -55,6 +64,7 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToActor(actor: ActorRef, message: Any)
 
+<<<<<<< HEAD
   def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
 
   def sendToWorkerForVertexId(message: Any, vertexId: Id)
@@ -63,6 +73,18 @@ trait MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Doub
 
   def sendToWorkers(message: Any, messageCounting: Boolean)
 
+=======
+  def sendToLogger(message: LogMessage)
+
+  def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
+
+  def sendToWorkerForVertexId(message: Any, vertexId: Id)
+
+  def sendToWorker(workerId: Int, message: Any)
+
+  def sendToWorkers(message: Any, messageCounting: Boolean)
+
+>>>>>>> upstream/master
   def sendToNode(nodeId: Int, message: Any)
   
   def sendToNodes(message: Any, messageCounting: Boolean)

@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
+
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.MessageBusFactory
@@ -124,6 +125,11 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = newLocalBuilder(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds)
 
   /**
+   *  If true forces Akka message serialization even in local settings. For debugging purposes only.
+   */
+  def withMessageSerialization(newSerializeMessages: Boolean) = newLocalBuilder(serializeMessages = newSerializeMessages)
+  
+  /**
    *  Internal function to create a new builder instance that has a configuration which defaults
    *  to parameters that are the same as the ones in this instance, unless explicitly set differently.
    */
@@ -138,7 +144,9 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     akkaDispatcher: AkkaDispatcher = config.akkaDispatcher,
     akkaMessageCompression: Boolean = config.akkaMessageCompression,
     nodeProvisioner: NodeProvisioner = config.nodeProvisioner,
-    heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds): GraphBuilder[Id, Signal] = {
+    heartbeatIntervalInMilliseconds: Int = config.heartbeatIntervalInMilliseconds,
+    kryoRegistrations: List[String] = config.kryoRegistrations,
+    serializeMessages: Boolean = config.serializeMessages): GraphBuilder[Id, Signal] = {
     new GraphBuilder[Id, Signal](
       GraphConfiguration(
         consoleEnabled = consoleEnabled,
@@ -151,7 +159,9 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
         akkaDispatcher = akkaDispatcher,
         akkaMessageCompression = akkaMessageCompression,
         nodeProvisioner = nodeProvisioner,
-        heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds))
+        heartbeatIntervalInMilliseconds = heartbeatIntervalInMilliseconds,
+        kryoRegistrations = kryoRegistrations,
+        serializeMessages = serializeMessages))
   }
 
 }

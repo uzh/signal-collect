@@ -95,7 +95,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     for (workerId <- workerIds) {
       result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](
         workers(workerId),
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_),
+=======
         sendCountIncrementorForRequests,
+>>>>>>> upstream/master
         sentWorkerMessageCounters(workerId),
         receivedMessagesCounter)
     }
@@ -134,6 +138,17 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     actor ! message
   }
 
+<<<<<<< HEAD
+=======
+  override def sendToLogger(message: LogMessage) {
+    if (logger != null) {
+      logger ! message
+    } else {
+      println("Could not log message: " + message)
+    }
+  }
+
+>>>>>>> upstream/master
   override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
     val workerId = mapper.getWorkerIdForVertexId(recipientId)
     sendToWorker(workerId, message)
@@ -205,7 +220,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       val request = Request[WorkerApi[Id, Signal]](
         (_.addVertex(vertex)),
         returnResult = false,
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_))
+=======
         sendCountIncrementorForRequests)
+>>>>>>> upstream/master
       sendToWorkerForVertexId(request, vertex.id)
     }
   }
@@ -220,7 +239,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       val request = Request[WorkerApi[Id, Signal]](
         (_.addEdge(sourceId, edge)),
         returnResult = false,
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_))
+=======
         sendCountIncrementorForRequests)
+>>>>>>> upstream/master
       sendToWorkerForVertexId(request, sourceId)
     }
   }
@@ -234,7 +257,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       val request = Request[WorkerApi[Id, Signal]](
         (_.removeVertex(vertexId)),
         returnResult = false,
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_))
+=======
         sendCountIncrementorForRequests)
+>>>>>>> upstream/master
       sendToWorkerForVertexId(request, vertexId)
     }
   }
@@ -248,7 +275,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       val request = Request[WorkerApi[Id, Signal]](
         (_.removeEdge(edgeId)),
         returnResult = false,
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_))
+=======
         sendCountIncrementorForRequests)
+>>>>>>> upstream/master
       sendToWorkerForVertexId(request, edgeId.sourceId)
     }
   }
@@ -260,7 +291,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       val request = Request[WorkerApi[Id, Signal]](
         (_.modifyGraph(graphModification)),
         returnResult = false,
+<<<<<<< HEAD
+        sendCountIncrementorForRequests(_))
+=======
         sendCountIncrementorForRequests)
+>>>>>>> upstream/master
       if (vertexIdHint.isDefined) {
         val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
         sendToWorker(workerId, request)
@@ -275,7 +310,11 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
     val request = Request[WorkerApi[Id, Signal]](
       (_.loadGraph(graphModifications)),
       false,
+<<<<<<< HEAD
+      sendCountIncrementorForRequests(_))
+=======
       sendCountIncrementorForRequests)
+>>>>>>> upstream/master
     if (vertexIdHint.isDefined) {
       val workerId = mapper.getWorkerIdForVertexId(vertexIdHint.get)
       sendToWorker(workerId, request)

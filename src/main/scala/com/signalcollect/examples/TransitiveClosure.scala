@@ -88,8 +88,7 @@ object TransitiveClosure extends App {
       jobSubmitter = torqueJobSubmitter,
       localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
       priority = priority),
-    numberOfNodes = numberOfNodes,
-    jvmParameters = baseOptions) // + jvmParams)
+    numberOfNodes = numberOfNodes)
 
   println("Building graph...")
   val graph = GraphBuilder
@@ -120,7 +119,7 @@ object TransitiveClosure extends App {
           }
 
           if (i % 200 == 0) {
-            println("Node y="+ y +", i=" + i)
+            println("Node y=" + y + ", i=" + i)
           }
           i += 1
         }
@@ -129,7 +128,6 @@ object TransitiveClosure extends App {
   }
   println("Graph: awaitIdle...")
   graph.awaitIdle
-  
 
   //  var i = 1
   //  for (line <- Source.fromFile(dataFile).getLines()) {

@@ -5,9 +5,9 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, loggingLevel: LogLevel) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, loggingLevel))
-  def distributedConfig(akkaMessageCompression: Boolean, loggingLevel: LogLevel) = """
+  def get(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = ConfigFactory.parseString(
+    distributedConfig(akkaMessageCompression, serializeMessages, loggingLevel, kryoRegistrations))
+  def distributedConfig(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
@@ -39,7 +39,15 @@ akka {
   # }
     
   actor {
-    # serialize-messages = on
+    """ +
+    {
+      if (serializeMessages) {
+        """
+    serialize-messages = on
+  """
+      } else ""
+    } +
+    """
     provider = "akka.remote.RemoteActorRefProvider"
     
   	pinned-dispatcher {
@@ -65,6 +73,26 @@ akka {
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
+      "com.signalcollect.interfaces.WorkerStatistics" = kryo
+      "com.signalcollect.interfaces.SystemInformation" = kryo
+      "com.signalcollect.interfaces.SentMessagesStats" = kryo
+      "scala.collection.immutable.Map$EmptyMap$" = kryo
+      "scala.collection.immutable.$colon$colon"= kryo
+      "scala.collection.immutable.Nil$" = kryo
+      "scala.collection.immutable.Map$Map1" = kryo
+    """ +
+    {
+      if (!kryoRegistrations.isEmpty) {
+        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+          s"""
+             "$kryoRegistration" = kryo"""
+        }
+        bindingsBlock.foldLeft("")(_ + _)
+      } else {
+        ""
+      }
+    } +
+    """
     }
 
     deployment {
@@ -135,7 +163,7 @@ akka {
         # Log implicitly registered classes. Useful, if you want to know all classes
         # which are serialized. You can then use this information in the mappings and/or 
         # classes sections
-        implicit-registration-logging = false
+        implicit-registration-logging = true
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking
@@ -154,19 +182,40 @@ akka {
         # ids below it are used by Kryo internally e.g. for built-in Java and 
         # Scala types   
         mappings {
-            "scala.Int" = 25
-            "scala.Long" = 26
-            "scala.Float" = 27
-            "scala.Double" = 28
-            "scala.Some" = 29
-            "com.signalcollect.Vertex" = 30
-            "com.signalcollect.Edge" = 31
-            "com.signalcollect.interfaces.SignalMessage" = 32
-            "com.signalcollect.interfaces.BulkSignal" = 33
-            "java.util.HashMap" = 34
-            "com.signalcollect.interfaces.EdgeId" = 35
-            "com.signalcollect.interfaces.WorkerStatus" = 36
-            "com.signalcollect.interfaces.WorkerStatistics" = 37
+            "scala.Int" = 27
+            "scala.Long" = 28
+            "scala.Float" = 29
+            "scala.Double" = 30
+            "scala.Some" = 31
+            "com.signalcollect.Vertex" = 32
+            "com.signalcollect.Edge" = 33
+            "com.signalcollect.interfaces.SignalMessage" = 34
+            "com.signalcollect.interfaces.BulkSignal" = 35
+            "java.util.HashMap" = 36
+            "com.signalcollect.interfaces.EdgeId" = 37
+            "com.signalcollect.interfaces.WorkerStatus" = 38
+            "com.signalcollect.interfaces.WorkerStatistics" = 39
+            "com.signalcollect.interfaces.SystemInformation" = 40
+            "com.signalcollect.interfaces.SentMessagesStats" = 41
+            "scala.collection.immutable.Map$EmptyMap$" = 42
+            "scala.collection.immutable.$colon$colon"= 43
+            "scala.collection.immutable.Nil$" = 44
+            "scala.collection.immutable.Map$Map1" = 45
+    """ +
+    {
+      if (!kryoRegistrations.isEmpty) {
+        var highestUsedKryoId = 45
+        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+          highestUsedKryoId += 1
+          s"""
+             "$kryoRegistration" = $highestUsedKryoId"""
+        }
+        bindingsBlock.foldLeft("")(_ + _)
+      } else {
+        ""
+      }
+    } +
+    """
         }
 
         # Define a set of fully qualified class names for   
@@ -186,10 +235,30 @@ akka {
             "com.signalcollect.Vertex",
             "com.signalcollect.Edge",
             "com.signalcollect.interfaces.SignalMessage",
+            "com.signalcollect.interfaces.BulkSignal",
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
-            "com.signalcollect.interfaces.WorkerStatistics"
+            "com.signalcollect.interfaces.WorkerStatistics",
+            "com.signalcollect.interfaces.SystemInformation",
+            "com.signalcollect.interfaces.SentMessagesStats",
+            "scala.collection.immutable.Map$EmptyMap$",
+            "scala.collection.immutable.$colon$colon",
+            "scala.collection.immutable.Nil$",
+            "scala.collection.immutable.Map$Map1"
+    """ +
+    {
+      if (!kryoRegistrations.isEmpty) {
+        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+          s""",
+             "$kryoRegistration""""
+        }
+        bindingsBlock.foldLeft("")(_ + _)
+      } else {
+        ""
+      }
+    } +
+    """
         ]
     }
   }

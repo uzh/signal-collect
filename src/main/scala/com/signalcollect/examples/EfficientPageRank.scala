@@ -36,7 +36,7 @@ import com.signalcollect.configuration.ExecutionMode._
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Double].build //withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build//
+  val g = new GraphBuilder[Int, Double].withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)

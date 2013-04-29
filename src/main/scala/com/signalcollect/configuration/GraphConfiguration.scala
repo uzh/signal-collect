@@ -45,7 +45,9 @@ case class GraphConfiguration(
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
-  heartbeatIntervalInMilliseconds: Int = 100)
+  heartbeatIntervalInMilliseconds: Int = 100,
+  kryoRegistrations: List[String] = List(),
+  serializeMessages: Boolean = false)
 
 sealed trait AkkaDispatcher
 case object EventBased extends AkkaDispatcher

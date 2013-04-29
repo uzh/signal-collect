@@ -1,6 +1,10 @@
 /*
  *  @author Philip Stutz
+<<<<<<< HEAD
+ *  
+=======
  *  @author Mihaela Verman
+>>>>>>> upstream/master
  *  @author Francisco de Freitas
  *  @author Daniel Strebel
  *  
@@ -44,6 +48,9 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 
+<<<<<<< HEAD
+object ScheduleOperations
+=======
 case object ScheduleOperations
 
 /**
@@ -55,6 +62,7 @@ case class IncrementorForWorker(workerId: Int) {
     messageBus.incrementMessagesSentToWorker(workerId)
   }
 }
+>>>>>>> upstream/master
 
 /**
  * Class that interfaces the worker implementation with Akka messaging.
@@ -66,8 +74,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
+<<<<<<< HEAD
   val heartbeatIntervalInMilliseconds: Int)
     extends WorkerActor[Id, Signal] with ActorLogging {
+=======
+  val heartbeatIntervalInMilliseconds: Int,
+  val loggingLevel: Int)
+  extends WorkerActor[Id, Signal] with ActorLogging {
+>>>>>>> upstream/master
 
   override def toString = "Worker" + workerId
   
@@ -75,7 +89,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+<<<<<<< HEAD
+      mb => mb.incrementMessagesSentToWorker(workerId))
+=======
       IncrementorForWorker(workerId).increment _)
+>>>>>>> upstream/master
   }
 
   val worker = new WorkerImplementation[Id, Signal](
@@ -134,7 +152,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
+<<<<<<< HEAD
 /**
+=======
+  /**
+>>>>>>> upstream/master
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {

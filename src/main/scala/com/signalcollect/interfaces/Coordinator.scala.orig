@@ -20,7 +20,6 @@
 package com.signalcollect.interfaces
 
 import com.signalcollect.GraphEditor
-
 import akka.actor.Actor
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
@@ -41,4 +40,8 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with L
   def getGlobalInboxSize: Long
   
   def getWorkerStatuses: Array[WorkerStatus]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> upstream/master

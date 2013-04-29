@@ -27,7 +27,6 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.future
 import scala.language.postfixOps
 import scala.util.Random
-
 import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
@@ -64,6 +63,7 @@ class DefaultWorkerApi[Id, Signal](
 
   override def getWorkerStatistics: WorkerStatistics = {
     getIndividualWorkerStatistics.fold(WorkerStatistics())(_ + _)
+<<<<<<< HEAD
   }
 
   // TODO: Move to node.
@@ -71,6 +71,8 @@ class DefaultWorkerApi[Id, Signal](
 
   override def getSystemInformation: SystemInformation = {
     getIndividualSystemInformation.fold(SystemInformation())(_ + _)
+=======
+>>>>>>> upstream/master
   }
 
   override def signalStep: Boolean = futures(_.signalStep) forall get
@@ -196,4 +198,8 @@ class DefaultWorkerApi[Id, Signal](
     }
   }
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> upstream/master

@@ -95,7 +95,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
 class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
   val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.loggingLevel)
+  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.serializeMessages, config.loggingLevel, config.kryoRegistrations)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
@@ -167,13 +167,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def initializeMessageBuses {
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
-    for (registry <- registries.par) {
+    for (registry <- registries) {
       registry.registerCoordinator(coordinatorActor)
       registry.registerLogger(loggerActor)
-      for (workerId <- (0 until numberOfWorkers).par) {
+      for (workerId <- 0 until numberOfWorkers) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
-      for (nodeId <- (0 until numberOfNodes).par) {
+      for (nodeId <- 0 until numberOfNodes) {
         registry.registerNode(nodeId, nodeActors(nodeId))
       }
     }

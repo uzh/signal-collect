@@ -50,7 +50,12 @@ case class NodeProvisionerCreator(numberOfNodes: Int) extends Creator[NodeProvis
 
 class TorqueNodeProvisioner(
     torqueHost: TorqueHost,
+<<<<<<< HEAD
+    numberOfNodes: Int,
+    jvmParameters: String) extends NodeProvisioner {
+=======
     numberOfNodes: Int) extends NodeProvisioner {
+>>>>>>> upstream/master
   def getNodes(akkaConfig: Config): Array[ActorRef] = {
     val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
