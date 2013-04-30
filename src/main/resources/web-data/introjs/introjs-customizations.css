@@ -1,14 +1,22 @@
 .introjs-overlay {
-  background-color: transparent;
+  opacity: 0.2 !important;
 }
 
 .introjs-helperLayer {
   position: absolute;
   z-index: 9999998;
-  background-color: transparent;
+  background-color: rgba(224,27,27,0.3);
   border: 3px solid red;
 }
 
 .introjs-helperNumberLayer {
   display: none;
+}
+
+.tooltipOnTop {
+	bottom: 60px !important;
+}
+
+.tooltipOnTop .introjs-arrow {
+	display: none;
 }

@@ -317,23 +317,6 @@ $(document).ready(function() {
       layout(["graph", "resources"]);
   }
 
-  
-  // show a guided tour
-  if (false) { // TODO check cookie
-    var intro = introJs();
-    intro.onchange(function(targetElement) {
-      if (targetElement.id == "questions") {
-        $("#mode_resources").click();
-      }
-      if (targetElement.id == "mode_graph") {
-        $("#mode_graph").click();
-      }
-    });
-    $("#mode_graph").click();
-    intro.start();
-    // TODO set cookie
-  }
-
 });
 
 /**

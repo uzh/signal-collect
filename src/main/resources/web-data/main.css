@@ -922,3 +922,15 @@ div#logBox p.filter > span.active {
   border-color: black transparent transparent black;
   color: black;
 }
+
+#help a {
+	font-size: 10px;
+	color: black;
+	text-decoration: none;
+	z-index: 9999;
+	position: fixed;
+	bottom: 2px;
+	right: 20px;
+	background: white;
+	padding:2px 5px;
+}
