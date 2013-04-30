@@ -108,6 +108,7 @@ scc.modules.State = function() {
         if (scc.consumers.Graph != undefined) {
           scc.consumers.Graph.autoRefresh = false;
           scc.consumers.Graph.order();
+          scc.consumers.BreakConditions.order();
         }
         break;
     }
@@ -116,6 +117,7 @@ scc.modules.State = function() {
       if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.order();
+        scc.consumers.BreakConditions.order();
       }
       enabledButtons(["pause", "terminate"])
     }

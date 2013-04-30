@@ -530,6 +530,10 @@ body {
   border-radius: 5px;
 }
 
+#graph {
+  overflow: hidden;
+}
+
 #graph_background {
   display: none;
   position: absolute;
@@ -607,7 +611,7 @@ body {
 .blocked {
   opacity: 0.5;
 }
-#error, #small_error, #success {
+#error, #warning, #small_error, #success {
   float: left;
 }
 #error, #small_error {
@@ -624,6 +628,10 @@ body {
 #success {
   color: #eee;
   background-color: #00c742;
+}
+#warning {
+  color: #eee;
+  background-color: #ff9100;
 }
 .node_link {
   color: #59b6e8;

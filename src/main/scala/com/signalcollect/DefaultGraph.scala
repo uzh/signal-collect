@@ -333,6 +333,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       lock.synchronized {
         setState("resetting")
         resetting = true
+        conditionsReached = Map[String,String]()
         steps = 0
         iteration = 0
         graph.reset

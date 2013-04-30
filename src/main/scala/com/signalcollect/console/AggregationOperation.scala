@@ -226,16 +226,16 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
                 if (i.state.toString.toDouble < c.props("expectedState").toDouble)
                   results += (id -> i.state.toString)
               case GoesBelowSignalThreshold =>
-                if (i.scoreSignal < c.props("threshold").toDouble)
+                if (i.scoreSignal < c.props("signalThreshold").toDouble)
                   results += (id -> i.scoreSignal.toString)
               case GoesAboveSignalThreshold =>
-                if (i.scoreSignal > c.props("threshold").toDouble)
+                if (i.scoreSignal > c.props("signalThreshold").toDouble)
                   results += (id -> i.scoreSignal.toString)
               case GoesBelowCollectThreshold =>
-                if (i.scoreCollect < c.props("threshold").toDouble)
+                if (i.scoreCollect < c.props("collectThreshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
               case GoesAboveCollectThreshold =>
-                if (i.scoreCollect > c.props("threshold").toDouble)
+                if (i.scoreCollect > c.props("collectThreshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
             }
           }

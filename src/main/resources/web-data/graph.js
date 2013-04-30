@@ -111,7 +111,7 @@ scc.modules.Graph = function() {
                       "Is Vicinity": function(d) { return colorCategories(d.category); },
                       "All equal": function(d) { return "#17becf"; },
                       "Node degree": function (d) { return color(d.weight); }},
-    "gd_nodeBorder": { "Node state": function(d) { return color(d.state); },
+    "gd_nodeBorder": { "Node state": function(d) { return colorGradient(gradientDomain)(d.state); },
                        "Node id": function(d) { return color(d.id); },
                        "All equal": function(d) { return "#9edae5"; },
                        "Is Vicinity": function(d) { return colorCategories(d.category); },
@@ -271,8 +271,8 @@ scc.modules.Graph = function() {
         var tooltip = $("#graph_tooltip");
         $("#graph_tooltip").fadeIn(200);
         link.attr("class", function(o) {
-          if (o.target.id === data.id) { return "link outgoing"; }
-          if (o.source.id === data.id) { return "link"; }
+          if (o.source.id === data.id) { return "link outgoing"; }
+          if (o.target.id === data.id) { return "link"; }
           return "link hiddenOpacity"
         });
       }
@@ -323,11 +323,18 @@ scc.modules.Graph = function() {
       // The user may choose if the graph edges should be drawn always, never,
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
-      var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
+      
+      // Update the node and link positions
+      console.log("tick")
+      node.attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
       link.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
+
+      // Add classes to edges depending on options and user interaction
+      var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       link.attr("class", function(o) {
         // If the user is hovering over a node, only draw edges of that node
         if (hoveringOverNode) {
@@ -343,6 +350,8 @@ scc.modules.Graph = function() {
           else { return "link hiddenOpacity" }
         }
       });
+
+      // If a node has been searched for, also move the tooltip with the node
       if (highlightedNode) {
         var boundingRect = highlightedNode.getBoundingClientRect()
         var leftOffset = boundingRect.left - 300 + (boundingRect.width/2) + 10
@@ -351,14 +360,10 @@ scc.modules.Graph = function() {
                                  "top": topOffset + "px"});
       }
 
-      // update the node positions
-      node.attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
     });
 
-    // enable the forced layout and order the first batch of graph data
+    // enable the forced layout
     force.start();
-    scc.consumers.Graph.order();
   }
 
   /**
@@ -562,7 +567,10 @@ scc.modules.Graph = function() {
     clearTimeout(fadeTimer);
     $("#graph_tooltip").stop().css("opacity", "0.9");
     var node = scc.consumers.Graph.findExistingNode(s);
-    if (!node) { console.log("node containing string '" + s + "' is not present"); return; }
+    if (!node) { 
+      showMsg("#warning", "There are no results for this query", true);
+      return;
+    }
     highlightedNode = node;
     var data = node.__data__;
     var n = d3.select(node);
@@ -626,6 +634,7 @@ scc.modules.Graph = function() {
       scc.consumers.Graph.highlightNode(id); 
     }
   }
+
   $("#gs_searchById").click(function (e) {
     e.preventDefault();
     var id = $("#gs_searchId").val();

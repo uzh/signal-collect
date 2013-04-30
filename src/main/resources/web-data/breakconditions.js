@@ -82,6 +82,13 @@ scc.modules.BreakConditions = function () {
   this.notready = function() { };
 
   /**
+   * Order break condition data in order to update the condition list
+   */
+  this.order = function() {
+    scc.order({"provider": "breakconditions"});
+  };
+
+  /**
    * Function that is called by the main module when a message is received
    * from the WebSocket. Rebuilds the list of conditions, possibly
    * highlighting any number of them.
@@ -105,8 +112,8 @@ scc.modules.BreakConditions = function () {
     $.each(j.active, function (k, c) {
       // Shorten long node ids
       var s = c.props.nodeId;
-      if (s.length > 23) {
-        s = s.substring(s.length - 25, s.length);
+      if (s.length > 20) {
+        s = s.substring(s.length - 22, s.length);
       }
       // Build the div element to be added...
       var item = '<div class="condition';
