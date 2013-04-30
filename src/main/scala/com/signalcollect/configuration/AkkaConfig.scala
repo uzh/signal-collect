@@ -73,6 +73,8 @@ akka {
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
+      "com.signalcollect.interfaces.NodeStatus" = kryo
+      "com.signalcollect.interfaces.Heartbeat" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.SystemInformation" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
@@ -194,17 +196,19 @@ akka {
             "java.util.HashMap" = 36
             "com.signalcollect.interfaces.EdgeId" = 37
             "com.signalcollect.interfaces.WorkerStatus" = 38
-            "com.signalcollect.interfaces.WorkerStatistics" = 39
-            "com.signalcollect.interfaces.SystemInformation" = 40
-            "com.signalcollect.interfaces.SentMessagesStats" = 41
-            "scala.collection.immutable.Map$EmptyMap$" = 42
-            "scala.collection.immutable.$colon$colon"= 43
-            "scala.collection.immutable.Nil$" = 44
-            "scala.collection.immutable.Map$Map1" = 45
+            "com.signalcollect.interfaces.NodeStatus" = 39
+            "com.signalcollect.interfaces.Heartbeat" = 40
+            "com.signalcollect.interfaces.WorkerStatistics" = 41
+            "com.signalcollect.interfaces.SystemInformation" = 42
+            "com.signalcollect.interfaces.SentMessagesStats" = 43
+            "scala.collection.immutable.Map$EmptyMap$" = 44
+            "scala.collection.immutable.$colon$colon"= 45
+            "scala.collection.immutable.Nil$" = 46
+            "scala.collection.immutable.Map$Map1" = 47
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 45
+        var highestUsedKryoId = 47
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -239,6 +243,8 @@ akka {
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
+            "com.signalcollect.interfaces.NodeStatus",
+            "com.signalcollect.interfaces.Heartbeat",
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.SystemInformation",
             "com.signalcollect.interfaces.SentMessagesStats",

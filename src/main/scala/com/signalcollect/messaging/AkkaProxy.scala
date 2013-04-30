@@ -102,6 +102,7 @@ class AkkaProxy[ProxiedClass](
 
 case class Command[ParameterType](className: String, methodDescription: String, arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
   def apply(proxiedClass: ParameterType) = {
+    //    println(s"$methodDescription")
     val clazz = Class.forName(className)
     val methods = clazz.getMethods map (method => (method.toString, method)) toMap
     val method = methods(methodDescription)

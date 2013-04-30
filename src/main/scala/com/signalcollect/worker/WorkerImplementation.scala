@@ -57,7 +57,7 @@ case class WorkerImplementation[Id, Signal](
   var signalThreshold: Double,
   var collectThreshold: Double,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-    extends Worker[Id, Signal] {
+  extends Worker[Id, Signal] {
 
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
@@ -118,6 +118,8 @@ case class WorkerImplementation[Id, Signal](
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)
+    } else {
+      println(s"Worker $workerId is ignoring status request from coordinator because its MB is not initialized.")
     }
   }
 
@@ -433,8 +435,7 @@ case class WorkerImplementation[Id, Signal](
       jmx_swap_total = osBean.getTotalSwapSpaceSize(),
       jmx_process_load = osBean.getProcessCpuLoad(),
       jmx_process_time = osBean.getProcessCpuTime(),
-      jmx_system_load = osBean.getSystemCpuLoad()
-    )
+      jmx_system_load = osBean.getSystemCpuLoad())
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

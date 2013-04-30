@@ -30,6 +30,7 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.Path
 import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
+import akka.event.Logging
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -40,7 +41,8 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   sequential
 
-  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withMessageSerialization(true).build)
+  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withMessageSerialization(true).
+      withLoggingLevel(Logging.DebugLevel).build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 

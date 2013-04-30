@@ -71,7 +71,6 @@ object PageRank extends App {
   //  graph.addEdge(3, new PageRankEdge(2))
 
   graph.awaitIdle
-  println("IDLE 1")
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
   //  graph.addVertex(new PageRankVertex(3))
@@ -79,7 +78,6 @@ object PageRank extends App {
   graph.addEdge(2, new PageRankEdge(1))
 
   graph.awaitIdle
-  println("IDLE 2")
 
   val stats = graph.execute
   println(stats)

@@ -99,9 +99,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
+      println(s"Worker $workerId is doing some graph loading ...")
       for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
         modification(worker.graphEditor)
       }
+      println(s"Worker $workerId takes a break from graph loading.")
       worker.messageBusFlushed = false
     }
   }
@@ -116,6 +118,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def executeOperations {
+    println(s"Worker $workerId is executing operations.")
     if (messageQueue.isEmpty) {
       if (!worker.vertexStore.toCollect.isEmpty) {
         val collected = worker.vertexStore.toCollect.process(
@@ -171,22 +174,29 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case ScheduleOperations =>
       if (messageQueue.isEmpty) {
+        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
+          log.debug(s"Worker $workerId turns to idle")
           worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
+          log.debug(s"Worker $workerId has work to do")
           if (worker.isPaused) {
+            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
+            log.debug(s"Worker $workerId is not paused. Will execute operations.")
             executeOperations
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
             worker.messageBusFlushed = true
           }
+          log.debug(s"Worker $workerId will schedule operations.")
           scheduleOperations
         }
       } else {
+        log.debug(s"Message queue on worker $workerId is NOT empty, will schedule operations")
         scheduleOperations
       }
 
