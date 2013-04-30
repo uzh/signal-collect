@@ -82,6 +82,8 @@ akka {
       "scala.collection.immutable.$colon$colon"= kryo
       "scala.collection.immutable.Nil$" = kryo
       "scala.collection.immutable.Map$Map1" = kryo
+      "com.signalcollect.interfaces.AddVertex" = kryo
+      "com.signalcollect.interfaces.AddEdge" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
@@ -169,7 +171,7 @@ akka {
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking
-        kryo-trace = false 
+        kryo-trace = true 
 
         kryo-reference-map = false
     
@@ -205,10 +207,12 @@ akka {
             "scala.collection.immutable.$colon$colon"= 45
             "scala.collection.immutable.Nil$" = 46
             "scala.collection.immutable.Map$Map1" = 47
+            "com.signalcollect.interfaces.AddVertex" = 48
+            "com.signalcollect.interfaces.AddEdge" = 49
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 47
+        var highestUsedKryoId = 49
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -251,7 +255,9 @@ akka {
             "scala.collection.immutable.Map$EmptyMap$",
             "scala.collection.immutable.$colon$colon",
             "scala.collection.immutable.Nil$",
-            "scala.collection.immutable.Map$Map1"
+            "scala.collection.immutable.Map$Map1",
+            "com.signalcollect.interfaces.AddVertex",
+            "com.signalcollect.interfaces.AddEdge"
     """ +
     {
       if (!kryoRegistrations.isEmpty) {

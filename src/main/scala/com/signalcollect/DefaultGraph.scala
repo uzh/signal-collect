@@ -53,10 +53,6 @@ import scala.language.postfixOps
 import com.signalcollect.interfaces.ComplexAggregation
 import java.net.InetSocketAddress
 
-case object EmptyIncrementor {
-  def increment(mb: MessageBus[_, _]): Unit = {}
-}
-
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
@@ -118,7 +114,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   val nodeActors = config.nodeProvisioner.getNodes(akkaConfig).sorted
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_, EmptyIncrementor.increment _)) // MessageBus not initialized at this point.
+  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
 
@@ -167,8 +163,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, EmptyIncrementor.increment _)) // MessageBus not initialized at this point.
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor, EmptyIncrementor.increment _) // MessageBus not initialized at this point.
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_)) // MessageBus not initialized at this point.
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor) // MessageBus not initialized at this point.
 
   initializeMessageBuses
 

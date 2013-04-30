@@ -38,12 +38,16 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.signalcollect.interfaces.MessageBus
 
+case class EmptyIncrementor() {
+  def increment(mb: MessageBus[_, _]): Unit = {}
+}
+
 /**
  * Used to create proxies
  */
 object AkkaProxy {
 
-  def newInstance[T: ClassTag](
+  def newInstanceWithIncrementor[T: ClassTag](
     actor: ActorRef,
     incrementor: MessageBus[_, _] => Unit,
     sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
@@ -55,6 +59,22 @@ object AkkaProxy {
       Array[Class[_]](c),
       new AkkaProxy(actor,
         incrementor,
+        sentMessagesCounter,
+        receivedMessagesCounter,
+        timeout)).asInstanceOf[T]
+  }
+
+  def newInstance[T: ClassTag](
+    actor: ActorRef,
+    sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+    val c = classTag[T].runtimeClass
+    Proxy.newProxyInstance(
+      c.getClassLoader,
+      Array[Class[_]](c),
+      new AkkaProxy(actor,
+        EmptyIncrementor().increment _,
         sentMessagesCounter,
         receivedMessagesCounter,
         timeout)).asInstanceOf[T]

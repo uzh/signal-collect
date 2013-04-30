@@ -67,10 +67,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
   override def toString = "Worker" + workerId
-  
+
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
@@ -93,17 +93,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   /**
    * How many graph modifications this worker will execute in one batch.
    */
-  val graphModificationBatchProcessingSize = 100
+  val graphModificationBatchProcessingSize = 1000
 
   def isInitialized = messageBus.isInitialized
 
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
-      println(s"Worker $workerId is doing some graph loading ...")
-      for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
-        modification(worker.graphEditor)
+      //      println(s"Worker $workerId is doing some graph loading ...")
+      try {
+        for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
+          modification(worker.graphEditor)
+        }
+      } catch {
+        case t: Throwable => println(s"Worker $workerId had a problem during graph loading: $t")
       }
-      println(s"Worker $workerId takes a break from graph loading.")
+      //      println(s"Worker $workerId takes a break from graph loading.")
       worker.messageBusFlushed = false
     }
   }
@@ -118,7 +122,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def executeOperations {
-    println(s"Worker $workerId is executing operations.")
+    //    println(s"Worker $workerId is executing operations.")
     if (messageQueue.isEmpty) {
       if (!worker.vertexStore.toCollect.isEmpty) {
         val collected = worker.vertexStore.toCollect.process(
@@ -137,7 +141,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-/**
+  /**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
@@ -169,6 +173,24 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       }
       if (!worker.operationsScheduled && !worker.isPaused) {
+        scheduleOperations
+      }
+
+    case AddVertex(vertex) =>
+      // TODO: More precise accounting for this kind of message.
+      worker.counters.requestMessagesReceived += 1
+      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
+      // TODO: Reevaluate, if we really need to schedule operations.
+      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+        scheduleOperations
+      }
+
+    case AddEdge(edge) =>
+      // TODO: More precise accounting for this kind of message.
+      worker.counters.requestMessagesReceived += 1
+      worker.addEdge(edge.sourceId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
+      // TODO: Reevaluate, if we really need to schedule operations.
+      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
         scheduleOperations
       }
 
@@ -214,7 +236,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       } catch {
         case e: Exception =>
-          log.error(s"Problematic request on worker $workerId: ${e.getMessage}")
+          val msg = s"Problematic request on worker $workerId: ${e.getMessage}"
+          log.error(msg)
+          println(msg)
           throw e
       }
       if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {

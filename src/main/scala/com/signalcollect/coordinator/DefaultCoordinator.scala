@@ -42,8 +42,6 @@ import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.management.OperatingSystemMXBean
-import com.signalcollect.EmptyIncrementor
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
@@ -81,7 +79,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
    */
   context.setReceiveTimeout(Duration.Undefined)
 
-  val logger = AkkaProxy.newInstance[Logger](loggerRef, EmptyIncrementor.increment _)
+  val logger = AkkaProxy.newInstance[Logger](loggerRef)
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
@@ -117,11 +115,19 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     log.debug(s"Total received     : ${totalMessagesReceived}")
     log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
     log.debug(workerApi.getWorkerStatistics.toString)
-    verboseIsIdle
+    println("Worker RPC ...")
+    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
+    println("Worker RPC ...")
+    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
+    println("Worker RPC ...")
+    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
+    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
+    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
+    //    verboseIsIdle
   }
 
   def sendHeartbeat {
-//    log.debug("Coordinator is sending a heartbeat.")
+    //    log.debug("Coordinator is sending a heartbeat.")
     logMessages
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
@@ -147,7 +153,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def receive = {
     case ws: WorkerStatus =>
-//      log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, its idle status is now: ${ws.isIdle}")
+      //      log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, its idle status is now: ${ws.isIdle}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
@@ -158,7 +164,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         sendHeartbeat
       }
     case ns: NodeStatus =>
-//      log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
+      //      log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
       updateNodeStatusMap(ns)
@@ -166,12 +172,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         sendHeartbeat
       }
     case ReceiveTimeout =>
-//      log.debug("Coordinator got a receive timeout.")
+      //      log.debug("Coordinator got a receive timeout.")
       if (shouldSendHeartbeat) {
         sendHeartbeat
       }
     case OnIdle(action) =>
-//      log.debug(s"Coordinator received an OnIdle request from $sender")
+      //      log.debug(s"Coordinator received an OnIdle request from $sender")
       context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
@@ -245,7 +251,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var messagesReceivedByCoordinator: Long = 0
 
   def totalMessagesReceived = messagesReceivedByWorkers.sum + messagesReceivedByNodes.sum + messagesReceivedByCoordinator
-  
+
   def resetMessagingStats {
     for (workerId <- 0 until numberOfWorkers) {
       messagesSentToWorkers(workerId) = 0
@@ -338,7 +344,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
     return true
   }
-  
+
   def isIdle = workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived
 
   def getJVMCpuTime = {
