@@ -283,8 +283,9 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
   }
 
-  def fetchTopState(n: Int, radius: Int, incoming: Boolean = false): JObject = {
-    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n)).take(n)
+  def fetchTopState(inverted: Boolean = false, 
+                    n: Int, radius: Int, incoming: Boolean = false): JObject = {
+    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n, inverted)).take(n)
     val nodes = topState.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
     val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
@@ -333,7 +334,8 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case otherwise => fetchInvalid(msg, "missing id")
       }
       case Some("top") => request.topCriterium match {
-        case Some("State") => fetchTopState(m, r, i)
+        case Some("Highest State") => fetchTopState(false, m, r, i)
+        case Some("Lowest State") => fetchTopState(true, m, r, i)
         case Some("Degree") => fetchTopDegree(m, r, i)
         case Some("Signal score") => fetchTopScore("signal", m, r, i)
         case Some("Collect score") => fetchTopScore("collect", m, r, i)

@@ -102,7 +102,7 @@ class TopDegreeAggregator[Id](n: Int)
   }
 }
 
-class TopStateAggregator[Id](n: Int)
+class TopStateAggregator[Id](n: Int, inverted: Boolean)
       extends AggregationOperation[List[(Double,Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
@@ -124,7 +124,10 @@ class TopStateAggregator[Id](n: Int)
 
   def reduce(degrees: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
     degrees.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
-           .sortWith({ (t1, t2) => t1._1 > t2._1 })
+           .sortWith({ (t1, t2) => 
+             if (inverted) { t1._1 < t2._1 }
+             else { t1._1 > t2._1 }
+           })
            .take(n)
   }
 }

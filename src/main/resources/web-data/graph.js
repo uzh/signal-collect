@@ -110,9 +110,13 @@ scc.modules.Graph = function() {
                       "Node id": function(d) { return color(d.id); },
                       "Is Vicinity": function(d) { return colorCategories(d.category); },
                       "All equal": function(d) { return "#17becf"; },
+                      "Signal threshold": function(d) { return color(d.ss); },
+                      "Collect threshold": function(d) { return color(d.ss); },
                       "Node degree": function (d) { return color(d.weight); }},
     "gd_nodeBorder": { "Node state": function(d) { return colorGradient(gradientDomain)(d.state); },
                        "Node id": function(d) { return color(d.id); },
+                       "Signal threshold": function(d) { return color(d.ss); },
+                       "Collect threshold": function(d) { return color(d.ss); },
                        "All equal": function(d) { return "#9edae5"; },
                        "Is Vicinity": function(d) { return colorCategories(d.category); },
                        "Node degree": function (d) { return color(d.weight); }},
@@ -325,7 +329,6 @@ scc.modules.Graph = function() {
       // amount of movement is expressed by d3 through the .alpha() property.
       
       // Update the node and link positions
-      console.log("tick")
       node.attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
       link.attr("x1", function(d) { return d.source.x; })
