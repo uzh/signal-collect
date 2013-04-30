@@ -550,11 +550,13 @@ scc.modules.Graph = function() {
     if (!node) { console.log("node containing string '" + s + "' is not present"); return; }
     var data = node.__data__;
     var n = d3.select(node);
+    n.attr("r", nodeSize);
     var r = n.attr("r");
     var flash = function (count) {
-      n.transition().duration(120).ease("linear").attr("r", 20).each("end", function () {
-        n.transition().duration(120).ease("linear").attr("r", r).each("end", function () {
+      n.transition().duration(120).ease("linear").attr("r", 30).each("end", function () {
+        n.transition().duration(120).ease("linear").attr("r", 5).each("end", function () {
           if (count > 0) { flash(count-1) }
+          else { n.transition().duration(120).ease("linear").attr("r", nodeSize); }
         });
       });
     };
@@ -563,8 +565,11 @@ scc.modules.Graph = function() {
     $("#node_state").text(data.state);
     $("#node_ss").text(data.ss);
     $("#node_cs").text(data.cs);
-    $("#graph_tooltip").css({"left": $(node).attr("cx")+5 + "px", 
-                             "top": $(node).attr("cy")+5 + "px"});
+    var boundingRect = node.getBoundingClientRect()
+    var leftOffset = boundingRect.left - 300 + boundingRect.width
+    var topOffset = boundingRect.bottom
+    $("#graph_tooltip").css({"left": leftOffset + "px", 
+                             "top": topOffset + "px"});
     $("#graph_tooltip").fadeIn(200);
   };
 
