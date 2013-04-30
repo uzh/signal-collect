@@ -71,7 +71,7 @@ scc.conf.resources.resourceBoxes = {
     "logs" : [
       "logBox"
     ],
-    "detailed" : [
+    "charts" : [
       "chartZoomer",
       // all charts will be added automatically to this section
      ],

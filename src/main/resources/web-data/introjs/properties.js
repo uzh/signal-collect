@@ -38,9 +38,10 @@ $(document).ready(function() {
       " and estimations about the graph size.",
     "#cResourceComputation":
       "Besides statistics, you can also look at log messages and several different charts.",
-    "#crs_detailed h1":
+    "#crs_charts h1":
       "A chart draws three different lines over time. The blue line visualizes the lowest value over all workers, the" +
-      " red line is the highest value, and the black line is the average value.",
+      " red line is the highest value, and the black line is the average value. You can zoom and shift the charts by" + 
+      " using the controls in the upper right.",
     "#cResourceProblems":
       "Should you ever have a problem with a computation, we try to help in this section. For every problem or" + 
       " question, we try to explain why this could have happened and show information that might help in solving" +
@@ -61,8 +62,8 @@ $(document).ready(function() {
   intro.onchange(function(targetElement) {
     var currentDataStep = parseInt($(targetElement).attr("data-step"));
     if (currentDataStep >= parseInt($("#cResourceComputation").attr("data-step"))) {
-      show_section("detailed");
-      view = ',"main":{"view":"resources"},"resources":{"section":"detailed"}';
+      show_section("charts");
+      view = ',"main":{"view":"resources"},"resources":{"section":"charts"}';
     }
     else if (currentDataStep >= parseInt($("#mode_resources").attr("data-step"))) {
       $("#mode_resources").click();

@@ -6,6 +6,10 @@ body {
   font-size:14px;
 }
 
+a, a:visited {
+	color: #2c90c4;
+}
+
 #title {
   position: fixed;
   width: 300px;
@@ -870,6 +874,7 @@ div#logBox li {
   list-style: none;
   padding: 5px;
   margin: 1px 0;
+  font-family: monospace;
 }
 
 div#logBox li.hidden_level,

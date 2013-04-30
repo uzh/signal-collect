@@ -164,8 +164,8 @@
               <label for="rs_statistics">Statistics</label><br/>
               <input type="radio" name="rs" id="rs_logs"/>
               <label for="rs_logs">Logs</label><br/>
-              <input type="radio" name="rs" id="rs_detailed"/>
-              <label for="rs_detailed">Detailed</label>
+              <input type="radio" name="rs" id="rs_charts"/>
+              <label for="rs_charts">Charts</label>
             </div>
           </div>
           <div id="cResourceProblems" class="panel_section">
@@ -194,7 +194,7 @@
               <label for="rs_phase">Computation phases</label><br/>
 
               <input type="radio" name="rs" id="rs_loadingspeed"/>
-              <label for="rs_loadingspeed">Graph loading speed and estimated completion</label><br/>
+              <label for="rs_loadingspeed">Graph loading speed</label>
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@
             <h1>Computation does not converge</h1>
             <p class="teaser">
               When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
-              converge. You can observe the charts below to see whethere there are any messages sent or received. Additionally, 
+              converge. You can observe the charts below to see whether there are any messages sent or received. Additionally, 
               you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>observe
               the graph with a state visualization</a>.
             </p>
@@ -303,14 +303,22 @@
             </p>
           </div>
         
-          <div id="crs_detailed">
-            <h1>Detailed</h1>
+          <div id="crs_charts">
+            <h1>All Charts</h1>
             <p class="teaser">
               Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
               represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
               <strong style="color:red;">maximum</strong> values over all worker nodes. You can hover the lines to get more information.
             </p> 
             <div class="chartContainer"></div>
+          </div>
+        
+          <div id="crs_phase">
+            <h1>Computation phases</h1>
+          </div>
+        
+          <div id="crs_loadingspeed">
+            <h1>Graph loading speed</h1>
           </div>
           
           <div id="resourceBoxes">
