@@ -580,9 +580,13 @@ body {
 }
 
 .link {
-  display: none;
   stroke: #999;
   stroke-width: 1;
+  -moz-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
+  -webkit-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
+  -o-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
+  transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
+  opacity: 1;
 }
 .link.outgoing {
   stroke: #00dd00;
@@ -591,6 +595,9 @@ body {
 
 *:focus {
   outline: none;
+}
+.hiddenOpacity {
+  opacity: 0;
 }
 .hidden {
   display: none !important;

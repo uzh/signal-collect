@@ -253,18 +253,18 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
 
   val workerApi = coordinator.getWorkerApi 
 
-  def findVicinity(vertexIds: List[Id], radius: Int = 3, 
-                   incoming: Boolean = false): List[Id] = {
+  def findVicinity(vertexIds: Set[Id], radius: Int = 3, 
+                   incoming: Boolean = false): Set[Id] = {
     if (radius == 0) { vertexIds }
     else {
       if (incoming) {
         val nodes = workerApi.aggregateAll(new FindNodeVicinitiesByIdsAggregator[Id](vertexIds))
-        findVicinity(nodes, radius - 1, true)
+        vertexIds ++ findVicinity(nodes, radius - 1, true)
       }
       else {
-        findVicinity(vertexIds.map { id =>
+        vertexIds ++ findVicinity(vertexIds.map { id =>
           workerApi.forVertexWithId(id, { vertex: Inspectable[Id,_] =>
-            vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toList
+            vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toSet
           })
         }.flatten, radius - 1, false)
       }
@@ -275,9 +275,9 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     val result = workerApi.aggregateAll(
                  new FindVerticesByIdsAggregator[Id](List(id)))
     val (vertices, vicinity) = result.size match {
-      case 0 => (List[Id](), List[Id]())
+      case 0 => (Set[Id](), Set[Id]())
       case otherwise => 
-        val nodeIds = result.map { _.id }.toList
+        val nodeIds = result.map { _.id }.toSet
         (nodeIds, findVicinity(nodeIds, radius, incoming).diff(nodeIds))
     }
     workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
@@ -285,7 +285,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
 
   def fetchTopState(n: Int, radius: Int, incoming: Boolean = false): JObject = {
     val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n)).take(n)
-    val nodes = topState.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
+    val nodes = topState.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
     val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
@@ -295,7 +295,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
                              .toSeq.sortBy(-_._2)
                              .take(n)
                              .map{ _._1 }
-                             .toList
+                             .toSet
     val vicinity = findVicinity(nodes, radius, incoming)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }
@@ -303,7 +303,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   def fetchTopScore(scoreType: String, 
                      n: Int, radius: Int, incoming: Boolean = false): JObject = {
     val topScore = workerApi.aggregateAll(new TopScoreAggregator[Id](n, scoreType)).take(n)
-    val nodes = topScore.foldLeft(List[Id]()){ (acc, m) => m._2 :: acc }
+    val nodes = topScore.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
     val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
     workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
   }

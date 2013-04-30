@@ -77,6 +77,7 @@ scc.modules.Graph = function() {
   var orderTemplate = {"provider": "graph"};
   var gradientDomain = [null,null];
   var zoomLevel = 1;
+  var hoveringOverNode = undefined;
 
   var colorGradient =  function (domain) {
     var scale = d3.scale.linear().domain(domain);
@@ -253,30 +254,39 @@ scc.modules.Graph = function() {
       var target = d3.event.target;
       var data = target.__data__;
       var node = $(target);
+      var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
       if (d3.event.target.tagName == "circle") {
-          $("#node_id").text(data.id);
-          $("#node_state").text(data.state);
-          $("#node_ss").text(data.ss);
-          $("#node_cs").text(data.cs);
-          clearTimeout(fadeTimer);
-          var tooltip = $("#graph_tooltip");
-          $("#graph_tooltip").fadeIn(200);
-          link.attr("class", function(o) {
-            if (o.target.id === data.id) { return "link outgoing"; }
-            return "link"
-          });
+        hoveringOverNode = data.id; 
+        $("#node_id").text(data.id);
+        $("#node_state").text(data.state);
+        $("#node_ss").text(data.ss);
+        $("#node_cs").text(data.cs);
+        clearTimeout(fadeTimer);
+        var tooltip = $("#graph_tooltip");
+        $("#graph_tooltip").fadeIn(200);
+        link.attr("class", function(o) {
+          if (o.target.id === data.id) { return "link outgoing"; }
+          if (o.source.id === data.id) { return "link"; }
+          return "link hiddenOpacity"
+        });
       }
       else {
-          $("#node_id").text("-");
-          $("#node_state").text("-");
-          $("#node_ss").text("-");
-          $("#node_cs").text("-");
-          clearTimeout(fadeTimer);
-          fadeTimer = setTimeout(function() {
-            $("#graph_tooltip").fadeOut(200);
-          }, 500);
+        hoveringOverNode = undefined; 
+        $("#node_id").text("-");
+        $("#node_state").text("-");
+        $("#node_ss").text("-");
+        $("#node_cs").text("-");
+        clearTimeout(fadeTimer);
+        fadeTimer = setTimeout(function() {
+          $("#graph_tooltip").fadeOut(200);
+        }, 500);
+        if (drawEdges == "Only on hover") {
+          link.attr("class", "link hiddenOpacity");
+        }
+        else {
           link.attr("class", "link");
+        }
       }
     });
 
@@ -306,18 +316,27 @@ scc.modules.Graph = function() {
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
-      if (drawEdges == "Always" || 
-         (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
-        link.style("display", "block");
-        var test = true;
-        link.attr("x1", function(d) { if (!test) { test = true; } return d.source.x; })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return d.target.x; })
-            .attr("y2", function(d) { return d.target.y; });
-      }
-      else {
-        link.style("display", "none");
-      }
+      link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+      link.attr("class", function(o) {
+        if (hoveringOverNode) {
+          if (o.target.id === hoveringOverNode) { return "link outgoing"; }
+          if (o.source.id === hoveringOverNode) { return "link"; }
+          return "link hiddenOpacity"
+        }
+        else {
+          if (drawEdges == "Always" || 
+             (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
+            return "link"
+          }
+          else {
+            return "link hiddenOpacity"
+          }
+        }
+
+      });
 
       // update the node positions
       node.attr("cx", function(d) { return d.x; })
@@ -438,7 +457,7 @@ scc.modules.Graph = function() {
     link = svg.selectAll(".link");
     link = link.data(links)
     link.enter().append("line")
-        .attr("class", "link");
+        .attr("class", "link hiddenOpacity");
     link.exit().remove();
 
     node = svg.selectAll(".node");
@@ -717,9 +736,9 @@ scc.modules.Graph = function() {
     switch (val) {
         case "Always":
         case "When graph is still":
-            link.style("display", "block"); break;
-        case "Never":
-            link.style("display", "none"); break;
+            link.attr("class", "link"); break;
+        case "Only on hover":
+            link.attr("class", "link hiddenOpacity"); break;
     }
     scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });

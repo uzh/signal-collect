@@ -24,6 +24,9 @@ STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
        "State": {
+         "non-interactive": [
+           "Waiting for interactive exec...",
+           "The interactive execution is either not enabled or currently unavailable"],
          "pausedBeforeChecksBeforeSignal": [
            "Paused before signal/checks",
            "Paused - The next partial step triggers a break condition check"],
