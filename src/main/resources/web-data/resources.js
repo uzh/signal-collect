@@ -47,7 +47,6 @@ $(window).on('hashchange', function() {
  * @param {string} s - The name of the section to show.
  */
 function show_section(s) {
-  console.log("Section: " + s);
   if (s == "") { return; }
   // hide all sections
   $("#resources .structured > div[id^=\"crs\"]").hide();
@@ -259,7 +258,6 @@ scc.modules.Log = function() {
     var fragments = [];
     var latest = null; // TODO replace latest with fragments[fragments.length-1]
     msg["messages"].forEach(function(l) {
-      console.log(l);
       var json = $.parseJSON(l);
       json.occurrences = 1;
       json.cls = "";
@@ -335,10 +333,10 @@ scc.modules.Resources = function() {
   this.requires = ["resources"];
   show_section(scc.settings.get().resources.section);
   
-  // fill detailed view with all the charts we have
+  // fill charts view with all the charts we have
   setTimeout(function() {
     $("#resourceBoxes div[id$='Chart']").each(function() {
-      scc.conf.resources.resourceBoxes.detailed.push($(this).attr("id"));
+      scc.conf.resources.resourceBoxes.charts.push($(this).attr("id"));
     });
   }, 500);
   

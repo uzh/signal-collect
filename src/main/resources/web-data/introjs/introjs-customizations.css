@@ -9,6 +9,10 @@
   border: 3px solid red;
 }
 
+.introjs-tooltip {
+  margin-left:10px;
+}
+
 .introjs-helperNumberLayer {
   display: none;
 }
