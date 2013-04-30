@@ -78,6 +78,7 @@ scc.modules.Graph = function() {
   var gradientDomain = [null,null];
   var zoomLevel = 1;
   var hoveringOverNode = undefined;
+  var highlightedNode = undefined;
 
   var colorGradient =  function (domain) {
     var scale = d3.scale.linear().domain(domain);
@@ -192,7 +193,12 @@ scc.modules.Graph = function() {
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_searchId').keypress(function(e) {
-      if ( e.which == 13 ) { scc.consumers.Graph.searchById($("#gs_searchId").val()); }
+      if ( e.which == 13 ) { 
+        e.preventDefault();
+        $("#gs_searchById").addClass("active")
+        setTimeout(function () { $("#gs_searchById").removeClass("active"); }, 100);
+        scc.consumers.Graph.searchById($("#gs_searchId").val());
+      }
     });
     window.addEventListener("keydown", function (e) {
       if (e.ctrlKey && e.keyCode == 70) { 
@@ -240,9 +246,7 @@ scc.modules.Graph = function() {
                      "translate(" + d3.event.translate + ")" + 
                      " scale(" + zoomLevel + ")")
           }
-        }))
-        .append('svg:g')
-        .append('svg:g');
+        })).append('svg:g')
 
     /**
      * Handler for when the user hovers over the graph. Shows a tooltip when
@@ -255,8 +259,9 @@ scc.modules.Graph = function() {
       var data = target.__data__;
       var node = $(target);
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
-      $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
       if (d3.event.target.tagName == "circle") {
+        $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
+        highlightedNode = undefined; 
         hoveringOverNode = data.id; 
         $("#node_id").text(data.id);
         $("#node_state").text(data.state);
@@ -273,14 +278,17 @@ scc.modules.Graph = function() {
       }
       else {
         hoveringOverNode = undefined; 
-        $("#node_id").text("-");
-        $("#node_state").text("-");
-        $("#node_ss").text("-");
-        $("#node_cs").text("-");
-        clearTimeout(fadeTimer);
-        fadeTimer = setTimeout(function() {
-          $("#graph_tooltip").fadeOut(200);
-        }, 500);
+        if (highlightedNode == undefined) {
+          $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
+          $("#node_id").text("-");
+          $("#node_state").text("-");
+          $("#node_ss").text("-");
+          $("#node_cs").text("-");
+          clearTimeout(fadeTimer);
+          fadeTimer = setTimeout(function() {
+            $("#graph_tooltip").fadeOut(200);
+          }, 500);
+        }
         if (drawEdges == "Only on hover") {
           link.attr("class", "link hiddenOpacity");
         }
@@ -321,22 +329,27 @@ scc.modules.Graph = function() {
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
       link.attr("class", function(o) {
+        // If the user is hovering over a node, only draw edges of that node
         if (hoveringOverNode) {
           if (o.target.id === hoveringOverNode) { return "link outgoing"; }
           if (o.source.id === hoveringOverNode) { return "link"; }
           return "link hiddenOpacity"
         }
+        // Else draw nodes depending on the drawEdges setting
         else {
           if (drawEdges == "Always" || 
-             (drawEdges == "When graph is still" && force.alpha() < 0.02)) {
-            return "link"
-          }
-          else {
-            return "link hiddenOpacity"
-          }
+             (drawEdges == "When graph is still" && 
+             force.alpha() < 0.02)) { return "link" }
+          else { return "link hiddenOpacity" }
         }
-
       });
+      if (highlightedNode) {
+        var boundingRect = highlightedNode.getBoundingClientRect()
+        var leftOffset = boundingRect.left - 300 + (boundingRect.width/2) + 10
+        var topOffset = boundingRect.bottom - (boundingRect.height/2) + 10
+        $("#graph_tooltip").css({"left": leftOffset + "px", 
+                                 "top": topOffset + "px"});
+      }
 
       // update the node positions
       node.attr("cx", function(d) { return d.x; })
@@ -546,12 +559,17 @@ scc.modules.Graph = function() {
    * @param {string} s - The string that should appear in the node id
    */
   this.highlightNode = function (s) {
+    clearTimeout(fadeTimer);
+    $("#graph_tooltip").stop().css("opacity", "0.9");
     var node = scc.consumers.Graph.findExistingNode(s);
     if (!node) { console.log("node containing string '" + s + "' is not present"); return; }
+    highlightedNode = node;
     var data = node.__data__;
     var n = d3.select(node);
     n.attr("r", nodeSize);
     var r = n.attr("r");
+
+    // Highlight the node visually by flashing its size
     var flash = function (count) {
       n.transition().duration(120).ease("linear").attr("r", 30).each("end", function () {
         n.transition().duration(120).ease("linear").attr("r", 5).each("end", function () {
@@ -561,6 +579,8 @@ scc.modules.Graph = function() {
       });
     };
     flash(3);
+
+    // Now show the tooltip in the right position
     $("#node_id").text(data.id);
     $("#node_state").text(data.state);
     $("#node_ss").text(data.ss);

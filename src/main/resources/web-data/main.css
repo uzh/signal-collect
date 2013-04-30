@@ -267,7 +267,9 @@ body {
                     rgba(255,255,255,.25),
                     rgba(200,200,200,.11));
 }
-.panel button.active {
+
+.panel button.active,
+.panel button:active {
   background-color: #59b6e8;
 }
 
