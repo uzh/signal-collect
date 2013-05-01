@@ -30,10 +30,10 @@ scc.defaults.graph = {"layout": {
                         "gd_nodeSize": "Node state",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Latest query",
-                        "gp_vicinityIncoming": "No",
+                        "gp_vicinityIncoming": "Yes",
                         "gp_vicinityRadius": "1",
-                        "gp_targetCount": "10",
-                        "gp_refreshRate": "5",
+                        "gp_targetCount": "60",
+                        "gp_refreshRate": "1",
                         "gp_drawEdges": "When graph is still"
                       }
 };
@@ -129,17 +129,29 @@ scc.modules.Graph = function() {
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
-   * to the range [0, 0.5, 1] so that colors from green to yellow to red
-   * can be used to represent the input domain. In essence, it creates a
-   * green-to-red scale for any given input domain.
-   * @param {array<double>} domain - A two-element array containing the
-   *     lowest and highest values of the input domain
+   * to a green-to-red color scale
+   * @param {array<double>} domain - A three-element array containing the
+   *     lowest, median and highest values of the input domain
    * @return {object} - The d3 color scale for this input domain
    */
   var colorGradient = function (domain) {
-    var scale = d3.scale.linear().domain(domain);
-    scale.domain([0, 0.5, 1].map(scale.invert));
-    scale.range(["green", "yellow", "red"]);
+    var scale = d3.scale.linear()
+        .domain(domain)
+        .range(["green", "yellow", "red"]);
+    return scale;
+  };
+
+  /**
+   * Returns a d3 scale that that maps the domain passed to the function
+   * to a green-to-red color scale
+   * @param {array<double>} domain - A three-element array containing the
+   *     lowest, median and highest values of the input domain
+   * @return {object} - The d3 color scale for this input domain
+   */
+  var sizeGradient = function (domain) {
+    var scale = d3.scale.linear()
+        .domain(domain)
+        .range([5, 10, 25]);
     return scale;
   };
 
@@ -189,7 +201,7 @@ scc.modules.Graph = function() {
     },
     // functions returning a radius
     "gd_nodeSize": { "Node state": function(d) { 
-                            return scale(d.state.replace(/[^0-9.,]/g, '')); },
+                            return sizeGradient(gradientDomain)(d.state.replace(/[^0-9.,]/g, '')); },
                      "All equal": function(d) { 
                             return 5; }
     }
@@ -376,8 +388,8 @@ scc.modules.Graph = function() {
         clearTimeout(fadeTimer);
         tooltip.fadeIn(200);
         link.attr("class", function(o) {
-          if (o.target.id === data.id) { return "link outgoing"; }
-          if (o.source.id === data.id) { return "link"; }
+          if (o.source.id === data.id) { return "link outgoing"; }
+          if (o.target.id === data.id) { return "link"; }
           return "link hiddenOpacity";
         });
       }
@@ -404,7 +416,7 @@ scc.modules.Graph = function() {
         .size([$("#content").width(), $("#content").height()])
         .nodes(nodes)
         .links(links)
-        .linkDistance(150)
+        .linkDistance(350)
         .charge(-500);
     
     // node and link shall contain the SVG elements of the graph
@@ -579,16 +591,9 @@ scc.modules.Graph = function() {
     nodeStorage.save();
 
     // Determine maximum and minimum state to determine color gradient
-    gradientDomain = [null,null];
-    $.each(nodes, function(id, data) {
-      var state = parseFloat(data.state);
-      if (gradientDomain[0] == null || gradientDomain[0] < state) { 
-        gradientDomain[0] = state;
-      }
-      if (gradientDomain[1] == null || gradientDomain[1] > state) { 
-        gradientDomain[1] = state;
-      }
-    });
+    gradientDomain = [d3.min(nodes, function (d) { return parseFloat(d.state) }),
+                      d3.median(nodes, function (d) { return parseFloat(d.state) }),
+                      d3.max(nodes, function (d) { return parseFloat(d.state) })]
 
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
