@@ -107,7 +107,6 @@ scc.modules.State = function() {
         enabledButtons(["reset", "step", "collect", "continue", "terminate"])
         if (scc.consumers.Graph != undefined) {
           scc.consumers.Graph.autoRefresh = false;
-          scc.consumers.Graph.order();
           scc.consumers.BreakConditions.order();
         }
         break;
@@ -116,7 +115,7 @@ scc.modules.State = function() {
     if (j.steps != 0) {
       if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
         scc.consumers.Graph.autoRefresh = true;
-        scc.consumers.Graph.order();
+        scc.consumers.Graph.update();
         scc.consumers.BreakConditions.order();
       }
       enabledButtons(["pause", "terminate"])
@@ -124,7 +123,8 @@ scc.modules.State = function() {
     // Else there are more choices:
     else {
       if (scc.consumers.Graph != undefined) {
-        scc.consumers.Graph.order();
+        scc.consumers.Graph.autoRefresh = false;
+        scc.consumers.Graph.update();
       }
       switch (j.state) {
         case "signalling":

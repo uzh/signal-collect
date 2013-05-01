@@ -18,7 +18,7 @@
  *  
  */
 
-STR = {"searchByID": "Search and hit Enter to execute", //TODO put these in sub-object
+STR = {"addByIds": "Nodes whose IDs contain this string", //TODO put these in sub-object
        "pickNode": "Enter ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",

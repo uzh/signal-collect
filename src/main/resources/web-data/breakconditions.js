@@ -57,7 +57,7 @@ scc.modules.BreakConditions = function () {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    scc.order({"provider": "breakconditions"});
+    $("#gc_nodeId").val(STR.pickNode);
   }
 
   /**
@@ -157,12 +157,12 @@ scc.modules.BreakConditions = function () {
     /**
      * Handler called upon clicking on a node id. It highlights the appropriate
      * node in the graph or loads the node if it's not yet represented in the
-     * graph. This is done simply by using the searchById function provided by
+     * graph. This is done simply by using the addById function provided by
      * the graph module
      */
     $(".node_link").click(function (e) {
       var id = $(this).attr("title");
-      scc.consumers.Graph.searchById(id);
+      scc.consumers.Graph.addByIds([id]);
     });
 
     // The last child in the list doesn't have a bottom border
@@ -178,10 +178,12 @@ scc.modules.BreakConditions = function () {
     if ($("#graph_canvas").hasClass("picking")) {
       $("#graph_canvas").removeClass("picking");
       $("#gc_useMouse").removeClass("active");
+      $("#gc_useMouse").text("Select");
     }
     else {
       $("#graph_canvas").addClass("picking");
       $("#gc_useMouse").addClass("active");
+      $("#gc_useMouse").text("Cancel");
     }
   });
 
@@ -192,6 +194,7 @@ scc.modules.BreakConditions = function () {
    */
   d3.select("#graph_canvas").on("click.breakconditions", function (e) {
     if (!$("#graph_canvas").hasClass("picking")) { return; }
+    $("#gc_useMouse").text("Select");
     $("#graph_canvas").removeClass("picking");
     $("#gc_useMouse").removeClass("active");
     var target = d3.event.target;

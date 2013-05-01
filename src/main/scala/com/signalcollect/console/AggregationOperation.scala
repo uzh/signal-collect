@@ -30,35 +30,28 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
-class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id](), 
-                          vicinityNodeIds: Set[Id] = Set[Id]())
+class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id]())
       extends AggregationOperation[JObject] {
-
-  def scanIds(l: Set[Id], l2: Set[Id], category: String, i: Inspectable[Id,_]): JObject = {
-    if (l.contains(i.id)) {
-      val targetNodes = i.outgoingEdges.values.filter { value =>
-        value match {
-          case v: Edge[Id] => l.contains(v.targetId) || l2.contains(v.targetId)
-          case otherwise => false
-        }
-      }.map{ e => ( JString(e.targetId.toString))}.toList
-      def nodesObj = ("nodes", JObject(List(JField(i.id.toString, 
-                        JObject(List(JField("s", i.state.toString),
-                                     JField("c", category),
-                                     JField("ss", i.scoreSignal),
-                                     JField("cs", i.scoreCollect)))))))
-      def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetNodes)))))
-      if (targetNodes.size > 0) { nodesObj ~ edgesObj } else { nodesObj }
-    }
-    else { JObject(List()) }
-  }
 
   def extract(v: Vertex[_,_]): JObject = v match {
     case i: Inspectable[Id,_] => {
-      (scanIds(vicinityNodeIds, nodeIds, "v", i)
-      merge
-      scanIds(nodeIds, vicinityNodeIds, "n", i))
-    }
+      if (nodeIds.contains(i.id)) {
+        val targetNodes = i.outgoingEdges.values.filter { value =>
+          value match {
+            case v: Edge[Id] => nodeIds.contains(v.targetId)
+            case otherwise => false
+          }
+        }.map{ e => ( JString(e.targetId.toString))}.toList
+        def nodesObj = ("nodes", JObject(List(JField(i.id.toString, 
+                          JObject(List(JField("s", i.state.toString),
+                                       JField("ss", i.scoreSignal),
+                                       JField("cs", i.scoreCollect)))))))
+        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetNodes)))))
+        if (targetNodes.size > 0) { nodesObj ~ edgesObj } else { nodesObj }
+      }
+      else { JObject(List()) }
+
+      }
     case other => JObject(List())
   }
 
