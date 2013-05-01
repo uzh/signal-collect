@@ -78,10 +78,6 @@ akka {
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.SystemInformation" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
-      "scala.collection.immutable.Map$EmptyMap$" = kryo
-      "scala.collection.immutable.$colon$colon"= kryo
-      "scala.collection.immutable.Nil$" = kryo
-      "scala.collection.immutable.Map$Map1" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
       "com.signalcollect.interfaces.AddEdge" = kryo
     """ +
@@ -171,7 +167,7 @@ akka {
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking
-        kryo-trace = true 
+        kryo-trace = false 
 
         kryo-reference-map = false
     
@@ -203,16 +199,12 @@ akka {
             "com.signalcollect.interfaces.WorkerStatistics" = 41
             "com.signalcollect.interfaces.SystemInformation" = 42
             "com.signalcollect.interfaces.SentMessagesStats" = 43
-            "scala.collection.immutable.Map$EmptyMap$" = 44
-            "scala.collection.immutable.$colon$colon"= 45
-            "scala.collection.immutable.Nil$" = 46
-            "scala.collection.immutable.Map$Map1" = 47
-            "com.signalcollect.interfaces.AddVertex" = 48
-            "com.signalcollect.interfaces.AddEdge" = 49
+            "com.signalcollect.interfaces.AddVertex" = 44
+            "com.signalcollect.interfaces.AddEdge" = 45
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 49
+        var highestUsedKryoId = 45
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -252,10 +244,6 @@ akka {
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.SystemInformation",
             "com.signalcollect.interfaces.SentMessagesStats",
-            "scala.collection.immutable.Map$EmptyMap$",
-            "scala.collection.immutable.$colon$colon",
-            "scala.collection.immutable.Nil$",
-            "scala.collection.immutable.Map$Map1",
             "com.signalcollect.interfaces.AddVertex",
             "com.signalcollect.interfaces.AddEdge"
     """ +

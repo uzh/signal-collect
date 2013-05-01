@@ -20,8 +20,9 @@
 package com.signalcollect.examples
 
 import scala.util.Random
-
 import com.signalcollect._
+import java.util.HashSet
+import collection.JavaConversions._
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
@@ -44,7 +45,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
   type Signal = Int
 
   /** The set of available colors */
-  val colors: Set[Int] = (1 to numColors).toSet
+  val colors: HashSet[Int] = new HashSet(1 to numColors)
 
   /** Returns a random color */
   def getRandomColor: Int = Random.nextInt(numColors) + 1

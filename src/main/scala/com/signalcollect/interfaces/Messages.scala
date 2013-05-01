@@ -44,7 +44,7 @@ case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
 
 case class AddVertex[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) State](v: Vertex[Id, State])
 
-case class AddEdge[@specialized(Int, Long) TargetId](e: Edge[TargetId])
+case class AddEdge[@specialized(Int, Long) SourceId, @specialized(Int, Long) TargetId](sourceVertexId: SourceId, e: Edge[TargetId])
 
 case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val signals: Array[Signal], val targetIds: Array[Id], val sourceIds: Array[Id])
 

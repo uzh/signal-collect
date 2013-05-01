@@ -69,7 +69,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val heartbeatIntervalInMilliseconds: Int)
   extends WorkerActor[Id, Signal] with ActorLogging {
 
-  override def toString = "Worker" + workerId
+  override def postRestart(reason: Throwable): Unit = {
+    val msg = s"Worker $workerId crashed because of ${reason.getStackTraceString}, not recoverable."
+    log.debug(msg)
+    println(msg)
+  }
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
@@ -99,7 +103,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
-      //      println(s"Worker $workerId is doing some graph loading ...")
       try {
         for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
           modification(worker.graphEditor)
@@ -107,7 +110,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       } catch {
         case t: Throwable => println(s"Worker $workerId had a problem during graph loading: $t")
       }
-      //      println(s"Worker $workerId takes a break from graph loading.")
       worker.messageBusFlushed = false
     }
   }
@@ -122,7 +124,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def executeOperations {
-    //    println(s"Worker $workerId is executing operations.")
     if (messageQueue.isEmpty) {
       if (!worker.vertexStore.toCollect.isEmpty) {
         val collected = worker.vertexStore.toCollect.process(
@@ -185,10 +186,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         scheduleOperations
       }
 
-    case AddEdge(edge) =>
+    case AddEdge(sourceVertexId, edge) =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
-      worker.addEdge(edge.sourceId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
+      worker.addEdge(sourceVertexId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
       // TODO: Reevaluate, if we really need to schedule operations.
       if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
         scheduleOperations

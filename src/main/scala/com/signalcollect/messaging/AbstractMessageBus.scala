@@ -215,7 +215,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addEdge(sourceId, edge)
     } else {
       // Manually send a fire & forget request.
-      sendToWorkerForVertexId(AddEdge(edge), sourceId)
+      sendToWorkerForVertexId(AddEdge(sourceId, edge), sourceId)
     }
   }
 
