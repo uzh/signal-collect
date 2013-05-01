@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit
 import scala.util.Success
 import scala.util.Failure
 import com.signalcollect.triplerush.TriplePattern
+import com.signalcollect.triplerush.PatternQuery
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
@@ -161,8 +162,10 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     kryo.register(classOf[Array[Float]], 22)
     kryo.register(classOf[Array[Double]], 23)
     kryo.register(classOf[Array[Boolean]], 24)
-    kryo.register(classOf[Array[Object]], 25)
-    kryo.register(classOf[Array[TriplePattern]], 26)
+    kryo.register(classOf[Array[scala.Tuple2[Any, Any]]], 25)
+    kryo.register(classOf[Array[Object]], 26)
+    kryo.register(classOf[Array[TriplePattern]], 27)
+    kryo.register(classOf[Array[PatternQuery]], 28)
        
     if (settings.KryoTrace)
       MiniLog.TRACE()

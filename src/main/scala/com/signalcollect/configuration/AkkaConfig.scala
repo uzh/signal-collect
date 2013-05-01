@@ -80,6 +80,7 @@ akka {
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
       "com.signalcollect.interfaces.AddEdge" = kryo
+      "scala.Tuple2" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
@@ -182,29 +183,30 @@ akka {
         # ids below it are used by Kryo internally e.g. for built-in Java and 
         # Scala types   
         mappings {
-            "scala.Int" = 27
-            "scala.Long" = 28
-            "scala.Float" = 29
-            "scala.Double" = 30
-            "scala.Some" = 31
-            "com.signalcollect.Vertex" = 32
-            "com.signalcollect.Edge" = 33
-            "com.signalcollect.interfaces.SignalMessage" = 34
-            "com.signalcollect.interfaces.BulkSignal" = 35
-            "java.util.HashMap" = 36
-            "com.signalcollect.interfaces.EdgeId" = 37
-            "com.signalcollect.interfaces.WorkerStatus" = 38
-            "com.signalcollect.interfaces.NodeStatus" = 39
-            "com.signalcollect.interfaces.Heartbeat" = 40
-            "com.signalcollect.interfaces.WorkerStatistics" = 41
-            "com.signalcollect.interfaces.SystemInformation" = 42
-            "com.signalcollect.interfaces.SentMessagesStats" = 43
-            "com.signalcollect.interfaces.AddVertex" = 44
-            "com.signalcollect.interfaces.AddEdge" = 45
+            "scala.Int" = 29
+            "scala.Long" = 30
+            "scala.Float" = 31
+            "scala.Double" = 32
+            "scala.Some" = 33
+            "com.signalcollect.Vertex" = 34
+            "com.signalcollect.Edge" = 35
+            "com.signalcollect.interfaces.SignalMessage" = 36
+            "com.signalcollect.interfaces.BulkSignal" = 37
+            "java.util.HashMap" = 38
+            "com.signalcollect.interfaces.EdgeId" = 39
+            "com.signalcollect.interfaces.WorkerStatus" = 40
+            "com.signalcollect.interfaces.NodeStatus" = 41
+            "com.signalcollect.interfaces.Heartbeat" = 42
+            "com.signalcollect.interfaces.WorkerStatistics" = 43
+            "com.signalcollect.interfaces.SystemInformation" = 44
+            "com.signalcollect.interfaces.SentMessagesStats" = 45
+            "com.signalcollect.interfaces.AddVertex" = 46
+            "com.signalcollect.interfaces.AddEdge" = 47
+            "scala.Tuple2" = 48
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 45
+        var highestUsedKryoId = 48
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -245,7 +247,8 @@ akka {
             "com.signalcollect.interfaces.SystemInformation",
             "com.signalcollect.interfaces.SentMessagesStats",
             "com.signalcollect.interfaces.AddVertex",
-            "com.signalcollect.interfaces.AddEdge"
+            "com.signalcollect.interfaces.AddEdge",
+            "scala.Tuple2"
     """ +
     {
       if (!kryoRegistrations.isEmpty) {

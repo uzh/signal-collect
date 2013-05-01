@@ -24,7 +24,8 @@ object Mapping {
   private var id2String = Map[Int, String]((0 -> "*"))
   private var string2Id = Map[String, Int](("*" -> 0))
   private var maxId = 0
-  private var minId = 0
+
+  private var variablesForQueries = Map[Int, Map[Int, String]]().withDefaultValue(Map())
   private var abbreviations = Map[String, String]() //original = key, abbreviation = value
 
   private def abbreviate(s: String): String = {
@@ -35,18 +36,13 @@ object Mapping {
     abbreviatedString
   }
 
-  def register(s: String, isVariable: Boolean = false): Int = {
+  def register(s: String): Int = {
     val abbreviation = abbreviate(s)
     synchronized {
       if (!string2Id.contains(abbreviation)) {
         val id = {
-          if (isVariable) {
-            minId -= 1
-            minId
-          } else {
-            maxId += 1
-            maxId
-          }
+          maxId += 1
+          maxId
         }
         string2Id += ((abbreviation, id))
         id2String += ((id, abbreviation))
