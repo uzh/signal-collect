@@ -244,14 +244,19 @@ a, a:visited {
 }
 
 .panel label {
-  padding-left: 5px;
-  cursor: pointer;
+  padding-left: 2%;
+}
+
+.panel span {
+  height: 18px;
+  padding: 2px 0 6px 5px;
+  display: inline-block;
 }
 
 .panel input[type="text"] {
   padding: 0;
   margin: 0;
-  margin-left: 10px;
+  margin-left: 2%;
   margin-bottom: 5px;
   border: 1px solid #bbb;
   height: 20px;
@@ -272,6 +277,10 @@ a, a:visited {
                     rgba(200,200,200,.11));
 }
 
+.panel button.disabled {
+  color: #bbb;
+}
+
 .panel button.active,
 .panel button:active {
   background-color: #59b6e8;
@@ -281,10 +290,14 @@ a, a:visited {
 .panel input[type="text"] + button {
   padding: 0;
   margin: 0;
-  width: 17%;
+  width: 19%;
   height: 22px;
   position: absolute;
-  right: 10px;
+  right: 2%;
+}
+
+.panel button.snd {
+  right: 22%;
 }
     
 .panel input[type="radio"] {
@@ -571,6 +584,28 @@ a, a:visited {
   padding: 10px;
 }
 
+#graph_canvas_overlay {
+  display: none;
+  position: absolute;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #59b6e8;
+  opacity: 0.2;
+  z-index: 5;
+}
+#graph_canvas_selection {
+  position: absolute;
+  border: 1px solid #ddd;
+  display: none;
+  background-color: #444;
+  opacity: 0.3;
+  z-index: 6;
+  pointer-events: none;
+}
+
 #graph_canvas {
   position: absolute;
   top: 0px;
@@ -580,7 +615,8 @@ a, a:visited {
   padding: 0;
   background-color: #444;
 }
-#graph_canvas.picking {
+#graph_canvas.picking,
+#graph_canvas.pickingRemove {
   cursor: crosshair;
 }
 
@@ -640,6 +676,9 @@ a, a:visited {
 .node_link {
   color: #59b6e8;
   cursor: pointer;
+}
+.busy {
+  cursor: wait;
 }
 
 /* D3 charts */

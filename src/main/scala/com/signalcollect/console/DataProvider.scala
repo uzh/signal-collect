@@ -18,6 +18,8 @@
  *  
  */
 
+// TODO: unify nodes/vertices nomenclature
+
 package com.signalcollect.console
 
 import java.io.StringWriter
@@ -238,11 +240,11 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
 }
 
 case class GraphDataRequest(
+  nodeIds: Option[List[String]],
   vicinityRadius: Option[Int],
   vicinityIncoming: Option[Boolean],
   query: Option[String], 
-  id: Option[String],
-  maxVertices: Option[Int],
+  targetCount: Option[Int],
   topCriterium: Option[String]
 )
 
@@ -252,6 +254,10 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   implicit val formats = DefaultFormats
 
   val workerApi = coordinator.getWorkerApi 
+  var nodeIds = List[String]()
+  var targetCount = 5
+  var vicinityRadius = 0
+  var vicinityIncoming = false
 
   def findVicinity(vertexIds: Set[Id], radius: Int = 3, 
                    incoming: Boolean = false): Set[Id] = {
@@ -271,77 +277,72 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     }
   }
 
-  def fetchId(id: String, radius: Int, incoming: Boolean = false): JObject = {
-    val result = workerApi.aggregateAll(
-                 new FindVerticesByIdsAggregator[Id](List(id)))
-    val (vertices, vicinity) = result.size match {
-      case 0 => (Set[Id](), Set[Id]())
-      case otherwise => 
-        val nodeIds = result.map { _.id }.toSet
-        (nodeIds, findVicinity(nodeIds, radius, incoming).diff(nodeIds))
-    }
-    workerApi.aggregateAll(new GraphAggregator[Id](vertices, vicinity))
+  def fetchGraph(nodes: Set[Id] = Set[Id]()): JObject = {
+    val nodesOfIds = workerApi.aggregateAll(
+                     new FindVerticesByIdsAggregator[Id](nodeIds))
+    val vicinity = findVicinity(nodes ++ nodesOfIds.map { _.id }.toSet, 
+                                vicinityRadius, vicinityIncoming)
+    workerApi.aggregateAll(new GraphAggregator[Id](vicinity))
   }
 
-  def fetchTopState(inverted: Boolean = false, 
-                    n: Int, radius: Int, incoming: Boolean = false): JObject = {
-    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](n, inverted)).take(n)
+  def fetchTopState(inverted: Boolean = false): JObject = {
+    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](targetCount, inverted)).take(targetCount)
     val nodes = topState.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
-    val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
-    workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
+    fetchGraph(nodes)
   }
 
-  def fetchTopDegree(n: Int, radius: Int, incoming: Boolean = false): JObject = {
-    val nodes = workerApi.aggregateAll(new TopDegreeAggregator[Id](n))
+  def fetchTopDegree(): JObject = {
+    val nodes = workerApi.aggregateAll(new TopDegreeAggregator[Id](targetCount))
                              .toSeq.sortBy(-_._2)
-                             .take(n)
+                             .take(targetCount)
                              .map{ _._1 }
                              .toSet
-    val vicinity = findVicinity(nodes, radius, incoming)
-    workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
+    fetchGraph(nodes)
   }
 
-  def fetchTopScore(scoreType: String, 
-                     n: Int, radius: Int, incoming: Boolean = false): JObject = {
-    val topScore = workerApi.aggregateAll(new TopScoreAggregator[Id](n, scoreType)).take(n)
+  def fetchTopScore(scoreType: String): JObject = {
+    val topScore = workerApi.aggregateAll(new TopScoreAggregator[Id](targetCount, scoreType)).take(targetCount)
     val nodes = topScore.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
-    val vicinity = findVicinity(nodes, radius, incoming).diff(nodes)
-    workerApi.aggregateAll(new GraphAggregator(nodes, vicinity))
+    fetchGraph(nodes)
   }
 
-  def fetchSample(n: Int, radius: Int, incoming: Boolean = false): JObject = {
-    val nodes = workerApi.aggregateAll(new SampleAggregator[Id](n))
-    workerApi.aggregateAll(new GraphAggregator(nodes, findVicinity(nodes, radius, incoming)))
+  def fetchSample(): JObject = {
+    val nodes = workerApi.aggregateAll(new SampleAggregator[Id](targetCount))
+    fetchGraph(nodes)
   }
 
   def fetch(): JObject = {
     val request = (msg).extract[GraphDataRequest]
-    val m = request.maxVertices match {
-      case Some(maxVertices) => maxVertices
-      case otherwise => 100
+    request.nodeIds match {
+      case Some(ids) => nodeIds = ids
+      case otherwise => 
     }
-    val r = request.vicinityRadius match {
-      case Some(radius) => radius
-      case otherwise => 0
+    request.targetCount match {
+      case Some(t) => targetCount = t
+      case otherwise => 
     }
-    val i = request.vicinityIncoming match {
-      case Some(bool) => bool
-      case otherwise => false
+    request.vicinityRadius match {
+      case Some(r) => vicinityRadius = r
+      case otherwise => 
+    }
+    request.vicinityIncoming match {
+      case Some(b) => vicinityIncoming = b
+      case otherwise => 
     }
     val graphData = request.query match {
-      case Some("id") => request.id match {
-        case Some(id) => fetchId(id, r, i)
-        case otherwise => fetchInvalid(msg, "missing id")
+      case Some("nodeIds") => request.nodeIds match {
+        case Some(ids) => fetchGraph()
+        case otherwise => fetchInvalid(msg, "missing nodeIds")
       }
       case Some("top") => request.topCriterium match {
-        case Some("Highest State") => fetchTopState(false, m, r, i)
-        case Some("Lowest State") => fetchTopState(true, m, r, i)
-        case Some("Degree") => fetchTopDegree(m, r, i)
-        case Some("Signal score") => fetchTopScore("signal", m, r, i)
-        case Some("Collect score") => fetchTopScore("collect", m, r, i)
+        case Some("Highest State") => fetchTopState()
+        case Some("Lowest State") => fetchTopState(true)
+        case Some("Highest degree") => fetchTopDegree()
+        case Some("Signal score") => fetchTopScore("signal")
+        case Some("Collect score") => fetchTopScore("collect")
         case otherwise => new InvalidDataProvider(msg).fetch
       }
-      case otherwise => fetchTopDegree(m, r, i)
+      case otherwise => fetchTopDegree()
     }
     
     ("provider" -> "graph") ~

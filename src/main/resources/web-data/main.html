@@ -49,7 +49,7 @@
     <div id="top">
       <div id="error" class="msg">Javascript is required to run this Application.</div>
       <div id="small_error" class="msg hidden">Javascript is required to run this Application.</div>
-      <div id="warning" class="msg"></div>
+      <div id="warning" class="msg hidden"></div>
       <div id="success" class="msg hidden"></div>
       <div id="close_msgs" title="Hide message"></div>
     </div>
@@ -62,22 +62,44 @@
       <div id="graph_panel_container">
         <div class="panel">
           <div id="cNodeSelection" class="panel_section">
-            <div class="title expanded">Select nodes to display</div>
+            <div class="title expanded">Add and remove nodes from the canvas</div>
             <div class="contents">
               <form>
-                <h1><span>Show top vertices</span></h1>
-                <label>By:</label>
+                <h1><span>Options impacting performance</span></h1>
+                <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
+                <select id="gp_vicinityRadius"></select><br/>
+                <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
+                <select id="gp_vicinityIncoming">
+                  <option>No</option>
+                  <option>Yes</option>
+                </select><br/>
+                <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
+                <select id="gp_refreshRate"></select>
+                <h1><span>Add vertices</span></h1>
+                <span>Top </span>
+                <select id="gp_targetCount"></select>
+                <span> of </span>
                 <select id="gs_topCriterium">
-                  <option>Degree</option>
+                  <option>Highest degree</option>
                   <option>Highest State</option>
                   <option>Lowest State</option>
                   <option>Signal score</option>
                   <option>Collect score</option>
                 </select>
-                <button id="gs_searchByTop">Find</button><br/>
-                <h1><span>Search for vertex by ID</span></h1>
-                <input id="gs_searchId" type="text">
-                <button id="gs_searchById">Find</button><br/>
+                <button id="gs_addByTop">Add</button><br/>
+                <input id="gs_addIds" type="text">
+                <button id="gs_addIdsButton">Add</button><br/>
+                <span>Vicinity of all nodes </span>
+                <button id="gs_addAllVicinities">Add</button><br/>
+                <span>Vicinity of selected nodes </span>
+                <button id="gs_addSelectedVicinities">Select</button><br/>
+                <button id="gs_addSelectedVicinitiesAdd" class="hidden">Add</button>
+                <h1><span>Remove nodes</span></h1>
+                <span>Remove all nodes</span>
+                <button id="gd_removeAll">Remove</button><br/>
+                <span>Select nodes to remove</span>
+                <button id="gd_removeBySelect">Select</button>
+                <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
               </form> 
             </div>
           </div>
@@ -85,6 +107,13 @@
             <div class="title expanded">Graph Look and Feel</div>
             <div class="contents">
               <form>
+                <h1><span>Options impacting performance</span></h1>
+                <label for="gp_drawEdges">Draw edges:</label>
+                <select id="gp_drawEdges">
+                  <option>When graph is still</option>
+                  <option>Always</option>
+                  <option>Only on hover</option>
+                </select>
                 <h1><span>Node styling</span></h1>
                 <label for="gd_nodeSize">Node size:</label>
                 <select id="gd_nodeSize">
@@ -111,24 +140,6 @@
                   <option>Is Vicinity</option>
                   <option>All equal</option>
                 </select><br/>
-                <h1><span>Performance &amp; Complexity</span></h1>
-                <label for="gp_vicinityRadius">Node vicinity radius:</label>
-                <select id="gp_vicinityRadius"></select><br/>
-                <label for="gp_maxVertices">Target node count (exkl. vicinity):</label>
-                <select id="gp_maxVertices"></select><br/>
-                <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
-                <select id="gp_refreshRate"></select><br/>
-                <label for="gp_drawEdges">Draw edges:</label>
-                <select id="gp_drawEdges">
-                  <option>When graph is still</option>
-                  <option>Always</option>
-                  <option>Only on hover</option>
-                </select><br/>
-                <label for="gp_vicinityIncoming">Also compute incoming edges:</label>
-                <select id="gp_vicinityIncoming">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select>
               </form> 
             </div>
           </div>
@@ -141,7 +152,7 @@
                 <h1><span>Add New Condition</span></h1>
                 <label for="gc_nodeId">When node with id:</label><br/>
                 <input id="gc_nodeId" type="text">
-                <button id="gc_useMouse">Mouse</button><br/>
+                <button id="gc_useMouse">Select</button><br/>
                 <select id="gc_condition">
                   <option>changes state</option>
                   <option>goes above state:</option>
@@ -232,6 +243,8 @@
           <div class="graph_tooltip_item">Collect Score: <span id="node_cs"></span></div>
         </div>
         <div id="graph_canvas"></div>
+        <div id="graph_canvas_overlay"></div>
+        <div id="graph_canvas_selection"></div>
       </div>
       <div class="view" id="resources">
         <div class="structured">
@@ -273,7 +286,7 @@
             <p class="teaser">
               When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
               converge. You can observe the charts below to see whether there are any messages sent or received. Additionally, 
-              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>observe
+              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>observe
               the graph with a state visualization</a>.
             </p>
           </div>
@@ -304,7 +317,7 @@
             <p class="teaser">
               There can be various reasons for when a computation yields unexpected results. To find potential problems, you can
               <a target="_blank" href='/graph'>set breakpoints on the graph</a> and step through different phases of the computation.
-              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_maxVertices":"40"}}}'>view
+              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>view
               the graph with state visualization enabled</a>.
             </p>
           </div>

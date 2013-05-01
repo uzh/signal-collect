@@ -17,6 +17,8 @@
  *  
  */
 
+// TODO: cleanup scan for missing trailing ";"
+
 /**
  * The default settings for the graph module.
  */
@@ -25,14 +27,14 @@ scc.defaults.graph = {"layout": {
                         "cGraphDesign": "show"
                       },
                       "options": {
-                        "gs_searchId": "",
-                        "gs_topCriterium": "Degree",
+                        "gs_addIds": "",
+                        "gs_topCriterium": "Highest degree",
                         "gd_nodeSize": "Node state",
                         "gd_nodeColor": "Node state",
                         "gd_nodeBorder": "Is Vicinity",
                         "gp_vicinityIncoming": "No",
                         "gp_vicinityRadius": "1",
-                        "gp_maxVertices": "10",
+                        "gp_targetCount": "10",
                         "gp_refreshRate": "5",
                         "gp_drawEdges": "When graph is still"
                       }
@@ -79,8 +81,64 @@ scc.modules.Graph = function() {
   var zoomLevel = 1;
   var hoveringOverNode = undefined;
   var highlightedNode = undefined;
+  var selectionX, selectionY;
+  var selectedNodes;
 
-  var colorGradient =  function (domain) {
+  /**
+   * The NodeStorageAgent provides method for setting, getting and adding to the
+   * local storage which contains an array of nodeIds as strings. It represents
+   * the nodes which the user has loaded into the canvas
+   * @constructor
+   */
+  var NodeStorageAgent = function () {
+    // Initialize the localStorage if necessary
+    if (localStorage["nodeIds"] == undefined || localStorage["nodeIds"] == "") { 
+      localStorage["nodeIds"] = "[]";
+    }
+
+    /**
+     * Adds the given nodes to the local storage.
+     * @param {array<string>} nodeIds - The nodes to be added to the storage
+     */
+    this.push = function (nodeIds) {
+      var stored = this.get()
+      $.each(stored, function (key, value) {
+        if (nodeIds.indexOf(value) != -1) { nodeIds.splice(key, 1); }
+      });
+      stored.push.apply(stored, nodeIds)
+      localStorage["nodeIds"] = JSON.stringify(stored);
+    }
+
+    /**
+     * Replaces the existing list stored with the one passed to the funciton
+     * @param {array<string>} nodeIds - The nodes to be stored
+     */
+    this.save = function () {
+      localStorage["nodeIds"] = JSON.stringify(
+        $.map(nodes, function (node, i) { console.log(node); return node.id; })
+      );
+    }
+
+    /**
+     * Loads the list of nodes from the local storage
+     */
+    this.get = function () {
+      return JSON.parse(localStorage["nodeIds"]);
+    }
+  }
+  // Instantiate an agent for us to use
+  var nodeStorage = new NodeStorageAgent();
+
+  /**
+   * Returns a d3 scale that that maps the domain passed to the function
+   * to the range [0, 0.5, 1] so that colors from green to yellow to red
+   * can be used to represent the input domain. In essence, it creates a
+   * green-to-red scale for any given input domain.
+   * @param {array<double>} domain - A two-element array containing the
+   *     lowest and highest values of the input domain
+   * @return {object} - The d3 color scale for this input domain
+   */
+  var colorGradient = function (domain) {
     var scale = d3.scale.linear().domain(domain);
     scale.domain([0, 0.5, 1].map(scale.invert));
     scale.range(["green", "yellow", "red"]);
@@ -93,10 +151,10 @@ scc.modules.Graph = function() {
    * @param {object} o - The order message to be augmented
    * @return {object} - The order message augmented by the settings
    */
-  var addOptionsToOrder = function(o) { 
-    o["vicinityRadius"] = parseInt($("#gp_vicinityRadius").val());
+  var finalize = function(o) { 
+    o["provider"] = "graph"; 
     o["vicinityIncoming"] = ($("#gp_vicinityIncoming").val() == "Yes");
-    o["maxVertices"] = parseInt($("#gp_maxVertices").val());
+    o["targetCount"] = parseInt($("#gp_targetCount").val());
     return o;
   };
 
@@ -172,8 +230,12 @@ scc.modules.Graph = function() {
    * Order graph data using the options set in the GUI. This function may be
    * called by other modules as well, in case they require a graph refresh.
    */
-  this.order = function() {
-    scc.order(addOptionsToOrder(orderTemplate));
+  this.update = function() {
+    if (nodeStorage.get().length > 0) {
+      scc.order(finalize({"provider": "graph",
+                          "query": "nodeIds",
+                          "nodeIds": nodeStorage.get() }));
+    }
   };
 
   /**
@@ -181,10 +243,10 @@ scc.modules.Graph = function() {
    */
   this.layout = function() {
     for (var i = 5; i<=15; i+=5) {
-      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>');
+      $("#gp_targetCount").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 20; i<=200; i+=20) {
-      $("#gp_maxVertices").append('<option value="' + i + '">' + i + '</option>');
+      $("#gp_targetCount").append('<option value="' + i + '">' + i + '</option>');
     }
     for (var i = 0; i<=4; i++) {
       $("#gp_vicinityRadius").append('<option value="' + i + '">' + i + '</option>');
@@ -196,19 +258,12 @@ scc.modules.Graph = function() {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
-    $('#gs_searchId').keypress(function(e) {
+    $('#gs_addIds').keypress(function(e) {
       if ( e.which == 13 ) { 
         e.preventDefault();
-        $("#gs_searchById").addClass("active")
-        setTimeout(function () { $("#gs_searchById").removeClass("active"); }, 100);
-        scc.consumers.Graph.searchById($("#gs_searchId").val());
-      }
-    });
-    window.addEventListener("keydown", function (e) {
-      if (e.ctrlKey && e.keyCode == 70) { 
-        $("#gs_searchId").focus();
-        $("#gs_searchId").select();
-        e.preventDefault();
+        $("#gs_addByIdsButton").addClass("active")
+        setTimeout(function () { $("#gs_addByIdsButton").removeClass("active"); }, 100);
+        scc.consumers.Graph.addByIds($("#gs_addIds").val());
       }
     });
     $.each(scc.settings.get().graph.layout, function (key, value) {
@@ -217,8 +272,8 @@ scc.modules.Graph = function() {
     $.each(scc.settings.get().graph.options, function (key, value) {
       $("#" + key).val(value);
     });
-    if (scc.settings.get().graph.options["gs_searchId"] == "") {
-      $("#gs_searchId").val(STR.searchByID);
+    if (scc.settings.get().graph.options["gs_addIds"] == "") {
+      $("#gs_addIds").val(STR.addByIds);
     }
     if (scc.settings.get().graph.options["gc_nodeId"] == "") {
       $("#gc_nodeId").val(STR.pickNode);
@@ -366,8 +421,36 @@ scc.modules.Graph = function() {
     });
 
     // enable the forced layout
-    force.start();
+    restart();
   }
+
+  var restart = function () {
+    link = link.data(links, function(d) { return d.id; })
+    link.enter().append("line")
+        .attr("class", "link hiddenOpacity");
+    link.exit().remove();
+
+    node = node.data(nodes, function(d) { return d.id; })
+    node.enter().append("circle")
+        .attr("class", "node")
+        .call(force.drag);
+    node.exit().remove();
+    node.transition(100)
+        .style("fill", nodeColor)
+        .style("stroke", nodeBorder)
+        .attr("r", nodeSize);
+
+    if (nodes.length == 0) {
+      $("#graph_background").text("Canvas is empty: use the tools on the left to add and remove nodes").fadeIn();
+    }
+
+    // Edges should be drawn first so that nodes are draw above edges
+    svg.selectAll("circle, line").sort(function (a, b) { 
+      if (a.source == undefined) { return true }
+      else { return false }
+    }).order()
+    force.start();
+  };
 
   /**
    * Function that is called by the main module when a message is received
@@ -376,13 +459,19 @@ scc.modules.Graph = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
+    scc.notBusy();
+    $("button").removeClass("disabled");
     // Keep references to the forced layout data
-    nodes = force.nodes();
-    links = force.links();
     var newNodes = false;
 
     // If the server sent an empty graph, do nothing
-    if (j.nodes == undefined) { return; }
+    if (j.nodes == undefined) { 
+      $("#graph_background").text("There are no nodes matching your request").fadeIn();
+      return; 
+    }
+    else {
+      $("#graph_background").fadeOut();
+    }
 
     // The server sends us two maps, one for nodes and one for links. In both,
     // the nodes are identifies using strings. For example, given the following
@@ -419,10 +508,13 @@ scc.modules.Graph = function() {
     // to nodes[nodeRefs["1111"]], thereby updating the correct node in d3's
     // node array.
 
+    $.each(nodes, function(id, node) {
+      node["category"] = "old"; // TODO: do this more quickly?
+    });
     $.each(j.nodes, function(id, data) {
       if (nodeRefs[id] == undefined) {
         // Update d3's node array
-        nodes.push({"id": id, "state": data.s, "category": data.c, 
+        nodes.push({"id": id, "state": data.s, "category": "new", 
                     "ss": data.ss, "cs": data.cs});
         // Store the index of the node in the lookup table
         nodeRefs[id] = nodes.length - 1;
@@ -431,11 +523,12 @@ scc.modules.Graph = function() {
       else {
         // Look up the node with this id in d3's node array and update it
         nodes[nodeRefs[id]].state = data.s;
-        nodes[nodeRefs[id]].category = data.c;
+        nodes[nodeRefs[id]].category = "new";
         nodes[nodeRefs[id]].ss = data.ss;
         nodes[nodeRefs[id]].cs = data.cs;
       }
     });
+    nodeStorage.save();
 
     // Determine maximum and minimum state to determine color gradient
     gradientDomain = [null,null];
@@ -449,55 +542,30 @@ scc.modules.Graph = function() {
       }
     });
 
-    $.each(j.edges, function (source, targets) {
-      for (var t = 0; t < targets.length; t++) {
-        linkID = source + "-" + targets[t];
-        if (linkRefs[linkID] == undefined) {
-          // Update d3's link array
-          links.push({"source": nodes[nodeRefs[source]], 
-                      "target": nodes[nodeRefs[targets[t]]]});
-          // Store the index of the link in the lookup table
-          linkRefs[linkID] = links.length - 1;
+    if (j.edges) {
+      $.each(j.edges, function (source, targets) {
+        for (var t = 0; t < targets.length; t++) {
+          linkId = source + "-" + targets[t];
+          if (linkRefs[linkId] == undefined) {
+            // Update d3's link array
+            links.push({"id": linkId,
+                        "source": nodes[nodeRefs[source]], 
+                        "target": nodes[nodeRefs[targets[t]]]});
+            // Store the index of the link in the lookup table
+            linkRefs[linkId] = links.length - 1;
+          }
+          else {
+            // One could update d3's link array here, like with the nodes
+          }
         }
-        else {
-          // One could update d3's link array here, like with the nodes
-        }
-      }
-    });
-    
-    // Hide or show the graph canvas background text
-    $("#graph_background").fadeOut(100);
-    if (nodes.length == 0) {
-      $("#graph_background")
-        .text("There are no nodes to display for the current criteria").fadeIn();
-      return;
+      });
     }
-
     
-    // Finally, map data to links and nodes
-    link = svg.selectAll(".link");
-    link = link.data(links)
-    link.enter().append("line")
-        .attr("class", "link hiddenOpacity");
-    link.exit().remove();
-
-    node = svg.selectAll(".node");
-    node = node.data(nodes)
-    node.enter().append("circle")
-        .attr("class", "node")
-        .call(force.drag);
-    node.exit().remove();
-    node.transition(100)
-        .style("fill", nodeColor)
-        .style("stroke", nodeBorder)
-        .attr("r", nodeSize);
-
-    // (Re-)enable forced layout in case new nodes were added
-    if (newNodes) { force.start(); }
+    restart();    
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
-      scc.order(addOptionsToOrder(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
+      scc.order(finalize(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
     }
 
   }
@@ -514,7 +582,7 @@ scc.modules.Graph = function() {
    * is not (yet) available from the server. Show a message on the graph canvas
    */
   this.notready = function() {
-    $("#graph_background").text("Loading...").fadeIn();
+    $("#graph_background").text("Data Provider not ready, retrying...").fadeIn();
   };
 
   /**
@@ -545,6 +613,103 @@ scc.modules.Graph = function() {
     nodeRefs = {};
     linkRefs = {};
   };
+
+  d3.select("#graph_canvas_overlay").on("mousedown.selectNodes", function (e) {
+    var coords = d3.mouse(this);
+    selectionX = coords[0]
+    selectionY = coords[1]
+    $("#graph_canvas_selection").hide();
+    $("#graph_canvas_selection").css({"left": selectionX, "top": selectionY,
+                                      "height": 1, "width": 1});
+    $("#graph_canvas_selection").show();
+  });
+
+  d3.select("#graph_canvas_overlay").on("mousemove.selectNodes", function (e) {
+    var coords = d3.mouse(this);
+    $("#graph_canvas_selection").css({"width": coords[0] - selectionX, 
+                                      "height": coords[1] - selectionY});
+  });
+
+  d3.select("#graph_canvas_overlay").on("mouseup.selectNodes", function (e) {
+    var coords = d3.mouse(this);
+    selectedNodes = $("circle").filter(function (i) {
+      var boundingRect = this.getBoundingClientRect()
+      if (boundingRect.left-301 > selectionX && 
+          boundingRect.bottom > selectionY &&
+          boundingRect.right-301 < coords[0] && 
+          boundingRect.bottom < coords[1]) { 
+        return true;
+      }
+      return false;
+    });
+    selectedNodes.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
+    $("button").removeClass("active");
+    $("#gd_removeBySelect").addClass("snd");
+    $("#gd_removeBySelectRemove").removeClass("hidden");
+    $("#graph_canvas_selection").hide();
+    $("#graph_canvas_overlay").fadeOut();
+    $("#graph_canvas_overlay").removeClass("pickingNodes");
+  });
+
+  /**
+   * Handler that allows the user to draw a shape around a number of nodes to 
+   * select all of them.
+   */
+  $("#gd_removeBySelect").click(function (e) { 
+    e.preventDefault();
+    node.style("fill", nodeColor)
+        .style("stroke", nodeBorder)
+    if ($("#gd_removeBySelect").text() == "Cancel") {
+      $("#gd_removeBySelect").text("Select");
+      $("#gd_removeBySelect").removeClass("snd");
+      $("#gd_removeBySelectRemove").addClass("hidden");
+      $("#graph_canvas_selection").hide();
+      $("#graph_canvas_overlay").fadeOut();
+      $("#graph_canvas_overlay").removeClass("pickingNodes");
+      $("button").removeClass("active");
+    }
+    else {
+      $("#graph_canvas_overlay").addClass("pickingNodes");
+      $("#graph_canvas_overlay").fadeIn();
+      $("#gd_removeBySelect").addClass("active");
+      $("#gd_removeBySelect").text("Cancel");
+    }
+  });
+  // TODO: document
+  $("#gd_removeBySelectRemove").click(function (e) { 
+    $("#gd_removeBySelect").text("Select");
+    $("#gd_removeBySelect").removeClass("snd");
+    $("#gd_removeBySelectRemove").addClass("hidden");
+    var selectedNodeIds = $.map(selectedNodes, function (node, key) { 
+      return node.__data__.id;
+    });
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (selectedNodeIds.indexOf(n.id) != -1) {
+        nodes.splice(i, 1)
+        nodeRefs[n.id] = undefined;
+        i--
+      }
+      else {
+        nodeRefs[n.id] = i;
+      }
+    }
+    for (var i = 0; i < links.length; i++) {
+      var l = links[i]
+      linkId = l.source.id + "-" + l.target.id;
+      if (selectedNodeIds.indexOf(l.source.id) != -1 ||
+          selectedNodeIds.indexOf(l.target.id) != -1) {
+        links.splice(i, 1)
+        linkRefs[l.id] = undefined;
+        i--
+      }
+      else {
+        linkRefs[l.id] = i;
+      }
+    }
+    nodeStorage.save();
+    restart();
+  });
 
   /**
    * Find the DOM element of the graph node where the id contains the given
@@ -612,8 +777,8 @@ scc.modules.Graph = function() {
   this.loadNodeById = function (id, cb) {
     orderTemplate = {"provider": "graph", 
                      "query": "id", 
-                     "id": id};
-    scc.order(addOptionsToOrder(orderTemplate), 0, cb);
+                     "nodeIds": [id]};
+    scc.order(finalize(orderTemplate), 0, cb);
   }
 
   /**
@@ -621,27 +786,25 @@ scc.modules.Graph = function() {
    * it from the server
    * @param {string} id - The node id
    */
-  this.searchById = function (id) {
-    if (id == "") {
-      $("#gs_searchId").val("Search and hit Enter to execute");
+  this.addByIds = function (s) {
+    if (s == "") {
+      $("#gs_addIds").val("Search and hit Enter to execute");
       return;
     }
-    var node = scc.consumers.Graph.findExistingNode(id);
-    if (!node) {
+    var node = scc.consumers.Graph.findExistingNodes(s);
+    if (!nodes) {
       $("#graph_tooltip").fadeOut(200);
-      scc.consumers.Graph.loadNodeById(id, function () {
-        setTimeout(function () { scc.consumers.Graph.highlightNode(id) }, 1500);
-      });
+      scc.consumers.Graph.addByIds(s)
     }
     else {
       scc.consumers.Graph.highlightNode(id); 
     }
   }
 
-  $("#gs_searchById").click(function (e) {
+  $("#gs_addByIdsButton").click(function (e) {
     e.preventDefault();
-    var id = $("#gs_searchId").val();
-    scc.consumers.Graph.searchById(id);
+    var ids = $("#gs_addIds").val();
+    scc.consumers.Graph.addById(ids);
   });
           
   /**
@@ -649,18 +812,15 @@ scc.modules.Graph = function() {
    * specified by the user.
    * @param {Event} e - The event that triggered the call
    */
-  var searchTop = function (e) {
+  var addTop = function (e) {
     e.preventDefault();
-    scc.consumers.Graph.reset();
-    orderTemplate = {"provider": "graph", 
-             "query": "top", 
-             "topCriterium": $("#gs_topCriterium").val()};
-    scc.order(addOptionsToOrder(orderTemplate));
-    $("button").removeClass("active");
-    $("#gs_searchByTop").addClass("active");
-    return false;
+    scc.busy();
+    orderTemplate = { "query": "top", 
+                      "topCriterium": $("#gs_topCriterium").val()};
+    scc.order(finalize(orderTemplate));
+    $("button").addClass("disabled");
   };
-  $("#gs_searchByTop").click(searchTop);
+  $("#gs_addByTop").click(addTop);
 
   /**
    * Set the design of the given node property to the given node metric.
@@ -687,18 +847,6 @@ scc.modules.Graph = function() {
     }
   };
 
-  // TODO: Do we need this functionality?
-  this.setNodeSelection = function (property, choice) {
-    switch (property) {
-      case "gs_searchId": 
-          scc.settings.set({"graph": {"options": {"gs_searchId": choice}}});
-          break;
-      case "gs_topCriterium": 
-          scc.settings.set({"graph": {"options": {"gs_topCriterium": choice}}});
-          break;
-    }
-  };
-
   /**
    * Handler called when a 'select' HTML element is changed. The choice is
    * presisted to the settings hash.
@@ -709,24 +857,28 @@ scc.modules.Graph = function() {
     scc.consumers.Graph.setGraphDesign(property.attr("id"), property.val());
   });
 
-  // TODO: Do we need this functionality?
-  $("#cNodeSelection").find("select,input").keyup(function (e) {
-    var property = $(this);
-    scc.consumers.Graph.setNodeSelection(property.attr("id"), property.val());
+  /**
+   * Handler called when the user wants to load the vicinity of all nodes
+   * @param {Event} e - The event that triggered the call
+   */
+  $("#gs_addAllVicinities").click(function (e) { 
+    e.preventDefault();
+    scc.order(finalize({"provider": "graph",
+                        "nodeIds":  nodeStorage.get(),
+                        "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) }));
   });
 
   /**
-   * Handler called when the vicinity 'incoming' option changes. Persists the 
-   * choice to the settings hash and re-orders the graph with the new setting
+   * Handler called when the user clicks on button to remove all nodes
    * @param {Event} e - The event that triggered the call
    */
-  $("#gp_vicinityIncoming").change(function (e) { 
-    var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_vicinityIncoming": property.val() }}});
+  $("#gd_removeAll").click(function (e) { 
+    e.preventDefault();
+    nodes = []
+    nodeStorage.save();
     scc.consumers.Graph.reset();
-    scc.consumers.Graph.order();
+    scc.consumers.Graph.update();
   });
-
 
   /**
    * Handler called when the vicinity radius option changes. Persists the 
@@ -736,8 +888,6 @@ scc.modules.Graph = function() {
   $("#gp_vicinityRadius").change(function (e) { 
     var property = $(this);
     scc.settings.set({"graph": {"options": {"gp_vicinityRadius": property.val() }}});
-    scc.consumers.Graph.reset();
-    scc.consumers.Graph.order();
   });
 
   /**
@@ -745,11 +895,9 @@ scc.modules.Graph = function() {
    * choice to the settings hash and re-orders the graph with the new setting
    * @param {Event} e - The event that triggered the call
    */
-  $("#gp_maxVertices").change(function (e) { 
+  $("#gp_targetCount").change(function (e) { 
     var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_maxVertices": property.val() }}});
-    scc.consumers.Graph.reset();
-    scc.consumers.Graph.order();
+    scc.settings.set({"graph": {"options": {"gp_targetCount": property.val() }}});
   });
 
   /**

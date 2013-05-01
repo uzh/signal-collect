@@ -1,7 +1,6 @@
 /*
  *  @author Carol Alexandru
- *  @author Silvan Troxler
- *  
+ *  @author Silvan Troxler *  
  *  Copyright 2013 University of Zurich
  *      
  *  Licensed below the Apache License, Version 2.0 (the "License");
@@ -129,6 +128,16 @@ scc.Settings = function() {
 
 $(document).ready(function() {
   scc.settings = new scc.Settings();
+
+  /**
+   * Changes the cursor globally to busy
+   */
+  scc.busy = function () { $("body,a,select,label").addClass("busy"); }
+
+  /**
+   * Removes the busy cursor globally
+   */
+  scc.notBusy = function () { $("body,a,select,label").removeClass("busy"); }
 
   /** 
    * Instantiates scc.webSocket with a ReconnectingWebSocket and overrides

@@ -57,7 +57,7 @@ scc.modules.BreakConditions = function () {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    scc.order({"provider": "breakconditions"});
+    //scc.order({"provider": "breakconditions"});
   }
 
   /**
@@ -178,10 +178,12 @@ scc.modules.BreakConditions = function () {
     if ($("#graph_canvas").hasClass("picking")) {
       $("#graph_canvas").removeClass("picking");
       $("#gc_useMouse").removeClass("active");
+      $("#gc_useMouse").text("Select");
     }
     else {
       $("#graph_canvas").addClass("picking");
       $("#gc_useMouse").addClass("active");
+      $("#gc_useMouse").text("Cancel");
     }
   });
 
@@ -192,6 +194,7 @@ scc.modules.BreakConditions = function () {
    */
   d3.select("#graph_canvas").on("click.breakconditions", function (e) {
     if (!$("#graph_canvas").hasClass("picking")) { return; }
+    $("#gc_useMouse").text("Select");
     $("#graph_canvas").removeClass("picking");
     $("#gc_useMouse").removeClass("active");
     var target = d3.event.target;
