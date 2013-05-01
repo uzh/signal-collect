@@ -120,8 +120,9 @@ class WorkerImplementation[Id, Signal](
       messageBus.sendToCoordinator(status)
     } else {
       val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
-      log.error(msg)
       println(msg)
+      log.debug(msg)
+      throw new Exception(msg)
     }
   }
 
@@ -439,24 +440,37 @@ class WorkerImplementation[Id, Signal](
       jmx_system_load = osBean.getSystemCpuLoad())
   }
 
+  protected def logIntialization {
+    if (messageBus.isInitialized) {
+      val msg = s"Worker $workerId has a fully initialized message bus."
+      //println(msg)
+      log.debug(msg)
+      sendStatusToCoordinator
+    }
+  }
+
   def registerWorker(otherWorkerId: Int, worker: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerWorker(otherWorkerId, worker)
+    logIntialization
   }
 
   def registerNode(nodeId: Int, node: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerNode(nodeId, node)
+    logIntialization
   }
 
   def registerCoordinator(coordinator: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerCoordinator(coordinator)
+    logIntialization
   }
 
   def registerLogger(logger: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerLogger(logger)
+    logIntialization
   }
 
 } 

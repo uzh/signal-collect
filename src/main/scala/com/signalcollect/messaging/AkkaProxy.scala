@@ -122,12 +122,27 @@ class AkkaProxy[ProxiedClass](
 
 case class Command[ParameterType](className: String, methodDescription: String, arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
   def apply(proxiedClass: ParameterType) = {
-//    println(s"Command: $methodDescription")
-    val clazz = Class.forName(className)
-    val methods = clazz.getMethods map (method => (method.toString, method)) toMap
-    val method = methods(methodDescription)
-    val result = method.invoke(proxiedClass, arguments: _*)
-    result
+    try {
+      val clazz = Class.forName(className)
+      val methods = clazz.getMethods map (method => (method.toString, method)) toMap
+      val method = methods(methodDescription)
+      val result = method.invoke(proxiedClass, arguments: _*)
+      result
+    } catch {
+      case t: Throwable =>
+        val argsString = {
+          if (arguments != null) {
+            arguments.toList.mkString(", ")
+          } else {
+            "null"
+          }
+        }
+        println(s"Exception when trying to execute $methodDescription with argument(s) $argsString")
+        println(t.getCause)
+        println(t.getStackTraceString)
+        println("Finished printing stack trace")
+        throw t
+    }
   }
 
   override def toString: String = {

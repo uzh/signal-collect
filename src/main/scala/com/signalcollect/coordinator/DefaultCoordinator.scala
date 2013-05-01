@@ -91,9 +91,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
 
   var lastHeartbeatTimestamp = 0l
+  
+  var allWorkersInitialized = false
 
   def shouldSendHeartbeat: Boolean = {
-    messageBus.isInitialized && (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
+    allWorkersInitialized && messageBus.isInitialized && (System.nanoTime - lastHeartbeatTimestamp) > heartbeatInterval
   }
 
   var globalQueueSizeLimitPreviousHeartbeat = 0l
@@ -210,6 +212,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     // Only update worker status if no status received so far or if the current status is newer.
     if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant < ws.messagesSent.sumRelevant) {
       workerStatus(ws.workerId) = ws
+      if (!allWorkersInitialized) {
+        allWorkersInitialized = workerStatus forall (_ != null)
+      }
     }
   }
 
