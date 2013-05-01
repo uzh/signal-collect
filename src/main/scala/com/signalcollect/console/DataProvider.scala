@@ -180,8 +180,6 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
   val workerApi = coordinator.getWorkerApi 
 
   def fetchConditions(e: Execution): JObject = {
-    println(e);
-    println(e.conditions);
     val active = e.conditions.map { case (id, c) =>
       Toolkit.unpackObject(BreakConditionContainer(id, c.name.toString, c.props.toMap))
     }.toList
