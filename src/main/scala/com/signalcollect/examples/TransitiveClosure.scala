@@ -81,7 +81,7 @@ object TransitiveClosure extends App {
 
   // remove output file from last time and upload data file
   //torqueJobSubmitter.executeCommandOnClusterManager("rm /home/user/" + username + "/out/" + jobname + ".out")
-  //torqueJobSubmitter.copyFileToCluster("Cit-HepPh.txt", "Cit-HepPh.txt")
+  torqueJobSubmitter.copyFileToCluster("Cit-HepPh.txt", "Cit-HepPh.txt")
 
   val torqueNodeProvisioner = new TorqueNodeProvisioner(
     torqueHost = new TorqueHost(
@@ -92,7 +92,7 @@ object TransitiveClosure extends App {
 
   println("Building graph...")
   val graph = GraphBuilder
-    .withConsole(true, 8088)
+    .withConsole(true, 8089)
     .withNodeProvisioner(torqueNodeProvisioner)
     .build
 
