@@ -461,12 +461,12 @@ var LineChart = function() {
    */
   this.update = function(newData) {
     var currentDate = new Date(newData.timestamp);
-    var workerIds   = newData.workerStatistics.workerId;
+    var workerIds = newData.workerStatistics.workerId;
     newData = this.config.dataCallback(newData);
     
-    var shiftRight         = false;
-    var lowestXDomain      = x.domain()[0];
-    var highestXDomain     = x.domain()[1];
+    var shiftRight     = false;
+    var lowestXDomain  = x.domain()[0];
+    var highestXDomain = x.domain()[1];
     
     // is current highest date currently being showed?
     if (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain) {

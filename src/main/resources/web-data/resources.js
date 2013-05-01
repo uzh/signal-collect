@@ -483,6 +483,25 @@ scc.modules.Resources = function() {
     return found;
   }
 
+  
+  /**
+   * Selector of the computation start time.
+   * @type {Object}
+   */
+  var resStatStartTime = $("#resStatStartTime");
+
+  /**
+   * Selector of the computation run time.
+   * @type {Object}
+   */
+  var resStatRunTime = $("#resStatRunTime");
+
+  /**
+   * Selector of the number of workers.
+   * @type {Object}
+   */
+  var resStatWorkers = $("#resStatWorkers");
+
   /**
    * Function that is called by the main module when a message is received
    * from the WebSocket. A new message is distributed to the several charts
@@ -492,7 +511,7 @@ scc.modules.Resources = function() {
    */
   this.onmessage = function(msg) {
     
-    // check if there is more data in the websockets
+    // check if there is more data in the websocket response
     if (!hasAddedNewCharts) {
       for (var key in msg.workerStatistics) {
         if (msg.workerStatistics.hasOwnProperty(key) && !ChartsContains(key)) {
@@ -507,12 +526,11 @@ scc.modules.Resources = function() {
     
     // update statistics
     if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
-      var resStatStartTime = $("#resStatStartTime");
       if (resStatStartTime.html() == "?") {
         resStatStartTime.html(new Date(msg.timestamp).dateTime());
       }
-      $("#resStatRunTime").html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
-      $("#resStatWorkers").html(msg.workerStatistics.workerId.length);
+      resStatRunTime.html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
+      resStatWorkers.html(msg.workerStatistics.workerId.length);
       statisticsLastUpdated = new Date(msg.timestamp);
     }
     

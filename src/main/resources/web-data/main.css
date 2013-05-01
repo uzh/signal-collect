@@ -7,7 +7,7 @@ body {
 }
 
 a, a:visited {
-	color: #2c90c4;
+	color: #2580B0;
 }
 
 #title {
@@ -304,7 +304,7 @@ a, a:visited {
 }
 
 .panel input[type="radio"]:checked + label {
-  color: #2c90c4;
+  color: #2580B0;
 }
 .panel input[type="radio"]:checked + label:before {
   content: "●";
@@ -312,7 +312,7 @@ a, a:visited {
 }
 
 .panel select {
-  color: #59b6e8;
+  color: #2580B0;
   padding-left: 10px;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 14px;
