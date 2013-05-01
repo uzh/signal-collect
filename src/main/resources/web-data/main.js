@@ -274,6 +274,9 @@ $(document).ready(function() {
     if (scc.orders[id]) { scc.resetOrders(id); }
     scc.callbacks[id] = cb;
     scc.orders[id] = setTimeout(function() {
+      if (msg["provider"] == "graph") {
+        $("#graph_background").text("Loading...").fadeIn(50);
+      }
       var j = JSON.stringify(msg);
       try { 
         scc.webSocket.send(j); 

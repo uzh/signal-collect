@@ -75,10 +75,10 @@
                 </select><br/>
                 <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
                 <select id="gp_refreshRate"></select>
-                <h1><span>Add vertices</span></h1>
-                <span>Top </span>
+                <h1><span>Add nodes</span></h1>
+                <span class="panel_span">Top </span>
                 <select id="gp_targetCount"></select>
-                <span> of </span>
+                <span class="panel_span"> of </span>
                 <select id="gs_topCriterium">
                   <option>Highest degree</option>
                   <option>Highest State</option>
@@ -89,15 +89,17 @@
                 <button id="gs_addByTop">Add</button><br/>
                 <input id="gs_addIds" type="text">
                 <button id="gs_addIdsButton">Add</button><br/>
-                <span>Vicinity of all nodes </span>
+                <span class="panel_span">Vicinity of all nodes </span>
                 <button id="gs_addAllVicinities">Add</button><br/>
-                <span>Vicinity of selected nodes </span>
-                <button id="gs_addSelectedVicinities">Select</button><br/>
-                <button id="gs_addSelectedVicinitiesAdd" class="hidden">Add</button>
+                <span class="panel_span">Vicinity of selection </span>
+                <button id="gs_addVicinitiesBySelect">Select</button>
+                <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button>
                 <h1><span>Remove nodes</span></h1>
-                <span>Remove all nodes</span>
+                <span class="panel_span">Remove unconnected nodes</span>
+                <button id="gd_removeOrphans">Remove</button><br/>
+                <span class="panel_span">Remove all nodes</span>
                 <button id="gd_removeAll">Remove</button><br/>
-                <span>Select nodes to remove</span>
+                <span class="panel_span">Select nodes to remove</span>
                 <button id="gd_removeBySelect">Select</button>
                 <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
               </form> 
@@ -124,20 +126,18 @@
                 <select id="gd_nodeColor">
                   <option>Node state</option>
                   <option>Node id</option>
-                  <option>Node degree</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
-                  <option>Is Vicinity</option>
+                  <option>Latest query</option>
                   <option>All equal</option>
                 </select><br/>
                 <label for="gd_nodeBorder">Node outline color:</label>
                 <select id="gd_nodeBorder">
                   <option>Node state</option>
                   <option>Node id</option>
-                  <option>Node degree</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
-                  <option>Is Vicinity</option>
+                  <option>Latest query</option>
                   <option>All equal</option>
                 </select><br/>
               </form> 
@@ -234,6 +234,7 @@
     <div id="content">
       <div class="view" id="graph">
         <div id="graph_background_container">
+          <div id="graph_background_color"></div>
           <div id="graph_background">Loading...</div>
         </div>
         <div id="graph_tooltip">

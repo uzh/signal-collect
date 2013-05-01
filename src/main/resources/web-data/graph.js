@@ -17,8 +17,6 @@
  *  
  */
 
-// TODO: cleanup scan for missing trailing ";"
-
 /**
  * The default settings for the graph module.
  */
@@ -31,7 +29,7 @@ scc.defaults.graph = {"layout": {
                         "gs_topCriterium": "Highest degree",
                         "gd_nodeSize": "Node state",
                         "gd_nodeColor": "Node state",
-                        "gd_nodeBorder": "Is Vicinity",
+                        "gd_nodeBorder": "Latest query",
                         "gp_vicinityIncoming": "No",
                         "gp_vicinityRadius": "1",
                         "gp_targetCount": "10",
@@ -80,9 +78,9 @@ scc.modules.Graph = function() {
   var gradientDomain = [null,null];
   var zoomLevel = 1;
   var hoveringOverNode = undefined;
-  var highlightedNode = undefined;
-  var selectionX, selectionY;
+  var mouseClickCoords = undefined;
   var selectedNodes;
+  var pickAction;
 
   /**
    * The NodeStorageAgent provides method for setting, getting and adding to the
@@ -107,7 +105,7 @@ scc.modules.Graph = function() {
       });
       stored.push.apply(stored, nodeIds)
       localStorage["nodeIds"] = JSON.stringify(stored);
-    }
+    };
 
     /**
      * Replaces the existing list stored with the one passed to the funciton
@@ -115,17 +113,17 @@ scc.modules.Graph = function() {
      */
     this.save = function () {
       localStorage["nodeIds"] = JSON.stringify(
-        $.map(nodes, function (node, i) { console.log(node); return node.id; })
+        $.map(nodes, function (node, i) { return node.id; })
       );
-    }
+    };
 
     /**
      * Loads the list of nodes from the local storage
      */
     this.get = function () {
       return JSON.parse(localStorage["nodeIds"]);
-    }
-  }
+    };
+  };
   // Instantiate an agent for us to use
   var nodeStorage = new NodeStorageAgent();
 
@@ -142,8 +140,8 @@ scc.modules.Graph = function() {
     var scale = d3.scale.linear().domain(domain);
     scale.domain([0, 0.5, 1].map(scale.invert));
     scale.range(["green", "yellow", "red"]);
-    return scale
-  }
+    return scale;
+  };
 
   /**
    * Adds the settings selected by the user (such as the vicinity size to be 
@@ -154,7 +152,6 @@ scc.modules.Graph = function() {
   var finalize = function(o) { 
     o["provider"] = "graph"; 
     o["vicinityIncoming"] = ($("#gp_vicinityIncoming").val() == "Yes");
-    o["targetCount"] = parseInt($("#gp_targetCount").val());
     return o;
   };
 
@@ -164,23 +161,38 @@ scc.modules.Graph = function() {
    */
   var nodeDesign = {
     // functions returning a color
-    "gd_nodeColor": { "Node state": function(d) { return colorGradient(gradientDomain)(d.state); },
-                      "Node id": function(d) { return color(d.id); },
-                      "Is Vicinity": function(d) { return colorCategories(d.category); },
-                      "All equal": function(d) { return "#17becf"; },
-                      "Signal threshold": function(d) { return color(d.ss); },
-                      "Collect threshold": function(d) { return color(d.ss); },
-                      "Node degree": function (d) { return color(d.weight); }},
-    "gd_nodeBorder": { "Node state": function(d) { return colorGradient(gradientDomain)(d.state); },
-                       "Node id": function(d) { return color(d.id); },
-                       "Signal threshold": function(d) { return color(d.ss); },
-                       "Collect threshold": function(d) { return color(d.ss); },
-                       "All equal": function(d) { return "#9edae5"; },
-                       "Is Vicinity": function(d) { return colorCategories(d.category); },
-                       "Node degree": function (d) { return color(d.weight); }},
+    "gd_nodeColor":  {"Node state": function(d) { 
+                            return colorGradient(gradientDomain)(d.state); },
+                      "Node id": function(d) { 
+                            return color(d.id); },
+                      "Latest query": function(d) { 
+                            return d.recent == "new"?"#00ff00":"#ff0000"; },
+                      "All equal": function(d) { 
+                            return "#17becf"; },
+                      "Signal threshold": function(d) { 
+                            return color(d.ss); },
+                      "Collect threshold": function(d) { 
+                            return color(d.ss); }
+    },
+    "gd_nodeBorder": {"Node state": function(d) { 
+                            return colorGradient(gradientDomain)(d.state); },
+                      "Node id": function(d) { 
+                            return color(d.id); },
+                      "Signal threshold": function(d) { 
+                            return color(d.ss); },
+                      "Collect threshold": function(d) { 
+                            return color(d.ss); },
+                      "All equal": function(d) { 
+                            return "#9edae5"; },
+                      "Latest query": function(d) { 
+                            return d.recent == "new"?"#00ff00":"#ff0000"; }
+    },
     // functions returning a radius
-    "gd_nodeSize": { "Node state": function(d) { return scale(d.state.replace(/[^0-9.,]/g, '')); },
-                     "All equal": function(d) { return 5; }}
+    "gd_nodeSize": { "Node state": function(d) { 
+                            return scale(d.state.replace(/[^0-9.,]/g, '')); },
+                     "All equal": function(d) { 
+                            return 5; }
+    }
   };
 
   /**
@@ -227,14 +239,23 @@ scc.modules.Graph = function() {
   var nodeSize = nodeDesign["gd_nodeSize"]["Node state"];
 
   /**
+   * Wrapper function to do things that allways come with a graph order
+   */
+  var order = function (order, delay) {
+    if (!delay) { delay = 0; }
+    scc.order(order, delay)
+  };
+
+  /**
    * Order graph data using the options set in the GUI. This function may be
    * called by other modules as well, in case they require a graph refresh.
    */
-  this.update = function() {
+  this.update = function(delay) {
     if (nodeStorage.get().length > 0) {
-      scc.order(finalize({"provider": "graph",
-                          "query": "nodeIds",
-                          "nodeIds": nodeStorage.get() }));
+      order({"provider": "graph",
+             "query": "nodeIds",
+             "nodeIds": nodeStorage.get()
+      }, delay);
     }
   };
 
@@ -275,9 +296,6 @@ scc.modules.Graph = function() {
     if (scc.settings.get().graph.options["gs_addIds"] == "") {
       $("#gs_addIds").val(STR.addByIds);
     }
-    if (scc.settings.get().graph.options["gc_nodeId"] == "") {
-      $("#gc_nodeId").val(STR.pickNode);
-    }
   }
   this.layout();
 
@@ -288,8 +306,9 @@ scc.modules.Graph = function() {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    $("#graph_background").text("Loading...").fadeIn();
+    $("#graph_background").text("Loading...").fadeIn(50);
 
+    // Add an SVG element to the canvas and enable the d3 zoom functionality
     svg = d3.select("#graph_canvas").append("svg")
         .attr("width", "100%")
         .attr("height", "100%")
@@ -305,7 +324,35 @@ scc.modules.Graph = function() {
                      "translate(" + d3.event.translate + ")" + 
                      " scale(" + zoomLevel + ")")
           }
-        })).append('svg:g')
+        })).append('svg:g');
+    // Disable double-click zooming, because we need double clicks to expand
+    // the vicinity of a node. Zooming remains possible using the mouse wheel.
+    d3.select("#graph_canvas > svg").on("dblclick.zoom", null);
+
+    // When double clicking a node, load the vicinity of the node
+    d3.select("#graph").on("dblclick", function (e) {
+      if (d3.event.target.tagName == "circle") {
+        var target = d3.event.target;
+        var data = target.__data__;
+        order({"provider": "graph",
+               "query": "nodeIds",
+               "nodeIds": [data.id],
+               "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+               "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+        });
+      }
+    });
+
+    /**
+     * Fill the tooltip with information from a data object
+     * @param {object} data - The data to use.
+     */
+    var fillTooltip = function (data) {
+        $("#node_id").text(data.id);
+        $("#node_state").text(data.state);
+        $("#node_ss").text(data.ss);
+        $("#node_cs").text(data.cs);
+    };
 
     /**
      * Handler for when the user hovers over the graph. Shows a tooltip when
@@ -318,36 +365,31 @@ scc.modules.Graph = function() {
       var data = target.__data__;
       var node = $(target);
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
+      var tooltip = $("#graph_tooltip");
+
+      // When over a node, show the tooltip, highlight its edges and hide all
+      // other edges in the graph
       if (d3.event.target.tagName == "circle") {
         $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
-        highlightedNode = undefined; 
         hoveringOverNode = data.id; 
-        $("#node_id").text(data.id);
-        $("#node_state").text(data.state);
-        $("#node_ss").text(data.ss);
-        $("#node_cs").text(data.cs);
+        fillTooltip(data);
         clearTimeout(fadeTimer);
-        var tooltip = $("#graph_tooltip");
-        $("#graph_tooltip").fadeIn(200);
+        tooltip.fadeIn(200);
         link.attr("class", function(o) {
-          if (o.source.id === data.id) { return "link outgoing"; }
-          if (o.target.id === data.id) { return "link"; }
-          return "link hiddenOpacity"
+          if (o.target.id === data.id) { return "link outgoing"; }
+          if (o.source.id === data.id) { return "link"; }
+          return "link hiddenOpacity";
         });
       }
+      // Otherwise, clear the tooltip and set a timeout to hide it soon
       else {
         hoveringOverNode = undefined; 
-        if (highlightedNode == undefined) {
-          $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
-          $("#node_id").text("-");
-          $("#node_state").text("-");
-          $("#node_ss").text("-");
-          $("#node_cs").text("-");
-          clearTimeout(fadeTimer);
-          fadeTimer = setTimeout(function() {
-            $("#graph_tooltip").fadeOut(200);
-          }, 500);
-        }
+        tooltip.css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
+        fillTooltip({"id": "-", "state": "-", "ss": "-", "cs": "-"});
+        clearTimeout(fadeTimer);
+        fadeTimer = setTimeout(function() {
+          tooltip.fadeOut(200);
+        }, 500);
         if (drawEdges == "Only on hover") {
           link.attr("class", "link hiddenOpacity");
         }
@@ -362,12 +404,14 @@ scc.modules.Graph = function() {
         .size([$("#content").width(), $("#content").height()])
         .nodes(nodes)
         .links(links)
-        .linkDistance(50)
-        .charge(function (d) { return nodeSize(d) * -40; });
+        .linkDistance(150)
+        .charge(-500);
+    
+    // node and link shall contain the SVG elements of the graph
     node = svg.selectAll(".node");
     link = svg.selectAll(".link");
 
-    // apply graph design options
+    // apply graph design options from the settings
     $.each(scc.settings.get().graph.options, function (key, value) {
       scc.consumers.Graph.setGraphDesign(key, value);
     });
@@ -398,42 +442,40 @@ scc.modules.Graph = function() {
         if (hoveringOverNode) {
           if (o.target.id === hoveringOverNode) { return "link outgoing"; }
           if (o.source.id === hoveringOverNode) { return "link"; }
-          return "link hiddenOpacity"
+          return "link hiddenOpacity";
         }
         // Else draw nodes depending on the drawEdges setting
         else {
           if (drawEdges == "Always" || 
              (drawEdges == "When graph is still" && 
-             force.alpha() < 0.02)) { return "link" }
-          else { return "link hiddenOpacity" }
+             force.alpha() < 0.02)) { return "link"; }
+          else { return "link hiddenOpacity"; }
         }
       });
-
-      // If a node has been searched for, also move the tooltip with the node
-      if (highlightedNode) {
-        var boundingRect = highlightedNode.getBoundingClientRect()
-        var leftOffset = boundingRect.left - 300 + (boundingRect.width/2) + 10
-        var topOffset = boundingRect.bottom - (boundingRect.height/2) + 10
-        $("#graph_tooltip").css({"left": leftOffset + "px", 
-                                 "top": topOffset + "px"});
-      }
-
     });
 
     // enable the forced layout
-    restart();
+    restart(true);
   }
 
-  var restart = function () {
-    link = link.data(links, function(d) { return d.id; })
+  /**
+   * Update the visual graph representation.
+   * @param {boolean} graphChanged - Were nodes/edges added or removed?
+   */
+  var restart = function (graphChanged) {
+
+    // Update the link data
+    link = link.data(links, function(d) { return d.id; });
     link.enter().append("line")
         .attr("class", "link hiddenOpacity");
     link.exit().remove();
 
-    node = node.data(nodes, function(d) { return d.id; })
+    // update the node data
+    node = node.data(nodes, function(d) { return d.id; });
     node.enter().append("circle")
         .attr("class", "node")
-        .call(force.drag);
+        .call(force.drag)
+        .on("mousedown.drag", null);
     node.exit().remove();
     node.transition(100)
         .style("fill", nodeColor)
@@ -441,15 +483,21 @@ scc.modules.Graph = function() {
         .attr("r", nodeSize);
 
     if (nodes.length == 0) {
-      $("#graph_background").text("Canvas is empty: use the tools on the left to add and remove nodes").fadeIn();
+      $("#graph_background").text(
+          "Canvas is empty: use the tools on the left to add and remove nodes"
+      ).fadeIn(50);
     }
 
     // Edges should be drawn first so that nodes are draw above edges
     svg.selectAll("circle, line").sort(function (a, b) { 
       if (a.source == undefined) { return true }
       else { return false }
-    }).order()
-    force.start();
+    }).order();
+
+    // Restart the forced layout if necessary
+    if (graphChanged) {
+      force.start();
+    }
   };
 
   /**
@@ -466,11 +514,11 @@ scc.modules.Graph = function() {
 
     // If the server sent an empty graph, do nothing
     if (j.nodes == undefined) { 
-      $("#graph_background").text("There are no nodes matching your request").fadeIn();
+      $("#graph_background").text("There are no nodes matching your request").fadeIn(50);
       return; 
     }
     else {
-      $("#graph_background").fadeOut();
+      $("#graph_background").fadeOut(50);
     }
 
     // The server sends us two maps, one for nodes and one for links. In both,
@@ -509,12 +557,12 @@ scc.modules.Graph = function() {
     // node array.
 
     $.each(nodes, function(id, node) {
-      node["category"] = "old"; // TODO: do this more quickly?
+      node["recent"] = "old";
     });
     $.each(j.nodes, function(id, data) {
       if (nodeRefs[id] == undefined) {
-        // Update d3's node array
-        nodes.push({"id": id, "state": data.s, "category": "new", 
+        // The node hasn't existed yet. Update d3's node array
+        nodes.push({"id": id, "state": data.s, "recent": "new", 
                     "ss": data.ss, "cs": data.cs});
         // Store the index of the node in the lookup table
         nodeRefs[id] = nodes.length - 1;
@@ -523,7 +571,7 @@ scc.modules.Graph = function() {
       else {
         // Look up the node with this id in d3's node array and update it
         nodes[nodeRefs[id]].state = data.s;
-        nodes[nodeRefs[id]].category = "new";
+        nodes[nodeRefs[id]].recent = "new";
         nodes[nodeRefs[id]].ss = data.ss;
         nodes[nodeRefs[id]].cs = data.cs;
       }
@@ -547,7 +595,7 @@ scc.modules.Graph = function() {
         for (var t = 0; t < targets.length; t++) {
           linkId = source + "-" + targets[t];
           if (linkRefs[linkId] == undefined) {
-            // Update d3's link array
+            // The link hasn't existed yet. Update d3's link array
             links.push({"id": linkId,
                         "source": nodes[nodeRefs[source]], 
                         "target": nodes[nodeRefs[targets[t]]]});
@@ -561,11 +609,11 @@ scc.modules.Graph = function() {
       });
     }
     
-    restart();    
+    restart(newNodes);    
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
-      scc.order(finalize(orderTemplate), parseInt($("#gp_refreshRate").val())*1000);
+      scc.consumers.Graph.update(parseInt($("#gp_refreshRate").val())*1000);
     }
 
   }
@@ -582,7 +630,7 @@ scc.modules.Graph = function() {
    * is not (yet) available from the server. Show a message on the graph canvas
    */
   this.notready = function() {
-    $("#graph_background").text("Data Provider not ready, retrying...").fadeIn();
+    $("#graph_background").text("Data Provider not ready, retrying...").fadeIn(50);
   };
 
   /**
@@ -614,101 +662,198 @@ scc.modules.Graph = function() {
     linkRefs = {};
   };
 
+
+  /**
+   * Take two coordinates and use them as opposite corner of a rectangle.
+   * Calculate the position and size of the resulting rectangle.
+   * @param {array<int>} cornerA - The [x,y] position of the first corner
+   * @param {array<int>} cornerB - The [x,y] position of the second corner
+   * @return {array<int>} dimensions - The [x, y, w, h] dimensions
+   */
+  var cornersToDimensions = function (cornerA, cornerB) {
+    var left = Math.min(cornerA[0],cornerB[0]);
+    var top = Math.min(cornerA[1],cornerB[1]);
+    var width = Math.max(cornerA[0],cornerB[0]) - left;
+    var height = Math.max(cornerA[1],cornerB[1]) - top;
+    return [left, top, width, height];
+  };
+
+  /**
+   * d3 handler that initiates a selection using the mouse to draw a rectangle.
+   */
   d3.select("#graph_canvas_overlay").on("mousedown.selectNodes", function (e) {
-    var coords = d3.mouse(this);
-    selectionX = coords[0]
-    selectionY = coords[1]
-    $("#graph_canvas_selection").hide();
-    $("#graph_canvas_selection").css({"left": selectionX, "top": selectionY,
-                                      "height": 1, "width": 1});
+    // Store the positions of where the mouse button was pressed
+    mouseClickCoords = d3.mouse(this);
+    // Place the selection rectangle at the right spot and show it
+    $("#graph_canvas_selection").css({"height": 0, "width": 0});
     $("#graph_canvas_selection").show();
   });
 
+  /**
+   * d3 handler that adjusts the selection rectangle when moving the mouse
+   */
   d3.select("#graph_canvas_overlay").on("mousemove.selectNodes", function (e) {
-    var coords = d3.mouse(this);
-    $("#graph_canvas_selection").css({"width": coords[0] - selectionX, 
-                                      "height": coords[1] - selectionY});
+    if (mouseClickCoords) {
+      // update the width
+      var coords = d3.mouse(this);
+      var dimensions = cornersToDimensions(coords, mouseClickCoords);
+      $("#graph_canvas_selection").css({"left": dimensions[0], 
+                                        "top": dimensions[1],
+                                        "width": dimensions[2], 
+                                        "height": dimensions[3]
+      });
+    }
   });
 
+  /**
+   * d3 handler that finally calculates which nodes fall into the selection
+   * and then adjusts the panel buttons depending on the action that follows
+   * this selection.
+   */
   d3.select("#graph_canvas_overlay").on("mouseup.selectNodes", function (e) {
+    // Filter nodes to find the ones inside the selection rectangle
     var coords = d3.mouse(this);
     selectedNodes = $("circle").filter(function (i) {
       var boundingRect = this.getBoundingClientRect()
-      if (boundingRect.left-301 > selectionX && 
-          boundingRect.bottom > selectionY &&
-          boundingRect.right-301 < coords[0] && 
-          boundingRect.bottom < coords[1]) { 
+      if (boundingRect.left-301 > Math.min(coords[0], mouseClickCoords[0]) && 
+          boundingRect.bottom > Math.min(coords[1], mouseClickCoords[1]) &&
+          boundingRect.right-301 < Math.max(coords[0], mouseClickCoords[0]) && 
+          boundingRect.bottom < Math.max(coords[1], mouseClickCoords[1])) { 
         return true;
       }
       return false;
     });
+
+    // Highlight the selected nodes
     selectedNodes.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
+
+    // Modify the panel buttons depending on the current action
     $("button").removeClass("active");
-    $("#gd_removeBySelect").addClass("snd");
-    $("#gd_removeBySelectRemove").removeClass("hidden");
+    switch (pickAction) {
+      case "remove":
+        $("#gd_removeBySelect").addClass("snd");
+        $("#gd_removeBySelectRemove").removeClass("hidden");
+        break;
+      case "addVicinities":
+        $("#gs_addVicinitiesBySelect").addClass("snd");
+        $("#gs_addVicinitiesBySelectAdd").removeClass("hidden");
+        break;
+    }
+
+    // Hide the selection rectangle and overlay
     $("#graph_canvas_selection").hide();
-    $("#graph_canvas_overlay").fadeOut();
+    $("#graph_canvas_overlay").fadeOut(100);
     $("#graph_canvas_overlay").removeClass("pickingNodes");
   });
 
   /**
-   * Handler that allows the user to draw a shape around a number of nodes to 
-   * select all of them.
+   * Handler for selecting nodes whose vicinities shall be loaded.
+   */
+  $("#gs_addVicinitiesBySelect").click(function (e) { 
+    e.preventDefault();
+    pickAction = "addVicinities";
+    // restore styling on all nodes
+    node.style("fill", nodeColor)
+        .style("stroke", nodeBorder);
+    $("button").removeClass("active");
+    selectedNodes = undefined;
+    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
+      // modify panel buttons
+      $("#gs_addVicinitiesBySelect").text("Select");
+      $("#gs_addVicinitiesBySelect").removeClass("snd");
+      $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
+      $("#graph_canvas_selection").hide();
+      $("#graph_canvas_overlay").fadeOut(100);
+      $("#graph_canvas_overlay").removeClass("pickingNodes");
+    }
+    else { // TODO: merge with code from removeBySelect
+      $("button").removeClass("snd");
+      $("#gd_removeBySelect").text("Select");
+      $("#gd_removeBySelectRemove").addClass("hidden");
+      $("#graph_canvas_overlay").addClass("pickingNodes");
+      $("#graph_canvas_overlay").fadeIn(100);
+      $("#gs_addVicinitiesBySelect").addClass("active");
+      $("#gs_addVicinitiesBySelect").text("Cancel");
+    }
+  });
+
+  /**
+   * Handler for finally loading the vicinities of the selected nodes.
+   */
+  $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
+    e.preventDefault();
+    $("#gs_addVicinitiesBySelect").text("Select");
+    $("#gs_addVicinitiesBySelect").removeClass("snd");
+    $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
+    // extract list of Ids from node list and order data
+    var selectedNodeIds = $.map(selectedNodes, function (node, key) { 
+      return node.__data__.id;
+    });
+    order({"provider": "graph",
+           "query": "nodeIds",
+           "nodeIds": selectedNodeIds,
+           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+           "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+    });
+  });
+
+  /**
+   * Handler for selecting nodes which shall be removed.
    */
   $("#gd_removeBySelect").click(function (e) { 
     e.preventDefault();
+    pickAction = "remove";
+    // restore styling on all nodes
     node.style("fill", nodeColor)
-        .style("stroke", nodeBorder)
+        .style("stroke", nodeBorder);
+    selectedNodes = undefined;
+    $("button").removeClass("active");
     if ($("#gd_removeBySelect").text() == "Cancel") {
       $("#gd_removeBySelect").text("Select");
       $("#gd_removeBySelect").removeClass("snd");
       $("#gd_removeBySelectRemove").addClass("hidden");
       $("#graph_canvas_selection").hide();
-      $("#graph_canvas_overlay").fadeOut();
+      $("#graph_canvas_overlay").fadeOut(100);
       $("#graph_canvas_overlay").removeClass("pickingNodes");
-      $("button").removeClass("active");
     }
     else {
+      $("button").removeClass("snd");
       $("#graph_canvas_overlay").addClass("pickingNodes");
-      $("#graph_canvas_overlay").fadeIn();
+      $("#gs_addVicinitiesBySelect").text("Select");
+      $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
+      $("#graph_canvas_overlay").fadeIn(100);
       $("#gd_removeBySelect").addClass("active");
       $("#gd_removeBySelect").text("Cancel");
     }
   });
-  // TODO: document
+
+  /**
+   * Handler for finally removing the selected nodes.
+   */
   $("#gd_removeBySelectRemove").click(function (e) { 
+    e.preventDefault();
     $("#gd_removeBySelect").text("Select");
     $("#gd_removeBySelect").removeClass("snd");
     $("#gd_removeBySelectRemove").addClass("hidden");
-    var selectedNodeIds = $.map(selectedNodes, function (node, key) { 
-      return node.__data__.id;
+    removeNodesFromCanvas(selectedNodes);
+  });
+
+  /**
+   * Handler called when the user clicks on button to remove all nodes
+   * @param {Event} e - The event that triggered the call
+   */
+  $("#gd_removeOrphans").click(function (e) { 
+    e.preventDefault();
+    var nodesWithEdges = {};
+    $.map(links, function (d, i) {
+      nodesWithEdges[d.source.id] = 1; 
+      nodesWithEdges[d.target.id] = 1; 
     });
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      if (selectedNodeIds.indexOf(n.id) != -1) {
-        nodes.splice(i, 1)
-        nodeRefs[n.id] = undefined;
-        i--
-      }
-      else {
-        nodeRefs[n.id] = i;
-      }
-    }
-    for (var i = 0; i < links.length; i++) {
-      var l = links[i]
-      linkId = l.source.id + "-" + l.target.id;
-      if (selectedNodeIds.indexOf(l.source.id) != -1 ||
-          selectedNodeIds.indexOf(l.target.id) != -1) {
-        links.splice(i, 1)
-        linkRefs[l.id] = undefined;
-        i--
-      }
-      else {
-        linkRefs[l.id] = i;
-      }
-    }
-    nodeStorage.save();
-    restart();
+    var nodeIds = Object.keys(nodesWithEdges);
+    var nodesWithoutEdges = node.filter(function (d, i) {
+      return nodeIds.indexOf(d.id) == -1;
+    });
+    removeNodesFromCanvas(nodesWithoutEdges[0]);
   });
 
   /**
@@ -717,88 +862,26 @@ scc.modules.Graph = function() {
    * @param {string} s - The string that should appear in the node id
    * @return {DOMElement|undefined} - The node with the matching id
    */
-  this.findExistingNode = function (s) {
-    var node = undefined;
-    d3.selectAll(".node").each(function () {
-      var data = this.__data__;
-      if (data.id.indexOf(s) !== -1) {
-        node = this;
-      }
+  this.findExistingNodes = function (ids) {
+    var existingNodes = node.filter(function (d, i) {
+      return ids.indexOf(d.id) != -1
     });
-    return node;
+    return existingNodes;
   };
-  /**
-   * Visually highlight the node where the id contains the given string.
-   * @param {string} s - The string that should appear in the node id
-   */
-  this.highlightNode = function (s) {
-    clearTimeout(fadeTimer);
-    $("#graph_tooltip").stop().css("opacity", "0.9");
-    var node = scc.consumers.Graph.findExistingNode(s);
-    if (!node) { 
-      showMsg("#warning", "There are no results for this query", true);
-      return;
-    }
-    highlightedNode = node;
-    var data = node.__data__;
-    var n = d3.select(node);
-    n.attr("r", nodeSize);
-    var r = n.attr("r");
-
-    // Highlight the node visually by flashing its size
-    var flash = function (count) {
-      n.transition().duration(120).ease("linear").attr("r", 30).each("end", function () {
-        n.transition().duration(120).ease("linear").attr("r", 5).each("end", function () {
-          if (count > 0) { flash(count-1) }
-          else { n.transition().duration(120).ease("linear").attr("r", nodeSize); }
-        });
-      });
-    };
-    flash(3);
-
-    // Now show the tooltip in the right position
-    $("#node_id").text(data.id);
-    $("#node_state").text(data.state);
-    $("#node_ss").text(data.ss);
-    $("#node_cs").text(data.cs);
-    var boundingRect = node.getBoundingClientRect()
-    var leftOffset = boundingRect.left - 300 + boundingRect.width
-    var topOffset = boundingRect.bottom
-    $("#graph_tooltip").css({"left": leftOffset + "px", 
-                             "top": topOffset + "px"});
-    $("#graph_tooltip").fadeIn(200);
-  };
-
-  /**
-   * Order graph data from the server for a single node with the given id.
-   * @param {string} id - The node id
-   * @param {function} cb - Callback called upon receiving the data
-   */
-  this.loadNodeById = function (id, cb) {
-    orderTemplate = {"provider": "graph", 
-                     "query": "id", 
-                     "nodeIds": [id]};
-    scc.order(finalize(orderTemplate), 0, cb);
-  }
 
   /**
    * Search the graph for the given id, and if the node is not present, order
    * it from the server
    * @param {string} id - The node id
    */
-  this.addByIds = function (s) {
-    if (s == "") {
+  this.addByIds = function (ids) {
+    if (ids == "") {
       $("#gs_addIds").val("Search and hit Enter to execute");
       return;
     }
-    var node = scc.consumers.Graph.findExistingNodes(s);
-    if (!nodes) {
-      $("#graph_tooltip").fadeOut(200);
-      scc.consumers.Graph.addByIds(s)
-    }
-    else {
-      scc.consumers.Graph.highlightNode(id); 
-    }
+    order({"provider": "graph", 
+           "query": "nodeIds", 
+           "nodeIds": ids});
   }
 
   $("#gs_addByIdsButton").click(function (e) {
@@ -815,9 +898,11 @@ scc.modules.Graph = function() {
   var addTop = function (e) {
     e.preventDefault();
     scc.busy();
-    orderTemplate = { "query": "top", 
-                      "topCriterium": $("#gs_topCriterium").val()};
-    scc.order(finalize(orderTemplate));
+    order({"provider": "graph",
+           "query": "top", 
+           "targetCount": parseInt($("#gp_targetCount").val()),
+           "topCriterium": $("#gs_topCriterium").val()
+    });
     $("button").addClass("disabled");
   };
   $("#gs_addByTop").click(addTop);
@@ -863,10 +948,55 @@ scc.modules.Graph = function() {
    */
   $("#gs_addAllVicinities").click(function (e) { 
     e.preventDefault();
-    scc.order(finalize({"provider": "graph",
-                        "nodeIds":  nodeStorage.get(),
-                        "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) }));
+    order({"provider": "graph",
+           "query":  "nodeIds",
+           "nodeIds":  nodeStorage.get(),
+           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+           "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+    });
   });
+
+  /**
+   * Removes the provided nodes from the graph cavas
+   * @param {object} nodeList - List of node items
+   */
+  var removeNodesFromCanvas = function(nodeList) {
+    // Extract node Ids from node items
+    scc.resetOrders("graph");
+    var nodeIds = $.map(nodeList, function (node, key) { 
+      return node.__data__.id;
+    });
+    // remove the nodes
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (nodeIds.indexOf(n.id) != -1) {
+        nodes.splice(i, 1);
+        nodeRefs[n.id] = undefined;
+        i--
+      }
+      else {
+        nodeRefs[n.id] = i;
+      }
+    }
+    // remove links that were connected to these nodes
+    for (var i = 0; i < links.length; i++) {
+      var l = links[i];
+      linkId = l.source.id + "-" + l.target.id;
+      if (nodeIds.indexOf(l.source.id) != -1 ||
+          nodeIds.indexOf(l.target.id) != -1) {
+        links.splice(i, 1);
+        linkRefs[l.id] = undefined;
+        i--
+      }
+      else {
+        linkRefs[l.id] = i;
+      }
+    }
+    // persist the new node selection and re-activate the graph layout
+    nodeStorage.save();
+    restart(true);
+    scc.consumers.Graph.update();
+  };
 
   /**
    * Handler called when the user clicks on button to remove all nodes
@@ -874,11 +1004,21 @@ scc.modules.Graph = function() {
    */
   $("#gd_removeAll").click(function (e) { 
     e.preventDefault();
-    nodes = []
+    nodes = [];
     nodeStorage.save();
     scc.consumers.Graph.reset();
     scc.consumers.Graph.update();
   });
+
+   /**
+    * Handler called when the vicinity 'incoming' option changes. Persists the 
+    * choice to the settings hash and re-orders the graph with the new setting
+    * @param {Event} e - The event that triggered the call
+    */
+  $("#gp_vicinityIncoming").change(function (e) { 
+    var property = $(this);
+    scc.settings.set({"graph": {"options": {"gp_vicinityIncoming": property.val() }}});
+   });
 
   /**
    * Handler called when the vicinity radius option changes. Persists the 

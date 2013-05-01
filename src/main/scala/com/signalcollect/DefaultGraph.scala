@@ -272,6 +272,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     console: ConsoleServer[Id],
     stats: ExecutionStatistics,
     parameters: ExecutionConfiguration) extends Execution {
+    var conditions = Map[String,BreakCondition]()
     var state = "initExecution"
     var iteration = 0
     if (console != null) { console.setInteractor(this) }
@@ -291,7 +292,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
     // user break condition management
     var conditionCounter = 0
-    var conditions = Map[String,BreakCondition]()
     var conditionsReached = Map[String,String]()
     def addCondition(condition: BreakCondition) {
       conditionCounter += 1

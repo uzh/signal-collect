@@ -247,7 +247,7 @@ a, a:visited {
   padding-left: 2%;
 }
 
-.panel span {
+.panel span.panel_span {
   height: 18px;
   padding: 2px 0 6px 5px;
   display: inline-block;
@@ -551,6 +551,17 @@ a, a:visited {
   overflow: hidden;
 }
 
+#graph_background_color {
+  z-index: 2;
+  background-color: #444;
+  position: absolute;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 #graph_background {
   display: none;
   position: absolute;
@@ -559,12 +570,13 @@ a, a:visited {
   height: 40px;
   width: 600px;
   margin: -20px 0 0 -300px;
-  z-index: 10;
+  z-index: 3;
   text-align: center;
   font-size: 35px;
   font-weight: bold;
   color: #222;
   text-shadow: 0 1px 1px #777;
+  background-color: transparent;
 }
 
 #graph_tooltip {
@@ -592,7 +604,7 @@ a, a:visited {
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #59b6e8;
+  background-color: transparent;
   opacity: 0.2;
   z-index: 5;
 }
@@ -600,7 +612,7 @@ a, a:visited {
   position: absolute;
   border: 1px solid #ddd;
   display: none;
-  background-color: #444;
+  background-color: #59b6e8;
   opacity: 0.3;
   z-index: 6;
   pointer-events: none;
@@ -613,16 +625,18 @@ a, a:visited {
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #444;
+  z-index: 4;
+  background-color: transparent;
 }
 #graph_canvas.picking,
-#graph_canvas.pickingRemove {
+#graph_canvas_selection,
+#graph_canvas_overlay.pickingNodes {
   cursor: crosshair;
 }
 
 .node {
   stroke: #fff;
-  stroke-width: 1.5px;
+  stroke-width: 3;
 }
 
 .link {
@@ -674,6 +688,7 @@ a, a:visited {
   background-color: #ff9100;
 }
 .node_link {
+  padding: none;
   color: #59b6e8;
   cursor: pointer;
 }

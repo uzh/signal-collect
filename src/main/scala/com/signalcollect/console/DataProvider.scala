@@ -180,6 +180,8 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
   val workerApi = coordinator.getWorkerApi 
 
   def fetchConditions(e: Execution): JObject = {
+    println(e);
+    println(e.conditions);
     val active = e.conditions.map { case (id, c) =>
       Toolkit.unpackObject(BreakConditionContainer(id, c.name.toString, c.props.toMap))
     }.toList
@@ -342,7 +344,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case Some("Collect score") => fetchTopScore("collect")
         case otherwise => new InvalidDataProvider(msg).fetch
       }
-      case otherwise => fetchTopDegree()
+      case otherwise => fetchInvalid(msg, "missing query")
     }
     
     ("provider" -> "graph") ~

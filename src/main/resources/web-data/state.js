@@ -107,7 +107,6 @@ scc.modules.State = function() {
         enabledButtons(["reset", "step", "collect", "continue", "terminate"])
         if (scc.consumers.Graph != undefined) {
           scc.consumers.Graph.autoRefresh = false;
-          scc.consumers.Graph.update();
           scc.consumers.BreakConditions.order();
         }
         break;
@@ -124,6 +123,7 @@ scc.modules.State = function() {
     // Else there are more choices:
     else {
       if (scc.consumers.Graph != undefined) {
+        scc.consumers.Graph.autoRefresh = false;
         scc.consumers.Graph.update();
       }
       switch (j.state) {
