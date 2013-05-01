@@ -43,29 +43,26 @@ import net.liftweb.json.JsonDSL._
 import java.io.BufferedReader
 import java.io.FileReader
 
-/** Handles the logging, it stores new messages and allows to retrieve them to send to the console.
-  * 
-  * @constructor defines needed variables and values, clears the log file.
-  */
-class ConsoleLogger extends Actor with Logger with ActorLogging {
+case class Get(level: LogLevel, number: Int)
 
-  /** Defines the name of the file in which log messages are stored. */
+class ConsoleLogger extends Actor with Logger with ActorLogging {
+//  println(context.self)
+
   def logFileName = "log_messages.txt"
-    
-  /** Stores the reader object used to read only new lines. */
   var logReader: BufferedReader = null
 
-  /** Number of lines to read at most per request. */
+  // number of lines to read per request
   val maxReadLines = 1000;
   
   // reset log file
   resetLog
   
   
-  /** Writes the passed `message` to the log message file.
-    * 
-    * @param message the log message to store
-    */
+  def getLogMessages: List[String] = {
+    readLog
+  }
+  
+  
   def writeLog(message: String) {
     val fileWriter = new FileWriter(logFileName, true)
     try {
@@ -77,15 +74,6 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
   
   
-  /** Creates a JSON string based on the passed log message arguments. 
-    * 
-    * @param level the level of the log message
-    * @param cause the cause of the log message
-    * @param logSource the source of the log message
-    * @param logClass the class of the log message
-    * @param message the message of the log message
-    * @return the string representing a JSON object.
-    */
   def createJsonString(
       level: String,
       cause: Throwable,
@@ -120,7 +108,6 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
   
   
-  /** Clears the file in which log messages are stored. */
   def resetLog {
     if (!logFileExists) {
       return
@@ -135,20 +122,12 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
   
   
-  /** Returns whether the log file exists.
-    * 
-    * @return whether or not the log file exists.
-    */
   def logFileExists: Boolean = {
     (new File(logFileName)).exists
   }
   
   
-  /** Returns new log messages added after the last request.
-    * 
-    * @return a list of log messages.
-    */
-  def getLogMessages: List[String] = {
+  def readLog: List[String] = {
     var logMessages: List[String] = List()
     if (!logFileExists) {
       return logMessages
@@ -165,11 +144,6 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
 
   
-  /** Handles requests regarding logging.
-    * 
-    * Forwards any log message type that should be stored, sends a list of log messages if these
-    * are requested.
-    */
   def receive = {
     case InitializeLogger(_) => sender ! LoggerInitialized
     case l @ Error(cause, logSource, logClass, message) =>
