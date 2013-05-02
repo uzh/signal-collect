@@ -97,7 +97,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   /**
    * How many graph modifications this worker will execute in one batch.
    */
-  val graphModificationBatchProcessingSize = 1000
+  val graphModificationBatchProcessingSize = 100
 
   def isInitialized = messageBus.isInitialized
 
