@@ -108,7 +108,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     
-    "return valid API result for provider 'resources'" in {
+    "return valid API result for provider 'resources.workerStatistics'" in {
       websocket.sendJsonOrderWithProvider("resources")
       val json = websocket.getJsonResponse
       val requiredProviderResults = Array(
@@ -133,7 +133,22 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "collectOperationsExecuted",
         "toCollectSize",
         "toSignalSize",
-        "workerId",
+        "workerId"
+      );
+
+      val providerResults = (json \\ "workerStatistics").children
+      val providerResultsMap = createMapFromJValueList(providerResults);
+      requiredProviderResults.foreach {
+        result =>
+          println(result)
+          providerResultsMap.contains(result) === true
+      }
+    }
+    
+    "return valid API result for provider 'resources.nodeStatistics'" in {
+      websocket.sendJsonOrderWithProvider("resources")
+      val json = websocket.getJsonResponse
+      val requiredProviderResults = Array(
         "runtime_cores",
         "jmx_system_load",
         "jmx_process_time",
@@ -148,7 +163,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "runtime_mem_total"    
       );
 
-      val providerResults = (json \\ "workerStatistics").children
+      val providerResults = (json \\ "nodeStatistics").children
       val providerResultsMap = createMapFromJValueList(providerResults);
       requiredProviderResults.foreach {
         result => providerResultsMap.contains(result) === true
@@ -280,12 +295,12 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     
-//    "return valid API result for provider 'graph'" in {
-//      websocket.sendJsonOrderWithProvider("graph")
-//      val json = websocket.getJsonResponse
-//      // the graph provider offers a lot of different API calls, we do not test them all
-//      (json \\ "provider").values === "graph"
-//    }
+    "return valid API result for provider 'graph'" in {
+      websocket.sendJsonOrder("{\"provider\":\"graph\",\"query\":\"top\", \"topCriterium\": \"Highest State\"}")
+      val json = websocket.getJsonResponse
+      // the graph provider offers a lot of different API calls, we do not test them all
+      (json \\ "provider").values === "graph"
+    }
     
     
     
