@@ -21,15 +21,15 @@
  * The default settings for the graph module.
  */
 scc.defaults.graph = {"layout": {
-                        "cNodeSelection": "show",
+                        "cVertexSelection": "show",
                         "cGraphDesign": "show"
                       },
                       "options": {
                         "gs_addIds": "",
                         "gs_topCriterium": "Highest degree",
-                        "gd_nodeSize": "Node state",
-                        "gd_nodeColor": "Node state",
-                        "gd_nodeBorder": "Latest query",
+                        "gd_verticesize": "Vertex state",
+                        "gd_vertexColor": "Vertex state",
+                        "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
                         "gp_vicinityRadius": "1",
                         "gp_targetCount": "60",
@@ -67,36 +67,36 @@ scc.modules.Graph = function() {
   var scale = d3.scale.linear()
     .range([5, 25])
     .clamp(true);
-  var nodes = [];
+  var vertices = [];
   var links = [];
-  var nodeRefs = {};
+  var vertexRefs = {};
   var linkRefs = {};
-  var node;
+  var vertex;
   var link;
   var fadeTimer;
   var orderTemplate = {"provider": "graph"};
   var gradientDomain = [null,null];
   var zoomLevel = 1;
-  var hoveringOverNode = undefined;
+  var hoveringOverVertex = undefined;
   var mouseClickCoords = undefined;
-  var selectedNodes;
+  var selectedVertices;
   var pickAction;
 
   /**
-   * The NodeStorageAgent provides method for setting, getting and adding to the
+   * The VertexStorageAgent provides method for setting, getting and adding to the
    * local storage which contains an array of vertexIds as strings. It represents
-   * the nodes which the user has loaded into the canvas
+   * the vertices which the user has loaded into the canvas
    * @constructor
    */
-  var NodeStorageAgent = function () {
+  var VertexStorageAgent = function () {
     // Initialize the localStorage if necessary
     if (localStorage["vertexIds"] == undefined || localStorage["vertexIds"] == "") { 
       localStorage["vertexIds"] = "[]";
     }
 
     /**
-     * Adds the given nodes to the local storage.
-     * @param {array<string>} vertexIds - The nodes to be added to the storage
+     * Adds the given vertices to the local storage.
+     * @param {array<string>} vertexIds - The vertices to be added to the storage
      */
     this.push = function (vertexIds) {
       var stored = this.get()
@@ -109,23 +109,23 @@ scc.modules.Graph = function() {
 
     /**
      * Replaces the existing list stored with the one passed to the funciton
-     * @param {array<string>} vertexIds - The nodes to be stored
+     * @param {array<string>} vertexIds - The vertices to be stored
      */
     this.save = function () {
       localStorage["vertexIds"] = JSON.stringify(
-        $.map(nodes, function (node, i) { return node.id; })
+        $.map(vertices, function (vertex, i) { return vertex.id; })
       );
     };
 
     /**
-     * Loads the list of nodes from the local storage
+     * Loads the list of vertices from the local storage
      */
     this.get = function () {
       return JSON.parse(localStorage["vertexIds"]);
     };
   };
   // Instantiate an agent for us to use
-  var nodeStorage = new NodeStorageAgent();
+  var verticestorage = new VertexStorageAgent();
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
@@ -171,11 +171,11 @@ scc.modules.Graph = function() {
    * An object containing the necessary transformation functions that can be
    * used to style the graph.
    */
-  var nodeDesign = {
+  var vertexDesign = {
     // functions returning a color
-    "gd_nodeColor":  {"Node state": function(d) { 
+    "gd_vertexColor":  {"Vertex state": function(d) { 
                             return colorGradient(gradientDomain)(d.state); },
-                      "Node id": function(d) { 
+                      "Vertex id": function(d) { 
                             return color(d.id); },
                       "Latest query": function(d) { 
                             return d.recent == "new"?"#00ff00":"#ff0000"; },
@@ -186,9 +186,9 @@ scc.modules.Graph = function() {
                       "Collect threshold": function(d) { 
                             return color(d.ss); }
     },
-    "gd_nodeBorder": {"Node state": function(d) { 
+    "gd_vertexBorder": {"Vertex state": function(d) { 
                             return colorGradient(gradientDomain)(d.state); },
-                      "Node id": function(d) { 
+                      "Vertex id": function(d) { 
                             return color(d.id); },
                       "Signal threshold": function(d) { 
                             return color(d.ss); },
@@ -200,7 +200,7 @@ scc.modules.Graph = function() {
                             return d.recent == "new"?"#00ff00":"#ff0000"; }
     },
     // functions returning a radius
-    "gd_nodeSize": { "Node state": function(d) { 
+    "gd_verticesize": { "Vertex state": function(d) { 
                             return sizeGradient(gradientDomain)(d.state.replace(/[^0-9.,]/g, '')); },
                      "All equal": function(d) { 
                             return 5; }
@@ -208,47 +208,47 @@ scc.modules.Graph = function() {
   };
 
   /**
-   * Set the color of nodes in the graph. Providing a string, all nodes will
+   * Set the color of vertices in the graph. Providing a string, all vertices will
    * have the same color. If a function is provided, it will be run for each
-   * node individually, resulting in different colors for different nodes.
+   * vertex individually, resulting in different colors for different vertices.
    * @param {string|function} s - The color or a function returning a color
    */
-  var setNodeColor = function (s) {
-    nodeColor = s;
-    node.transition().style("fill", s);
+  var setVertexColor = function (s) {
+    vertexColor = s;
+    vertex.transition().style("fill", s);
   };
   /**
-   * The default node color
+   * The default vertex color
    */
-  var nodeColor = nodeDesign["gd_nodeColor"]["Node state"];
+  var vertexColor = vertexDesign["gd_vertexColor"]["Vertex state"];
   
   /**
-   * Set the color of node borders (outlines) in the graph.
-   * @see setNodeColor
+   * Set the color of vertex borders (outlines) in the graph.
+   * @see setVertexColor
    * @param {string|function} s - The color or a function returning a color
    */
-  var setNodeBorder = function (s) {
-    nodeBorder = s;
-    node.transition().style("stroke", s);
+  var setVertexBorder = function (s) {
+    vertexBorder = s;
+    vertex.transition().style("stroke", s);
   };
   /**
-   * The default node border color
+   * The default vertex border color
    */
-  var nodeBorder = nodeDesign["gd_nodeBorder"]["Node id"];
+  var vertexBorder = vertexDesign["gd_vertexBorder"]["Vertex id"];
 
   /**
-   * Set the radius of nodes in the graph.
-   * @see setNodeColor
+   * Set the radius of vertices in the graph.
+   * @see setVertexColor
    * @param {int|function} s - The radius or a function returning a radius
    */
-  var setNodeSize = function (s) {
-    nodeSize = s;
-    node.transition().attr("r", s);
+  var setVertexSize = function (s) {
+    verticesize = s;
+    vertex.transition().attr("r", s);
   };
   /**
-   * The default node radius
+   * The default vertex radius
    */
-  var nodeSize = nodeDesign["gd_nodeSize"]["Node state"];
+  var verticesize = vertexDesign["gd_verticesize"]["Vertex state"];
 
   /**
    * Wrapper function to do things that allways come with a graph order
@@ -263,10 +263,10 @@ scc.modules.Graph = function() {
    * called by other modules as well, in case they require a graph refresh.
    */
   this.update = function(delay) {
-    if (nodeStorage.get().length > 0) {
+    if (verticestorage.get().length > 0) {
       order({"provider": "graph",
              "query": "vertexIds",
-             "vertexIds": nodeStorage.get()
+             "vertexIds": verticestorage.get()
       }, delay);
     }
   };
@@ -338,10 +338,10 @@ scc.modules.Graph = function() {
           }
         })).append('svg:g');
     // Disable double-click zooming, because we need double clicks to expand
-    // the vicinity of a node. Zooming remains possible using the mouse wheel.
+    // the vicinity of a vertex. Zooming remains possible using the mouse wheel.
     d3.select("#graph_canvas > svg").on("dblclick.zoom", null);
 
-    // When double clicking a node, load the vicinity of the node
+    // When double clicking a vertex, load the vicinity of the vertex
     d3.select("#graph").on("dblclick", function (e) {
       if (d3.event.target.tagName == "circle") {
         var target = d3.event.target;
@@ -360,30 +360,30 @@ scc.modules.Graph = function() {
      * @param {object} data - The data to use.
      */
     var fillTooltip = function (data) {
-        $("#node_id").text(data.id);
-        $("#node_state").text(data.state);
-        $("#node_ss").text(data.ss);
-        $("#node_cs").text(data.cs);
+        $("#vertex_id").text(data.id);
+        $("#vertex_state").text(data.state);
+        $("#vertex_ss").text(data.ss);
+        $("#vertex_cs").text(data.cs);
     };
 
     /**
      * Handler for when the user hovers over the graph. Shows a tooltip when
-     * hovering over a node.
+     * hovering over a vertex.
      * @param {Event} e - The event that triggered the call
      */
     d3.select("#graph").on("mousemove", function (e) {
       var coords = d3.mouse(this);
       var target = d3.event.target;
       var data = target.__data__;
-      var node = $(target);
+      var vertex = $(target);
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       var tooltip = $("#graph_tooltip");
 
-      // When over a node, show the tooltip, highlight its edges and hide all
+      // When over a vertex, show the tooltip, highlight its edges and hide all
       // other edges in the graph
       if (d3.event.target.tagName == "circle") {
         $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
-        hoveringOverNode = data.id; 
+        hoveringOverVertex = data.id; 
         fillTooltip(data);
         clearTimeout(fadeTimer);
         tooltip.fadeIn(200);
@@ -395,7 +395,7 @@ scc.modules.Graph = function() {
       }
       // Otherwise, clear the tooltip and set a timeout to hide it soon
       else {
-        hoveringOverNode = undefined; 
+        hoveringOverVertex = undefined; 
         tooltip.css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
         fillTooltip({"id": "-", "state": "-", "ss": "-", "cs": "-"});
         clearTimeout(fadeTimer);
@@ -414,13 +414,13 @@ scc.modules.Graph = function() {
     // Enable d3's forced directed graph layout
     force = d3.layout.force()
         .size([$("#content").width(), $("#content").height()])
-        .nodes(nodes)
+        .nodes(vertices)
         .links(links)
         .linkDistance(350)
         .charge(-500);
     
-    // node and link shall contain the SVG elements of the graph
-    node = svg.selectAll(".node");
+    // vertex and link shall contain the SVG elements of the graph
+    vertex = svg.selectAll(".vertex");
     link = svg.selectAll(".link");
 
     // apply graph design options from the settings
@@ -431,7 +431,7 @@ scc.modules.Graph = function() {
     /**
      * Handler on d3's force layout. This handler may be called several times
      * per second and as such causes the fluid animation to occur. On each 
-     * 'tick', the node positions need to be updated.
+     * 'tick', the vertex positions need to be updated.
      * @param {Event} e - The event that triggered the call
      */
     force.on("tick", function(e) {
@@ -439,8 +439,8 @@ scc.modules.Graph = function() {
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
       
-      // Update the node and link positions
-      node.attr("cx", function(d) { return d.x; })
+      // Update the vertex and link positions
+      vertex.attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
       link.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
@@ -450,13 +450,13 @@ scc.modules.Graph = function() {
       // Add classes to edges depending on options and user interaction
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       link.attr("class", function(o) {
-        // If the user is hovering over a node, only draw edges of that node
-        if (hoveringOverNode) {
-          if (o.target.id === hoveringOverNode) { return "link outgoing"; }
-          if (o.source.id === hoveringOverNode) { return "link"; }
+        // If the user is hovering over a vertex, only draw edges of that vertex
+        if (hoveringOverVertex) {
+          if (o.target.id === hoveringOverVertex) { return "link outgoing"; }
+          if (o.source.id === hoveringOverVertex) { return "link"; }
           return "link hiddenOpacity";
         }
-        // Else draw nodes depending on the drawEdges setting
+        // Else draw vertices depending on the drawEdges setting
         else {
           if (drawEdges == "Always" || 
              (drawEdges == "When graph is still" && 
@@ -472,7 +472,7 @@ scc.modules.Graph = function() {
 
   /**
    * Update the visual graph representation.
-   * @param {boolean} graphChanged - Were nodes/edges added or removed?
+   * @param {boolean} graphChanged - Were vertices/edges added or removed?
    */
   var restart = function (graphChanged) {
 
@@ -482,25 +482,25 @@ scc.modules.Graph = function() {
         .attr("class", "link hiddenOpacity");
     link.exit().remove();
 
-    // update the node data
-    node = node.data(nodes, function(d) { return d.id; });
-    node.enter().append("circle")
-        .attr("class", "node")
+    // update the vertex data
+    vertex = vertex.data(vertices, function(d) { return d.id; });
+    vertex.enter().append("circle")
+        .attr("class", "vertex")
         .call(force.drag)
         .on("mousedown.drag", null);
-    node.exit().remove();
-    node.transition(100)
-        .style("fill", nodeColor)
-        .style("stroke", nodeBorder)
-        .attr("r", nodeSize);
+    vertex.exit().remove();
+    vertex.transition(100)
+        .style("fill", vertexColor)
+        .style("stroke", vertexBorder)
+        .attr("r", verticesize);
 
-    if (nodes.length == 0) {
+    if (vertices.length == 0) {
       $("#graph_background").text(
-          "Canvas is empty: use the tools on the left to add and remove nodes"
+          "Canvas is empty: use the tools on the left to add and remove vertices"
       ).fadeIn(50);
     }
 
-    // Edges should be drawn first so that nodes are draw above edges
+    // Edges should be drawn first so that vertices are draw above edges
     svg.selectAll("circle, line").sort(function (a, b) { 
       if (a.source == undefined) { return true }
       else { return false }
@@ -522,24 +522,24 @@ scc.modules.Graph = function() {
     scc.notBusy();
     $("button").removeClass("disabled");
     // Keep references to the forced layout data
-    var newNodes = false;
+    var newVertices = false;
 
     // If the server sent an empty graph, do nothing
     if (j.vertices == undefined) { 
-      $("#graph_background").text("There are no nodes matching your request").fadeIn(50);
+      $("#graph_background").text("There are no vertices matching your request").fadeIn(50);
       return; 
     }
     else {
       $("#graph_background").fadeOut(50);
     }
 
-    // The server sends us two maps, one for nodes and one for links. In both,
-    // the nodes are identifies using strings. For example, given the following
-    // node map...
+    // The server sends us two maps, one for vertices and one for links. In both,
+    // the vertices are identifies using strings. For example, given the following
+    // vertex map...
     //
-    // {"1111":{ <node properties> },
-    //  "2222":{ <node properties> },
-    //  "3333":{ <node properties> }}
+    // {"1111":{ <vertex properties> },
+    //  "2222":{ <vertex properties> },
+    //  "3333":{ <vertex properties> }}
     //
     // and the following link map...
     //
@@ -549,51 +549,51 @@ scc.modules.Graph = function() {
     // we'd had received a graph that looks like a triangle. 
     // 
     // d3 needs a different representation for the graph. It keeps a list of
-    // nodes, not a map, and as such every node is only identifiable by its 
+    // vertices, not a map, and as such every vertex is only identifiable by its 
     // index in the list. This is not sufficient for our purpose, since we
-    // want to be able to update existing nodes without having to redraw the 
-    // whole graph but we have no way of mapping the actual node id to the 
-    // index used by d3. For this reason, we keep a lookup table, 'nodeRefs',
-    // which keeps the (nodeId -> index) mapping. The same thing happens for
+    // want to be able to update existing vertices without having to redraw the 
+    // whole graph but we have no way of mapping the actual vertex id to the 
+    // index used by d3. For this reason, we keep a lookup table, 'vertexRefs',
+    // which keeps the (vertexId -> index) mapping. The same thing happens for
     // the links. For example given the graph above, the resulting maps could be:
     //
-    // nodeRefs["1111"] = 0
-    // nodeRefs["2222"] = 1
-    // nodeRefs["3333"] = 2
+    // vertexRefs["1111"] = 0
+    // vertexRefs["2222"] = 1
+    // vertexRefs["3333"] = 2
     // linkRefs["1111-2222"] = 0
     // linkRefs["1111-3333"] = 1
     // linkRefs["2222-3333"] = 3
     //
-    // This way, we can later update node states, for exmaple by re-assigning
-    // to nodes[nodeRefs["1111"]], thereby updating the correct node in d3's
-    // node array.
+    // This way, we can later update vertex states, for exmaple by re-assigning
+    // to vertices[vertexRefs["1111"]], thereby updating the correct vertex in d3's
+    // vertex array.
 
-    $.each(nodes, function(id, node) {
-      node["recent"] = "old";
+    $.each(vertices, function(id, vertex) {
+      vertex["recent"] = "old";
     });
     $.each(j.vertices, function(id, data) {
-      if (nodeRefs[id] == undefined) {
-        // The node hasn't existed yet. Update d3's node array
-        nodes.push({"id": id, "state": data.s, "recent": "new", 
+      if (vertexRefs[id] == undefined) {
+        // The vertex hasn't existed yet. Update d3's vertex array
+        vertices.push({"id": id, "state": data.s, "recent": "new", 
                     "ss": data.ss, "cs": data.cs});
-        // Store the index of the node in the lookup table
-        nodeRefs[id] = nodes.length - 1;
-        newNodes = true;
+        // Store the index of the vertex in the lookup table
+        vertexRefs[id] = vertices.length - 1;
+        newVertices = true;
       }
       else {
-        // Look up the node with this id in d3's node array and update it
-        nodes[nodeRefs[id]].state = data.s;
-        nodes[nodeRefs[id]].recent = "new";
-        nodes[nodeRefs[id]].ss = data.ss;
-        nodes[nodeRefs[id]].cs = data.cs;
+        // Look up the vertex with this id in d3's vertex array and update it
+        vertices[vertexRefs[id]].state = data.s;
+        vertices[vertexRefs[id]].recent = "new";
+        vertices[vertexRefs[id]].ss = data.ss;
+        vertices[vertexRefs[id]].cs = data.cs;
       }
     });
-    nodeStorage.save();
+    verticestorage.save();
 
     // Determine maximum and minimum state to determine color gradient
-    gradientDomain = [d3.min(nodes, function (d) { return parseFloat(d.state) }),
-                      d3.median(nodes, function (d) { return parseFloat(d.state) }),
-                      d3.max(nodes, function (d) { return parseFloat(d.state) })]
+    gradientDomain = [d3.min(vertices, function (d) { return parseFloat(d.state) }),
+                      d3.median(vertices, function (d) { return parseFloat(d.state) }),
+                      d3.max(vertices, function (d) { return parseFloat(d.state) })]
 
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
@@ -602,19 +602,19 @@ scc.modules.Graph = function() {
           if (linkRefs[linkId] == undefined) {
             // The link hasn't existed yet. Update d3's link array
             links.push({"id": linkId,
-                        "source": nodes[nodeRefs[source]], 
-                        "target": nodes[nodeRefs[targets[t]]]});
+                        "source": vertices[vertexRefs[source]], 
+                        "target": vertices[vertexRefs[targets[t]]]});
             // Store the index of the link in the lookup table
             linkRefs[linkId] = links.length - 1;
           }
           else {
-            // One could update d3's link array here, like with the nodes
+            // One could update d3's link array here, like with the vertices
           }
         }
       });
     }
     
-    restart(newNodes);    
+    restart(newVertices);    
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
@@ -661,9 +661,9 @@ scc.modules.Graph = function() {
   this.destroy = function() {
     scc.resetOrders("graph");
     $("#graph_canvas").empty();
-    nodes = [];
+    vertices = [];
     links = [];
-    nodeRefs = {};
+    vertexRefs = {};
     linkRefs = {};
   };
 
@@ -686,7 +686,7 @@ scc.modules.Graph = function() {
   /**
    * d3 handler that initiates a selection using the mouse to draw a rectangle.
    */
-  d3.select("#graph_canvas_overlay").on("mousedown.selectNodes", function (e) {
+  d3.select("#graph_canvas_overlay").on("mousedown.selectVertices", function (e) {
     // Store the positions of where the mouse button was pressed
     mouseClickCoords = d3.mouse(this);
     // Place the selection rectangle at the right spot and show it
@@ -697,7 +697,7 @@ scc.modules.Graph = function() {
   /**
    * d3 handler that adjusts the selection rectangle when moving the mouse
    */
-  d3.select("#graph_canvas_overlay").on("mousemove.selectNodes", function (e) {
+  d3.select("#graph_canvas_overlay").on("mousemove.selectVertices", function (e) {
     if (mouseClickCoords) {
       // update the width
       var coords = d3.mouse(this);
@@ -711,14 +711,14 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * d3 handler that finally calculates which nodes fall into the selection
+   * d3 handler that finally calculates which vertices fall into the selection
    * and then adjusts the panel buttons depending on the action that follows
    * this selection.
    */
-  d3.select("#graph_canvas_overlay").on("mouseup.selectNodes", function (e) {
-    // Filter nodes to find the ones inside the selection rectangle
+  d3.select("#graph_canvas_overlay").on("mouseup.selectVertices", function (e) {
+    // Filter vertices to find the ones inside the selection rectangle
     var coords = d3.mouse(this);
-    selectedNodes = $("circle").filter(function (i) {
+    selectedVertices = $("circle").filter(function (i) {
       var boundingRect = this.getBoundingClientRect()
       if (boundingRect.left-301 > Math.min(coords[0], mouseClickCoords[0]) && 
           boundingRect.bottom > Math.min(coords[1], mouseClickCoords[1]) &&
@@ -729,8 +729,8 @@ scc.modules.Graph = function() {
       return false;
     });
 
-    // Highlight the selected nodes
-    selectedNodes.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
+    // Highlight the selected vertices
+    selectedVertices.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
 
     // Modify the panel buttons depending on the current action
     $("button").removeClass("active");
@@ -748,20 +748,20 @@ scc.modules.Graph = function() {
     // Hide the selection rectangle and overlay
     $("#graph_canvas_selection").hide();
     $("#graph_canvas_overlay").fadeOut(100);
-    $("#graph_canvas_overlay").removeClass("pickingNodes");
+    $("#graph_canvas_overlay").removeClass("pickingVertices");
   });
 
   /**
-   * Handler for selecting nodes whose vicinities shall be loaded.
+   * Handler for selecting vertices whose vicinities shall be loaded.
    */
   $("#gs_addVicinitiesBySelect").click(function (e) { 
     e.preventDefault();
     pickAction = "addVicinities";
-    // restore styling on all nodes
-    node.style("fill", nodeColor)
-        .style("stroke", nodeBorder);
+    // restore styling on all vertices
+    vertex.style("fill", vertexColor)
+        .style("stroke", vertexBorder);
     $("button").removeClass("active");
-    selectedNodes = undefined;
+    selectedVertices = undefined;
     if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
       // modify panel buttons
       $("#gs_addVicinitiesBySelect").text("Select");
@@ -769,13 +769,13 @@ scc.modules.Graph = function() {
       $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
       $("#graph_canvas_selection").hide();
       $("#graph_canvas_overlay").fadeOut(100);
-      $("#graph_canvas_overlay").removeClass("pickingNodes");
+      $("#graph_canvas_overlay").removeClass("pickingVertices");
     }
     else { // TODO: merge with code from removeBySelect
       $("button").removeClass("snd");
       $("#gd_removeBySelect").text("Select");
       $("#gd_removeBySelectRemove").addClass("hidden");
-      $("#graph_canvas_overlay").addClass("pickingNodes");
+      $("#graph_canvas_overlay").addClass("pickingVertices");
       $("#graph_canvas_overlay").fadeIn(100);
       $("#gs_addVicinitiesBySelect").addClass("active");
       $("#gs_addVicinitiesBySelect").text("Cancel");
@@ -783,35 +783,35 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler for finally loading the vicinities of the selected nodes.
+   * Handler for finally loading the vicinities of the selected vertices.
    */
   $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
     e.preventDefault();
     $("#gs_addVicinitiesBySelect").text("Select");
     $("#gs_addVicinitiesBySelect").removeClass("snd");
     $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
-    // extract list of Ids from node list and order data
-    var selectedNodeIds = $.map(selectedNodes, function (node, key) { 
-      return node.__data__.id;
+    // extract list of Ids from vertex list and order data
+    var selectedVertexIds = $.map(selectedVertices, function (vertex, key) { 
+      return vertex.__data__.id;
     });
     order({"provider": "graph",
            "query": "vertexIds",
-           "vertexIds": selectedNodeIds,
+           "vertexIds": selectedVertexIds,
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
   });
 
   /**
-   * Handler for selecting nodes which shall be removed.
+   * Handler for selecting vertices which shall be removed.
    */
   $("#gd_removeBySelect").click(function (e) { 
     e.preventDefault();
     pickAction = "remove";
-    // restore styling on all nodes
-    node.style("fill", nodeColor)
-        .style("stroke", nodeBorder);
-    selectedNodes = undefined;
+    // restore styling on all vertices
+    vertex.style("fill", vertexColor)
+        .style("stroke", vertexBorder);
+    selectedVertices = undefined;
     $("button").removeClass("active");
     if ($("#gd_removeBySelect").text() == "Cancel") {
       $("#gd_removeBySelect").text("Select");
@@ -819,11 +819,11 @@ scc.modules.Graph = function() {
       $("#gd_removeBySelectRemove").addClass("hidden");
       $("#graph_canvas_selection").hide();
       $("#graph_canvas_overlay").fadeOut(100);
-      $("#graph_canvas_overlay").removeClass("pickingNodes");
+      $("#graph_canvas_overlay").removeClass("pickingVertices");
     }
     else {
       $("button").removeClass("snd");
-      $("#graph_canvas_overlay").addClass("pickingNodes");
+      $("#graph_canvas_overlay").addClass("pickingVertices");
       $("#gs_addVicinitiesBySelect").text("Select");
       $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
       $("#graph_canvas_overlay").fadeIn(100);
@@ -833,51 +833,51 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler for finally removing the selected nodes.
+   * Handler for finally removing the selected vertices.
    */
   $("#gd_removeBySelectRemove").click(function (e) { 
     e.preventDefault();
     $("#gd_removeBySelect").text("Select");
     $("#gd_removeBySelect").removeClass("snd");
     $("#gd_removeBySelectRemove").addClass("hidden");
-    removeNodesFromCanvas(selectedNodes);
+    removeVerticesFromCanvas(selectedVertices);
   });
 
   /**
-   * Handler called when the user clicks on button to remove all nodes
+   * Handler called when the user clicks on button to remove all vertices
    * @param {Event} e - The event that triggered the call
    */
   $("#gd_removeOrphans").click(function (e) { 
     e.preventDefault();
-    var nodesWithEdges = {};
+    var verticesWithEdges = {};
     $.map(links, function (d, i) {
-      nodesWithEdges[d.source.id] = 1; 
-      nodesWithEdges[d.target.id] = 1; 
+      verticesWithEdges[d.source.id] = 1; 
+      verticesWithEdges[d.target.id] = 1; 
     });
-    var vertexIds = Object.keys(nodesWithEdges);
-    var nodesWithoutEdges = node.filter(function (d, i) {
+    var vertexIds = Object.keys(verticesWithEdges);
+    var verticesWithoutEdges = vertex.filter(function (d, i) {
       return vertexIds.indexOf(d.id) == -1;
     });
-    removeNodesFromCanvas(nodesWithoutEdges[0]);
+    removeVerticesFromCanvas(verticesWithoutEdges[0]);
   });
 
   /**
-   * Find the DOM element of the graph node where the id contains the given
+   * Find the DOM element of the graph vertex where the id contains the given
    * string. 
-   * @param {string} s - The string that should appear in the node id
-   * @return {DOMElement|undefined} - The node with the matching id
+   * @param {string} s - The string that should appear in the vertex id
+   * @return {DOMElement|undefined} - The vertex with the matching id
    */
-  this.findExistingNodes = function (ids) {
-    var existingNodes = node.filter(function (d, i) {
+  this.findExistingVertices = function (ids) {
+    var existingVertices = vertex.filter(function (d, i) {
       return ids.indexOf(d.id) != -1
     });
-    return existingNodes;
+    return existingVertices;
   };
 
   /**
-   * Search the graph for the given id, and if the node is not present, order
+   * Search the graph for the given id, and if the vertex is not present, order
    * it from the server
-   * @param {string} id - The node id
+   * @param {string} id - The vertex id
    */
   this.addByIds = function (ids) {
     if (ids == "") {
@@ -896,7 +896,7 @@ scc.modules.Graph = function() {
   });
           
   /**
-   * Send an order for the top nodes by the criteria and in the quantity
+   * Send an order for the top vertices by the criteria and in the quantity
    * specified by the user.
    * @param {Event} e - The event that triggered the call
    */
@@ -913,26 +913,26 @@ scc.modules.Graph = function() {
   $("#gs_addByTop").click(addTop);
 
   /**
-   * Set the design of the given node property to the given node metric.
-   * For example, set the size ("gd_nodeSize") to be depending on the node
-   * node state ("Node state").
-   * @param {string} property - The visual node property to change
-   * @param {string} metric - The node metric on which the visual
+   * Set the design of the given vertex property to the given vertex metric.
+   * For example, set the size ("gd_verticesize") to be depending on the vertex
+   * vertex state ("Vertex state").
+   * @param {string} property - The visual vertex property to change
+   * @param {string} metric - The vertex metric on which the visual
    *     representation should depend.
    */
   this.setGraphDesign = function (property, metric) {
     switch (property) {
-      case "gd_nodeSize": 
-          setNodeSize(nodeDesign["gd_nodeSize"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_nodeSize": metric}}});
+      case "gd_verticesize": 
+          setVertexSize(vertexDesign["gd_verticesize"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_verticesize": metric}}});
           break;
-      case "gd_nodeColor": 
-          setNodeColor(nodeDesign["gd_nodeColor"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_nodeColor": metric}}});
+      case "gd_vertexColor": 
+          setVertexColor(vertexDesign["gd_vertexColor"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_vertexColor": metric}}});
           break;
-      case "gd_nodeBorder": 
-          setNodeBorder(nodeDesign["gd_nodeBorder"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_nodeBorder": metric}}});
+      case "gd_vertexBorder": 
+          setVertexBorder(vertexDesign["gd_vertexBorder"][metric]); 
+          scc.settings.set({"graph": {"options": {"gd_vertexBorder": metric}}});
           break;
     }
   };
@@ -948,42 +948,42 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler called when the user wants to load the vicinity of all nodes
+   * Handler called when the user wants to load the vicinity of all vertices
    * @param {Event} e - The event that triggered the call
    */
   $("#gs_addAllVicinities").click(function (e) { 
     e.preventDefault();
     order({"provider": "graph",
            "query":  "vertexIds",
-           "vertexIds":  nodeStorage.get(),
+           "vertexIds":  verticestorage.get(),
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
   });
 
   /**
-   * Removes the provided nodes from the graph cavas
-   * @param {object} nodeList - List of node items
+   * Removes the provided vertices from the graph cavas
+   * @param {object} vertexList - List of vertex items
    */
-  var removeNodesFromCanvas = function(nodeList) {
-    // Extract node Ids from node items
+  var removeVerticesFromCanvas = function(vertexList) {
+    // Extract vertex Ids from vertex items
     scc.resetOrders("graph");
-    var vertexIds = $.map(nodeList, function (node, key) { 
-      return node.__data__.id;
+    var vertexIds = $.map(vertexList, function (vertex, key) { 
+      return vertex.__data__.id;
     });
-    // remove the nodes
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
+    // remove the vertices
+    for (var i = 0; i < vertices.length; i++) {
+      var n = vertices[i];
       if (vertexIds.indexOf(n.id) != -1) {
-        nodes.splice(i, 1);
-        nodeRefs[n.id] = undefined;
+        vertices.splice(i, 1);
+        vertexRefs[n.id] = undefined;
         i--
       }
       else {
-        nodeRefs[n.id] = i;
+        vertexRefs[n.id] = i;
       }
     }
-    // remove links that were connected to these nodes
+    // remove links that were connected to these vertices
     for (var i = 0; i < links.length; i++) {
       var l = links[i];
       linkId = l.source.id + "-" + l.target.id;
@@ -997,20 +997,20 @@ scc.modules.Graph = function() {
         linkRefs[l.id] = i;
       }
     }
-    // persist the new node selection and re-activate the graph layout
-    nodeStorage.save();
+    // persist the new vertex selection and re-activate the graph layout
+    verticestorage.save();
     restart(true);
     scc.consumers.Graph.update();
   };
 
   /**
-   * Handler called when the user clicks on button to remove all nodes
+   * Handler called when the user clicks on button to remove all vertices
    * @param {Event} e - The event that triggered the call
    */
   $("#gd_removeAll").click(function (e) { 
     e.preventDefault();
-    nodes = [];
-    nodeStorage.save();
+    vertices = [];
+    verticestorage.save();
     scc.consumers.Graph.reset();
     scc.consumers.Graph.update();
   });

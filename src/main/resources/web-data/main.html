@@ -61,8 +61,8 @@
       </div>
       <div id="graph_panel_container">
         <div class="panel">
-          <div id="cNodeSelection" class="panel_section">
-            <div class="title expanded">Add and remove nodes from the canvas</div>
+          <div id="cVertexSelection" class="panel_section">
+            <div class="title expanded">Add and remove vertices from the canvas</div>
             <div class="contents">
               <form>
                 <h1><span>Options impacting performance</span></h1>
@@ -75,7 +75,7 @@
                 </select><br/>
                 <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
                 <select id="gp_refreshRate"></select>
-                <h1><span>Add nodes</span></h1>
+                <h1><span>Add vertices</span></h1>
                 <span class="panel_span">Top </span>
                 <select id="gp_targetCount"></select>
                 <span class="panel_span"> of </span>
@@ -89,17 +89,17 @@
                 <button id="gs_addByTop">Add</button><br/>
                 <input id="gs_addIds" type="text">
                 <button id="gs_addIdsButton">Add</button><br/>
-                <span class="panel_span">Vicinity of all nodes </span>
+                <span class="panel_span">Vicinity of all vertices </span>
                 <button id="gs_addAllVicinities">Add</button><br/>
                 <span class="panel_span">Vicinity of selection </span>
                 <button id="gs_addVicinitiesBySelect">Select</button>
                 <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button>
-                <h1><span>Remove nodes</span></h1>
-                <span class="panel_span">Remove unconnected nodes</span>
+                <h1><span>Remove vertices</span></h1>
+                <span class="panel_span">Remove unconnected vertices</span>
                 <button id="gd_removeOrphans">Remove</button><br/>
-                <span class="panel_span">Remove all nodes</span>
+                <span class="panel_span">Remove all vertices</span>
                 <button id="gd_removeAll">Remove</button><br/>
-                <span class="panel_span">Select nodes to remove</span>
+                <span class="panel_span">Select vertices to remove</span>
                 <button id="gd_removeBySelect">Select</button>
                 <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
               </form> 
@@ -116,25 +116,25 @@
                   <option>Always</option>
                   <option>Only on hover</option>
                 </select>
-                <h1><span>Node styling</span></h1>
-                <label for="gd_nodeSize">Node size:</label>
-                <select id="gd_nodeSize">
-                  <option>Node state</option>
+                <h1><span>Vertex styling</span></h1>
+                <label for="gd_verticesize">Vertex size:</label>
+                <select id="gd_verticesize">
+                  <option>Vertex state</option>
                   <option>All equal</option>
                 </select><br/>
-                <label for="gd_nodeColor">Node color:</label>
-                <select id="gd_nodeColor">
-                  <option>Node state</option>
-                  <option>Node id</option>
+                <label for="gd_vertexColor">Vertex color:</label>
+                <select id="gd_vertexColor">
+                  <option>Vertex state</option>
+                  <option>Vertex id</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
                   <option>Latest query</option>
                   <option>All equal</option>
                 </select><br/>
-                <label for="gd_nodeBorder">Node outline color:</label>
-                <select id="gd_nodeBorder">
-                  <option>Node state</option>
-                  <option>Node id</option>
+                <label for="gd_vertexBorder">Vertex outline color:</label>
+                <select id="gd_vertexBorder">
+                  <option>Vertex state</option>
+                  <option>Vertex id</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
                   <option>Latest query</option>
@@ -150,8 +150,8 @@
                 <h1><span>Breakpoint Conditions</span></h1>
                 <div class="bottom_border"><div id="gc_conditionList"></div></div>
                 <h1><span>Add New Condition</span></h1>
-                <label for="gc_nodeId">When node with id:</label><br/>
-                <input id="gc_nodeId" type="text">
+                <label for="gc_vertexId">When vertex with id:</label><br/>
+                <input id="gc_vertexId" type="text">
                 <button id="gc_useMouse">Select</button><br/>
                 <select id="gc_condition">
                   <option>changes state</option>
@@ -238,10 +238,10 @@
           <div id="graph_background">Loading...</div>
         </div>
         <div id="graph_tooltip">
-          <div class="graph_tooltip_item">Id: <span id="node_id"></span></div>
-          <div class="graph_tooltip_item">State: <span id="node_state"></span></div>
-          <div class="graph_tooltip_item">Signal Score: <span id="node_ss"></span></div>
-          <div class="graph_tooltip_item">Collect Score: <span id="node_cs"></span></div>
+          <div class="graph_tooltip_item">Id: <span id="vertex_id"></span></div>
+          <div class="graph_tooltip_item">State: <span id="vertex_state"></span></div>
+          <div class="graph_tooltip_item">Signal Score: <span id="vertex_ss"></span></div>
+          <div class="graph_tooltip_item">Collect Score: <span id="vertex_cs"></span></div>
         </div>
         <div id="graph_canvas"></div>
         <div id="graph_canvas_overlay"></div>
@@ -287,7 +287,7 @@
             <p class="teaser">
               When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
               converge. You can observe the charts below to see whether there are any messages sent or received. Additionally, 
-              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>observe
+              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_verticesize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>observe
               the graph with a state visualization</a>.
             </p>
           </div>
@@ -318,7 +318,7 @@
             <p class="teaser">
               There can be various reasons for when a computation yields unexpected results. To find potential problems, you can
               <a target="_blank" href='/graph'>set breakpoints on the graph</a> and step through different phases of the computation.
-              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_nodeSize":"Node state","gd_nodeBorder":"Node state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>view
+              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_verticesize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>view
               the graph with state visualization enabled</a>.
             </p>
           </div>
@@ -328,7 +328,7 @@
             <p class="teaser">
               Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
               represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
-              <strong style="color:red;">maximum</strong> values over all worker nodes. You can hover the lines to get more information.
+              <strong style="color:red;">maximum</strong> values over all worker vertices. You can hover the lines to get more information.
             </p> 
             <div class="chartContainer"></div>
           </div>

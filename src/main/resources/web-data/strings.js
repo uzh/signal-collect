@@ -18,8 +18,8 @@
  *  
  */
 
-STR = {"addByIds": "Nodes whose IDs contain this string", //TODO put these in sub-object
-       "pickNode": "Enter ID or select using mouse",
+STR = {"addByIds": "Vertices whose IDs contain this string", //TODO put these in sub-object
+       "pickVertex": "Enter ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
@@ -72,7 +72,7 @@ STR = {"addByIds": "Nodes whose IDs contain this string", //TODO put these in su
 
 chartNames = {
     "messagesSent": "Messages Sent in Total (#)",
-    "messagesSentToNodes": "Messages Sent to Nodes(#)",
+    "messagesSentToVertices": "Messages Sent to Vertices(#)",
     "messagesSentToWorkers": "Messages Sent to Workers (#)",
     "messagesSentToCoordinator": "Messages Sent to Coordinator (#)",
     "messagesSentToOthers": "Messages Sent to Others (#)",

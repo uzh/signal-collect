@@ -630,11 +630,11 @@ a, a:visited {
 }
 #graph_canvas.picking,
 #graph_canvas_selection,
-#graph_canvas_overlay.pickingNodes {
+#graph_canvas_overlay.pickingVertices {
   cursor: crosshair;
 }
 
-.node {
+.vertex {
   stroke: #fff;
   stroke-width: 3;
 }
@@ -687,7 +687,7 @@ a, a:visited {
   color: #eee;
   background-color: #ff9100;
 }
-.node_link {
+.vertex_link {
   padding: none;
   color: #59b6e8;
   cursor: pointer;

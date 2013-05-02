@@ -57,7 +57,7 @@ scc.modules.BreakConditions = function () {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    $("#gc_nodeId").val(STR.pickNode);
+    $("#gc_vertexId").val(STR.pickVertex);
   }
 
   /**
@@ -110,16 +110,16 @@ scc.modules.BreakConditions = function () {
     }
     // Add each of the conditions to the list of conditions
     $.each(j.active, function (k, c) {
-      // Shorten long node ids
-      var s = c.props.nodeId;
+      // Shorten long vertex ids
+      var s = c.props.vertexId;
       if (s.length > 20) {
         s = s.substring(s.length - 22, s.length);
       }
       // Build the div element to be added...
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
-      item += ('">When Node with id: <span class="node_link" title="' + 
-               c.props.nodeId + '">...' + s + '</span><br/> ' + c.name)
+      item += ('">When Vertex with id: <span class="vertex_link" title="' + 
+               c.props.vertexId + '">...' + s + '</span><br/> ' + c.name)
       switch(c.name) {
         case CNAME.goesAboveState:
         case CNAME.goesBelowState:
@@ -155,12 +155,12 @@ scc.modules.BreakConditions = function () {
     });
 
     /**
-     * Handler called upon clicking on a node id. It highlights the appropriate
-     * node in the graph or loads the node if it's not yet represented in the
+     * Handler called upon clicking on a vertex id. It highlights the appropriate
+     * vertex in the graph or loads the vertex if it's not yet represented in the
      * graph. This is done simply by using the addById function provided by
      * the graph module
      */
-    $(".node_link").click(function (e) {
+    $(".vertex_link").click(function (e) {
       var id = $(this).attr("title");
       scc.consumers.Graph.addByIds([id]);
     });
@@ -170,8 +170,8 @@ scc.modules.BreakConditions = function () {
   }
 
   /**
-   * Handler that allows the user to pick a node from the graph to fill in the
-   * id of the node which the break condition shall be applied to
+   * Handler that allows the user to pick a vertex from the graph to fill in the
+   * id of the vertex which the break condition shall be applied to
    */
   $("#gc_useMouse").click(function (e) { 
     e.preventDefault();
@@ -188,7 +188,7 @@ scc.modules.BreakConditions = function () {
   });
 
   /**
-   * Handler that is added to the #graph_canvas for when the user picks a node
+   * Handler that is added to the #graph_canvas for when the user picks a vertex
    * using the mouse. It only applies when the #graph_canas has the "picking"
    * class.
    */
@@ -199,26 +199,26 @@ scc.modules.BreakConditions = function () {
     $("#gc_useMouse").removeClass("active");
     var target = d3.event.target;
     var data = target.__data__;
-    var node = $(target);
+    var vertex = $(target);
     if (data == undefined) {
-      $("#gc_nodeId").val(STR.pickNode);
+      $("#gc_vertexId").val(STR.pickVertex);
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
-      $("#gc_nodeId").val(data.id);
-      $("#gc_nodeId").focus();
-      $("#gc_nodeId").val($("#gc_nodeId").val());
+      $("#gc_vertexId").val(data.id);
+      $("#gc_vertexId").focus();
+      $("#gc_vertexId").val($("#gc_vertexId").val());
       $("#gc_addCondition").removeAttr("disabled");
     }
   });
 
   /**
-   * Handler that resets the nodeId field and disables the 'add condition'
+   * Handler that resets the vertexId field and disables the 'add condition'
    * button in case the field is left empty.
    */
-  $("#gc_nodeId").keyup(function(e) {
-    if ($(this).val().length == 0 || $(this).val() == STR.pickNode) {
-      $(this).val(STR.pickNode);
+  $("#gc_vertexId").keyup(function(e) {
+    if ($(this).val().length == 0 || $(this).val() == STR.pickVertex) {
+      $(this).val(STR.pickVertex);
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
@@ -250,18 +250,18 @@ scc.modules.BreakConditions = function () {
     var props = {};
     switch (name) {
       case CNAME.changesState:
-        props["vertexId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_vertexId").val();
         break;
       case CNAME.goesAboveState:
       case CNAME.goesBelowState:
-        props["vertexId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_vertexId").val();
         props["expectedState"] = $("#gc_state").val();
         break;
       case CNAME.goesAboveSignalThreshold:
       case CNAME.goesBelowSignalThreshold:
       case CNAME.goesAboveCollectThreshold:
       case CNAME.goesBelowCollectThreshold:
-        props["vertexId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_vertexId").val();
         break;
     }
     scc.order({
@@ -274,7 +274,7 @@ scc.modules.BreakConditions = function () {
     $("#gc_conditionList").append('<div class="condition new last_child"></div>');
     $("#gc_addCondition").attr("disabled", true);
     $("#gc_state").val(STR.enterState); 
-    $("#gc_nodeId").val(STR.pickNode); 
+    $("#gc_vertexId").val(STR.pickVertex); 
   });
 
   /**
@@ -301,6 +301,6 @@ scc.modules.BreakConditions = function () {
 
   // set the default text on the text fields
   $("#gc_state").val(STR.enterState); 
-  $("#gc_nodeId").val(STR.pickNode); 
+  $("#gc_vertexId").val(STR.pickVertex); 
 
 }
