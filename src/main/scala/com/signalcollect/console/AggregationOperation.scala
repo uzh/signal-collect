@@ -33,45 +33,45 @@ import BreakConditionName._
 /** Aggregator that loads a JObject representation of vertices and their edges.
   *
   * Given the set of ids, the aggregator the corresponding vertices and the 
-  * edges between the nodes. The aggregator returs a JObject, which contains
-  * two objects, one for nodes, one for edges. The data structure is best
+  * edges between the vertices. The aggregator returs a JObject, which contains
+  * two objects, one for vertices, one for edges. The data structure is best
   * explained by an example:
   *
   * {{{
-  * {"nodes":{"id1":{"s":"0.15","ss":0.0,"cs":1.0},
+  * {"vertices":{"id1":{"s":"0.15","ss":0.0,"cs":1.0},
   *           "id2":{"s":"0.16","ss":1.0,"cs":1.0},
   *           "id3":{"s":"0.17","ss":1.0,"cs":1.0}},
   *  "edges":{"id1":["id2","id3"]}}}
   * }}}
   *
-  * The nodes object uses a node id as key and stores the state, signal and 
-  * collect scores. The edges object uses a node id as key and stores the list
-  * of target nodes.
+  * The vertices object uses a vertex id as key and stores the state, signal and 
+  * collect scores. The edges object uses a vertex id as key and stores the list
+  * of target vertices.
   *
   * @constructor create the aggregator
-  * @param nodeIds set of node ids to be loaded
+  * @param vertexIds set of vertex ids to be loaded
   */
-class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id]())
+class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
       extends AggregationOperation[JObject] {
 
   def extract(v: Vertex[_,_]): JObject = v match {
     case i: Inspectable[Id,_] => {
-      if (nodeIds.contains(i.id)) {
-        // Get the list of target nodes that this node's edges point at
-        val targetNodes = i.outgoingEdges.values.filter { value =>
+      if (vertexIds.contains(i.id)) {
+        // Get the list of target vertices that this vertex' edges point at
+        val targetvertices = i.outgoingEdges.values.filter { value =>
           // This match is necessary because only an Edge[Id] will have a 
           // targetId of type Id.
           value match {
-            case v: Edge[Id] => nodeIds.contains(v.targetId)
+            case v: Edge[Id] => vertexIds.contains(v.targetId)
             case otherwise => false
           }
         }.map{ e => ( JString(e.targetId.toString))}.toList
-        def nodesObj = ("nodes", JObject(List(JField(i.id.toString, 
+        def verticesObj = ("vertices", JObject(List(JField(i.id.toString, 
                           JObject(List(JField("s", i.state.toString),
                                        JField("ss", i.scoreSignal),
                                        JField("cs", i.scoreCollect)))))))
-        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetNodes)))))
-        if (targetNodes.size > 0) { nodesObj ~ edgesObj } else { nodesObj }
+        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetvertices)))))
+        if (targetvertices.size > 0) { verticesObj ~ edgesObj } else { verticesObj }
       }
       else { JObject(List()) }
 
@@ -87,10 +87,10 @@ class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id]())
 }
 
 
-/** Aggregator that retrieves a random sample of node ids.
+/** Aggregator that retrieves a random sample of vertex ids.
   *
   * @constructor create the aggregator
-  * @param sampleSize the number of node ids to retrieve
+  * @param sampleSize the number of vertex ids to retrieve
   */
 class SampleAggregator[Id](sampleSize: Int) 
       extends ModularAggregationOperation[Set[Id]] {
@@ -108,9 +108,9 @@ class SampleAggregator[Id](sampleSize: Int)
   }
 }
 
-/** Aggregator that retrieves nodes with the highest degree.
+/** Aggregator that retrieves vertices with the highest degree.
   *
-  * The aggregator produces a map of node ids to degrees.
+  * The aggregator produces a map of vertex ids to degrees.
   *
   * @constructor create the aggregator
   * @param n the number of top elements to find
@@ -135,10 +135,10 @@ class TopDegreeAggregator[Id](n: Int)
   }
 }
 
-/** Aggregator that retrieves nodes with the highest or lowest state.
+/** Aggregator that retrieves vertices with the highest or lowest state.
   *
   * The aggregator produces a list of tuples, each containing the state and the
-  * node id with that state.
+  * vertex id with that state.
   *
   * @constructor create the aggregator
   * @param n the number of top elements to find
@@ -175,10 +175,10 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
   }
 }
 
-/** Aggregator that retrieves nodes with the highest signal or collect scores.
+/** Aggregator that retrieves vertices with the highest signal or collect scores.
   *
   * The aggregator produces a list of tuples, each containing the score and the
-  * node id with that score.
+  * vertex id with that score.
   *
   * @constructor create the aggregator
   * @param n the number of top elements to find
@@ -205,29 +205,29 @@ class TopScoreAggregator[Id](n: Int, scoreType: String)
 
 }
 
-/** Aggregator that loads the ids of nodes in the vicinity of other nodes.
+/** Aggregator that loads the ids of vertices in the vicinity of other vertices.
   *
-  * The aggregator produces a new set of ids representing the nodes that are
-  * connected to any of the nodes in the given set, be it incoming or outgoing.
+  * The aggregator produces a new set of ids representing the vertices that are
+  * connected to any of the vertices in the given set, be it incoming or outgoing.
   *
   * @constructor create the aggregator
-  * @param ids set of node ids to be loaded
+  * @param ids set of vertex ids to be loaded
   */
-class FindNodeVicinitiesByIdsAggregator[Id](ids: Set[Id])
+class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
       extends AggregationOperation[Set[Id]] {
 
   def extract(v: Vertex[_,_]): Set[Id] = v match {
     case i: Inspectable[Id,_] =>
-      // If this node is the target of a primary node, it's a vicinity node
+      // If this vertex is the target of a primary vertex, it's a vicinity vertex
       if(i.outgoingEdges.values.view.map { 
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise => false
       }.toSet.contains(true)) { return  Set(i.id) }
-      // If this node is a primary node, all its targets are vicinity nodes
+      // If this vertex is a primary vertex, all its targets are vicinity vertices
       if (ids.contains(i.id)) {
         return i.outgoingEdges.values.map{ case v: Edge[Id] => v.targetId }.toSet
       }
-      // If neither is true, this node is irrelevant
+      // If neither is true, this vertex is irrelevant
       return Set()
     case otherwise => Set()
   }
@@ -239,11 +239,11 @@ class FindNodeVicinitiesByIdsAggregator[Id](ids: Set[Id])
 
 /** Aggregator that translates a list of strings to a list of vertices.
   *
-  * The aggregator compares the string representation of the id of any node
+  * The aggregator compares the string representation of the id of any vertex
   * to the strings supplied to it.
   *
   * @constructor create the aggregator
-  * @param idsList the list of ids to compare node ids with
+  * @param idsList the list of ids to compare vertex ids with
   */
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
       extends AggregationOperation[List[Vertex[Id,_]]] {
@@ -278,7 +278,7 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
       extends AggregationOperation[Map[String,String]] {
 
-  val nodeConditions = List(
+  val vertexConditions = List(
     ChangesState,
     GoesAboveState,
     GoesBelowState,
@@ -292,8 +292,8 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
     case i: Inspectable[_, _] => {
       var results = Map[String,String]()
       conditions.foreach { case (id, c) => 
-        if (nodeConditions.contains(c.name)) {
-          if (i.id.toString == c.props("nodeId")) {
+        if (vertexConditions.contains(c.name)) {
+          if (i.id.toString == c.props("vertexId")) {
             c.name match { 
               case ChangesState =>
                 if (i.state.toString != c.props("currentState"))

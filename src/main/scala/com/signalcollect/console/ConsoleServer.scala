@@ -86,10 +86,10 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
   require(
-    if (props.contains("nodeId")) {
-      props("nodeId") match {
+    if (props.contains("vertexId")) {
+      props("vertexId") match {
         case id: String =>
-          val result = workerApi.aggregateAll(new FindVerticesByIdsAggregator(List(props("nodeId"))))
+          val result = workerApi.aggregateAll(new FindVerticesByIdsAggregator(List(props("vertexId"))))
           result.size match {
             case 0 => false
             case otherwise =>
@@ -100,7 +100,7 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
       }
     } else {
       false
-    }, "Missing or invalid nodeId!")
+    }, "Missing or invalid vertexId!")
 
   require(name match {
     case GoesAboveState

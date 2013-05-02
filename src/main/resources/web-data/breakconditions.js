@@ -250,18 +250,18 @@ scc.modules.BreakConditions = function () {
     var props = {};
     switch (name) {
       case CNAME.changesState:
-        props["nodeId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_nodeId").val();
         break;
       case CNAME.goesAboveState:
       case CNAME.goesBelowState:
-        props["nodeId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_nodeId").val();
         props["expectedState"] = $("#gc_state").val();
         break;
       case CNAME.goesAboveSignalThreshold:
       case CNAME.goesBelowSignalThreshold:
       case CNAME.goesAboveCollectThreshold:
       case CNAME.goesBelowCollectThreshold:
-        props["nodeId"] = $("#gc_nodeId").val();
+        props["vertexId"] = $("#gc_nodeId").val();
         break;
     }
     scc.order({

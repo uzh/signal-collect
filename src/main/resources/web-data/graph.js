@@ -84,35 +84,35 @@ scc.modules.Graph = function() {
 
   /**
    * The NodeStorageAgent provides method for setting, getting and adding to the
-   * local storage which contains an array of nodeIds as strings. It represents
+   * local storage which contains an array of vertexIds as strings. It represents
    * the nodes which the user has loaded into the canvas
    * @constructor
    */
   var NodeStorageAgent = function () {
     // Initialize the localStorage if necessary
-    if (localStorage["nodeIds"] == undefined || localStorage["nodeIds"] == "") { 
-      localStorage["nodeIds"] = "[]";
+    if (localStorage["vertexIds"] == undefined || localStorage["vertexIds"] == "") { 
+      localStorage["vertexIds"] = "[]";
     }
 
     /**
      * Adds the given nodes to the local storage.
-     * @param {array<string>} nodeIds - The nodes to be added to the storage
+     * @param {array<string>} vertexIds - The nodes to be added to the storage
      */
-    this.push = function (nodeIds) {
+    this.push = function (vertexIds) {
       var stored = this.get()
       $.each(stored, function (key, value) {
-        if (nodeIds.indexOf(value) != -1) { nodeIds.splice(key, 1); }
+        if (vertexIds.indexOf(value) != -1) { vertexIds.splice(key, 1); }
       });
-      stored.push.apply(stored, nodeIds)
-      localStorage["nodeIds"] = JSON.stringify(stored);
+      stored.push.apply(stored, vertexIds)
+      localStorage["vertexIds"] = JSON.stringify(stored);
     };
 
     /**
      * Replaces the existing list stored with the one passed to the funciton
-     * @param {array<string>} nodeIds - The nodes to be stored
+     * @param {array<string>} vertexIds - The nodes to be stored
      */
     this.save = function () {
-      localStorage["nodeIds"] = JSON.stringify(
+      localStorage["vertexIds"] = JSON.stringify(
         $.map(nodes, function (node, i) { return node.id; })
       );
     };
@@ -121,7 +121,7 @@ scc.modules.Graph = function() {
      * Loads the list of nodes from the local storage
      */
     this.get = function () {
-      return JSON.parse(localStorage["nodeIds"]);
+      return JSON.parse(localStorage["vertexIds"]);
     };
   };
   // Instantiate an agent for us to use
@@ -265,8 +265,8 @@ scc.modules.Graph = function() {
   this.update = function(delay) {
     if (nodeStorage.get().length > 0) {
       order({"provider": "graph",
-             "query": "nodeIds",
-             "nodeIds": nodeStorage.get()
+             "query": "vertexIds",
+             "vertexIds": nodeStorage.get()
       }, delay);
     }
   };
@@ -347,8 +347,8 @@ scc.modules.Graph = function() {
         var target = d3.event.target;
         var data = target.__data__;
         order({"provider": "graph",
-               "query": "nodeIds",
-               "nodeIds": [data.id],
+               "query": "vertexIds",
+               "vertexIds": [data.id],
                "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
                "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
         });
@@ -525,7 +525,7 @@ scc.modules.Graph = function() {
     var newNodes = false;
 
     // If the server sent an empty graph, do nothing
-    if (j.nodes == undefined) { 
+    if (j.vertices == undefined) { 
       $("#graph_background").text("There are no nodes matching your request").fadeIn(50);
       return; 
     }
@@ -571,7 +571,7 @@ scc.modules.Graph = function() {
     $.each(nodes, function(id, node) {
       node["recent"] = "old";
     });
-    $.each(j.nodes, function(id, data) {
+    $.each(j.vertices, function(id, data) {
       if (nodeRefs[id] == undefined) {
         // The node hasn't existed yet. Update d3's node array
         nodes.push({"id": id, "state": data.s, "recent": "new", 
@@ -795,8 +795,8 @@ scc.modules.Graph = function() {
       return node.__data__.id;
     });
     order({"provider": "graph",
-           "query": "nodeIds",
-           "nodeIds": selectedNodeIds,
+           "query": "vertexIds",
+           "vertexIds": selectedNodeIds,
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
@@ -854,9 +854,9 @@ scc.modules.Graph = function() {
       nodesWithEdges[d.source.id] = 1; 
       nodesWithEdges[d.target.id] = 1; 
     });
-    var nodeIds = Object.keys(nodesWithEdges);
+    var vertexIds = Object.keys(nodesWithEdges);
     var nodesWithoutEdges = node.filter(function (d, i) {
-      return nodeIds.indexOf(d.id) == -1;
+      return vertexIds.indexOf(d.id) == -1;
     });
     removeNodesFromCanvas(nodesWithoutEdges[0]);
   });
@@ -885,8 +885,8 @@ scc.modules.Graph = function() {
       return;
     }
     order({"provider": "graph", 
-           "query": "nodeIds", 
-           "nodeIds": ids});
+           "query": "vertexIds", 
+           "vertexIds": ids});
   }
 
   $("#gs_addByIdsButton").click(function (e) {
@@ -954,8 +954,8 @@ scc.modules.Graph = function() {
   $("#gs_addAllVicinities").click(function (e) { 
     e.preventDefault();
     order({"provider": "graph",
-           "query":  "nodeIds",
-           "nodeIds":  nodeStorage.get(),
+           "query":  "vertexIds",
+           "vertexIds":  nodeStorage.get(),
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
@@ -968,13 +968,13 @@ scc.modules.Graph = function() {
   var removeNodesFromCanvas = function(nodeList) {
     // Extract node Ids from node items
     scc.resetOrders("graph");
-    var nodeIds = $.map(nodeList, function (node, key) { 
+    var vertexIds = $.map(nodeList, function (node, key) { 
       return node.__data__.id;
     });
     // remove the nodes
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
-      if (nodeIds.indexOf(n.id) != -1) {
+      if (vertexIds.indexOf(n.id) != -1) {
         nodes.splice(i, 1);
         nodeRefs[n.id] = undefined;
         i--
@@ -987,8 +987,8 @@ scc.modules.Graph = function() {
     for (var i = 0; i < links.length; i++) {
       var l = links[i];
       linkId = l.source.id + "-" + l.target.id;
-      if (nodeIds.indexOf(l.source.id) != -1 ||
-          nodeIds.indexOf(l.target.id) != -1) {
+      if (vertexIds.indexOf(l.source.id) != -1 ||
+          vertexIds.indexOf(l.target.id) != -1) {
         links.splice(i, 1);
         linkRefs[l.id] = undefined;
         i--
