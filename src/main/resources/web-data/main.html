@@ -65,43 +65,49 @@
             <div class="title expanded">Add and remove vertices from the canvas</div>
             <div class="contents">
               <form>
-                <h1><span>Options impacting performance</span></h1>
-                <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
-                <select id="gp_vicinityRadius"></select><br/>
-                <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
-                <select id="gp_vicinityIncoming">
-                  <option>No</option>
-                  <option>Yes</option>
-                </select><br/>
-                <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
-                <select id="gp_refreshRate"></select>
-                <h1><span>Add vertices</span></h1>
-                <span class="panel_span">Top </span>
-                <select id="gp_targetCount"></select>
-                <span class="panel_span"> of </span>
-                <select id="gs_topCriterium">
-                  <option>Highest degree</option>
-                  <option>Highest State</option>
-                  <option>Lowest State</option>
-                  <option>Signal score</option>
-                  <option>Collect score</option>
-                </select>
-                <button id="gs_addByTop">Add</button><br/>
-                <input id="gs_addIds" type="text">
-                <button id="gs_addIdsButton">Add</button><br/>
-                <span class="panel_span">Vicinity of all vertices </span>
-                <button id="gs_addAllVicinities">Add</button><br/>
-                <span class="panel_span">Vicinity of selection </span>
-                <button id="gs_addVicinitiesBySelect">Select</button>
-                <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button>
+                <div id="gp_container">
+                  <h1><span>Options impacting performance</span></h1>
+                  <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
+                  <select id="gp_vicinityRadius"></select><br/>
+                  <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
+                  <select id="gp_vicinityIncoming">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select><br/>
+                  <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
+                  <select id="gp_refreshRate"></select>
+                </div>
+                <div id="gs_container">
+                  <h1><span>Add vertices</span></h1>
+                  <span class="panel_span">Top </span>
+                  <select id="gp_targetCount"></select>
+                  <span class="panel_span"> of </span>
+                  <select id="gs_topCriterium">
+                    <option>Highest degree</option>
+                    <option>Highest State</option>
+                    <option>Lowest State</option>
+                    <option>Signal score</option>
+                    <option>Collect score</option>
+                  </select>
+                  <button id="gs_addByTop">Add</button><br/>
+                  <input id="gs_addIds" type="text">
+                  <button id="gs_addIdsButton">Add</button><br/>
+                  <span class="panel_span">Vicinity of all vertices </span>
+                  <button id="gs_addAllVicinities">Add</button><br/>
+                  <span class="panel_span">Vicinity of selection </span>
+                  <button id="gs_addVicinitiesBySelect">Select</button>
+                  <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button>
+                </div>
+                <div id="gd_container">
                 <h1><span>Remove vertices</span></h1>
-                <span class="panel_span">Remove unconnected vertices</span>
-                <button id="gd_removeOrphans">Remove</button><br/>
-                <span class="panel_span">Remove all vertices</span>
-                <button id="gd_removeAll">Remove</button><br/>
-                <span class="panel_span">Select vertices to remove</span>
-                <button id="gd_removeBySelect">Select</button>
-                <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
+                  <span class="panel_span">Remove unconnected vertices</span>
+                  <button id="gd_removeOrphans">Remove</button><br/>
+                  <span class="panel_span">Remove all vertices</span>
+                  <button id="gd_removeAll">Remove</button><br/>
+                  <span class="panel_span">Select vertices to remove</span>
+                  <button id="gd_removeBySelect">Select</button>
+                  <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
+                </div>
               </form> 
             </div>
           </div>
@@ -420,7 +426,7 @@
       </div>
     </div>
     <div id="help">
-      <a href='/#{"intro":1}' target="_blank">HELP</a>
+      <a href='/#{"intro":1}' target="_blank">TOUR</a>
     </div>
   </body>
 </html>
