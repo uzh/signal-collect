@@ -264,6 +264,32 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
 }
 
+/** Aggregator that finds a list of node ids which contain a given substring.
+  *
+  * @constructor create the aggregator
+  * @param s the substring that should be contained in the node id
+  * @param limit maximum number of nodes to find
+  */
+class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
+      extends AggregationOperation[Set[Id]] {
+
+  var counter = 0;
+
+  def extract(v: Vertex[_, _]): Set[Id] = v match {
+    case i: Inspectable[Id, _] => {
+      if (counter >= limit) { return Set() }
+      if (i.id.toString.contains(s)) { return Set(i.id) }
+      else { return Set() }
+    }
+    case other => Set()
+  }
+
+  def reduce(vertices: Stream[Set[Id]]): Set[Id] = {
+    vertices.toSet.flatten
+  }
+
+}
+
 /** Aggregator that checks if any of the break conditions apply
   *
   * The aggregator takes a map of ids (strings used to identify break 

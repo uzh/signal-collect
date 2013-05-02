@@ -25,7 +25,7 @@ scc.defaults.graph = {"layout": {
                         "cGraphDesign": "show"
                       },
                       "options": {
-                        "gs_addIds": "",
+                        "gs_addBySubstring": "",
                         "gs_topCriterium": "Highest degree",
                         "gd_verticesize": "Vertex state",
                         "gd_vertexColor": "Vertex state",
@@ -291,12 +291,12 @@ scc.modules.Graph = function() {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
     $('input[type="text"]').click(function(e) { $(this).select(); });
-    $('#gs_addIds').keypress(function(e) {
+    $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
         e.preventDefault();
-        $("#gs_addByIdsButton").addClass("active")
-        setTimeout(function () { $("#gs_addByIdsButton").removeClass("active"); }, 100);
-        scc.consumers.Graph.addByIds($("#gs_addIds").val());
+        $("#gs_addBySubstringAdd").addClass("active")
+        setTimeout(function () { $("#gs_addBySubstringAdd").removeClass("active"); }, 100);
+        scc.consumers.Graph.addBySubstring($("#gs_addBySubstring").val());
       }
     });
     $.each(scc.settings.get().graph.layout, function (key, value) {
@@ -305,8 +305,8 @@ scc.modules.Graph = function() {
     $.each(scc.settings.get().graph.options, function (key, value) {
       $("#" + key).val(value);
     });
-    if (scc.settings.get().graph.options["gs_addIds"] == "") {
-      $("#gs_addIds").val(STR.addByIds);
+    if (scc.settings.get().graph.options["gs_addBySubstring"] == "") {
+      $("#gs_addBySubstring").val(STR.addBySubstring);
     }
   }
   this.layout();
@@ -879,20 +879,16 @@ scc.modules.Graph = function() {
    * it from the server
    * @param {string} id - The vertex id
    */
-  this.addByIds = function (ids) {
-    if (ids == "") {
-      $("#gs_addIds").val("Search and hit Enter to execute");
-      return;
-    }
+  this.addBySubstring = function (s) {
     order({"provider": "graph", 
-           "query": "vertexIds", 
-           "vertexIds": ids});
+           "query": "substring", 
+           "substring": s});
   }
 
-  $("#gs_addByIdsButton").click(function (e) {
+  $("#gs_addBySubstringAdd").click(function (e) {
     e.preventDefault();
-    var ids = $("#gs_addIds").val();
-    scc.consumers.Graph.addById(ids);
+    var s = $("#gs_addBySubstring").val();
+    scc.consumers.Graph.addBySubstring(s);
   });
           
   /**
@@ -951,7 +947,7 @@ scc.modules.Graph = function() {
    * Handler called when the user wants to load the vicinity of all vertices
    * @param {Event} e - The event that triggered the call
    */
-  $("#gs_addAllVicinities").click(function (e) { 
+  $("#gs_addAllVicinitiesAdd").click(function (e) { 
     e.preventDefault();
     order({"provider": "graph",
            "query":  "vertexIds",

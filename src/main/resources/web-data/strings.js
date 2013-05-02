@@ -18,7 +18,7 @@
  *  
  */
 
-STR = {"addByIds": "Vertices whose IDs contain this string", //TODO put these in sub-object
+STR = {"addBySubstring": "Node ID should contain this string", //TODO put these in sub-object
        "pickVertex": "Enter ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",

@@ -245,7 +245,8 @@ case class GraphDataRequest(
   vicinityIncoming: Option[Boolean],
   query: Option[String], 
   targetCount: Option[Int],
-  topCriterium: Option[String]
+  topCriterium: Option[String],
+  substring: Option[String]
 )
 
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
@@ -254,21 +255,22 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   implicit val formats = DefaultFormats
 
   val workerApi = coordinator.getWorkerApi 
-  var vertexIds = List[String]()
+  var vertexIdStrings = List[String]()
   var targetCount = 5
   var vicinityRadius = 0
   var vicinityIncoming = false
 
-  def findVicinity(vertexIds: Set[Id], radius: Int = 3, 
+  def findVicinity(sourceIds: Set[Id], radius: Int = 3, 
                    incoming: Boolean = false): Set[Id] = {
-    if (radius == 0) { vertexIds }
+    if (radius == 0) { sourceIds }
     else {
       if (incoming) {
-        val vertices = workerApi.aggregateAll(new FindVertexVicinitiesByIdsAggregator[Id](vertexIds))
-        vertexIds ++ findVicinity(vertices, radius - 1, true)
+        val vicinityIds = workerApi.aggregateAll(
+                          new FindVertexVicinitiesByIdsAggregator[Id](sourceIds))
+        sourceIds ++ findVicinity(vicinityIds, radius - 1, true)
       }
       else {
-        vertexIds ++ findVicinity(vertexIds.map { id =>
+        sourceIds ++ findVicinity(sourceIds.map { id =>
           workerApi.forVertexWithId(id, { vertex: Inspectable[Id,_] =>
             vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toSet
           })
@@ -277,44 +279,52 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     }
   }
 
-  def fetchGraph(vertices: Set[Id] = Set[Id]()): JObject = {
-    val verticesOfIds = workerApi.aggregateAll(
-                     new FindVerticesByIdsAggregator[Id](vertexIds))
-    val vicinity = findVicinity(vertices ++ verticesOfIds.map { _.id }.toSet, 
-                                vicinityRadius, vicinityIncoming)
-    workerApi.aggregateAll(new GraphAggregator[Id](vicinity))
+  def fetchGraph(vertexIds: Set[Id] = Set[Id]()): JObject = {
+    val vertices = workerApi.aggregateAll(
+                     new FindVerticesByIdsAggregator[Id](vertexIdStrings))
+    val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet, 
+                                   vicinityRadius, vicinityIncoming)
+    workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds))
   }
 
-  def fetchTopState(inverted: Boolean = false): JObject = {
-    val topState = workerApi.aggregateAll(new TopStateAggregator[Id](targetCount, inverted)).take(targetCount)
-    val vertices = topState.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
-    fetchGraph(vertices)
+  def fetchByTopState(inverted: Boolean = false): JObject = {
+    val topState = workerApi.aggregateAll(
+                     new TopStateAggregator[Id](targetCount, inverted)).take(targetCount)
+    val vertexIds = topState.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
+    fetchGraph(vertexIds)
   }
 
-  def fetchTopDegree(): JObject = {
-    val vertices = workerApi.aggregateAll(new TopDegreeAggregator[Id](targetCount))
+  def fetchByTopDegree(): JObject = {
+    val vertexIds = workerApi.aggregateAll(new TopDegreeAggregator[Id](targetCount))
                              .toSeq.sortBy(-_._2)
                              .take(targetCount)
                              .map{ _._1 }
                              .toSet
-    fetchGraph(vertices)
+    fetchGraph(vertexIds)
   }
 
-  def fetchTopScore(scoreType: String): JObject = {
-    val topScore = workerApi.aggregateAll(new TopScoreAggregator[Id](targetCount, scoreType)).take(targetCount)
-    val vertices = topScore.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
-    fetchGraph(vertices)
+  def fetchByTopScore(scoreType: String): JObject = {
+    val topScore = workerApi.aggregateAll(
+                     new TopScoreAggregator[Id](targetCount, scoreType)).take(targetCount)
+    val vertexIds = topScore.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
+    fetchGraph(vertexIds)
+  }
+
+  def fetchBySubstring(s: String): JObject = {
+    val vertexIds = workerApi.aggregateAll(
+                     new FindVertexIdsBySubstringAggregator[Id](s, targetCount))
+    fetchGraph(vertexIds)
   }
 
   def fetchSample(): JObject = {
-    val vertices = workerApi.aggregateAll(new SampleAggregator[Id](targetCount))
-    fetchGraph(vertices)
+    val vertexIds = workerApi.aggregateAll(new SampleAggregator[Id](targetCount))
+    fetchGraph(vertexIds)
   }
 
   def fetch(): JObject = {
     val request = (msg).extract[GraphDataRequest]
     request.vertexIds match {
-      case Some(ids) => vertexIds = ids
+      case Some(ids) => vertexIdStrings = ids
       case otherwise => 
     }
     request.targetCount match {
@@ -330,16 +340,20 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case otherwise => 
     }
     val graphData = request.query match {
+      case Some("substring") => request.substring match {
+        case Some(s) => fetchBySubstring(s)
+        case otherwise => fetchInvalid(msg, "missing substring")
+      }
       case Some("vertexIds") => request.vertexIds match {
         case Some(ids) => fetchGraph()
         case otherwise => fetchInvalid(msg, "missing vertexIds")
       }
       case Some("top") => request.topCriterium match {
-        case Some("Highest State") => fetchTopState()
-        case Some("Lowest State") => fetchTopState(true)
-        case Some("Highest degree") => fetchTopDegree()
-        case Some("Signal score") => fetchTopScore("signal")
-        case Some("Collect score") => fetchTopScore("collect")
+        case Some("Highest state") => fetchByTopState()
+        case Some("Lowest state") => fetchByTopState(true)
+        case Some("Highest degree") => fetchByTopDegree()
+        case Some("Signal score") => fetchByTopScore("signal")
+        case Some("Collect score") => fetchByTopScore("collect")
         case otherwise => new InvalidDataProvider(msg).fetch
       }
       case otherwise => fetchInvalid(msg, "missing query")
