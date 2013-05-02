@@ -59,8 +59,8 @@ trait WorkerApi[Id, Signal] {
   def reset
   
   //TODO: Implement system information accessors on node instead.
-  def getSystemInformation: SystemInformation
-  def getIndividualSystemInformation: List[SystemInformation]
+  def getNodeStatistics: NodeStatistics
+  def getIndividualNodeStatistics: List[NodeStatistics]
 
   /**
    * Creates a snapshot of all the vertices in all workers.

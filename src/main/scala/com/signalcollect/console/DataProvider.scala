@@ -35,7 +35,7 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Extraction._
 import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.SystemInformation
+import com.signalcollect.interfaces.NodeStatistics
 import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
@@ -360,14 +360,15 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val ws: Array[WorkerStatistics] = 
       (coordinator.getWorkerApi.getIndividualWorkerStatistics).toArray
     val wstats = Toolkit.unpackObjects(ws)
-    val ss: Array[SystemInformation] = 
-      (coordinator.getWorkerApi.getIndividualSystemInformation).toArray
-    val sstats = Toolkit.unpackObjects(ss)
+    val ns: Array[NodeStatistics] = 
+      (coordinator.getWorkerApi.getIndividualNodeStatistics).toArray
+    val nstats = Toolkit.unpackObjects(ns)
     
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
-    ("workerStatistics" -> wstats ~ sstats)
+    ("workerStatistics" -> wstats) ~
+    ("nodeStatistics" -> nstats)
   }
 }
 

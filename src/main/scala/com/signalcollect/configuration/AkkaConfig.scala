@@ -74,7 +74,7 @@ akka {
       "com.signalcollect.interfaces.NodeStatus" = kryo
       "com.signalcollect.interfaces.Heartbeat" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
-      "com.signalcollect.interfaces.SystemInformation" = kryo
+      "com.signalcollect.interfaces.NodeStatistics" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
     """ +
     {
@@ -191,7 +191,7 @@ akka {
             "com.signalcollect.interfaces.NodeStatus" = 36
             "com.signalcollect.interfaces.Heartbeat" = 37
             "com.signalcollect.interfaces.WorkerStatistics" = 38
-            "com.signalcollect.interfaces.SystemInformation" = 39
+            "com.signalcollect.interfaces.NodeStatistics" = 39
             "com.signalcollect.interfaces.SentMessagesStats" = 40
     """ +
     {
@@ -232,7 +232,7 @@ akka {
             "com.signalcollect.interfaces.NodeStatus",
             "com.signalcollect.interfaces.Heartbeat",
             "com.signalcollect.interfaces.WorkerStatistics",
-            "com.signalcollect.interfaces.SystemInformation",
+            "com.signalcollect.interfaces.NodeStatistics",
             "com.signalcollect.interfaces.SentMessagesStats"
     """ +
     {

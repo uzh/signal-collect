@@ -38,7 +38,7 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.WorkerStatistics.apply
-import com.signalcollect.interfaces.SystemInformation
+import com.signalcollect.interfaces.NodeStatistics
 
 /**
  * Class that allows to interact with all the workers as if there were just one worker.
@@ -67,10 +67,10 @@ class DefaultWorkerApi[Id, Signal](
   }
 
   // TODO: Move to node.
-  def getIndividualSystemInformation: List[SystemInformation] = futures(_.getSystemInformation) map get toList
+  def getIndividualNodeStatistics: List[NodeStatistics] = futures(_.getNodeStatistics) map get toList
 
-  override def getSystemInformation: SystemInformation = {
-    getIndividualSystemInformation.fold(SystemInformation())(_ + _)
+  override def getNodeStatistics: NodeStatistics = {
+    getIndividualNodeStatistics.fold(NodeStatistics())(_ + _)
   }
 
   override def signalStep: Boolean = futures(_.signalStep) forall get

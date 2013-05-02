@@ -128,8 +128,8 @@ case class WorkerStatistics(
   }
 }
 
-case class SystemInformation(
-    workerId: Int = -1,
+case class NodeStatistics(
+    nodeId: Int = -1, // give more meaningful ID when implemented on node
     os: String = "",
     runtime_mem_total: Long = 0l,
     runtime_mem_max: Long = 0l,
@@ -144,8 +144,8 @@ case class SystemInformation(
     jmx_process_time: Double = 0.0,
     jmx_system_load: Double = 0.0
 ) {
-  def +(other: SystemInformation): SystemInformation = {
-    SystemInformation(
+  def +(other: NodeStatistics): NodeStatistics = {
+    NodeStatistics(
         -1,
         os + other.os,
         runtime_mem_total + other.runtime_mem_total,

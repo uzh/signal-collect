@@ -30,7 +30,7 @@ import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.WorkerApi
 import akka.event.LoggingAdapter
 import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.SystemInformation
+import com.signalcollect.interfaces.NodeStatistics
 import java.io.DataInputStream
 import com.signalcollect.serialization.DefaultSerializer
 import java.io.DataOutputStream
@@ -417,13 +417,13 @@ class WorkerImplementation[Id, Signal](
       messagesSentToOthers = messageBus.messagesSentToOthers)
   }
 
-  def getIndividualSystemInformation = List(getSystemInformation)
+  def getIndividualNodeStatistics = List(getNodeStatistics)
 
-  def getSystemInformation: SystemInformation = {
+  def getNodeStatistics: NodeStatistics = {
     val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
     val runtime: Runtime = Runtime.getRuntime()
-    SystemInformation(
-      workerId = workerId,
+    NodeStatistics(
+      nodeId = workerId,
       os = System.getProperty("os.name"),
       runtime_mem_total = runtime.totalMemory(),
       runtime_mem_max = runtime.maxMemory(),
