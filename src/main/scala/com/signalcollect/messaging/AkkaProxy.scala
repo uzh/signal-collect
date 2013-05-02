@@ -52,7 +52,7 @@ object AkkaProxy {
     incrementor: MessageBus[_, _] => Unit,
     sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
     receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
-    timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+    timeout: Timeout = Timeout(Duration.create(2, TimeUnit.HOURS))): T = {
     val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,
@@ -68,7 +68,7 @@ object AkkaProxy {
     actor: ActorRef,
     sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
     receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
-    timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+    timeout: Timeout = Timeout(Duration.create(2, TimeUnit.HOURS))): T = {
     val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,
