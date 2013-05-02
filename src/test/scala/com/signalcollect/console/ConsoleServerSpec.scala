@@ -139,9 +139,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       val providerResults = (json \\ "workerStatistics").children
       val providerResultsMap = createMapFromJValueList(providerResults);
       requiredProviderResults.foreach {
-        result =>
-          println(result)
-          providerResultsMap.contains(result) === true
+        result => providerResultsMap.contains(result) === true
       }
     }
     
@@ -348,7 +346,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
   
     
     "stop successfully" in {
-      println("Client shutting down...") 
       try {
         server.close();
         true
@@ -372,7 +369,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     json.foreach {
       s: JValue =>
         val (name: String, values: Any) = s.values
-//        println("\"" + name + "\",")
         map += (name -> values)
     }
     map
@@ -388,7 +384,6 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
     sendJsonOrder("{\"provider\":\"" + provider + "\"}")
   }
   def sendJsonOrder(json : String) {
-//    println("Client sending: " + json)
     try {
       send(json)
     } catch {
@@ -402,17 +397,13 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
     json
   }
   def onOpen(handshakedata : ServerHandshake) {
-    println("Client onOpen")
   }
   def onMessage(message : String) {
-//    println("Client received: " + message)
     while (response.length() > 0) { Thread.sleep(100) }
     response = message
   }
   def onClose(code : Int, reason : String, remote : Boolean) {
-    println("Client onClose")
   }
   def onError(ex : Exception) {
-    println("Client onError")
   }
 }
