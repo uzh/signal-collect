@@ -30,13 +30,37 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
+/** Aggregator that loads a JObject representation of vertices and their edges.
+  *
+  * Given the set of ids, the aggregator the corresponding vertices and the 
+  * edges between the nodes. The aggregator returs a JObject, which contains
+  * two objects, one for nodes, one for edges. The data structure is best
+  * explained by an example:
+  *
+  * {{{
+  * {"nodes":{"id1":{"s":"0.15","ss":0.0,"cs":1.0},
+  *           "id2":{"s":"0.16","ss":1.0,"cs":1.0},
+  *           "id3":{"s":"0.17","ss":1.0,"cs":1.0}},
+  *  "edges":{"id1":["id2","id3"]}}}
+  * }}}
+  *
+  * The nodes object uses a node id as key and stores the state, signal and 
+  * collect scores. The edges object uses a node id as key and stores the list
+  * of target nodes.
+  *
+  * @constructor create the aggregator
+  * @param nodeIds set of node ids to be loaded
+  */
 class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id]())
       extends AggregationOperation[JObject] {
 
   def extract(v: Vertex[_,_]): JObject = v match {
     case i: Inspectable[Id,_] => {
       if (nodeIds.contains(i.id)) {
+        // Get the list of target nodes that this node's edges point at
         val targetNodes = i.outgoingEdges.values.filter { value =>
+          // This match is necessary because only an Edge[Id] will have a 
+          // targetId of type Id.
           value match {
             case v: Edge[Id] => nodeIds.contains(v.targetId)
             case otherwise => false
@@ -62,6 +86,12 @@ class GraphAggregator[Id](nodeIds: Set[Id] = Set[Id]())
   }
 }
 
+
+/** Aggregator that retrieves a random sample of node ids.
+  *
+  * @constructor create the aggregator
+  * @param sampleSize the number of node ids to retrieve
+  */
 class SampleAggregator[Id](sampleSize: Int) 
       extends ModularAggregationOperation[Set[Id]] {
 
@@ -78,12 +108,21 @@ class SampleAggregator[Id](sampleSize: Int)
   }
 }
 
+/** Aggregator that retrieves nodes with the highest degree.
+  *
+  * The aggregator produces a map of node ids to degrees.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  */
 class TopDegreeAggregator[Id](n: Int)
       extends AggregationOperation[Map[Id,Int]] {
 
   def extract(v: Vertex[_, _]): Map[Id,Int] = v match {
     case i: Inspectable[Id, _] => 
+      // Create one map from this id to the number of outgoing edges
       Map(i.id -> i.outgoingEdges.size) ++
+      // Create several maps, one for each target id to 1
       i.outgoingEdges.values.map { 
         case v: Edge[Id] => (v.targetId -> 1)
       }
@@ -91,15 +130,26 @@ class TopDegreeAggregator[Id](n: Int)
   }
 
   def reduce(degrees: Stream[Map[Id,Int]]): Map[Id,Int] = {
+    // Combine the maps created above to count the total number of edges
     Toolkit.mergeMaps(degrees.toList)((v1, v2) => v1 + v2)
   }
 }
 
+/** Aggregator that retrieves nodes with the highest or lowest state.
+  *
+  * The aggregator produces a list of tuples, each containing the state and the
+  * node id with that state.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  * @param inverted gather by lowest, not highest state
+  */
 class TopStateAggregator[Id](n: Int, inverted: Boolean)
       extends AggregationOperation[List[(Double,Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
     case i: Inspectable[Id, _] => 
+      // Try to interpret different types of numberic states
       val state: Option[Double] = i.state match {
         case x: Double => Some(x)
         case x: Int => Some(x.toDouble)
@@ -125,6 +175,15 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
   }
 }
 
+/** Aggregator that retrieves nodes with the highest signal or collect scores.
+  *
+  * The aggregator produces a list of tuples, each containing the score and the
+  * node id with that score.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  * @param scoreType the score to look at (signal or collect)
+  */
 class TopScoreAggregator[Id](n: Int, scoreType: String)
       extends AggregationOperation[List[(Double,Id)]] {
 
@@ -146,21 +205,29 @@ class TopScoreAggregator[Id](n: Int, scoreType: String)
 
 }
 
+/** Aggregator that loads the ids of nodes in the vicinity of other nodes.
+  *
+  * The aggregator produces a new set of ids representing the nodes that are
+  * connected to any of the nodes in the given set, be it incoming or outgoing.
+  *
+  * @constructor create the aggregator
+  * @param ids set of node ids to be loaded
+  */
 class FindNodeVicinitiesByIdsAggregator[Id](ids: Set[Id])
       extends AggregationOperation[Set[Id]] {
 
   def extract(v: Vertex[_,_]): Set[Id] = v match {
     case i: Inspectable[Id,_] =>
-      // if this node is the target of a primary node, it's a vicinity node
+      // If this node is the target of a primary node, it's a vicinity node
       if(i.outgoingEdges.values.view.map { 
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise => false
       }.toSet.contains(true)) { return  Set(i.id) }
-      // if this node is a primary node, all its targets are vicinity nodes
+      // If this node is a primary node, all its targets are vicinity nodes
       if (ids.contains(i.id)) {
         return i.outgoingEdges.values.map{ case v: Edge[Id] => v.targetId }.toSet
       }
-      // if neither is true, this node is irrelevant
+      // If neither is true, this node is irrelevant
       return Set()
     case otherwise => Set()
   }
@@ -170,6 +237,14 @@ class FindNodeVicinitiesByIdsAggregator[Id](ids: Set[Id])
   }
 }
 
+/** Aggregator that translates a list of strings to a list of vertices.
+  *
+  * The aggregator compares the string representation of the id of any node
+  * to the strings supplied to it.
+  *
+  * @constructor create the aggregator
+  * @param idsList the list of ids to compare node ids with
+  */
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
       extends AggregationOperation[List[Vertex[Id,_]]] {
 
@@ -189,6 +264,17 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
 }
 
+/** Aggregator that checks if any of the break conditions apply
+  *
+  * The aggregator takes a map of ids (strings used to identify break 
+  * conditions) to BreakCondition items. It produces a map of the same ids to
+  * strings which represent the reason for the condition firing. For example,
+  * one result item may be ("3" -> "0.15"), which would mean that the condition
+  * identified as "3" fired because of a value "0.15".
+  *
+  * @constructor create the aggregator
+  * @param conditions map of conditions
+  */
 class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
       extends AggregationOperation[Map[String,String]] {
 
@@ -200,9 +286,6 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
     GoesBelowSignalThreshold,
     GoesAboveCollectThreshold,
     GoesBelowCollectThreshold
-  )
-
-  val allNodeConditions = List(
   )
 
   def extract(v: Vertex[_, _]): Map[String,String] = v match {
@@ -244,3 +327,4 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
     Toolkit.mergeMaps(results.toList)((v1, v2) => v1 + v2)
   }
 }
+
