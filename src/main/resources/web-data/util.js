@@ -73,3 +73,19 @@ var sumMessageReceived = function(data) {
   });
   return sum;
 };
+
+/**
+ * Function that returns true when the passed DOM element is in the viewport,
+ * false otherwise.
+ * @param {Object} el - The element to check whether it is in the viewport.
+ * @return {boolean} - Whether or not the passed DOM element is in the viewport.
+ */ 
+function isElementOverlappingViewport(el) {
+  var rect = el.getBoundingClientRect();
+  return (
+      rect.top >= -400 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document. documentElement.clientHeight) + 400 && /*or $(window).height() */
+      rect.right <= (window.innerWidth || document. documentElement.clientWidth) /*or $(window).width() */
+      );
+}

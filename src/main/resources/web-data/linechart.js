@@ -42,10 +42,16 @@ var LineChart = function() {
   };
   
   /**
-   * The DOM container of the current chart.
-   * @type {Object}
+   * The container of all the charts.
+   * @type {string}
    */
   this.container = null;
+  
+  /**
+   * The DOM selector of the current chart.
+   * @type {Object}
+   */
+  this.chartSelector = null;
   
   /**
    * The array which stores all the data (minimum, average, and maximum) that is
@@ -211,7 +217,7 @@ var LineChart = function() {
     var newLowestXDomain, newHighestXDomain;
     
     if (scale == 0) {
-      newHighestXDomain = new Date(currentHighestDate.addMilliseconds(scc.conf.resources.intervalCharts));
+      newHighestXDomain = new Date(currentHighestDate.addMilliseconds(2*scc.conf.resources.intervalCharts));
       newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-differenceMS));
     } else {      
       var moveMS       = scale * Math.round(differenceMS / 3);
@@ -269,7 +275,7 @@ var LineChart = function() {
 
     // add default scale of the axes
     var now = new Date();
-    x.domain([new Date(now.addMilliseconds(-170*1000)), new Date(now.addMilliseconds(10*1000))]);
+    x.domain([new Date(now.addMilliseconds(-8*60*1000)), new Date(now.addMilliseconds(2*scc.conf.resources.intervalCharts))]);
     y.domain([0, 1]);
 
     xAxis = d3.svg.axis().scale(x)
@@ -345,6 +351,9 @@ var LineChart = function() {
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
     divTooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
     
+    // add the DOM selector for this chart
+    this.chartSelector = $("#" + this.config.jsonName + "Chart");
+    
     draw();
   };
 
@@ -355,8 +364,8 @@ var LineChart = function() {
    */
   function draw() {
     svg.select("g.x.axis").call(xAxis);
-    svg.select("g.y.axis").transition().duration(300).ease("linear").call(yAxis);
-    path.transition().duration(300).ease("linear").attr("d", line);
+    svg.select("g.y.axis").transition().duration(200).ease("linear").call(yAxis);
+    path.transition().duration(200).ease("linear").attr("d", line);
     aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
   }
   
@@ -471,7 +480,7 @@ var LineChart = function() {
     // is current highest date currently being showed?
     if (lowestXDomain <= currentHighestDate && currentHighestDate <= highestXDomain) {
       // if new highest date is out of the domain, we have to shift the chart
-      if (highestXDomain < currentDate) {
+      if (highestXDomain < new Date(currentDate.addMilliseconds(2*scc.conf.resources.intervalCharts))) {
         shiftRight = true;
       }
     }
@@ -480,20 +489,32 @@ var LineChart = function() {
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average" });
     data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id] });
     data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id] });
+    
+    currentHighestDate = currentDate;
+
+    if (shiftRight) {
+      // update x domain
+      x.domain([new Date(lowestXDomain.addMilliseconds(2*scc.conf.resources.intervalCharts)),
+                new Date(currentDate.addMilliseconds(scc.conf.resources.intervalCharts))]);
+    }
+    
+    if (this.chartSelector.hasClass("hidden") || !isElementOverlappingViewport(this.chartSelector.find("svg")[0])) {
+      // TODO update y domain before this
+      // TODO collective zooming is buggy
+      return false;
+    }
+    
     path.attr("transform", null); // needed to avoid shifting scatter points
     
     // only perform animated transition when needed or we will have problems when dragging/zooming
-    d3.transition().ease("linear").duration((shiftRight ? 300 : 0)).each(function() {
+    d3.transition().ease("linear").duration((shiftRight ? 200 : 0)).each(function() {
 
       if (shiftRight) {
-        // update x domain
-        x.domain([new Date(lowestXDomain.addMilliseconds(scc.conf.resources.intervalCharts)), currentDate]);
         zoom.x(x);
         
         // line transition
         var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + scc.conf.resources.intervalCharts));
-        path.transition().ease("linear")
-            .attr("transform", "translate(" + x(transformVal) + ")");
+        path.attr("transform", "translate(" + x(transformVal) + ")");
       }
       
       // update scatter points
@@ -529,8 +550,6 @@ var LineChart = function() {
     
       draw();
     });
-
-    currentHighestDate = currentDate;
   };
   
 };
