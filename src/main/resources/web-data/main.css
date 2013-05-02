@@ -639,7 +639,7 @@ a, a:visited {
   stroke-width: 3;
 }
 
-.link {
+.edge {
   stroke: #999;
   stroke-width: 1;
   -moz-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
@@ -648,7 +648,7 @@ a, a:visited {
   transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
   opacity: 1;
 }
-.link.outgoing {
+.edge.outgoing {
   stroke: #00dd00;
   stroke-width: 2;
 }

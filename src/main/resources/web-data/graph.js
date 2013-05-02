@@ -68,11 +68,11 @@ scc.modules.Graph = function() {
     .range([5, 25])
     .clamp(true);
   var vertices = [];
-  var links = [];
+  var edges = [];
   var vertexRefs = {};
-  var linkRefs = {};
+  var edgeRefs = {};
   var vertex;
-  var link;
+  var edge;
   var fadeTimer;
   var orderTemplate = {"provider": "graph"};
   var gradientDomain = [null,null];
@@ -387,10 +387,10 @@ scc.modules.Graph = function() {
         fillTooltip(data);
         clearTimeout(fadeTimer);
         tooltip.fadeIn(200);
-        link.attr("class", function(o) {
-          if (o.source.id === data.id) { return "link outgoing"; }
-          if (o.target.id === data.id) { return "link"; }
-          return "link hiddenOpacity";
+        edge.attr("class", function(o) {
+          if (o.source.id === data.id) { return "edge outgoing"; }
+          if (o.target.id === data.id) { return "edge"; }
+          return "edge hiddenOpacity";
         });
       }
       // Otherwise, clear the tooltip and set a timeout to hide it soon
@@ -403,10 +403,10 @@ scc.modules.Graph = function() {
           tooltip.fadeOut(200);
         }, 500);
         if (drawEdges == "Only on hover") {
-          link.attr("class", "link hiddenOpacity");
+          edge.attr("class", "edge hiddenOpacity");
         }
         else {
-          link.attr("class", "link");
+          edge.attr("class", "edge");
         }
       }
     });
@@ -415,13 +415,13 @@ scc.modules.Graph = function() {
     force = d3.layout.force()
         .size([$("#content").width(), $("#content").height()])
         .nodes(vertices)
-        .links(links)
+        .links(edges)
         .linkDistance(350)
         .charge(-500);
     
-    // vertex and link shall contain the SVG elements of the graph
+    // vertex and edge shall contain the SVG elements of the graph
     vertex = svg.selectAll(".vertex");
-    link = svg.selectAll(".link");
+    edge = svg.selectAll(".edge");
 
     // apply graph design options from the settings
     $.each(scc.settings.get().graph.options, function (key, value) {
@@ -439,29 +439,29 @@ scc.modules.Graph = function() {
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
       
-      // Update the vertex and link positions
+      // Update the vertex and edge positions
       vertex.attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
-      link.attr("x1", function(d) { return d.source.x; })
+      edge.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
 
       // Add classes to edges depending on options and user interaction
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
-      link.attr("class", function(o) {
+      edge.attr("class", function(o) {
         // If the user is hovering over a vertex, only draw edges of that vertex
         if (hoveringOverVertex) {
-          if (o.target.id === hoveringOverVertex) { return "link outgoing"; }
-          if (o.source.id === hoveringOverVertex) { return "link"; }
-          return "link hiddenOpacity";
+          if (o.target.id === hoveringOverVertex) { return "edge outgoing"; }
+          if (o.source.id === hoveringOverVertex) { return "edge"; }
+          return "edge hiddenOpacity";
         }
         // Else draw vertices depending on the drawEdges setting
         else {
           if (drawEdges == "Always" || 
              (drawEdges == "When graph is still" && 
-             force.alpha() < 0.02)) { return "link"; }
-          else { return "link hiddenOpacity"; }
+             force.alpha() < 0.02)) { return "edge"; }
+          else { return "edge hiddenOpacity"; }
         }
       });
     });
@@ -476,11 +476,11 @@ scc.modules.Graph = function() {
    */
   var restart = function (graphChanged) {
 
-    // Update the link data
-    link = link.data(links, function(d) { return d.id; });
-    link.enter().append("line")
-        .attr("class", "link hiddenOpacity");
-    link.exit().remove();
+    // Update the edge data
+    edge = edge.data(edges, function(d) { return d.id; });
+    edge.enter().append("line")
+        .attr("class", "edge hiddenOpacity");
+    edge.exit().remove();
 
     // update the vertex data
     vertex = vertex.data(vertices, function(d) { return d.id; });
@@ -533,7 +533,7 @@ scc.modules.Graph = function() {
       $("#graph_background").fadeOut(50);
     }
 
-    // The server sends us two maps, one for vertices and one for links. In both,
+    // The server sends us two maps, one for vertices and one for edges. In both,
     // the vertices are identifies using strings. For example, given the following
     // vertex map...
     //
@@ -541,7 +541,7 @@ scc.modules.Graph = function() {
     //  "2222":{ <vertex properties> },
     //  "3333":{ <vertex properties> }}
     //
-    // and the following link map...
+    // and the following edge map...
     //
     // {"1111":["2222","3333"],
     //  "2222":["3333"]}
@@ -555,14 +555,14 @@ scc.modules.Graph = function() {
     // whole graph but we have no way of mapping the actual vertex id to the 
     // index used by d3. For this reason, we keep a lookup table, 'vertexRefs',
     // which keeps the (vertexId -> index) mapping. The same thing happens for
-    // the links. For example given the graph above, the resulting maps could be:
+    // the edges. For example given the graph above, the resulting maps could be:
     //
     // vertexRefs["1111"] = 0
     // vertexRefs["2222"] = 1
     // vertexRefs["3333"] = 2
-    // linkRefs["1111-2222"] = 0
-    // linkRefs["1111-3333"] = 1
-    // linkRefs["2222-3333"] = 3
+    // edgeRefs["1111-2222"] = 0
+    // edgeRefs["1111-3333"] = 1
+    // edgeRefs["2222-3333"] = 3
     //
     // This way, we can later update vertex states, for exmaple by re-assigning
     // to vertices[vertexRefs["1111"]], thereby updating the correct vertex in d3's
@@ -598,17 +598,17 @@ scc.modules.Graph = function() {
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
         for (var t = 0; t < targets.length; t++) {
-          linkId = source + "-" + targets[t];
-          if (linkRefs[linkId] == undefined) {
-            // The link hasn't existed yet. Update d3's link array
-            links.push({"id": linkId,
+          edgeId = source + "-" + targets[t];
+          if (edgeRefs[edgeId] == undefined) {
+            // The edge hasn't existed yet. Update d3's edge array
+            edges.push({"id": edgeId,
                         "source": vertices[vertexRefs[source]], 
                         "target": vertices[vertexRefs[targets[t]]]});
-            // Store the index of the link in the lookup table
-            linkRefs[linkId] = links.length - 1;
+            // Store the index of the edge in the lookup table
+            edgeRefs[edgeId] = edges.length - 1;
           }
           else {
-            // One could update d3's link array here, like with the vertices
+            // One could update d3's edge array here, like with the vertices
           }
         }
       });
@@ -662,9 +662,9 @@ scc.modules.Graph = function() {
     scc.resetOrders("graph");
     $("#graph_canvas").empty();
     vertices = [];
-    links = [];
+    edges = [];
     vertexRefs = {};
-    linkRefs = {};
+    edgeRefs = {};
   };
 
 
@@ -850,7 +850,7 @@ scc.modules.Graph = function() {
   $("#gd_removeOrphans").click(function (e) { 
     e.preventDefault();
     var verticesWithEdges = {};
-    $.map(links, function (d, i) {
+    $.map(edges, function (d, i) {
       verticesWithEdges[d.source.id] = 1; 
       verticesWithEdges[d.target.id] = 1; 
     });
@@ -983,18 +983,18 @@ scc.modules.Graph = function() {
         vertexRefs[n.id] = i;
       }
     }
-    // remove links that were connected to these vertices
-    for (var i = 0; i < links.length; i++) {
-      var l = links[i];
-      linkId = l.source.id + "-" + l.target.id;
+    // remove edges that were connected to these vertices
+    for (var i = 0; i < edges.length; i++) {
+      var l = edges[i];
+      edgeId = l.source.id + "-" + l.target.id;
       if (vertexIds.indexOf(l.source.id) != -1 ||
           vertexIds.indexOf(l.target.id) != -1) {
-        links.splice(i, 1);
-        linkRefs[l.id] = undefined;
+        edges.splice(i, 1);
+        edgeRefs[l.id] = undefined;
         i--
       }
       else {
-        linkRefs[l.id] = i;
+        edgeRefs[l.id] = i;
       }
     }
     // persist the new vertex selection and re-activate the graph layout
@@ -1066,9 +1066,9 @@ scc.modules.Graph = function() {
     switch (val) {
         case "Always":
         case "When graph is still":
-            link.attr("class", "link"); break;
+            edge.attr("class", "edge"); break;
         case "Only on hover":
-            link.attr("class", "link hiddenOpacity"); break;
+            edge.attr("class", "edge hiddenOpacity"); break;
     }
     scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });
