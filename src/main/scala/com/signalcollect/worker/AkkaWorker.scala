@@ -67,10 +67,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Int)
-    extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal] with ActorLogging {
 
-  override def toString = "Worker" + workerId
-  
+  override def postRestart(reason: Throwable): Unit = {
+    val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
+    println(msg)
+    log.debug(msg)
+  }
+
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
@@ -99,8 +103,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
-      for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
-        modification(worker.graphEditor)
+      try {
+        for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
+          modification(worker.graphEditor)
+        }
+      } catch {
+        case t: Throwable => println(s"Worker $workerId had a problem during graph loading: $t")
       }
       worker.messageBusFlushed = false
     }
@@ -134,7 +142,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     }
   }
 
-/**
+  /**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
@@ -169,24 +177,49 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         scheduleOperations
       }
 
+    case AddVertex(vertex) =>
+      // TODO: More precise accounting for this kind of message.
+      worker.counters.requestMessagesReceived += 1
+      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
+      // TODO: Reevaluate, if we really need to schedule operations.
+      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+        scheduleOperations
+      }
+
+    case AddEdge(sourceVertexId, edge) =>
+      // TODO: More precise accounting for this kind of message.
+      worker.counters.requestMessagesReceived += 1
+      worker.addEdge(sourceVertexId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
+      // TODO: Reevaluate, if we really need to schedule operations.
+      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+        scheduleOperations
+      }
+
     case ScheduleOperations =>
       if (messageQueue.isEmpty) {
+        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
+          log.debug(s"Worker $workerId turns to idle")
           worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
+          log.debug(s"Worker $workerId has work to do")
           if (worker.isPaused) {
+            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
+            log.debug(s"Worker $workerId is not paused. Will execute operations.")
             executeOperations
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
             worker.messageBusFlushed = true
           }
+          log.debug(s"Worker $workerId will schedule operations.")
           scheduleOperations
         }
       } else {
+        log.debug(s"Message queue on worker $workerId is NOT empty, will schedule operations")
         scheduleOperations
       }
 
@@ -204,7 +237,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       } catch {
         case e: Exception =>
-          log.error(s"Problematic request on worker $workerId: ${e.getMessage}")
+          val msg = s"Problematic request on worker $workerId: ${e.getStackTraceString}"
+          println(msg)
+          log.debug(msg)
           throw e
       }
       if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
@@ -218,7 +253,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case other =>
       worker.counters.otherMessagesReceived += 1
-      log.error(s"Worker $workerId could not handle message $other")
+      val msg = s"Worker $workerId could not handle message $other"
+      println(msg)
+      log.debug(msg)
       throw new UnsupportedOperationException(s"Unsupported message: $other")
   }
 

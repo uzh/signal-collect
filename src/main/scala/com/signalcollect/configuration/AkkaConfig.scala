@@ -66,20 +66,16 @@ akka {
       "scala.Float" = kryo
       "scala.Double" = kryo
       "scala.Some" = kryo
-      "com.signalcollect.Vertex" = kryo
-      "com.signalcollect.Edge" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
+      "com.signalcollect.interfaces.NodeStatus" = kryo
+      "com.signalcollect.interfaces.Heartbeat" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.SystemInformation" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
-      "scala.collection.immutable.Map$EmptyMap$" = kryo
-      "scala.collection.immutable.$colon$colon"= kryo
-      "scala.collection.immutable.Nil$" = kryo
-      "scala.collection.immutable.Map$Map1" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
@@ -182,29 +178,25 @@ akka {
         # ids below it are used by Kryo internally e.g. for built-in Java and 
         # Scala types   
         mappings {
-            "scala.Int" = 27
-            "scala.Long" = 28
-            "scala.Float" = 29
-            "scala.Double" = 30
-            "scala.Some" = 31
-            "com.signalcollect.Vertex" = 32
-            "com.signalcollect.Edge" = 33
-            "com.signalcollect.interfaces.SignalMessage" = 34
-            "com.signalcollect.interfaces.BulkSignal" = 35
-            "java.util.HashMap" = 36
-            "com.signalcollect.interfaces.EdgeId" = 37
-            "com.signalcollect.interfaces.WorkerStatus" = 38
-            "com.signalcollect.interfaces.WorkerStatistics" = 39
-            "com.signalcollect.interfaces.SystemInformation" = 40
-            "com.signalcollect.interfaces.SentMessagesStats" = 41
-            "scala.collection.immutable.Map$EmptyMap$" = 42
-            "scala.collection.immutable.$colon$colon"= 43
-            "scala.collection.immutable.Nil$" = 44
-            "scala.collection.immutable.Map$Map1" = 45
+            "scala.Int" = 26
+            "scala.Long" = 27
+            "scala.Float" = 28
+            "scala.Double" = 29
+            "scala.Some" = 30
+            "com.signalcollect.interfaces.SignalMessage" = 31
+            "com.signalcollect.interfaces.BulkSignal" = 32
+            "java.util.HashMap" = 33
+            "com.signalcollect.interfaces.EdgeId" = 34
+            "com.signalcollect.interfaces.WorkerStatus" = 35
+            "com.signalcollect.interfaces.NodeStatus" = 36
+            "com.signalcollect.interfaces.Heartbeat" = 37
+            "com.signalcollect.interfaces.WorkerStatistics" = 38
+            "com.signalcollect.interfaces.SystemInformation" = 39
+            "com.signalcollect.interfaces.SentMessagesStats" = 40
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 45
+        var highestUsedKryoId = 48
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -232,20 +224,16 @@ akka {
             "scala.Float",
             "scala.Double",
             "scala.Some",
-            "com.signalcollect.Vertex",
-            "com.signalcollect.Edge",
             "com.signalcollect.interfaces.SignalMessage",
             "com.signalcollect.interfaces.BulkSignal",
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
+            "com.signalcollect.interfaces.NodeStatus",
+            "com.signalcollect.interfaces.Heartbeat",
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.SystemInformation",
-            "com.signalcollect.interfaces.SentMessagesStats",
-            "scala.collection.immutable.Map$EmptyMap$",
-            "scala.collection.immutable.$colon$colon",
-            "scala.collection.immutable.Nil$",
-            "scala.collection.immutable.Map$Map1"
+            "com.signalcollect.interfaces.SentMessagesStats"
     """ +
     {
       if (!kryoRegistrations.isEmpty) {

@@ -99,6 +99,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
+  val log = system.log
   ActorSystemRegistry.register(system)
 
   val console = {
@@ -109,9 +110,11 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     }
   }
 
-  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
+  log.debug("Requesting nodes ...")
+  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig).sorted
+  log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_, mb => Unit)) // MessageBus not initialized at this point.
+  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
 
@@ -160,23 +163,25 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
   // Bootstrap => sent and received messages are not counted for termination detection. 
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_, mb => Unit)) // MessageBus not initialized at this point.
-  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor, mb => Unit) // MessageBus not initialized at this point.
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_)) // MessageBus not initialized at this point.
+  val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor) // MessageBus not initialized at this point.
 
   initializeMessageBuses
 
   def initializeMessageBuses {
+    log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
-    for (registry <- registries) {
+    for (registry <- registries.par) {
       registry.registerCoordinator(coordinatorActor)
       registry.registerLogger(loggerActor)
-      for (workerId <- 0 until numberOfWorkers) {
+      for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
       }
-      for (nodeId <- 0 until numberOfNodes) {
+      for (nodeId <- (0 until numberOfNodes).par) {
         registry.registerNode(nodeId, nodeActors(nodeId))
       }
     }
+    log.debug("All registries have been fully initialized.")
   }
 
   lazy val workerApi = coordinatorProxy.getWorkerApi
@@ -273,6 +278,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     stats: ExecutionStatistics,
     parameters: ExecutionConfiguration) extends Execution {
     var conditions = Map[String,BreakCondition]()
+    var conditionsReached = Map[String, String]()
     var state = "initExecution"
     var iteration = 0
     if (console != null) { console.setInteractor(this) }
@@ -292,7 +298,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
     // user break condition management
     var conditionCounter = 0
-    var conditionsReached = Map[String,String]()
     def addCondition(condition: BreakCondition) {
       conditionCounter += 1
       conditions += (conditionCounter.toString -> condition)
@@ -366,7 +371,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           if (!resetting) {
             setState("checksBeforeSignal")
             conditionsReached = workerApi.aggregateAll(
-                new BreakConditionsAggregator(conditions))
+              new BreakConditionsAggregator(conditions))
             if (conditionsReached.size > 0) {
               steps = 0
               setState("pausing")
@@ -396,7 +401,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           if (!resetting) {
             setState("checksBeforeCollect")
             conditionsReached = workerApi.aggregateAll(
-                new BreakConditionsAggregator(conditions))
+              new BreakConditionsAggregator(conditions))
             if (conditionsReached.size > 0) {
               steps = 0
               setState("pausing")
@@ -429,8 +434,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
               globalTermination = isGlobalTerminationConditionMet(parameters.globalTerminationCondition.get)
             }
             if (steps > 0) { steps -= 1 }
-          }
-          else {
+          } else {
             resetting = false
           }
         }
@@ -600,8 +604,8 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   }
 
   def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
-  
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = workerApi.foreachVertexWithGraphEditor(f) 
+
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = workerApi.foreachVertexWithGraphEditor(f)
 
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)

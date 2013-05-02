@@ -36,6 +36,8 @@ import com.signalcollect.interfaces.WorkerApi
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 import akka.event.Logging.LogEvent
+import com.signalcollect.interfaces.AddVertex
+import com.signalcollect.interfaces.AddEdge
 
 trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
   extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
@@ -93,7 +95,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
   lazy val workerProxies: Array[WorkerApi[Id, Signal]] = {
     val result = new Array[WorkerApi[Id, Signal]](numberOfWorkers)
     for (workerId <- workerIds) {
-      result(workerId) = AkkaProxy.newInstance[WorkerApi[Id, Signal]](
+      result(workerId) = AkkaProxy.newInstanceWithIncrementor[WorkerApi[Id, Signal]](
         workers(workerId),
         sendCountIncrementorForRequests,
         sentWorkerMessageCounters(workerId),
@@ -202,11 +204,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addVertex(vertex)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[WorkerApi[Id, Signal]](
-        (_.addVertex(vertex)),
-        returnResult = false,
-        sendCountIncrementorForRequests)
-      sendToWorkerForVertexId(request, vertex.id)
+      sendToWorkerForVertexId(AddVertex(vertex), vertex.id)
     }
   }
 
@@ -217,11 +215,7 @@ trait AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
       workerApi.addEdge(sourceId, edge)
     } else {
       // Manually send a fire & forget request.
-      val request = Request[WorkerApi[Id, Signal]](
-        (_.addEdge(sourceId, edge)),
-        returnResult = false,
-        sendCountIncrementorForRequests)
-      sendToWorkerForVertexId(request, sourceId)
+      sendToWorkerForVertexId(AddEdge(sourceId, edge), sourceId)
     }
   }
 

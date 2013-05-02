@@ -146,11 +146,11 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         throw e
       }
     }
-//    kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
+    kryo.addDefaultSerializer(classOf[scala.collection.Map[_, _]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.Set[_]], classOf[ScalaSetSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.MapFactory[scala.collection.Map]], classOf[ScalaMapSerializer])
     kryo.addDefaultSerializer(classOf[scala.collection.generic.SetFactory[scala.collection.Set]], classOf[ScalaSetSerializer])
-//    kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
+    kryo.addDefaultSerializer(classOf[scala.collection.Traversable[_]], classOf[ScalaCollectionSerializer])
     kryo.addDefaultSerializer(classOf[ActorRef], new ActorRefSerializer(system))
     kryo.addDefaultSerializer(None.getClass, new NoneSerializer)
     kryo.register(classOf[scala.Enumeration#Value], 10)

@@ -38,23 +38,43 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.signalcollect.interfaces.MessageBus
 
+case class EmptyIncrementor() {
+  def increment(mb: MessageBus[_, _]): Unit = {}
+}
+
 /**
  * Used to create proxies
  */
 object AkkaProxy {
 
-  def newInstance[T: ClassTag](
+  def newInstanceWithIncrementor[T: ClassTag](
     actor: ActorRef,
     incrementor: MessageBus[_, _] => Unit,
     sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
     receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
-    timeout: Timeout = Timeout(Duration.create(7200, TimeUnit.SECONDS))): T = {
+    timeout: Timeout = Timeout(Duration.create(2, TimeUnit.HOURS))): T = {
     val c = classTag[T].runtimeClass
     Proxy.newProxyInstance(
       c.getClassLoader,
       Array[Class[_]](c),
       new AkkaProxy(actor,
         incrementor,
+        sentMessagesCounter,
+        receivedMessagesCounter,
+        timeout)).asInstanceOf[T]
+  }
+
+  def newInstance[T: ClassTag](
+    actor: ActorRef,
+    sentMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    receivedMessagesCounter: AtomicInteger = new AtomicInteger(0),
+    timeout: Timeout = Timeout(Duration.create(2, TimeUnit.HOURS))): T = {
+    val c = classTag[T].runtimeClass
+    Proxy.newProxyInstance(
+      c.getClassLoader,
+      Array[Class[_]](c),
+      new AkkaProxy(actor,
+        EmptyIncrementor().increment _,
         sentMessagesCounter,
         receivedMessagesCounter,
         timeout)).asInstanceOf[T]
@@ -102,11 +122,27 @@ class AkkaProxy[ProxiedClass](
 
 case class Command[ParameterType](className: String, methodDescription: String, arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
   def apply(proxiedClass: ParameterType) = {
-    val clazz = Class.forName(className)
-    val methods = clazz.getMethods map (method => (method.toString, method)) toMap
-    val method = methods(methodDescription)
-    val result = method.invoke(proxiedClass, arguments: _*)
-    result
+    try {
+      val clazz = Class.forName(className)
+      val methods = clazz.getMethods map (method => (method.toString, method)) toMap
+      val method = methods(methodDescription)
+      val result = method.invoke(proxiedClass, arguments: _*)
+      result
+    } catch {
+      case t: Throwable =>
+        val argsString = {
+          if (arguments != null) {
+            arguments.toList.mkString(", ")
+          } else {
+            "null"
+          }
+        }
+        println(s"Exception when trying to execute $methodDescription with argument(s) $argsString")
+        println(t.getCause)
+        println(t.getStackTraceString)
+        println("Finished printing stack trace")
+        throw t
+    }
   }
 
   override def toString: String = {

@@ -28,7 +28,7 @@ import java.io.BufferedInputStream
 import java.io.FileInputStream
 import scala.language.postfixOps
 import scala.reflect._
-import scala.reflect.runtime.{universe => ru}
+import scala.reflect.runtime.{ universe => ru }
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.configuration.GraphConfiguration
@@ -51,8 +51,8 @@ import akka.event.Logging
 
 trait Execution {
   var steps: Int
-  var conditions: Map[String,BreakCondition]
-  var conditionsReached: Map[String,String]
+  var conditions: Map[String, BreakCondition]
+  var conditionsReached: Map[String, String]
   var state: String
   var iteration: Int
   def step()
@@ -70,22 +70,22 @@ object BreakConditionName extends Enumeration {
   val ChangesState = Value("changes state")
   val GoesAboveState = Value("goes above state")
   val GoesBelowState = Value("goes below state")
-  val GoesAboveSignalThreshold = Value("goes above signal threshold") 
-  val GoesBelowSignalThreshold = Value("goes below signal threshold") 
+  val GoesAboveSignalThreshold = Value("goes above signal threshold")
+  val GoesBelowSignalThreshold = Value("goes below signal threshold")
   val GoesAboveCollectThreshold = Value("goes above collect threshold")
-  val GoesBelowCollectThreshold = Value("goes below collect threshold") 
+  val GoesBelowCollectThreshold = Value("goes below collect threshold")
 }
 
 import BreakConditionName._
 class BreakCondition(val graphConfiguration: GraphConfiguration,
-                     val executionConfiguration: ExecutionConfiguration,
-                     val name: BreakConditionName, 
-                     val propsMap: Map[String,String], 
-                     workerApi: WorkerApi[_,_]) {
+  val executionConfiguration: ExecutionConfiguration,
+  val name: BreakConditionName,
+  val propsMap: Map[String, String],
+  workerApi: WorkerApi[_, _]) {
 
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
-  require( 
+  require(
     if (props.contains("nodeId")) {
       props("nodeId") match {
         case id: String =>
@@ -98,23 +98,22 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
           }
         case otherwise => false
       }
-    }
-    else { 
-      false 
+    } else {
+      false
     }, "Missing or invalid nodeId!")
 
-  require(name match { 
-      case GoesAboveState
-         | GoesBelowState  => props.contains("expectedState")
+  require(name match {
+    case GoesAboveState
+      | GoesBelowState => props.contains("expectedState")
     case otherwise => true
-    }, "Missing expectedState")
+  }, "Missing expectedState")
 
-  name match { 
+  name match {
     case GoesBelowSignalThreshold
-       | GoesAboveSignalThreshold =>
+      | GoesAboveSignalThreshold =>
       props += ("signalThreshold" -> executionConfiguration.signalThreshold.toString)
     case GoesBelowCollectThreshold
-       | GoesAboveCollectThreshold => 
+      | GoesAboveCollectThreshold =>
       props += ("collectThreshold" -> executionConfiguration.collectThreshold.toString)
     case otherwise => true
   }
@@ -123,58 +122,57 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
 
 class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
-  val (server: HttpServer, 
-       sockets: WebSocketConsoleServer[Id]) = setupUserPorts(graphConfiguration.consoleHttpPort)
+  val (server: HttpServer,
+    sockets: WebSocketConsoleServer[Id]) = setupUserPorts(graphConfiguration.consoleHttpPort)
 
   server.createContext("/", new FileServer("web-data"))
   server.setExecutor(Executors.newCachedThreadPool)
   server.start
-  println("HTTP server started on http://localhost:" + 
-          server.getAddress.getPort + "")
+  println("HTTP server started on http://localhost:" +
+    server.getAddress.getPort + "")
 
   sockets.start
   println("WebSocket - Server started on port: " + sockets.getPort)
 
-  def setupUserPorts(httpPort: Int): 
-      (HttpServer, WebSocketConsoleServer[Id]) = {
+  def setupUserPorts(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
       val defaultPort = 8080
       val maxUserPort = 8179
-      println("Websocket - No valid port given (using default port " + 
-              defaultPort + ")")
+      println("Websocket - No valid port given (using default port " +
+        defaultPort + ")")
       for (port <- defaultPort to maxUserPort) {
         try {
           println("Websocket - Connecting to port " + port + "...")
           return getNewServers(port)
         } catch {
-          case e: Exception => 
-            println("Websocket - Starting server on port " + 
-                    port + " failed: " + e.getMessage)
+          case e: Exception =>
+            println("Websocket - Starting server on port " +
+              port + " failed: " + e.getMessage)
         }
       }
-      println("Could not start server on ports " + defaultPort + 
-              " to " + maxUserPort)
+      println("Could not start server on ports " + defaultPort +
+        " to " + maxUserPort)
       sys.exit
     } else {
       try {
         return getNewServers(httpPort)
       } catch {
-        case e: Throwable => 
+        case e: Throwable =>
           println("Could not start server: " + e.getMessage)
           sys.exit
       }
     }
   }
-  
+
   def getNewServers(httpPort: Int) = {
-    val server: HttpServer = 
-        HttpServer.create(new InetSocketAddress(httpPort), 0)
-    val sockets: WebSocketConsoleServer[Id] = 
-        new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100), graphConfiguration)
+    val server: HttpServer =
+      HttpServer.create(new InetSocketAddress(httpPort), 0)
+    val sockets: WebSocketConsoleServer[Id] =
+      new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100), graphConfiguration)
     (server, sockets)
   }
-  
+
   def setCoordinator(coordinatorActor: ActorRef) = {
     sockets.setCoordinator(coordinatorActor)
   }
@@ -198,27 +196,27 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
 class FileServer(folderName: String) extends HttpHandler {
   def handle(t: HttpExchange) {
-    
+
     var logFileName = "log_messages.txt"
 
-    var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "") 
-    if (List("", "graph", "resources").contains(target)) { 
+    var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "")
+    if (List("", "graph", "resources").contains(target)) {
       target = "main.html"
     }
     val fileType = target match {
       case t if t.matches(".*\\.html$") => "text/html"
-      case t if t.matches(".*\\.css$")  => "text/css"
-      case t if t.matches(".*\\.js$")   => "application/javascript"
-      case t if t.matches(".*\\.png$")  => "image/png"
-      case t if t.matches(".*\\.svg$")  => "image/svg+xml"
-      case t if t.matches(".*\\.ico$")  => "image/x-icon"
-      case otherwise                    => "text/plain"
+      case t if t.matches(".*\\.css$") => "text/css"
+      case t if t.matches(".*\\.js$") => "application/javascript"
+      case t if t.matches(".*\\.png$") => "image/png"
+      case t if t.matches(".*\\.svg$") => "image/svg+xml"
+      case t if t.matches(".*\\.ico$") => "image/x-icon"
+      case otherwise => "text/plain"
     }
 
     def os = t.getResponseBody
     try {
       val root = "./src/main/resources/" + folderName
-      var inputStream : InputStream = null
+      var inputStream: InputStream = null
       if ((new File(root)).exists()) {
         // read from the filesystem
         val targetPath = {
@@ -239,30 +237,28 @@ class FileServer(folderName: String) extends HttpHandler {
         t.getResponseHeaders.set("Content-Disposition", "attachment; filename=" + logFileName)
       }
       t.sendResponseHeaders(200, 0)
-      Iterator 
-        .continually (file.read)
-        .takeWhile (-1 !=)
-        .foreach (os.write)
+      Iterator
+        .continually(file.read)
+        .takeWhile(-1 !=)
+        .foreach(os.write)
       file.close
-    }
-    catch {
+    } catch {
       case e: Exception => {
         t.getResponseHeaders.set("Content-Type", "text/plain")
         t.sendResponseHeaders(200, 0)
-        os.write(("An exception occurred:\n" + e.getMessage() + "\n" + 
-                  e.getStackTraceString).getBytes())
+        os.write(("An exception occurred:\n" + e.getMessage() + "\n" +
+          e.getStackTraceString).getBytes())
         e.printStackTrace()
       }
-    }
-    finally {
+    } finally {
       os.close
     }
   }
 }
 
 class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
-                             extends WebSocketServer(port) {
-  var coordinator: Option[Coordinator[Id,_]] = None
+  extends WebSocketServer(port) {
+  var coordinator: Option[Coordinator[Id, _]] = None
   var execution: Option[Execution] = None
   var executionConfiguration: Option[ExecutionConfiguration] = None
   var breakConditions = List()
@@ -271,8 +267,8 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
   def setCoordinator(c: ActorRef) {
     println("ConsoleServer: got coordinator " + c)
-    // TODO: Pass proper incrementor.
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]] (c, mb => ()))
+    // TODO: Use other proxy constructor with proper incrementor.
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]](c))
   }
 
   def setExecution(e: Execution) {
@@ -302,7 +298,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         case "breakconditions" => new BreakConditionsProvider(c, this, j)
         case otherwise => new InvalidDataProvider(msg)
       }
-      case None => p match{
+      case None => p match {
         case "state" => new StateDataProvider(this)
         case otherwise => new NotReadyDataProvider(msg)
       }
@@ -310,23 +306,22 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
     try {
       socket.send(compact(render(provider.fetch)))
-    } 
-    catch {
+    } catch {
       case e: NumberFormatException =>
         socket.send(compact(render(new InvalidDataProvider(msg).fetch)))
       case e: Exception =>
         socket.send(compact(render(new ErrorDataProvider(e).fetch)))
-    } 
+    }
   }
 
-  def onOpen(socket: WebSocket, handshake:ClientHandshake) {
-    println("WebSocket - client connected: " + 
-            socket.getRemoteSocketAddress.getAddress.getHostAddress)
+  def onOpen(socket: WebSocket, handshake: ClientHandshake) {
+    println("WebSocket - client connected: " +
+      socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
   def onClose(socket: WebSocket, code: Int, reason: String, remote: Boolean) {
-    println("WebSocket - client disconected: " + 
-            socket.getRemoteSocketAddress.getAddress.getHostAddress)
+    println("WebSocket - client disconected: " +
+      socket.getRemoteSocketAddress.getAddress.getHostAddress)
   }
 
   def updateClientState() {
@@ -343,9 +338,9 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
 object Toolkit {
   implicit val formats = DefaultFormats
-  def unpackObjectToMap[T: ClassTag: ru.TypeTag](obj: T): Map[String,JValue] = {
+  def unpackObjectToMap[T: ClassTag: ru.TypeTag](obj: T): Map[String, JValue] = {
     val methods = ru.typeOf[T].members.filter { m =>
-      m.isMethod && m.asMethod.isStable 
+      m.isMethod && m.asMethod.isStable
     }
     val mirror = ru.runtimeMirror(obj.getClass.getClassLoader)
     val im = mirror.reflect(obj)
@@ -357,7 +352,7 @@ object Toolkit {
         case x: String => JString(x)
         case x: Double if x.isNaN => JDouble(0)
         case x: Double => JDouble(0)
-        case x: Map[_,_] => decompose(x)
+        case x: Map[_, _] => decompose(x)
         case x: BreakConditionName.Value => JString(x.toString)
         case other => JString(other.toString)
       }
@@ -370,14 +365,15 @@ object Toolkit {
   }
   def unpackObjects[T: ClassTag: ru.TypeTag](obj: Array[T]): JObject = {
     val unpacked = obj.toList.map(unpackObjectToMap[T])
-    JObject(unpacked.head.map { case (k, _) =>
-      JField(k, JArray(unpacked.map{ m =>  m(k) })) 
+    JObject(unpacked.head.map {
+      case (k, _) =>
+        JField(k, JArray(unpacked.map { m => m(k) }))
     }.toList)
   }
   def mergeMaps[A, B](ms: List[Map[A, B]])(f: (B, B) => B): Map[A, B] =
     (Map[A, B]() /: (for (m <- ms; kv <- m) yield kv)) { (a, kv) =>
       a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
-  }
+    }
 
 }
 

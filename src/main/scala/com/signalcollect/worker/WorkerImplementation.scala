@@ -49,7 +49,7 @@ import java.lang.management.ManagementFactory
 /**
  * Main implementation of the WorkerApi interface.
  */
-case class WorkerImplementation[Id, Signal](
+class WorkerImplementation[Id, Signal](
   val workerId: Int,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
@@ -57,7 +57,7 @@ case class WorkerImplementation[Id, Signal](
   var signalThreshold: Double,
   var collectThreshold: Double,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-    extends Worker[Id, Signal] {
+  extends Worker[Id, Signal] {
 
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
@@ -118,11 +118,15 @@ case class WorkerImplementation[Id, Signal](
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)
+    } else {
+      val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
+      println(msg)
+      log.debug(msg)
+      throw new Exception(msg)
     }
   }
 
   def isConverged = {
-    //    log.debug(s"toCollect.isEmpty=${vertexStore.toCollect.isEmpty} toSignal.isEmpty=${vertexStore.toSignal.isEmpty} flushedAfterUndeliverableSignalHandler=$flushedAfterUndeliverableSignalHandler")
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
       messageBusFlushed
@@ -432,28 +436,40 @@ case class WorkerImplementation[Id, Signal](
       jmx_swap_total = osBean.getTotalSwapSpaceSize(),
       jmx_process_load = osBean.getProcessCpuLoad(),
       jmx_process_time = osBean.getProcessCpuTime(),
-      jmx_system_load = osBean.getSystemCpuLoad()
-    )
+      jmx_system_load = osBean.getSystemCpuLoad())
   }
 
-  def registerWorker(workerId: Int, worker: ActorRef) {
+  protected def logIntialization {
+    if (messageBus.isInitialized) {
+      val msg = s"Worker $workerId has a fully initialized message bus."
+      //println(msg)
+      log.debug(msg)
+      sendStatusToCoordinator
+    }
+  }
+
+  def registerWorker(otherWorkerId: Int, worker: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
-    messageBus.registerWorker(workerId, worker)
+    messageBus.registerWorker(otherWorkerId, worker)
+    logIntialization
   }
 
   def registerNode(nodeId: Int, node: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerNode(nodeId, node)
+    logIntialization
   }
 
   def registerCoordinator(coordinator: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerCoordinator(coordinator)
+    logIntialization
   }
 
   def registerLogger(logger: ActorRef) {
     counters.requestMessagesReceived -= 1 // Registration messages are not counted.
     messageBus.registerLogger(logger)
+    logIntialization
   }
 
 } 

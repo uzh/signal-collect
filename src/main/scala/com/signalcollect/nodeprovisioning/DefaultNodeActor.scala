@@ -47,8 +47,8 @@ import com.signalcollect.interfaces.SentMessagesStats
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-    nodeId: Int,
-    nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+  nodeId: Int,
+  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     nodeProvisionerAddress)
@@ -71,7 +71,7 @@ class DefaultNodeActor(
   val nodeId: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor {
-  
+
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
@@ -131,7 +131,7 @@ class DefaultNodeActor(
   var nodeProvisioner: ActorRef = _
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
-    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
+    receivedMessagesCounter -= 1 // Node messages are not counted.
     messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, IncrementorForNode(nodeId).increment _)
   }
 
@@ -160,7 +160,7 @@ class DefaultNodeActor(
   def isInitialized = messageBus != null && messageBus.isInitialized
 
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
-    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
+    receivedMessagesCounter -= 1 // Node messages are not counted.
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased =>
@@ -175,7 +175,7 @@ class DefaultNodeActor(
   }
 
   def numberOfCores = {
-    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
+    receivedMessagesCounter -= 1 // Node messages are not counted.
     Runtime.getRuntime.availableProcessors
   }
 
@@ -186,7 +186,10 @@ class DefaultNodeActor(
     }
   }
 
-  def shutdown = context.system.shutdown
+  def shutdown = {
+    receivedMessagesCounter -= 1 // Node messages are not counted.
+    context.system.shutdown
+  }
 
   def registerWorker(workerId: Int, worker: ActorRef) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
