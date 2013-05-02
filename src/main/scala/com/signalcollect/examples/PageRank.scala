@@ -20,6 +20,11 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.nodeprovisioning.torque.TorqueNodeProvisioner
+import com.signalcollect.nodeprovisioning.torque.TorqueHost
+import com.signalcollect.nodeprovisioning.torque.TorqueJobSubmitter
+import com.signalcollect.nodeprovisioning.torque.TorquePriority
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * Represents an edge in a PageRank compute graph
@@ -66,22 +71,28 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.build
-  //  graph.addEdge(2, new PageRankEdge(3))
-  //  graph.addEdge(3, new PageRankEdge(2))
+  val graph = GraphBuilder.
+    withConsole(true).
+    withNodeProvisioner(new TorqueNodeProvisioner(
+      torqueHost = new TorqueHost(
+        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
+        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
+        jvmParameters = "",
+        priority = TorquePriority.fast),
+      numberOfNodes = 2)).
+    build
 
   graph.awaitIdle
-  println("IDLE 1")
   graph.addVertex(new PageRankVertex(1))
   graph.addVertex(new PageRankVertex(2))
-  //  graph.addVertex(new PageRankVertex(3))
+  graph.addVertex(new PageRankVertex(3))
   graph.addEdge(1, new PageRankEdge(2))
   graph.addEdge(2, new PageRankEdge(1))
+  graph.addEdge(2, new PageRankEdge(3))
+  graph.addEdge(3, new PageRankEdge(2))
 
   graph.awaitIdle
-  println("IDLE 2")
-
-  val stats = graph.execute
+  val stats = graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   println(stats)
 
   graph.foreachVertex(println(_))
