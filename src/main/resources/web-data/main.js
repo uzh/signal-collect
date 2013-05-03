@@ -124,6 +124,19 @@ scc.Settings = function() {
     }
     return added;
   }
+
+  /**
+   * Handler for persisting settings automatically when they change
+   * @param {Event} e - The event that triggered the call
+   */
+  $(".setting").change(function (e) { 
+    var property = $(this);
+    var panel = property.parents(".panel_container").attr("id").split("_")[0]
+    var newSetting = {}
+    newSetting[panel] = {"options":{}}
+    newSetting[panel]["options"][property.attr("id")] = property.val()
+    scc.settings.set(newSetting);
+   });
 }
 
 $(document).ready(function() {

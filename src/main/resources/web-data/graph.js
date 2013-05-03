@@ -32,6 +32,7 @@ scc.defaults.graph = {"layout": {
                         "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
                         "gp_vicinityRadius": "1",
+                        "gp_maxVertexCount": "200",
                         "gp_targetCount": "60",
                         "gp_refreshRate": "1",
                         "gp_drawEdges": "When graph is still"
@@ -290,6 +291,10 @@ scc.modules.Graph = function() {
     for (var i = 15; i<=60; i+=5) {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
+    $("#gp_maxVertexCount").append('<option value="-1">Unlimited</option>');
+    for (var i = 40; i<=300; i+=20) {
+      $("#gp_maxVertexCount").append('<option value="' + i + '">' + i + '</option>');
+    }
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
@@ -460,7 +465,7 @@ scc.modules.Graph = function() {
         else {
           if (drawEdges == "Always" || 
              (drawEdges == "When graph is still" && 
-             force.alpha() < 0.02)) { return "edge"; }
+             force.alpha() < 0.05)) { return "edge"; }
           else { return "edge hiddenOpacity"; }
         }
       });
@@ -804,6 +809,7 @@ scc.modules.Graph = function() {
 
   /**
    * Handler for selecting vertices which shall be removed.
+   * TODO: merge with addVicinitiesBySelect handlers
    */
   $("#gd_removeBySelect").click(function (e) { 
     e.preventDefault();
@@ -831,6 +837,43 @@ scc.modules.Graph = function() {
       $("#gd_removeBySelect").text("Cancel");
     }
   });
+
+  /**
+   * Handler that fires when pressing a key. It facilitates issuing some
+   * actions using the keyboard
+   */
+  $(document).keydown(function(e) {
+    console.log(e.which)
+    // If the user has selected nodes to be removed, DEL will do the same as
+    // clicking on "Remove". ESC will cancel the selection.
+    if ($("#gd_removeBySelect").hasClass("snd")) {
+      if ( e.which == 46 ) { 
+        e.preventDefault();
+        $("#gd_removeBySelectRemove").trigger('click');
+      }
+    }
+    if ($("#gd_removeBySelect").text() == "Cancel") {
+      if ( e.which == 27 ) { 
+        e.preventDefault();
+        $("#gd_removeBySelect").trigger('click');
+      }
+    }
+    // If the user has selected nodes to load their vicinities, ENTER will do
+    // the same as clicking on "Add". ESC will cancel the selection.
+    if ($("#gs_addVicinitiesBySelect").hasClass("snd")) {
+      if ( e.which == 13 ) { 
+        e.preventDefault();
+        $("#gs_addVicinitiesBySelectAdd").trigger('click');
+      }
+    }
+    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
+      if ( e.which == 27 ) { 
+        e.preventDefault();
+        $("#gs_addVicinitiesBySelect").trigger('click');
+      }
+    }
+  });
+
 
   /**
    * Handler for finally removing the selected vertices.
@@ -882,6 +925,7 @@ scc.modules.Graph = function() {
   this.addBySubstring = function (s) {
     order({"provider": "graph", 
            "query": "substring", 
+           "targetCount": Math.min(100, $("#gp_maxVertexCount").val()),
            "substring": s});
   }
 
@@ -920,15 +964,12 @@ scc.modules.Graph = function() {
     switch (property) {
       case "gd_verticesize": 
           setVertexSize(vertexDesign["gd_verticesize"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_verticesize": metric}}});
           break;
       case "gd_vertexColor": 
           setVertexColor(vertexDesign["gd_vertexColor"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_vertexColor": metric}}});
           break;
       case "gd_vertexBorder": 
           setVertexBorder(vertexDesign["gd_vertexBorder"][metric]); 
-          scc.settings.set({"graph": {"options": {"gd_vertexBorder": metric}}});
           break;
     }
   };
@@ -1011,46 +1052,6 @@ scc.modules.Graph = function() {
     scc.consumers.Graph.update();
   });
 
-   /**
-    * Handler called when the vicinity 'incoming' option changes. Persists the 
-    * choice to the settings hash and re-orders the graph with the new setting
-    * @param {Event} e - The event that triggered the call
-    */
-  $("#gp_vicinityIncoming").change(function (e) { 
-    var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_vicinityIncoming": property.val() }}});
-   });
-
-  /**
-   * Handler called when the vicinity radius option changes. Persists the 
-   * choice to the settings hash and re-orders the graph with the new setting
-   * @param {Event} e - The event that triggered the call
-   */
-  $("#gp_vicinityRadius").change(function (e) { 
-    var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_vicinityRadius": property.val() }}});
-  });
-
-  /**
-   * Handler called when the maximum vertices option changes. Persists the 
-   * choice to the settings hash and re-orders the graph with the new setting
-   * @param {Event} e - The event that triggered the call
-   */
-  $("#gp_targetCount").change(function (e) { 
-    var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_targetCount": property.val() }}});
-  });
-
-  /**
-   * Handler called when the refresh rate option changes. Persists the choice 
-   * to the settings hash.
-   * @param {Event} e - The event that triggered the call
-   */
-  $("#gp_refreshRate").change(function (e) { 
-    var property = $(this);
-    scc.settings.set({"graph": {"options": {"gp_refreshRate": property.val() }}});
-  });
-
   /**
    * Handler called when the 'draw edges' option changes. Persists the choice 
    * to the settings hash and updates the representation (shows or hides the
@@ -1066,7 +1067,6 @@ scc.modules.Graph = function() {
         case "Only on hover":
             edge.attr("class", "edge hiddenOpacity"); break;
     }
-    scc.settings.set({"graph": {"options": {"gp_drawEdges": val }}});
   });
 };
 
