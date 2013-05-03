@@ -79,7 +79,8 @@ $(document).ready(function() {
       " question, we try to explain why this could have happened and show information that might help in solving" +
       " a problem or answer a question.",
     "#title img":
-      "This is the end of the tour. We hope you enjoy using this tool."
+      "This is the end of the tour. We hope you enjoy using this tool. " +
+      "You can revisit the tour at any time by clicking on <strong>Tour</strong> in the lower right corner."
   };
   
   // add the introduction information to the DOM
@@ -87,7 +88,7 @@ $(document).ready(function() {
   $.each(properties, function(selector, val) {
     $(selector).attr("data-step", i++).attr("data-intro", val);
   });
-  $("#reset,#pause,#step,#collect,#continue,#terminate,#stateContainer").attr("data-position", "top");
+  $("#controls,#reset,#pause,#step,#collect,#continue,#terminate,#stateContainer").attr("data-position", "top");
 
   // show the introduction
   var intro = introJs();
@@ -107,11 +108,8 @@ $(document).ready(function() {
     if (targetElement.id == "cResourceComputation") {
       $("#mode_resources").click();
     }
-    if (targetElement.id == "controls") {
+    if (targetElement.id == "stateContainer") {
       $("#mode_graph").click();
-      $(".introjs-tooltip").addClass("tooltipOnTop");
-    } else {
-      $(".introjs-tooltip").removeClass("tooltipOnTop");
     }
     top.location.hash = '{"intro":' + $(targetElement).attr('data-step') + view + "}";
   });

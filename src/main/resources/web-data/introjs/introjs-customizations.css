@@ -16,11 +16,3 @@
 .introjs-helperNumberLayer {
   display: none;
 }
-
-.tooltipOnTop {
-	bottom: 60px !important;
-}
-
-.tooltipOnTop .introjs-arrow {
-	display: none;
-}
