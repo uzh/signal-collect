@@ -220,7 +220,7 @@ var LineChart = function() {
       newHighestXDomain = new Date(currentHighestDate.addMilliseconds(2*scc.conf.resources.intervalCharts));
       newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-differenceMS));
     } else {      
-      var moveMS       = scale * Math.round(differenceMS / 3);
+      var moveMS        = scale * Math.round(differenceMS / 3);
       newLowestXDomain  = new Date(lowestXDomain.addMilliseconds(moveMS));
       newHighestXDomain = new Date(highestXDomain.addMilliseconds(moveMS));
     }
@@ -250,7 +250,11 @@ var LineChart = function() {
     if (this.config.dataCallback == null) {
       this.config.dataCallback = function(newData) {
         var that = this; // access this
-        return newData.workerStatistics[that.jsonName];
+        var stat = "workerStatistics";
+        if (newData[stat][that.jsonName] == null) {
+          stat = "nodeStatistics";
+        }
+        return newData[stat][that.jsonName];
       };
     }
     
@@ -275,7 +279,7 @@ var LineChart = function() {
 
     // add default scale of the axes
     var now = new Date();
-    x.domain([new Date(now.addMilliseconds(-8*60*1000)), new Date(now.addMilliseconds(2*scc.conf.resources.intervalCharts))]);
+    x.domain([new Date(now.addMilliseconds(-5*60*1000)), new Date(now.addMilliseconds(2*scc.conf.resources.intervalCharts))]);
     y.domain([0, 1]);
 
     xAxis = d3.svg.axis().scale(x)
@@ -494,8 +498,12 @@ var LineChart = function() {
 
     if (shiftRight) {
       // update x domain
-      x.domain([new Date(lowestXDomain.addMilliseconds(2*scc.conf.resources.intervalCharts)),
-                new Date(currentDate.addMilliseconds(scc.conf.resources.intervalCharts))]);
+      x.domain([new Date(lowestXDomain.addMilliseconds(scc.conf.resources.intervalCharts)),
+                new Date(currentDate.addMilliseconds(2*scc.conf.resources.intervalCharts))]);
+    }
+    
+    if (newMinMax.max.v > maxYValue) {
+      maxYValue = newMinMax.max.v;
     }
     
     if (this.chartSelector.hasClass("hidden") || !isElementOverlappingViewport(this.chartSelector.find("svg")[0])) {
@@ -540,10 +548,7 @@ var LineChart = function() {
                        .style("opacity", 0);   
                   });
       
-      // update x domains
-      if (newMinMax.max.v > maxYValue) {
-        maxYValue = newMinMax.max.v;
-      }
+      // update y domains
       if (maxYValue * 1.05 > y.domain()[1]) {
         y.domain([0, maxYValue * 1.1]);
       }

@@ -382,7 +382,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~
     ("workerStatistics" -> wstats) ~
-    ("verticestatistics" -> nstats)
+    ("nodeStatistics" -> nstats)
   }
 }
 

@@ -187,8 +187,10 @@
               <label for="rs_statistics">Statistics</label><br/>
               <input type="radio" name="rs" id="rs_logs"/>
               <label for="rs_logs">Logs</label><br/>
-              <input type="radio" name="rs" id="rs_charts"/>
-              <label for="rs_charts">Charts</label>
+              <input type="radio" name="rs" id="rs_nodecharts"/>
+              <label for="rs_nodecharts">Node Charts</label><br/>
+              <input type="radio" name="rs" id="rs_workercharts"/>
+              <label for="rs_workercharts">Worker Charts</label>
             </div>
           </div>
           <div id="cResourceProblems" class="panel_section">
@@ -329,10 +331,20 @@
             </p>
           </div>
         
-          <div id="crs_charts">
-            <h1>All Charts</h1>
+          <div id="crs_nodecharts">
+            <h1>Node Charts</h1>
             <p class="teaser">
-              Here you can view all charts that are generated and updated while processing your data. The different colors of the lines
+              Here you can view all node charts that are generated and updated while processing your data. The different colors of the lines
+              represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
+              <strong style="color:red;">maximum</strong> values over all nodes. You can hover the lines to get more information.
+            </p> 
+            <div class="chartContainer"></div>
+          </div>
+        
+          <div id="crs_workercharts">
+            <h1>Worker Charts</h1>
+            <p class="teaser">
+              Here you can view all worker charts that are generated and updated while processing your data. The different colors of the lines
               represent the <strong style="color:blue;">minimum</strong>, <strong>average</strong>, and
               <strong style="color:red;">maximum</strong> values over all worker vertices. You can hover the lines to get more information.
             </p> 

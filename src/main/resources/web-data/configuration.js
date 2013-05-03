@@ -71,10 +71,14 @@ scc.conf.resources.resourceBoxes = {
     "logs" : [
       "logBox"
     ],
-    "charts" : [
+    "nodecharts" : [
       "chartZoomer",
-      // all charts will be added automatically to this section
+      // charts will be added according to the chart configuration
      ],
+     "workercharts" : [
+       "chartZoomer",
+       // charts will be added according to the chart configuration
+      ],
     
     "nostart" : [ 
       "chartZoomer",
@@ -144,12 +148,12 @@ scc.conf.resources.resourceBoxes = {
 };
 
 /**
- * Configures the main chart types. This is not mandatory, but they load faster
- * if you add them here. You can also add different data callbacks or skip
- * entire objects.
+ * Configures the main chart types for workers. This is not mandatory, but they
+ * load faster if you add them here. You can also add different data callbacks
+ * or skip entire objects.
  * @type {Array.<Objects>}
  */
-scc.conf.resources.chartConfig = [
+scc.conf.resources.chartConfigWorkers = [
                    {jsonName : "messagesSent", dataCallback: sumMessageSent },
                    {jsonName : "messagesSentToNodes"},
                    {jsonName : "messagesSentToWorkers"},
@@ -173,7 +177,16 @@ scc.conf.resources.chartConfig = [
                    {jsonName : "collectOperationsExecuted"},
                    {jsonName : "toCollectSize"},
                    {jsonName : "toSignalSize"},
-                   {jsonName : "workerId"},
+                   {jsonName : "workerId", skip: true },
+                  ];
+
+/**
+ * Configures the main chart types for nodes. This is not mandatory, but they
+ * load faster if you add them here. You can also add different data callbacks
+ * or skip entire objects.
+ * @type {Array.<Objects>}
+ */
+scc.conf.resources.chartConfigNodes = [
                    {jsonName : "runtime_cores"},
                    {jsonName : "jmx_system_load"},
                    {jsonName : "jmx_process_time"},
@@ -187,4 +200,5 @@ scc.conf.resources.chartConfig = [
                    {jsonName : "runtime_mem_free"},
                    {jsonName : "runtime_mem_total"},
                    {jsonName : "os", skip: true },
+                   {jsonName : "nodeId", skip: true },
                   ];

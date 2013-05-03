@@ -333,13 +333,6 @@ scc.modules.Resources = function() {
   this.requires = ["resources"];
   show_section(scc.settings.get().resources.section);
   
-  // fill charts view with all the charts we have
-  setTimeout(function() {
-    $("#resourceBoxes div[id$='Chart']").each(function() {
-      scc.conf.resources.resourceBoxes.charts.push($(this).attr("id"));
-    });
-  }, 500);
-  
   // show the number of seconds after which the statistics will be updated
   $("#resStatInterval").html(scc.conf.resources.intervalStatistics / 1000);
   
@@ -381,9 +374,20 @@ scc.modules.Resources = function() {
     lineCharts[lineChart.config.jsonName] = lineChart;
   }
   
-  scc.conf.resources.chartConfig.forEach(function(config) {
+  scc.conf.resources.chartConfigWorkers.forEach(function(config) {
     if (!config.skip) {
       ChartsCreate(config);
+      if (scc.conf.resources.resourceBoxes.workercharts.indexOf(config.jsonName + "Chart") === -1) {
+        scc.conf.resources.resourceBoxes.workercharts.push(config.jsonName + "Chart");
+      }
+    }
+  });
+  scc.conf.resources.chartConfigNodes.forEach(function(config) {
+    if (!config.skip) {
+      ChartsCreate(config);
+      if (scc.conf.resources.resourceBoxes.nodecharts.indexOf(config.jsonName + "Chart") === -1) {
+        scc.conf.resources.resourceBoxes.nodecharts.push(config.jsonName + "Chart");
+      }
     }
   });
   
@@ -474,12 +478,20 @@ scc.modules.Resources = function() {
    */
   var ChartsContains = function(key) {
     var found = false;
-    scc.conf.resources.chartConfig.forEach(function(c) {
+    scc.conf.resources.chartConfigWorkers.forEach(function(c) {
       if (c.jsonName == key) {
         found = true;
         return found;
       }
     });
+    if (!found) {
+      scc.conf.resources.chartConfigNodes.forEach(function(c) {
+        if (c.jsonName == key) {
+          found = true;
+          return found;
+        }
+      });
+    }
     return found;
   }
 
@@ -513,9 +525,26 @@ scc.modules.Resources = function() {
     
     // check if there is more data in the websocket response
     if (!hasAddedNewCharts) {
+      var chartSkipped = function(resource, chart) {
+        if (scc.conf.resources[resource].hasOwnProperty(chart)) {
+          console.dir(scc.conf.resources[resource][chart].skip);
+          if (scc.conf.resources[resource][chart].skip) {
+            console.log("> " + chart);
+            return true;
+          }
+        }
+        return false;
+      };
       for (var key in msg.workerStatistics) {
-        if (msg.workerStatistics.hasOwnProperty(key) && !ChartsContains(key)) {
+        if (!ChartsContains(key) && !chartSkipped("chartConfigWorkers", key)) {
           ChartsCreate({jsonName : key});
+          scc.conf.resources.resourceBoxes.workercharts.push(key + "Chart");
+        }
+      }
+      for (var key in msg.nodeStatistics) {
+        if (!ChartsContains(key) && !chartSkipped("chartConfigNodes", key)) {
+          ChartsCreate({jsonName : key});
+          scc.conf.resources.resourceBoxes.nodecharts.push(key + "Chart");
         }
       }
       hasAddedNewCharts = true;
