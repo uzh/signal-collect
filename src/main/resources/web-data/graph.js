@@ -26,6 +26,7 @@ scc.defaults.graph = {"layout": {
                         "cGraphControl": "show"
                       },
                       "options": {
+                        "gs_addBySubstring": "",
                         "gs_autoAddVicinities": "No",
                         "gs_topCriterium": "Highest degree",
                         "gd_vertexSize": "Vertex state",
@@ -215,7 +216,7 @@ scc.modules.Graph = function() {
                       "All equal": function(d) { 
                             return "#17becf"; },
                       "Outgoing degree": function(d) { 
-                            return colorGradient([1, 20, 50])(d.es); },
+                            return colorGradient([1, 5, 20])(d.es); },
                       "Signal threshold": function(d) { 
                             return color(d.ss); },
                       "Collect threshold": function(d) { 
@@ -491,7 +492,7 @@ scc.modules.Graph = function() {
       
       // Update the vertex and edge positions
       svgVertices
-          .attr("cx", function(d) { if (isNaN(d.x)) { console.log(d); console.log(d3ForceStarting)  }; return d.x; })
+          .attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
       svgEdges
           .attr("x1", function(d) { return d.source.x; })

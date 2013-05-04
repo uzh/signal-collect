@@ -99,9 +99,9 @@ scc.modules.State = function() {
     $('#state').text(STR.State[j.state][0])
     $('#state').attr("title", STR.State[j.state][1])
     switch (j.state) {
-      case "pausedBeforeChecksBeforeSignal":
+      case "pausedBeforeChecksAfterCollect":
       case "pausedBeforeSignal":
-      case "pausedBeforeChecksBeforeCollect":
+      case "pausedBeforeChecksAfterSignal":
       case "pausedBeforeCollect":
       case "pausedBeforeGlobalChecks":
         enabledButtons(["reset", "step", "collect", "continue", "terminate"])

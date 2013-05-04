@@ -27,11 +27,11 @@ STR = {"addBySubstring": "Node ID should contain this string", //TODO put these 
          "non-interactive": [
            "Waiting for interactive exec...",
            "The interactive execution is either not enabled or currently unavailable"],
-         "pausedBeforeChecksBeforeSignal": [
-           "Paused before signal/checks",
+         "pausedBeforeChecksAfterCollect": [
+           "Paused bef. checks after collect",
            "Paused - The next partial step triggers a break condition check"],
-         "checksBeforeSignal": [
-           "Checking pre-signal conditions...",
+         "checksAfterCollect": [
+           "Check cond. after collecting...",
            "Checking conditions before the next signal step..."],
          "pausedBeforeSignal": [
            "Paused before signalling",
@@ -39,11 +39,11 @@ STR = {"addBySubstring": "Node ID should contain this string", //TODO put these 
          "signalling": [
            "Signalling...",
            "Performing the signalling step of the computation..."],
-         "pausedBeforeChecksBeforeCollect": [
-           "Paused before collect/checks",
+         "pausedBeforeChecksAfterSignal": [
+           "Paused before checks after signal",
            "Paused - The next partial step triggers a break condition check"],
-         "checksBeforeCollect": [
-           "Checking pre-collect conditions...",
+         "checksAfterSignal": [
+           "Check cond. after signalling...",
            "Checking conditions before the next collect step..."],
          "pausedBeforeCollect": [
            "Paused before collecting",

@@ -162,7 +162,7 @@ scc.modules.BreakConditions = function () {
      */
     $(".vertex_link").click(function (e) {
       var id = $(this).attr("title");
-      scc.consumers.Graph.addByIds([id]);
+      scc.consumers.Graph.addBySubstring(id);
     });
 
     // The last child in the list doesn't have a bottom border
@@ -208,7 +208,9 @@ scc.modules.BreakConditions = function () {
       $("#gc_vertexId").val(data.id);
       $("#gc_vertexId").focus();
       $("#gc_vertexId").val($("#gc_vertexId").val());
-      $("#gc_addCondition").removeAttr("disabled");
+      if ($("#gc_condition").val() == "changes state") {
+        $("#gc_addCondition").removeAttr("disabled");
+      }
     }
   });
 
@@ -217,8 +219,36 @@ scc.modules.BreakConditions = function () {
    * button in case the field is left empty.
    */
   $("#gc_vertexId").keyup(function(e) {
-    if ($(this).val().length == 0 || $(this).val() == STR.pickVertex) {
+    if ($(this).val() == STR.pickVertex) {
       $(this).val(STR.pickVertex);
+      $("#gc_addCondition").attr("disabled", true);
+    }
+    else {
+      if ($("#gc_condition").val() == "changes state") {
+        $("#gc_addCondition").removeAttr("disabled");
+      }
+    }
+  });
+
+  /**
+   * Handler that resets the vertexId field and disables the 'add condition'
+   * button in case the field is left empty.
+   */
+  $("#gc_vertexId").change(function(e) {
+    if ($(this).val().length == 0) {
+      $(this).val(STR.pickVertex); 
+      $("#gc_addCondition").attr("disabled", true);
+    }
+  });
+
+
+  /**
+   * Handler that enables the 'add condition' button if there's a non-default
+   * value in the value field
+   */
+  $("#gc_state").keyup(function(e) {
+    if ($(this).val() == STR.enterState) {
+      $(this).val(STR.enterState); 
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
@@ -230,13 +260,10 @@ scc.modules.BreakConditions = function () {
    * Handler that resets the state field and disables the 'add condition'
    * button in case the field is left empty.
    */
-  $("#gc_state").keyup(function(e) {
-    if ($(this).val().length == 0 || $(this).val() == STR.enterState) {
+  $("#gc_state").change(function(e) {
+    if ($(this).val().length == 0) {
       $(this).val(STR.enterState); 
       $("#gc_addCondition").attr("disabled", true);
-    }
-    else {
-      $("#gc_addCondition").removeAttr("disabled");
     }
   });
 
