@@ -140,13 +140,13 @@ a, a:visited {
   text-shadow: 0 1px 0 #ddd;
   background-image: -moz-linear-gradient(top,
                     rgba(245,245,245,.9),
-                    rgba(220,220,220,.3))
+                    rgba(220,220,220,.3));
   background-image: -webkit-gradient(linear,left top,left bottom,
                     color-stop(0, rgba(245,245,245,.9)),
                     color-stop(1, rgba(255,255,255,.3)));
   background-image: -webkit-linear-gradient(
                     rgba(245,245,245,.9),
-                    rgba(220,220,220,.3))
+                    rgba(220,220,220,.3));
 }
 
 .panel {
@@ -245,6 +245,10 @@ a, a:visited {
 
 .panel label {
   padding-left: 2%;
+}
+
+#resources_panel_container .panel label {
+	cursor: pointer;
 }
 
 .panel span.panel_span {
@@ -921,8 +925,7 @@ ul.statistics li span {
 /* logging */
 body.crash div#resourceBoxes > div#logBox,
 body.nostart div#resourceBoxes > div#logBox {
-  max-width: 1500px;
-  min-width: 1000px;
+  width: 98%;
   overflow: hidden;
   display: block;
   float: left;
@@ -932,7 +935,6 @@ body.nostart div#resourceBoxes > div#logBox {
 div#logBox div.scroll {
   overflow-y: auto;
   max-height: 400px;
-  max-width: 900px;
 }
 
 body.logs div#resources .structured {
@@ -944,6 +946,7 @@ body.logs div#logBox div.scroll {
   width: 100%;
   max-width: 100%;
   max-height: 100%;
+  height:400px;
 }
 
 div#logBox ul {
@@ -962,16 +965,36 @@ div#logBox li.hidden_source {
   display: none;
 }
 
+div#logBox li.level_debug {
+  background: #E0DEDE;
+}
+
+div#logBox li.level_debug:not([class*="hidden"]):nth-child(odd) {
+  background: #E6E6E6;
+}
+
 div#logBox li.level_info {
-  background: #ddd;
+  background: #C9C9C9;
+}
+
+div#logBox li.level_info:not([class*="hidden"]):nth-child(odd) {
+  background: #d1d1d1;
 }
 
 div#logBox li.level_warning {
   background: #FFC6BF;
 }
 
+div#logBox li.level_warning:not([class*="hidden"]):nth-child(odd) {
+  background: #FFD2CC;
+}
+
 div#logBox li.level_error {
   background: #FAA49B;
+}
+
+div#logBox li.level_error:not([class*="hidden"]):nth-child(odd) {
+  background: #FFB1A8;
 }
 
 body:not([class='logs']) div[id$='LogBox'] {
@@ -995,26 +1018,36 @@ div#logBox p.filter span:last-child {
 }
 
 div#logBox p.filter > span {
-  background-color: #eee;
   display: inline-block;
   padding: 3px 6px;
   border-radius: 0px;
   border-style: solid;
   border-width: 1px;
-  border-color: transparent black black transparent;
+  border-color: #ccc;
   cursor: pointer;
-  color: #aaa;
-}
-
-div#logBox p.filter > span:hover {
-  color:black;
+  background-image: -moz-linear-gradient(top,
+                    rgba(255,255,255,.25),
+                    rgba(0,0,0,.11));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(0, rgba(255,255,255,.25)),
+                    color-stop(1, rgba(0,0,0,.11)));
+  background-image: -webkit-linear-gradient(
+                    rgba(255,255,255,.25),
+                    rgba(0,0,0,.11));
 }
 
 div#logBox p.filter > span.active {
-  background: #ddd;
-  background: linear-gradient(to bottom, rgb(171,197,255), #59B6E8);
   border-color: black transparent transparent black;
-  color: black;
+  background-color: #59b6e8;
+  background-image: -moz-linear-gradient(top,
+                    rgba(245,245,245,.9),
+                    rgba(220,220,220,.3));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(0, rgba(245,245,245,.9)),
+                    color-stop(1, rgba(255,255,255,.3)));
+  background-image: -webkit-linear-gradient(
+                    rgba(245,245,245,.9),
+                    rgba(220,220,220,.3));
 }
 
 #help a {
