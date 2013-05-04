@@ -102,8 +102,8 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
                               msg: JValue) extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
-      case Some(e: ExecutionConfiguration) => Toolkit.unpackObjects(Array(e))
-      case otherwise => JObject(List(JField("unknown", "unknown")))
+      case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(e)
+      case otherwise => JString("unknown")
     }
     ("provider" -> "configuration") ~ 
     ("executionConfiguration" -> executionConfiguration) ~
@@ -246,7 +246,9 @@ case class GraphDataRequest(
   query: Option[String], 
   targetCount: Option[Int],
   topCriterium: Option[String],
-  substring: Option[String]
+  substring: Option[String],
+  signalThreshold: Option[Double],
+  collectThreshold: Option[Double]
 )
 
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
@@ -259,6 +261,8 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   var targetCount = 5
   var vicinityRadius = 0
   var vicinityIncoming = false
+  var signalThreshold = 0.01
+  var collectThreshold = 0.0
 
   def findVicinity(sourceIds: Set[Id], radius: Int = 3, 
                    incoming: Boolean = false): Set[Id] = {
@@ -309,10 +313,11 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     fetchGraph(vertexIds)
   }
 
-  def fetchByTopScore(scoreType: String): JObject = {
-    val topScore = workerApi.aggregateAll(
-                     new TopScoreAggregator[Id](targetCount, scoreType)).take(targetCount)
-    val vertexIds = topScore.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
+  def fetchByAboveThreshold(scoreType: String): JObject = {
+    val threshold = if (scoreType == "signal") signalThreshold else collectThreshold
+    val aboveThreshold = workerApi.aggregateAll(
+                     new AboveThresholdAggregator[Id](targetCount, scoreType, threshold)).take(targetCount)
+    val vertexIds = aboveThreshold.foldLeft(Set[Id]()){ (acc, m) => acc + m._2 }
     fetchGraph(vertexIds)
   }
 
@@ -345,6 +350,14 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case Some(b) => vicinityIncoming = b
       case otherwise => 
     }
+    request.signalThreshold match {
+      case Some(t) => signalThreshold = t
+      case otherwise => 
+    }
+    request.collectThreshold match {
+      case Some(t) => collectThreshold = t
+      case otherwise => 
+    }
     val graphData = request.query match {
       case Some("substring") => request.substring match {
         case Some(s) => fetchBySubstring(s)
@@ -358,9 +371,9 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case Some("Highest state") => fetchByTopState()
         case Some("Lowest state") => fetchByTopState(true)
         case Some("Highest degree") => fetchByTopDegree()
-        case Some("Signal score") => fetchByTopScore("signal")
-        case Some("Collect score") => fetchByTopScore("collect")
-        case otherwise => new InvalidDataProvider(msg).fetch
+        case Some("Above signal thresh.") => fetchByAboveThreshold("signal")
+        case Some("Above collect thresh.") => fetchByAboveThreshold("collect")
+        case otherwise => new InvalidDataProvider(msg, "invalid top criterium").fetch
       }
       case otherwise => fetchInvalid(msg, "missing query")
     }

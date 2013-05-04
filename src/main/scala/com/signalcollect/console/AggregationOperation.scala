@@ -202,7 +202,7 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
   * @param n the number of top elements to find
   * @param scoreType the score to look at (signal or collect)
   */
-class TopScoreAggregator[Id](n: Int, scoreType: String)
+class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
       extends AggregationOperation[List[(Double,Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
@@ -211,7 +211,12 @@ class TopScoreAggregator[Id](n: Int, scoreType: String)
         case "signal" => i.scoreSignal
         case "collect" => i.scoreCollect
       }
-      List[(Double,Id)]((score, i.id))
+      if (score > threshold) { 
+        List[(Double,Id)]((score, i.id))
+      }
+      else { 
+        List[(Double,Id)]()
+      }
     case otherwise => List[(Double,Id)]()
   }
 
@@ -314,52 +319,60 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
   * conditions) to BreakCondition items. It produces a map of the same ids to
   * strings which represent the reason for the condition firing. For example,
   * one result item may be ("3" -> "0.15"), which would mean that the condition
-  * identified as "3" fired because of a value "0.15".
+  * identified as "3" fired because of a value "0.15". Depending on the state,
+  * not all condition checks are performed. For example, the signal threshold
+  * is only ever checked before the signalling step, because else it will be 0
+  * anyway.
   *
   * @constructor create the aggregator
   * @param conditions map of conditions
+  * @param state string denoting the current state
   */
-class BreakConditionsAggregator(conditions: Map[String,BreakCondition])
+class BreakConditionsAggregator(conditions: Map[String,BreakCondition], state: String)
       extends AggregationOperation[Map[String,String]] {
 
   val vertexConditions = List(
-    ChangesState,
-    GoesAboveState,
-    GoesBelowState,
-    GoesAboveSignalThreshold,
-    GoesBelowSignalThreshold,
-    GoesAboveCollectThreshold,
-    GoesBelowCollectThreshold
+    StateChanges,
+    StateAbove,
+    StateBelow,
+    SignalScoreAboveThreshold,
+    SignalScoreBelowThreshold,
+    CollectScoreAboveThreshold,
+    CollectScoreBelowThreshold
   )
 
   def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => {
       var results = Map[String,String]()
       conditions.foreach { case (id, c) => 
-        if (vertexConditions.contains(c.name)) {
-          if (i.id.toString == c.props("vertexId")) {
-            c.name match { 
-              case ChangesState =>
-                if (i.state.toString != c.props("currentState"))
-                  results += (id -> i.state.toString)
-              case GoesAboveState =>
-                if (i.state.toString.toDouble > c.props("expectedState").toDouble)
-                  results += (id -> i.state.toString)
-              case GoesBelowState =>
-                if (i.state.toString.toDouble < c.props("expectedState").toDouble)
-                  results += (id -> i.state.toString)
-              case GoesBelowSignalThreshold =>
-                if (i.scoreSignal < c.props("signalThreshold").toDouble)
-                  results += (id -> i.scoreSignal.toString)
-              case GoesAboveSignalThreshold =>
-                if (i.scoreSignal > c.props("signalThreshold").toDouble)
-                  results += (id -> i.scoreSignal.toString)
-              case GoesBelowCollectThreshold =>
+        if (i.id.toString == c.props("vertexId")) {
+          state match {
+            case "checksAfterSignal" => c.name match { 
+              case CollectScoreBelowThreshold =>
                 if (i.scoreCollect < c.props("collectThreshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
-              case GoesAboveCollectThreshold =>
+              case CollectScoreAboveThreshold =>
                 if (i.scoreCollect > c.props("collectThreshold").toDouble)
                   results += (id -> i.scoreCollect.toString)
+              case otherwise =>
+              }
+            case "checksAfterCollect" => c.name match { 
+              case StateChanges =>
+                if (i.state.toString != c.props("currentState"))
+                  results += (id -> i.state.toString)
+              case StateAbove =>
+                if (i.state.toString.toDouble > c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case StateBelow =>
+                if (i.state.toString.toDouble < c.props("expectedState").toDouble)
+                  results += (id -> i.state.toString)
+              case SignalScoreBelowThreshold =>
+                if (i.scoreSignal < c.props("signalThreshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case SignalScoreAboveThreshold =>
+                if (i.scoreSignal > c.props("signalThreshold").toDouble)
+                  results += (id -> i.scoreSignal.toString)
+              case otherwise =>
             }
           }
         }

@@ -155,12 +155,11 @@ scc.modules.Configuration = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
-    $.each(msg.executionConfiguration, function(k,v) {
-      if (v instanceof Array) {
-        v = v.join(",");
-      }
-      $("#resStat" + k).html(v);
-    });
+    if (msg.executionConfiguration != "unknown") {
+      $.each(msg.executionConfiguration, function(k,v) {
+        $("#resStat" + k).html(v);
+      });
+    }
     var ul = $("#infrastructureStatBox ul").html('');
     $.each(msg.systemProperties, function(index) {
       $.each(msg.systemProperties[index], function(k, v) {

@@ -19,16 +19,25 @@
  */
 
 STR = {
-       "pickVertex": "Enter full ID or select using mouse",
-       "enterState": "Enter state",
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
+       "BreakConditions": {
+         "pickVertex": "Enter full ID or select using mouse",
+         "enterState": "Enter state",
+         "stateChanges": "state changes",
+         "stateAbove": "state above",
+         "stateBelow": "state below",
+         "signalScoreAboveThreshold": "signal score above threshold",
+         "signalScoreBelowThreshold": "signal score below threshold",
+         "collectScoreAboveThreshold": "collect score above threshold",
+         "collectScoreBelowThreshold": "collect score below threshold"
+       },
        "Graph": {
          "canvasEmpty":
            "Canvas is empty: use the tools on the left to add and remove vertices. "  +
            "Older vertices will automatically be removed once the maximum vertex count is reached.",
          "addBySubstring": 
-           "Node ID should contain this string"
+           "Node with ID having this substring"
        },
        "State": {
          "non-interactive": [
@@ -38,10 +47,10 @@ STR = {
            "Paused bef. checks after collect",
            "Paused - The next partial step triggers a break condition check"],
          "checksAfterCollect": [
-           "Check cond. after collecting...",
+           "Check conditions after collect...",
            "Checking conditions before the next signal step..."],
          "pausedBeforeSignal": [
-           "Paused before signalling",
+           "Paused before signal",
            "Paused - The next partial step will perform the signalling step of the computation"],
          "signalling": [
            "Signalling...",
@@ -50,10 +59,10 @@ STR = {
            "Paused before checks after signal",
            "Paused - The next partial step triggers a break condition check"],
          "checksAfterSignal": [
-           "Check cond. after signalling...",
+           "Check conditions after signal...",
            "Checking conditions before the next collect step..."],
          "pausedBeforeCollect": [
-           "Paused before collecting",
+           "Paused before collect",
            "Paused - The next partial step will perform the collecting step of the computation"],
          "collecting": [
            "Collecting...",
