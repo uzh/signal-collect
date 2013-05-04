@@ -467,9 +467,9 @@ var LineChart = function() {
   
   
   /**
-   * Eventhandler to perform all actions needed for the LineChart to update.
-   * This stores the new data, adds it to the chart and shifts it the left (if
-   * necessary).
+   * Eventhandler to update the data of a chart, and if needed also call
+   * functions to redraw the chart. This stores the new data, adds it to the
+   * chart and shifts it the left (if necessary).
    * @param {object} newData - Object containing the new data from JSON.
    */
   this.update = function(newData) {
@@ -502,29 +502,43 @@ var LineChart = function() {
                 new Date(currentDate.addMilliseconds(2*scc.conf.resources.intervalCharts))]);
     }
     
+    // update highest Y value if needed
     if (newMinMax.max.v > maxYValue) {
       maxYValue = newMinMax.max.v;
     }
     
-    if (this.chartSelector.hasClass("hidden") || !isElementOverlappingViewport(this.chartSelector.find("svg")[0])) {
-      // TODO update y domain before this
-      // TODO collective zooming is buggy
-      return false;
+    if (this.isOverlappingViewport()) {
+      this.updateChart();
     }
-    
+  }
+  
+  
+  /**
+   * Helper function to return whether or not this chart is visible and in (or
+   * very close to) the current viewport.
+   * @returns {boolean} - Whether or not this chart is in the viewport.
+   */
+  this.isOverlappingViewport = function() {
+    return (!this.chartSelector.hasClass("hidden") && isElementOverlappingViewport(this.chartSelector.find("svg")[0]));
+  }
+  
+  
+  /**
+   * Redraws the LineChart and the scatter points by adding new data.
+   * @param {boolean} shiftRight - Whether or not the graph needs to shift right.
+   */
+  this.updateChart = function() {
     path.attr("transform", null); // needed to avoid shifting scatter points
     
-    // only perform animated transition when needed or we will have problems when dragging/zooming
-    d3.transition().ease("linear").duration((shiftRight ? 200 : 0)).each(function() {
-
-      if (shiftRight) {
-        zoom.x(x);
+    var currentDate = data[0][data[0].length-1].date;
+    
+    d3.transition().ease("linear").duration(200).each(function() {
+      zoom.x(x);
         
-        // line transition
-        var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + scc.conf.resources.intervalCharts));
-        path.attr("transform", "translate(" + x(transformVal) + ")");
-      }
-      
+      // line transition
+      var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + scc.conf.resources.intervalCharts));
+      path.attr("transform", "translate(" + x(transformVal) + ")");
+       
       // update scatter points
       aLineContainer.selectAll(".dot")
         .data( function(d, i) { return d; } )  // This is the nested data call

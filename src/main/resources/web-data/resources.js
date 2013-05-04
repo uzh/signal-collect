@@ -30,6 +30,12 @@ scc.defaults.resources = {"layout":{
                           "section": "statistics"
 };
 
+/**
+ * Object container that encapsulates all chart objects.
+ * @type {Object}
+ */
+scc.conf.resources.lineCharts = {};
+
 
 /**
  * Event handler to catch onHashChange events to update the current section.
@@ -77,7 +83,23 @@ function show_boxes(s) {
     var resourceBox = boxes + " > #" + v;
     $(resourceBox).removeClass("hidden");
     $(resourceBox).appendTo(boxes); // change order
+    if (v.endsWith("Chart")) {
+      update_chart(v.slice(0, -5));
+    }
   });
+}
+
+/**
+ * Updates a chart when it is in viewport.
+ * @param {string} chart - The name of the chart to update.
+ */
+function update_chart(chart) {
+  if (!scc.conf.resources.lineCharts.hasOwnProperty(chart)) {
+    return;
+  }
+  if (scc.conf.resources.lineCharts[chart].isOverlappingViewport()) {
+    scc.conf.resources.lineCharts[chart].updateChart();
+  }
 }
 
 /**
@@ -358,12 +380,6 @@ scc.modules.Resources = function() {
   var estimationsLastUpdated = new Date(0);
   
   /**
-   * Object container that encapsulates all chart objects.
-   * @type {Object}
-   */
-  var lineCharts = {};
-  
-  /**
    * Helper function to create a chart and store it to the chart container.
    * @param {Object} config - The configuration to use to create the chart.
    */
@@ -371,7 +387,7 @@ scc.modules.Resources = function() {
     var lineChart = new LineChart();
     lineChart.container = "#resourceBoxes";
     lineChart.setup(config);
-    lineCharts[lineChart.config.jsonName] = lineChart;
+    scc.conf.resources.lineCharts[lineChart.config.jsonName] = lineChart;
   }
   
   scc.conf.resources.chartConfigWorkers.forEach(function(config) {
@@ -412,7 +428,7 @@ scc.modules.Resources = function() {
    * @param {number} scale - The scale to which to zoom in or out.
    */
   var zooming = function(scale) {
-    $.each(lineCharts, function(key, chart) {
+    $.each(scc.conf.resources.lineCharts, function(key, chart) {
       chart.setZoom(scale);
     });
   }
@@ -437,7 +453,7 @@ scc.modules.Resources = function() {
    * @param {number} scale - The scale to which to shift to.
    */
   var moving = function(scale) {
-    $.each(lineCharts, function(key, chart) {
+    $.each(scc.conf.resources.lineCharts, function(key, chart) {
       chart.setMove(scale);
     });
   }
@@ -466,9 +482,13 @@ scc.modules.Resources = function() {
 
   /**
    * Function that is called by the main module when a new WebSocket connection
-   * breaks down. Does nothing.
+   * breaks down. Redraws all charts so that they show current data.
    */
-  this.onclose = function() { }
+  this.onclose = function() {
+    $.each(scc.conf.resources.lineCharts, function(chartKey) {
+      scc.conf.resources.lineCharts[chartKey].updateChart();
+    });
+  }
 
   /**
    * Helper function to check whether {@code chartConfig} contains a chart with
@@ -551,7 +571,7 @@ scc.modules.Resources = function() {
     }
     
     // update all graphs
-    $.each(lineCharts, function(k,v) { v.update(msg); });
+    $.each(scc.conf.resources.lineCharts, function(k,v) { v.update(msg); });
     
     // update statistics
     if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
@@ -565,9 +585,9 @@ scc.modules.Resources = function() {
     
     // update estimations
     if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
-      if (lineCharts.runtime_mem_total.dataLength() >= 10) {
-        var maxMemory = lineCharts.runtime_mem_max.dataLatest();
-        var avgMemory = lineCharts.runtime_mem_total.dataAvg();
+      if (scc.conf.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
+        var maxMemory = scc.conf.resources.lineCharts.runtime_mem_max.dataLatest();
+        var avgMemory = scc.conf.resources.lineCharts.runtime_mem_total.dataAvg();
         var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);
         var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
         var fraction  = maxMemory / avgMemory;

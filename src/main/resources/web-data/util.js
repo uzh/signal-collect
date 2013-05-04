@@ -83,9 +83,18 @@ var sumMessageReceived = function(data) {
 function isElementOverlappingViewport(el) {
   var rect = el.getBoundingClientRect();
   return (
-      rect.top >= -400 &&
+      rect.top >= -600 &&
       rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document. documentElement.clientHeight) + 400 && /*or $(window).height() */
-      rect.right <= (window.innerWidth || document. documentElement.clientWidth) /*or $(window).width() */
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) + 600 && /*or $(window).height() */
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
       );
 }
+
+/**
+ * Returns whether or not a string ends with the passed suffix.
+ * @param {string} suffix - The suffix to check the end of the string for.
+ * @return {boolean} - Whether or not the string ends with suffix.
+ */
+String.prototype.endsWith = function(suffix) {
+  return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
