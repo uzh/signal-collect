@@ -505,8 +505,8 @@ scc.modules.Graph = function() {
       svgEdges.attr("class", function(o) {
         // If the user is hovering over a vertex, only draw edges of that vertex
         if (hoveringOverVertex) {
-          if (o.target.id === hoveringOverVertex) { return "edge outgoing"; }
-          if (o.source.id === hoveringOverVertex) { return "edge"; }
+          if (o.source.id === hoveringOverVertex) { return "edge outgoing"; }
+          if (o.target.id === hoveringOverVertex) { return "edge"; }
           return "edge hiddenOpacity";
         }
         // Else draw vertices depending on the drawEdges setting
