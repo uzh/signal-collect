@@ -38,7 +38,8 @@ $(document).ready(function() {
     "#gs_container":
       "Add vertices by exceptional properties or by searching for vertices using a string. If any vertex has an id which contains the string, " +
       "it will be added to the canvas. Load the vicinity of a vertex by <strong>double-clicking</strong> it, or expand several vicinities at once by " +
-      "drawing a rectangle around them.",
+      "drawing a rectangle around them.<br/>" +
+      "Signal/Collect Console remembers which nodes have been added to the canvas even beyond a restart of the server or your browser!",
     "#gd_container":
       "Clear the entire canvas or remove nodes by drawing a rectangle around them. You can also remove any vertices that don't have any edges.",
     "#cGraphDesign":

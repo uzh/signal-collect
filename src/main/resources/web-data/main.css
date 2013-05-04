@@ -636,12 +636,12 @@ a, a:visited {
 
 .vertex {
   stroke: #fff;
-  stroke-width: 3;
+  stroke-width: 2;
 }
 
 .edge {
   stroke: #999;
-  stroke-width: 1;
+  stroke-width: 0.6;
   -moz-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
   -webkit-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
   -o-transition: opacity 1s, stroke 0.5s, stroke-width 0.5s;
@@ -650,7 +650,7 @@ a, a:visited {
 }
 .edge.outgoing {
   stroke: #00dd00;
-  stroke-width: 2;
+  stroke-width: 1;
 }
 
 *:focus {

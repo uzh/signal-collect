@@ -22,23 +22,25 @@
  */
 scc.defaults.graph = {"layout": {
                         "cVertexSelection": "show",
-                        "cGraphDesign": "show"
+                        "cGraphDesign": "show",
+                        "cGraphControl": "show"
                       },
                       "options": {
-                        "gs_addBySubstring": "",
+                        "gs_autoAddVicinities": "No",
                         "gs_topCriterium": "Highest degree",
-                        "gd_verticesize": "Vertex state",
-                        "gd_vertexColor": "Vertex state",
+                        "gd_vertexSize": "Vertex state",
+                        "gd_vertexColor": "Outgoing degree",
                         "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
                         "gp_vicinityRadius": "1",
-                        "gp_maxVertexCount": "200",
-                        "gp_targetCount": "60",
+                        "gp_maxVertexCount": "300",
+                        "gp_targetCount": "100",
                         "gp_refreshRate": "1",
                         "gp_drawEdges": "When graph is still"
                       }
 };
 
+//TODO: always get options from settings, not HTML!
 /**
  * The Graph module provides the graph-related menu panel and the graph
  * drawing itself.
@@ -72,9 +74,13 @@ scc.modules.Graph = function() {
   var edges = [];
   var vertexRefs = {};
   var edgeRefs = {};
-  var vertex;
-  var edge;
+  var svgVertices;
+  var svgEdges;
   var fadeTimer;
+  var hideBackgroundTimeout;
+  var vicinityAutoLoadDelay;
+  var d3ForceStarting = false;
+  var d3ForceBusyDelay;
   var orderTemplate = {"provider": "graph"};
   var gradientDomain = [null,null];
   var zoomLevel = 1;
@@ -82,6 +88,8 @@ scc.modules.Graph = function() {
   var mouseClickCoords = undefined;
   var selectedVertices;
   var pickAction;
+  var vertexSequence = 0;
+  var vertexSequenceEnd = 0;
 
   /**
    * The VertexStorageAgent provides method for setting, getting and adding to the
@@ -126,7 +134,31 @@ scc.modules.Graph = function() {
     };
   };
   // Instantiate an agent for us to use
-  var verticestorage = new VertexStorageAgent();
+  var vertexStorage = new VertexStorageAgent();
+
+  /**
+   * Clears and then populates the select box that allows the user to choose
+   * the number of exceptional vertices with numbers ranging up to the
+   * specified maximum.
+   * @param {int} maximum - Maximum option to show
+   */
+  var populateTargetCountSelector = function (maximum) {
+    var selector = $("#gp_targetCount");
+    var currentChoice = selector.val()
+    selector.empty();
+    for (var i = 5; i<=15; i+=5) {
+      selector.append('<option value="' + i + '">' + i + '</option>');
+    }
+    for (var i = 20; i<=maximum; i+=20) {
+      selector.append('<option value="' + i + '">' + i + '</option>');
+    }
+    // re-select the value selected before emptying or the maximum value
+    if (currentChoice != null) {
+      currentChoice = parseInt(currentChoice)
+      if (currentChoice > maximum) { selector.val(maximum); }
+      else if (currentChoice <= maximum) { selector.val(currentChoice); }
+    }
+  }
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
@@ -152,7 +184,7 @@ scc.modules.Graph = function() {
   var sizeGradient = function (domain) {
     var scale = d3.scale.linear()
         .domain(domain)
-        .range([5, 10, 25]);
+        .range([2, 5, 30]);
     return scale;
   };
 
@@ -179,9 +211,11 @@ scc.modules.Graph = function() {
                       "Vertex id": function(d) { 
                             return color(d.id); },
                       "Latest query": function(d) { 
-                            return d.recent == "new"?"#00ff00":"#ff0000"; },
+                            return  d.seq > vertexSequenceEnd?"#00ff00":"#ff0000"; },
                       "All equal": function(d) { 
                             return "#17becf"; },
+                      "Outgoing degree": function(d) { 
+                            return colorGradient([1, 20, 50])(d.es); },
                       "Signal threshold": function(d) { 
                             return color(d.ss); },
                       "Collect threshold": function(d) { 
@@ -198,12 +232,12 @@ scc.modules.Graph = function() {
                       "All equal": function(d) { 
                             return "#9edae5"; },
                       "Latest query": function(d) { 
-                            return d.recent == "new"?"#00ff00":"#ff0000"; }
+                            return d.seq > vertexSequenceEnd?"#00ff00":"#ff0000"; }
     },
     // functions returning a radius
-    "gd_verticesize": { "Vertex state": function(d) { 
+    "gd_vertexSize": { "Vertex state": function(d) { 
                             return sizeGradient(gradientDomain)(d.state.replace(/[^0-9.,]/g, '')); },
-                     "All equal": function(d) { 
+                       "All equal": function(d) { 
                             return 5; }
     }
   };
@@ -216,7 +250,7 @@ scc.modules.Graph = function() {
    */
   var setVertexColor = function (s) {
     vertexColor = s;
-    vertex.transition().style("fill", s);
+    svgVertices.transition().style("fill", s);
   };
   /**
    * The default vertex color
@@ -230,7 +264,7 @@ scc.modules.Graph = function() {
    */
   var setVertexBorder = function (s) {
     vertexBorder = s;
-    vertex.transition().style("stroke", s);
+    svgVertices.transition().style("stroke", s);
   };
   /**
    * The default vertex border color
@@ -243,13 +277,13 @@ scc.modules.Graph = function() {
    * @param {int|function} s - The radius or a function returning a radius
    */
   var setVertexSize = function (s) {
-    verticesize = s;
-    vertex.transition().attr("r", s);
+    vertexSize = s;
+    svgVertices.transition().attr("r", s);
   };
   /**
    * The default vertex radius
    */
-  var verticesize = vertexDesign["gd_verticesize"]["Vertex state"];
+  var vertexSize = vertexDesign["gd_vertexSize"]["Vertex state"];
 
   /**
    * Wrapper function to do things that allways come with a graph order
@@ -264,10 +298,10 @@ scc.modules.Graph = function() {
    * called by other modules as well, in case they require a graph refresh.
    */
   this.update = function(delay) {
-    if (verticestorage.get().length > 0) {
+    if (vertexStorage.get().length > 0) {
       order({"provider": "graph",
              "query": "vertexIds",
-             "vertexIds": verticestorage.get()
+             "vertexIds": vertexStorage.get()
       }, delay);
     }
   };
@@ -276,12 +310,6 @@ scc.modules.Graph = function() {
    * Modify the panel html, setting options and adding dynamic fields
    */
   this.layout = function() {
-    for (var i = 5; i<=15; i+=5) {
-      $("#gp_targetCount").append('<option value="' + i + '">' + i + '</option>');
-    }
-    for (var i = 20; i<=200; i+=20) {
-      $("#gp_targetCount").append('<option value="' + i + '">' + i + '</option>');
-    }
     for (var i = 0; i<=4; i++) {
       $("#gp_vicinityRadius").append('<option value="' + i + '">' + i + '</option>');
     }
@@ -292,9 +320,10 @@ scc.modules.Graph = function() {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
     $("#gp_maxVertexCount").append('<option value="-1">Unlimited</option>');
-    for (var i = 40; i<=300; i+=20) {
+    for (var i = 40; i<=500; i+=20) {
       $("#gp_maxVertexCount").append('<option value="' + i + '">' + i + '</option>');
     }
+    populateTargetCountSelector(500);
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
@@ -313,6 +342,9 @@ scc.modules.Graph = function() {
     if (scc.settings.get().graph.options["gs_addBySubstring"] == "") {
       $("#gs_addBySubstring").val(STR.addBySubstring);
     }
+    var val = $("#gp_maxVertexCount").val();
+    if (val == "-1") { val = $("#gp_maxVertexCount option:last-child").val(); }
+    populateTargetCountSelector(val);
   }
   this.layout();
 
@@ -341,7 +373,7 @@ scc.modules.Graph = function() {
                      "translate(" + d3.event.translate + ")" + 
                      " scale(" + zoomLevel + ")")
           }
-        })).append('svg:g');
+        })).append("svg:g");
     // Disable double-click zooming, because we need double clicks to expand
     // the vicinity of a vertex. Zooming remains possible using the mouse wheel.
     d3.select("#graph_canvas > svg").on("dblclick.zoom", null);
@@ -392,11 +424,24 @@ scc.modules.Graph = function() {
         fillTooltip(data);
         clearTimeout(fadeTimer);
         tooltip.fadeIn(200);
-        edge.attr("class", function(o) {
+        svgEdges.attr("class", function(o) {
           if (o.source.id === data.id) { return "edge outgoing"; }
           if (o.target.id === data.id) { return "edge"; }
           return "edge hiddenOpacity";
         });
+        if (scc.settings.get().graph.options["gs_autoAddVicinities"] == "Yes") {
+          clearTimeout(vicinityAutoLoadDelay);
+          var target = d3.event.target;
+          var data = target.__data__;
+          vicinityAutoLoadDelay = setTimeout(function () {
+            order({"provider": "graph",
+                   "query": "vertexIds",
+                   "vertexIds": [data.id],
+                   "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+                   "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+            });
+          }, 150);
+        }
       }
       // Otherwise, clear the tooltip and set a timeout to hide it soon
       else {
@@ -404,14 +449,15 @@ scc.modules.Graph = function() {
         tooltip.css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
         fillTooltip({"id": "-", "state": "-", "ss": "-", "cs": "-"});
         clearTimeout(fadeTimer);
+        clearTimeout(vicinityAutoLoadDelay);
         fadeTimer = setTimeout(function() {
           tooltip.fadeOut(200);
         }, 500);
         if (drawEdges == "Only on hover") {
-          edge.attr("class", "edge hiddenOpacity");
+          svgEdges.attr("class", "edge hiddenOpacity");
         }
         else {
-          edge.attr("class", "edge");
+          svgEdges.attr("class", "edge");
         }
       }
     });
@@ -421,12 +467,11 @@ scc.modules.Graph = function() {
         .size([$("#content").width(), $("#content").height()])
         .nodes(vertices)
         .links(edges)
-        .linkDistance(350)
-        .charge(-500);
+        .linkDistance(150)
+        .charge(-100);
     
-    // vertex and edge shall contain the SVG elements of the graph
-    vertex = svg.selectAll(".vertex");
-    edge = svg.selectAll(".edge");
+    svgEdges = svg.append('svg:g').selectAll(".edge");
+    svgVertices = svg.append('svg:g').selectAll(".vertex");
 
     // apply graph design options from the settings
     $.each(scc.settings.get().graph.options, function (key, value) {
@@ -445,16 +490,18 @@ scc.modules.Graph = function() {
       // amount of movement is expressed by d3 through the .alpha() property.
       
       // Update the vertex and edge positions
-      vertex.attr("cx", function(d) { return d.x; })
+      svgVertices
+          .attr("cx", function(d) { if (isNaN(d.x)) { console.log(d); console.log(d3ForceStarting)  }; return d.x; })
           .attr("cy", function(d) { return d.y; });
-      edge.attr("x1", function(d) { return d.source.x; })
+      svgEdges
+          .attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
 
       // Add classes to edges depending on options and user interaction
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
-      edge.attr("class", function(o) {
+      svgEdges.attr("class", function(o) {
         // If the user is hovering over a vertex, only draw edges of that vertex
         if (hoveringOverVertex) {
           if (o.target.id === hoveringOverVertex) { return "edge outgoing"; }
@@ -482,38 +529,42 @@ scc.modules.Graph = function() {
   var restart = function (graphChanged) {
 
     // Update the edge data
-    edge = edge.data(edges, function(d) { return d.id; });
-    edge.enter().append("line")
+    svgEdges = svgEdges.data(edges, function(d) { return d.id; });
+    svgEdges.enter().append("svg:line")
         .attr("class", "edge hiddenOpacity");
-    edge.exit().remove();
+    svgEdges.exit().remove();
 
     // update the vertex data
-    vertex = vertex.data(vertices, function(d) { return d.id; });
-    vertex.enter().append("circle")
+    svgVertices = svgVertices.data(vertices, function(d) { return d.id; })
+    svgVertices.enter().append("circle")
         .attr("class", "vertex")
         .call(force.drag)
-        .on("mousedown.drag", null);
-    vertex.exit().remove();
-    vertex.transition(100)
-        .style("fill", vertexColor)
-        .style("stroke", vertexBorder)
-        .attr("r", verticesize);
+        .on("mousedown.drag", null); // prevent grabbing of vertices
+    svgVertices.exit()
+      .style("opacity", 1)
+      .transition()
+      .duration(100)
+      .style("opacity", 0)
+      .remove();
+    svgVertices
+      .style("fill", vertexColor)
+      .style("stroke", vertexBorder)
+      .transition()
+      .duration(100)
+      .attr("r", vertexSize);
 
     if (vertices.length == 0) {
+      clearTimeout(hideBackgroundTimeout);
       $("#graph_background").text(
           "Canvas is empty: use the tools on the left to add and remove vertices"
       ).fadeIn(50);
     }
 
-    // Edges should be drawn first so that vertices are draw above edges
-    svg.selectAll("circle, line").sort(function (a, b) { 
-      if (a.source == undefined) { return true }
-      else { return false }
-    }).order();
-
     // Restart the forced layout if necessary
     if (graphChanged) {
+      d3ForceStarting = true;
       force.start();
+      d3ForceStarting = false;
     }
   };
 
@@ -525,6 +576,14 @@ scc.modules.Graph = function() {
    */
   this.onmessage = function(j) {
     scc.notBusy();
+    // Prevent race condition occuring if d3 is busy starting the force layout
+    // and changing the vertices/edges arrays by delaying the execution of this
+    // function.
+    if (d3ForceStarting) {
+      clearTimeout(d3ForceBusyDelay);
+      d3ForceBusyDelay = setTimeout(function () { scc.consumers.Graph.onmessage(j) }, 50);
+      return
+    }
     $("button").removeClass("disabled");
     // Keep references to the forced layout data
     var newVertices = false;
@@ -532,6 +591,16 @@ scc.modules.Graph = function() {
     // If the server sent an empty graph, do nothing
     if (j.vertices == undefined) { 
       $("#graph_background").text("There are no vertices matching your request").fadeIn(50);
+      hideBackgroundTimeout = setTimeout(function () {
+        if (vertices.length == 0) {
+          $("#graph_background").text(
+              "Canvas is empty: use the tools on the left to add and remove vertices"
+          ).fadeIn(50);
+        }
+        else {
+          $("#graph_background").fadeOut(50);
+        }
+      }, 2000);
       return; 
     }
     else {
@@ -573,14 +642,27 @@ scc.modules.Graph = function() {
     // to vertices[vertexRefs["1111"]], thereby updating the correct vertex in d3's
     // vertex array.
 
-    $.each(vertices, function(id, vertex) {
-      vertex["recent"] = "old";
-    });
+    // If there's a vertex limit, then check if we need to remove some vertices
+    // before there's enough space for the new ones
+
+    var maxVertexCount = parseInt(scc.settings.get().graph.options["gp_maxVertexCount"]);
+
+    vertexSequenceEnd = vertexSequence;
+    var newVertexCount = 0;
+
     $.each(j.vertices, function(id, data) {
+      newVertexCount += 1;
+      // If there are more vertices in the data than we're allowed to draw,
+      // then remove the remaining elements from the vertexRefs if necessary
+      if (maxVertexCount != -1 && newVertexCount > maxVertexCount) { 
+        vertexRefs[id] = undefined;
+        return;
+      }
+      vertexSequence += 1;
       if (vertexRefs[id] == undefined) {
         // The vertex hasn't existed yet. Update d3's vertex array
-        vertices.push({"id": id, "state": data.s, "recent": "new", 
-                    "ss": data.ss, "cs": data.cs});
+        vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
+                       "es": data.es, "ss": data.ss, "cs": data.cs});
         // Store the index of the vertex in the lookup table
         vertexRefs[id] = vertices.length - 1;
         newVertices = true;
@@ -588,12 +670,25 @@ scc.modules.Graph = function() {
       else {
         // Look up the vertex with this id in d3's vertex array and update it
         vertices[vertexRefs[id]].state = data.s;
-        vertices[vertexRefs[id]].recent = "new";
+        vertices[vertexRefs[id]].seq = vertexSequence;
         vertices[vertexRefs[id]].ss = data.ss;
         vertices[vertexRefs[id]].cs = data.cs;
       }
     });
-    verticestorage.save();
+
+    var verticesToRemove = [];
+    if (maxVertexCount != -1) {
+      var vertexOverflow =  maxVertexCount - vertices.length;
+      if (vertexOverflow < 0) {
+        var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
+        verticesToRemove = $("circle").filter(function (i) {
+          if (this.__data__.seq < highestSeqToKeep) { return true; }
+        });
+      }
+    }
+
+    vertexStorage.save();
+
 
     // Determine maximum and minimum state to determine color gradient
     gradientDomain = [d3.min(vertices, function (d) { return parseFloat(d.state) }),
@@ -606,11 +701,14 @@ scc.modules.Graph = function() {
           edgeId = source + "-" + targets[t];
           if (edgeRefs[edgeId] == undefined) {
             // The edge hasn't existed yet. Update d3's edge array
-            edges.push({"id": edgeId,
-                        "source": vertices[vertexRefs[source]], 
-                        "target": vertices[vertexRefs[targets[t]]]});
-            // Store the index of the edge in the lookup table
-            edgeRefs[edgeId] = edges.length - 1;
+            if (vertexRefs[source] != undefined && 
+                vertexRefs[targets[t]] != undefined) {
+              edges.push({"id": edgeId,
+                          "source": vertices[vertexRefs[source]], 
+                          "target": vertices[vertexRefs[targets[t]]]});
+              // Store the index of the edge in the lookup table
+              edgeRefs[edgeId] = edges.length - 1;
+            }
           }
           else {
             // One could update d3's edge array here, like with the vertices
@@ -619,7 +717,12 @@ scc.modules.Graph = function() {
       });
     }
     
-    restart(newVertices);    
+    if (verticesToRemove.length != 0) {
+      removeVerticesFromCanvas(verticesToRemove);
+    }
+    else {
+      restart(newVertices);    
+    }
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
@@ -763,8 +866,8 @@ scc.modules.Graph = function() {
     e.preventDefault();
     pickAction = "addVicinities";
     // restore styling on all vertices
-    vertex.style("fill", vertexColor)
-        .style("stroke", vertexBorder);
+    svgVertices.style("fill", vertexColor)
+               .style("stroke", vertexBorder);
     $("button").removeClass("active");
     selectedVertices = undefined;
     if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
@@ -815,8 +918,8 @@ scc.modules.Graph = function() {
     e.preventDefault();
     pickAction = "remove";
     // restore styling on all vertices
-    vertex.style("fill", vertexColor)
-        .style("stroke", vertexBorder);
+    svgVertices.style("fill", vertexColor)
+               .style("stroke", vertexBorder);
     selectedVertices = undefined;
     $("button").removeClass("active");
     if ($("#gd_removeBySelect").text() == "Cancel") {
@@ -837,43 +940,6 @@ scc.modules.Graph = function() {
       $("#gd_removeBySelect").text("Cancel");
     }
   });
-
-  /**
-   * Handler that fires when pressing a key. It facilitates issuing some
-   * actions using the keyboard
-   */
-  $(document).keydown(function(e) {
-    console.log(e.which)
-    // If the user has selected nodes to be removed, DEL will do the same as
-    // clicking on "Remove". ESC will cancel the selection.
-    if ($("#gd_removeBySelect").hasClass("snd")) {
-      if ( e.which == 46 ) { 
-        e.preventDefault();
-        $("#gd_removeBySelectRemove").trigger('click');
-      }
-    }
-    if ($("#gd_removeBySelect").text() == "Cancel") {
-      if ( e.which == 27 ) { 
-        e.preventDefault();
-        $("#gd_removeBySelect").trigger('click');
-      }
-    }
-    // If the user has selected nodes to load their vicinities, ENTER will do
-    // the same as clicking on "Add". ESC will cancel the selection.
-    if ($("#gs_addVicinitiesBySelect").hasClass("snd")) {
-      if ( e.which == 13 ) { 
-        e.preventDefault();
-        $("#gs_addVicinitiesBySelectAdd").trigger('click');
-      }
-    }
-    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
-      if ( e.which == 27 ) { 
-        e.preventDefault();
-        $("#gs_addVicinitiesBySelect").trigger('click');
-      }
-    }
-  });
-
 
   /**
    * Handler for finally removing the selected vertices.
@@ -898,10 +964,45 @@ scc.modules.Graph = function() {
       verticesWithEdges[d.target.id] = 1; 
     });
     var vertexIds = Object.keys(verticesWithEdges);
-    var verticesWithoutEdges = vertex.filter(function (d, i) {
+    var verticesWithoutEdges = svgVertices.filter(function (d, i) {
       return vertexIds.indexOf(d.id) == -1;
     });
     removeVerticesFromCanvas(verticesWithoutEdges[0]);
+  });
+
+  /**
+   * Handler that fires when pressing a key. It facilitates issuing some
+   * actions using the keyboard
+   */
+  $(document).keydown(function(e) {
+    // If the user has selected vertices to be removed, DEL will do the same as
+    // clicking on "Remove". ESC will cancel the selection.
+    if ($("#gd_removeBySelect").hasClass("snd")) {
+      if ( e.which == 46 ) { 
+        e.preventDefault();
+        $("#gd_removeBySelectRemove").trigger('click');
+      }
+    }
+    if ($("#gd_removeBySelect").text() == "Cancel") {
+      if ( e.which == 27 ) { 
+        e.preventDefault();
+        $("#gd_removeBySelect").trigger('click');
+      }
+    }
+    // If the user has selected vertices to load their vicinities, ENTER will do
+    // the same as clicking on "Add". ESC will cancel the selection.
+    if ($("#gs_addVicinitiesBySelect").hasClass("snd")) {
+      if ( e.which == 13 ) { 
+        e.preventDefault();
+        $("#gs_addVicinitiesBySelectAdd").trigger('click');
+      }
+    }
+    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
+      if ( e.which == 27 ) { 
+        e.preventDefault();
+        $("#gs_addVicinitiesBySelect").trigger('click');
+      }
+    }
   });
 
   /**
@@ -911,7 +1012,7 @@ scc.modules.Graph = function() {
    * @return {DOMElement|undefined} - The vertex with the matching id
    */
   this.findExistingVertices = function (ids) {
-    var existingVertices = vertex.filter(function (d, i) {
+    var existingVertices = svgVertices.filter(function (d, i) {
       return ids.indexOf(d.id) != -1
     });
     return existingVertices;
@@ -954,7 +1055,7 @@ scc.modules.Graph = function() {
 
   /**
    * Set the design of the given vertex property to the given vertex metric.
-   * For example, set the size ("gd_verticesize") to be depending on the vertex
+   * For example, set the size ("gd_vertexSize") to be depending on the vertex
    * vertex state ("Vertex state").
    * @param {string} property - The visual vertex property to change
    * @param {string} metric - The vertex metric on which the visual
@@ -962,8 +1063,8 @@ scc.modules.Graph = function() {
    */
   this.setGraphDesign = function (property, metric) {
     switch (property) {
-      case "gd_verticesize": 
-          setVertexSize(vertexDesign["gd_verticesize"][metric]); 
+      case "gd_vertexSize": 
+          setVertexSize(vertexDesign["gd_vertexSize"][metric]); 
           break;
       case "gd_vertexColor": 
           setVertexColor(vertexDesign["gd_vertexColor"][metric]); 
@@ -992,7 +1093,7 @@ scc.modules.Graph = function() {
     e.preventDefault();
     order({"provider": "graph",
            "query":  "vertexIds",
-           "vertexIds":  verticestorage.get(),
+           "vertexIds":  vertexStorage.get(),
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
@@ -1004,7 +1105,7 @@ scc.modules.Graph = function() {
    */
   var removeVerticesFromCanvas = function(vertexList) {
     // Extract vertex Ids from vertex items
-    scc.resetOrders("graph");
+    // scc.resetOrders("graph"); TODO: is this necessary?
     var vertexIds = $.map(vertexList, function (vertex, key) { 
       return vertex.__data__.id;
     });
@@ -1035,9 +1136,9 @@ scc.modules.Graph = function() {
       }
     }
     // persist the new vertex selection and re-activate the graph layout
-    verticestorage.save();
-    restart(true);
-    scc.consumers.Graph.update();
+    vertexStorage.save();
+    restart(true); 
+    //scc.consumers.Graph.update();
   };
 
   /**
@@ -1047,11 +1148,20 @@ scc.modules.Graph = function() {
   $("#gd_removeAll").click(function (e) { 
     e.preventDefault();
     vertices = [];
-    verticestorage.save();
+    vertexStorage.save();
     scc.consumers.Graph.reset();
     scc.consumers.Graph.update();
   });
 
+  /**
+   * Handler called when the maximum vertex count option changes. Adjusts the
+   * possible range to choose from in the target count option.
+   */
+  $("#gp_maxVertexCount").change(function (e) { 
+    var val = $(this).val();
+    if (val == "-1") { val = $('#gp_maxVertexCount option:last-child').val(); }
+    populateTargetCountSelector(val);
+  });
   /**
    * Handler called when the 'draw edges' option changes. Persists the choice 
    * to the settings hash and updates the representation (shows or hides the
@@ -1063,9 +1173,9 @@ scc.modules.Graph = function() {
     switch (val) {
         case "Always":
         case "When graph is still":
-            edge.attr("class", "edge"); break;
+            svgEdges.attr("class", "edge"); break;
         case "Only on hover":
-            edge.attr("class", "edge hiddenOpacity"); break;
+            svgEdges.attr("class", "edge hiddenOpacity"); break;
     }
   });
 };

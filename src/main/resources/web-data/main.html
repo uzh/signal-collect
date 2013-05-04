@@ -98,7 +98,12 @@
                   <button id="gs_addAllVicinitiesAdd">Add</button><br/>
                   <span class="panel_span">Vicinity of selection </span>
                   <button id="gs_addVicinitiesBySelect">Select</button>
-                  <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button>
+                  <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button><br/>
+                  <label for="gs_autoAddVicinities">Auto-expand nodes on hover:</label>
+                  <select id="gs_autoAddVicinities" class="setting">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select>
                 </div>
                 <div id="gd_container">
                 <h1><span>Remove vertices</span></h1>
@@ -125,8 +130,8 @@
                   <option>Only on hover</option>
                 </select>
                 <h1><span>Vertex styling</span></h1>
-                <label for="gd_verticesize">Vertex size:</label>
-                <select id="gd_verticesize" class="setting">
+                <label for="gd_vertexSize">Vertex size:</label>
+                <select id="gd_vertexSize" class="setting">
                   <option>Vertex state</option>
                   <option>All equal</option>
                 </select><br/>
@@ -134,6 +139,7 @@
                 <select id="gd_vertexColor" class="setting">
                   <option>Vertex state</option>
                   <option>Vertex id</option>
+                  <option>Outgoing degree</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
                   <option>Latest query</option>
@@ -143,6 +149,7 @@
                 <select id="gd_vertexBorder" class="setting">
                   <option>Vertex state</option>
                   <option>Vertex id</option>
+                  <option>Outgoing degree</option>
                   <option>Signal threshold</option>
                   <option>Collect threshold</option>
                   <option>Latest query</option>
@@ -152,7 +159,7 @@
             </div>
           </div>
           <div id="cGraphControl" class="panel_section">
-            <div class="title expanded">Graph Execution Control</div>
+            <div class="title expanded">Computation Break Conditions</div>
             <div class="contents">
               <form>
                 <h1><span>Breakpoint Conditions</span></h1>
@@ -297,7 +304,7 @@
             <p class="teaser">
               When a computation does not converge, there might be cyclic signal and collect messages so that it might <em>never</em>
               converge. You can observe the charts below to see whether there are any messages sent or received. Additionally, 
-              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_verticesize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>observe
+              you could <a target="_blank" href='/graph#{"graph":{"options":{"gd_vertexSize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>observe
               the graph with a state visualization</a>.
             </p>
           </div>
@@ -328,7 +335,7 @@
             <p class="teaser">
               There can be various reasons for when a computation yields unexpected results. To find potential problems, you can
               <a target="_blank" href='/graph'>set breakpoints on the graph</a> and step through different phases of the computation.
-              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_verticesize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>view
+              You can also <a target="_blank" href='/graph#{"graph":{"options":{"gd_vertexSize":"Vertex state","gd_vertexBorder":"Vertex state","gp_vicinityRadius":"2","gc_targetCount":"40"}}}'>view
               the graph with state visualization enabled</a>.
             </p>
           </div>

@@ -58,7 +58,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
     case i: Inspectable[Id,_] => {
       if (vertexIds.contains(i.id)) {
         // Get the list of target vertices that this vertex' edges point at
-        val targetvertices = i.outgoingEdges.values.filter { value =>
+        val targetVertices = i.outgoingEdges.values.filter { value =>
           // This match is necessary because only an Edge[Id] will have a 
           // targetId of type Id.
           value match {
@@ -68,10 +68,12 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
         }.map{ e => ( JString(e.targetId.toString))}.toList
         def verticesObj = ("vertices", JObject(List(JField(i.id.toString, 
                           JObject(List(JField("s", i.state.toString),
+                                       //TODO: consider also computing incoming edges?
+                                       JField("es", targetVertices.size),
                                        JField("ss", i.scoreSignal),
                                        JField("cs", i.scoreCollect)))))))
-        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetvertices)))))
-        if (targetvertices.size > 0) { verticesObj ~ edgesObj } else { verticesObj }
+        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+        if (targetVertices.size > 0) { verticesObj ~ edgesObj } else { verticesObj }
       }
       else { JObject(List()) }
 

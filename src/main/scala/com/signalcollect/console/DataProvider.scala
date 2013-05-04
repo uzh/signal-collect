@@ -280,6 +280,8 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   }
 
   def fetchGraph(vertexIds: Set[Id] = Set[Id]()): JObject = {
+    // TODO: combine these two aggregators? 
+    // It would mean that I pass a Set[Id] and a List[String] :/
     val vertices = workerApi.aggregateAll(
                      new FindVerticesByIdsAggregator[Id](vertexIdStrings))
     val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet, 

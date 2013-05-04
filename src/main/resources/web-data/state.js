@@ -111,8 +111,9 @@ scc.modules.State = function() {
         }
         break;
     }
-    // If the computation is continuing, it's only possible to pause or terminate
-    if (j.steps != 0) {
+    // If the computation is continuing, it's only possible to pause or
+    // terminate. If only a few steps remain, don't do anything.
+    if (j.steps > 5 || j.steps == -1) {
       if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
@@ -121,7 +122,7 @@ scc.modules.State = function() {
       enabledButtons(["pause", "terminate"])
     }
     // Else there are more choices:
-    else {
+    else if (j.steps == 0) {
       if (scc.consumers.Graph != undefined) {
         scc.consumers.Graph.autoRefresh = false;
         scc.consumers.Graph.update();
