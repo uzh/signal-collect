@@ -229,7 +229,7 @@ class FileServer(folderName: String) extends HttpHandler {
         inputStream = new FileInputStream(targetPath)
       } else {
         // read from the JAR
-        inputStream = ClassLoader.getSystemResource(folderName + "/" + target).openStream()
+        inputStream = getClass().getClassLoader().getResourceAsStream(folderName + "/" + target)
       }
       val file = new BufferedInputStream(inputStream.asInstanceOf[InputStream])
       t.getResponseHeaders.set("Content-Type", fileType)
