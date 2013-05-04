@@ -81,6 +81,11 @@
                 </div>
                 <div id="gs_container">
                   <h1><span>Add vertices</span></h1>
+                  <label for="gs_autoAddVicinities">Load vertex vicinity on hover:</label>
+                  <select id="gs_autoAddVicinities" class="setting">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select><br/>
                   <span class="panel_span">Top </span>
                   <select id="gp_targetCount" class="setting"></select>
                   <span class="panel_span"> of </span>
@@ -91,29 +96,26 @@
                     <option>Signal score</option>
                     <option>Collect score</option>
                   </select>
-                  <button id="gs_addByTop">Add</button><br/>
+                  <button id="gs_addByTop" class="narrow">Add</button><br/>
                   <input id="gs_addBySubstring" type="text">
-                  <button id="gs_addBySubstringAdd">Add</button><br/>
-                  <span class="panel_span">Vicinity of all vertices </span>
-                  <button id="gs_addAllVicinitiesAdd">Add</button><br/>
-                  <span class="panel_span">Vicinity of selection </span>
-                  <button id="gs_addVicinitiesBySelect">Select</button>
-                  <button id="gs_addVicinitiesBySelectAdd" class="hidden">Add</button><br/>
-                  <label for="gs_autoAddVicinities">Auto-expand nodes on hover:</label>
-                  <select id="gs_autoAddVicinities" class="setting">
-                    <option>No</option>
-                    <option>Yes</option>
-                  </select>
+                  <button id="gs_addBySubstringAdd" class="narrow">Add</button><br/>
+                  <span class="panel_span">Vertex vicinity of:</span>
+                  <button id="gs_addRecentVicinitiesAdd" class="half">Latest query</button><br/>
+                  <span class="panel_span">&nbsp;</span>
+                  <button id="gs_addAllVicinitiesAdd" class="half">All vertices</button><br/>
+                  <span class="panel_span">&nbsp;</span>
+                  <button id="gs_addVicinitiesBySelect" class="half">Selected vertices</button>
+                  <button id="gs_addVicinitiesBySelectAdd" class="hidden active quarter">Add</button><br/>
                 </div>
                 <div id="gd_container">
                 <h1><span>Remove vertices</span></h1>
-                  <span class="panel_span">Remove unconnected vertices</span>
-                  <button id="gd_removeOrphans">Remove</button><br/>
-                  <span class="panel_span">Remove all vertices</span>
-                  <button id="gd_removeAll">Remove</button><br/>
-                  <span class="panel_span">Select vertices to remove</span>
-                  <button id="gd_removeBySelect">Select</button>
-                  <button id="gd_removeBySelectRemove" class="hidden">Remove</button>
+                  <span class="panel_span">&nbsp;</span>
+                  <button id="gd_removeNonLatest" class="left half">All except latest</button>
+                  <button id="gd_removeOrphans" class="half">Orphaned vertices</button><br/>
+                  <button id="gd_removeAll" class="left half">All vertices</button>
+                  <span class="panel_span">&nbsp;</span>
+                  <button id="gd_removeBySelect" class="half">Selected vertices</button>
+                  <button id="gd_removeBySelectRemove" class="hidden active quarter">Remove</button>
                 </div>
               </form> 
             </div>
@@ -165,9 +167,9 @@
                 <h1><span>Breakpoint Conditions</span></h1>
                 <div class="bottom_border"><div id="gc_conditionList"></div></div>
                 <h1><span>Add New Condition</span></h1>
-                <label for="gc_vertexId">When vertex with id:</label><br/>
+                <label for="gc_vertexId">When vertex with ID:</label><br/>
                 <input id="gc_vertexId" type="text">
-                <button id="gc_useMouse">Select</button><br/>
+                <button id="gc_useMouse" class="narrow">Select</button><br/>
                 <select id="gc_condition">
                   <option>changes state</option>
                   <option>goes above state:</option>
@@ -180,7 +182,7 @@
                 <span id="gc_stateContainer">
                   <input id="gc_state" type="text">
                 </span>
-                <button disabled="disabled" id="gc_addCondition">Add</button><br/>
+                <button disabled="disabled" class="narrow" id="gc_addCondition">Add</button><br/>
               </form> 
             </div>
           </div>

@@ -260,30 +260,7 @@ a, a:visited {
   margin-bottom: 5px;
   border: 1px solid #bbb;
   height: 20px;
-  width: 73%;
-}
-
-.panel button {
-  cursor: inherit;
-  border: 1px solid #bbb;
-  background-image: -moz-linear-gradient(top,
-                    rgba(255,255,255,.25),
-                    rgba(200,200,200,.11));
-  background-image: -webkit-gradient(linear,left top,left bottom,
-                    color-stop(0, rgba(255,255,255,.25)),
-                    color-stop(1, rgba(200,200,200,.11)));
-  background-image: -webkit-linear-gradient(
-                    rgba(255,255,255,.25),
-                    rgba(200,200,200,.11));
-}
-
-.panel button.disabled {
-  color: #bbb;
-}
-
-.panel button.active,
-.panel button:active {
-  background-color: #59b6e8;
+  width: 74%;
 }
 
 .panel button, 
@@ -296,8 +273,49 @@ a, a:visited {
   right: 2%;
 }
 
+.panel button.active,
+.panel button:active {
+  background-color: #59b6e8;
+}
+
+.panel button, 
+.panel button[disabled],
+.panel button[disabled]:active {
+  cursor: inherit;
+  border: 1px solid #bbb;
+  background-color: rgb(221, 221, 221);
+  background-image: -moz-linear-gradient(top,
+                    rgba(255,255,255,.25),
+                    rgba(200,200,200,.11));
+  background-image: -webkit-gradient(linear,left top,left bottom,
+                    color-stop(0, rgba(255,255,255,.25)),
+                    color-stop(1, rgba(200,200,200,.11)));
+  background-image: -webkit-linear-gradient(
+                    rgba(255,255,255,.25),
+                    rgba(200,200,200,.11));
+}
+
+.panel button[disabled],
+.panel button[disabled]:active {
+  color: #999;
+}
 .panel button.snd {
-  right: 22%;
+  right: 26%;
+}
+.panel button.half {
+  width: 47%;
+} 
+.panel button.quarter {
+  width: 23%;
+} 
+.panel button.left.half {
+  left: 2%;
+}
+.panel button.full {
+  width: 96%;
+} 
+.panel button.snd.half {
+  width: 23%;
 }
     
 .panel input[type="radio"] {

@@ -286,7 +286,11 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
                      new FindVerticesByIdsAggregator[Id](vertexIdStrings))
     val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet, 
                                    vicinityRadius, vicinityIncoming)
-    workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds))
+    val (lowestState, highestState, graph) = 
+        workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds))
+    ("highestState" -> highestState) ~
+    ("lowestState" -> lowestState) ~
+    graph
   }
 
   def fetchByTopState(inverted: Boolean = false): JObject = {

@@ -291,6 +291,8 @@ scc.modules.Graph = function() {
    */
   var order = function (order, delay) {
     if (!delay) { delay = 0; }
+    scc.busy();
+    $("button").attr("disabled", true);
     scc.order(order, delay)
   };
 
@@ -585,7 +587,7 @@ scc.modules.Graph = function() {
       d3ForceBusyDelay = setTimeout(function () { scc.consumers.Graph.onmessage(j) }, 50);
       return
     }
-    $("button").removeClass("disabled");
+    $("button").attr("disabled", false);
     // Keep references to the forced layout data
     var newVertices = false;
 
@@ -842,7 +844,6 @@ scc.modules.Graph = function() {
     selectedVertices.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
 
     // Modify the panel buttons depending on the current action
-    $("button").removeClass("active");
     switch (pickAction) {
       case "remove":
         $("#gd_removeBySelect").addClass("snd");
@@ -869,11 +870,12 @@ scc.modules.Graph = function() {
     // restore styling on all vertices
     svgVertices.style("fill", vertexColor)
                .style("stroke", vertexBorder);
-    $("button").removeClass("active");
     selectedVertices = undefined;
+    $("button").attr("disabled", false);
+    $("#gs_addVicinitiesBySelect").removeClass("active");
     if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
       // modify panel buttons
-      $("#gs_addVicinitiesBySelect").text("Select");
+      $("#gs_addVicinitiesBySelect").text("Selected vertices");
       $("#gs_addVicinitiesBySelect").removeClass("snd");
       $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
       $("#graph_canvas_selection").hide();
@@ -882,12 +884,13 @@ scc.modules.Graph = function() {
     }
     else { // TODO: merge with code from removeBySelect
       $("button").removeClass("snd");
-      $("#gd_removeBySelect").text("Select");
+      $("#gd_removeBySelect").text("Selected vertices");
       $("#gd_removeBySelectRemove").addClass("hidden");
       $("#graph_canvas_overlay").addClass("pickingVertices");
       $("#graph_canvas_overlay").fadeIn(100);
       $("#gs_addVicinitiesBySelect").addClass("active");
       $("#gs_addVicinitiesBySelect").text("Cancel");
+      $("button:not(.active)").attr("disabled", true);
     }
   });
 
@@ -896,8 +899,10 @@ scc.modules.Graph = function() {
    */
   $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
     e.preventDefault();
-    $("#gs_addVicinitiesBySelect").text("Select");
+    $("#gs_addVicinitiesBySelect").text("Selected vertices");
+    $("button").attr("disabled", false);
     $("#gs_addVicinitiesBySelect").removeClass("snd");
+    $("#gs_addVicinitiesBySelect").removeClass("active");
     $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
     // extract list of Ids from vertex list and order data
     var selectedVertexIds = $.map(selectedVertices, function (vertex, key) { 
@@ -922,9 +927,10 @@ scc.modules.Graph = function() {
     svgVertices.style("fill", vertexColor)
                .style("stroke", vertexBorder);
     selectedVertices = undefined;
-    $("button").removeClass("active");
+    $("#gd_removeBySelect").removeClass("active");
+    $("button").attr("disabled", false);
     if ($("#gd_removeBySelect").text() == "Cancel") {
-      $("#gd_removeBySelect").text("Select");
+      $("#gd_removeBySelect").text("Selected vertices");
       $("#gd_removeBySelect").removeClass("snd");
       $("#gd_removeBySelectRemove").addClass("hidden");
       $("#graph_canvas_selection").hide();
@@ -934,11 +940,12 @@ scc.modules.Graph = function() {
     else {
       $("button").removeClass("snd");
       $("#graph_canvas_overlay").addClass("pickingVertices");
-      $("#gs_addVicinitiesBySelect").text("Select");
+      $("#gs_addVicinitiesBySelect").text("Selected vertices");
       $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
       $("#graph_canvas_overlay").fadeIn(100);
       $("#gd_removeBySelect").addClass("active");
       $("#gd_removeBySelect").text("Cancel");
+      $("button:not(.active)").attr("disabled", true);
     }
   });
 
@@ -947,8 +954,10 @@ scc.modules.Graph = function() {
    */
   $("#gd_removeBySelectRemove").click(function (e) { 
     e.preventDefault();
-    $("#gd_removeBySelect").text("Select");
+    $("#gd_removeBySelect").text("Selected vertices");
+    $("#gd_removeBySelect").removeClass("active");
     $("#gd_removeBySelect").removeClass("snd");
+    $("button").attr("disabled", false);
     $("#gd_removeBySelectRemove").addClass("hidden");
     removeVerticesFromCanvas(selectedVertices);
   });
@@ -969,6 +978,19 @@ scc.modules.Graph = function() {
       return vertexIds.indexOf(d.id) == -1;
     });
     removeVerticesFromCanvas(verticesWithoutEdges[0]);
+  });
+
+  /**
+   * Handler called when the user clicks on button to remove all vertices that
+   * do not belong to the latest query.
+   * @param {Event} e - The event that triggered the call
+   */
+  $("#gd_removeNonLatest").click(function (e) { 
+    e.preventDefault();
+    var verticesToRemove = $("circle").filter(function (i) {
+      if (this.__data__.seq <= vertexSequenceEnd) { return true; }
+    });
+    removeVerticesFromCanvas(verticesToRemove);
   });
 
   /**
@@ -1044,13 +1066,11 @@ scc.modules.Graph = function() {
    */
   var addTop = function (e) {
     e.preventDefault();
-    scc.busy();
     order({"provider": "graph",
            "query": "top", 
            "targetCount": parseInt($("#gp_targetCount").val()),
            "topCriterium": $("#gs_topCriterium").val()
     });
-    $("button").addClass("disabled");
   };
   $("#gs_addByTop").click(addTop);
 
@@ -1095,6 +1115,27 @@ scc.modules.Graph = function() {
     order({"provider": "graph",
            "query":  "vertexIds",
            "vertexIds":  vertexStorage.get(),
+           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+           "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+    });
+  });
+
+  /**
+   * Handler called when the user wants to load the vicinity of the vertices
+   * that have been most recently queried
+   * @param {Event} e - The event that triggered the call
+   */
+  $("#gs_addRecentVicinitiesAdd").click(function (e) { 
+    e.preventDefault();
+    var verticesToExpand = $("circle").filter(function (i) {
+      if (this.__data__.seq > vertexSequenceEnd) { return true; }
+    });
+    var vertexIds = $.map(verticesToExpand, function (vertex, key) { 
+      return vertex.__data__.id;
+    });
+    order({"provider": "graph",
+           "query":  "vertexIds",
+           "vertexIds":  vertexIds,
            "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });

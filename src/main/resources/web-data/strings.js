@@ -19,7 +19,7 @@
  */
 
 STR = {"addBySubstring": "Node ID should contain this string", //TODO put these in sub-object
-       "pickVertex": "Enter ID or select using mouse",
+       "pickVertex": "Enter full ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
@@ -65,7 +65,10 @@ STR = {"addBySubstring": "Node ID should contain this string", //TODO put these 
            "Terminating the Signal/Collect application"],
          "pausing": [
            "Pausing...",
-           "Pausing the computation, waiting for tasks to finish"]
+           "Pausing the computation, waiting for tasks to finish"],
+         "converged": [
+           "Computation converged!",
+           "The computation has converged. You may reset the graph to start over."]
        }
        
 };

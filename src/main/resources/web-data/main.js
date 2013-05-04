@@ -348,7 +348,7 @@ $(document).ready(function() {
  * Ensure that the websocket is closed when leaving/closing the page
  */
 window.onbeforeunload = function() {
-  ws.onclose = function () {}; 
-  ws.close();
+  scc.webSocket.onclose = function () {}; 
+  scc.webSocket.close();
 };
 

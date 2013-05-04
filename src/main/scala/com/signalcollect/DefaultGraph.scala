@@ -339,6 +339,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         setState("resetting")
         resetting = true
         conditionsReached = Map[String,String]()
+        converged = false
         steps = 0
         iteration = 0
         graph.reset
@@ -405,6 +406,14 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
             lock.notifyAll
             stats.collectSteps += 1
             if (steps > 0) { steps -= 1 }
+            if (converged) {
+              setState("converged")
+              while (!resetting) {
+                try { lock.wait } catch {
+                  case e: InterruptedException =>
+                }
+              }
+            }
           }
           while (steps == 0 && !resetting) {
             setState("pausedBeforeChecksAfterCollect")

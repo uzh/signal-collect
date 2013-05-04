@@ -30,6 +30,8 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
+//TODO: rename extract / reduce parameters to something meaningful
+
 /** Aggregator that loads a JObject representation of vertices and their edges.
   *
   * Given the set of ids, the aggregator the corresponding vertices and the 
@@ -52,38 +54,52 @@ import BreakConditionName._
   * @param vertexIds set of vertex ids to be loaded
   */
 class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
-      extends AggregationOperation[JObject] {
+      extends AggregationOperation[(Double,Double,JObject)] {
 
-  def extract(v: Vertex[_,_]): JObject = v match {
-    case i: Inspectable[Id,_] => {
-      if (vertexIds.contains(i.id)) {
-        // Get the list of target vertices that this vertex' edges point at
-        val targetVertices = i.outgoingEdges.values.filter { value =>
-          // This match is necessary because only an Edge[Id] will have a 
-          // targetId of type Id.
-          value match {
-            case v: Edge[Id] => vertexIds.contains(v.targetId)
-            case otherwise => false
-          }
-        }.map{ e => ( JString(e.targetId.toString))}.toList
-        def verticesObj = ("vertices", JObject(List(JField(i.id.toString, 
-                          JObject(List(JField("s", i.state.toString),
-                                       //TODO: consider also computing incoming edges?
-                                       JField("es", targetVertices.size),
-                                       JField("ss", i.scoreSignal),
-                                       JField("cs", i.scoreCollect)))))))
-        def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
-        if (targetVertices.size > 0) { verticesObj ~ edgesObj } else { verticesObj }
-      }
-      else { JObject(List()) }
-
-      }
-    case other => JObject(List())
+  def interpretState(s: Any): Double = {
+    s match {
+      case x: Double => x
+      case x: Int => x.toDouble
+      case x: Long => x.toDouble
+      case x: Float => x.toDouble
+      case otherwise => 0.0
+    }
   }
 
-  def reduce(vertices: Stream[JObject]): JObject = {
-    vertices.foldLeft(JObject(List())) { (acc, v) => 
-      acc merge v
+  def extract(v: Vertex[_,_]): ((Double,Double,JObject)) = {
+    def state = interpretState(v.state)
+    v match {
+      case i: Inspectable[Id,_] => {
+        if (vertexIds.contains(i.id)) {
+          // Get the list of target vertices that this vertex' edges point at
+          val targetVertices = i.outgoingEdges.values.filter { value =>
+            // This match is necessary because only an Edge[Id] will have a 
+            // targetId of type Id.
+            value match {
+              case v: Edge[Id] => vertexIds.contains(v.targetId)
+              case otherwise => false
+            }
+          }.map{ e => ( JString(e.targetId.toString))}.toList
+          def verticesObj = ("vertices", JObject(List(JField(i.id.toString, 
+                            JObject(List(JField("s", i.state.toString),
+                                         JField("es", targetVertices.size),
+                                         JField("ss", i.scoreSignal),
+                                         JField("cs", i.scoreCollect)))))))
+          def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+          (state, state, verticesObj ~ edgesObj)
+        }
+        else { (state, state, JObject(List())) }
+
+        }
+      case other => (state, state, JObject(List()))
+    }
+  }
+
+  def reduce(vertices: Stream[(Double,Double,JObject)]): (Double,Double,JObject) = {
+    vertices.foldLeft((vertices.head._1,vertices.head._2,JObject(List()))) { (acc, v) => 
+      (if (acc._1 < v._1) acc._1 else v._1,
+       if (acc._2 > v._2) acc._2 else v._2,
+       acc._3 merge v._3) 
     }
   }
 }

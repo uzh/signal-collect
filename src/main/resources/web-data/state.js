@@ -113,7 +113,7 @@ scc.modules.State = function() {
     }
     // If the computation is continuing, it's only possible to pause or
     // terminate. If only a few steps remain, don't do anything.
-    if (j.steps > 5 || j.steps == -1) {
+    if ((j.steps > 5 || j.steps == -1) && j.state != "converged") {
       if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
@@ -122,7 +122,7 @@ scc.modules.State = function() {
       enabledButtons(["pause", "terminate"])
     }
     // Else there are more choices:
-    else if (j.steps == 0) {
+    else if (j.steps == 0 || j.state == "converged") {
       if (scc.consumers.Graph != undefined) {
         scc.consumers.Graph.autoRefresh = false;
         scc.consumers.Graph.update();
@@ -135,6 +135,9 @@ scc.modules.State = function() {
         case "resetting":
           this.destroy();
           this.onopen();
+          break;
+        case "converged":
+          enabledButtons(["reset", "terminate"])
           break;
         case "terminating":
           this.terminate("#success", "Terminating...");
