@@ -294,7 +294,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     "return valid API result for provider 'graph'" in {
-      websocket.sendJsonOrder("{\"provider\":\"graph\",\"query\":\"top\", \"topCriterium\": \"Highest State\"}")
+      websocket.sendJsonOrder("{\"provider\":\"graph\",\"query\":\"top\", \"topCriterium\": \"Highest state\"}")
       val json = websocket.getJsonResponse
       // we do not load a data set, so we can't actually get a graph.
       // As long as we get back a result, it's OK.

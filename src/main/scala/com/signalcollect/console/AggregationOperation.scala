@@ -271,24 +271,24 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
   * @param limit maximum number of nodes to find
   */
 class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
-      extends AggregationOperation[Set[Id]] {
+      extends ModularAggregationOperation[Set[Id]] {
 
-  var counter = 0;
+  val neutralElement = Set[Id]()
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] => {
-      if (counter >= limit) { return Set() }
       if (i.id.toString.contains(s)) { return Set(i.id) }
       else { return Set() }
     }
     case other => Set()
   }
 
-  def reduce(vertices: Stream[Set[Id]]): Set[Id] = {
-    vertices.toSet.flatten
+  def aggregate(a: Set[Id], b: Set[Id]): Set[Id] = {
+    val combinedSet = a ++ b
+    combinedSet.slice(0, math.min(limit, combinedSet.size)).toSet
   }
-
 }
+
 
 /** Aggregator that checks if any of the break conditions apply
   *

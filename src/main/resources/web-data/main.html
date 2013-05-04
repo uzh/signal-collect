@@ -59,7 +59,7 @@
         <span id="mode_graph" class="leftmost selected">Graph</span>
         <span id="mode_resources">Resources</span>
       </div>
-      <div id="graph_panel_container">
+      <div id="graph_panel_container" class="panel_container">
         <div class="panel">
           <div id="cVertexSelection" class="panel_section">
             <div class="title expanded">Add and remove vertices from the canvas</div>
@@ -68,21 +68,23 @@
                 <div id="gp_container">
                   <h1><span>Options impacting performance</span></h1>
                   <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
-                  <select id="gp_vicinityRadius"></select><br/>
+                  <select id="gp_vicinityRadius" class="setting"></select><br/>
                   <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
-                  <select id="gp_vicinityIncoming">
+                  <select id="gp_vicinityIncoming" class="setting">
                     <option>No</option>
                     <option>Yes</option>
                   </select><br/>
                   <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
-                  <select id="gp_refreshRate"></select>
+                  <select id="gp_refreshRate" class="setting"></select><br/>
+                  <label for="gp_maxVertexCount">Maximum vertex count:</label>
+                  <select id="gp_maxVertexCount" class="setting"></select>
                 </div>
                 <div id="gs_container">
                   <h1><span>Add vertices</span></h1>
                   <span class="panel_span">Top </span>
-                  <select id="gp_targetCount"></select>
+                  <select id="gp_targetCount" class="setting"></select>
                   <span class="panel_span"> of </span>
-                  <select id="gs_topCriterium">
+                  <select id="gs_topCriterium" class="setting">
                     <option>Highest degree</option>
                     <option>Highest state</option>
                     <option>Lowest state</option>
@@ -117,19 +119,19 @@
               <form>
                 <h1><span>Options impacting performance</span></h1>
                 <label for="gp_drawEdges">Draw edges:</label>
-                <select id="gp_drawEdges">
+                <select id="gp_drawEdges" class="setting">
                   <option>When graph is still</option>
                   <option>Always</option>
                   <option>Only on hover</option>
                 </select>
                 <h1><span>Vertex styling</span></h1>
                 <label for="gd_verticesize">Vertex size:</label>
-                <select id="gd_verticesize">
+                <select id="gd_verticesize" class="setting">
                   <option>Vertex state</option>
                   <option>All equal</option>
                 </select><br/>
                 <label for="gd_vertexColor">Vertex color:</label>
-                <select id="gd_vertexColor">
+                <select id="gd_vertexColor" class="setting">
                   <option>Vertex state</option>
                   <option>Vertex id</option>
                   <option>Signal threshold</option>
@@ -138,7 +140,7 @@
                   <option>All equal</option>
                 </select><br/>
                 <label for="gd_vertexBorder">Vertex outline color:</label>
-                <select id="gd_vertexBorder">
+                <select id="gd_vertexBorder" class="setting">
                   <option>Vertex state</option>
                   <option>Vertex id</option>
                   <option>Signal threshold</option>
@@ -178,7 +180,7 @@
 
         </div>
       </div>
-      <div id="resources_panel_container">
+      <div id="resources_panel_container" class="panel_container">
         <div class="panel">
           <div id="cResourceComputation"  class="panel_section">
             <div class="title expanded">Computation</div>
