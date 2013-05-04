@@ -330,15 +330,15 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   def fetch(): JObject = {
     val request = (msg).extract[GraphDataRequest]
     request.vertexIds match {
-      case Some(ids) => vertexIdStrings = ids
+      case Some(ids) => vertexIdStrings = ids.take(1000)
       case otherwise => 
     }
     request.targetCount match {
-      case Some(t) => targetCount = t
+      case Some(t) => targetCount = List(t, 1000).min
       case otherwise => 
     }
     request.vicinityRadius match {
-      case Some(r) => vicinityRadius = r
+      case Some(r) => vicinityRadius = List(r, 4).min
       case otherwise => 
     }
     request.vicinityIncoming match {

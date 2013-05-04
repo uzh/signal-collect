@@ -34,7 +34,7 @@ scc.defaults.graph = {"layout": {
                         "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
                         "gp_vicinityRadius": "1",
-                        "gp_maxVertexCount": "300",
+                        "gp_maxVertexCount": "250",
                         "gp_targetCount": "100",
                         "gp_refreshRate": "1",
                         "gp_drawEdges": "When graph is still"
@@ -91,6 +91,10 @@ scc.modules.Graph = function() {
   var pickAction;
   var vertexSequence = 0;
   var vertexSequenceEnd = 0;
+  var GSTR = STR["Graph"];
+  var nodeCountIntervals = []; 
+  for (var i = 50; i<=250; i+=50) { nodeCountIntervals.push(i) };
+  for (var i = 400; i<=1000; i+=100) { nodeCountIntervals.push(i) };
 
   /**
    * The VertexStorageAgent provides method for setting, getting and adding to the
@@ -147,11 +151,10 @@ scc.modules.Graph = function() {
     var selector = $("#gp_targetCount");
     var currentChoice = selector.val()
     selector.empty();
-    for (var i = 5; i<=15; i+=5) {
-      selector.append('<option value="' + i + '">' + i + '</option>');
-    }
-    for (var i = 20; i<=maximum; i+=20) {
-      selector.append('<option value="' + i + '">' + i + '</option>');
+    for (var i in  nodeCountIntervals) {
+      if (nodeCountIntervals[i] > maximum) { break; }
+      selector.append('<option value="' + nodeCountIntervals[i] + '">' + 
+                      nodeCountIntervals[i] + '</option>');
     }
     // re-select the value selected before emptying or the maximum value
     if (currentChoice != null) {
@@ -322,11 +325,11 @@ scc.modules.Graph = function() {
     for (var i = 15; i<=60; i+=5) {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
-    $("#gp_maxVertexCount").append('<option value="-1">Unlimited</option>');
-    for (var i = 40; i<=500; i+=20) {
-      $("#gp_maxVertexCount").append('<option value="' + i + '">' + i + '</option>');
+    for (var i in nodeCountIntervals) {
+      $("#gp_maxVertexCount").append('<option value="' + nodeCountIntervals[i] + '">' + 
+                                     nodeCountIntervals[i] + '</option>');
     }
-    populateTargetCountSelector(500);
+    populateTargetCountSelector(nodeCountIntervals[nodeCountIntervals.length-1]);
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
@@ -343,10 +346,9 @@ scc.modules.Graph = function() {
       $("#" + key).val(value);
     });
     if (scc.settings.get().graph.options["gs_addBySubstring"] == "") {
-      $("#gs_addBySubstring").val(STR.addBySubstring);
+      $("#gs_addBySubstring").val(GSTR["addBySubstring"]);
     }
-    var val = $("#gp_maxVertexCount").val();
-    if (val == "-1") { val = $("#gp_maxVertexCount option:last-child").val(); }
+    var val = parseInt($("#gp_maxVertexCount").val());
     populateTargetCountSelector(val);
   }
   this.layout();
@@ -558,9 +560,7 @@ scc.modules.Graph = function() {
 
     if (vertices.length == 0) {
       clearTimeout(hideBackgroundTimeout);
-      $("#graph_background").text(
-          "Canvas is empty: use the tools on the left to add and remove vertices"
-      ).fadeIn(50);
+      $("#graph_background").text(GSTR["canvasEmpty"]).fadeIn(50);
     }
 
     // Restart the forced layout if necessary
@@ -596,18 +596,16 @@ scc.modules.Graph = function() {
       $("#graph_background").text("There are no vertices matching your request").fadeIn(50);
       hideBackgroundTimeout = setTimeout(function () {
         if (vertices.length == 0) {
-          $("#graph_background").text(
-              "Canvas is empty: use the tools on the left to add and remove vertices"
-          ).fadeIn(50);
+          $("#graph_background").text(GSTR["canvasEmpty"]).fadeIn(50);
         }
         else {
-          $("#graph_background").fadeOut(50);
+          $("#graph_background").fadeOut(150);
         }
       }, 2000);
       return; 
     }
     else {
-      $("#graph_background").fadeOut(50);
+      $("#graph_background").fadeOut(150);
     }
 
     // The server sends us two maps, one for vertices and one for edges. In both,
@@ -652,13 +650,15 @@ scc.modules.Graph = function() {
 
     vertexSequenceEnd = vertexSequence;
     var newVertexCount = 0;
+    var tooManyVertices = 0;
 
     $.each(j.vertices, function(id, data) {
       newVertexCount += 1;
       // If there are more vertices in the data than we're allowed to draw,
       // then remove the remaining elements from the vertexRefs if necessary
-      if (maxVertexCount != -1 && newVertexCount > maxVertexCount) { 
+      if (newVertexCount > maxVertexCount) { 
         vertexRefs[id] = undefined;
+        tooManyVertices += 1;
         return;
       }
       vertexSequence += 1;
@@ -679,15 +679,21 @@ scc.modules.Graph = function() {
       }
     });
 
+    if (tooManyVertices > 0) {
+      $("#graph_background").stop().text(
+          "The query yields " + tooManyVertices + " vertices. Only the first " +
+          maxVertexCount  + " are being displayed.").fadeIn(50);
+      hideBackgroundTimeout = setTimeout(function () {
+          $("#graph_background").fadeOut(150);
+      }, 4000);
+    }
     var verticesToRemove = [];
-    if (maxVertexCount != -1) {
-      var vertexOverflow =  maxVertexCount - vertices.length;
-      if (vertexOverflow < 0) {
-        var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
-        verticesToRemove = $("circle").filter(function (i) {
-          if (this.__data__.seq < highestSeqToKeep) { return true; }
-        });
-      }
+    var vertexOverflow =  maxVertexCount - vertices.length;
+    if (vertexOverflow < 0) {
+      var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
+      verticesToRemove = $("circle").filter(function (i) {
+        if (this.__data__.seq < highestSeqToKeep) { return true; }
+      });
     }
 
     vertexStorage.save();
@@ -1183,8 +1189,7 @@ scc.modules.Graph = function() {
    * possible range to choose from in the target count option.
    */
   $("#gp_maxVertexCount").change(function (e) { 
-    var val = $(this).val();
-    if (val == "-1") { val = $('#gp_maxVertexCount option:last-child').val(); }
+    var val = parseInt($(this).val());
     populateTargetCountSelector(val);
   });
   /**

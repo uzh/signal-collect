@@ -18,11 +18,18 @@
  *  
  */
 
-STR = {"addBySubstring": "Node ID should contain this string", //TODO put these in sub-object
+STR = {
        "pickVertex": "Enter full ID or select using mouse",
        "enterState": "Enter state",
        "noConditions": "No conditions specified",
        "noExecution": "The interactive execution mode is unavailable, retrying...",
+       "Graph": {
+         "canvasEmpty":
+           "Canvas is empty: use the tools on the left to add and remove vertices. "  +
+           "Older vertices will automatically be removed once the maximum vertex count is reached.",
+         "addBySubstring": 
+           "Node ID should contain this string"
+       },
        "State": {
          "non-interactive": [
            "Waiting for interactive exec...",
