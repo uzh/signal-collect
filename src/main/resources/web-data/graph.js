@@ -163,7 +163,7 @@ scc.modules.Graph = function() {
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
-   * to a green-to-red color scale
+   * to a blue-to-red color scale
    * @param {array<double>} domain - A three-element array containing the
    *     lowest, median and highest values of the input domain
    * @return {object} - The d3 color scale for this input domain
@@ -171,7 +171,7 @@ scc.modules.Graph = function() {
   var colorGradient = function (domain) {
     var scale = d3.scale.linear()
         .domain(domain)
-        .range(["green", "yellow", "red"]);
+        .range(["blue", "green", "red"]);
     return scale;
   };
 
@@ -841,7 +841,7 @@ scc.modules.Graph = function() {
     });
 
     // Highlight the selected vertices
-    selectedVertices.css({"fill": "#00ff00", "stroke": "#bbbbbb"});
+    selectedVertices.css({"fill": "#00ff00", "stroke": "#fff"});
 
     // Modify the panel buttons depending on the current action
     switch (pickAction) {
@@ -862,104 +862,87 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler for selecting vertices whose vicinities shall be loaded.
+   * Function used as handler for selecting vertices whose vicinities shall be 
+   * loaded.
    */
-  $("#gs_addVicinitiesBySelect").click(function (e) { 
+  var processSelection = function (e, action, primaryButton, confirmButton) { 
     e.preventDefault();
-    pickAction = "addVicinities";
     // restore styling on all vertices
     svgVertices.style("fill", vertexColor)
                .style("stroke", vertexBorder);
     selectedVertices = undefined;
     $("button").attr("disabled", false);
-    $("#gs_addVicinitiesBySelect").removeClass("active");
-    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
-      // modify panel buttons
-      $("#gs_addVicinitiesBySelect").text("Selected vertices");
-      $("#gs_addVicinitiesBySelect").removeClass("snd");
-      $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
-      $("#graph_canvas_selection").hide();
-      $("#graph_canvas_overlay").fadeOut(100);
-      $("#graph_canvas_overlay").removeClass("pickingVertices");
-    }
-    else { // TODO: merge with code from removeBySelect
-      $("button").removeClass("snd");
-      $("#gd_removeBySelect").text("Selected vertices");
-      $("#gd_removeBySelectRemove").addClass("hidden");
-      $("#graph_canvas_overlay").addClass("pickingVertices");
-      $("#graph_canvas_overlay").fadeIn(100);
-      $("#gs_addVicinitiesBySelect").addClass("active");
-      $("#gs_addVicinitiesBySelect").text("Cancel");
-      $("button:not(.active)").attr("disabled", true);
-    }
-  });
-
-  /**
-   * Handler for finally loading the vicinities of the selected vertices.
-   */
-  $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
-    e.preventDefault();
-    $("#gs_addVicinitiesBySelect").text("Selected vertices");
-    $("button").attr("disabled", false);
-    $("#gs_addVicinitiesBySelect").removeClass("snd");
-    $("#gs_addVicinitiesBySelect").removeClass("active");
-    $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
-    // extract list of Ids from vertex list and order data
-    var selectedVertexIds = $.map(selectedVertices, function (vertex, key) { 
-      return vertex.__data__.id;
-    });
-    order({"provider": "graph",
-           "query": "vertexIds",
-           "vertexIds": selectedVertexIds,
-           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
-           "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
-    });
-  });
-
-  /**
-   * Handler for selecting vertices which shall be removed.
-   * TODO: merge with addVicinitiesBySelect handlers
-   */
-  $("#gd_removeBySelect").click(function (e) { 
-    e.preventDefault();
-    pickAction = "remove";
-    // restore styling on all vertices
-    svgVertices.style("fill", vertexColor)
-               .style("stroke", vertexBorder);
-    selectedVertices = undefined;
-    $("#gd_removeBySelect").removeClass("active");
-    $("button").attr("disabled", false);
-    if ($("#gd_removeBySelect").text() == "Cancel") {
-      $("#gd_removeBySelect").text("Selected vertices");
-      $("#gd_removeBySelect").removeClass("snd");
-      $("#gd_removeBySelectRemove").addClass("hidden");
+    primaryButton.removeClass("active");
+    pickAction = action;
+    // modify panel buttons
+    if (primaryButton.text() == "Cancel") {
+      primaryButton.text("Selected vertices");
+      primaryButton.removeClass("snd");
+      confirmButton.addClass("hidden");
       $("#graph_canvas_selection").hide();
       $("#graph_canvas_overlay").fadeOut(100);
       $("#graph_canvas_overlay").removeClass("pickingVertices");
     }
     else {
       $("button").removeClass("snd");
+      primaryButton.text("Cancel");
+      primaryButton.addClass("active");
+      confirmButton.addClass("hidden");
       $("#graph_canvas_overlay").addClass("pickingVertices");
-      $("#gs_addVicinitiesBySelect").text("Selected vertices");
-      $("#gs_addVicinitiesBySelectAdd").addClass("hidden");
       $("#graph_canvas_overlay").fadeIn(100);
-      $("#gd_removeBySelect").addClass("active");
-      $("#gd_removeBySelect").text("Cancel");
       $("button:not(.active)").attr("disabled", true);
     }
+  };
+
+  /**
+   * Bind the function to the vertex selection buttons
+   */
+  $("#gs_addVicinitiesBySelect").click(function (e) {
+    processSelection(e, "addVicinities", $("#gs_addVicinitiesBySelect"), 
+                     $("#gs_addVicinitiesBySelectAdd"));
+  });
+  $("#gd_removeBySelect").click(function (e) {
+    processSelection(e, "remove", $("#gd_removeBySelect"), 
+                     $("#gd_removeBySelectRemove"));
   });
 
   /**
-   * Handler for finally removing the selected vertices.
+   * Function used as handler for finally executing the action 
    */
-  $("#gd_removeBySelectRemove").click(function (e) { 
+  var executeAction = function (e, primaryButton, confirmButton, callback) {
     e.preventDefault();
-    $("#gd_removeBySelect").text("Selected vertices");
-    $("#gd_removeBySelect").removeClass("active");
-    $("#gd_removeBySelect").removeClass("snd");
     $("button").attr("disabled", false);
-    $("#gd_removeBySelectRemove").addClass("hidden");
-    removeVerticesFromCanvas(selectedVertices);
+    primaryButton.text("Selected vertices");
+    primaryButton.removeClass("snd");
+    primaryButton.removeClass("active");
+    confirmButton.addClass("hidden");
+    callback();
+  }
+
+  /**
+   * Bind the function to the vertex selection buttons
+   */
+  $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
+    executeAction(e, $("#gs_addVicinitiesBySelect"), 
+                     $("#gs_addVicinitiesBySelectAdd"), function () {
+      // extract list of Ids from vertex list and order data
+      var selectedVertexIds = $.map(selectedVertices, function (vertex, key) { 
+        return vertex.__data__.id;
+      });
+      order({"provider": "graph",
+             "query": "vertexIds",
+             "vertexIds": selectedVertexIds,
+             "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+             "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
+      });
+    });
+  });
+
+  $("#gd_removeBySelectRemove").click(function (e) { 
+    executeAction(e, $("#gd_removeBySelect"), 
+                     $("#gd_removeBySelectRemove"), function () {
+      removeVerticesFromCanvas(selectedVertices);
+    });
   });
 
   /**
