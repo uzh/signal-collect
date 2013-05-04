@@ -694,9 +694,9 @@ scc.modules.Graph = function() {
 
 
     // Determine maximum and minimum state to determine color gradient
-    gradientDomain = [d3.min(vertices, function (d) { return parseFloat(d.state) }),
+    gradientDomain = [parseFloat(j.lowestState),
                       d3.median(vertices, function (d) { return parseFloat(d.state) }),
-                      d3.max(vertices, function (d) { return parseFloat(d.state) })]
+                      parseFloat(j.highestState)]
 
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
