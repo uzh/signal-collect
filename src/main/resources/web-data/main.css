@@ -297,6 +297,7 @@ a, a:visited {
   background-image: -webkit-linear-gradient(
                     rgba(255,255,255,.25),
                     rgba(200,200,200,.11));
+  box-shadow: inset -4px -5px 15px 0 rgba(0,0,0,0.15);
 }
 
 .panel button[disabled],
@@ -788,7 +789,8 @@ div.tooltip {
   margin-left: 10px;
   position: absolute;           
   text-align: left;           
-  width: 120px;                  
+  min-width: 120px;
+  max-width: 150px;                
   height: 42px;                 
   padding: 2px;             
   font: 12px sans-serif;        
@@ -829,7 +831,7 @@ div#resourceBoxes .chartTitle {
   text-align: center;
   z-index: 10;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 100px;
 }
 
 #chartZoomer span {

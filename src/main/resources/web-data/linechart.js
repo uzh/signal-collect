@@ -547,12 +547,13 @@ var LineChart = function() {
           .attr("r", 6)
           .on("mouseover",
               function(d) {
+                var screenShift = ($(document).width() - d3.event.x < 180 ? 155 : 0);
                 divTooltip.transition()        
                    .duration(100)      
-                   .style("opacity", .9);      
+                   .style("opacity", .9);
                 divTooltip.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
-                   .style("left", (d3.event.pageX) + "px")     
-                   .style("top", (d3.event.pageY - 28) + "px");    
+                   .style("left", (d3.event.pageX - screenShift) + "px")     
+                   .style("top", (d3.event.pageY - 28) + "px");
               })                  
               .on("mouseout",
                   function(d) {       
