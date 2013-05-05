@@ -22,20 +22,6 @@
  */
 scc.defaults.breakconditions = {};
 
-/**
- * A mapping from shortened names to full names of the condition types.
- * @constant
- * @default
- * @type {object}
- */
-CNAME = {"changesState": "changes state",
-         "goesAboveState": "goes above state",
-         "goesBelowState": "goes below state",
-         "goesAboveSignalThreshold": "goes above signal threshold",
-         "goesBelowSignalThreshold": "goes below signal threshold",
-         "goesAboveCollectThreshold": "goes above collect threshold",
-         "goesBelowCollectThreshold": "goes below collect threshold"
-};
 
 /**
  * The BreakConditions module allows setting new break conditions on the 
@@ -51,13 +37,16 @@ scc.modules.BreakConditions = function () {
    */
   this.requires = ["breakconditions"];
 
+  // Object-scope variables
+  BSTR = STR["BreakConditions"];
+
   /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Requests the list of break conditions currently specified.
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    $("#gc_vertexId").val(STR.pickVertex);
+    $("#gc_vertexId").val(BSTR.pickVertex);
   }
 
   /**
@@ -100,13 +89,13 @@ scc.modules.BreakConditions = function () {
     // execution mode or that the execution mode object cannot be retrieved.
     // In this case, another order is issued after a certain delay.
     if (j["status"] == "noExecution" ) {
-      $("#gc_conditionList").append('<div class="condition none">' + STR.noExecution + '</div>');
+      $("#gc_conditionList").append('<div class="condition none">' + BSTR.noExecution + '</div>');
       scc.order({"provider": "breakconditions"}, 1000);
       return;
     }
     // If there are no conditions specified, display a placeholder
     if (j.active.length == 0) {
-      $("#gc_conditionList").append('<div class="condition none">' + STR.noConditions + '</div>');
+      $("#gc_conditionList").append('<div class="condition none">' + BSTR.noConditions + '</div>');
     }
     // Add each of the conditions to the list of conditions
     $.each(j.active, function (k, c) {
@@ -118,19 +107,19 @@ scc.modules.BreakConditions = function () {
       // Build the div element to be added...
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
-      item += ('">When Vertex with id: <span class="vertex_link" title="' + 
-               c.props.vertexId + '">...' + s + '</span><br/> ' + c.name)
+      item += ('">Vertex with id: <span class="vertex_link" title="' + 
+               c.props.vertexId + '">...' + s + '</span><br/>when ' + c.name)
       switch(c.name) {
-        case CNAME.goesAboveState:
-        case CNAME.goesBelowState:
+        case BSTR.stateAbove:
+        case BSTR.stateBelow:
           item += (" " + c.props.expectedState); break;
-        case CNAME.changesState:
+        case BSTR.stateChanges:
           item += " from " + c.props.currentState; break;
-        case CNAME.goesAboveSignalThreshold:
-        case CNAME.goesBelowSignalThreshold:
+        case BSTR.signalScoreAboveThreshold:
+        case BSTR.signalScoreBelowThreshold:
           item += " " + c.props.signalThreshold; break;
-        case CNAME.goesAboveCollectThreshold:
-        case CNAME.goesBelowCollectThreshold:
+        case BSTR.collectScoreAboveThreshold:
+        case BSTR.collectScoreBelowThreshold:
           item += " " + c.props.collectThreshold; break;
       }
       if (j.reached[c.id] != undefined) { 
@@ -201,14 +190,19 @@ scc.modules.BreakConditions = function () {
     var data = target.__data__;
     var vertex = $(target);
     if (data == undefined) {
-      $("#gc_vertexId").val(STR.pickVertex);
+      $("#gc_vertexId").val(BSTR.pickVertex);
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
       $("#gc_vertexId").val(data.id);
       $("#gc_vertexId").focus();
       $("#gc_vertexId").val($("#gc_vertexId").val());
-      if ($("#gc_condition").val() == "changes state") {
+      if ([BSTR.stateChanges, 
+           BSTR.signalScoreAboveThreshold,
+           BSTR.signalScoreBelowThreshold,
+           BSTR.collectScoreAboveThreshold,
+           BSTR.collectScoreBelowThreshold,
+           ].indexOf($("#gc_condition").val()) != -1 ) {
         $("#gc_addCondition").removeAttr("disabled");
       }
     }
@@ -219,8 +213,8 @@ scc.modules.BreakConditions = function () {
    * button in case the field is left empty.
    */
   $("#gc_vertexId").keyup(function(e) {
-    if ($(this).val() == STR.pickVertex) {
-      $(this).val(STR.pickVertex);
+    if ($(this).val() == BSTR.pickVertex) {
+      $(this).val(BSTR.pickVertex);
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
@@ -236,7 +230,7 @@ scc.modules.BreakConditions = function () {
    */
   $("#gc_vertexId").change(function(e) {
     if ($(this).val().length == 0) {
-      $(this).val(STR.pickVertex); 
+      $(this).val(BSTR.pickVertex); 
       $("#gc_addCondition").attr("disabled", true);
     }
   });
@@ -247,8 +241,8 @@ scc.modules.BreakConditions = function () {
    * value in the value field
    */
   $("#gc_state").keyup(function(e) {
-    if ($(this).val() == STR.enterState) {
-      $(this).val(STR.enterState); 
+    if ($(this).val() == BSTR.enterState) {
+      $(this).val(BSTR.enterState); 
       $("#gc_addCondition").attr("disabled", true);
     }
     else {
@@ -262,7 +256,7 @@ scc.modules.BreakConditions = function () {
    */
   $("#gc_state").change(function(e) {
     if ($(this).val().length == 0) {
-      $(this).val(STR.enterState); 
+      $(this).val(BSTR.enterState); 
       $("#gc_addCondition").attr("disabled", true);
     }
   });
@@ -275,19 +269,21 @@ scc.modules.BreakConditions = function () {
     e.preventDefault();
     var name = $("#gc_condition").val().replace(/:/g,"");
     var props = {};
+    console.log(name)
+    console.log($("#gc_vertexId").val())
     switch (name) {
-      case CNAME.changesState:
+      case BSTR.stateChanges:
         props["vertexId"] = $("#gc_vertexId").val();
         break;
-      case CNAME.goesAboveState:
-      case CNAME.goesBelowState:
+      case BSTR.stateAbove:
+      case BSTR.stateBelow:
         props["vertexId"] = $("#gc_vertexId").val();
         props["expectedState"] = $("#gc_state").val();
         break;
-      case CNAME.goesAboveSignalThreshold:
-      case CNAME.goesBelowSignalThreshold:
-      case CNAME.goesAboveCollectThreshold:
-      case CNAME.goesBelowCollectThreshold:
+      case BSTR.signalScoreAboveThreshold:
+      case BSTR.signalScoreBelowThreshold:
+      case BSTR.collectScoreAboveThreshold:
+      case BSTR.collectScoreBelowThreshold:
         props["vertexId"] = $("#gc_vertexId").val();
         break;
     }
@@ -300,8 +296,8 @@ scc.modules.BreakConditions = function () {
     $("#gc_conditionList").children(".none").remove();
     $("#gc_conditionList").append('<div class="condition new last_child"></div>');
     $("#gc_addCondition").attr("disabled", true);
-    $("#gc_state").val(STR.enterState); 
-    $("#gc_vertexId").val(STR.pickVertex); 
+    $("#gc_state").val(BSTR.enterState); 
+    $("#gc_vertexId").val(BSTR.pickVertex); 
   });
 
   /**
@@ -311,23 +307,26 @@ scc.modules.BreakConditions = function () {
   $("#gc_condition").change(function (e) {
     conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"");
     switch(conditionChoice) {
-      case CNAME.goesAboveState:
-      case CNAME.goesBelowState:
-        $("#gc_state").val(STR.enterState); 
+      case BSTR.stateAbove:
+      case BSTR.stateBelow:
+        $("#gc_state").val(BSTR.enterState); 
         $("#gc_stateContainer").show(); 
         $("#gc_addCondition").attr("disabled", true);
         break;
-      case CNAME.changesState:
-      case CNAME.goesAboveSignalThreshold:
-      case CNAME.goesBelowSignalThreshold:
-      case CNAME.goesAboveCollectThreshold:
-      case CNAME.goesBelowCollectThreshold:
+      case BSTR.stateChanges:
+      case BSTR.signalScoreAboveThreshold:
+      case BSTR.signalScoreBelowThreshold:
+      case BSTR.collectScoreAboveThreshold:
+      case BSTR.collectScoreBelowThreshold:
+        if ($("gc_vertexId").val() != BSTR["pickVertex"]) {
+          $("#gc_addCondition").attr("disabled", false);
+        }
         $("#gc_stateContainer").hide(); break;
     }
   });
 
   // set the default text on the text fields
-  $("#gc_state").val(STR.enterState); 
-  $("#gc_vertexId").val(STR.pickVertex); 
+  $("#gc_state").val(BSTR.enterState); 
+  $("#gc_vertexId").val(BSTR.pickVertex); 
 
 }

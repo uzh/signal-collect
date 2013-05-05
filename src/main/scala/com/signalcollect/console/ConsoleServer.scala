@@ -67,13 +67,13 @@ trait Execution {
 
 object BreakConditionName extends Enumeration {
   type BreakConditionName = Value
-  val ChangesState = Value("changes state")
-  val GoesAboveState = Value("goes above state")
-  val GoesBelowState = Value("goes below state")
-  val GoesAboveSignalThreshold = Value("goes above signal threshold")
-  val GoesBelowSignalThreshold = Value("goes below signal threshold")
-  val GoesAboveCollectThreshold = Value("goes above collect threshold")
-  val GoesBelowCollectThreshold = Value("goes below collect threshold")
+  val StateChanges = Value("state changes")
+  val StateAbove = Value("state above")
+  val StateBelow = Value("state below")
+  val SignalScoreAboveThreshold = Value("signal score above threshold")
+  val SignalScoreBelowThreshold = Value("signal score below threshold")
+  val CollectScoreAboveThreshold = Value("collect score above threshold")
+  val CollectScoreBelowThreshold = Value("collect score below threshold")
 }
 
 import BreakConditionName._
@@ -103,17 +103,17 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
     }, "Missing or invalid vertexId!")
 
   require(name match {
-    case GoesAboveState
-      | GoesBelowState => props.contains("expectedState")
+    case StateAbove
+      | StateBelow => props.contains("expectedState")
     case otherwise => true
   }, "Missing expectedState")
 
   name match {
-    case GoesBelowSignalThreshold
-      | GoesAboveSignalThreshold =>
+    case SignalScoreBelowThreshold
+      | SignalScoreAboveThreshold =>
       props += ("signalThreshold" -> executionConfiguration.signalThreshold.toString)
-    case GoesBelowCollectThreshold
-      | GoesAboveCollectThreshold =>
+    case CollectScoreBelowThreshold
+      | CollectScoreAboveThreshold =>
       props += ("collectThreshold" -> executionConfiguration.collectThreshold.toString)
     case otherwise => true
   }
@@ -296,7 +296,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         case "state" => new StateDataProvider(this)
         case "controls" => new ControlsProvider(this, j)
         case "breakconditions" => new BreakConditionsProvider(c, this, j)
-        case otherwise => new InvalidDataProvider(msg)
+        case otherwise => new InvalidDataProvider(msg, "invalid provider")
       }
       case None => p match {
         case "state" => new StateDataProvider(this)
@@ -308,7 +308,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
       socket.send(compact(render(provider.fetch)))
     } catch {
       case e: NumberFormatException =>
-        socket.send(compact(render(new InvalidDataProvider(msg).fetch)))
+        socket.send(compact(render(new InvalidDataProvider(msg, "number format exception").fetch)))
       case e: Exception =>
         socket.send(compact(render(new ErrorDataProvider(e).fetch)))
     }
@@ -351,7 +351,7 @@ object Toolkit {
         case x: Int => JInt(x)
         case x: String => JString(x)
         case x: Double if x.isNaN => JDouble(0)
-        case x: Double => JDouble(0)
+        case x: Double => JDouble(x)
         case x: Map[_, _] => decompose(x)
         case x: BreakConditionName.Value => JString(x.toString)
         case other => JString(other.toString)

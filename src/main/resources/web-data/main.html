@@ -86,15 +86,14 @@
                     <option>No</option>
                     <option>Yes</option>
                   </select><br/>
-                  <span class="panel_span">Top </span>
                   <select id="gp_targetCount" class="setting"></select>
                   <span class="panel_span"> of </span>
                   <select id="gs_topCriterium" class="setting">
                     <option>Highest degree</option>
                     <option>Highest state</option>
                     <option>Lowest state</option>
-                    <option>Signal score</option>
-                    <option>Collect score</option>
+                    <option>Above signal thresh.</option>
+                    <option>Above collect thresh.</option>
                   </select>
                   <button id="gs_addByTop" class="narrow">Add</button><br/>
                   <input id="gs_addBySubstring" type="text">
@@ -167,17 +166,17 @@
                 <h1><span>Breakpoint Conditions</span></h1>
                 <div class="bottom_border"><div id="gc_conditionList"></div></div>
                 <h1><span>Add New Condition</span></h1>
-                <label for="gc_vertexId">When vertex with ID:</label><br/>
+                <label for="gc_vertexId">Vertex ID and condition:</label><br/>
                 <input id="gc_vertexId" type="text">
                 <button id="gc_useMouse" class="narrow">Select</button><br/>
                 <select id="gc_condition">
-                  <option>changes state</option>
-                  <option>goes above state:</option>
-                  <option>goes below state:</option>
-                  <option>goes above signal threshold</option>
-                  <option>goes below signal threshold</option>
-                  <option>goes above collect threshold</option>
-                  <option>goes below collect threshold</option>
+                  <option>state changes</option>
+                  <option>state above:</option>
+                  <option>state below:</option>
+                  <option>signal score above threshold</option>
+                  <option>signal score below threshold</option>
+                  <option>collect score above threshold</option>
+                  <option>collect score below threshold</option>
                 </select>
                 <span id="gc_stateContainer">
                   <input id="gc_state" type="text">

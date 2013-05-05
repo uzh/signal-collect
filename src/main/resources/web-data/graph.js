@@ -53,7 +53,7 @@ scc.modules.Graph = function() {
    * main module.
    * @type {Array.<string>}
    */
-  this.requires = ["graph"];
+  this.requires = ["graph", "configuration"];
 
   /**
    * If this is true, the graph will reload itself periodically. This is the
@@ -93,8 +93,11 @@ scc.modules.Graph = function() {
   var vertexSequenceEnd = 0;
   var GSTR = STR["Graph"];
   var nodeCountIntervals = []; 
+  for (var i = 5; i<=25; i+=5) { nodeCountIntervals.push(i) };
   for (var i = 50; i<=250; i+=50) { nodeCountIntervals.push(i) };
   for (var i = 400; i<=1000; i+=100) { nodeCountIntervals.push(i) };
+  var signalThreshold = 0.01;
+  var collectThreshold = 0.0;
 
   /**
    * The VertexStorageAgent provides method for setting, getting and adding to the
@@ -221,18 +224,18 @@ scc.modules.Graph = function() {
                       "Outgoing degree": function(d) { 
                             return colorGradient([1, 5, 20])(d.es); },
                       "Signal threshold": function(d) { 
-                            return color(d.ss); },
+                            return d.ss > signalThreshold?"#00ff00":"#ff0000"; },
                       "Collect threshold": function(d) { 
-                            return color(d.ss); }
+                            return d.cs > collectThreshold?"#00ff00":"#ff0000"; }
     },
     "gd_vertexBorder": {"Vertex state": function(d) { 
                             return colorGradient(gradientDomain)(d.state); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
                       "Signal threshold": function(d) { 
-                            return color(d.ss); },
+                            return d.ss > signalThreshold?"#00ff00":"#ff0000"; },
                       "Collect threshold": function(d) { 
-                            return color(d.ss); },
+                            return d.cs > collectThreshold?"#00ff00":"#ff0000"; },
                       "All equal": function(d) { 
                             return "#9edae5"; },
                       "Latest query": function(d) { 
@@ -570,6 +573,25 @@ scc.modules.Graph = function() {
       d3ForceStarting = false;
     }
   };
+  
+  /**
+   * Calculate which are the 'oldest' vertices in the sequence that do not
+   * fit onto the canvas given current vertex count limitations.
+   * @return {array<object>} the vertices that can be removed
+   */
+  var getOverflowingVertices = function () {
+    var verticesToRemove = [];
+    var maxVertexCount = parseInt(scc.settings.get().graph.options["gp_maxVertexCount"]);
+    var vertexOverflow =  maxVertexCount - vertices.length;
+    if (vertexOverflow < 0) {
+      var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
+      verticesToRemove = $("circle").filter(function (i) {
+        if (this.__data__.seq < highestSeqToKeep) { return true; }
+      });
+    }
+    return verticesToRemove;
+  }
+
 
   /**
    * Function that is called by the main module when a message is received
@@ -578,6 +600,12 @@ scc.modules.Graph = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
+    if (j.provider == "configuration") {
+      if (j.executionConfiguration != "unknown") {
+        signalThreshold = j.executionConfiguration.signalThreshold
+        collectThreshold = j.executionConfiguration.collectThreshold
+      }
+    }
     scc.notBusy();
     // Prevent race condition occuring if d3 is busy starting the force layout
     // and changing the vertices/edges arrays by delaying the execution of this
@@ -598,14 +626,8 @@ scc.modules.Graph = function() {
         if (vertices.length == 0) {
           $("#graph_background").text(GSTR["canvasEmpty"]).fadeIn(50);
         }
-        else {
-          $("#graph_background").fadeOut(150);
-        }
       }, 2000);
       return; 
-    }
-    else {
-      $("#graph_background").fadeOut(150);
     }
 
     // The server sends us two maps, one for vertices and one for edges. In both,
@@ -684,18 +706,14 @@ scc.modules.Graph = function() {
           "The query yields " + tooManyVertices + " vertices. Only the first " +
           maxVertexCount  + " are being displayed.").fadeIn(50);
       hideBackgroundTimeout = setTimeout(function () {
-          $("#graph_background").fadeOut(150);
+        $("#graph_background").text("Showing " + vertcies.length + " vertices");
       }, 4000);
     }
-    var verticesToRemove = [];
-    var vertexOverflow =  maxVertexCount - vertices.length;
-    if (vertexOverflow < 0) {
-      var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
-      verticesToRemove = $("circle").filter(function (i) {
-        if (this.__data__.seq < highestSeqToKeep) { return true; }
-      });
+    else {
+      $("#graph_background").text("Showing " + vertices.length + " vertices");
     }
 
+    var verticesToRemove = getOverflowingVertices()
     vertexStorage.save();
 
 
@@ -1057,6 +1075,8 @@ scc.modules.Graph = function() {
     e.preventDefault();
     order({"provider": "graph",
            "query": "top", 
+           "signalThreshold": signalThreshold,
+           "collectThreshold": collectThreshold,
            "targetCount": parseInt($("#gp_targetCount").val()),
            "topCriterium": $("#gs_topCriterium").val()
     });
@@ -1190,7 +1210,10 @@ scc.modules.Graph = function() {
    */
   $("#gp_maxVertexCount").change(function (e) { 
     var val = parseInt($(this).val());
+    var verticesToRemove = getOverflowingVertices()
+    removeVerticesFromCanvas(verticesToRemove);
     populateTargetCountSelector(val);
+
   });
   /**
    * Handler called when the 'draw edges' option changes. Persists the choice 
