@@ -592,8 +592,8 @@ scc.modules.Resources = function() {
         var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
         var fraction  = maxMemory / avgMemory;
         var message   = "The current graph has got " + vertices + " vertices and " + edges + " edges."
-          + "<br><br>Based on the current memory consumption, your infrastructure could "
-          + "handle a similar graph which is approximately " + Math.round(fraction) + " times bigger (i.e. ≈"
+          + "<br><br>Based on the current memory consumption, your infrastructure could handle a similar "
+          + "graph which has approximately " + Math.round(fraction*100)/100 + " times that size (i.e. ≈"
           + Math.floor(fraction * vertices) + " vertices and ≈" + Math.floor(fraction * edges) + " edges).";
         $("#estimationStatBox p").html(message);
         estimationsLastUpdated = new Date(msg.timestamp);
