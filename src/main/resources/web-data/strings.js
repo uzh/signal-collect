@@ -91,7 +91,7 @@ STR = {
 
 chartNames = {
     "messagesSent": "Messages Sent in Total (#)",
-    "messagesSentToVertices": "Messages Sent to Vertices(#)",
+    "messagesSentToNodes": "Messages Sent to Nodes (#)",
     "messagesSentToWorkers": "Messages Sent to Workers (#)",
     "messagesSentToCoordinator": "Messages Sent to Coordinator (#)",
     "messagesSentToOthers": "Messages Sent to Others (#)",

@@ -529,6 +529,10 @@ var LineChart = function() {
    * @param {boolean} shiftRight - Whether or not the graph needs to shift right.
    */
   this.updateChart = function() {
+    if (data[0].length == 0) {
+      return;
+    }
+    
     var currentDate = data[0][data[0].length-1].date;
     
     d3.transition().ease("linear").duration(200).each(function() {

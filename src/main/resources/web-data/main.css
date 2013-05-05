@@ -171,14 +171,14 @@ a, a:visited {
   border-top: 1px solid #eee;
   text-shadow: 0 1px 0 #fff;
   background-image: -moz-linear-gradient(top,
-                    rgba(245,245,245,1),
-                    rgba(220,220,220,1));
+                    rgba(234,234,234,1),
+                    rgba(210,210,210,1));
   background-image: -webkit-gradient(linear,left top,left bottom,
-                    color-stop(0, rgba(245,245,245,1)),
-                    color-stop(1, rgba(220,220,220,1)));
+                    color-stop(0, rgba(234,234,234,1)),
+                    color-stop(1, rgba(210,210,210,1)));
   background-image: -webkit-linear-gradient(
-                    rgba(245,245,245,1),
-                    rgba(220,220,220,1));
+                    rgba(234,234,234,1),
+                    rgba(210,210,210,1));
   cursor: pointer;
 }
 .panel .panel_section .title:before {

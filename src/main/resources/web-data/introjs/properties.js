@@ -98,7 +98,7 @@ $(document).ready(function() {
     var currentDataStep = parseInt($(targetElement).attr("data-step"));
     if (currentDataStep >= parseInt($("#cResourceComputation").attr("data-step"))) {
       show_section("charts");
-      view = ',"main":{"view":"resources"},"resources":{"section":"charts"}';
+      view = ',"main":{"view":"resources"},"resources":{"section":"nodecharts"}';
     }
     else if (currentDataStep >= parseInt($("#mode_resources").attr("data-step"))) {
       $("#mode_resources").click();
