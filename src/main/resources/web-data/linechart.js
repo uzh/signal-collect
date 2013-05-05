@@ -299,12 +299,17 @@ var LineChart = function() {
              .scaleExtent([0.005, 5]) // allow zooming in/out
              .on("zoom", draw);
 
+    var totalWidth  = this.config.width + this.config.margin.left + this.config.margin.right;
+    var totalHeight = this.config.height + this.config.margin.top + this.config.margin.bottom;
+    
     svg = d3.select(this.container).append("div")
         .attr("id", this.config.jsonName + "Chart")
+        .attr("width", totalWidth)
+        .attr("height", totalHeight)
         .attr("class", "hidden")
       .append("svg")
-        .attr("width", this.config.width + this.config.margin.left + this.config.margin.right)
-        .attr("height", this.config.height + this.config.margin.top + this.config.margin.bottom)
+        .attr("width", totalWidth)
+        .attr("height", totalHeight)
       .append("g")
         .attr("transform", "translate(" + this.config.margin.left + "," + this.config.margin.top + ")")
         //.call(zoom) // un-comment to enable on hover dragging and zooming 
@@ -341,15 +346,11 @@ var LineChart = function() {
         .attr("transform", "translate(0," + this.config.height + ")");
 
     // add y axis to chart
-    svg.append("g")
-        .attr("class", "y axis")
-      .append("text")
-        .attr("y", this.config.height-10)
-        .attr("x", this.config.width-6)
-        .attr("dy", ".31em")
-        .style("text-anchor", "end")
-        .text(this.config.prettyName)
-        .style("font-size", "14px");
+    svg.append("g").attr("class", "y axis")
+    
+    // add the pretty name to the chart
+    $("#" + this.config.jsonName + "Chart")
+      .append("<span class=\"chartTitle\">" + this.config.prettyName + "</span>");
 
     // show scatter points and tool tips
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");
@@ -528,17 +529,11 @@ var LineChart = function() {
    * @param {boolean} shiftRight - Whether or not the graph needs to shift right.
    */
   this.updateChart = function() {
-    path.attr("transform", null); // needed to avoid shifting scatter points
-    
     var currentDate = data[0][data[0].length-1].date;
     
     d3.transition().ease("linear").duration(200).each(function() {
       zoom.x(x);
         
-      // line transition
-      var transformVal = new Date(+(currentDate) - (+(x.domain()[1])-(+(x.domain()[0])) + scc.conf.resources.intervalCharts));
-      path.attr("transform", "translate(" + x(transformVal) + ")");
-       
       // update scatter points
       aLineContainer.selectAll(".dot")
         .data( function(d, i) { return d; } )  // This is the nested data call

@@ -738,9 +738,7 @@ a, a:visited {
 }
 
 .graphs path {
-  stroke: steelblue;
   stroke-width: 1;
-  fill: lightblue;
 }
 
 svg .tick text {
@@ -780,7 +778,6 @@ svg .tick text {
 
 rect {
 	fill: white;
-	/*cursor: move;*/
 }
 
 circle.dot {
@@ -799,13 +796,24 @@ div.tooltip {
   border: 0px;      
   border-radius: 8px;           
   pointer-events: none;
-  z-index: 999;       
+  z-index: 999;
 }
 
 .chartContainer > div {
 	float: left;
 }
 
+div#resourceBoxes > div[id$='Chart'] {
+	overflow:hidden;
+	position: relative;
+}
+
+div#resourceBoxes .chartTitle {
+  position: absolute;
+  top: -35px;
+  left: 55px;
+  background-color:rgba(255,255,255,0.7);
+}
 
 
 
