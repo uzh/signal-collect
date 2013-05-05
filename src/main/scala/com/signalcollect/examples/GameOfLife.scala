@@ -52,6 +52,7 @@ class GameOfLifeCell(id: Any, initialState: Int)
  */
 object GameOfLife extends App {
   val graph = GraphBuilder.withConsole(true, 8090)
+                          .withLoggingLevel(Logging.InfoLevel)
                           .build
 
   //Dimensions of the grid

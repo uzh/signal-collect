@@ -52,6 +52,12 @@ scc.conf.resources.intervalCharts = 3000;
 scc.conf.resources.intervalStatistics = 6000;
 
 /**
+ * Interval in milliseconds between two consecutive estimation updates.
+ * @type {number}
+ */
+scc.conf.resources.intervalEstimation = 20*1000;
+
+/**
  * Interval in milliseconds between two consecutive log message updates.
  * @type {number}
  */

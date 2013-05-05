@@ -583,7 +583,7 @@ scc.modules.Resources = function() {
     }
     
     // update estimations
-    if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
+    if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalEstimation) <= msg.timestamp) {
       if (scc.conf.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
         var maxMemory = scc.conf.resources.lineCharts.runtime_mem_max.dataLatest();
         var avgMemory = scc.conf.resources.lineCharts.runtime_mem_total.dataAvg();
