@@ -42,6 +42,7 @@ import org.java_websocket._
 import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
+import org.java_websocket.exceptions.WebsocketNotConnectedException
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Extraction._
@@ -201,7 +202,7 @@ class FileServer(folderName: String) extends HttpHandler {
 
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "")
     if (List("", "graph", "resources").contains(target)) {
-      target = "main.html"
+      target = "html/main.html"
     }
     val fileType = target match {
       case t if t.matches(".*\\.html$") => "text/html"
@@ -235,7 +236,7 @@ class FileServer(folderName: String) extends HttpHandler {
         }
         catch {
           case e: java.io.FileNotFoundException =>
-            inputStream = new FileInputStream(root + "/404.html")
+            inputStream = new FileInputStream(root + "/html/404.html")
             t.getResponseHeaders.set("Content-Type", "text/html")
         }
       } else {
@@ -318,6 +319,8 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
         socket.send(compact(render(new InvalidDataProvider(msg, "number format exception").fetch)))
       case e: Exception =>
         socket.send(compact(render(new ErrorDataProvider(e).fetch)))
+      case e: WebsocketNotConnectedException =>
+        println("Warning: Couldn't send message to websocket")
     }
   }
 
