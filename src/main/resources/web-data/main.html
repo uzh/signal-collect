@@ -161,7 +161,10 @@
           </div>
           <div id="cGraphControl" class="panel_section">
             <div class="title expanded">Computation Break Conditions</div>
-            <div class="contents">
+            <div id="cGraphControlDisabled" class="contents hidden">
+              <span class="panel_span">The computation controls are only available when using the interactive execution mode</span>
+            </div>
+            <div id="cGraphControlEnabled" class="contents">
               <form>
                 <h1><span>Breakpoint Conditions</span></h1>
                 <div class="bottom_border"><div id="gc_conditionList"></div></div>
@@ -246,7 +249,7 @@
       </div>
       <div id="stateContainer">
         <div class="left"><span id="state"></span></div>
-        <div class="right">It. #<span id="iteration"></span></div>
+        <div id="iteration_container" class="right">It. #<span id="iteration"></span></div>
       </div>
     </div>
     <div id="content">

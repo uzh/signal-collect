@@ -95,11 +95,20 @@ scc.modules.State = function() {
     }
     // Update the state information in the GUI
     $('#iteration').text(j.iteration);
-    console.log(j.state)
-    console.log(STR.State[j.state])
     $('#resStatStatus').text(STR.State[j.state][0]);
     $('#state').text(STR.State[j.state][0])
     $('#state').attr("title", STR.State[j.state][1])
+    if (j.state == "non-interactive") {
+      $("#cGraphControlEnabled").addClass("hidden");
+      $("#iteration_container").addClass("hidden");
+      $("#cGraphControlDisabled").removeClass("hidden");
+      scc.consumers.Graph.autoRefresh = true;
+      scc.consumers.Graph.update();
+      return
+    }
+    $("#cGraphControlEnabled").removeClass("hidden");
+    $("#iteration_container").removeClass("hidden");
+    $("#cGraphControlDisabled").addClass("hidden");
     switch (j.state) {
       case "pausedBeforeChecksAfterCollect":
       case "pausedBeforeSignal":

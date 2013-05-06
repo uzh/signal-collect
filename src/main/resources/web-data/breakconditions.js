@@ -269,8 +269,6 @@ scc.modules.BreakConditions = function () {
     e.preventDefault();
     var name = $("#gc_condition").val().replace(/:/g,"");
     var props = {};
-    console.log(name)
-    console.log($("#gc_vertexId").val())
     switch (name) {
       case BSTR.stateChanges:
         props["vertexId"] = $("#gc_vertexId").val();

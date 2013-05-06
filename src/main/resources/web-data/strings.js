@@ -19,9 +19,9 @@
  */
 
 STR = {
-       "noConditions": "No conditions specified",
-       "noExecution": "The interactive execution mode is unavailable, retrying...",
        "BreakConditions": {
+         "noConditions": "No conditions specified",
+         "noExecution": "The interactive execution mode is unavailable, retrying...",
          "pickVertex": "Enter full ID or select using mouse",
          "enterState": "Enter state",
          "stateChanges": "state changes",
@@ -41,7 +41,7 @@ STR = {
        },
        "State": {
          "non-interactive": [
-           "Waiting for interactive exec...",
+           "Non-Interactive",
            "The interactive execution is either not enabled or currently unavailable"],
          "pausedBeforeChecksAfterCollect": [
            "Paused bef. checks after collect",

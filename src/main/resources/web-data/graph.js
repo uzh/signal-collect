@@ -297,8 +297,6 @@ scc.modules.Graph = function() {
    */
   var order = function (order, delay) {
     if (!delay) { delay = 0; }
-    scc.busy();
-    $("button").attr("disabled", true);
     scc.order(order, delay)
   };
 
@@ -606,7 +604,6 @@ scc.modules.Graph = function() {
         collectThreshold = j.executionConfiguration.collectThreshold
       }
     }
-    scc.notBusy();
     // Prevent race condition occuring if d3 is busy starting the force layout
     // and changing the vertices/edges arrays by delaying the execution of this
     // function.
@@ -615,7 +612,6 @@ scc.modules.Graph = function() {
       d3ForceBusyDelay = setTimeout(function () { scc.consumers.Graph.onmessage(j) }, 50);
       return
     }
-    $("button").attr("disabled", false);
     // Keep references to the forced layout data
     var newVertices = false;
 
@@ -780,6 +776,7 @@ scc.modules.Graph = function() {
    */
   this.onclose = function(e) {
     this.destroy();
+    $("#graph_background").fadeOut(50);
   };
 
   /**
