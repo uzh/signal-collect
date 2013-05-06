@@ -30,8 +30,6 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
-//TODO: rename extract / reduce parameters to something meaningful
-
 /** Aggregator that loads a JObject representation of vertices and their edges.
   *
   * Given the set of ids, the aggregator the corresponding vertices and the 
@@ -95,8 +93,9 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
     }
   }
 
-  def reduce(vertices: Stream[(Double,Double,JObject)]): (Double,Double,JObject) = {
-    vertices.foldLeft((vertices.head._1,vertices.head._2,JObject(List()))) { (acc, v) => 
+  def reduce(subGraphs: Stream[(Double,Double,JObject)]): (Double,Double,JObject) = {
+    // Determine the lowest and highest state and merge the sub-graphs
+    subGraphs.foldLeft((subGraphs.head._1,subGraphs.head._2,JObject(List()))) { (acc, v) => 
       (if (acc._1 < v._1) acc._1 else v._1,
        if (acc._2 > v._2) acc._2 else v._2,
        acc._3 merge v._3) 
@@ -147,9 +146,9 @@ class TopDegreeAggregator[Id](n: Int)
     case other => Map[Id,Int]()
   }
 
-  def reduce(degrees: Stream[Map[Id,Int]]): Map[Id,Int] = {
+  def reduce(vertexToDegreeMap: Stream[Map[Id,Int]]): Map[Id,Int] = {
     // Combine the maps created above to count the total number of edges
-    Toolkit.mergeMaps(degrees.toList)((v1, v2) => v1 + v2)
+    Toolkit.mergeMaps(vertexToDegreeMap.toList)((v1, v2) => v1 + v2)
   }
 }
 
@@ -183,13 +182,14 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
     case otherwise => List[(Double,Id)]()
   }
 
-  def reduce(degrees: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
-    degrees.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
-           .sortWith({ (t1, t2) => 
-             if (inverted) { t1._1 < t2._1 }
-             else { t1._1 > t2._1 }
-           })
-           .take(n)
+  def reduce(statesAndIds: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
+    // Sort the tuples by descending/ascending value and take the first n tuples
+    statesAndIds.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
+       .sortWith({ (t1, t2) => 
+         if (inverted) { t1._1 < t2._1 }
+         else { t1._1 > t2._1 }
+       })
+       .take(n)
   }
 }
 
@@ -211,6 +211,7 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
         case "signal" => i.scoreSignal
         case "collect" => i.scoreCollect
       }
+      // Yield score and id only if the score is above the threshold
       if (score > threshold) { 
         List[(Double,Id)]((score, i.id))
       }
@@ -220,10 +221,11 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
     case otherwise => List[(Double,Id)]()
   }
 
-  def reduce(degrees: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
-    degrees.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
-           .sortWith({ (t1, t2) => t1._1 > t2._1 })
-           .take(n)
+  def reduce(thresholdsAndIds: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
+    // Sort the tuples by descending thresholds and take the first n tuples
+    thresholdsAndIds.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
+       .sortWith({ (t1, t2) => t1._1 > t2._1 })
+       .take(n)
   }
 
 }
@@ -255,8 +257,8 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
     case otherwise => Set()
   }
 
-  def reduce(vertices: Stream[Set[Id]]): Set[Id] = {
-    vertices.toSet.flatten
+  def reduce(vertexIds: Stream[Set[Id]]): Set[Id] = {
+    vertexIds.toSet.flatten
   }
 }
 
@@ -331,48 +333,47 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 class BreakConditionsAggregator(conditions: Map[String,BreakCondition], state: String)
       extends AggregationOperation[Map[String,String]] {
 
-  val vertexConditions = List(
-    StateChanges,
-    StateAbove,
-    StateBelow,
-    SignalScoreAboveThreshold,
-    SignalScoreBelowThreshold,
-    CollectScoreAboveThreshold,
-    CollectScoreBelowThreshold
-  )
+  val relevantVertexIds = conditions.map(_._2.props("vertexId")).toSet
 
   def extract(v: Vertex[_, _]): Map[String,String] = v match {
     case i: Inspectable[_, _] => {
       var results = Map[String,String]()
-      conditions.foreach { case (id, c) => 
-        if (i.id.toString == c.props("vertexId")) {
-          state match {
-            case "checksAfterSignal" => c.name match { 
-              case CollectScoreBelowThreshold =>
-                if (i.scoreCollect < c.props("collectThreshold").toDouble)
-                  results += (id -> i.scoreCollect.toString)
-              case CollectScoreAboveThreshold =>
-                if (i.scoreCollect > c.props("collectThreshold").toDouble)
-                  results += (id -> i.scoreCollect.toString)
-              case otherwise =>
+      if (relevantVertexIds.contains(i.id.toString)) {
+        conditions.foreach { case (id, c) => 
+          if (i.id.toString == c.props("vertexId")) {
+            // It depends on the state which checks are performed, because 
+            // some checks would falsely return true during some states. For
+            // example, checking the signal scores right after a signal step 
+            // would yield a value below the threshold every time. In this 
+            // case, we only check the signal scores after a collect step.
+            state match {
+              case "checksAfterSignal" => c.name match { 
+                case CollectScoreBelowThreshold =>
+                  if (i.scoreCollect < c.props("collectThreshold").toDouble)
+                    results += (id -> i.scoreCollect.toString)
+                case CollectScoreAboveThreshold =>
+                  if (i.scoreCollect > c.props("collectThreshold").toDouble)
+                    results += (id -> i.scoreCollect.toString)
+                case otherwise =>
+                }
+              case "checksAfterCollect" => c.name match { 
+                case StateChanges =>
+                  if (i.state.toString != c.props("currentState"))
+                    results += (id -> i.state.toString)
+                case StateAbove =>
+                  if (i.state.toString.toDouble > c.props("expectedState").toDouble)
+                    results += (id -> i.state.toString)
+                case StateBelow =>
+                  if (i.state.toString.toDouble < c.props("expectedState").toDouble)
+                    results += (id -> i.state.toString)
+                case SignalScoreBelowThreshold =>
+                  if (i.scoreSignal < c.props("signalThreshold").toDouble)
+                    results += (id -> i.scoreSignal.toString)
+                case SignalScoreAboveThreshold =>
+                  if (i.scoreSignal > c.props("signalThreshold").toDouble)
+                    results += (id -> i.scoreSignal.toString)
+                case otherwise =>
               }
-            case "checksAfterCollect" => c.name match { 
-              case StateChanges =>
-                if (i.state.toString != c.props("currentState"))
-                  results += (id -> i.state.toString)
-              case StateAbove =>
-                if (i.state.toString.toDouble > c.props("expectedState").toDouble)
-                  results += (id -> i.state.toString)
-              case StateBelow =>
-                if (i.state.toString.toDouble < c.props("expectedState").toDouble)
-                  results += (id -> i.state.toString)
-              case SignalScoreBelowThreshold =>
-                if (i.scoreSignal < c.props("signalThreshold").toDouble)
-                  results += (id -> i.scoreSignal.toString)
-              case SignalScoreAboveThreshold =>
-                if (i.scoreSignal > c.props("signalThreshold").toDouble)
-                  results += (id -> i.scoreSignal.toString)
-              case otherwise =>
             }
           }
         }
