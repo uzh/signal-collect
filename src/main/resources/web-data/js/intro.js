@@ -12,36 +12,40 @@ $(document).ready(function() {
   }
   var url = document.URL.split("/");
   var loc = url[0] + "//" + url[2]
-  var locGraph = '<a href="' + loc + '/graph">' + loc + '/graph</a>';
-  var locResources = '<a href="' + loc + '/resources">' + loc + '/resources</a>';
+  var locGraph = '<a target="_blank" href="' + loc + '/graph">' + loc + '/graph</a>';
+  var locResources = '<a target="_blank" href="' + loc + '/resources">' + loc + '/resources</a>';
   
   // define the introduction selectors and texts
   var properties = {
     "#title":
       "<strong>Welcome! This is a guided tour through the user interface of the Signal/Collect Console.</strong><br/>" + 
       "Navigate these steps by using the arrow keys or your mouse and hit ESC or click 'Skip' to cancel the tour. " +
-      "You can revisit the tour at any time by clicking on <strong>Tour</strong> in the lower right corner",
+      "You can revisit the tour at any time by clicking on <strong>Tour</strong> in the lower right corner of the screen.",
     "#modes":
       "The Console Server consists of two main views: The <strong>Graph View</strong> and the <strong>Resource View</strong>. " +
       "You can switch between the views using these buttons, or you may access a single view under " + locGraph + 
       " or " + locResources + " without loading the other.",
     "#cVertexSelection":
-      "In the Graph view, you can navigate the graph of your current computation is running. You start out with an empty " +
-      "canvas, onto which you add the vertices you're interested in. When the view becomes cluttered, you can remove vertices you don't " +
+      "In the Graph view you can view and navigate the graph of your current computation. You start out with an empty " +
+      "canvas onto which you add the vertices you're interested in. When the view becomes cluttered, you can remove vertices you don't " +
       "need anymore.",
     "#gp_container":
       "The choices you make here may have an impact on how quickly your query completes and on how smooth the graph will be " +
       "displayed. <br/>" +
-      "<ul><li>The <strong>hop radius</strong> determines the maximum distance travelled from the source vertex when loading its vicinity</li>" +
-      "    <li><strong>computing incoming edges</strong> is much more expensive than only computing outgoing ones when loading vicinities</li>" +
-      "    <li>The <strong>refresh rate</strong> determines how often the graph auto-reloads when running a computation continuously</li></ul>",
+      "<ul><li>The <strong>hop radius</strong> determines the maximum distance travelled from the source vertex when loading its vicinity. Raising it is only useful in graphs where all vertices have a very low degree.</li>" +
+      "    <li><strong>computing incoming edges</strong> is somewhat more expensive than only computing outgoing ones when loading vicinities</li>" +
+      "    <li>The <strong>refresh rate</strong> determines how often the graph auto-reloads when running a computation continuously</li>" +
+      "    <li>The <strong>maximum vertex count</strong> sets an upper cap on how many vertices are displayed. If there are too many, those which have been added earliest will be removed to make way for the new ones.</strong></li></ul>",
     "#gs_container":
-      "Add vertices by exceptional properties or by searching for vertices using a string. If any vertex has an id which contains the string, " +
-      "it will be added to the canvas. Load the vicinity of a vertex by <strong>double-clicking</strong> it, or expand several vicinities at once by " +
-      "drawing a rectangle around them.<br/>" +
-      "Signal/Collect Console remembers which nodes have been added to the canvas even beyond a restart of the server or your browser!",
+      "Add vertices..." +
+      "<ul><li>by enabling an option to expand vertices on hover</li>" +
+      "    <li>by their exceptional properties</li>" +
+      "    <li>by searching for vertices with an ID containing the given string</li>" + 
+      "    <li>by <strong>double-clicking</strong> on a vertex to expand its vicinity</li>" +
+      "    <li>by clicking on 'Selected vertices' and then using the mouse to draw a rectangle around several vertices to expand</li></ul>" +
+      "Signal/Collect Console remembers which nodes have been previously added to the canvas even beyond a restart of the server or your browser!",
     "#gd_container":
-      "Clear the entire canvas or remove nodes by drawing a rectangle around them. You can also remove any vertices that don't have any edges.",
+      "Clear the entire canvas or remove nodes by drawing a rectangle around them. You can also remove all vertices except the ones most recently added to the canvas, or any vertices that don't have any edges (orphans).",
     "#cGraphDesign":
       "Choose how the vertices in the graph should look like. You can make the vertex size, fill color and outline color correspond to " +
       "certain properties of the vertex.",
@@ -55,7 +59,7 @@ $(document).ready(function() {
       " <strong>Pause</strong> the computation if it is running",
     "#step":
       " Performing a <strong>partial step</strong> will walk you through all the states of a single iteration, pausing before each of them: " +
-               "1st condition check, signalling, 2nd condition check, collecting and global termination check.",
+               "signalling, condition checks after signalling, collecting, condition checks after signalling, and global termination check.",
     "#collect":
       " Performing a <strong>full step</strong> continues the iteration and stops before the next 1st condition check.",
     "#continue":
@@ -89,7 +93,8 @@ $(document).ready(function() {
   $.each(properties, function(selector, val) {
     $(selector).attr("data-step", i++).attr("data-intro", val);
   });
-  $("#controls,#reset,#pause,#step,#collect,#continue,#terminate,#stateContainer").attr("data-position", "top");
+  $("#controls,#reset,#pause,#step,#collect,#continue,#terminate,#stateContainer, " +
+    "#cGraphDesign,#cGraphControl").attr("data-position", "top");
 
   // show the introduction
   var intro = introJs();
