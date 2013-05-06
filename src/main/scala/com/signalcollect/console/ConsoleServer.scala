@@ -214,6 +214,10 @@ class FileServer(folderName: String) extends HttpHandler {
     }
 
     def os = t.getResponseBody
+    t.getResponseHeaders.set("Content-Type", fileType)
+    if (target.endsWith(logFileName)) {
+      t.getResponseHeaders.set("Content-Disposition", "attachment; filename=" + logFileName)
+    }
     try {
       val root = "./src/main/resources/" + folderName
       var inputStream: InputStream = null
@@ -226,16 +230,19 @@ class FileServer(folderName: String) extends HttpHandler {
             root + "/" + target
           }
         }
-        inputStream = new FileInputStream(targetPath)
+        try {
+          inputStream = new FileInputStream(targetPath)
+        }
+        catch {
+          case e: java.io.FileNotFoundException =>
+            inputStream = new FileInputStream(root + "/404.html")
+            t.getResponseHeaders.set("Content-Type", "text/html")
+        }
       } else {
         // read from the JAR
         inputStream = getClass().getClassLoader().getResourceAsStream(folderName + "/" + target)
       }
       val file = new BufferedInputStream(inputStream.asInstanceOf[InputStream])
-      t.getResponseHeaders.set("Content-Type", fileType)
-      if (target.endsWith(logFileName)) {
-        t.getResponseHeaders.set("Content-Disposition", "attachment; filename=" + logFileName)
-      }
       t.sendResponseHeaders(200, 0)
       Iterator
         .continually(file.read)

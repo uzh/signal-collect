@@ -45,7 +45,6 @@ function hideMsg(fast) {
   if (fast) { $("#top").css("top", "-85px"); $(".msg").empty(); }
   else { $("#top").stop().animate({"top": "-85px"}, function () { $(".msg").empty(); }); }
 }
-hideMsg(true);
 
 function showMsg(type, msg, timeout) {
   clearTimeout(hidingTimeout);
