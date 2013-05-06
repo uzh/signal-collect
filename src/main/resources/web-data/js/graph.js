@@ -80,8 +80,6 @@ scc.modules.Graph = function() {
   var fadeTimer;
   var hideBackgroundTimeout;
   var vicinityAutoLoadDelay;
-  var d3ForceStarting = false;
-  var d3ForceBusyDelay;
   var orderTemplate = {"provider": "graph"};
   var gradientDomain = [null,null];
   var zoomLevel = 1;
@@ -222,7 +220,7 @@ scc.modules.Graph = function() {
                       "All equal": function(d) { 
                             return "#17becf"; },
                       "Outgoing degree": function(d) { 
-                            return colorGradient([1, 5, 20])(d.es); },
+                            return colorGradient([1, 5, 50])(d.es); },
                       "Signal threshold": function(d) { 
                             return d.ss > signalThreshold?"#00ff00":"#ff0000"; },
                       "Collect threshold": function(d) { 
@@ -232,6 +230,8 @@ scc.modules.Graph = function() {
                             return colorGradient(gradientDomain)(d.state); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
+                      "Outgoing degree": function(d) { 
+                            return colorGradient([1, 5, 50])(d.es); },
                       "Signal threshold": function(d) { 
                             return d.ss > signalThreshold?"#00ff00":"#ff0000"; },
                       "Collect threshold": function(d) { 
@@ -361,7 +361,7 @@ scc.modules.Graph = function() {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function(e) {
-    $("#graph_background").text("Loading...").fadeIn(50);
+    $("#graph_background").text("Loading...");
 
     // Add an SVG element to the canvas and enable the d3 zoom functionality
     svg = d3.select("#graph_canvas").append("svg")
@@ -490,21 +490,24 @@ scc.modules.Graph = function() {
      * 'tick', the vertex positions need to be updated.
      * @param {Event} e - The event that triggered the call
      */
+    failed = false;
     force.on("tick", function(e) {
       // The user may choose if the graph edges should be drawn always, never,
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
       
       // Update the vertex and edge positions
+      if (failed) { return; }
       svgVertices
-          .attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
+          .attr("cx", function(d) { if (isNaN(d.x)) { failed = true; return 1; }; return d.x; })
+          .attr("cy", function(d) { if (isNaN(d.y)) { failed = true; return 1; };  return d.y; });
       svgEdges
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
+          .attr("x1", function(d) { if (isNaN(d.source.x)) { failed = true; return 1; };  return d.source.x; })
+          .attr("y1", function(d) { if (isNaN(d.source.y)) { failed = true; return 1; };  return d.source.y; })
+          .attr("x2", function(d) { if (isNaN(d.target.x)) { failed = true; return 1; };  return d.target.x; })
+          .attr("y2", function(d) { if (isNaN(d.target.y)) { failed = true; return 1; };  return d.target.y; });
 
+      if (failed) { return; }
       // Add classes to edges depending on options and user interaction
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       svgEdges.attr("class", function(o) {
@@ -559,17 +562,19 @@ scc.modules.Graph = function() {
       .duration(100)
       .attr("r", vertexSize);
 
+    // TODO: show correct message if graph empty
     if (vertices.length == 0) {
       clearTimeout(hideBackgroundTimeout);
-      $("#graph_background").text(GSTR["canvasEmpty"]).fadeIn(50);
+      $("#graph_background").text(GSTR["canvasEmpty"]);
     }
+    $("#graph_background").text("Showing " + vertices.length + " vertices");
 
     // Restart the forced layout if necessary
-    if (graphChanged) {
-      d3ForceStarting = true;
-      force.start();
-      d3ForceStarting = false;
-    }
+    xValues = []
+    $.each(vertices, function (key, v) {
+      xValues.push(v.x)
+    });
+    force.start();
   };
   
   /**
@@ -580,7 +585,7 @@ scc.modules.Graph = function() {
   var getOverflowingVertices = function () {
     var verticesToRemove = [];
     var maxVertexCount = parseInt(scc.settings.get().graph.options["gp_maxVertexCount"]);
-    var vertexOverflow =  maxVertexCount - vertices.length;
+    var vertexOverflow = maxVertexCount - vertices.length;
     if (vertexOverflow < 0) {
       var highestSeqToKeep = vertexSequence - maxVertexCount + 1;
       verticesToRemove = $("circle").filter(function (i) {
@@ -589,7 +594,6 @@ scc.modules.Graph = function() {
     }
     return verticesToRemove;
   }
-
 
   /**
    * Function that is called by the main module when a message is received
@@ -604,23 +608,15 @@ scc.modules.Graph = function() {
         collectThreshold = j.executionConfiguration.collectThreshold
       }
     }
-    // Prevent race condition occuring if d3 is busy starting the force layout
-    // and changing the vertices/edges arrays by delaying the execution of this
-    // function.
-    if (d3ForceStarting) {
-      clearTimeout(d3ForceBusyDelay);
-      d3ForceBusyDelay = setTimeout(function () { scc.consumers.Graph.onmessage(j) }, 50);
-      return
-    }
     // Keep references to the forced layout data
     var newVertices = false;
 
     // If the server sent an empty graph, do nothing
     if (j.vertices == undefined) { 
-      $("#graph_background").text("There are no vertices matching your request").fadeIn(50);
+      $("#graph_background").text("There are no vertices matching your request");
       hideBackgroundTimeout = setTimeout(function () {
         if (vertices.length == 0) {
-          $("#graph_background").text(GSTR["canvasEmpty"]).fadeIn(50);
+          $("#graph_background").text(GSTR["canvasEmpty"]);
         }
       }, 2000);
       return; 
@@ -697,18 +693,6 @@ scc.modules.Graph = function() {
       }
     });
 
-    if (tooManyVertices > 0) {
-      $("#graph_background").stop().text(
-          "The query yields " + tooManyVertices + " vertices. Only the first " +
-          maxVertexCount  + " are being displayed.").fadeIn(50);
-      hideBackgroundTimeout = setTimeout(function () {
-        $("#graph_background").text("Showing " + vertcies.length + " vertices");
-      }, 4000);
-    }
-    else {
-      $("#graph_background").text("Showing " + vertices.length + " vertices");
-    }
-
     var verticesToRemove = getOverflowingVertices()
     vertexStorage.save();
 
@@ -747,6 +731,15 @@ scc.modules.Graph = function() {
       restart(newVertices);    
     }
 
+    if (tooManyVertices > 0) {
+      $("#graph_background").stop().text(
+          "The query yields " + (tooManyVertices + vertices.length) + " vertices. Only the first " +
+          maxVertexCount  + " are being displayed.");
+      hideBackgroundTimeout = setTimeout(function () {
+        $("#graph_background").text("Showing " + vertices.length + " vertices");
+      }, 4000);
+    }
+
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
       scc.consumers.Graph.update(parseInt($("#gp_refreshRate").val())*1000);
@@ -766,7 +759,7 @@ scc.modules.Graph = function() {
    * is not (yet) available from the server. Show a message on the graph canvas
    */
   this.notready = function() {
-    $("#graph_background").text("Data Provider not ready, retrying...").fadeIn(50);
+    $("#graph_background").text("Data Provider not ready, retrying...");
   };
 
   /**
@@ -776,7 +769,7 @@ scc.modules.Graph = function() {
    */
   this.onclose = function(e) {
     this.destroy();
-    $("#graph_background").fadeOut(50);
+    $("#graph_background").text("Connection lost");
   };
 
   /**
@@ -1210,7 +1203,6 @@ scc.modules.Graph = function() {
     var verticesToRemove = getOverflowingVertices()
     removeVerticesFromCanvas(verticesToRemove);
     populateTargetCountSelector(val);
-
   });
   /**
    * Handler called when the 'draw edges' option changes. Persists the choice 
