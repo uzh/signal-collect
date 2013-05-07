@@ -222,7 +222,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
         new InteractiveExecution[Id](this, console, stats, parameters).run()
-        console.shutdown
+        if (console != null) { console.shutdown }
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -355,7 +355,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
     def setState(s: String) {
       state = s
-      console.sockets.updateClientState()
+      if (console != null) { console.sockets.updateClientState() }
     }
     def run() {
       lock.synchronized {
@@ -459,7 +459,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
         gtc.shouldTerminate(globalAggregateValue)
       }
-      println("done running")
     }
   }
 
