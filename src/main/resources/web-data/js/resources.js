@@ -537,6 +537,12 @@ scc.modules.Resources = function() {
   var resStatWorkers = $("#resStatWorkers");
 
   /**
+   * The latest state of the computation.
+   * @type {string}
+   */
+  var latestState = "";
+  
+  /**
    * Function that is called by the main module when a message is received
    * from the WebSocket. A new message is distributed to the several charts
    * which then update their visualization. This function also updates the
@@ -575,32 +581,44 @@ scc.modules.Resources = function() {
     // update all graphs
     $.each(scc.conf.resources.lineCharts, function(k,v) { v.update(msg); });
     
-    // update statistics
-    if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
-      if (resStatStartTime.html() == "?") {
-        resStatStartTime.html(new Date(msg.timestamp).dateTime());
-      }
-      resStatRunTime.html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
-      resStatWorkers.html(msg.workerStatistics.workerId.length);
-      statisticsLastUpdated = new Date(msg.timestamp);
-    }
+    console.log(scc.conf.state.state);
+    if (scc.conf.state.state != "converged") {
     
-    // update estimations
-    if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalEstimation) <= msg.timestamp) {
-      if (scc.conf.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
-        var maxMemory = scc.conf.resources.lineCharts.runtime_mem_max.dataLatest();
-        var avgMemory = scc.conf.resources.lineCharts.runtime_mem_total.dataAvg();
-        var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);
-        var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
-        var fraction  = maxMemory / avgMemory;
-        var message   = "The current graph has got " + vertices + " vertices and " + edges + " edges."
-          + "<br><br>Based on the current memory consumption, your infrastructure could handle a similar "
-          + "graph which has approximately " + Math.round(fraction*100)/100 + " times that size (i.e. ≈"
-          + Math.floor(fraction * vertices) + " vertices and ≈" + Math.floor(fraction * edges) + " edges).";
-        $("#estimationStatBox p").html(message);
-        estimationsLastUpdated = new Date(msg.timestamp);
+      if (latestState == "converged" || latestState == "resetting") {
+        // initialize statistics
+        resStatStartTime.html("?");
+        resStatRunTime.html("0");
       }
+      
+      // update statistics
+      if (latestState == "converged" || statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
+        if (resStatStartTime.html() == "?") {
+          resStatStartTime.html(new Date(msg.timestamp).dateTime());
+        }
+        resStatRunTime.html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
+        resStatWorkers.html(msg.workerStatistics.workerId.length);
+        statisticsLastUpdated = new Date(msg.timestamp);
+      }
+      
+      // update estimations
+      if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalEstimation) <= msg.timestamp) {
+        if (scc.conf.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
+          var maxMemory = scc.conf.resources.lineCharts.runtime_mem_max.dataLatest();
+          var avgMemory = scc.conf.resources.lineCharts.runtime_mem_total.dataAvg();
+          var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);
+          var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
+          var fraction  = maxMemory / avgMemory;
+          var message   = "The current graph has got " + vertices + " vertices and " + edges + " edges."
+            + "<br><br>Based on the current memory consumption, your infrastructure could handle a similar "
+            + "graph which has approximately " + Math.round(fraction*100)/100 + " times that size (i.e. ≈"
+            + Math.floor(fraction * vertices) + " vertices and ≈" + Math.floor(fraction * edges) + " edges).";
+          $("#estimationStatBox p").html(message);
+          estimationsLastUpdated = new Date(msg.timestamp);
+        }
+      }
+    
     }
+    latestState = scc.conf.state.state;
     
     scc.order({"provider": "resources"}, scc.conf.resources.intervalCharts);
   }

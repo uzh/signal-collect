@@ -443,7 +443,7 @@ var LineChart = function() {
         ms = ms % v; // store the rest
       }
     });
-    return duration;
+    return (duration.length > 0 ? duration : "0");
   };
   
   /**
