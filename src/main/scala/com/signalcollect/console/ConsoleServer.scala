@@ -130,25 +130,19 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
     case otherwise => true
   }, "Missing expectedState!")
 
-  require(name match {
-    case StateChanges => props.contains("currentState")
-    case otherwise => true
-  }, "Missing currentState!")
-
-  require({
+  require(
     if (props.contains("expectedState")) { 
       try {
         props("expectedState").toDouble
-        println("no exception")
         true
       }
       catch { 
         case e: NumberFormatException => 
-          println("exception!")
           false
       }
     }
-    else { true }
+    else { 
+      true 
   }, "Invalid state! Needs to be parseable as double.")
  
   name match {
