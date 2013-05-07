@@ -20,6 +20,9 @@
 
 STR = {
        "BreakConditions": {
+         "invalidId": "A node with the ID you provided does not exist",
+         "invalidState": "The state you provided is invalid. It must be something that can be parsed as a double",
+         "unknownError": "Unknown validation error: ",
          "noConditions": "No conditions specified",
          "noExecution": "The interactive execution mode is unavailable, retrying...",
          "pickVertex": "Enter full ID or select using mouse",

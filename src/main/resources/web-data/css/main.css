@@ -718,6 +718,10 @@ a, a:visited {
 .busy {
   cursor: wait;
 }
+.fade {
+  color: #cc0000;
+  font-weight: bold;
+}
 
 /* D3 charts */
 .graphs {

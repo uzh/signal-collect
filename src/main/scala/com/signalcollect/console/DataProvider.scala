@@ -208,8 +208,9 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
                             e.addCondition(condition)
                             fetchConditions(e)
                           }
-                          catch { case e: IllegalArgumentException => 
-                            fetchInvalid(msg, new ErrorDataProvider(e).fetchStacktrace())
+                          catch { case ex: IllegalArgumentException => 
+                            fetchConditions(e) ~ 
+                            ("error" -> ex.getMessage.toString)
                           } 
                         case None => fetchInvalid(msg, "executionConfiguration unavailable!")
                       }

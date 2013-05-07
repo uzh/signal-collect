@@ -88,15 +88,12 @@ scc.modules.BreakConditions = function () {
     // It can happen that the Console is started without the interactive
     // execution mode or that the execution mode object cannot be retrieved.
     // In this case, another order is issued after a certain delay.
-    if (j["status"] == "noExecution" ) {
-      $("#gc_conditionList").append('<div class="condition none">' + BSTR.noExecution + '</div>');
-      scc.order({"provider": "breakconditions"}, 1000);
-      return;
-    }
+    
     // If there are no conditions specified, display a placeholder
     if (j.active.length == 0) {
       $("#gc_conditionList").append('<div class="condition none">' + BSTR.noConditions + '</div>');
     }
+
     // Add each of the conditions to the list of conditions
     $.each(j.active, function (k, c) {
       // Shorten long vertex ids
@@ -133,6 +130,31 @@ scc.modules.BreakConditions = function () {
       // Finally append the item to the list
       $("#gc_conditionList").append(item);
     });
+
+    if (j["status"] == "noExecution" ) {
+      $("#gc_conditionList").append('<div class="condition none">' + BSTR.noExecution + '</div>');
+      scc.order({"provider": "breakconditions"}, 1000);
+      return;
+    }
+
+    // Display error if any
+    if (j["error"] != undefined) {
+      if (j["error"].indexOf("Missing or invalid vertexId") != -1) {
+        $("#gc_conditionList").append('<div class="condition none fade">' + BSTR.invalidId + '</div>');
+      }
+      else if (j["error"].indexOf("Invalid state") != -1) {
+        $("#gc_conditionList").append('<div class="condition none fade">' + BSTR.invalidState + '</div>');
+      }
+      else {
+        $("#gc_conditionList").append('<div class="condition none fade">' + BSTR.unknownError +
+                                      j["error"] + '</div>');
+      }
+      setTimeout(function () {
+        $(".fade").slideUp(200, function () {
+          $(this).remove(); 
+        });
+      }, 4000);
+    }
 
     // Delete button handler
     $("#gc_conditionList .delete").click(function (e) { 
@@ -197,69 +219,64 @@ scc.modules.BreakConditions = function () {
       $("#gc_vertexId").val(data.id);
       $("#gc_vertexId").focus();
       $("#gc_vertexId").val($("#gc_vertexId").val());
-      if ([BSTR.stateChanges, 
-           BSTR.signalScoreAboveThreshold,
-           BSTR.signalScoreBelowThreshold,
-           BSTR.collectScoreAboveThreshold,
-           BSTR.collectScoreBelowThreshold,
-           ].indexOf($("#gc_condition").val()) != -1 ) {
-        $("#gc_addCondition").removeAttr("disabled");
-      }
+      $("#gc_vertexId").trigger("keyup");
     }
   });
 
   /**
-   * Handler that resets the vertexId field and disables the 'add condition'
-   * button in case the field is left empty.
+   * Checks if the choices made by the user can be considered "sane" for
+   * submission to the server. It doesn't necessarily mean that the supplied
+   * ID or state is valid, but it's not empty or the default and the
+   * combination of choices is valid
    */
-  $("#gc_vertexId").keyup(function(e) {
-    if ($(this).val() == BSTR.pickVertex) {
-      $(this).val(BSTR.pickVertex);
-      $("#gc_addCondition").attr("disabled", true);
+  var formCompleted = function () {
+    if ($("#gc_vertexId").val() == BSTR.pickVertex ||
+        $("#gc_vertexId").val().length == 0) {
+      return false;
     }
     else {
-      if ($("#gc_condition").val() == "changes state") {
-        $("#gc_addCondition").removeAttr("disabled");
+      if ($("#gc_condition").val() == BSTR.stateChanges) {
+        return true;
+      }
+      else if ($("#gc_state").val() == BSTR.enterState ||
+               $("#gc_state").val().length == 0) {
+        return false;
       }
     }
-  });
+    return true;
+  };
 
   /**
-   * Handler that resets the vertexId field and disables the 'add condition'
-   * button in case the field is left empty.
+   * Handler that toggles the 'add' button if the content of the text fields
+   * while the user types. Performed on each keyup on any of the two fields.
    */
-  $("#gc_vertexId").change(function(e) {
-    if ($(this).val().length == 0) {
-      $(this).val(BSTR.pickVertex); 
-      $("#gc_addCondition").attr("disabled", true);
-    }
-  });
-
-
-  /**
-   * Handler that enables the 'add condition' button if there's a non-default
-   * value in the value field
-   */
-  $("#gc_state").keyup(function(e) {
-    if ($(this).val() == BSTR.enterState) {
-      $(this).val(BSTR.enterState); 
-      $("#gc_addCondition").attr("disabled", true);
-    }
-    else {
+  var checkFormCompleted = function(e) {
+    if (formCompleted()) {
       $("#gc_addCondition").removeAttr("disabled");
     }
-  });
-
-  /**
-   * Handler that resets the state field and disables the 'add condition'
-   * button in case the field is left empty.
-   */
-  $("#gc_state").change(function(e) {
-    if ($(this).val().length == 0) {
-      $(this).val(BSTR.enterState); 
+    else {
       $("#gc_addCondition").attr("disabled", true);
     }
-  });
+  };
+  $("#gc_vertexId").keyup(checkFormCompleted);
+  $("#gc_state").keyup(checkFormCompleted);
+
+  /**
+   * Checks if a field is empty and fills in the default. Performed only on
+   * change, not on keyup.
+   */
+  var checkEmptyField = function(e) {
+    if ($("#gc_vertexId").val().length == 0) {
+      $("#gc_vertexId").val(BSTR.pickVertex); 
+    }
+    if ($("#gc_state").val().length == 0) {
+      $("#gc_state").val(BSTR.enterState); 
+    }
+    $("#gc_vertexId").trigger("keyup");
+    $("#gc_state").trigger("keyup");
+  }
+  $("#gc_vertexId").change(checkEmptyField);
+  $("#gc_state").change(checkEmptyField);
 
   /**
    * Handler that is called when clicking on 'add condition'. The input fields
@@ -293,9 +310,7 @@ scc.modules.BreakConditions = function () {
     });
     $("#gc_conditionList").children(".none").remove();
     $("#gc_conditionList").append('<div class="condition new last_child"></div>');
-    $("#gc_addCondition").attr("disabled", true);
-    $("#gc_state").val(BSTR.enterState); 
-    $("#gc_vertexId").val(BSTR.pickVertex); 
+    $("#gc_vertexId").trigger("keyup");
   });
 
   /**
@@ -307,20 +322,17 @@ scc.modules.BreakConditions = function () {
     switch(conditionChoice) {
       case BSTR.stateAbove:
       case BSTR.stateBelow:
-        $("#gc_state").val(BSTR.enterState); 
         $("#gc_stateContainer").show(); 
-        $("#gc_addCondition").attr("disabled", true);
         break;
       case BSTR.stateChanges:
       case BSTR.signalScoreAboveThreshold:
       case BSTR.signalScoreBelowThreshold:
       case BSTR.collectScoreAboveThreshold:
       case BSTR.collectScoreBelowThreshold:
-        if ($("gc_vertexId").val() != BSTR["pickVertex"]) {
-          $("#gc_addCondition").attr("disabled", false);
-        }
-        $("#gc_stateContainer").hide(); break;
+        $("#gc_stateContainer").hide();
+        break;
     }
+    $("#gc_vertexId").trigger("keyup");
   });
 
   // set the default text on the text fields

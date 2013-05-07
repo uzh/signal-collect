@@ -49,7 +49,6 @@ import net.liftweb.json.Extraction._
 import java.io.File
 import java.io.InputStream
 import akka.event.Logging
-import java.io.FileNotFoundException
 
 /** The trait that defines the interface for our InteractiveExecution */
 trait Execution {
@@ -120,7 +119,8 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
           }
         case otherwise => false
       }
-    } else {
+    } 
+    else {
       false
     }, "Missing or invalid vertexId!")
 
@@ -128,8 +128,29 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
     case StateAbove
       | StateBelow => props.contains("expectedState")
     case otherwise => true
-  }, "Missing expectedState")
+  }, "Missing expectedState!")
 
+  require(name match {
+    case StateChanges => props.contains("currentState")
+    case otherwise => true
+  }, "Missing currentState!")
+
+  require({
+    if (props.contains("expectedState")) { 
+      try {
+        props("expectedState").toDouble
+        println("no exception")
+        true
+      }
+      catch { 
+        case e: NumberFormatException => 
+          println("exception!")
+          false
+      }
+    }
+    else { true }
+  }, "Invalid state! Needs to be parseable as double.")
+ 
   name match {
     case SignalScoreBelowThreshold
       | SignalScoreAboveThreshold =>
@@ -280,19 +301,6 @@ class FileServer() extends HttpHandler {
     // Log files are served as attachments
     if (target.endsWith(logFileName)) {
       t.getResponseHeaders.set("Content-Disposition", "attachment; filename=" + logFileName)
-      t.sendResponseHeaders(200, 0)
-      try {
-        val file = new BufferedInputStream(new FileInputStream(target))
-        Iterator.continually(file.read)
-                .takeWhile(-1 !=)
-                .foreach(os.write)
-        file.close
-      } catch {
-        case e: Exception => os.write("No log messages so far.".getBytes())
-      } finally {
-        os.close()
-      }
-      return
     }
 
     try {
@@ -300,12 +308,15 @@ class FileServer() extends HttpHandler {
       var inputStream: InputStream = null
       // If the file exists, use it (when using a cloned repository)
       if ((new File(root)).exists()) {
-        val targetPath = root + "/" + target
+        val targetPath = {
+          if (target.endsWith(logFileName)) { target } 
+          else { root + "/" + target }
+        }
         try {
           inputStream = new FileInputStream(targetPath)
         }
         catch {
-          case e: FileNotFoundException =>
+          case e: java.io.FileNotFoundException =>
             t.sendResponseHeaders(404, 0)
             inputStream = new FileInputStream(root + "/html/404.html")
             t.getResponseHeaders.set("Content-Type", "text/html")
