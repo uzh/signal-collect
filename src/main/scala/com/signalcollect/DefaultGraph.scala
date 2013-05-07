@@ -222,6 +222,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
         new InteractiveExecution[Id](this, console, stats, parameters).run()
+        console.shutdown
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
     val executionStopTime = System.nanoTime
@@ -293,9 +294,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (parameters.globalTerminationCondition.isDefined) {
       interval = parameters.globalTerminationCondition.get.aggregationInterval
     }
-    val startTime = System.nanoTime
-    val nanosecondLimit = parameters.timeLimit.getOrElse(0l) * 1000000l
-
     // user break condition management
     var conditionCounter = 0
     def addCondition(condition: BreakCondition) {
@@ -361,7 +359,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     }
     def run() {
       lock.synchronized {
-        while (!userTermination) { //!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+        while (!userTermination) { 
           iteration += 1
           while (steps == 0 && !resetting) {
             setState("pausedBeforeSignal")
@@ -455,19 +453,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         stats.terminationReason = TerminationReason.TerminatedByUser
       } else if (globalTermination) {
         stats.terminationReason = TerminationReason.GlobalConstraintMet
-      } else if (isStepsLimitReached) {
-        stats.terminationReason = TerminationReason.ComputationStepLimitReached
-      } else {
-        stats.terminationReason = TerminationReason.TimeLimitReached
       }
       def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
       def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
         val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
         gtc.shouldTerminate(globalAggregateValue)
       }
-      def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
-      def isTimeLimitReached = parameters.timeLimit.isDefined && remainingTimeLimit <= 0
-      def isStepsLimitReached = parameters.stepsLimit.isDefined && stats.collectSteps >= parameters.stepsLimit.get
+      println("done running")
     }
   }
 
