@@ -175,14 +175,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       // any 'executionConfiguration' result
       websocket.sendJsonOrderWithProvider("configuration")
       val json = websocket.getJsonResponse
-      val requiredProviderResults = Array(
-        "unknown"
-      );
-      val providerResults = (json \\ "executionConfiguration").children
-      val providerResultsMap = createMapFromJValueList(providerResults)
-      requiredProviderResults.foreach {
-        result => providerResultsMap.contains(result) === true
-      }
+      (json \\ "executionConfiguration").values === "unknown"
     }
     
     "return valid API result for provider 'configuration.graphConfiguration'" in {
@@ -215,8 +208,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "java.runtime.name",
         "sun.boot.library.path",
         "java.vm.version",
-        "user.country.format",
-        "gopherProxySet",
         "java.vm.vendor",
         "java.vendor.url",
         "path.separator",
@@ -242,7 +233,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "java.class.version",
         "sun.management.compiler",
         "os.version",
-        "http.nonProxyHosts",
         "user.home",
         "user.timezone",
         "java.awt.printerjob",
@@ -266,9 +256,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "java.vendor.url.bug",
         "sun.io.unicode.encoding",
         "sun.cpu.endian",
-        "socksNonProxyHosts",
-        "ftp.nonProxyHosts",
         "sun.cpu.isalist"
+        // the following properties seem to be unavailable on a Linux host
+        // "user.country.format", "gopherProxySet", "http.nonProxyHosts", "socksNonProxyHosts", "ftp.nonProxyHosts",
       );
       val providerResults = (json \\ "systemProperties").children
       var providerResultsMap: Map[String, Any] = Map()
@@ -294,7 +284,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     "return valid API result for provider 'graph'" in {
-      websocket.sendJsonOrder("{\"provider\":\"graph\",\"query\":\"top\", \"topCriterium\": \"Highest state\"}")
+      websocket.sendJsonOrderWithProvider("graph")
       val json = websocket.getJsonResponse
       // we do not load a data set, so we can't actually get a graph.
       // As long as we get back a result, it's OK.
