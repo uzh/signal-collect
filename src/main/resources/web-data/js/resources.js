@@ -168,6 +168,9 @@ scc.modules.Configuration = function() {
     });
     ul = $("#graphStatBox ul").html('');
     $.each(msg.graphConfiguration, function(k, v) {
+      if (k == "consoleHttpPort" && v[0] == -1) {
+        v[0] = location.port;
+      }
       ul.append('<li>' + k + ': ' + v[0] + '</li>');
     });
   }
