@@ -117,6 +117,10 @@ scc.conf.resources.resourceBoxes = {
       "signalCollectTitle",
       "messagesSentChart",
       "messagesReceivedChart",
+      "infrastructureTitle",
+      "jmx_system_loadChart",
+      "jmx_process_timeChart",
+      "jmx_process_loadChart",
     ], 
     "estimation" : [
       "chartZoomer",
