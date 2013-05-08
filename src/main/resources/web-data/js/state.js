@@ -37,7 +37,6 @@ scc.modules.State = function() {
   // Variables
   this.stateCount = 0;
   this.state = "uninizialized";
-  scc.conf.state = {"state":this.state};
   var pendingCommand = false;
   var controls = ["step", "collect", "continue", "pause", "reset", "terminate"];
 
@@ -94,8 +93,6 @@ scc.modules.State = function() {
     if (!pendingCommand) {
       $("#pending_command").hide();
     }
-    // update the internal state
-    scc.conf.state.state = j.state;
     // Update the state information in the GUI
     $('#iteration').text(j.iteration);
     $('#resStatStatus').text(STR.State[j.state][0]);

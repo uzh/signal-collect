@@ -361,7 +361,7 @@ var LineChart = function() {
     
     draw();
   };
-
+  
   
   /**
    * Helper function to update the axis and the chart content when new data is
@@ -371,6 +371,9 @@ var LineChart = function() {
     svg.select("g.x.axis").call(xAxis);
     svg.select("g.y.axis").transition().duration(200).ease("linear").call(yAxis);
     path.transition().duration(200).ease("linear").attr("d", line);
+    aLineContainer.selectAll(".computationState").transition().duration(200).ease("linear")
+                  .attr("x1", function() { return x(new Date(parseInt($(this).attr("date")))); })
+                  .attr("x2", function() { return x(new Date(parseInt($(this).attr("date")))); });
     aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
   }
   
@@ -569,6 +572,27 @@ var LineChart = function() {
     
       draw();
     });
+  };
+  
+  
+  
+  /**
+   * Adds a vertical separator to the charts, this indicates either a reset or a converged computation.
+   * @param {string} - The type of the separator, either "reset" or "converge"
+   */
+  this.addComputationState = function(type) {
+    var now = new Date();
+    aLineContainer
+        .append("line")
+        .attr("class", "line computationState")
+        .style("stroke", (type == "converge" ? "green" : "gray"))
+        .style("stroke-width", "3px")
+        .style("stroke-opacity", "0.25")
+        .attr("date", +(now))
+        .attr({
+          x1: x(now), y1: 0,
+          x2: x(now), y2: this.config.height
+        });
   };
   
 };

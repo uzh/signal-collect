@@ -354,7 +354,7 @@ scc.modules.Log = function() {
  * @constructor
  */
 scc.modules.Resources = function() {
-  this.requires = ["resources"];
+  this.requires = ["resources", "state"];
   show_section(scc.settings.get().resources.section);
   
   // show the number of seconds after which the statistics will be updated
@@ -537,10 +537,10 @@ scc.modules.Resources = function() {
   var resStatWorkers = $("#resStatWorkers");
 
   /**
-   * The latest state of the computation.
+   * The current state of the computation.
    * @type {string}
    */
-  var latestState = "";
+  var computationState = "";
   
   /**
    * Function that is called by the main module when a message is received
@@ -550,6 +550,12 @@ scc.modules.Resources = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
+    
+    // check whether it is a state change message
+    if (msg.provider == "state") {
+      this.handleStateChange(msg);
+      return;
+    }
     
     // check if there is more data in the websocket response
     if (!hasAddedNewCharts) {
@@ -581,17 +587,11 @@ scc.modules.Resources = function() {
     // update all graphs
     $.each(scc.conf.resources.lineCharts, function(k,v) { v.update(msg); });
     
-    console.log(scc.conf.state.state);
-    if (scc.conf.state.state != "converged") {
+
+    if (computationState != "converged") {
     
-      if (latestState == "converged" || latestState == "resetting") {
-        // initialize statistics
-        resStatStartTime.html("?");
-        resStatRunTime.html("0");
-      }
-      
       // update statistics
-      if (latestState == "converged" || statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
+      if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
         if (resStatStartTime.html() == "?") {
           resStatStartTime.html(new Date(msg.timestamp).dateTime());
         }
@@ -618,10 +618,34 @@ scc.modules.Resources = function() {
       }
     
     }
-    latestState = scc.conf.state.state;
     
     scc.order({"provider": "resources"}, scc.conf.resources.intervalCharts);
   }
+  
+  
+  
+  this.handleStateChange = function(msg) {
+    
+    if (computationState == "" || msg.state == "resetting") {
+      $.each(scc.conf.resources.lineCharts, function(key, chart) {
+        chart.addComputationState("reset");
+      });
+    }
+    
+    if (msg.state == "resetting") {
+      // re-initialize statistics
+      resStatStartTime.html(new Date().dateTime());
+      resStatRunTime.html("0"); 
+    }
+    
+    if (msg.state == "converged") {
+      $.each(scc.conf.resources.lineCharts, function(key, chart) {
+        chart.addComputationState("converge");
+      });
+    }
+
+    computationState = msg.state;
+  };
 
 }
 
