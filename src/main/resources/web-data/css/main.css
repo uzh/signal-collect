@@ -216,27 +216,25 @@ a, a:visited {
 }
 
 .panel h1:before {
-    content: "";
-    display: block;
-    border-top: solid 1px #111;
-    width: 100%;
-    height: 1px;
-    position: relative;
-    top: 12px;
-    z-index: 45;
+  content: "";
+  display: block;
+  border-top: solid 1px #111;
+  width: 100%;
+  height: 1px;
+  position: relative;
+  top: 12px;
+  z-index: 45;
 }
 
 .panel h1 span {
-    background: #F5F5F5;
-    padding: 0 8px;
-    position: relative;
-    z-index: 50;
+  background: #F5F5F5;
+  padding: 0 8px 0 4px;
+  position: relative;
+  z-index: 50;
 }
 
 .panel h1 {
-  font-weight: normal;
   font-size: 14px;
-  text-align: center;
   padding: 2px;
   margin: 0;
   margin-bottom: 5px;
