@@ -32,7 +32,7 @@ import com.signalcollect.interfaces.ModularAggregationOperation
  *
  *  Only works on graphs where this information fits into memory.
  */
-class IdStateMapAggregator[IdType, StateType] extends ModularAggregationOperation[Map[IdType, StateType]] {
+case class IdStateMapAggregator[IdType, StateType]() extends ModularAggregationOperation[Map[IdType, StateType]] {
   val neutralElement = Map[IdType, StateType]()
   def extract(v: Vertex[_, _]): Map[IdType, StateType] = {
     try {
@@ -45,7 +45,7 @@ class IdStateMapAggregator[IdType, StateType] extends ModularAggregationOperatio
 /**
  *  Aggregation operation that sums up all the vertex states that have numeric type `N`.
  */
-class SumOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
+case class SumOfStates[N: Numeric: Manifest]() extends ReduceStatesOperation[N] {
 
   val numeric = implicitly[Numeric[N]]
 
@@ -59,7 +59,7 @@ class SumOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
 /**
  *  Aggregation operation that multiplies all the vertex states that have numeric type `N`.
  */
-class ProductOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
+case class ProductOfStates[N: Numeric: Manifest]() extends ReduceStatesOperation[N] {
 
   val numeric = implicitly[Numeric[N]]
 
@@ -73,7 +73,7 @@ class ProductOfStates[N: Numeric: Manifest] extends ReduceStatesOperation[N] {
 /**
  *  Aggregation operation that returns a sample of all vertex ids.
  */
-class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[List[Any]] {
+case class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[List[Any]] {
 
   val neutralElement = List[Any]()
 
@@ -92,7 +92,7 @@ class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[List[
  *
  *  @example `val numberOfPageRankVertices = graph.aggregate(new CountVertices[PageRankVertex])`
  */
-class CountVertices[VertexType <: Vertex[_, _]: ClassTag] extends ModularAggregationOperation[Long] {
+case class CountVertices[VertexType <: Vertex[_, _]: ClassTag]() extends ModularAggregationOperation[Long] {
 
   val neutralElement: Long = 0l
 
@@ -172,7 +172,7 @@ abstract class StateAggregator[StateType] extends ModularAggregationOperation[St
 /**
  * Finds the ids and states of the K vertices with the largest states.
  */
-class TopKFinder[State](k: Int)(implicit ord: Ordering[State])
+case class TopKFinder[State](k: Int)(implicit ord: Ordering[State])
   extends ComplexAggregation[Iterable[(_, State)], Iterable[(_, State)]] {
 
   implicit val ordering = Ordering.by((value: (_, State)) => value._2)

@@ -50,7 +50,7 @@ import java.io.File
 import java.io.InputStream
 import akka.event.Logging
 
-/** The trait that defines the interface for our InteractiveExecution */
+/** Trait that defines the interface for our InteractiveExecution */
 trait Execution {
   var steps: Int              // How many sub-steps remain until pause
   var conditions: Map[String, BreakCondition] // Map of active conditions
@@ -67,7 +67,7 @@ trait Execution {
   def removeCondition(id: String)             // Remove a condition
 }
 
-/** The enumeration of possible break conditions */
+/** Enumeration of possible break conditions */
 object BreakConditionName extends Enumeration {
   type BreakConditionName = Value
   val StateChanges = Value("state changes")
@@ -391,7 +391,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
     val p = (j \ "provider").extract[String]
     def provider: DataProvider = coordinator match {
       case Some(c) => p match {
-        case "configuration" => new ConfigurationDataProvider(this, c, msg)
+        case "configuration" => new ConfigurationDataProvider(this, c)
         case "log" => new LogDataProvider(c)
         case "graph" => new GraphDataProvider(c, j)
         case "resources" => new ResourcesDataProvider(c, j)
