@@ -374,7 +374,9 @@ var LineChart = function() {
     aLineContainer.selectAll(".computationState").transition().duration(200).ease("linear")
                   .attr("x1", function() { return x(new Date(parseInt($(this).attr("date")))); })
                   .attr("x2", function() { return x(new Date(parseInt($(this).attr("date")))); });
-    aLineContainer.selectAll("circle.dot").attr("cx", line.x()).attr("cy", line.y());
+    aLineContainer.selectAll("circle.dot:not(:hover)").attr("cx", line.x()).attr("cy", line.y());
+    aLineContainer.selectAll("circle.dot:hover").transition().duration(200).ease("linear")
+                  .attr("cx", line.x()).attr("cy", line.y());
   }
   
   
