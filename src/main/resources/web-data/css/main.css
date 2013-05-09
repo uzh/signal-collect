@@ -664,18 +664,19 @@ a, a:visited {
   right: 0;
   bottom: 0;
   z-index: 5;
-  opacity: 0.9;
-  background-color: #fff;
+  background-color: #f5f5f5;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
+#exposition_title {
+  padding-bottom: 10px;
+}
 #exposition_content {
   margin: 10px;
   font-size: 12px;
   background-color: transparent;
   z-index: 6;
-  opacity: 1;
   white-space:nowrap;
 }
 #exposition_background {
@@ -710,21 +711,26 @@ a, a:visited {
   color: #00ff00;
 }
 .tvalue {
-  color: #ff0000;
+  color: #883333;
   padding-left: 5px;
 }
 .tobject_key {
-  color: #009900;
+  display: inline-block;
+  border-bottom: 1px solid #555;
+  margin-bottom: 2px;
+  padding: 2px;
 }
 .tvalue_key {
-  color: #990000;
+  color: #222;
 }
 .tid {
-  color: #0000ff;
+  color: #2580B0;
   cursor: pointer;
+  font-size: 14px;
+  font-size: 14px; 
 }
 .ttop {
-  font-size: 14px; 
+  font-size: 14px;
 }
 
 .vertex {
