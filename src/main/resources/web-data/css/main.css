@@ -784,7 +784,19 @@ rect {
 }
 
 circle.dot {
-	fill: transparent;
+  fill-opacity:0;
+}
+circle.dot:hover {
+  fill-opacity:0.5;
+}
+circle.dot.avg {
+  fill:black;
+}
+circle.dot.min {
+  fill:blue;
+}
+circle.dot.max {
+  fill:red;
 }
 
 div.tooltip {

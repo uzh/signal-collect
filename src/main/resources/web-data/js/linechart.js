@@ -184,7 +184,7 @@ var LineChart = function() {
     var lowestXDomain  = x.domain()[0];
     var highestXDomain = x.domain()[1];
 
-    if (newZoomScale > 1.5) {
+    if (newZoomScale > 2.5) {
       return;
     }
     
@@ -494,9 +494,9 @@ var LineChart = function() {
     }
 
     var newMinMax = Array.getMinMax(newData);
-    data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average" });
-    data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id] });
-    data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id] });
+    data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average", type:"avg" });
+    data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id], type:"min" });
+    data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id], type:"max" });
     
     currentHighestDate = currentDate;
 
@@ -546,8 +546,8 @@ var LineChart = function() {
         .data( function(d, i) { return d; } )  // This is the nested data call
         .enter()
           .append("circle")
-          .attr("class", "dot")
-          .attr("r", 6)
+          .attr("class", function(d) { return "dot " + d.type; })
+          .attr("r", 5)
           .on("mouseover",
               function(d) {
                 var screenShift = ($(document).width() - d3.event.x < 180 ? 155 : 0);
