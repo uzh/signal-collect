@@ -78,7 +78,12 @@
                   <label for="gp_refreshRate">Min. graph refresh rate (seconds):</label>
                   <select id="gp_refreshRate" class="setting"></select><br/>
                   <label for="gp_maxVertexCount">Maximum vertex count:</label>
-                  <select id="gp_maxVertexCount" class="setting"></select>
+                  <select id="gp_maxVertexCount" class="setting"></select><br/>
+                  <label for="gp_exposeVertices">Expose vertice details on click:</label>
+                  <select id="gp_exposeVertices" class="setting">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select>
                 </div>
                 <div id="gs_container">
                   <h1><span>Add vertices</span></h1>
@@ -268,6 +273,14 @@
         <div id="graph_canvas"></div>
         <div id="graph_canvas_overlay"></div>
         <div id="graph_canvas_selection"></div>
+        <div id="exposition">
+          <div id="dragbar"></div>
+          <div id="exposition_background"></div>
+          <div id="exposition_content">
+            <div id ="exposition_title"></div>
+            <div id="exposition_data"></div>
+          </div>
+        </div>
       </div>
       <div class="view" id="resources">
         <div class="structured">
@@ -454,7 +467,7 @@
         </div>
       </div>
     </div>
-    <div id="help">
+    <div id="tour">
       <a href='/#{"intro":1}' target="_blank">TOUR</a>
     </div>
   </body>

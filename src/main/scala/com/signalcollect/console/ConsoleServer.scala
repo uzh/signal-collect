@@ -465,17 +465,7 @@ object Toolkit {
     val im = mirror.reflect(obj)
     // for each field, get the value and put it in a JValue
     methods.map { m =>
-      val value = im.reflectField(m.asTerm).get match {
-        case x: Array[Long] => JArray(x.toList.map(JInt(_)))
-        case x: Long => JInt(x)
-        case x: Int => JInt(x)
-        case x: String => JString(x)
-        case x: Double if x.isNaN => JDouble(0)
-        case x: Double => JDouble(x)
-        case x: Map[_, _] => decompose(x)
-        case x: BreakConditionName.Value => JString(x.toString)
-        case other => JString(other.toString)
-      }
+      val value = Toolkit.serializeAny(im.reflectField(m.asTerm).get)
       (m.name.toString -> value)
     }.toMap
   }
@@ -501,5 +491,20 @@ object Toolkit {
       a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
     }
 
+  /** Serialize objects or collections of arbitrary type  */
+  def serializeAny(o: Any): JValue = {
+    o match {
+      case x: Array[_] => JArray(x.toList.map(serializeAny(_)))
+      case x: List[_] => JArray(x.map(serializeAny(_)))
+      case x: Long => JInt(x)
+      case x: Int => JInt(x)
+      case x: String => JString(x)
+      case x: Double if x.isNaN => JDouble(0)
+      case x: Double => JDouble(x)
+      case x: Map[_, _] => decompose(x)
+      case x: BreakConditionName.Value => JString(x.toString)
+      case other => JString(other.toString)
+    }
+  }
 }
 

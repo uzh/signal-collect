@@ -23,7 +23,8 @@
 scc.defaults.graph = {"layout": {
                         "cVertexSelection": "show",
                         "cGraphDesign": "show",
-                        "cGraphControl": "show"
+                        "cGraphControl": "show",
+                        "expositionWidth": "350"
                       },
                       "options": {
                         "gs_addBySubstring": "",
@@ -33,6 +34,7 @@ scc.defaults.graph = {"layout": {
                         "gd_vertexColor": "Outgoing degree",
                         "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
+                        "gp_exposeVertices": "No",
                         "gp_vicinityRadius": "1",
                         "gp_maxVertexCount": "250",
                         "gp_targetCount": "100",
@@ -90,12 +92,14 @@ scc.modules.Graph = function() {
   var vertexSequence = 0;
   var vertexSequenceEnd = 0;
   var GSTR = STR["Graph"];
-  var nodeCountIntervals = []; 
-  for (var i = 5; i<=25; i+=5) { nodeCountIntervals.push(i) };
-  for (var i = 50; i<=250; i+=50) { nodeCountIntervals.push(i) };
-  for (var i = 400; i<=1000; i+=100) { nodeCountIntervals.push(i) };
+  var vertexCountIntervals = []; 
+  for (var i = 5; i<=25; i+=5) { vertexCountIntervals.push(i) };
+  for (var i = 50; i<=250; i+=50) { vertexCountIntervals.push(i) };
+  for (var i = 400; i<=1000; i+=100) { vertexCountIntervals.push(i) };
   var signalThreshold = 0.01;
   var collectThreshold = 0.0;
+  var resizingExposition = false;
+  var exposedVertexId = undefined;
 
   /**
    * The VertexStorageAgent provides method for setting, getting and adding to the
@@ -152,10 +156,10 @@ scc.modules.Graph = function() {
     var selector = $("#gp_targetCount");
     var currentChoice = selector.val()
     selector.empty();
-    for (var i in  nodeCountIntervals) {
-      if (nodeCountIntervals[i] > maximum) { break; }
-      selector.append('<option value="' + nodeCountIntervals[i] + '">' + 
-                      nodeCountIntervals[i] + '</option>');
+    for (var i in  vertexCountIntervals) {
+      if (vertexCountIntervals[i] > maximum) { break; }
+      selector.append('<option value="' + vertexCountIntervals[i] + '">' + 
+                      vertexCountIntervals[i] + '</option>');
     }
     // re-select the value selected before emptying or the maximum value
     if (currentChoice != null) {
@@ -191,18 +195,6 @@ scc.modules.Graph = function() {
         .domain(domain)
         .range([2, 5, 30]);
     return scale;
-  };
-
-  /**
-   * Adds the settings selected by the user (such as the vicinity size to be 
-   * retrieved) to the given order
-   * @param {object} o - The order message to be augmented
-   * @return {object} - The order message augmented by the settings
-   */
-  var finalize = function(o) { 
-    o["provider"] = "graph"; 
-    o["vicinityIncoming"] = ($("#gp_vicinityIncoming").val() == "Yes");
-    return o;
   };
 
   /**
@@ -297,6 +289,7 @@ scc.modules.Graph = function() {
    */
   var order = function (order, delay) {
     if (!delay) { delay = 0; }
+    order["exposeVertices"] = (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes")
     scc.order(order, delay)
   };
 
@@ -314,6 +307,122 @@ scc.modules.Graph = function() {
   };
 
   /**
+   * Take a json document and transform it into a tree compatible with d3's
+   * tree layout (with name and children attributes).
+   * @param {object} json to transform
+   * @return {object} tree for d3's tree layout
+   */
+  var jsonIntoTree = function (json) {
+    if(typeof json == "object") {
+      var arr = []
+      $.each(json, function(k,v) {
+        var child = jsonIntoTree(v)
+        if (Object.prototype.toString.call(child) === '[object Array]') {
+          arr.push({"name": k, "children": child});
+        }
+        else {
+          arr.push({"name": k, "val": child});
+        }
+      });
+      return arr;
+    }
+    else {
+      return json;
+    }
+  };
+
+  /**
+   * Loads the information into the exposition panel using the provided id and
+   * json data.
+   * @param {string} id the id of the vertex
+   * @param {object} id the arbitrary json data to display
+   */
+  var expose = function (id, json) {
+    // Transform the json into a tree for d3's tree layout
+    var tree = { "name": "root", "children": jsonIntoTree(json)}
+
+    // Clicking on the Id shall load the node
+    $("#exposition_title").html(
+        '<span class="ttop">Information exposed by vertex with ID:</span><br/>' + 
+        '<span class="tid">' + id + '</span>')
+    $(".tid").click(function () {
+      scc.consumers.Graph.addBySubstring($(this).text());
+    });
+
+    // Create the layout and popluate it
+    var treeLayout = d3.layout.tree();
+    treeLayout.value(function(d) { return d.name; });
+
+    var expo = d3.select("#exposition_data")
+    expo.data([tree]);
+    expo.data([tree]);
+    var t = expo.selectAll("div")
+        .data(treeLayout.nodes);
+    
+    t.enter().append("div")
+      .attr("class", function (d) {
+        if (d.depth == 0) {
+          return "hidden";
+        }
+        if (d.children != undefined) {
+          return "tobject_key";
+        }
+        return "tvalue_container";
+      })
+      .style("margin-left", function(d) {
+        return (10*(d.depth-1)) + "px";
+      })
+    t.exit().remove();
+    t.html(function (d) {
+      var s = d.name;
+      s = '<span class="tvalue_key">' + s + '</span>';
+      if (d.val == undefined) { 
+        s = s + ": ";
+      }
+      else { 
+        s = s + '<br/><span class="tvalue">' + d.val + '</span>';
+      }
+      return s;
+    })
+  }
+
+  /**
+   * Handler for when the user presses the mouse when resizing the exposition panel
+   * @param {Event} e - The event that triggered the call
+   */
+  d3.select('#dragbar').on("mousedown.resizeExposition", function () {
+    d3.event.preventDefault();
+    resizingExposition = true;
+    var main = $('#exposition');
+    var ghostbar = $('<div>', {id:'ghostbar',
+                               css: { height: main.outerHeight(),
+                                      top: main.offset().top,
+                                      left: main.offset().left
+                    }}).appendTo('body');
+    d3.select(document).on("mousemove.resizeExposition", function () {
+      d3.event.preventDefault();
+      ghostbar.css("left", d3.event.x);
+    });
+  });
+      
+  /**
+   * Handler for when the user releases the mouse when resizing the exposition panel
+   * @param {Event} e - The event that triggered the call
+   */
+  d3.select(document).on("mouseup.resizeExposition", function () {
+    d3.event.preventDefault();
+    if (resizingExposition) {
+      var newWidth = screen.width-d3.event.x;
+      scc.settings.set({"graph":{"layout": {"expositionWidth": newWidth}}});
+      $('#exposition').css("width", newWidth);
+      $('#graph_canvas').css("right", newWidth);
+      $('#ghostbar').remove();
+      d3.select(document).on("mousemove.resizeExposition", null);
+      resizingExposition = false;
+    }
+  });
+
+  /**
    * Modify the panel html, setting options and adding dynamic fields
    */
   this.layout = function() {
@@ -326,11 +435,11 @@ scc.modules.Graph = function() {
     for (var i = 15; i<=60; i+=5) {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
-    for (var i in nodeCountIntervals) {
-      $("#gp_maxVertexCount").append('<option value="' + nodeCountIntervals[i] + '">' + 
-                                     nodeCountIntervals[i] + '</option>');
+    for (var i in vertexCountIntervals) {
+      $("#gp_maxVertexCount").append('<option value="' + vertexCountIntervals[i] + '">' + 
+                                     vertexCountIntervals[i] + '</option>');
     }
-    populateTargetCountSelector(nodeCountIntervals[nodeCountIntervals.length-1]);
+    populateTargetCountSelector(vertexCountIntervals[vertexCountIntervals.length-1]);
     $('input[type="text"]').click(function(e) { $(this).select(); });
     $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
@@ -346,9 +455,14 @@ scc.modules.Graph = function() {
     $.each(scc.settings.get().graph.options, function (key, value) {
       $("#" + key).val(value);
     });
-    if (scc.settings.get().graph.options["gs_addBySubstring"] == "") {
-      $("#gs_addBySubstring").val(GSTR["addBySubstring"]);
+    if (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes") {
+      $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
+      exposedVertexId = localStorage["exposedVertexId"];
+      $("#exposition").fadeIn(100, function () {
+        $('#graph_canvas').css("right", $("#exposition").width());
+      });
     }
+    $("#exposition_background").text(GSTR.expositionEmpty);
     var val = parseInt($("#gp_maxVertexCount").val());
     populateTargetCountSelector(val);
   }
@@ -410,6 +524,24 @@ scc.modules.Graph = function() {
     };
 
     /**
+     * Handler for when the user clicks on a node to load its exposed
+     * information.
+     * @param {Event} e - The event that triggered the call
+     */
+    d3.select("#graph").on("click.exposeVertex", function (e) {
+      if ($("#exposition").is(":visible")) {
+        var target = d3.event.target;
+        var data = target.__data__;
+        if (target.tagName == "circle") {
+          exposedVertexId = data.id;
+          localStorage["exposedVertexId"] = exposedVertexId;
+          $("#exposition_background").text("");
+          expose(data.id, data.info);
+        }
+      }
+    });
+
+    /**
      * Handler for when the user hovers over the graph. Shows a tooltip when
      * hovering over a vertex.
      * @param {Event} e - The event that triggered the call
@@ -424,7 +556,7 @@ scc.modules.Graph = function() {
 
       // When over a vertex, show the tooltip, highlight its edges and hide all
       // other edges in the graph
-      if (d3.event.target.tagName == "circle") {
+      if (target.tagName == "circle") {
         $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
         hoveringOverVertex = data.id; 
         fillTooltip(data);
@@ -470,7 +602,7 @@ scc.modules.Graph = function() {
 
     // Enable d3's forced directed graph layout
     force = d3.layout.force()
-        .size([$("#content").width(), $("#content").height()])
+        .size([$("#graph_canvas").width(), $("#graph_canvas").height()])
         .nodes(vertices)
         .links(edges)
         .linkDistance(150)
@@ -679,7 +811,8 @@ scc.modules.Graph = function() {
       if (vertexRefs[id] == undefined) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
-                       "es": data.es, "ss": data.ss, "cs": data.cs});
+                       "es": data.es, "ss": data.ss, "cs": data.cs,
+                       "info": data.exposition});
         // Store the index of the vertex in the lookup table
         vertexRefs[id] = vertices.length - 1;
         newVertices = true;
@@ -690,9 +823,9 @@ scc.modules.Graph = function() {
         vertices[vertexRefs[id]].seq = vertexSequence;
         vertices[vertexRefs[id]].ss = data.ss;
         vertices[vertexRefs[id]].cs = data.cs;
+        vertices[vertexRefs[id]].info = data.exposition;
       }
     });
-
     var verticesToRemove = getOverflowingVertices()
     vertexStorage.save();
 
@@ -738,6 +871,18 @@ scc.modules.Graph = function() {
       hideBackgroundTimeout = setTimeout(function () {
         $("#graph_background").text("Showing " + vertices.length + " vertices");
       }, 4000);
+    }
+
+    // Update exposed vertex
+    if (typeof exposedVertexId == "string") {
+      var exposedVertex = svgVertices.filter(function (d, i) {
+        return d.id == exposedVertexId;
+      })[0][0];
+      if (exposedVertex != undefined) {
+        var data = exposedVertex.__data__;
+        $("#exposition_background").text("");
+        expose(data.id, data.info);
+      }
     }
 
     // Order new graph if autorefresh is enabled
@@ -1179,7 +1324,6 @@ scc.modules.Graph = function() {
     // persist the new vertex selection and re-activate the graph layout
     vertexStorage.save();
     restart(true); 
-    //scc.consumers.Graph.update();
   };
 
   /**
@@ -1204,6 +1348,27 @@ scc.modules.Graph = function() {
     removeVerticesFromCanvas(verticesToRemove);
     populateTargetCountSelector(val);
   });
+
+  /**
+   * Handler called when the exposeVertices option changes. Adjusts the
+   * possible range to choose from in the target count option.
+   */
+  $("#gp_exposeVertices").change(function (e) { 
+    var val = $(this).val();
+    if (val == "Yes") {
+      scc.consumers.Graph.update();
+      $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
+      exposedVertexId = localStorage["exposedVertexId"];
+      $("#exposition").fadeIn(100, function () {
+        $('#graph_canvas').css("right", $("#exposition").width());
+      });
+      $("#exposition").fadeIn(100)
+    }
+    else {
+      $("#exposition").fadeOut(100)
+    }
+  });
+
   /**
    * Handler called when the 'draw edges' option changes. Persists the choice 
    * to the settings hash and updates the representation (shows or hides the

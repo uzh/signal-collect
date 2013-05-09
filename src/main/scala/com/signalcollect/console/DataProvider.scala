@@ -318,6 +318,7 @@ case class GraphDataRequest(
   vertexIds: Option[List[String]],
   vicinityRadius: Option[Int],
   vicinityIncoming: Option[Boolean],
+  exposeVertices: Option[Boolean],
   query: Option[String], 
   targetCount: Option[Int],
   topCriterium: Option[String],
@@ -342,6 +343,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   var targetCount = 5
   var vicinityRadius = 0
   var vicinityIncoming = false
+  var exposeVertices = false
   var signalThreshold = 0.01
   var collectThreshold = 0.0
 
@@ -399,7 +401,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet, 
                                    vicinityRadius, vicinityIncoming)
     val (lowestState, highestState, graph) = 
-        workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds))
+        workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds, exposeVertices))
     ("highestState" -> highestState) ~
     ("lowestState" -> lowestState) ~
     graph
@@ -463,6 +465,10 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     }
     request.vicinityIncoming match {
       case Some(b) => vicinityIncoming = b
+      case otherwise => 
+    }
+    request.exposeVertices match {
+      case Some(b) => exposeVertices = b
       case otherwise => 
     }
     request.signalThreshold match {

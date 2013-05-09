@@ -33,5 +33,6 @@ trait Inspectable[Id, State] extends Vertex[Id, State] {
    */
   def getTargetIdsOfOutgoingEdges: Traversable[_]
   def outgoingEdges: collection.mutable.Map[Any, Edge[_]] 
+  def expose: Map[String,Any] = Map[String,Any]()
 
 }

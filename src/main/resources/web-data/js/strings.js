@@ -36,6 +36,8 @@ STR = {
          "collectScoreBelowThreshold": "collect score below threshold"
        },
        "Graph": {
+         "expositionEmpty":
+           "Click on a node to expose its details. Click and drag the border of this box to make it larger or smaller.",
          "canvasEmpty":
            "Canvas is empty: use the tools on the left to add and remove vertices. "  +
            "Older vertices will automatically be removed once the maximum vertex count is reached.",

@@ -98,8 +98,8 @@ scc.modules.BreakConditions = function () {
     $.each(j.active, function (k, c) {
       // Shorten long vertex ids
       var s = c.props.vertexId;
-      if (s.length > 20) {
-        s = s.substring(s.length - 22, s.length);
+      if (s.length > 30) {
+        s = s.substring(s.length - 32, s.length);
       }
       // Build the div element to be added...
       var item = '<div class="condition';

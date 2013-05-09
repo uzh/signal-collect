@@ -20,6 +20,7 @@
 package com.signalcollect.console
 
 import scala.language.postfixOps
+import com.signalcollect.DataGraphVertex
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ModularAggregationOperation
 import net.liftweb.json._
@@ -51,7 +52,7 @@ import BreakConditionName._
   * @constructor create the aggregator
   * @param vertexIds set of vertex ids to be loaded
   */
-class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
+class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolean = false)
       extends AggregationOperation[(Double,Double,JObject)] {
 
   def interpretState(s: Any): Double = {
@@ -78,11 +79,23 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id]())
               case otherwise => false
             }
           }.map{ e => ( JString(e.targetId.toString))}.toList
-          def verticesObj = ("vertices", JObject(List(JField(i.id.toString, 
-                            JObject(List(JField("s", i.state.toString),
-                                         JField("es", targetVertices.size),
-                                         JField("ss", i.scoreSignal),
-                                         JField("cs", i.scoreCollect)))))))
+          def vertexProperties = (List(JField("s", i.state.toString),
+                                       JField("es", targetVertices.size),
+                                       JField("ss", i.scoreSignal),
+                                       JField("cs", i.scoreCollect),
+                                       JField("exposition",
+                                         if (exposeVertices) {
+                                           JObject(
+                                             (for ((k, v) <- i.expose) yield {
+                                               JField(k, Toolkit.serializeAny(v))
+                                             }).toList
+                                           )
+                                         }
+                                         else { JNothing }
+                                       )))
+          def verticesObj = ("vertices", 
+              JObject(List( JField(i.id.toString, JObject(vertexProperties)) )))
+
           def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
           (state, state, verticesObj ~ edgesObj)
         }

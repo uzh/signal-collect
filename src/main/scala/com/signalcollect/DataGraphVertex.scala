@@ -98,4 +98,31 @@ abstract class DataGraphVertex[Id, State](
     }
   }
 
+  /**
+   * Implementing expose can provide additional information when using the Console
+   * @return a map with a single element, the mostRecentSignalMap
+   */
+  override def expose(): Map[String,Any] = {
+    Map(("mostRecentSignalMap", makeExposable(mostRecentSignalMap.toMap)))
+  }
+
+  /**
+   * Helper method to expose meaningful information no matter what types are used
+   * for the signals. Recursively modifies any data structure to be compatible.
+   * @param an arbitrary data structure for transformation
+   * @return a transformed data structure from the one provided
+   */
+  private def makeExposable(a: Any): Any = {
+    a match {
+      case x: Array[_] => x.toList.map(makeExposable(_))
+      case x: List[_] => x.map(makeExposable(_))
+      case x @ (_: Int | _: Long | _: String | _: Double) => x
+      case x: Map[_, _] => 
+        (for ((k, v) <- x) yield {
+          (k.toString -> makeExposable(v))
+        })
+      case other => other.toString
+    }
+  }
+
 }
