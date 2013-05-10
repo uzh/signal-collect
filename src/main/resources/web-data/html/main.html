@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="css/introjs-customizations.css">
     <script type="text/javascript" src="dependencies/jquery.js"></script>
     <script type="text/javascript" src="dependencies/d3.js"></script>
-    <script type="text/javascript" src="dependencies/reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src="dependencies/reconnecting-websocket.js"></script>
     <script type="text/javascript" src="js/util.js"></script>
     <script type="text/javascript" src="js/configuration.js"></script>
     <script type="text/javascript" src="js/strings.js"></script>
@@ -235,10 +235,7 @@
               <label for="rs_unexpectedresults">Unexpected results</label><br/>
 
               <input type="radio" name="rs" id="rs_phase"/>
-              <label for="rs_phase">Computation phases</label><br/>
-
-              <input type="radio" name="rs" id="rs_loadingspeed"/>
-              <label for="rs_loadingspeed">Graph loading speed</label>
+              <label for="rs_phase">Computation phases</label>
             </div>
           </div>
         </div>
@@ -383,10 +380,6 @@
         
           <div id="crs_phase">
             <h1>Computation phases</h1>
-          </div>
-        
-          <div id="crs_loadingspeed">
-            <h1>Graph loading speed</h1>
           </div>
           
           <div id="resourceBoxes">

@@ -979,7 +979,6 @@ p.teaser {
 
 div#resourceBoxes > div:not([id$='Title']) {
   display: inline;
-  overflow: auto;
 }
 
 body.statistics div#resourceBoxes div[id$=StatBox] {

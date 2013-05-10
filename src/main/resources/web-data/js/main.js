@@ -162,6 +162,8 @@ $(document).ready(function() {
     scc.webSocket = new ReconnectingWebSocket(
                         "ws://" + document.domain + ":" + 
                         (parseInt(window.location.port) + 100));
+    scc.webSocket.reconnectInterval = 500;
+    scc.webSocket.timeoutInterval = 8000;
 
     /**
      * Function that is called when a new WebSocket connection is established.
@@ -192,14 +194,12 @@ $(document).ready(function() {
         var targetProvider = j["targetProvider"];
         if (scc.consumers[targetProvider].notready != null) {
           scc.consumers[targetProvider].notready(j);
-        } else {
-          console.log("Consumer '" + targetProvider + "' has no notready() method");
         }
       }
       // Error messages are printed to the error pop-up, including the stack-
       // trace that caused the error. These errors are generally considered to
       // be fatal and the computation and console may not function properly
-      // after such an occurence.
+      // after such an occurrence.
       else if (provider == "error") {
         console.log(j["stacktrace"]);
         showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
@@ -237,8 +237,6 @@ $(document).ready(function() {
       for (var m in scc.consumers) {
         if (scc.consumers[m].onclose != null) {
           scc.consumers[m].onclose(e);
-        } else {
-          console.log("Consumer '" + m + "' has no onclose() method");
         }
       }
     };
@@ -252,8 +250,6 @@ $(document).ready(function() {
       for (var m in scc.consumers) {
         if (scc.consumers[m].onerror != null) {
           scc.consumers[m].onerror(e);
-        } else {
-          console.log("Consumer '" + m + "' has no onerror() method");
         }
       }
     };
