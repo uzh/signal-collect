@@ -49,9 +49,12 @@ STR = {
            "Node with ID having this substring"
        },
        "State": {
-         "non-interactive": [
-           "Non-Interactive",
-           "The interactive execution is either not enabled or currently unavailable"],
+         "undetermined": [
+           "State undetermined...",
+           "The execution mode and state have not been determined, yet"],
+         "initExecution": [
+           "Loading interactive execution...",
+           "The interactive execution is being initilized"],
          "pausedBeforeChecksAfterCollect": [
            "Paused bef. checks after collect",
            "Paused - The next partial step triggers a break condition check"],

@@ -658,9 +658,6 @@ scc.modules.Graph = function() {
         }
       });
     });
-
-    // enable the forced layout
-    restart(true);
   }
 
   /**

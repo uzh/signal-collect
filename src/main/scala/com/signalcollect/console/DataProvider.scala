@@ -34,6 +34,7 @@ import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Extraction._
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
+import com.signalcollect.ExecutionStatistics
 import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
@@ -118,7 +119,19 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
         ("state" -> e.state) ~ 
         ("steps" -> e.steps) ~ 
         ("iteration" -> e.iteration)
-      case None => ("state" -> "non-interactive")
+      case None => socket.executionConfiguration match {
+        case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {
+          case Some(es: ExecutionStatistics) =>
+            ("mode" -> ec.executionMode.toString) ~
+            ("state" -> es.terminationReason.toString) ~
+            ("totalExecutionTime" -> es.totalExecutionTime.toString) ~
+            ("computationTime" -> es.computationTime.toString)
+          case None => 
+            ("mode" -> ec.executionMode.toString())
+        }
+        case None => 
+          ("state" -> "undetermined")
+      }
     }
     ("provider" -> "state") ~ reply
   }

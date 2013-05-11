@@ -207,6 +207,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
+    if (console != null) { console.setExecutionStatistics(stats) }
     workerApi.setSignalThreshold(parameters.signalThreshold)
     workerApi.setCollectThreshold(parameters.collectThreshold)
     val jvmCpuStartTime = getJVMCpuTime
@@ -282,7 +283,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     var conditionsReached = Map[String, String]()
     var state = "initExecution"
     var iteration = 0
-    if (console != null) { console.setInteractor(this) }
+    if (console != null) { console.setExecution(this) }
     graph.snapshot
     var converged = false
     var globalTermination = false

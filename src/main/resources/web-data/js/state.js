@@ -39,6 +39,8 @@ scc.modules.State = function() {
   this.state = "uninizialized";
   var pendingCommand = false;
   var controls = ["step", "collect", "continue", "pause", "reset", "terminate"];
+  var retryMillis = 500;
+  var retryMillisMultiplier = 1.2;
 
   /**
    * Add an event handler to each of the control buttons. Clicking a button
@@ -84,6 +86,7 @@ scc.modules.State = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
+    console.log(j)
     // Receiving a message from controls means that the command was received.
     if (j.provider == "controls") { 
       pendingCommand = false;
@@ -93,22 +96,55 @@ scc.modules.State = function() {
     if (!pendingCommand) {
       $("#pending_command").hide();
     }
+    // Retry at increasing intervals if the mode is undetermined
+    if (j.state == "undetermined") {
+      setTimeout(function () {
+        scc.order({"provider": "state"}); 
+      }, retryMillis);
+      retryMillis *= retryMillisMultiplier;
+    }
     // Update the state information in the GUI
-    $('#iteration').text(j.iteration);
-    $('#resStatStatus').text(STR.State[j.state][0]);
-    $('#state').text(STR.State[j.state][0])
-    $('#state').attr("title", STR.State[j.state][1])
-    if (j.state == "non-interactive") {
+    var stateStrings = STR.State[j.state];
+    if (j.mode != undefined) {
+      stateStrings = [j.mode + ": " + j.state, ""];
+    }
+    else if (stateStrings == undefined) {
+      stateStrings = ["Mode: " + j.mode + ", state: " + j.state];
+    }
+    $('#resStatStatus').text(stateStrings[0]);
+    $('#state').text(stateStrings[0])
+    $('#state').attr("title", stateStrings[1])
+    if (j.state != "undetermined") {
+      retryMillis = 200;
+    }
+    if (j.state == "undetermined" || !STR.State.hasOwnProperty(j.state)) {
       $("#cGraphControlEnabled").addClass("hidden");
       $("#iteration_container").addClass("hidden");
       $("#cGraphControlDisabled").removeClass("hidden");
-      scc.consumers.Graph.autoRefresh = true;
-      scc.consumers.Graph.update();
+      console.log(scc.consumers.Graph.autoRefresh);
+      if (j.state != undefined && 
+          j.state.toLowerCase().indexOf("converged") != -1) {
+        if (scc.consumers.Graph.autoRefresh == false) {
+          scc.consumers.Graph.update();
+        }
+        scc.consumers.Graph.autoRefresh = false;
+      }
+      else if (scc.consumers.Graph.autoRefresh == false) {
+        scc.consumers.Graph.autoRefresh = true;
+        scc.consumers.Graph.update();
+      }
+      else {
+        setTimeout(function () {
+          scc.order({"provider": "state"}); 
+        }, 1000);
+      }
       return
     }
+    // What follows is only available in interactive mode
     $("#cGraphControlEnabled").removeClass("hidden");
     $("#iteration_container").removeClass("hidden");
     $("#cGraphControlDisabled").addClass("hidden");
+    $('#iteration').text(j.iteration);
     switch (j.state) {
       case "pausedBeforeChecksAfterCollect":
       case "pausedBeforeSignal":

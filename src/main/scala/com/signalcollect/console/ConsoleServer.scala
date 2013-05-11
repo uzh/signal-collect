@@ -31,6 +31,7 @@ import scala.reflect._
 import scala.reflect.runtime.{ universe => ru }
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.ExecutionStatistics
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.interfaces.WorkerApi
@@ -242,13 +243,18 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     sockets.setCoordinator(coordinatorActor)
   }
 
-  def setInteractor(e: Execution) = {
+  def setExecution(e: Execution) = {
     sockets.setExecution(e)
   }
 
   def setExecutionConfiguration(e: ExecutionConfiguration) = {
     sockets.setExecutionConfiguration(e)
   }
+
+  def setExecutionStatistics(e: ExecutionStatistics) = {
+    sockets.setExecutionStatistics(e)
+  }
+
 
   /** Stop both HTTP and WebSocket servers and exit */
   def shutdown = {
@@ -363,6 +369,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   // as early as possible and these things can be supplied later.
   var coordinator: Option[Coordinator[Id, _]] = None
   var execution: Option[Execution] = None
+  var executionStatistics: Option[ExecutionStatistics] = None
   var executionConfiguration: Option[ExecutionConfiguration] = None
   var breakConditions = List()
   val graphConfiguration = config
@@ -375,6 +382,10 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
   def setExecution(e: Execution) {
     execution = Some(e)
+  }
+
+  def setExecutionStatistics(e: ExecutionStatistics) {
+    executionStatistics = Some(e)
   }
 
   def setExecutionConfiguration(e: ExecutionConfiguration) {
