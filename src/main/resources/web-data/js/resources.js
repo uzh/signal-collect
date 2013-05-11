@@ -199,21 +199,21 @@ scc.modules.Log = function() {
    * Selector of the scrollable container of the log messages.
    * @type {Object}
    */
-  var box = $(container).find("div.scroll");
+  var box = container.find("div.scroll");
 
   /**
    * Selector of the inner container of the log messages, this is necessary for
    * formatting purposes.
    * @type {Object}
    */
-  var boxInner = $(box).find("div");
+  var boxInner = box.find("div");
   
   /**
    * Defines the maximum number of debug messages that will be stored in the
    * DOM. When there are more, old debug messages will be deleted from the DOM.
    * @type {number}
    */
-  var maxDebugMessages = 200;
+  var maxDebugMessages = 100;
   
   /**
    * Object that stores the different levels of the log messages.
@@ -225,7 +225,7 @@ scc.modules.Log = function() {
    * Selector of the log level filter.
    * @type {Object}
    */
-  var filterLevel = $(container).find("p.filter.level");
+  var filterLevel = container.find("p.filter.level");
 
   /**
    * Object that stores the different sources of the log messages.
@@ -237,23 +237,55 @@ scc.modules.Log = function() {
    * Selector of the log source filter.
    * @type {Object}
    */
-  var filterSource = $(container).find("p.filter.source");
+  var filterSource = container.find("p.filter.source");
   
   // hide and show log messages based on their level
   $.each(logLevelIndex, function(v, k) {
-    $(filterLevel).find("> span:eq(" + (k-1) + ")").on("click", function() {
+    filterLevel.find("> span:eq(" + (k-1) + ")").on("click", function() {
       $(this).toggleClass("active");
-      $(box).find("li.level_" + v).toggleClass("hidden_level");
+      box.find("li.level_" + v).toggleClass("hidden_level");
     });
   });
   
   // hide and show log messages based on their source
   $.each(logSourceIndex, function(v, k) {
-    $(filterSource).find("> span:eq(" + (k-1) + ")").on("click", function() {
+    filterSource.find("> span:eq(" + (k-1) + ")").on("click", function() {
       $(this).toggleClass("active");
-      $(box).find("li.source_" + v).toggleClass("hidden_source");
+      box.find("li.source_" + v).toggleClass("hidden_source");
     });
   });
+  
+  /**
+   * Preset the selectors for the level filter buttons.
+   * @type {Object}
+   */
+  var filterLevelButtons = {
+    "Error":   filterLevel.find("> span:eq(0)"),
+    "Warning": filterLevel.find("> span:eq(1)"),
+    "Info":    filterLevel.find("> span:eq(2)"),
+    "Debug":   filterLevel.find("> span:eq(3)")
+  };
+
+  /**
+   * Preset the selectors for the source filter buttons.
+   * @type {Object}
+   */
+  var filterSourceButtons = {
+    "akka": filterSource.find("> span:eq(0)"),
+    "sc":   filterSource.find("> span:eq(1)"),
+    "user": filterSource.find("> span:eq(2)")
+  };
+  
+  /**
+   * Store the number of log messages per log level.
+   * @type {Object}
+   */
+  var logMessagesPerLevel = {
+    "Error":   0,
+    "Warning": 0,
+    "Info":    0,
+    "Debug":   0
+  };
 
   /**
    * Function that is called by the main module when a new WebSocket connection
@@ -280,14 +312,11 @@ scc.modules.Log = function() {
   this.onmessage = function(msg) {
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
     var fragments = [];
-    var latest = null; // TODO replace latest with fragments[fragments.length-1]
+    var latest = null;
     msg["messages"].forEach(function(l) {
       var json = $.parseJSON(l);
       json.occurrences = 1;
       json.cls = "";
-      // TODO do not update in every iteration
-      var filterLevelButton = $(filterLevel).find("> span:eq(" + (logLevelIndex[json.level.toLowerCase()]-1) + ")");
-      var filterSourceButton = $(filterSource).find("> span:eq(" + (logSourceIndex[json.source.toLowerCase()]-1) + ")");
       if (latest != null &&
           latest.level == json.level && 
           latest.cause == json.cause &&
@@ -300,18 +329,21 @@ scc.modules.Log = function() {
 
         var cls = "level_" + json.level.toLowerCase() + " source_" + json.source;
         // check whether this message should be hidden
-        if (!$(filterLevelButton).hasClass("active"))  { cls += " hidden_level"; }
-        if (!$(filterSourceButton).hasClass("active")) { cls += " hidden_source"; }
+        if (!filterLevelButtons[json.level].hasClass("active"))  { cls += " hidden_level"; }
+        if (!filterSourceButtons[json.source].hasClass("active")) { cls += " hidden_source"; }
         json.cls = cls;
         
         latest = json;
         fragments.push(json);
       }
-      // number of entries in the filter
-      // TODO do not update in every iteration
-      var nr = $(filterLevelButton).find("span");
-      $(nr).text(parseInt($(nr).text()) + 1);
+      // update number of entries per level
+      logMessagesPerLevel[json.level] += 1;
     });
+    
+    // update number of log messages in the filter buttons
+    $.each(logMessagesPerLevel, function(level, nr) {
+      filterLevelButtons[level].find("span").text(nr);
+    })
     
     // convert fragments to HTML and append to the DOM
     var fragmentsHtml = "";
@@ -326,18 +358,18 @@ scc.modules.Log = function() {
       }
       fragmentsHtml += "</li>";
     });
-    $(box).find("ul").append(fragmentsHtml);
+    box.find("ul").append(fragmentsHtml);
 
     // scroll
     if (scrollDown && msg.messages.length > 0) {
-      $(box).animate({ scrollTop: $(box)[0].scrollHeight }, 200);
+      box.animate({ scrollTop: box[0].scrollHeight }, 200);
     }
 
     // remove old debug messages
-    var debugMessages = $(box).find('li.level_debug')
-    var numDebugMessages = $(debugMessages).length;
+    var debugMessages = box.find('li.level_debug')
+    var numDebugMessages = debugMessages.length;
     if (numDebugMessages > maxDebugMessages) {
-      $(debugMessages).slice(0, numDebugMessages-maxDebugMessages).remove();
+      debugMessages.slice(0, numDebugMessages-maxDebugMessages).remove();
     }
 
     scc.order({"provider": "log"}, scc.conf.resources.intervalLogs);
