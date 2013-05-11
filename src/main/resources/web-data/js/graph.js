@@ -401,7 +401,8 @@ scc.modules.Graph = function() {
                     }}).appendTo('body');
     d3.select(document).on("mousemove.resizeExposition", function () {
       d3.event.preventDefault();
-      ghostbar.css("left", d3.event.x);
+      console.log(d3.event.clientX);
+      ghostbar.css("left", d3.event.clientX);
     });
   });
       
@@ -412,7 +413,7 @@ scc.modules.Graph = function() {
   d3.select(document).on("mouseup.resizeExposition", function () {
     d3.event.preventDefault();
     if (resizingExposition) {
-      var newWidth = screen.width-d3.event.x;
+      var newWidth = screen.width-d3.event.clientX;
       scc.settings.set({"graph":{"layout": {"expositionWidth": newWidth}}});
       $('#exposition').css("width", newWidth);
       $('#graph_canvas').css("right", newWidth);
