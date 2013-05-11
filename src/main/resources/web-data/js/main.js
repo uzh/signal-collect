@@ -35,8 +35,17 @@ scc.defaults.main = {"view": "graph"};
  */
 scc.Settings = function() {
   /**
-   * JS object representation of the settings stored in the hash
-   * TODO: provider an example
+   * JS object representation of the settings stored in the hash. Example:
+   * {"graph":
+   *   {"options":
+   *     {"gp_exposeVertices":"Yes",
+   *      "gp_targetCount":"10",
+   *      "gp_maxVertexCount":"600"},
+   *    "layout":{
+   *      "expositionWidth":344
+   *     }
+   *   }
+   * }
    * @type {object}
    */
   this.settings = loadSettings();

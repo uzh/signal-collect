@@ -43,7 +43,6 @@ scc.defaults.graph = {"layout": {
                       }
 };
 
-//TODO: always get options from settings, not HTML!
 /**
  * The Graph module provides the graph-related menu panel and the graph
  * drawing itself.
@@ -303,6 +302,11 @@ scc.modules.Graph = function() {
              "query": "vertexIds",
              "vertexIds": vertexStorage.get()
       }, delay);
+    }
+    else {
+      clearTimeout(hideBackgroundTimeout);
+      $("#graph_background").show();
+      $("#graph_background").text(GSTR["canvasEmpty"]);
     }
   };
 
@@ -693,12 +697,13 @@ scc.modules.Graph = function() {
       .duration(100)
       .attr("r", vertexSize);
 
-    // TODO: show correct message if graph empty
     if (vertices.length == 0) {
       clearTimeout(hideBackgroundTimeout);
       $("#graph_background").text(GSTR["canvasEmpty"]);
     }
-    $("#graph_background").text("Showing " + vertices.length + " vertices");
+    else {
+      $("#graph_background").text("Showing " + vertices.length + " vertices");
+    }
 
     // Restart the forced layout if necessary
     xValues = []
@@ -1292,7 +1297,6 @@ scc.modules.Graph = function() {
    */
   var removeVerticesFromCanvas = function(vertexList) {
     // Extract vertex Ids from vertex items
-    // scc.resetOrders("graph"); TODO: is this necessary?
     var vertexIds = $.map(vertexList, function (vertex, key) { 
       return vertex.__data__.id;
     });
@@ -1324,6 +1328,11 @@ scc.modules.Graph = function() {
     }
     // persist the new vertex selection and re-activate the graph layout
     vertexStorage.save();
+    if (vertices.length == 0) {
+      clearTimeout(hideBackgroundTimeout);
+      $("#graph_background").text(GSTR["canvasEmpty"]);
+    }
+
     restart(true); 
   };
 

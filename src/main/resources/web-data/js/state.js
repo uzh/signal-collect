@@ -1,6 +1,5 @@
 /*
  *  @author Carol Alexandru
- *  //TODO: renew comments in this file!
  *  
  *  Copyright 2013 University of Zurich
  *      
@@ -34,7 +33,7 @@ scc.modules.State = function() {
    */
   this.requires = ["state", "controls"];
 
-  // Variables
+  // Object scope variables
   this.stateCount = 0;
   this.state = "uninizialized";
   var pendingCommand = false;
@@ -88,6 +87,7 @@ scc.modules.State = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
+    // If this is the first time a state message is received, update the graph.
     if (firstTry == true) {
       firstTry = false;
       scc.consumers.Graph.update();
@@ -112,15 +112,16 @@ scc.modules.State = function() {
     $('#resStatStatus').text(stateStrings[0]);
     $('#state').text(stateStrings[0])
     $('#state').attr("title", stateStrings[1])
-    if (j.state != "undetermined") {
-      retryMillis = 200;
-    }
     // Retry at increasing intervals if the mode is undetermined
     if (j.state == "undetermined") {
       setTimeout(function () {
         scc.order({"provider": "state"}); 
       }, retryMillis);
       retryMillis *= retryMillisMultiplier;
+    }
+    // If the state is determined, reset retryMillis
+    if (j.state != "undetermined") {
+      retryMillis = 200;
     }
     // Adjust UI if not in interactive execution mode
     if (j.state == "undetermined" || !STR.State.hasOwnProperty(j.state)) {
@@ -203,20 +204,6 @@ scc.modules.State = function() {
       }
     }
   };
-
-  /**
-   * Function that is called by the main module when a WebSocket error is
-   * encountered. Does nothing.
-   * @param {Event} e - The event that triggered the call
-   */
-  this.onerror = function(e) { };
-
-  /**
-   * Function that is called by the main module when a requested piece of data
-   * is not (yet) available from the server. Does nothing.
-   * @param {Event} e - The event that triggered the call
-   */
-  this.notready = function() { };
 
   /**
    * Function that is called by the main module when a new WebSocket connection
