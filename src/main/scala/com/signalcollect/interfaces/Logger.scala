@@ -21,7 +21,8 @@ package com.signalcollect.interfaces
 
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
+import net.liftweb.json.JValue
 
 trait Logger {
-  def getLogMessages: List[String]
+  def getLogMessages: List[JValue]
 }

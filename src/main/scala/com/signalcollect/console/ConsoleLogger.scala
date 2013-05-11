@@ -148,8 +148,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     * 
     * @return a list of log messages.
     */
-  def getLogMessages: List[String] = {
-    var logMessages: List[String] = List()
+  def getLogMessages: List[JValue] = {
+    var logMessages: List[JValue] = List()
     if (!logFileExists) {
       return logMessages
     }
@@ -158,7 +158,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     }
     var readLines = 0
     while (logReader.ready() && readLines < maxReadLines) {
-      logMessages = logMessages ::: List(logReader.readLine())
+      logMessages = logMessages ::: List(parse(logReader.readLine()))
       readLines += 1
     }
     logMessages

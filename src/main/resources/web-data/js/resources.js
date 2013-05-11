@@ -313,8 +313,7 @@ scc.modules.Log = function() {
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
     var fragments = [];
     var latest = null;
-    msg["messages"].forEach(function(l) {
-      var json = $.parseJSON(l);
+    msg["messages"].forEach(function(json) {
       json.occurrences = 1;
       json.cls = "";
       if (latest != null &&

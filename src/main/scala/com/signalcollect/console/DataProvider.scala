@@ -158,7 +158,7 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
 class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
   def fetch(): JObject = {
     ("provider" -> "log") ~ 
-    ("messages" -> coordinator.getLogMessages.map(_.toString)) 
+    ("messages" -> coordinator.getLogMessages) 
   }
 }
 
