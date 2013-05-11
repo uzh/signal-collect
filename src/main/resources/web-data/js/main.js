@@ -243,7 +243,7 @@ $(document).ready(function() {
 
     /**
      * Function that is called when a WebSocket error is encountered. In 
-     * this case, the onerrror function is called on each consumer.
+     * this case, the onerror function is called on each consumer.
      * @param {Event} e - The event that triggered the call
      */
     scc.webSocket.onerror = function(e) {
@@ -267,7 +267,7 @@ $(document).ready(function() {
 
   /**
    * Order new data from the server. Messages need to adhere to the protocol.
-   * and when an order is issued, any previous pending orders are overriden.
+   * and when an order is issued, any previous pending orders are overridden.
    * @param {string|object} msg - The message to be sent to the server. If a
    *     string is supplied, it will first be parsed as JSON. 
    * @param {int} delay - Milliseconds to wait before ordering the data

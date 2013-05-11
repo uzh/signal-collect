@@ -18,6 +18,10 @@
  *  
  */
 
+/**
+ * Objects which contains Strings needed in the UI of BreakConditions, Graph, and State.
+ * @type {Object}
+ */
 STR = {
        "BreakConditions": {
          "invalidId": "A node with the ID you provided does not exist",
@@ -94,6 +98,10 @@ STR = {
        
 };
 
+/**
+ * Configure the pretty name of the charts based on their name from the JSON object.
+ * @type {Object}
+ */
 chartNames = {
     "messagesSent": "Messages Sent in Total (#)",
     "messagesSentToNodes": "Messages Sent to Nodes (#)",

@@ -127,7 +127,7 @@ scc.modules.Graph = function() {
     };
 
     /**
-     * Replaces the existing list stored with the one passed to the funciton
+     * Replaces the existing list stored with the one passed to the function
      * @param {array<string>} vertexIds - The vertices to be stored
      */
     this.save = function () {
@@ -171,7 +171,7 @@ scc.modules.Graph = function() {
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
-   * to a blue-to-red color scale
+   * to a blue-to-red color scale.
    * @param {array<double>} domain - A three-element array containing the
    *     lowest, median and highest values of the input domain
    * @return {object} - The d3 color scale for this input domain
@@ -185,7 +185,7 @@ scc.modules.Graph = function() {
 
   /**
    * Returns a d3 scale that that maps the domain passed to the function
-   * to a green-to-red color scale
+   * to a green-to-red color scale.
    * @param {array<double>} domain - A three-element array containing the
    *     lowest, median and highest values of the input domain
    * @return {object} - The d3 color scale for this input domain
@@ -285,7 +285,7 @@ scc.modules.Graph = function() {
   var vertexSize = vertexDesign["gd_vertexSize"]["Vertex state"];
 
   /**
-   * Wrapper function to do things that allways come with a graph order
+   * Wrapper function to do things that always come with a graph order
    */
   var order = function (order, delay) {
     if (!delay) { delay = 0; }
@@ -349,7 +349,7 @@ scc.modules.Graph = function() {
       scc.consumers.Graph.addBySubstring($(this).text());
     });
 
-    // Create the layout and popluate it
+    // Create the layout and populate it
     var treeLayout = d3.layout.tree();
     treeLayout.value(function(d) { return d.name; });
 

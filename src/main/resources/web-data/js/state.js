@@ -42,7 +42,7 @@ scc.modules.State = function() {
 
   /**
    * Add an event handler to each of the control buttons. Clicking a button
-   * usually invokes an order to the server, if the button isn't decactivated.
+   * usually invokes an order to the server, if the button isn't deactivated.
    */
   controls.forEach(function (control) {
     $("#" + control).click(function (e) { 
@@ -193,7 +193,7 @@ scc.modules.State = function() {
    * re-enable the automatic WebSocket reconnect after a timeout, giving
    * the server the chance to shut down before re-connection is attempted.
    * The function accepts two parameters that will be used to display an
-   * accompaning message in the UI. This means that other modules may call
+   * accompanying message in the UI. This means that other modules may call
    * this terminate function and supply a reason for why they did it (e.g.
    * a fatal error message).
    * @param {string} type - The message type to show

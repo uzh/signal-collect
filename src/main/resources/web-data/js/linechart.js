@@ -26,7 +26,7 @@
 var LineChart = function() {
   
   /**
-   * Default configuration of a chart. This can be overriden by recreating a
+   * Default configuration of a chart. This can be overridden by recreating a
    * similar object with other values.
    * @type {Object}
    */ 
