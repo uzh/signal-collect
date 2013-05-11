@@ -41,6 +41,7 @@ scc.modules.State = function() {
   var controls = ["step", "collect", "continue", "pause", "reset", "terminate"];
   var retryMillis = 500;
   var retryMillisMultiplier = 1.2;
+  var firstTry = true;
 
   /**
    * Add an event handler to each of the control buttons. Clicking a button
@@ -62,6 +63,7 @@ scc.modules.State = function() {
    * @param {Event} e - The event that triggered the call
    */
   this.onopen = function() {
+    firstTry = true;
     scc.order({"provider": "state"}); 
   };
 
@@ -86,7 +88,10 @@ scc.modules.State = function() {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
-    console.log(j)
+    if (firstTry == true) {
+      firstTry = false;
+      scc.consumers.Graph.update();
+    }
     // Receiving a message from controls means that the command was received.
     if (j.provider == "controls") { 
       pendingCommand = false;
@@ -95,13 +100,6 @@ scc.modules.State = function() {
     // If there are no pending commands, remove the loading gif.
     if (!pendingCommand) {
       $("#pending_command").hide();
-    }
-    // Retry at increasing intervals if the mode is undetermined
-    if (j.state == "undetermined") {
-      setTimeout(function () {
-        scc.order({"provider": "state"}); 
-      }, retryMillis);
-      retryMillis *= retryMillisMultiplier;
     }
     // Update the state information in the GUI
     var stateStrings = STR.State[j.state];
@@ -117,11 +115,23 @@ scc.modules.State = function() {
     if (j.state != "undetermined") {
       retryMillis = 200;
     }
+    // Retry at increasing intervals if the mode is undetermined
+    if (j.state == "undetermined") {
+      setTimeout(function () {
+        scc.order({"provider": "state"}); 
+      }, retryMillis);
+      retryMillis *= retryMillisMultiplier;
+    }
+    // Adjust UI if not in interactive execution mode
     if (j.state == "undetermined" || !STR.State.hasOwnProperty(j.state)) {
       $("#cGraphControlEnabled").addClass("hidden");
       $("#iteration_container").addClass("hidden");
       $("#cGraphControlDisabled").removeClass("hidden");
-      console.log(scc.consumers.Graph.autoRefresh);
+    }
+    // If neither undetermined, nor interactive, then some other mode is being
+    // used. We simply enable/disable auto-refreshing as long as the computation
+    // is running.
+    if (!STR.State.hasOwnProperty(j.state)) {
       if (j.state != undefined && 
           j.state.toLowerCase().indexOf("converged") != -1) {
         if (scc.consumers.Graph.autoRefresh == false) {
@@ -133,13 +143,14 @@ scc.modules.State = function() {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
       }
-      else {
+      if (scc.consumers.Graph.autoRefresh == true) {
         setTimeout(function () {
           scc.order({"provider": "state"}); 
         }, 1000);
       }
       return
     }
+    if (j.state == "initExecution") { return; }
     // What follows is only available in interactive mode
     $("#cGraphControlEnabled").removeClass("hidden");
     $("#iteration_container").removeClass("hidden");

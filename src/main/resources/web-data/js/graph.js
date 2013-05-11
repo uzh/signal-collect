@@ -435,6 +435,7 @@ scc.modules.Graph = function() {
     for (var i = 15; i<=60; i+=5) {
       $("#gp_refreshRate").append('<option value="' + i + '">' + i + '</option>');
     }
+    $("#gp_refreshRate").append('<option value="Never">Never</option>');
     for (var i in vertexCountIntervals) {
       $("#gp_maxVertexCount").append('<option value="' + vertexCountIntervals[i] + '">' + 
                                      vertexCountIntervals[i] + '</option>');
@@ -884,7 +885,9 @@ scc.modules.Graph = function() {
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
-      scc.consumers.Graph.update(parseInt($("#gp_refreshRate").val())*1000);
+      if ($("#gp_refreshRate").val() != "Never") {
+        scc.consumers.Graph.update(parseInt($("#gp_refreshRate").val())*1000);
+      }
     }
 
   }
