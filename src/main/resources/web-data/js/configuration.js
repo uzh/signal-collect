@@ -30,7 +30,7 @@
  * @property {object} conf - Container for the configurable parameters
  */
 var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, 
-           "callbacks": {}, "conf": {}, "lib": {}};
+           "callbacks": {}, "conf": {}, "lib": { "graph": {}, "resources": {} }};
 
 /**
  * Container for the configurable parameters

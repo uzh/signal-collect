@@ -1,6 +1,7 @@
 /*
  *  @author Carol Alexandru
- *  @author Silvan Troxler *  
+ *  @author Silvan Troxler
+ *    
  *  Copyright 2013 University of Zurich
  *      
  *  Licensed below the Apache License, Version 2.0 (the "License");
