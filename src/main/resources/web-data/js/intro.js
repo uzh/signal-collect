@@ -31,7 +31,7 @@ $(document).ready(function() {
     return false;
   }
   var url = document.URL.split("/");
-  var loc = url[0] + "//" + url[2]
+  var loc = url[0] + "//" + url[2];
   var locGraph = '<a target="_blank" href="' + loc + '/graph">' + loc + '/graph</a>';
   var locResources = '<a target="_blank" href="' + loc + '/resources">' + loc + '/resources</a>';
   

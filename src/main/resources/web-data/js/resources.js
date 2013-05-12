@@ -34,7 +34,7 @@ scc.defaults.resources = {"layout":{
  * Object container that encapsulates all chart objects.
  * @type {Object}
  */
-scc.conf.resources.lineCharts = {};
+scc.lib.resources.lineCharts = {};
 
 
 /**
@@ -44,7 +44,7 @@ $(window).on('hashchange', function() {
   scc.settings.reload();
   var settings = scc.settings.get();
   if (settings.resources.section != null) {
-    show_section(settings.resources.section);
+    scc.lib.resources.show_section(settings.resources.section);
   }
 });
 
@@ -52,13 +52,13 @@ $(window).on('hashchange', function() {
  * Hides all sections and shows only the given section.
  * @param {string} s - The name of the section to show.
  */
-function show_section(s) {
+scc.lib.resources.show_section = function(s) {
   if (s == "") { return; }
   // hide all sections
   $("#resources .structured > div[id^=\"crs\"]").hide();
   // show the appropriate section
   $("#crs_" + s).show();
-  show_boxes(s);
+  scc.lib.resources.show_boxes(s);
   // show change in the panel
   $("#resources_panel_container input").prop("checked", false);
   $("#resources_panel_container input#rs_" + s + "").prop("checked", true);
@@ -73,7 +73,7 @@ function show_section(s) {
  * given section.
  * @param {string} s - The name of the section to show the resource boxes for.
  */
-function show_boxes(s) {
+scc.lib.resources.show_boxes = function(s) {
   var boxes = "#resourceBoxes";
   // first, hide all of them
   $(boxes + " > div").attr("class", "hidden");
@@ -84,7 +84,7 @@ function show_boxes(s) {
     $(resourceBox).removeClass("hidden");
     $(resourceBox).appendTo(boxes); // change order
     if (v.endsWith("Chart")) {
-      update_chart(v.slice(0, -5));
+      scc.lib.resources.update_chart(v.slice(0, -5));
     }
   });
 }
@@ -93,12 +93,12 @@ function show_boxes(s) {
  * Updates a chart when it is in viewport.
  * @param {string} chart - The name of the chart to update.
  */
-function update_chart(chart) {
-  if (!scc.conf.resources.lineCharts.hasOwnProperty(chart)) {
+scc.lib.resources.update_chart = function(chart) {
+  if (!scc.lib.resources.lineCharts.hasOwnProperty(chart)) {
     return;
   }
-  if (scc.conf.resources.lineCharts[chart].isOverlappingViewport()) {
-    scc.conf.resources.lineCharts[chart].updateChart();
+  if (scc.lib.resources.lineCharts[chart].isOverlappingViewport()) {
+    scc.lib.resources.lineCharts[chart].updateChart();
   }
 }
 
@@ -386,7 +386,7 @@ scc.modules.Log = function() {
  */
 scc.modules.Resources = function() {
   this.requires = ["resources", "state"];
-  show_section(scc.settings.get().resources.section);
+  scc.lib.resources.show_section(scc.settings.get().resources.section);
   
   // show the number of seconds after which the statistics will be updated
   $("#resStatInterval").html(scc.conf.resources.intervalStatistics / 1000);
@@ -417,10 +417,10 @@ scc.modules.Resources = function() {
    * @param {Object} config - The configuration to use to create the chart.
    */
   var ChartsCreate = function(config) {
-    var lineChart = new LineChart();
+    var lineChart = new scc.lib.resources.LineChart();
     lineChart.container = "#resourceBoxes";
     lineChart.setup(config);
-    scc.conf.resources.lineCharts[lineChart.config.jsonName] = lineChart;
+    scc.lib.resources.lineCharts[lineChart.config.jsonName] = lineChart;
   }
   
   scc.conf.resources.chartConfigWorkers.forEach(function(config) {
@@ -442,17 +442,17 @@ scc.modules.Resources = function() {
   
   // update boxes (needed to show the charts on reload)
   setTimeout(function() {
-    show_boxes(scc.settings.get().resources.section);
+    scc.lib.resources.show_boxes(scc.settings.get().resources.section);
   }, 600);
   
 
   // zooming buttons
   $("#chartZoomer .zoomIn").click(function() {
-    console.log("Zoom: In");
+    console.debug("Zoom: In");
     zooming(1.2);
   });
   $("#chartZoomer .zoomOut").click(function() {
-    console.log("Zoom: Out");
+    console.debug("Zoom: Out");
     zooming(0.8);
   });
   
@@ -461,7 +461,7 @@ scc.modules.Resources = function() {
    * @param {number} scale - The scale to which to zoom in or out.
    */
   var zooming = function(scale) {
-    $.each(scc.conf.resources.lineCharts, function(key, chart) {
+    $.each(scc.lib.resources.lineCharts, function(key, chart) {
       chart.setZoom(scale);
     });
   }
@@ -469,15 +469,15 @@ scc.modules.Resources = function() {
 
   // moving buttons
   $("#chartZoomer .moveLeft").click(function() {
-    console.log("Move: Left");
+    console.debug("Move: Left");
     moving(-1);
   });
   $("#chartZoomer .moveRight").click(function() {
-    console.log("Move: Right");
+    console.debug("Move: Right");
     moving(1);
   });
   $("#chartZoomer .moveOrigin").click(function() {
-    console.log("Move: Origin");
+    console.debug("Move: Origin");
     moving(0);
   });
 
@@ -486,7 +486,7 @@ scc.modules.Resources = function() {
    * @param {number} scale - The scale to which to shift to.
    */
   var moving = function(scale) {
-    $.each(scc.conf.resources.lineCharts, function(key, chart) {
+    $.each(scc.lib.resources.lineCharts, function(key, chart) {
       chart.setMove(scale);
     });
   }
@@ -518,8 +518,8 @@ scc.modules.Resources = function() {
    * breaks down. Redraws all charts so that they show current data.
    */
   this.onclose = function() {
-    $.each(scc.conf.resources.lineCharts, function(chartKey) {
-      scc.conf.resources.lineCharts[chartKey].updateChart();
+    $.each(scc.lib.resources.lineCharts, function(chartKey) {
+      scc.lib.resources.lineCharts[chartKey].updateChart();
     });
   }
 
@@ -594,7 +594,6 @@ scc.modules.Resources = function() {
         if (scc.conf.resources[resource].hasOwnProperty(chart)) {
           console.dir(scc.conf.resources[resource][chart].skip);
           if (scc.conf.resources[resource][chart].skip) {
-            console.log("> " + chart);
             return true;
           }
         }
@@ -616,7 +615,7 @@ scc.modules.Resources = function() {
     }
     
     // update all graphs
-    $.each(scc.conf.resources.lineCharts, function(k,v) { v.update(msg); });
+    $.each(scc.lib.resources.lineCharts, function(k,v) { v.update(msg); });
     
 
     if (computationState != "converged") {
@@ -633,9 +632,9 @@ scc.modules.Resources = function() {
       
       // update estimations
       if (estimationsLastUpdated.addMilliseconds(scc.conf.resources.intervalEstimation) <= msg.timestamp) {
-        if (scc.conf.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
-          var maxMemory = scc.conf.resources.lineCharts.runtime_mem_max.dataLatest();
-          var avgMemory = scc.conf.resources.lineCharts.runtime_mem_total.dataAvg();
+        if (scc.lib.resources.lineCharts.runtime_mem_total.dataLength() >= 10) {
+          var maxMemory = scc.lib.resources.lineCharts.runtime_mem_max.dataLatest();
+          var avgMemory = scc.lib.resources.lineCharts.runtime_mem_total.dataAvg();
           var edges     = Array.sum(msg.workerStatistics.numberOfOutgoingEdges);
           var vertices  = Array.sum(msg.workerStatistics.numberOfVertices);
           var fraction  = maxMemory / avgMemory;
@@ -658,7 +657,7 @@ scc.modules.Resources = function() {
   this.handleStateChange = function(msg) {
     
     if (computationState == "" || msg.state == "resetting") {
-      $.each(scc.conf.resources.lineCharts, function(key, chart) {
+      $.each(scc.lib.resources.lineCharts, function(key, chart) {
         chart.addComputationState("reset");
       });
     }
@@ -670,7 +669,7 @@ scc.modules.Resources = function() {
     }
     
     if (msg.state == "converged") {
-      $.each(scc.conf.resources.lineCharts, function(key, chart) {
+      $.each(scc.lib.resources.lineCharts, function(key, chart) {
         chart.addComputationState("converge");
       });
     }

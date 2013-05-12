@@ -17,13 +17,14 @@
  *  
  */
 
+
 /**
  * Class that encapsulates a complete graph; it includes all data that needs to 
  * be stored about a graph, as well as the data that is visualized in the graph.
  * This class also offers methods to set up and update a graph.
  * @constructor
  */
-var LineChart = function() {
+scc.lib.resources.LineChart = function() {
   
   /**
    * Default configuration of a chart. This can be overridden by recreating a
@@ -260,8 +261,8 @@ var LineChart = function() {
     
     // set default prettyName to jsonName if needed
     if (this.config.prettyName == "") {
-      if (chartNames[this.config.jsonName] != null) {
-        this.config.prettyName = chartNames[this.config.jsonName];
+      if (scc.lib.resources.chartNames[this.config.jsonName] != null) {
+        this.config.prettyName = scc.lib.resources.chartNames[this.config.jsonName];
       } else {
         this.config.prettyName = this.config.jsonName;
       }

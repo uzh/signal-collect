@@ -19,27 +19,6 @@
  */
 
 /**
- * The project container variable scc which appears in the global namespace
- * @namespace
- * @property {object} modules - The module classes that can be instantiated.
- * @property {object} consumers - The instantiated modules
- * @property {object} defaults - The default settings of each module
- * @property {object} orders - The pending orders, zero or one for each consumer
- * @property {object} callbacks - Zero or one callback for each consumer to be
- *     called once a reply has been received from the server
- * @property {object} conf - Container for the configurable parameters
- */
-var scc = {"modules": {}, "consumers": {}, "defaults": {}, "orders": {}, 
-           "callbacks": {}, "conf": {}, "lib": { "graph": {}, "resources": {} }};
-
-/**
- * Container for the configurable parameters
- * @property {object} graph - Container for the configurable graph parameters
- * @property {object} resources - Container for the configurable resources parameters
- */
-scc.conf = {"graph": {}, "resources": {}};
-
-/**
  * Interval in milliseconds between two consecutive chart updates.
  * @type {number}
  */
@@ -164,12 +143,12 @@ scc.conf.resources.resourceBoxes = {
  * @type {Array.<Objects>}
  */
 scc.conf.resources.chartConfigWorkers = [
-                   {jsonName : "messagesSent", dataCallback: sumMessageSent },
+                   {jsonName : "messagesSent", dataCallback: scc.lib.resources.sumMessageSent },
                    {jsonName : "messagesSentToNodes"},
                    {jsonName : "messagesSentToWorkers"},
                    {jsonName : "messagesSentToCoordinator"},
                    {jsonName : "messagesSentToOthers"},
-                   {jsonName : "messagesReceived", dataCallback: sumMessageReceived },
+                   {jsonName : "messagesReceived", dataCallback: scc.lib.resources.sumMessageReceived },
                    {jsonName : "signalMessagesReceived"},
                    {jsonName : "otherMessagesReceived"},
                    {jsonName : "requestMessagesReceived"},

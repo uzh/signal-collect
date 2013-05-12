@@ -105,7 +105,7 @@ STR = {
  * Configure the pretty name of the charts based on their name from the JSON object.
  * @type {Object}
  */
-chartNames = {
+scc.lib.resources.chartNames = {
     "messagesSent": "Messages Sent in Total (#)",
     "messagesSentToNodes": "Messages Sent to Nodes (#)",
     "messagesSentToWorkers": "Messages Sent to Workers (#)",

@@ -39,7 +39,7 @@ Array.sumElements = function(sum, array) {
  * @param {Object} data - The data object that will be looked at.
  * @return {Array.<number>} - The summed array values.
  */
-var sumMessageSent = function(data) {
+scc.lib.resources.sumMessageSent = function(data) {
   var statistics = [ "messagesSentToNodes",
                      "messagesSentToWorkers",
                      "messagesSentToCoordinator",
@@ -58,7 +58,7 @@ var sumMessageSent = function(data) {
  * @param {Object} data - The data object that will be looked at.
  * @return {Array.<number>} - The summed array values.
  */
-var sumMessageReceived = function(data) {
+scc.lib.resources.sumMessageReceived = function(data) {
   var statistics = [ "otherMessagesReceived",
                      "requestMessagesReceived",
                      "signalMessagesReceived",
