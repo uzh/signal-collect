@@ -64,9 +64,9 @@ $(document).ready(function() {
       "    <li>by searching for vertices with an ID containing the given string</li>" + 
       "    <li>by <strong>double-clicking</strong> on a vertex to expand its vicinity</li>" +
       "    <li>by clicking on 'Selected vertices' and then using the mouse to draw a rectangle around several vertices to expand</li></ul>" +
-      "Signal/Collect Console remembers which nodes have been previously added to the canvas even beyond a restart of the server or your browser!",
+      "Signal/Collect Console remembers which vertices have been previously added to the canvas even beyond a restart of the server or your browser!",
     "#gd_container":
-      "Clear the entire canvas or remove nodes by drawing a rectangle around them. You can also remove all vertices except the ones most recently added to the canvas, or any vertices that don't have any edges (orphans).",
+      "Clear the entire canvas or remove vertices by drawing a rectangle around them. You can also remove all vertices except the ones most recently added to the canvas, or any vertices that don't have any edges (orphans).",
     "#cGraphDesign":
       "Choose how the vertices in the graph should look like. You can make the vertex size, fill color and outline color correspond to " +
       "certain properties of the vertex.",

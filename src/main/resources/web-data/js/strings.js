@@ -24,7 +24,7 @@
  */
 scc.STR = {
        "BreakConditions": {
-         "invalidId": "A node with the ID you provided does not exist",
+         "invalidId": "A vertex with the ID you provided does not exist",
          "invalidState": "The state you provided is invalid. It must be something that can be parsed as a double",
          "unknownError": "Unknown validation error: ",
          "noConditions": "No conditions specified",
@@ -41,12 +41,12 @@ scc.STR = {
        },
        "Graph": {
          "expositionEmpty":
-           "Click on a node to expose its details. Click and drag the border of this box to make it larger or smaller.",
+           "Click on a vertex to expose its details. Click and drag the border of this box to make it larger or smaller.",
          "canvasEmpty":
            "Canvas is empty: use the tools on the left to add and remove vertices. "  +
            "Older vertices will automatically be removed once the maximum vertex count is reached.",
          "addBySubstring": 
-           "Node with ID having this substring"
+           "Vertex with ID having this substring"
        },
        "State": {
          "undetermined": [
