@@ -294,7 +294,7 @@ scc.modules.Log = function() {
   this.onopen = function() {
     // make it using the full height
     var onResize = (function() {
-      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 220) + "px");
+      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 240) + "px");
     });
     $(document).ready(onResize);
     $(window).resize(onResize);

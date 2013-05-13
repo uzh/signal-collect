@@ -141,5 +141,5 @@ scc.lib.resources.chartNames = {
     "jmx_committed_vms": "Committed Virtual Memory Size (B)",
     "runtime_mem_max": "Max Memory (B)",
     "runtime_mem_free": "Free Memory (B)",
-    "runtime_mem_total": "Total Memory (B)",
+    "runtime_mem_total": "Used Memory (B)",
 };

@@ -32,14 +32,15 @@ scc.lib.resources.LineChart = function() {
    * @type {Object}
    */ 
   this.config = {
-      jsonName     : "",    // the name that is used in JSON 
-      skip         : false, // can be used to skip elements from the websocket (e.g. OS names)
-      prettyName   : "",    // name that will be shown on the chart
-      dataCallback : null,  // callback to get the data from JSON
-      numOfValues  : 100,   // number of values to show without zooming
+      jsonName     : "",      // the name that is used in JSON 
+      skip         : false,   // can be used to skip elements from the websocket (e.g. OS names)
+      prettyName   : "",      // name that will be shown on the chart
+      dataCallback : null,    // callback to get the data from JSON
+      numOfValues  : 100,     // number of values to show without zooming
       margin       : { top: 20, right: 20, bottom: 30, left: 50 },
-      width        : 550,   // the width of a chart
-      height       : 250,   // the height of a chart
+      width        : 550,     // the width of a chart
+      height       : 250,     // the height of a chart
+      type         : "worker" // the type of the chart, either 'worker' or 'node'
   };
   
   /**
@@ -254,6 +255,7 @@ scc.lib.resources.LineChart = function() {
         var stat = "workerStatistics";
         if (newData[stat][that.jsonName] == null) {
           stat = "nodeStatistics";
+          that.type = "node";
         }
         return newData[stat][that.jsonName];
       };
@@ -497,9 +499,11 @@ scc.lib.resources.LineChart = function() {
     }
 
     var newMinMax = Array.getMinMax(newData);
+    var minText = "Min" + (this.config.type=="worker" ? " = Worker ID: "+workerIds[newMinMax.min.id] : "");
+    var maxText = "Max" + (this.config.type=="worker" ? " = Worker ID: "+workerIds[newMinMax.max.id] : "");
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average", type:"avg" });
-    data[1].push({ date:currentDate, value:newMinMax.min.v, id:"Min = Worker ID: "+workerIds[newMinMax.min.id], type:"min" });
-    data[2].push({ date:currentDate, value:newMinMax.max.v, id:"Max = Worker ID: "+workerIds[newMinMax.max.id], type:"max" });
+    data[1].push({ date:currentDate, value:newMinMax.min.v, id:minText, type:"min" });
+    data[2].push({ date:currentDate, value:newMinMax.max.v, id:maxText, type:"max" });
     
     currentHighestDate = currentDate;
 
