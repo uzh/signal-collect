@@ -265,7 +265,11 @@ scc.modules.Graph = function() {
                                      vertexCountIntervals[i] + '</option>');
     }
     populateTargetCountSelector(vertexCountIntervals[vertexCountIntervals.length-1]);
-    $('input[type="text"]').click(function(e) { $(this).select(); });
+    $('#gs_addBySubstring').click(function(e) { 
+      if ($(this).val() == GSTR["addBySubstring"]) {
+        $(this).select();
+      }
+    });
     $('#gs_addBySubstring').keypress(function(e) {
       if ( e.which == 13 ) { 
         e.preventDefault();
@@ -617,6 +621,16 @@ scc.modules.Graph = function() {
   $("#gp_drawEdges").change(function (e) { 
     var val = $(this).val();
     graphD3.setEdgeDrawing(val);
+  });
+
+  /**
+   * Handler called when the user unfocuses the id-substring field. Reverts
+   * value to default if it's left empty.
+   */
+  $("#gs_addBySubstring").change(function () {
+    if ($("#gs_addBySubstring").val().length == 0) {
+      $("#gs_addBySubstring").val(GSTR.addBySubstring); 
+    }
   });
 };
 

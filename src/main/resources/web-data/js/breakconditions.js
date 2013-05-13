@@ -341,4 +341,18 @@ scc.modules.BreakConditions = function () {
   $("#gc_state").val(BSTR.enterState); 
   $("#gc_vertexId").val(BSTR.pickVertex); 
 
+  /**
+   * Handler called when clicking inside the field. Auto-selects the string
+   * if it's the default string.
+   */
+  var autoselect = function(e) { 
+    if ($(this).val() == BSTR.pickVertex ||
+        $(this).val() == BSTR.enterState) {
+      $(this).select();
+    }
+  };
+  $('#gc_state').click(autoselect);
+  $('#gc_vertexId').click(autoselect);
+
+
 }
