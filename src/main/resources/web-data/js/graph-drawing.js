@@ -305,7 +305,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
           exposedVertexId = data.id;
           localStorage["exposedVertexId"] = exposedVertexId;
           $("#exposition_background").text("");
-          graphModule.expose(data.id, data.info);
+          graphModule.expose(data);
         }
       }
     });
@@ -584,7 +584,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       if (exposedVertex != undefined) {
         var data = exposedVertex.__data__;
         $("#exposition_background").text("");
-        graphModule.expose(data.id, data.info);
+        graphModule.expose(data);
       }
     }
 

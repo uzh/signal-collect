@@ -158,14 +158,17 @@ scc.modules.Graph = function() {
    * @param {string} id the id of the vertex
    * @param {object} id the arbitrary json data to display
    */
-  this.expose = function (id, json) {
+  this.expose = function (data) {
     // Transform the json into a tree for d3's tree layout
-    var tree = { "name": "root", "children": jsonIntoTree(json)}
+    var tree = { "name": "root", "children": jsonIntoTree(data.info)}
 
     // Clicking on the Id shall load the node
     $("#exposition_title").html(
         '<span class="ttop">Information exposed by vertex with ID:</span><br/>' + 
-        '<span class="tid">' + id + '</span>')
+        '<span class="tid">' + data.id + '</span><br/>' +
+        '<span>State: ' + data.state + '</span><br/>' +
+        '<span>Signal score: ' + data.ss + '</span><br/>' +
+        '<span>Collect score: ' + data.cs + '</span><br/>')
     $(".tid").click(function () {
       graphD3.addBySubstring($(this).text());
     });
