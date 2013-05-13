@@ -595,7 +595,10 @@ scc.lib.resources.LineChart = function() {
         .attr({
           x1: x(now), y1: 0,
           x2: x(now), y2: this.config.height
-        });
+        })
+        // and add a tooltip
+        .append("svg:title")
+        .text("The computation " + (type == "converge" ? "converged" : "has been reset") + " at " + now.dateTime());
   };
   
 };
