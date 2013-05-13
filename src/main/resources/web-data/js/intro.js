@@ -92,14 +92,15 @@ $(document).ready(function() {
     "#mode_resources":
       "To change to the 'Resources', just click on it.",
     "#crs_statistics h1":
-      "First you will see statistics about your infrastructure, the computation that is running, the graph parameters," +
+      "First you will see statistics about your infrastructure, the computation that<br /> is running, the graph parameters," +
       " and estimations about the graph size.",
     "#cResourceComputation":
       "Besides statistics, you can also look at log messages and several different charts.",
     "#crs_nodecharts h1":
-      "A chart draws three different lines over time. The blue line visualizes the lowest value over all workers, the" +
-      " red line is the highest value, and the black line is the average value. You can zoom and shift the charts by" + 
-      " using the controls in the upper right.",
+      "<ul><li>A chart draws three different lines over time. The <span style=\"color:blue;\">blue</span> line" +
+      " visualizes the lowest value over<br /> all nodes or workers, the <span style=\"color:red;\">red</span>" +
+      " line is the highest value, and the black line is the average value.</li><li>The controls in the upper" +
+      " right can be used to collectively <strong>zoom, shift, and reset all charts</strong>.</li></ul>",
     "#cResourceProblems":
       "Should you ever have a problem with a computation, we try to help in this section. For every problem or" + 
       " question, we try to explain why this could have happened and show information that might help in solving" +
