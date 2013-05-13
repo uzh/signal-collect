@@ -126,7 +126,7 @@ scc.modules.Configuration = function() {
    * is established. Requests data from the ConfigurationProvider.
    */
   this.onopen = function () {
-    scc.order({"provider": "configuration"});
+    scc.order({"requestor": "Resources", "provider": "configuration"});
   }
     
   /**
@@ -299,7 +299,7 @@ scc.modules.Log = function() {
     $(document).ready(onResize);
     $(window).resize(onResize);
 
-    scc.order({"provider": "log"});
+    scc.order({"requestor": "Resources", "provider": "log"});
   }
 
   /**
@@ -371,7 +371,7 @@ scc.modules.Log = function() {
       debugMessages.slice(0, numDebugMessages-maxDebugMessages).remove();
     }
 
-    scc.order({"provider": "log"}, scc.conf.resources.intervalLogs);
+    scc.order({"requestor": "Resources", "provider": "log"}, scc.conf.resources.intervalLogs);
   }
   
 }
@@ -497,7 +497,7 @@ scc.modules.Resources = function() {
    * is established. Requests data from the ResourceProvider.
    */
   this.onopen = function () {
-    scc.order({"provider": "resources"})
+    scc.order({"requestor": "Resources", "provider": "resources"})
   }
 
   /**
@@ -649,7 +649,7 @@ scc.modules.Resources = function() {
     
     }
     
-    scc.order({"provider": "resources"}, scc.conf.resources.intervalCharts);
+    scc.order({"requestor": "Resources", "provider": "resources"}, scc.conf.resources.intervalCharts);
   }
   
   

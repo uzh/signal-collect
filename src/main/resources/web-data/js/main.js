@@ -206,9 +206,9 @@ $(document).ready(function() {
       if (provider == "notready") {
         var request = j["request"];
         scc.order(request, 500);
-        var targetProvider = j["targetProvider"];
-        if (scc.consumers[targetProvider].notready != null) {
-          scc.consumers[targetProvider].notready(j);
+        var requestor = j["requestor"];
+        if (scc.consumers[requestor].notready != null) {
+          scc.consumers[requestor].notready(j);
         }
       }
       // Error messages are printed to the error pop-up, including the stack-
@@ -226,9 +226,9 @@ $(document).ready(function() {
       }
       // Callees ordering information using scc.order can specify a callback
       // which will be called here
-      if (scc.callbacks[id]) { 
-        scc.callbacks[id]();
-        delete scc.callbacks[id];
+      if (scc.callbacks[provider]) { 
+        scc.callbacks[provider]();
+        delete scc.callbacks[provider];
       }
       // Any remaining messages are forwarded to their respective consumers
       for (var m in scc.consumers) { 
@@ -293,7 +293,7 @@ $(document).ready(function() {
     if (typeof(msg) == "string") {
       msg = JSON.parse(msg);
     }
-    id = msg.provider;
+    var id = msg.provider;
     if (!delay) { var delay = 0; }
     if (scc.orders[id]) { scc.resetOrders(id); }
     scc.callbacks[id] = cb;

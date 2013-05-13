@@ -51,10 +51,20 @@ scc.modules.State = function() {
       if ($(this).hasClass("blocked")) { return; }
       pendingCommand = true;
       $("#pending_command").show();
-      scc.order({"provider": "controls", "control": control}); 
+      scc.order({"requestor": "State", "provider": "controls", "control": control}); 
       $("#controls").find(".icon").addClass("blocked");
     });
   });
+
+  /**
+   * Order state data.
+   */
+  var order = function(o, delay) {
+    if (o == undefined) { o = {}; }
+    o["requestor"] = "State";
+    o["provider"] = "state";
+    scc.order(o, delay);
+  };
 
   /**
    * Function that is called by the main module when a new WebSocket connection
@@ -63,7 +73,7 @@ scc.modules.State = function() {
    */
   this.onopen = function() {
     firstTry = true;
-    scc.order({"provider": "state"}); 
+    order(); 
   };
 
   /**
@@ -115,7 +125,7 @@ scc.modules.State = function() {
     // Retry at increasing intervals if the mode is undetermined
     if (j.state == "undetermined") {
       setTimeout(function () {
-        scc.order({"provider": "state"}); 
+        order(); 
       }, retryMillis);
       retryMillis *= retryMillisMultiplier;
     }
@@ -146,7 +156,7 @@ scc.modules.State = function() {
       }
       if (scc.consumers.Graph.autoRefresh == true) {
         setTimeout(function () {
-          scc.order({"provider": "state"}); 
+          order(); 
         }, 1000);
       }
       return

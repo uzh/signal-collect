@@ -97,10 +97,10 @@ class InvalidDataProvider(msg: JValue, comment: String = "No comment") extends D
 class NotReadyDataProvider(msg: String) extends DataProvider {
   implicit val formats = DefaultFormats
   val j = parse(msg)
-  val p = (j \ "provider").extract[String]
+  val p = (j \ "requestor").extract[String]
   def fetch(): JObject = {
     ("provider" -> "notready") ~
-    ("targetProvider" -> p) ~
+    ("requestor" -> p) ~
     ("msg" -> "The signal/collect computation is not ready yet") ~
     ("request" -> msg)
   }

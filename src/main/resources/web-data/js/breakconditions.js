@@ -73,9 +73,13 @@ scc.modules.BreakConditions = function () {
   /**
    * Order break condition data in order to update the condition list
    */
-  this.order = function() {
-    scc.order({"provider": "breakconditions"});
+  var order = function(o, delay) {
+    if (o == undefined) { o = {}; }
+    o["requestor"] = "BreakConditions";
+    o["provider"] = "breakconditions";
+    scc.order(o, delay);
   };
+  this.order = order;
 
   /**
    * Function that is called by the main module when a message is received
@@ -133,7 +137,7 @@ scc.modules.BreakConditions = function () {
 
     if (j["status"] == "noExecution" ) {
       $("#gc_conditionList").append('<div class="condition none">' + BSTR.noExecution + '</div>');
-      scc.order({"provider": "breakconditions"}, 1000);
+      order({}, 1000);
       return;
     }
 
@@ -158,8 +162,7 @@ scc.modules.BreakConditions = function () {
 
     // Delete button handler
     $("#gc_conditionList .delete").click(function (e) { 
-      scc.order({
-          "provider": "breakconditions",
+      order({
           "action": "remove",
           "id": $(this).attr("data-id")
       });
@@ -302,8 +305,7 @@ scc.modules.BreakConditions = function () {
         props["vertexId"] = $("#gc_vertexId").val();
         break;
     }
-    scc.order({
-        "provider": "breakconditions",
+    order({
         "action": "add",
         "name": name,
         "props": props

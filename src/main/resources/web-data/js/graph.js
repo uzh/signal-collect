@@ -67,7 +67,6 @@ scc.modules.Graph = function() {
   var graphModule = this;
   var graphD3 = new scc.lib.graph.GraphD3(this);
   this.graphD3 = graphD3;
-  var orderTemplate = {"provider": "graph"};
   var GSTR = STR["Graph"];
   var vertexCountIntervals = []; 
   for (var i = 5; i<=25; i+=5) { vertexCountIntervals.push(i) };
@@ -105,10 +104,12 @@ scc.modules.Graph = function() {
   /**
    * Wrapper function to do things that always come with a graph order
    */
-  this.order = function (order, delay) {
-    if (!delay) { delay = 0; }
-    order["exposeVertices"] = (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes")
-    scc.order(order, delay)
+  this.order = function (o, delay) {
+    if (o == undefined) { o = {}; }
+    o["requestor"] = "Graph";
+    o["provider"] = "graph";
+    o["exposeVertices"] = (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes")
+    scc.order(o, delay)
   };
 
   /**
@@ -117,9 +118,8 @@ scc.modules.Graph = function() {
    */
   this.update = function(delay) {
     if (graphD3.vertexStorage.get().length > 0) {
-      graphModule.order({"provider": "graph",
-             "query": "vertexIds",
-             "vertexIds": graphD3.vertexStorage.get()
+      graphModule.order({"query": "vertexIds",
+                         "vertexIds": graphD3.vertexStorage.get()
       }, delay);
     }
     else {
@@ -481,7 +481,7 @@ scc.modules.Graph = function() {
       var selectedVertexIds = $.map(selectedVertices, function (vertex, key) { 
         return vertex.__data__.id;
       });
-      graphModule.order({"provider": "graph",
+      graphModule.order({
              "query": "vertexIds",
              "vertexIds": selectedVertexIds,
              "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
