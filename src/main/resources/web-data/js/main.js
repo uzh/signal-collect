@@ -162,6 +162,11 @@ $(document).ready(function() {
    */
   scc.notBusy = function () { $("body,a,select,label").removeClass("busy"); }
 
+  /**
+   * Instantiate a layouter.
+   */
+  scc.layout = new scc.lib.Layout();
+
   /** 
    * Instantiates scc.webSocket with a ReconnectingWebSocket and overrides
    * its onopen, onmessage, onclose and onerror functions. Much of the
@@ -181,7 +186,7 @@ $(document).ready(function() {
      * @param {Event} e - The event that triggered the call
      */
     scc.webSocket.onopen = function(e) {
-      showMsg("#success", "WebSocket connection established", true);
+      scc.layout.showMsg("#success", "WebSocket connection established", true);
       for (var m in scc.consumers) { scc.consumers[m].onopen(e) }
     }; 
 
@@ -212,12 +217,12 @@ $(document).ready(function() {
       // after such an occurrence.
       else if (provider == "error") {
         console.log(j["stacktrace"]);
-        showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
+        scc.layout.showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
       }
       // If the server receives a request that it considers invalid, it sends
       // back this message. The error will be printed to the error pop-up
       else if (provider == "invalid") {
-        showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
+        scc.layout.showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
       }
       // Callees ordering information using scc.order can specify a callback
       // which will be called here
@@ -243,7 +248,7 @@ $(document).ready(function() {
     scc.webSocket.onclose = function(e) {
       $.each(scc.orders, function(k, v) { clearTimeout(v); });
       scc.orders = {};
-      showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
+      scc.layout.showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
       for (var m in scc.consumers) {
         if (scc.consumers[m].onclose != null) {
           scc.consumers[m].onclose(e);
@@ -340,12 +345,12 @@ $(document).ready(function() {
       if (view == "graph") {
         enableModules(["Graph", "BreakConditions"]);
       }
-      layout([view]);
+      scc.layout.layout([view]);
       break;
     default:
       enableModules(["Resources", "Configuration" , "Log", 
                      "Graph", "BreakConditions", "State"]);
-      layout(["graph", "resources"]);
+      scc.layout.layout(["graph", "resources"]);
   }
 
 });

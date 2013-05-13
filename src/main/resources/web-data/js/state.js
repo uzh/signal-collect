@@ -235,7 +235,7 @@ scc.modules.State = function() {
    */
   this.terminate = function(type, msg) {
     scc.webSocket.close();
-    showMsg(type, msg);
+    scc.layout.showMsg(type, msg);
     setTimeout(scc.createWebSocket, 10000);
   };
  
