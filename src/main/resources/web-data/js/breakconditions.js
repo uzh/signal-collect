@@ -173,7 +173,7 @@ scc.modules.BreakConditions = function () {
      */
     $(".vertex_link").click(function (e) {
       var id = $(this).attr("title");
-      scc.consumers.Graph.addBySubstring(id);
+      scc.consumers.Graph.graphD3.addBySubstring(id);
     });
 
     // The last child in the list doesn't have a bottom border

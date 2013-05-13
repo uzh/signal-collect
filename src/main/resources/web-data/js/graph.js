@@ -66,6 +66,7 @@ scc.modules.Graph = function() {
   // Object-scope variables
   var graphModule = this;
   var graphD3 = new scc.lib.graph.GraphD3(this);
+  this.graphD3 = graphD3;
   var orderTemplate = {"provider": "graph"};
   var GSTR = STR["Graph"];
   var vertexCountIntervals = []; 
@@ -221,7 +222,7 @@ scc.modules.Graph = function() {
                     }}).appendTo('body');
     d3.select(document).on("mousemove.resizeExposition", function () {
       d3.event.preventDefault();
-      ghostbar.css("left", d3.event.clientX);
+      ghostbar.css("left", d3.event.clientX-2);
     });
   });
       
@@ -232,7 +233,7 @@ scc.modules.Graph = function() {
   d3.select(document).on("mouseup.resizeExposition", function () {
     d3.event.preventDefault();
     if (resizingExposition) {
-      var newWidth = screen.width-d3.event.clientX;
+      var newWidth = $(document).width()-d3.event.clientX+2;
       scc.settings.set({"graph":{"layout": {"expositionWidth": newWidth}}});
       $('#exposition').css("width", newWidth);
       $('#graph_canvas').css("right", newWidth);

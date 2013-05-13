@@ -55,7 +55,8 @@ $(document).ready(function() {
       "<ul><li>The <strong>hop radius</strong> determines the maximum distance travelled from the source vertex when loading its vicinity. Raising it is only useful in graphs where all vertices have a very low degree.</li>" +
       "    <li><strong>computing incoming edges</strong> is somewhat more expensive than only computing outgoing ones when loading vicinities</li>" +
       "    <li>The <strong>refresh rate</strong> determines how often the graph auto-reloads when running a computation continuously</li>" +
-      "    <li>The <strong>maximum vertex count</strong> sets an upper cap on how many vertices are displayed. If there are too many, those which have been added earliest will be removed to make way for the new ones.</strong></li></ul>",
+      "    <li>The <strong>maximum vertex count</strong> sets an upper cap on how many vertices are displayed. If there are too many, those which have been added earliest will be removed to make way for the new ones.</li>" + 
+      "    <li><strong>Exposing vertex details</strong> allows you to view any information a vertex is exposing through its 'expose' function.</li></ul>",
     "#gs_container":
       "Add vertices..." +
       "<ul><li>by enabling an option to expand vertices on hover</li>" +
