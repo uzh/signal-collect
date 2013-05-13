@@ -164,11 +164,11 @@ scc.modules.Graph = function() {
 
     // Clicking on the Id shall load the node
     $("#exposition_title").html(
-        '<span class="ttop">Information exposed by vertex with ID:</span><br/>' + 
-        '<span class="tid">' + data.id + '</span><br/>' +
+        'ID: <span class="tid">' + data.id + '</span><br/>' +
         '<span>State: ' + data.state + '</span><br/>' +
         '<span>Signal score: ' + data.ss + '</span><br/>' +
         '<span>Collect score: ' + data.cs + '</span><br/>')
+    $("#exposition_data_title").html('Information exposed by Vertex:')
     $(".tid").click(function () {
       graphD3.addBySubstring($(this).text());
     });
