@@ -67,7 +67,7 @@ scc.modules.Graph = function() {
   var graphModule = this;
   var graphD3 = new scc.lib.graph.GraphD3(this);
   this.graphD3 = graphD3;
-  var GSTR = STR["Graph"];
+  var GSTR = scc.STR["Graph"];
   var vertexCountIntervals = []; 
   for (var i = 5; i<=25; i+=5) { vertexCountIntervals.push(i) };
   for (var i = 50; i<=250; i+=50) { vertexCountIntervals.push(i) };

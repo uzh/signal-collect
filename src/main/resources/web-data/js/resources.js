@@ -107,7 +107,7 @@ scc.lib.resources.update_chart = function(chart) {
  */
 $(document).ready(function() {
   $("#resources_panel_container label").click(function() {
-    section = $(this).attr("for").split("_")[1];
+    var section = $(this).attr("for").split("_")[1];
     scc.settings.set({'resources':{'section':section}});
   });
 });
@@ -293,7 +293,7 @@ scc.modules.Log = function() {
    */
   this.onopen = function() {
     // make it using the full height
-    onResize = (function() {
+    var onResize = (function() {
       $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 220) + "px");
     });
     $(document).ready(onResize);

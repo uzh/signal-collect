@@ -22,7 +22,7 @@
  * Objects which contains Strings needed in the UI of BreakConditions, Graph, and State.
  * @type {Object}
  */
-STR = {
+scc.STR = {
        "BreakConditions": {
          "invalidId": "A node with the ID you provided does not exist",
          "invalidState": "The state you provided is invalid. It must be something that can be parsed as a double",

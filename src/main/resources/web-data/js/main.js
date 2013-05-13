@@ -99,8 +99,8 @@ scc.Settings = function() {
    * @return {object} - The settings object (without any default values added)
    */
   function loadSettings() {
-    settings = {};
-    hash = top.location.hash.slice(1);
+    var settings = {};
+    var hash = top.location.hash.slice(1);
     if (hash) {
       try {
         hash = JSON.parse(hash);
@@ -199,7 +199,7 @@ $(document).ready(function() {
      *     it contains the message from the server inside the e.data property.
      */
     scc.webSocket.onmessage = function(e) {
-      j = JSON.parse(e.data);
+      var j = JSON.parse(e.data);
       var provider = j["provider"];
       // When a 'notready' message is received, the request that caused this
       // message is re-sent after waiting 500ms.
@@ -317,7 +317,7 @@ $(document).ready(function() {
    * specifies in its own this.requires property.
    * @param {Array.<string>} modules - The names of the modules to be enabled
    */
-  enableModules = function(modules) {
+  var enableModules = function(modules) {
     for (var m in modules) {
       var module = modules[m];
       scc.consumers[module] = new scc.modules[module]();

@@ -49,7 +49,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
   var vicinityAutoLoadDelay;
   var vertexSequence = 0;
   var vertexSequenceEnd = 0;
-  var GSTR = STR["Graph"];
+  var GSTR = scc.STR["Graph"];
   var signalThreshold = 0.01;
   var collectThreshold = 0.0;
 
@@ -302,7 +302,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         var target = d3.event.target;
         var data = target.__data__;
         if (target.tagName == "circle") {
-          exposedVertexId = data.id;
+          var exposedVertexId = data.id;
           localStorage["exposedVertexId"] = exposedVertexId;
           $("#exposition_background").text("");
           graphModule.expose(data);
@@ -391,14 +391,12 @@ scc.lib.graph.GraphD3 = function (graphModule) {
      * 'tick', the vertex positions need to be updated.
      * @param {Event} e - The event that triggered the call
      */
-    failed = false;
     force.on("tick", function(e) {
       // The user may choose if the graph edges should be drawn always, never,
       // or only when the graph is moving only very little or not at all. The
       // amount of movement is expressed by d3 through the .alpha() property.
       
       // Update the vertex and edge positions
-      if (failed) { return; }
       svgVertices
           .attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
@@ -408,7 +406,6 @@ scc.lib.graph.GraphD3 = function (graphModule) {
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
 
-      if (failed) { return; }
       // Add classes to edges depending on options and user interaction
       var drawEdges = scc.settings.get().graph.options["gp_drawEdges"];
       svgEdges.attr("class", function(o) {
@@ -541,7 +538,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
         for (var t = 0; t < targets.length; t++) {
-          edgeId = source + "-" + targets[t];
+          var edgeId = source + "-" + targets[t];
           if (edgeRefs[edgeId] == undefined) {
             // The edge hasn't existed yet. Update d3's edge array
             if (vertexRefs[source] != undefined && 
@@ -718,10 +715,6 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     }
 
     // Restart the forced layout if necessary
-    xValues = []
-    $.each(vertices, function (key, v) {
-      xValues.push(v.x)
-    });
     force.start();
   };
 
@@ -758,7 +751,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // remove edges that were connected to these vertices
     for (var i = 0; i < edges.length; i++) {
       var l = edges[i];
-      edgeId = l.source.id + "-" + l.target.id;
+      var edgeId = l.source.id + "-" + l.target.id;
       if (vertexIds.indexOf(l.source.id) != -1 ||
           vertexIds.indexOf(l.target.id) != -1) {
         edges.splice(i, 1);

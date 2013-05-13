@@ -112,7 +112,7 @@ scc.modules.State = function() {
       $("#pending_command").hide();
     }
     // Update the state information in the GUI
-    var stateStrings = STR.State[j.state];
+    var stateStrings = scc.STR.State[j.state];
     if (j.mode != undefined) {
       stateStrings = [j.mode + ": " + j.state, ""];
     }
@@ -134,7 +134,7 @@ scc.modules.State = function() {
       retryMillis = 200;
     }
     // Adjust UI if not in interactive execution mode
-    if (j.state == "undetermined" || !STR.State.hasOwnProperty(j.state)) {
+    if (j.state == "undetermined" || !scc.STR.State.hasOwnProperty(j.state)) {
       $("#cGraphControlEnabled").addClass("hidden");
       $("#iteration_container").addClass("hidden");
       $("#cGraphControlDisabled").removeClass("hidden");
@@ -142,7 +142,7 @@ scc.modules.State = function() {
     // If neither undetermined, nor interactive, then some other mode is being
     // used. We simply enable/disable auto-refreshing as long as the computation
     // is running.
-    if (!STR.State.hasOwnProperty(j.state)) {
+    if (!scc.STR.State.hasOwnProperty(j.state)) {
       if (j.state != undefined && 
           j.state.toLowerCase().indexOf("converged") != -1) {
         if (scc.consumers.Graph.autoRefresh == false) {

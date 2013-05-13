@@ -38,7 +38,7 @@ scc.modules.BreakConditions = function () {
   this.requires = ["breakconditions"];
 
   // Object-scope variables
-  BSTR = STR["BreakConditions"];
+  var BSTR = scc.STR["BreakConditions"];
 
   /**
    * Function that is called by the main module when a new WebSocket connection
@@ -320,7 +320,7 @@ scc.modules.BreakConditions = function () {
    * selects the condition type.
    */
   $("#gc_condition").change(function (e) {
-    conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"");
+    var conditionChoice = $("#gc_condition option:selected").val().replace(/:/g,"");
     switch(conditionChoice) {
       case BSTR.stateAbove:
       case BSTR.stateBelow:
