@@ -714,8 +714,17 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       $("#graph_background").text("Showing " + vertices.length + " vertices");
     }
 
-    // Restart the forced layout if necessary
-    force.start();
+    // If vertices were added or removed, restart the layouting
+    if (graphChanged) { 
+      force.start();
+    }
+    // Or if the layout is still running, remember the current cooling value,
+    // restart the layouting and reset the cooling value to what it was before.
+    else if (force.alpha() > 0) {
+      var a = force.alpha()
+      force.start();
+      force.alpha(a);
+    }
   };
 
   /**
