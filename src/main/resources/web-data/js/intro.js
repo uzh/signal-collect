@@ -105,7 +105,7 @@ $(document).ready(function() {
       "Should you ever have a problem with a computation, we try to help in this section. For every problem or" + 
       " question, we try to explain why this could have happened and show information that might help in solving" +
       " a problem or answer a question.",
-    "#tour":
+    "#title img":
       "This is the end of the tour. We hope you enjoy using this tool. " +
       "You can revisit the tour at any time by clicking on <strong>Tour</strong> in the lower right corner."
   };
