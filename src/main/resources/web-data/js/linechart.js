@@ -249,16 +249,20 @@ scc.lib.resources.LineChart = function() {
     // replace default configuration
     $.extend(this.config, config);
 
+    // add the correct chart type
+    var chartFilter = (scc.conf.resources.chartConfigNodes.filter(function(v){
+        return v.jsonName == this.jsonName; 
+      }, this.config)
+    );
+    if (chartFilter.length > 0) {
+      this.config.type = "node";
+    }
+    
     // set default data callback if needed
     if (this.config.dataCallback == null) {
       this.config.dataCallback = function(newData) {
         var that = this; // access this
-        var stat = "workerStatistics";
-        if (newData[stat][that.jsonName] == null) {
-          stat = "nodeStatistics";
-          that.type = "node";
-        }
-        return newData[stat][that.jsonName];
+        return newData[that.type + "Statistics"][that.jsonName];
       };
     }
     
@@ -357,9 +361,11 @@ scc.lib.resources.LineChart = function() {
     // add y axis to chart
     svg.append("g").attr("class", "y axis")
     
-    // add the pretty name to the chart
+    // add the pretty name and (when given) a description to the chart
     $("#" + this.config.jsonName + "Chart")
-      .append("<span class=\"chartTitle\" title=\"" + this.config.info + "\">" + this.config.prettyName + "</span>");
+      .append("<span class=\"chartTitle\" title=\"" + this.config.info + "\""
+      		+ (this.config.info.length ? " style=\"cursor:help;\"" : "")
+          + ">" + this.config.prettyName + "</span>");
 
     // show scatter points and tool tips
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");

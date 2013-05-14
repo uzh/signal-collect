@@ -186,8 +186,8 @@ scc.conf.resources.chartConfigNodes = [
                    {jsonName : "jmx_mem_free"},
                    {jsonName : "jmx_committed_vms"},
                    {jsonName : "runtime_mem_max"},
-                   {jsonName : "runtime_mem_free"},
-                   {jsonName : "runtime_mem_total"},
+                   {jsonName : "runtime_mem_free", dataCallback: scc.lib.resources.getFreeMemory },
+                   {jsonName : "runtime_mem_total", dataCallback: scc.lib.resources.getUsedMemory },
                    {jsonName : "os", skip: true },
                    {jsonName : "nodeId", skip: true },
                   ];

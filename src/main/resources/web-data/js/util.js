@@ -75,6 +75,33 @@ scc.lib.resources.sumMessageReceived = function(data) {
 };
 
 /**
+ * Specific dataCallback function to calculate the used memory.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {Array.<number>} - The summed array values.
+ */
+scc.lib.resources.getUsedMemory = function(data) {
+  var usedMemory = [];
+  for (var i=0; i<data.nodeStatistics.runtime_mem_total.length; i++) {
+    usedMemory[i] = data.nodeStatistics.runtime_mem_total[i] - data.nodeStatistics.runtime_mem_free[i];
+  }
+  return usedMemory;
+};
+
+/**
+ * Specific dataCallback function to calculate the free memory.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {Array.<number>} - The summed array values.
+ */
+scc.lib.resources.getFreeMemory = function(data) {
+  var usedMemory = scc.lib.resources.getUsedMemory(data);
+  var freeMemory = [];
+  for (var i=0; i<data.nodeStatistics.runtime_mem_free.length; i++) {
+    freeMemory[i] = data.nodeStatistics.runtime_mem_max[i] - usedMemory[i];
+  }
+  return freeMemory;
+};
+
+/**
  * Function that returns true when the passed DOM element is in the viewport,
  * false otherwise.
  * @param {Object} el - The element to check whether it is in the viewport.

@@ -112,142 +112,142 @@ scc.lib.resources.chartInfo = {
     },
     "messagesSentToNodes": {
       name: "Messages Sent to Nodes (#)",
-      info: ""
+      info: "The number of messages that were sent to nodes per worker."
     },
     "messagesSentToWorkers": {
       name: "Messages Sent to Workers (#)",
-      info: ""
+      info: "The number of messages that were sent to workers per worker."
     },
     "messagesSentToCoordinator": {
       name: "Messages Sent to Coordinator (#)",
-      info: ""
+      info: "The number of messages that were sent to the coordinator per worker."
     },
     "messagesSentToOthers": {
       name: "Messages Sent to Others (#)",
-      info: ""
+      info: "The number of messages that were sent to others per worker."
     },
     "messagesReceived": { 
       name: "Messages Received in Total (#)",
-      info: ""
+      info: "The number of messages that were received in total per worker."
     },
     "signalMessagesReceived": { 
       name: "Signal Messages Received (#)",
-      info: ""
+      info: "The number of signal messages that were received per worker."
     },
     "otherMessagesReceived": { 
       name: "Other Messages Received (#)",
-      info: ""
+      info: "The number of other messages that were received per worker."
     },
     "requestMessagesReceived": { 
       name: "Request Messages Received (#)",
-      info: ""
+      info: "The number of request messages that were received per worker."
     },
     "continueMessagesReceived": { 
       name: "Continue Messages Received (#)",
-      info: ""
+      info: "The number of continue messages that were received per worker."
     },
     "bulkSignalMessagesReceived": { 
       name: "Bulk Signal Messages Received (#)",
-      info: ""
+      info: "The number of bulk signal messages that were received per worker."
     },
     "heartbeatMessagesReceived": { 
       name: "Heartbeat Messages Received (#)",
-      info: ""
+      info: "The number of heartbeat messages that were received per worker."
     },
     "receiveTimeoutMessagesReceived": { 
       name: "Timeout Messages Received (#)",
-      info: ""
+      info: "The number of timeout messages that were received per worker."
     },
     "outgoingEdgesAdded": { 
       name: "Outgoing Edges Added (#)",
-      info: ""
+      info: "The number of outgoing edges that were added after the initial graph loading per worker."
     },
     "outgoingEdgesRemoved": { 
       name: "Outgoing Edges Removed (#)",
-      info: ""
+      info: "The number of outgoing edges that were removed after the initial graph loading per worker."
     },
     "numberOfOutgoingEdges": { 
       name: "Number of Outgoing Edges (#)",
-      info: ""
+      info: "The number of outgoing edges per worker."
     },
     "verticesRemoved": { 
       name: "Vertices Removed (#)",
-      info: ""
+      info: "The number of vertices that were removed after the initial graph loading per worker."
     },
     "verticesAdded": { 
       name: "Vertices Added (#)",
-      info: ""
+      info: "The number of vertices that were added after the initial graph loading per worker."
     },
     "numberOfVertices": { 
       name: "Number of Vertices (#)",
-      info: ""
+      info: "The number of vertices per worker."
     },
     "signalOperationsExecuted": { 
       name: "Signal Operations Executed (#)",
-      info: ""
+      info: "The number of signal operations executed per worker."
     },
     "collectOperationsExecuted": { 
       name: "Collect Operations Executed (#)",
-      info: ""
+      info: "The number of collect operations executed per worker."
     },
     "toCollectSize": { 
       name: "To Collect Size (#)",
-      info: ""
+      info: "The size of the To-Collect inbox per worker."
     },
     "toSignalSize": { 
       name: "To Signal Size (#)",
-      info: ""
+      info: "The size of the To-Signal inbox per worker."
     },
     "workerId": { 
       name: "Worker ID",
-      info: ""
+      info: "The ID of the individual workers."
     },
     "runtime_cores": { 
-      name: "Available Processors (#)",
-      info: ""
+      name: "Available Processor Cores (#)",
+      info: "The number of available processor cores per node."
     },
     "jmx_system_load": { 
       name: "System CPU Load (%)",
-      info: ""
+      info: "CPU load of the whole system per processor core (most computers have more than one core). Value is between 0.0 and 1.0."
     },
     "jmx_process_time": { 
       name: "Process CPU Time (NS)",
-      info: ""
+      info: "CPU time used by the process on which the JVM is running in nanoseconds per core."
     },
     "jmx_process_load": { 
       name: "Process CPU Load (%)",
-      info: ""
+      info: "Recent CPU usage for the JVM process per core."
     },
     "jmx_swap_free": { 
       name: "Free Swap Space Size (B)",
-      info: ""
+      info: "Amount of free swap space in byte per node."
     },
     "jmx_swap_total": { 
       name: "Total Swap Space Size (B)",
-      info: ""
+      info: "Total amount of swap space in byte per node."
     },
     "jmx_mem_total": { 
       name: "Total Physical Memory Size (B)",
-      info: ""
+      info: "Total physical memory (RAM) size in byte per node, not all of this may be used for the process."
     },
     "jmx_mem_free": { 
       name: "Free Physical Memory Size (B)",
-      info: ""
+      info: "Amount of free physical memory (RAM) size in byte per node, not all of this may be used for the process."
     },
     "jmx_committed_vms": { 
       name: "Committed Virtual Memory Size (B)",
-      info: ""
+      info: "Amount of virtual memory in bytes that is guaranteed to be available to the running process per node."
     },
     "runtime_mem_max": { 
       name: "Max Memory (B)",
-      info: ""
+      info: "Maximum memory in bytes that can be used by the JVM per node. This value is configurable in the JVM."
     },
     "runtime_mem_free": { 
       name: "Free Memory (B)",
-      info: ""
+      info: "Approximation of the free memory in bytes per node."
     },
     "runtime_mem_total": { 
       name: "Used Memory (B)",
-      info: ""
+      info: "Total amount of allocated memory in bytes per node. This value may increase up to 'Max Memory'."
     }
 };
