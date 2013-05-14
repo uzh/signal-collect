@@ -50,7 +50,7 @@ $(document).ready(function() {
       "canvas onto which you add the vertices you're interested in. When the view becomes cluttered, you can remove vertices you don't " +
       "need anymore.",
     "#gp_container":
-      "The choices you make here may have an impact on how quickly your query completes and on how smooth the graph will be " +
+      "The choices you make here may have an impact on how quickly your query completes and on how smoothly the graph will be " +
       "displayed. <br/>" +
       "<ul><li>The <strong>hop radius</strong> determines the maximum distance travelled from the source vertex when loading its vicinity. Raising it is only useful in graphs where all vertices have a very low degree.</li>" +
       "    <li><strong>computing incoming edges</strong> is somewhat more expensive than only computing outgoing ones when loading vicinities</li>" +
@@ -64,7 +64,7 @@ $(document).ready(function() {
       "    <li>by searching for vertices with an ID containing the given string</li>" + 
       "    <li>by <strong>double-clicking</strong> on a vertex to expand its vicinity</li>" +
       "    <li>by clicking on 'Selected vertices' and then using the mouse to draw a rectangle around several vertices to expand</li></ul>" +
-      "Signal/Collect Console remembers which vertices have been previously added to the canvas even beyond a restart of the server or your browser!",
+      "Signal/Collect Console remembers which vertices have been previously added to the canvas even beyond a restart of the server or your browser.",
     "#gd_container":
       "Clear the entire canvas or remove vertices by drawing a rectangle around them. You can also remove all vertices except the ones most recently added to the canvas, or any vertices that don't have any edges (orphans).",
     "#cGraphDesign":
@@ -80,11 +80,11 @@ $(document).ready(function() {
       " <strong>Pause</strong> the computation if it is running",
     "#step":
       " Performing a <strong>partial step</strong> will walk you through all the states of a single iteration, pausing before each of them: " +
-               "signalling, condition checks after signalling, collecting, condition checks after signalling, and global termination check.",
+               "signalling, condition checks after signalling, collecting, condition checks after collecting, and global termination check.",
     "#collect":
-      " Performing a <strong>full step</strong> continues the iteration and stops before the next 1st condition check.",
+      " Performing a <strong>full step</strong> continues the iteration and stops before the next signal step.",
     "#continue":
-      " Clicking <strong>continue</strong> will only pause the computation when you hit pause, or if a break condition fires.",
+      " When clicking <strong>continue</strong>, the computation will run until you pause it or until a break condition fires.",
     "#terminate":
       " Click <strong>terminate</strong> to end the computation and quit Signal/Collect.",
     "#stateContainer":
@@ -105,7 +105,7 @@ $(document).ready(function() {
       "Should you ever have a problem with a computation, we try to help in this section. For every problem or" + 
       " question, we try to explain why this could have happened and show information that might help in solving" +
       " a problem or answer a question.",
-    "#title img":
+    "#tour":
       "This is the end of the tour. We hope you enjoy using this tool. " +
       "You can revisit the tour at any time by clicking on <strong>Tour</strong> in the lower right corner."
   };
