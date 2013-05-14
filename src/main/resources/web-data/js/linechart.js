@@ -35,6 +35,7 @@ scc.lib.resources.LineChart = function() {
       jsonName     : "",      // the name that is used in JSON 
       skip         : false,   // can be used to skip elements from the websocket (e.g. OS names)
       prettyName   : "",      // name that will be shown on the chart
+      info         : "",      // further description of what the chart actually shows
       dataCallback : null,    // callback to get the data from JSON
       numOfValues  : 100,     // number of values to show without zooming
       margin       : { top: 20, right: 20, bottom: 30, left: 50 },
@@ -263,11 +264,16 @@ scc.lib.resources.LineChart = function() {
     
     // set default prettyName to jsonName if needed
     if (this.config.prettyName == "") {
-      if (scc.lib.resources.chartNames[this.config.jsonName] != null) {
-        this.config.prettyName = scc.lib.resources.chartNames[this.config.jsonName];
+      if (scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
+        this.config.prettyName = scc.lib.resources.chartInfo[this.config.jsonName].name;
       } else {
         this.config.prettyName = this.config.jsonName;
       }
+    }
+
+    // set further description to the chart if available
+    if (scc.lib.resources.chartInfo[this.config.jsonName].info != null) {
+      this.config.info = scc.lib.resources.chartInfo[this.config.jsonName].info;
     }
     
     // correct with and height
@@ -353,7 +359,7 @@ scc.lib.resources.LineChart = function() {
     
     // add the pretty name to the chart
     $("#" + this.config.jsonName + "Chart")
-      .append("<span class=\"chartTitle\">" + this.config.prettyName + "</span>");
+      .append("<span class=\"chartTitle\" title=\"" + this.config.info + "\">" + this.config.prettyName + "</span>");
 
     // show scatter points and tool tips
     formatTime = d3.time.format("%Y-%m-%d %H:%M:%S");

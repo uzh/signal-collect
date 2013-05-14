@@ -907,6 +907,7 @@ div#resourceBoxes .chartTitle {
   top: -35px;
   left: 55px;
   background-color:rgba(255,255,255,0.7);
+  cursor: help;
 }
 
 

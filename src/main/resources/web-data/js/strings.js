@@ -105,41 +105,149 @@ scc.STR = {
  * Configure the pretty name of the charts based on their name from the JSON object.
  * @type {Object}
  */
-scc.lib.resources.chartNames = {
-    "messagesSent": "Messages Sent in Total (#)",
-    "messagesSentToNodes": "Messages Sent to Nodes (#)",
-    "messagesSentToWorkers": "Messages Sent to Workers (#)",
-    "messagesSentToCoordinator": "Messages Sent to Coordinator (#)",
-    "messagesSentToOthers": "Messages Sent to Others (#)",
-    "messagesReceived": "Messages Received in Total (#)",
-    "signalMessagesReceived": "Signal Messages Received (#)",
-    "otherMessagesReceived": "Other Messages Received (#)",
-    "requestMessagesReceived": "Request Messages Received (#)",
-    "continueMessagesReceived": "Continue Messages Received (#)",
-    "bulkSignalMessagesReceived": "Bulk Signal Messages Received (#)",
-    "heartbeatMessagesReceived": "Heartbeat Messages Received (#)",
-    "receiveTimeoutMessagesReceived": "Timeout Messages Received (#)",
-    "outgoingEdgesAdded": "Outgoing Edges Added (#)",
-    "outgoingEdgesRemoved": "Outgoing Edges Removed (#)",
-    "numberOfOutgoingEdges": "Number of Outgoing Edges (#)",
-    "verticesRemoved": "Vertices Removed (#)",
-    "verticesAdded": "Vertices Added (#)",
-    "numberOfVertices": "Number of Vertices (#)",
-    "signalOperationsExecuted": "Signal Operations Executed (#)",
-    "collectOperationsExecuted": "Collect Operations Executed (#)",
-    "toCollectSize": "To Collect Size (#)",
-    "toSignalSize": "To Signal Size (#)",
-    "workerId": "Worker ID",
-    "runtime_cores": "Available Processors (#)",
-    "jmx_system_load": "System CPU Load (%)",
-    "jmx_process_time": "Process CPU Time (NS)",
-    "jmx_process_load": "Process CPU Load (%)",
-    "jmx_swap_free": "Free Swap Space Size (B)",
-    "jmx_swap_total": "Total Swap Space Size (B)",
-    "jmx_mem_total": "Total Physical Memory Size (B)",
-    "jmx_mem_free": "Free Physical Memory Size (B)",
-    "jmx_committed_vms": "Committed Virtual Memory Size (B)",
-    "runtime_mem_max": "Max Memory (B)",
-    "runtime_mem_free": "Free Memory (B)",
-    "runtime_mem_total": "Used Memory (B)",
+scc.lib.resources.chartInfo = {
+    "messagesSent": {
+      name: "Messages Sent in Total (#)",
+      info: "The number of messages that were sent in total (including messages to nodes, workers, others, or the coordinator) per worker."
+    },
+    "messagesSentToNodes": {
+      name: "Messages Sent to Nodes (#)",
+      info: ""
+    },
+    "messagesSentToWorkers": {
+      name: "Messages Sent to Workers (#)",
+      info: ""
+    },
+    "messagesSentToCoordinator": {
+      name: "Messages Sent to Coordinator (#)",
+      info: ""
+    },
+    "messagesSentToOthers": {
+      name: "Messages Sent to Others (#)",
+      info: ""
+    },
+    "messagesReceived": { 
+      name: "Messages Received in Total (#)",
+      info: ""
+    },
+    "signalMessagesReceived": { 
+      name: "Signal Messages Received (#)",
+      info: ""
+    },
+    "otherMessagesReceived": { 
+      name: "Other Messages Received (#)",
+      info: ""
+    },
+    "requestMessagesReceived": { 
+      name: "Request Messages Received (#)",
+      info: ""
+    },
+    "continueMessagesReceived": { 
+      name: "Continue Messages Received (#)",
+      info: ""
+    },
+    "bulkSignalMessagesReceived": { 
+      name: "Bulk Signal Messages Received (#)",
+      info: ""
+    },
+    "heartbeatMessagesReceived": { 
+      name: "Heartbeat Messages Received (#)",
+      info: ""
+    },
+    "receiveTimeoutMessagesReceived": { 
+      name: "Timeout Messages Received (#)",
+      info: ""
+    },
+    "outgoingEdgesAdded": { 
+      name: "Outgoing Edges Added (#)",
+      info: ""
+    },
+    "outgoingEdgesRemoved": { 
+      name: "Outgoing Edges Removed (#)",
+      info: ""
+    },
+    "numberOfOutgoingEdges": { 
+      name: "Number of Outgoing Edges (#)",
+      info: ""
+    },
+    "verticesRemoved": { 
+      name: "Vertices Removed (#)",
+      info: ""
+    },
+    "verticesAdded": { 
+      name: "Vertices Added (#)",
+      info: ""
+    },
+    "numberOfVertices": { 
+      name: "Number of Vertices (#)",
+      info: ""
+    },
+    "signalOperationsExecuted": { 
+      name: "Signal Operations Executed (#)",
+      info: ""
+    },
+    "collectOperationsExecuted": { 
+      name: "Collect Operations Executed (#)",
+      info: ""
+    },
+    "toCollectSize": { 
+      name: "To Collect Size (#)",
+      info: ""
+    },
+    "toSignalSize": { 
+      name: "To Signal Size (#)",
+      info: ""
+    },
+    "workerId": { 
+      name: "Worker ID",
+      info: ""
+    },
+    "runtime_cores": { 
+      name: "Available Processors (#)",
+      info: ""
+    },
+    "jmx_system_load": { 
+      name: "System CPU Load (%)",
+      info: ""
+    },
+    "jmx_process_time": { 
+      name: "Process CPU Time (NS)",
+      info: ""
+    },
+    "jmx_process_load": { 
+      name: "Process CPU Load (%)",
+      info: ""
+    },
+    "jmx_swap_free": { 
+      name: "Free Swap Space Size (B)",
+      info: ""
+    },
+    "jmx_swap_total": { 
+      name: "Total Swap Space Size (B)",
+      info: ""
+    },
+    "jmx_mem_total": { 
+      name: "Total Physical Memory Size (B)",
+      info: ""
+    },
+    "jmx_mem_free": { 
+      name: "Free Physical Memory Size (B)",
+      info: ""
+    },
+    "jmx_committed_vms": { 
+      name: "Committed Virtual Memory Size (B)",
+      info: ""
+    },
+    "runtime_mem_max": { 
+      name: "Max Memory (B)",
+      info: ""
+    },
+    "runtime_mem_free": { 
+      name: "Free Memory (B)",
+      info: ""
+    },
+    "runtime_mem_total": { 
+      name: "Used Memory (B)",
+      info: ""
+    }
 };
