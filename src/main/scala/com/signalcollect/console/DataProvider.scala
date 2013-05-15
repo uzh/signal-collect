@@ -117,7 +117,7 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
     val reply: JObject = socket.execution match {
       case Some(e) => 
         ("state" -> e.state) ~ 
-        ("steps" -> e.steps) ~ 
+        ("steps" -> e.stepTokens) ~ 
         ("iteration" -> e.iteration)
       case None => socket.executionConfiguration match {
         case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {

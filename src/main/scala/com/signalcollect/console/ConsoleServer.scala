@@ -53,7 +53,7 @@ import akka.event.Logging
 
 /** Trait that defines the interface for our InteractiveExecution */
 trait Execution {
-  var steps: Int              // How many sub-steps remain until pause
+  var stepTokens: Int         // How many partial steps remain until pausing
   var conditions: Map[String, BreakCondition] // Map of active conditions
   var conditionsReached: Map[String, String]  // Map of fired conditions
   var state: String           // Current state of the computation
