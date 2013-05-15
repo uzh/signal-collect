@@ -132,7 +132,10 @@ scc.lib.graph.GraphD3 = function (graphModule) {
    */
   var vertexDesign = {
     // functions returning a color
-    "gd_vertexColor":  {"Vertex state": function(d) { 
+    "gd_vertexColor":  {
+                      "Vertex type": function(d) { 
+                            return color(d.t); },
+                      "Vertex state": function(d) { 
                             return colorGradient(gradientDomain)(d.state); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
@@ -147,7 +150,10 @@ scc.lib.graph.GraphD3 = function (graphModule) {
                       "Collect threshold": function(d) { 
                             return d.cs > collectThreshold?"#00ff00":"#ff0000"; }
     },
-    "gd_vertexBorder": {"Vertex state": function(d) { 
+    "gd_vertexBorder": {
+                      "Vertex type": function(d) { 
+                            return color(d.t); },
+                      "Vertex state": function(d) { 
                             return colorGradient(gradientDomain)(d.state); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
@@ -163,9 +169,10 @@ scc.lib.graph.GraphD3 = function (graphModule) {
                             return d.seq > vertexSequenceEnd?"#00ff00":"#ff0000"; }
     },
     // functions returning a radius
-    "gd_vertexSize": { "Vertex state": function(d) { 
+    "gd_vertexSize": {
+                      "Vertex state": function(d) { 
                             return sizeGradient(gradientDomain)(d.state.replace(/[^0-9.,]/g, '')); },
-                       "All equal": function(d) { 
+                      "All equal": function(d) { 
                             return 5; }
     }
   };
@@ -287,6 +294,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
      */
     var fillTooltip = function (data) {
         $("#vertex_id").text(data.id);
+        $("#vertex_type").text(data.t);
         $("#vertex_state").text(data.state);
         $("#vertex_ss").text(data.ss);
         $("#vertex_cs").text(data.cs);
@@ -354,7 +362,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       else {
         hoveringOverVertex = undefined; 
         tooltip.css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
-        fillTooltip({"id": "-", "state": "-", "ss": "-", "cs": "-"});
+        fillTooltip({"id": "-", "state": "-", "ss": "-", "cs": "-", "t": "-"});
         clearTimeout(fadeTooltipTimeout);
         clearTimeout(vicinityAutoLoadDelay);
         fadeTooltipTimeout = setTimeout(function() {
@@ -512,7 +520,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
                        "es": data.es, "ss": data.ss, "cs": data.cs,
-                       "info": data.exposition});
+                       "info": data.exposition, "t": data.t});
         // Store the index of the vertex in the lookup table
         vertexRefs[id] = vertices.length - 1;
         newVertices = true;
@@ -523,6 +531,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         vertices[vertexRefs[id]].seq = vertexSequence;
         vertices[vertexRefs[id]].ss = data.ss;
         vertices[vertexRefs[id]].cs = data.cs;
+        vertices[vertexRefs[id]].t = data.t;
         vertices[vertexRefs[id]].info = data.exposition;
       }
     });

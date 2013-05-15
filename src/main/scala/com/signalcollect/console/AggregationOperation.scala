@@ -83,6 +83,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
                                        JField("es", targetVertices.size),
                                        JField("ss", i.scoreSignal),
                                        JField("cs", i.scoreCollect),
+                                       JField("t", v.getClass.toString.split("""\.""").last),
                                        JField("exposition",
                                          if (exposeVertices) {
                                            JObject(
