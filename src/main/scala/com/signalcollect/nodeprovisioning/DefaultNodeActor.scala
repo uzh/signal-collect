@@ -42,6 +42,8 @@ import scala.concurrent.duration.DurationInt
 import akka.actor.ReceiveTimeout
 import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.SentMessagesStats
+import akka.actor.ActorLogging
+import com.signalcollect.interfaces.ActorRestartLogging
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -70,7 +72,9 @@ case class IncrementorForNode(nodeId: Int) {
 class DefaultNodeActor(
   val nodeId: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
-  ) extends NodeActor {
+  ) extends NodeActor
+  with ActorLogging
+  with ActorRestartLogging {
 
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0

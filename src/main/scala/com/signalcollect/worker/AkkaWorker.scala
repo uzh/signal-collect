@@ -67,7 +67,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
   val heartbeatIntervalInMilliseconds: Int)
-  extends WorkerActor[Id, Signal] with ActorLogging {
+  extends WorkerActor[Id, Signal]
+  with ActorLogging
+  with ActorRestartLogging {
 
   override def postRestart(reason: Throwable): Unit = {
     val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."

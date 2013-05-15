@@ -25,8 +25,13 @@ import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.NodeReady
+import akka.actor.ActorLogging
+import com.signalcollect.interfaces.ActorRestartLogging
 
-class NodeProvisionerActor(numberOfNodes: Int) extends Actor {
+class NodeProvisionerActor(numberOfNodes: Int)
+  extends Actor
+  with ActorLogging
+  with ActorRestartLogging {
 
   var nodeListRequestor: Option[ActorRef] = None
 

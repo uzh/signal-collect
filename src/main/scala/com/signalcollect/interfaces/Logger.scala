@@ -19,10 +19,20 @@
 
 package com.signalcollect.interfaces
 
-import akka.event.Logging.LogLevel
-import akka.event.Logging.LogEvent
+import akka.actor.{ Actor, ActorLogging }
 import net.liftweb.json.JValue
 
 trait Logger {
   def getLogMessages: List[JValue]
+}
+
+trait ActorRestartLogging {
+  self: Actor with ActorLogging =>
+
+  override def preRestart(t: Throwable, message: Option[Any]) {
+    val msg = s"Unhandled error: $message"
+    log.error(t, msg)
+    println(msg)
+    t.printStackTrace
+  }
 }
