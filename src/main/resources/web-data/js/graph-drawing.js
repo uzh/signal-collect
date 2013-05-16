@@ -52,6 +52,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
   var GSTR = scc.STR["Graph"];
   var signalThreshold = 0.01;
   var collectThreshold = 0.0;
+  this.exposedVertexId = undefined;
 
   /**
    * The VertexStorageAgent provides method for setting, getting and adding to the
@@ -382,7 +383,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         .size([$("#graph_canvas").width(), $("#graph_canvas").height()])
         .nodes(vertices)
         .links(edges)
-        .friction(0.3)
+        .friction(0.4)
         .linkDistance(30)
         .charge(function (d) {
           var weight = 2;
@@ -588,9 +589,9 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     }
 
     // Update exposed vertex
-    if (typeof exposedVertexId == "string") {
+    if (typeof graphD3.exposedVertexId == "string") {
       var exposedVertex = svgVertices.filter(function (d, i) {
-        return d.id == exposedVertexId;
+        return d.id == graphD3.exposedVertexId;
       })[0][0];
       if (exposedVertex != undefined) {
         var data = exposedVertex.__data__;
@@ -728,17 +729,15 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       $("#graph_background").text("Showing " + vertices.length + " vertices");
     }
 
-    // If vertices were added or removed, restart the layouting
-    //if (graphChanged) { 
-    //  force.start();
-    //}
-    // Or if the layout is still running, remember the current cooling value,
+    // If the layout is still running, remember the current cooling value,
     // restart the layouting and reset the cooling value to what it was before.
+    // Double it if it's very low already.
     if (force.alpha() > 0 && force.alpha < 0.2) {
       var a = force.alpha()
       force.start();
       force.alpha(a*1.5);
     }
+    // Otherwise, give the layouting just a slight nudge.
     else {
       force.start();
       force.alpha(0.04);

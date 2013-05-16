@@ -73,7 +73,6 @@ scc.modules.Graph = function() {
   for (var i = 50; i<=250; i+=50) { vertexCountIntervals.push(i) };
   for (var i = 400; i<=1000; i+=100) { vertexCountIntervals.push(i) };
   var resizingExposition = false;
-  var exposedVertexId = undefined;
   var mouseClickCoords = undefined;
   var selectedVertices;
   var pickAction;
@@ -165,6 +164,7 @@ scc.modules.Graph = function() {
     // Clicking on the Id shall load the node
     $("#exposition_title").html(
         'ID: <span class="tid">' + data.id + '</span><br/>' +
+        '<span>Vertex type: ' + data.t + '</span><br/>' +
         '<span>State: ' + data.state + '</span><br/>' +
         '<span>Signal score: ' + data.ss + '</span><br/>' +
         '<span>Collect score: ' + data.cs + '</span><br/>')
@@ -287,7 +287,7 @@ scc.modules.Graph = function() {
     $("#gs_addBySubstring").val(GSTR.addBySubstring);
     if (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes") {
       $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
-      exposedVertexId = localStorage["exposedVertexId"];
+      graphD3.exposedVertexId = localStorage["exposedVertexId"];
       $("#exposition").fadeIn(100, function () {
         $('#graph_canvas').css("right", $("#exposition").width());
       });
@@ -601,7 +601,7 @@ scc.modules.Graph = function() {
     if (val == "Yes") {
       scc.consumers.Graph.update();
       $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
-      exposedVertexId = localStorage["exposedVertexId"];
+      graphD3.exposedVertexId = localStorage["exposedVertexId"];
       $("#exposition").fadeIn(100, function () {
         $('#graph_canvas').css("right", $("#exposition").width());
       });
@@ -609,6 +609,7 @@ scc.modules.Graph = function() {
     }
     else {
       $("#exposition").fadeOut(100)
+      $('#graph_canvas').css("right", 0);
     }
   });
 
