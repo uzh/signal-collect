@@ -479,7 +479,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       */
     def run() {
       lock.synchronized {
-        while (!userTermination && !globalTermination) { 
+        while (!userTermination) { 
           iteration += 1
 
           // Signalling
@@ -512,9 +512,13 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           // Global condition checks
           if (shouldCheckGlobalCondition) {
             waitAs("pausedBeforeGlobalChecks")
-            performStep("globalTerminationCheck", () => {
+            performStep("globalChecks", () => {
               globalTermination = isGlobalTerminationConditionMet(
                            parameters.globalTerminationCondition.get)
+              if (globalTermination) { 
+                stepTokens = 0
+                waitAs("globalConditionReached")
+              }
             })
           }
 
@@ -527,8 +531,6 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         stats.terminationReason = TerminationReason.Converged
       } else if (userTermination) {
         stats.terminationReason = TerminationReason.TerminatedByUser
-      } else if (globalTermination) {
-        stats.terminationReason = TerminationReason.GlobalConstraintMet
       }
 
     }

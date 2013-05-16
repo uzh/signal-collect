@@ -85,6 +85,9 @@ scc.STR = {
          "globalChecks": [
            "Checking global conditions...",
            "Checking global termination conditions..."],
+         "globalConditionReached": [
+           "Global term. condition reached!",
+           "The global termination condition has been reached. You may reset the graph to start over."],
          "resetting": [
            "Resetting graph...",
            "Resetting the graph to its initial state"],
