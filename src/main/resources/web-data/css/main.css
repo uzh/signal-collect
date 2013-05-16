@@ -256,6 +256,9 @@ a, a:visited {
 }
 
 .panel input[type="text"] {
+  background-color: #fff;
+  font-size: 13px;
+  color: #000;
   padding: 0;
   margin: 0;
   margin-left: 2%;
@@ -267,6 +270,8 @@ a, a:visited {
 
 .panel button, 
 .panel input[type="text"] + button {
+  color: #333;
+  font-size: 13px;
   padding: 0;
   margin: 0;
   width: 19%;
@@ -299,6 +304,7 @@ a, a:visited {
 }
 
 .panel button[disabled],
+.panel input[type="text"] + button[disabled],
 .panel button[disabled]:active {
   color: #999;
 }
