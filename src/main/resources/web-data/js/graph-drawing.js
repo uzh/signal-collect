@@ -382,8 +382,13 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         .size([$("#graph_canvas").width(), $("#graph_canvas").height()])
         .nodes(vertices)
         .links(edges)
-        .linkDistance(150)
-        .charge(-100);
+        .friction(0.3)
+        .linkDistance(30)
+        .charge(function (d) {
+          var weight = 2;
+          if (d.weight > weight) { weight = d.weight; }
+          return vertexSize(d)*-20*weight
+        })
     
     svgEdges = svg.append('svg:g').selectAll(".edge");
     svgVertices = svg.append('svg:g').selectAll(".vertex");
@@ -724,15 +729,19 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     }
 
     // If vertices were added or removed, restart the layouting
-    if (graphChanged) { 
-      force.start();
-    }
+    //if (graphChanged) { 
+    //  force.start();
+    //}
     // Or if the layout is still running, remember the current cooling value,
     // restart the layouting and reset the cooling value to what it was before.
-    else if (force.alpha() > 0) {
+    if (force.alpha() > 0 && force.alpha < 0.2) {
       var a = force.alpha()
       force.start();
-      force.alpha(a);
+      force.alpha(a*1.5);
+    }
+    else {
+      force.start();
+      force.alpha(0.04);
     }
   };
 
