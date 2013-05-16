@@ -296,7 +296,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     "return valid API result for provider 'state'" in {
       websocket.sendJsonOrderWithProvider("state")
       val json = websocket.getJsonResponse
-      (json \\ "state").values === "non-interactive"
+      (json \\ "state").values === "undetermined"
     }
     
     
