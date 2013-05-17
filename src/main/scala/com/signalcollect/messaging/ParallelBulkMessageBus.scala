@@ -1,21 +1,21 @@
 /*
  *  @author Philip Stutz
  *  @author Mihaela Verman
- *  
+ *
  *  Copyright 2013 University of Zurich
- *      
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ *
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
+ *
  */
 
 package com.signalcollect.messaging
@@ -39,7 +39,7 @@ class ParallelSignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(In
   def addSignal(signal: Signal, targetId: Id) {
     var itemIndex = writePermissionsGranted.getAndIncrement
     while (itemIndex > maxIndex) {
-      //Buffer is full, need to flush. 
+      //Buffer is full, need to flush.
       flushIfNecessary
       itemIndex = writePermissionsGranted.getAndIncrement
     }
