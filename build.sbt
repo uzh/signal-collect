@@ -2,6 +2,10 @@ import AssemblyKeys._
 
 assemblySettings
 
+net.virtualvoid.sbt.graph.Plugin.graphSettings
+
+org.scalastyle.sbt.ScalastylePlugin.Settings
+
 /** Project */
 name := "signal-collect"
 
