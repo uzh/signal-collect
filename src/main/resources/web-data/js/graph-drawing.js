@@ -123,7 +123,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
   var sizeGradient = function (domain) {
     var scale = d3.scale.linear()
         .domain(domain)
-        .range([2, 5, 30]);
+        .range([4, 10, 35]);
     return scale;
   };
 
@@ -727,7 +727,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       .attr("r", vertexSize);
 
     if (vertices.length == 0) {
-      this.resetDefaultStatus()
+      graphD3.resetDefaultStatus()
     }
     else {
       $("#graph_background").text("Showing " + vertices.length + " vertices");
