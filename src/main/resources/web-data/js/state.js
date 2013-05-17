@@ -99,8 +99,10 @@ scc.modules.State = function() {
   this.onmessage = function(j) {
     // If this is the first time a state message is received, update the graph.
     if (firstTry == true) {
-      firstTry = false;
-      scc.consumers.Graph.update();
+      try {
+        scc.consumers.Graph.update();
+        firstTry = false;
+      } catch (e) {}
     }
     // Receiving a message from controls means that the command was received.
     if (j.provider == "controls") { 
