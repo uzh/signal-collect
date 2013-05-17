@@ -188,6 +188,12 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   sockets.start
   println("WebSocket - Server started on port: " + sockets.getPort)
+  
+  /** Returns the HttpServer */
+  def getServer = server
+
+  /** Returns the WebSocketConsoleServer */
+  def getSockets = sockets
 
   /** Starts a new HTTP and WebSocket server, using the specified port for the
     * HTTP server if possible. Else attempts to find a pair of free ports and 

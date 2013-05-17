@@ -35,6 +35,8 @@ import java.net.URI
 import net.liftweb.json._
 import org.java_websocket.handshake.ServerHandshake
 import java.io.FileWriter
+import com.signalcollect.Graph
+import com.signalcollect.DefaultGraph
 
 @RunWith(classOf[JUnitRunner])
 class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
@@ -44,30 +46,31 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
   
   "ConsoleServer" should {
 
-    // server vals
+    // console server address and ports
     val serverHost = InetAddress.getByName(null)
     val serverPort = 8086
-    val server = new Socket
-
-    // socket vals
     val socketPort = serverPort + 100
-    val socket = new Socket
-    
-    // websocket var
+
+    // websocket connection
     var websocket : WebSocketClient = null
+    
+    // signal collect graph
+    var graph : DefaultGraph[Any, Any] = null
 
     
 
     "start successfully" in {
+      val serverConnection = new Socket
       val serverAddress = new InetSocketAddress(serverHost, serverPort)
       val timeoutInMilliseconds = 5000
       var isServerOnline = false
 
-      val graph = GraphBuilder.withConsole(true, serverPort).build
+      graph = GraphBuilder.withConsole(true, serverPort).build.asInstanceOf[DefaultGraph[Any, Any]]
       
       try {
-        server.connect(serverAddress, timeoutInMilliseconds)
+        serverConnection.connect(serverAddress, timeoutInMilliseconds)
         isServerOnline = true
+        serverConnection.close()
       } catch {
         case _ : Throwable => 
       }
@@ -78,13 +81,15 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     
     "start socket successfully" in {
+      val socketConnection = new Socket
       val socketAddress = new InetSocketAddress(serverHost, socketPort)
       val timeoutInMilliseconds = 5000
       var isSocketOnline = false
 
       try {
-        socket.connect(socketAddress, timeoutInMilliseconds)
+        socketConnection.connect(socketAddress, timeoutInMilliseconds)
         isSocketOnline = true
+        socketConnection.close()
       } catch {
         case _ : Throwable => 
       }
@@ -329,28 +334,21 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     
     "close websocket connection" in {
       try {
-        websocket.close()
+        websocket.closeBlocking()
         true        
       } catch { case _ : Throwable => false }
     }
-  
-  
+   
     
-    "stop successfully" in {
-      try {
-        server.close();
-        true
-      } catch { case _ : Throwable => false }
+    
+    "shutdown successfully" in {
+      val console = graph.getConsole
+      console.getServer.stop(5)
+      console.getSockets.stop(5000)
+      graph.shutdown
+      true
     }
     
-    
-    
-    "stop socket successfully" in {
-       try {
-         socket.close();
-         true
-       } catch { case _ : Throwable => false }
-    }
   }
   
   

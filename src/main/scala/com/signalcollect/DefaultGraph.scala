@@ -168,6 +168,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   initializeMessageBuses
 
+  /** Returns the ConsoleServer */
+  def getConsole = console
+  
   def initializeMessageBuses {
     log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
