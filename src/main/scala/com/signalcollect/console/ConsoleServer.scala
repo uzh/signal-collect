@@ -2,21 +2,21 @@
  *  @author Philip Stutz
  *  @author Carol Alexandru
  *  @author Silvan Troxler
- *  
+ * 
  *  Copyright 2013 University of Zurich
- *      
+ * 
  *  Licensed below the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ * 
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed below the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations below the License.
- *  
+ * 
  */
 
 package com.signalcollect.console
@@ -84,7 +84,7 @@ import BreakConditionName._
 /** A break condition for the interactive execution mode
   *
   * When creating a new break conditions, a number of checks are performed
-  * to check wether it is valid or not. If insufficient or invalid data has 
+  * to check wether it is valid or not. If insufficient or invalid data has
   * been provided then an IllegalArgumentException is thrown. This can occur
   * if the propsMap doesn't contain everything a break condition of a
   * particular type needs, or if the provided data is invalid. In any case,
@@ -120,7 +120,7 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
           }
         case otherwise => false
       }
-    } 
+    }
     else {
       false
     }, "Missing or invalid vertexId!")
@@ -132,18 +132,18 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
   }, "Missing expectedState!")
 
   require(
-    if (props.contains("expectedState")) { 
+    if (props.contains("expectedState")) {
       try {
         props("expectedState").toDouble
         true
       }
-      catch { 
-        case e: NumberFormatException => 
+      catch {
+        case e: NumberFormatException =>
           false
       }
     }
-    else { 
-      true 
+    else {
+      true
   }, "Invalid state! Needs to be parseable as double.")
  
   name match {
@@ -196,9 +196,9 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   def getSockets = sockets
 
   /** Starts a new HTTP and WebSocket server, using the specified port for the
-    * HTTP server if possible. Else attempts to find a pair of free ports and 
+    * HTTP server if possible. Else attempts to find a pair of free ports and
     * use those.
-    *  
+    * 
     *  @param httpPort attempt to start the HTTP server on this port
     */
   def startServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
@@ -233,7 +233,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   }
 
   /** Attempt to instantiate HTTP and WebSocket servers.
-    *  
+    * 
     *  @param httpPort attempt to start the HTTP server on this port
     *  @return httpPort attempt to start the HTTP server on this port
     */
@@ -276,7 +276,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   *
   * The handler automatically sets the mime type for files ending in
   * html, css, js, png, svg and ico. Other files are assumed to be
-  * plain text. 
+  * plain text.
   *
   * @constructor create a new FileServer
   */
@@ -315,7 +315,7 @@ class FileServer() extends HttpHandler {
       // If the file exists, use it (when using a cloned repository)
       if ((new File(root)).exists()) {
         val targetPath = {
-          if (target.endsWith(logFileName)) { target } 
+          if (target.endsWith(logFileName)) { target }
           else { root + "/" + target }
         }
         try {
@@ -327,7 +327,7 @@ class FileServer() extends HttpHandler {
             inputStream = new FileInputStream(root + "/html/404.html")
             t.getResponseHeaders.set("Content-Type", "text/html")
         }
-      } 
+      }
       // If the file doesn't exist, use the resource from the jar file
       else {
         inputStream = getClass().getClassLoader()
@@ -346,7 +346,7 @@ class FileServer() extends HttpHandler {
         .takeWhile(-1 !=)
         .foreach(os.write)
       file.close
-    } 
+    }
     catch {
       case e: Exception => {
         t.getResponseHeaders.set("Content-Type", "text/plain")
@@ -464,11 +464,11 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 object Toolkit {
   implicit val formats = DefaultFormats
 
-  /** Yield all the properties of an object as a Map of strings to JValue 
+  /** Yield all the properties of an object as a Map of strings to JValue
     *
     * Using introspection, this function prepares the serialization of
     * arbitrary case classes. It will create a map of the property name to
-    * whatever is contained in the property as a JValue. 
+    * whatever is contained in the property as a JValue.
     *
     * @tparam T the ClassTag of the object to be unpacked
     * @param obj the object to be unpacked

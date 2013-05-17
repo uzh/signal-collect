@@ -1,20 +1,20 @@
 /*
  *  @author Silvan Troxler
- *  
+ * 
  *  Copyright 2013 University of Zurich
- *      
+ * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ * 
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
+ * 
  */
 
 package com.signalcollect.console
@@ -72,7 +72,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isServerOnline = true
         serverConnection.close()
       } catch {
-        case _ : Throwable => 
+        case _ : Throwable =>
       }
 
       isServerOnline
@@ -91,7 +91,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isSocketOnline = true
         socketConnection.close()
       } catch {
-        case _ : Throwable => 
+        case _ : Throwable =>
       }
 
       isSocketOnline
@@ -105,7 +105,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         websocket = new WebSocketClient(websocketUri)
         websocket.sendJsonOrderWithProvider("test")
         websocket.getJsonResponse
-        true        
+        true
       } catch {
         case _ : Throwable => false
       }
@@ -163,7 +163,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "jmx_committed_vms",
         "runtime_mem_max",
         "runtime_mem_free",
-        "runtime_mem_total"    
+        "runtime_mem_total"
       );
 
       val providerResults = (json \\ "nodeStatistics").children
@@ -335,7 +335,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     "close websocket connection" in {
       try {
         websocket.closeBlocking()
-        true        
+        true
       } catch { case _ : Throwable => false }
     }
    
@@ -376,7 +376,7 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
     try {
       send(json)
     } catch {
-      case _ : Throwable => 
+      case _ : Throwable =>
     }
   }
   def getJsonResponse = {

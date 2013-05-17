@@ -1,21 +1,21 @@
 /*
  *  @author Carol Alexandru
  *  @author Silvan Troxler
- *  
+ * 
  *  Copyright 2013 University of Zurich
- *      
+ * 
  *  Licensed below the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ * 
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed below the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations below the License.
- *  
+ * 
  */
 
 package com.signalcollect.console
@@ -43,7 +43,7 @@ import akka.actor.ActorLogging
 /** The trait defining the interface every DataProvider has to implement. */
 trait DataProvider {
   def fetch(): JObject
-  def fetchInvalid(msg: JValue = JString(""), 
+  def fetchInvalid(msg: JValue = JString(""),
                    comment: String): JObject = {
     new InvalidDataProvider(msg, comment).fetch
   }
@@ -109,15 +109,15 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
 /** DataProvider used to fetch the current state of the computation.
   *
   * @constructor create a new StateDataProvider
-  * @param socket the WebSocketConsoleServer 
+  * @param socket the WebSocketConsoleServer
   */
 class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
                             extends DataProvider {
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
-      case Some(e) => 
-        ("state" -> e.state) ~ 
-        ("steps" -> e.stepTokens) ~ 
+      case Some(e) =>
+        ("state" -> e.state) ~
+        ("steps" -> e.stepTokens) ~
         ("iteration" -> e.iteration)
       case None => socket.executionConfiguration match {
         case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {
@@ -126,10 +126,10 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
             ("state" -> es.terminationReason.toString) ~
             ("totalExecutionTime" -> es.totalExecutionTime.toString) ~
             ("computationTime" -> es.computationTime.toString)
-          case None => 
+          case None =>
             ("mode" -> ec.executionMode.toString())
         }
-        case None => 
+        case None =>
           ("state" -> "undetermined")
       }
     }
@@ -149,14 +149,14 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
   * @param coordinator the Coordinator (who knows the graph conf)
   */
 class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
-                                    coordinator: Coordinator[Id, _]) 
+                                    coordinator: Coordinator[Id, _])
                                     extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
       case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(e)
       case otherwise => JString("unknown")
     }
-    ("provider" -> "configuration") ~ 
+    ("provider" -> "configuration") ~
     ("executionConfiguration" -> executionConfiguration) ~
     ("graphConfiguration" -> Toolkit.unpackObjects(Array(socket.graphConfiguration))) ~
     ("systemProperties" -> propertiesAsScalaMap(System.getProperties))
@@ -170,8 +170,8 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
   */
 class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
   def fetch(): JObject = {
-    ("provider" -> "log") ~ 
-    ("messages" -> coordinator.getLogMessages) 
+    ("provider" -> "log") ~
+    ("messages" -> coordinator.getLogMessages)
   }
 }
 
@@ -192,7 +192,7 @@ class ControlsProvider(socket: WebSocketConsoleServer[_],
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
 
-  def command(e: Execution, command: String): JObject = { 
+  def command(e: Execution, command: String): JObject = {
     command match {
       case "step" => e.step
       case "collect" => e.collect
@@ -245,7 +245,7 @@ case class BreakConditionContainer(
   * times.
   *
   * Wether the client supplies an action (to add or remove a condition) or not,
-  * the provider will always answer with a list of configured conditions and a 
+  * the provider will always answer with a list of configured conditions and a
   * list of reached conditions. If the action could not be performed (e.g. if
   * an invalid vertex ID has been supplied) an error message will be included.
   *
@@ -254,13 +254,13 @@ case class BreakConditionContainer(
   * @param socket the WebSocketConsoleServer
   * @param msg the request by the client
   */
-class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _], 
+class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
                                   socket: WebSocketConsoleServer[Id],
                                   msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
-  val workerApi = coordinator.getWorkerApi 
+  val workerApi = coordinator.getWorkerApi
 
   def fetchConditions(e: Execution): JObject = {
     val active = e.conditions.map { case (id, c) =>
@@ -274,32 +274,32 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
 
   def fetch(): JObject = {
     execution match {
-      case Some(e) => 
+      case Some(e) =>
         // add or remove conditions
         val request = (msg).extract[BreakConditionsRequest]
         request.action match {
           case Some(action) => action match {
             case "add" => request.name match {
-              case Some(name) => 
+              case Some(name) =>
                 try {
                   val n = BreakConditionName.withName(name)
                   request.props match {
-                    case Some(props) => 
+                    case Some(props) =>
                       socket.executionConfiguration match {
                         case Some(c) =>
                           try {
                             // Create the condition. The input is validated
                             // inside the constructor of BreakCondition and
                             // when a requirement fails, an exception is thrown
-                            val condition = new BreakCondition(socket.graphConfiguration, 
+                            val condition = new BreakCondition(socket.graphConfiguration,
                                                                c, n, props, workerApi)
                             e.addCondition(condition)
                             fetchConditions(e)
                           }
-                          catch { case ex: IllegalArgumentException => 
-                            fetchConditions(e) ~ 
+                          catch { case ex: IllegalArgumentException =>
+                            fetchConditions(e) ~
                             ("error" -> ex.getMessage.toString)
-                          } 
+                          }
                         case None => fetchInvalid(msg, "executionConfiguration unavailable!")
                       }
                     case None => fetchInvalid(msg, "missing props!")
@@ -311,7 +311,7 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
               case None => fetchInvalid(msg, "missing name!")
             }
             case "remove" => request.id match {
-              case Some(id) => 
+              case Some(id) =>
                 e.removeCondition(id)
                 fetchConditions(e)
               case None => fetchInvalid(msg, "Missing id!")
@@ -319,7 +319,7 @@ class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
           }
           case None => fetchConditions(e)
         }
-        case None => 
+        case None =>
           ("provider" -> "breakconditions") ~
           ("status" -> "noExecution")
     }
@@ -332,7 +332,7 @@ case class GraphDataRequest(
   vicinityRadius: Option[Int],
   vicinityIncoming: Option[Boolean],
   exposeVertices: Option[Boolean],
-  query: Option[String], 
+  query: Option[String],
   targetCount: Option[Int],
   topCriterium: Option[String],
   substring: Option[String],
@@ -346,12 +346,12 @@ case class GraphDataRequest(
   * @param coordinator the Coordinator
   * @param msg the request by the client
   */
-class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue) 
+class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
                             extends DataProvider {
 
   implicit val formats = DefaultFormats
 
-  val workerApi = coordinator.getWorkerApi 
+  val workerApi = coordinator.getWorkerApi
   var vertexIdStrings = List[String]()
   var targetCount = 5
   var vicinityRadius = 0
@@ -367,7 +367,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     * from the vertex. A {{radius}} of 1 denotes only the vertices that share
     * an edge with the node. Because a vertex already knows its outgoing edges,
     * it is cheap to find the outgoing vicinity. However, for the incoming
-    * vicinity, an aggregation has to be performed to find the vertices that 
+    * vicinity, an aggregation has to be performed to find the vertices that
     * target one of the vertices we're interested in, hence it's an expensive
     * operation.
     *
@@ -376,7 +376,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     * @param incoming also consider incoming edges (costs {{radius}} aggregations)
     * @return the original set plus the set of vertex Ids in the vicinity
     */
-  def findVicinity(sourceIds: Set[Id], radius: Int = 3, 
+  def findVicinity(sourceIds: Set[Id], radius: Int = 3,
                    incoming: Boolean = false): Set[Id] = {
     if (radius == 0) { sourceIds }
     else {
@@ -397,8 +397,8 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
 
   /** Fetch a JObject representation of the vertices and edges of the graph.
     * 
-    * This function will load the vertices as supplied by the {{vertexIds}} 
-    * set but also any vertices in the object-scope variable 
+    * This function will load the vertices as supplied by the {{vertexIds}}
+    * set but also any vertices in the object-scope variable
     * {{vertexIdStrings}}. The client will usually request a specific part of
     * the graph, but also supply a list of vertices that should be loaded.
     *
@@ -411,9 +411,9 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   def fetchGraph(vertexIds: Set[Id] = Set[Id]()): JObject = {
     val vertices = workerApi.aggregateAll(
                      new FindVerticesByIdsAggregator[Id](vertexIdStrings))
-    val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet, 
+    val vicinityIds = findVicinity(vertexIds ++ vertices.map { _.id }.toSet,
                                    vicinityRadius, vicinityIncoming)
-    val (lowestState, highestState, graph) = 
+    val (lowestState, highestState, graph) =
         workerApi.aggregateAll(new GraphAggregator[Id](vicinityIds, exposeVertices))
     ("highestState" -> highestState) ~
     ("lowestState" -> lowestState) ~
@@ -466,31 +466,31 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     // Override default values if any
     request.vertexIds match {
       case Some(ids) => vertexIdStrings = ids.take(1000)
-      case otherwise => 
+      case otherwise =>
     }
     request.targetCount match {
       case Some(t) => targetCount = List(t, 1000).min
-      case otherwise => 
+      case otherwise =>
     }
     request.vicinityRadius match {
       case Some(r) => vicinityRadius = List(r, 4).min
-      case otherwise => 
+      case otherwise =>
     }
     request.vicinityIncoming match {
       case Some(b) => vicinityIncoming = b
-      case otherwise => 
+      case otherwise =>
     }
     request.exposeVertices match {
       case Some(b) => exposeVertices = b
-      case otherwise => 
+      case otherwise =>
     }
     request.signalThreshold match {
       case Some(t) => signalThreshold = t
-      case otherwise => 
+      case otherwise =>
     }
     request.collectThreshold match {
       case Some(t) => collectThreshold = t
-      case otherwise => 
+      case otherwise =>
     }
 
     // route request and fetch graph data
@@ -532,10 +532,10 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize
 
-    val ws: Array[WorkerStatistics] = 
+    val ws: Array[WorkerStatistics] =
       (coordinator.getWorkerApi.getIndividualWorkerStatistics).toArray
     val wstats = Toolkit.unpackObjects(ws)
-    val ns: Array[NodeStatistics] = 
+    val ns: Array[NodeStatistics] =
       (coordinator.getWorkerApi.getIndividualNodeStatistics).toArray
     val nstats = Toolkit.unpackObjects(ns)
     

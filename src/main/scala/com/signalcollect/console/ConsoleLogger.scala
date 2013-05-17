@@ -1,21 +1,21 @@
 /*
  *  @author Philip Stutz
  *  @author Silvan Troxler
- *  
+ * 
  *  Copyright 2013 University of Zurich
- *      
+ * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ * 
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
+ * 
  */
 
 package com.signalcollect.console
@@ -77,7 +77,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
   
   
-  /** Creates a JSON string based on the passed log message arguments. 
+  /** Creates a JSON string based on the passed log message arguments.
     * 
     * @param level the level of the log message
     * @param cause the cause of the log message
@@ -114,8 +114,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
                ("date" -> date) ~
                ("cause" -> causeStr) ~
                ("logSource" -> logSource) ~
-               ("logClass" -> logClassStr) ~ 
-               ("message" -> message.toString) 
+               ("logClass" -> logClassStr) ~
+               ("message" -> message.toString)
     compact(render(json))
   }
   
@@ -178,7 +178,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       writeLog(createJsonString("Warning", null, logSource, logClass, message))
     case l @ Info(logSource, logClass, message) =>
       writeLog(createJsonString("Info", null, logSource, logClass, message))
-    case l @ Debug(logSource, logClass, message) => 
+    case l @ Debug(logSource, logClass, message) =>
       writeLog(createJsonString("Debug", null, logSource, logClass, message))
     case Request(command, reply, incrementor) =>
       try {

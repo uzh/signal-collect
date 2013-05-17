@@ -1,20 +1,20 @@
 /*
  *  @author Carol Alexandru
- *  
+ * 
  *  Copyright 2013 University of Zurich
- *      
+ * 
  *  Licensed below the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ * 
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed below the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations below the License.
- *  
+ * 
  */
 
 package com.signalcollect.console
@@ -33,7 +33,7 @@ import BreakConditionName._
 
 /** Aggregator that loads a JObject representation of vertices and their edges.
   *
-  * Given the set of ids, the aggregator the corresponding vertices and the 
+  * Given the set of ids, the aggregator the corresponding vertices and the
   * edges between the vertices. The aggregator returs a JObject, which contains
   * two objects, one for vertices, one for edges. The data structure is best
   * explained by an example:
@@ -45,7 +45,7 @@ import BreakConditionName._
   *  "edges":{"id1":["id2","id3"]}}}
   * }}}
   *
-  * The vertices object uses a vertex id as key and stores the state, signal and 
+  * The vertices object uses a vertex id as key and stores the state, signal and
   * collect scores. The edges object uses a vertex id as key and stores the list
   * of target vertices.
   *
@@ -72,7 +72,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
         if (vertexIds.contains(i.id)) {
           // Get the list of target vertices that this vertex' edges point at
           val targetVertices = i.outgoingEdges.values.filter { value =>
-            // This match is necessary because only an Edge[Id] will have a 
+            // This match is necessary because only an Edge[Id] will have a
             // targetId of type Id.
             value match {
               case v: Edge[Id] => vertexIds.contains(v.targetId)
@@ -94,7 +94,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
                                          }
                                          else { JNothing }
                                        )))
-          def verticesObj = ("vertices", 
+          def verticesObj = ("vertices",
               JObject(List( JField(i.id.toString, JObject(vertexProperties)) )))
 
           def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
@@ -109,10 +109,10 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
 
   def reduce(subGraphs: Stream[(Double,Double,JObject)]): (Double,Double,JObject) = {
     // Determine the lowest and highest state and merge the sub-graphs
-    subGraphs.foldLeft((subGraphs.head._1,subGraphs.head._2,JObject(List()))) { (acc, v) => 
+    subGraphs.foldLeft((subGraphs.head._1,subGraphs.head._2,JObject(List()))) { (acc, v) =>
       (if (acc._1 < v._1) acc._1 else v._1,
        if (acc._2 > v._2) acc._2 else v._2,
-       acc._3 merge v._3) 
+       acc._3 merge v._3)
     }
   }
 }
@@ -123,7 +123,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
   * @constructor create the aggregator
   * @param sampleSize the number of vertex ids to retrieve
   */
-class SampleAggregator[Id](sampleSize: Int) 
+class SampleAggregator[Id](sampleSize: Int)
       extends ModularAggregationOperation[Set[Id]] {
 
   val neutralElement = Set[Id]()
@@ -134,7 +134,7 @@ class SampleAggregator[Id](sampleSize: Int)
   }
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
-    case i: Inspectable[Id, _] => 
+    case i: Inspectable[Id, _] =>
       List(i.id).toSet
   }
 }
@@ -150,11 +150,11 @@ class TopDegreeAggregator[Id](n: Int)
       extends AggregationOperation[Map[Id,Int]] {
 
   def extract(v: Vertex[_, _]): Map[Id,Int] = v match {
-    case i: Inspectable[Id, _] => 
+    case i: Inspectable[Id, _] =>
       // Create one map from this id to the number of outgoing edges
       Map(i.id -> i.outgoingEdges.size) ++
       // Create several maps, one for each target id to 1
-      i.outgoingEdges.values.map { 
+      i.outgoingEdges.values.map {
         case v: Edge[Id] => (v.targetId -> 1)
       }
     case other => Map[Id,Int]()
@@ -179,7 +179,7 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
       extends AggregationOperation[List[(Double,Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
-    case i: Inspectable[Id, _] => 
+    case i: Inspectable[Id, _] =>
       // Try to interpret different types of numberic states
       val state: Option[Double] = i.state match {
         case x: Double => Some(x)
@@ -189,7 +189,7 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
         case otherwise => None
       }
       state match {
-        case Some(number) => 
+        case Some(number) =>
           List[(Double,Id)]((number, i.id))
         case otherwise => List[(Double,Id)]()
       }
@@ -199,7 +199,7 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
   def reduce(statesAndIds: Stream[List[(Double,Id)]]): List[(Double,Id)] = {
     // Sort the tuples by descending/ascending value and take the first n tuples
     statesAndIds.foldLeft(List[(Double,Id)]()) { (acc, n) => acc ++ n }
-       .sortWith({ (t1, t2) => 
+       .sortWith({ (t1, t2) =>
          if (inverted) { t1._1 < t2._1 }
          else { t1._1 > t2._1 }
        })
@@ -220,16 +220,16 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
       extends AggregationOperation[List[(Double,Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double,Id)] = v match {
-    case i: Inspectable[Id, _] => 
+    case i: Inspectable[Id, _] =>
       val score = scoreType match {
         case "signal" => i.scoreSignal
         case "collect" => i.scoreCollect
       }
       // Yield score and id only if the score is above the threshold
-      if (score > threshold) { 
+      if (score > threshold) {
         List[(Double,Id)]((score, i.id))
       }
-      else { 
+      else {
         List[(Double,Id)]()
       }
     case otherwise => List[(Double,Id)]()
@@ -258,7 +258,7 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
   def extract(v: Vertex[_,_]): Set[Id] = v match {
     case i: Inspectable[Id,_] =>
       // If this vertex is the target of a primary vertex, it's a vicinity vertex
-      if(i.outgoingEdges.values.view.map { 
+      if(i.outgoingEdges.values.view.map {
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise => false
       }.toSet.contains(true)) { return  Set(i.id) }
@@ -331,7 +331,7 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 
 /** Aggregator that checks if any of the break conditions apply
   *
-  * The aggregator takes a map of ids (strings used to identify break 
+  * The aggregator takes a map of ids (strings used to identify break
   * conditions) to BreakCondition items. It produces a map of the same ids to
   * strings which represent the reason for the condition firing. For example,
   * one result item may be ("3" -> "0.15"), which would mean that the condition
@@ -353,15 +353,15 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition], state: S
     case i: Inspectable[_, _] => {
       var results = Map[String,String]()
       if (relevantVertexIds.contains(i.id.toString)) {
-        conditions.foreach { case (id, c) => 
+        conditions.foreach { case (id, c) =>
           if (i.id.toString == c.props("vertexId")) {
-            // It depends on the state which checks are performed, because 
+            // It depends on the state which checks are performed, because
             // some checks would falsely return true during some states. For
-            // example, checking the signal scores right after a signal step 
-            // would yield a value below the threshold every time. In this 
+            // example, checking the signal scores right after a signal step
+            // would yield a value below the threshold every time. In this
             // case, we only check the signal scores after a collect step.
             state match {
-              case "checksAfterSignal" => c.name match { 
+              case "checksAfterSignal" => c.name match {
                 case CollectScoreBelowThreshold =>
                   if (i.scoreCollect < c.props("collectThreshold").toDouble)
                     results += (id -> i.scoreCollect.toString)
@@ -370,7 +370,7 @@ class BreakConditionsAggregator(conditions: Map[String,BreakCondition], state: S
                     results += (id -> i.scoreCollect.toString)
                 case otherwise =>
                 }
-              case "checksAfterCollect" => c.name match { 
+              case "checksAfterCollect" => c.name match {
                 case StateChanges =>
                   if (i.state.toString != c.props("currentState"))
                     results += (id -> i.state.toString)
