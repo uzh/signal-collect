@@ -172,8 +172,6 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // functions returning a radius
     "gd_vertexSize": {
                       "Vertex state": function(d) { 
-                        console.log(d)
-                        console.log(sizeGradient(gradientDomain)(d.r))
                             return sizeGradient(gradientDomain)(d.r); },
                       "All equal": function(d) { 
                             return 5; }
