@@ -137,7 +137,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
                       "Vertex type": function(d) { 
                             return color(d.t); },
                       "Vertex state": function(d) { 
-                            return colorGradient(gradientDomain)(d.state); },
+                            return colorGradient(gradientDomain)(d.r); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
                       "Latest query": function(d) { 
@@ -155,7 +155,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
                       "Vertex type": function(d) { 
                             return color(d.t); },
                       "Vertex state": function(d) { 
-                            return colorGradient(gradientDomain)(d.state); },
+                            return colorGradient(gradientDomain)(d.r); },
                       "Vertex id": function(d) { 
                             return color(d.id); },
                       "Outgoing degree": function(d) { 
@@ -172,7 +172,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // functions returning a radius
     "gd_vertexSize": {
                       "Vertex state": function(d) { 
-                            return sizeGradient(gradientDomain)(d.state.replace(/[^0-9.,]/g, '')); },
+                            return sizeGradient(gradientDomain)(d.r); },
                       "All equal": function(d) { 
                             return 5; }
     }
@@ -522,11 +522,14 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         return;
       }
       vertexSequence += 1;
+      var radius = data.s.replace(/[^0-9.,]/g, '')
+      if (state == "NaN" || state == "") { radius = 1; }
+      if (isNaN(state)) { radius = 1; }
       if (vertexRefs[id] == undefined) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
                        "es": data.es, "ss": data.ss, "cs": data.cs,
-                       "info": data.exposition, "t": data.t});
+                       "info": data.exposition, "r": radius, "t": data.t});
         // Store the index of the vertex in the lookup table
         vertexRefs[id] = vertices.length - 1;
         newVertices = true;
@@ -537,6 +540,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         vertices[vertexRefs[id]].seq = vertexSequence;
         vertices[vertexRefs[id]].ss = data.ss;
         vertices[vertexRefs[id]].cs = data.cs;
+        vertices[vertexRefs[id]].r = radius;
         vertices[vertexRefs[id]].t = data.t;
         vertices[vertexRefs[id]].info = data.exposition;
       }
@@ -547,7 +551,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
 
     // Determine maximum and minimum state to determine color gradient
     gradientDomain = [parseFloat(j.lowestState),
-                      d3.median(vertices, function (d) { return parseFloat(d.state) }),
+                      d3.median(vertices, function (d) { return d.r }),
                       parseFloat(j.highestState)]
 
     if (j.edges) {
