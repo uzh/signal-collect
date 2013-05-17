@@ -172,6 +172,8 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // functions returning a radius
     "gd_vertexSize": {
                       "Vertex state": function(d) { 
+                        console.log(d)
+                        console.log(sizeGradient(gradientDomain)(d.r))
                             return sizeGradient(gradientDomain)(d.r); },
                       "All equal": function(d) { 
                             return 5; }
@@ -550,9 +552,12 @@ scc.lib.graph.GraphD3 = function (graphModule) {
 
 
     // Determine maximum and minimum state to determine color gradient
-    gradientDomain = [parseFloat(j.lowestState),
-                      d3.median(vertices, function (d) { return d.r }),
-                      parseFloat(j.highestState)]
+    var median = d3.median(vertices, function (d) { return d.r });
+    var lowest = parseFloat(j.lowestState)
+    var highest = parseFloat(j.highestState)
+    if (lowest > median) { lowest = median; }
+    if (highest < median) { highest = median; }
+    gradientDomain = [lowest, median, highest]
 
     if (j.edges) {
       $.each(j.edges, function (source, targets) {
