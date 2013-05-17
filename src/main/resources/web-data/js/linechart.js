@@ -569,7 +569,7 @@ scc.lib.resources.LineChart = function() {
           .attr("r", 5)
           .on("mouseover",
               function(d) {
-                var screenShift = ($(document).width() - d3.event.x < 180 ? 155 : 0);
+                var screenShift = ($(document).width() - d3.event.pageX < 180 ? 155 : 0);
                 divTooltip.transition()        
                    .duration(100)      
                    .style("opacity", .9);
