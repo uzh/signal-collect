@@ -523,8 +523,8 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       }
       vertexSequence += 1;
       var radius = data.s.replace(/[^0-9.,]/g, '')
-      if (state == "NaN" || state == "") { radius = 1; }
-      if (isNaN(state)) { radius = 1; }
+      if (radius == "NaN" || radius == "") { radius = 1; }
+      if (isNaN(radius)) { radius = 1; }
       if (vertexRefs[id] == undefined) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 

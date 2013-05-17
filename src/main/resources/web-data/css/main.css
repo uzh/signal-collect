@@ -683,7 +683,7 @@ a, a:visited {
   font-size: 12px;
   background-color: transparent;
   z-index: 6;
-  white-space:nowrap;
+  word-wrap: break-word;
 }
 #exposition_background {
   position: absolute;
