@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * Represents an edge in a Single-Source Shortest Path compute graph.
@@ -80,7 +81,7 @@ class Location(vertexId: Any, initialState: Option[Int] = None) extends DataFlow
 
 /** Builds a Single-Source Shortest Path compute graph and executes the computation */
 object SSSP extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
   graph.addVertex(new Location(1, Some(0)))
   graph.addVertex(new Location(2))
   graph.addVertex(new Location(3))
@@ -93,7 +94,8 @@ object SSSP extends App {
   graph.addEdge(1, new Path(5))
   graph.addEdge(4, new Path(6))
   graph.addEdge(5, new Path(6))
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown

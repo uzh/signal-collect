@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  *  Regular expression to match links in Html strings
@@ -35,9 +36,10 @@ object Regex {
  *  	- lacks proper user agent string
  */
 object WebCrawler extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
   graph.addVertex(new Webpage("http://www.ifi.uzh.ch/ddis/", 2))
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   graph.foreachVertex(println(_))
   println(stats)
   graph.shutdown

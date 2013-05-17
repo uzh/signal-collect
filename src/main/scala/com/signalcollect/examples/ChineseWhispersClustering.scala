@@ -20,6 +20,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * Represents an entity in a Chinese Whispers clustering algorithm.
@@ -59,7 +60,7 @@ class CWEdge(t: Any, weight: Double = 1.0) extends DefaultEdge(t) {
  */
 object ChineseWhispersClustering extends App {
 
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
 
   for (i <- 0 until 11) {
     graph.addVertex(new CWVertex(i))
@@ -92,7 +93,8 @@ object ChineseWhispersClustering extends App {
   graph.addEdge(10, new CWEdge(8))
   graph.addEdge(8, new CWEdge(10))
 
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   graph.foreachVertex { v => println(v) }
 
   println(stats)

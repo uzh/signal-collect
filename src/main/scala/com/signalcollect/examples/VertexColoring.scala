@@ -22,6 +22,7 @@ package com.signalcollect.examples
 import scala.util.Random
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * 	This algorithm attempts to find a vertex coloring.
@@ -101,7 +102,7 @@ class ColoredVertex(id: Any, numColors: Int, initialColor: Int, isFixed: Boolean
  * not require a custom edge type.
  */
 object VertexColoring extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
   graph.addVertex(new ColoredVertex(1, 2, 1))
   graph.addVertex(new ColoredVertex(2, 2, 1))
   graph.addVertex(new ColoredVertex(3, 2, 1))
@@ -109,7 +110,8 @@ object VertexColoring extends App {
   graph.addEdge(2, new StateForwarderEdge(1))
   graph.addEdge(2, new StateForwarderEdge(3))
   graph.addEdge(3, new StateForwarderEdge(2))
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown

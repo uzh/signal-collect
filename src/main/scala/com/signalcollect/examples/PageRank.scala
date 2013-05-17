@@ -71,16 +71,7 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.
-    withConsole(true).
-    withNodeProvisioner(new TorqueNodeProvisioner(
-      torqueHost = new TorqueHost(
-        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
-        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
-        jvmParameters = "",
-        priority = TorquePriority.fast),
-      numberOfNodes = 2)).
-    build
+  val graph = GraphBuilder.withConsole(true, 8091).build
 
   graph.awaitIdle
   graph.addVertex(new PageRankVertex(1))
@@ -92,7 +83,8 @@ object PageRank extends App {
   graph.addEdge(3, new PageRankEdge(2))
 
   graph.awaitIdle
-  val stats = graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
 
   graph.foreachVertex(println(_))

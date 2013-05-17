@@ -22,6 +22,7 @@ package com.signalcollect.examples
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListMap
 import scala.collection.mutable.SynchronizedMap
+import com.signalcollect.configuration.ExecutionMode
 
 import com.signalcollect._
 
@@ -125,7 +126,8 @@ object Sudoku extends App {
   graph.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
 
   //If simple constraint propagation did not solve the problem apply a depth first search algorithm to find a suitable solution
@@ -183,7 +185,8 @@ object Sudoku extends App {
         var determinedValues = possibleValues.filter(_._2.size == 1).map(x => (x._1, x._2.head)).toMap[Int, Int]
         determinedValues += (candidate.get._1 -> iterator.next)
         var graphTry = computeGraphFactory(determinedValues)
-        graphTry.execute
+        val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+        graphTry.execute(c)
         if (isDone(graphTry)) {
           solutionFound = true
           return graphTry
@@ -199,7 +202,7 @@ object Sudoku extends App {
   }
 
   def computeGraphFactory(seed: Map[Int, Int]): Graph[_, _] = {
-    val graph = GraphBuilder.build
+    val graph = GraphBuilder.withConsole(true, 8091).build
 
     //Add all Cells for Sudoku
     for (index <- 0 to 80) {

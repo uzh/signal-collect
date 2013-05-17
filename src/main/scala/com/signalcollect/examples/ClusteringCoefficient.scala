@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 class ClusteringCoefficientVertex(id: Any) extends DataGraphVertex(id, 0.0) {
 
@@ -47,7 +48,7 @@ class ClusteringCoefficientEdge(t: Any) extends DefaultEdge(t) {
 }
 
 object ClusteringCoefficient extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
   graph.addVertex(new ClusteringCoefficientVertex(1))
   graph.addVertex(new ClusteringCoefficientVertex(2))
   graph.addVertex(new ClusteringCoefficientVertex(3))
@@ -71,7 +72,8 @@ object ClusteringCoefficient extends App {
   graph.addEdge(6, new ClusteringCoefficientEdge(1))
   graph.addEdge(1, new ClusteringCoefficientEdge(6))
 
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown

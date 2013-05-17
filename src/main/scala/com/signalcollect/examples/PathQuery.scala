@@ -22,6 +22,7 @@ package com.signalcollect.examples
 import scala.collection.immutable.Queue
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.ListBuffer
+import com.signalcollect.configuration.ExecutionMode
 
 import com.signalcollect._
 
@@ -166,7 +167,7 @@ class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(
  */
 object PathQueryExample extends App {
 
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
   val query = new PathQuery
   //  query.addQueryNode(new WildcardQueryNode)
   //  query.addQueryNode(new WildcardQueryNode)
@@ -192,7 +193,8 @@ object PathQueryExample extends App {
   graph.addEdge(4, new StateForwarderEdge(2))
   graph.addEdge(2, new StateForwarderEdge(5))
 
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
 
   println(ResultHandler.getResults)
 

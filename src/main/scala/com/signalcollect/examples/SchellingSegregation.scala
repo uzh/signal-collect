@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  *  Represents an agent in a Schelling-Segregation simulation
@@ -45,7 +46,7 @@ class SegregationAgent(id: Any, initialState: Int, equalityThreshold: Float) ext
 
 /**Builds a Schelling-Segregation simulation on a random grid and executes it**/
 object SchellingSegregation extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
 
   //Dimensions of the grid
   val columns = 140
@@ -66,7 +67,8 @@ object SchellingSegregation extends App {
   }
 
   println("Grid before:\n" + stringRepresentationOfGraph)
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats) //Print computation statistics
   println("Grid after:\n" + stringRepresentationOfGraph)
   graph.shutdown

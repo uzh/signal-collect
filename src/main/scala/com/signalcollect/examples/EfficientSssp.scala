@@ -25,6 +25,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -36,7 +37,7 @@ import com.signalcollect.configuration.ExecutionMode._
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientSsspLoader extends App {
-  val g = new GraphBuilder[Int, Int].withMessageBusFactory(new BulkAkkaMessageBusFactory(96, false)).build
+  val g = new GraphBuilder[Int, Int].withMessageBusFactory(new BulkAkkaMessageBusFactory(96, false)).withConsole(true, 8091).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -52,7 +53,9 @@ object EfficientSsspLoader extends App {
   g.awaitIdle
   println("done.")
   print("Running computation ...")
-  val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous))
+
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = g.execute(c)
   println("done.")
   println(stats)
   implicit val ord = Ordering[Int].reverse

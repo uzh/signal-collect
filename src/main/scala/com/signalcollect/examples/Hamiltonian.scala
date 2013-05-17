@@ -20,12 +20,13 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 /**
  * Signal/Collect implementation of finding Hamiltonian paths in graphs.
  */
 object Hamiltonian extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true, 8091).build
 
   /**
    * Still need to test performance on complete and larger graphs
@@ -52,7 +53,8 @@ object Hamiltonian extends App {
   graph.addEdge("e", new HamiltonianEdge("a", 1))
   graph.addEdge("a", new HamiltonianEdge("e", 1))
 
-  val stats = graph.execute
+  val c = ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive)
+  val stats = graph.execute(c)
   println(stats)
   graph.foreachVertex(println(_))
   graph.shutdown
