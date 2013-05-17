@@ -1,21 +1,21 @@
 /*
  *  @author Carol Alexandru
  *  @author Silvan Troxler
- * 
+ *
  *  Copyright 2013 University of Zurich
- * 
+ *
  *  Licensed below the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- * 
+ *
  *         http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed below the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations below the License.
- * 
+ *
  */
 
 package com.signalcollect.console
@@ -396,7 +396,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   }
 
   /** Fetch a JObject representation of the vertices and edges of the graph.
-    * 
+    *
     * This function will load the vertices as supplied by the {{vertexIds}}
     * set but also any vertices in the object-scope variable
     * {{vertexIdStrings}}. The client will usually request a specific part of
@@ -513,7 +513,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       }
       case otherwise => fetchInvalid(msg, "missing query")
     }
-    
+
     ("provider" -> "graph") ~
     graphData
   }
@@ -538,7 +538,7 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
     val ns: Array[NodeStatistics] =
       (coordinator.getWorkerApi.getIndividualNodeStatistics).toArray
     val nstats = Toolkit.unpackObjects(ns)
-    
+
     ("provider" -> "resources") ~
     ("timestamp" -> System.currentTimeMillis) ~
     ("inboxSize" -> inboxSize) ~

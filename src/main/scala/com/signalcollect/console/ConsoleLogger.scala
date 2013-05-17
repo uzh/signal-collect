@@ -1,21 +1,21 @@
 /*
  *  @author Philip Stutz
  *  @author Silvan Troxler
- * 
+ *
  *  Copyright 2013 University of Zurich
- * 
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- * 
+ *
  *         http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- * 
+ *
  */
 
 package com.signalcollect.console
@@ -44,26 +44,26 @@ import java.io.BufferedReader
 import java.io.FileReader
 
 /** Handles the logging, it stores new messages and allows to retrieve them to send to the console.
-  * 
+  *
   * @constructor defines needed variables and values, clears the log file.
   */
 class ConsoleLogger extends Actor with Logger with ActorLogging {
 
   /** Defines the name of the file in which log messages are stored. */
   def logFileName = "log_messages.txt"
-    
+
   /** Stores the reader object used to read only new lines. */
   var logReader: BufferedReader = null
 
   /** Number of lines to read at most per request. */
   val maxReadLines = 1000;
-  
+
   // reset log file
   resetLog
-  
-  
+
+
   /** Writes the passed `message` to the log message file.
-    * 
+    *
     * @param message the log message to store
     */
   def writeLog(message: String) {
@@ -75,10 +75,10 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       fileWriter.close()
     }
   }
-  
-  
+
+
   /** Creates a JSON string based on the passed log message arguments.
-    * 
+    *
     * @param level the level of the log message
     * @param cause the cause of the log message
     * @param logSource the source of the log message
@@ -118,8 +118,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
                ("message" -> message.toString)
     compact(render(json))
   }
-  
-  
+
+
   /** Clears the file in which log messages are stored. */
   def resetLog {
     if (!logFileExists) {
@@ -133,19 +133,19 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       fileWriter.close()
     }
   }
-  
-  
+
+
   /** Returns whether the log file exists.
-    * 
+    *
     * @return whether or not the log file exists.
     */
   def logFileExists: Boolean = {
     (new File(logFileName)).exists
   }
-  
-  
+
+
   /** Returns new log messages added after the last request.
-    * 
+    *
     * @return a list of log messages.
     */
   def getLogMessages: List[JValue] = {
@@ -164,9 +164,9 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     logMessages
   }
 
-  
+
   /** Handles requests regarding logging.
-    * 
+    *
     * Forwards any log message type that should be stored, sends a list of log messages if these
     * are requested.
     */

@@ -1,20 +1,20 @@
 /*
  *  @author Silvan Troxler
- * 
+ *
  *  Copyright 2013 University of Zurich
- * 
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- * 
+ *
  *         http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- * 
+ *
  */
 
 package com.signalcollect.console
@@ -42,8 +42,8 @@ import com.signalcollect.DefaultGraph
 class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
-  
-  
+
+
   "ConsoleServer" should {
 
     // console server address and ports
@@ -53,11 +53,11 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
     // websocket connection
     var websocket : WebSocketClient = null
-    
+
     // signal collect graph
     var graph : DefaultGraph[Any, Any] = null
 
-    
+
 
     "start successfully" in {
       val serverConnection = new Socket
@@ -66,7 +66,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       var isServerOnline = false
 
       graph = GraphBuilder.withConsole(true, serverPort).build.asInstanceOf[DefaultGraph[Any, Any]]
-      
+
       try {
         serverConnection.connect(serverAddress, timeoutInMilliseconds)
         isServerOnline = true
@@ -78,8 +78,8 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       isServerOnline
     }
 
-    
-    
+
+
     "start socket successfully" in {
       val socketConnection = new Socket
       val socketAddress = new InetSocketAddress(serverHost, socketPort)
@@ -96,9 +96,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
       isSocketOnline
     }
-    
-    
-    
+
+
+
     "establish websocket connection" in {
       try {
         val websocketUri = new URI("ws://localhost:" + socketPort)
@@ -110,9 +110,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         case _ : Throwable => false
       }
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'resources.workerStatistics'" in {
       websocket.sendJsonOrderWithProvider("resources")
       val json = websocket.getJsonResponse
@@ -147,7 +147,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         result => providerResultsMap.contains(result) === true
       }
     }
-    
+
     "return valid API result for provider 'resources.nodeStatistics'" in {
       websocket.sendJsonOrderWithProvider("resources")
       val json = websocket.getJsonResponse
@@ -172,9 +172,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         result => providerResultsMap.contains(result) === true
       }
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'configuration.executionConfiguration'" in {
       // as we have no execution running, this test will only check whether we get
       // any 'executionConfiguration' result
@@ -182,7 +182,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       val json = websocket.getJsonResponse
       (json \\ "executionConfiguration").values === "unknown"
     }
-    
+
     "return valid API result for provider 'configuration.graphConfiguration'" in {
       websocket.sendJsonOrderWithProvider("configuration")
       val json = websocket.getJsonResponse
@@ -205,7 +205,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         result => providerResultsMap.contains(result) === true
       }
     }
-    
+
     "return valid API result for provider 'configuration.systemProperties'" in {
       websocket.sendJsonOrderWithProvider("configuration")
       val json = websocket.getJsonResponse
@@ -275,9 +275,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         result => providerResultsMap.contains(result) === true
       }
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'log'" in {
       websocket.sendJsonOrderWithProvider("log")
       val json = websocket.getJsonResponse
@@ -285,9 +285,9 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       // there won't be any messages, just checking whether the format is right
       createMapFromJValueList(providerResults).size == 0
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'graph'" in {
       websocket.sendJsonOrderWithProvider("graph")
       val json = websocket.getJsonResponse
@@ -295,17 +295,17 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       // As long as we get back a result, it's OK.
       true === true
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'state'" in {
       websocket.sendJsonOrderWithProvider("state")
       val json = websocket.getJsonResponse
       (json \\ "state").values === "undetermined"
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'controls'" in {
       websocket.sendJsonOrder("{\"provider\": \"controls\", \"control\": \"step\"}")
       val json = websocket.getJsonResponse
@@ -313,34 +313,34 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       // As long as we get back a result, it's OK.
       true === true
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'breakconditions'" in {
       websocket.sendJsonOrderWithProvider("breakconditions")
       val json = websocket.getJsonResponse
       (json \\ "status").values === "noExecution"
     }
-    
-    
-    
+
+
+
     "return valid API result for provider 'invalidDataProvider'" in {
       websocket.sendJsonOrderWithProvider("invalidDataProviderWhichDoesNotActuallyExist")
       val json = websocket.getJsonResponse
       (json \\ "provider").values === "invalid"
     }
-    
-    
-    
+
+
+
     "close websocket connection" in {
       try {
         websocket.closeBlocking()
         true
       } catch { case _ : Throwable => false }
     }
-   
-    
-    
+
+
+
     "shutdown successfully" in {
       val console = graph.getConsole
       console.getServer.stop(5)
@@ -348,11 +348,11 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       graph.shutdown
       true
     }
-    
+
   }
-  
-  
-  
+
+
+
   def createMapFromJValueList(json : List[JValue]) = {
     var map: Map[String, Any] = Map()
     json.foreach {
@@ -368,7 +368,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClient(uri) {
   connectBlocking()
   var response = ""
-  
+
   def sendJsonOrderWithProvider(provider : String) {
     sendJsonOrder("{\"provider\":\"" + provider + "\"}")
   }
