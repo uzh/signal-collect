@@ -79,7 +79,12 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
               case otherwise => false
             }
           }.map{ e => ( JString(e.targetId.toString))}.toList
-          def vertexProperties = (List(JField("s", i.state.toString),
+
+          val stateString = i.state match {
+            case null => "null"
+            case other => other.toString
+          }
+          def vertexProperties = (List(JField("s", stateString),
                                        JField("es", targetVertices.size),
                                        JField("ss", i.scoreSignal),
                                        JField("cs", i.scoreCollect),
