@@ -31,7 +31,7 @@ import java.io.NotSerializableException
 object KryoSerialization {
 
   class Settings(val config: Config) {
-  
+
     import scala.collection.JavaConverters._
     import config._
 
@@ -41,34 +41,34 @@ object KryoSerialization {
     val BufferSize: Int = config.getInt("akka.actor.kryo.buffer-size")
 
     val SerializerPoolSize: Int = config.getInt("akka.actor.kryo.serializer-pool-size")
-	
+
 	// Each entry should be: FQCN -> integer id
     val ClassNameMappings: Map[String, String] = configToMap(getConfig("akka.actor.kryo.mappings"))
 
     val ClassNames: java.util.List[String] = config.getStringList("akka.actor.kryo.classes")
-	
+
 	// Strategy: default, explicit, incremental
     val IdStrategy: String = config.getString("akka.actor.kryo.idstrategy")
-    
+
     val ImplicitRegistrationLogging: Boolean = config.getBoolean("akka.actor.kryo.implicit-registration-logging")
-    
+
     val KryoTrace: Boolean = config.getBoolean("akka.actor.kryo.kryo-trace")
-    
+
     val KryoReferenceMap: Boolean = config.getBoolean("akka.actor.kryo.kryo-reference-map")
 
     val UseManifests: Boolean = config.getBoolean("akka.actor.kryo.use-manifests")
-    
+
     private def configToMap(cfg: Config): Map[String, String] =
       cfg.root.unwrapped.asScala.toMap.map { case (k, v) => (k, v.toString) }
-  }  
+  }
 }
 
 class KryoSerialization(val system: ExtendedActorSystem) extends Extension {
   import KryoSerialization._
-	 
+
   val settings = new Settings(system.settings.config)
-  val log = Logging(system, getClass.getName) 
-  
+  val log = Logging(system, getClass.getName)
+
 }
 
 object KryoSerializationExtension extends ExtensionId[KryoSerialization] with ExtensionIdProvider {

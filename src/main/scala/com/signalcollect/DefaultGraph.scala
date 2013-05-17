@@ -1,20 +1,20 @@
 /*
  *  @author Philip Stutz
- *  
+ *
  *  Copyright 2010 University of Zurich
- *      
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ *
  *         http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
+ *
  */
 
 package com.signalcollect
@@ -113,7 +113,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   log.debug("Requesting nodes ...")
   val nodeActors = config.nodeProvisioner.getNodes(akkaConfig).sorted
   log.debug(s"Received ${nodeActors.length} nodes.")
-  // Bootstrap => sent and received messages are not counted for termination detection. 
+  // Bootstrap => sent and received messages are not counted for termination detection.
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
@@ -162,7 +162,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
-  // Bootstrap => sent and received messages are not counted for termination detection. 
+  // Bootstrap => sent and received messages are not counted for termination detection.
   val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_)) // MessageBus not initialized at this point.
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor) // MessageBus not initialized at this point.
 
@@ -170,7 +170,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   /** Returns the ConsoleServer */
   def getConsole = console
-  
+
   def initializeMessageBuses {
     log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
@@ -338,7 +338,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     }
 
     /** Returns true if a global condition check should be performed */
-    private def shouldCheckGlobalCondition = (globalCheckInterval > 0 && 
+    private def shouldCheckGlobalCondition = (globalCheckInterval > 0 &&
                          stats.collectSteps % globalCheckInterval == 0)
 
     // Store a map of break conditions and a map of reached break conditions.
@@ -388,7 +388,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         lock.notifyAll
       }
     }
-    
+
     /** Pause the computation. */
     def pause() {
       stepTokens = 0
@@ -453,7 +453,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         f()
       }
     }
-    
+
     /** Check user break conditions and pause if one of them was reached.
       *
       * The current state is passed along to the BreakConditionsAggregator
@@ -469,9 +469,9 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       }
     }
 
-    /** Start the main execution loop. 
-      * 
-      * The loop consists of five phases: 1) Signalling, 2) checks after 
+    /** Start the main execution loop.
+      *
+      * The loop consists of five phases: 1) Signalling, 2) checks after
       * signalling, 3) collecting, 4) checks after collecting and 5) global
       * termination condition checks. Each phase decrements the stepToken
       * counter by 1. If stepTokens is 0, the computation is paused. The
@@ -482,7 +482,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
       */
     def run() {
       lock.synchronized {
-        while (!userTermination) { 
+        while (!userTermination) {
           iteration += 1
 
           // Signalling
@@ -502,7 +502,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
           performStep("collecting", () => {
             converged = workerApi.collectStep
             stats.collectSteps += 1
-            if (converged) { 
+            if (converged) {
               stepTokens = 0
               waitAs("converged")
             }
@@ -510,7 +510,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
           // Checks after collecting
           waitAs("pausedBeforeChecksAfterCollect")
-          performStep("checksAfterCollect", checkBreakConditions) 
+          performStep("checksAfterCollect", checkBreakConditions)
 
           // Global condition checks
           if (shouldCheckGlobalCondition) {
@@ -518,7 +518,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
             performStep("globalChecks", () => {
               globalTermination = isGlobalTerminationConditionMet(
                            parameters.globalTerminationCondition.get)
-              if (globalTermination) { 
+              if (globalTermination) {
                 stepTokens = 0
                 waitAs("globalConditionReached")
               }

@@ -26,7 +26,7 @@ import com.esotericsoftware.kryo.io.Output
 
 /***
  * This module provides helper classes for serialization of Akka-specific classes.
- * 
+ *
  * @author Roman Levenstein
  *
  */

@@ -137,7 +137,7 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     val kryo = new Kryo(new KryoClassResolver(implicitRegistrationLogging), referenceResolver)
     // Support deserialization of classes without no-arg constructors
     kryo.setInstantiatorStrategy(new StdInstantiatorStrategy())
-    // Support serialization of some standard or often used Scala classes 
+    // Support serialization of some standard or often used Scala classes
     kryo.addDefaultSerializer(classOf[scala.Enumeration#Value], classOf[EnumerationSerializer])
     system.dynamicAccess.getClassFor[AnyRef]("scala.Enumeration$Val") match {
       case Success(clazz) => kryo.register(clazz)
@@ -161,7 +161,7 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     kryo.register(classOf[Array[Double]], 23)
     kryo.register(classOf[Array[Boolean]], 24)
     kryo.register(classOf[Array[Object]], 25)
-       
+
     if (settings.KryoTrace)
       MiniLog.TRACE()
 
@@ -279,7 +279,7 @@ class KryoBasedSerializer(val kryo: Kryo, val bufferSize: Int, val bufferPoolSiz
 
 }
 
-// Support pooling of objects. Useful if you want to reduce 
+// Support pooling of objects. Useful if you want to reduce
 // the GC overhead and memory pressure.
 class ObjectPool[T](number: Int, newInstance: () => T) {
 

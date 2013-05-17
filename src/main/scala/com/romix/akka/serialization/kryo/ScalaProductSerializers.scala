@@ -28,7 +28,7 @@ import com.esotericsoftware.kryo.io.Output
 /***
  * This module provides helper classes for serialization of scala.Product-based classes.
  * This includes all Tuple classes.
- * 
+ *
  * @author Roman Levenstein
  *
  */
@@ -71,20 +71,20 @@ class ScalaProductSerializer ( val kryo: Kryo ) extends Serializer[Product] {
 		val len = if (length != 0) length else input.readInt(true)
 		val ref = new Object
 		kryo.reference(ref)
-		
+
 		val elems: Array[Any] = new Array(len)
-		
-		val constructor = 
-				class2constuctor.get(typ) getOrElse 
-				{  
+
+		val constructor =
+				class2constuctor.get(typ) getOrElse
+				{
 					val constrs = typ.getDeclaredConstructors
 					val constr = constrs(0)
 					class2constuctor += typ->constr
 					constr
-				} 
-		
-		
-		
+				}
+
+
+
 		if (len != 0) {
 			if (serializer != null) {
 				if (elementsCanBeNull) {
@@ -95,9 +95,9 @@ class ScalaProductSerializer ( val kryo: Kryo ) extends Serializer[Product] {
 			} else {
 				0 until len foreach {i => elems(i) = kryo.readClassAndObject(input) }
 			}
-		} 
+		}
 
-		constructor.newInstance(elems.asInstanceOf[Array[Object]]:_*).asInstanceOf[Product] 
+		constructor.newInstance(elems.asInstanceOf[Array[Object]]:_*).asInstanceOf[Product]
 	}
 
 	override def write (kryo : Kryo, output: Output, obj: Product) = {
@@ -107,8 +107,8 @@ class ScalaProductSerializer ( val kryo: Kryo ) extends Serializer[Product] {
 			output.writeInt(size, true)
 			size
 		}
-	
-		if (len != 0) { 
+
+		if (len != 0) {
 			if (serializer != null) {
 				if (elementsCanBeNull) {
 					product.productIterator.foreach {element => kryo.writeObjectOrNull(output, element, serializer) }

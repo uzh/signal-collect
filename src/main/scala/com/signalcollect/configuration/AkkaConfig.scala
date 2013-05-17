@@ -13,7 +13,7 @@ akka {
 
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
   event-handlers = ["com.signalcollect.console.ConsoleLogger"]
-    
+
   logConfigOnStart=on
     """ +
     {
@@ -37,7 +37,7 @@ akka {
     # log-sent-messages = on
     # log-received-messages = on
   # }
-    
+
   actor {
     """ +
     {
@@ -49,7 +49,7 @@ akka {
     } +
     """
     provider = "akka.remote.RemoteActorRefProvider"
-    
+
   	pinned-dispatcher {
 	  type = PinnedDispatcher
 	  executor = "thread-pool-executor"
@@ -59,7 +59,7 @@ akka {
       kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
       java = "akka.serialization.JavaSerializer"
     }
-    
+
     serialization-bindings {
       "scala.Int" = kryo
       "scala.Long" = kryo
@@ -116,30 +116,30 @@ akka {
         }
       }
     }
-    
-    kryo  {  
-        # Possibles values for type are: graph or nograph  
-        # graph supports serialization of object graphs with shared nodes  
-        # and cyclic references, but this comes at the expense of a small overhead  
-        # nograph does not support object grpahs with shared nodes, but is usually faster   
-        type = "nograph"  
 
-        # Possible values for idstrategy are:  
-        # default, explicit, incremental  
-        #  
-        # default - slowest and produces bigger serialized representation. Contains fully-  
-        # qualified class names (FQCNs) for each class  
-        #  
-        # explicit - fast and produces compact serialized representation. Requires that all  
+    kryo  {
+        # Possibles values for type are: graph or nograph
+        # graph supports serialization of object graphs with shared nodes
+        # and cyclic references, but this comes at the expense of a small overhead
+        # nograph does not support object grpahs with shared nodes, but is usually faster
+        type = "nograph"
+
+        # Possible values for idstrategy are:
+        # default, explicit, incremental
+        #
+        # default - slowest and produces bigger serialized representation. Contains fully-
+        # qualified class names (FQCNs) for each class
+        #
+        # explicit - fast and produces compact serialized representation. Requires that all
         # classes that will be serialized are pre-registered using the "mappings" and "classes"
-        # sections. To guarantee that both sender and receiver use the same numeric ids for the same  
-        # classes it is advised to provide exactly the same entries in the "mappings" section   
-        #  
-        # incremental - fast and produces compact serialized representation. Support optional  
-        # pre-registering of classes using the "mappings" and "classes" sections. If class is  
-        # not pre-registered, it will be registered dynamically by picking a next available id  
-        # To guarantee that both sender and receiver use the same numeric ids for the same   
-        # classes it is advised to pre-register them using at least the "classes" section   
+        # sections. To guarantee that both sender and receiver use the same numeric ids for the same
+        # classes it is advised to provide exactly the same entries in the "mappings" section
+        #
+        # incremental - fast and produces compact serialized representation. Support optional
+        # pre-registering of classes using the "mappings" and "classes" sections. If class is
+        # not pre-registered, it will be registered dynamically by picking a next available id
+        # To guarantee that both sender and receiver use the same numeric ids for the same
+        # classes it is advised to pre-register them using at least the "classes" section
 
         idstrategy = "incremental"
 
@@ -149,34 +149,34 @@ akka {
         # of threads allowed for the scheduler
         serializer-pool-size = 24
 
-        # Define a default size for byte buffers used during serialization   
-        buffer-size = 4096  
+        # Define a default size for byte buffers used during serialization
+        buffer-size = 4096
 
         # If set, akka uses manifests to put a class name
         # of the top-level object into each message
         use-manifests = false
 
         # Log implicitly registered classes. Useful, if you want to know all classes
-        # which are serialized. You can then use this information in the mappings and/or 
+        # which are serialized. You can then use this information in the mappings and/or
         # classes sections
         implicit-registration-logging = true
 
         # If enabled, Kryo logs a lot of information about serialization process.
         # Useful for debugging and lowl-level tweaking
-        kryo-trace = false 
+        kryo-trace = false
 
         kryo-reference-map = false
-    
-        # Define mappings from a fully qualified class name to a numeric id.  
-        # Smaller ids lead to smaller sizes of serialized representations.  
-        #  
-        # This section is mandatory for idstrategy=explicit  
-        # This section is optional  for idstrategy=incremental  
-        # This section is ignored   for idstrategy=default  
-        #   
+
+        # Define mappings from a fully qualified class name to a numeric id.
+        # Smaller ids lead to smaller sizes of serialized representations.
+        #
+        # This section is mandatory for idstrategy=explicit
+        # This section is optional  for idstrategy=incremental
+        # This section is ignored   for idstrategy=default
+        #
         # The smallest possible id should start at 20 (or even higher), because
-        # ids below it are used by Kryo internally e.g. for built-in Java and 
-        # Scala types   
+        # ids below it are used by Kryo internally e.g. for built-in Java and
+        # Scala types
         mappings {
             "scala.Int" = 26
             "scala.Long" = 27
@@ -210,14 +210,14 @@ akka {
     """
         }
 
-        # Define a set of fully qualified class names for   
+        # Define a set of fully qualified class names for
         # classes to be used for serialization.
         # The ids for those classes will be assigned automatically,
-        # but respecting the order of declaration in this section  
-        #  
-        # This section is optional  for idstrategy=incremental  
-        # This section is ignored   for idstrategy=default  
-        # This section is optional  for idstrategy=explicit  
+        # but respecting the order of declaration in this section
+        #
+        # This section is optional  for idstrategy=incremental
+        # This section is ignored   for idstrategy=default
+        # This section is optional  for idstrategy=explicit
         classes = [
             "scala.Int",
             "scala.Long",
@@ -264,7 +264,7 @@ akka {
     """
     # Options: 0-9 (1 being fastest and 9 being the most compressed), default is 6
     # zlib-compression-level = 9
-    
+
     # Which implementation of akka.remote.RemoteTransport to use
     # default is a TCP-based remote transport based on Netty
     transport = "akka.remote.netty.NettyRemoteTransport"
@@ -281,7 +281,7 @@ akka {
 
     # If this is "on", Akka will log all outbound messages at DEBUG level, if off then they are not logged
     log-sent-messages = off
-    
+
     # If this is "on", Akka will log all RemoteLifeCycleEvents at the level defined for each, if off then they are not logged
     log-remote-lifecycle-events = off
 
@@ -304,7 +304,7 @@ akka {
       # (I) Should the remote server require that it peers share the same secure-cookie
       # (defined in the 'remote' section)?
       require-cookie = off
-   
+
       # (I) Reuse inbound connections for outbound messages
       use-passive-connections = off
 
@@ -312,7 +312,7 @@ akka {
       # will be used to accept inbound connections, and perform IO. If "" then
       # dedicated threads will be used.
       use-dispatcher-for-io = ""
-    
+
       # (I) The hostname or ip to bind the remoting to,
       # InetAddress.getLocalHost.getHostAddress is used if empty
       hostname = ""
@@ -349,19 +349,19 @@ akka {
       # (I&O) Sets the high water mark for the in and outbound sockets,
       # set to 0b for platform default
       write-buffer-high-water-mark = 0b
- 
+
       # (I&O) Sets the low water mark for the in and outbound sockets,
       # set to 0b for platform default
       write-buffer-low-water-mark = 0b
- 
+
       # (I&O) Sets the send buffer size of the Sockets,
       # set to 0b for platform default
       send-buffer-size = 0b
- 
+
       # (I&O) Sets the receive buffer size of the Sockets,
       # set to 0b for platform default
       receive-buffer-size = 0b
-    
+
       # (O) Time between reconnect attempts for active clients
       reconnect-delay = 5s
 
@@ -384,37 +384,37 @@ akka {
 
       # (O) Maximum time window that a client should try to reconnect for
       reconnection-time-window = 600s
-    
+
       ssl {
         # (I&O) Enable SSL/TLS encryption.
         # This must be enabled on both the client and server to work.
         enable = off
- 
+
         # (I) This is the Java Key Store used by the server connection
         key-store = "keystore"
- 
+
         # This password is used for decrypting the key store
         key-store-password = "changeme"
- 
+
         # (O) This is the Java Key Store used by the client connection
         trust-store = "truststore"
- 
+
         # This password is used for decrypting the trust store
         trust-store-password = "changeme"
- 
+
         # (I&O) Protocol to use for SSL encryption, choose from:
         # Java 6 & 7:
         #   'SSLv3', 'TLSv1'
         # Java 7:
         #   'TLSv1.1', 'TLSv1.2'
         protocol = "TLSv1"
- 
+
         # Example: ["TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA"]
         # You need to install the JCE Unlimited Strength Jurisdiction Policy
         # Files to use AES 256.
         # More info here: http://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJCEProvider
         enabled-algorithms = ["TLS_RSA_WITH_AES_128_CBC_SHA"]
- 
+
         # Using /dev/./urandom is only necessary when using SHA1PRNG on Linux to
         # prevent blocking. It is NOT as secure because it reuses the seed.
         # '' => defaults to /dev/random or whatever is set in java.security for
@@ -422,7 +422,7 @@ akka {
         # '/dev/./urandom' => NOT '/dev/urandom' as that doesn't work according
         #    to: http://bugs.sun.com/view_bug.do?bug_id=6202721
         sha1prng-random-source = ""
- 
+
         # There are three options, in increasing order of security:
         # "" or SecureRandom => (default)
         # "SHA1PRNG" => Can be slow because of blocking issues on Linux
@@ -438,7 +438,7 @@ akka {
         # suite (see enabled-algorithms section above)
         random-number-generator = ""
       }
-    
+
     }
 
     # The dispatcher used for the system actor "network-event-sender"

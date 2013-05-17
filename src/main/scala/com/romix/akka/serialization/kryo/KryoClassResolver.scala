@@ -28,7 +28,7 @@ class KryoClassResolver(val logImplicits: Boolean) extends DefaultClassResolver 
 		// registerInternal(new Registration(typ, kryo.getDefaultSerializer(typ), DefaultClassResolver.NAME))
 		/* TODO: This does not work if sender and receiver are
 		 * initialized independently and using different order of classes
-		 * Try to ensure that the same ID is assigned to the same classname 
+		 * Try to ensure that the same ID is assigned to the same classname
 		 * by every Kryo instance:
 		 */
 		// Take a next available ID
@@ -72,7 +72,7 @@ class KryoClassResolver(val logImplicits: Boolean) extends DefaultClassResolver 
 /**
  * This is a very fast, non-cryptographic hash suitable for general hash-based
  * lookup.  See http://murmurhash.googlepages.com/ for more details.
- * 
+ *
  * <p>The C version of MurmurHash 2.0 found at that site was ported
  * to Java by Andrzej Bialecki (ab at getopt org).</p>
  */

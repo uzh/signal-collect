@@ -30,7 +30,7 @@ import scala.Enumeration
 /***
  * This module provides helper classes for serialization of popular Scala types
  * like Tuple, Enumeration, Option.
- * 
+ *
  * @author romix
  *
  */
@@ -52,7 +52,7 @@ import scala.Enumeration
 
 //class TupleSerializer extends Serializer[Product] {
 //	override def write (kryo: Kryo, output: Output, obj: Product) = {
-//		obj.productIterator foreach { 
+//		obj.productIterator foreach {
 //			e => {
 //				val serializer = kryo.getSerializer(e.getClass)
 //				if (serializer != null) {
@@ -72,13 +72,13 @@ import scala.Enumeration
 class EnumerationSerializer extends Serializer[Enumeration#Value] {
 	val ref = new Object
 
-	// Cache the mapping from enumeration members to specific enumeration classes  
+	// Cache the mapping from enumeration members to specific enumeration classes
 	var value2enumClass = immutable.Map[Enumeration#Value, Class[_]]()
 	// Cache enumeration values for a given enumeration class
 	var enumClass2enumValues = immutable.Map[Class[_], ArrayBuffer[Enumeration#Value]]()
-	
+
 	private def cacheEnumValue(obj: Enumeration#Value) = {
-		val enumClass =  value2enumClass.get(obj) getOrElse {  
+		val enumClass =  value2enumClass.get(obj) getOrElse {
 			   val parentEnum = obj.asInstanceOf[AnyRef].getClass.getSuperclass.getDeclaredFields.find( f => f.getName == "$outer" ).get
 			   val parentEnumObj = parentEnum.get(obj)
 		       val enumClass = parentEnumObj.getClass
@@ -86,22 +86,22 @@ class EnumerationSerializer extends Serializer[Enumeration#Value] {
 		       val enumValues =  enumClass2enumValues.get(enumClass) getOrElse {
 		    	   val size = parentEnumObj.asInstanceOf[Enumeration].maxId+1
 		    	   val values = new ArrayBuffer[Enumeration#Value](size)
-		    	   0 until size foreach { e => values += null } 
+		    	   0 until size foreach { e => values += null }
 			       enumClass2enumValues += enumClass->values
 			       values
 		       }
 		       enumClass
 		   }
-		
+
 	    val enumValues =  enumClass2enumValues.get(enumClass).get
-	    
+
 	    if(enumValues(obj.id) == null) {
 	    	enumValues.update(obj.id, obj)
 	    }
-	    
+
 	    enumClass
 	}
-	
+
 	override def write (kryo: Kryo, output: Output, obj: Enumeration#Value) = {
 		val enumClass = cacheEnumValue(obj)
 		// Output a specific class of the enumeration
@@ -113,12 +113,12 @@ class EnumerationSerializer extends Serializer[Enumeration#Value] {
 		// Read a specific class of the enumeration
 		val clazz = kryo.readClass(input).getType
 		val id = input.readInt()
-		
+
 		val enumValues =  enumClass2enumValues.get(clazz).getOrElse {
 			cacheEnumValue(kryo.newInstance(clazz).asInstanceOf[Enumeration](id))
 			enumClass2enumValues.get(clazz).get
 		}
-	    
+
 		val enumInstance = enumValues(id)
 		enumInstance
 	}
