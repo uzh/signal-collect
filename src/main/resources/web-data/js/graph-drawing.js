@@ -388,7 +388,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         .charge(function (d) {
           var weight = 2;
           if (d.weight > weight) { weight = d.weight; }
-          return vertexSize(d)*-20*weight
+          return Math.max(vertexSize(d)*-40*weight, -10000)
         })
     
     svgEdges = svg.append('svg:g').selectAll(".edge");
