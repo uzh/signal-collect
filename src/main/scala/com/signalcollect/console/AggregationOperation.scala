@@ -114,10 +114,14 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
 
   def reduce(subGraphs: Stream[(Double,Double,JObject)]): (Double,Double,JObject) = {
     // Determine the lowest and highest state and merge the sub-graphs
-    subGraphs.foldLeft((subGraphs.head._1,subGraphs.head._2,JObject(List()))) { (acc, v) =>
-      (if (acc._1 < v._1) acc._1 else v._1,
-       if (acc._2 > v._2) acc._2 else v._2,
-       acc._3 merge v._3)
+    subGraphs.size match {
+      case 0 => (0.0, 0.0, JObject(List()))
+      case otherwise =>
+        subGraphs.foldLeft((subGraphs.head._1,subGraphs.head._2,JObject(List()))) { (acc, v) =>
+          (if (acc._1 < v._1) acc._1 else v._1,
+           if (acc._2 > v._2) acc._2 else v._2,
+           acc._3 merge v._3)
+        }
     }
   }
 }
