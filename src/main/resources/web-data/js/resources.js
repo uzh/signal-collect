@@ -288,16 +288,20 @@ scc.modules.Log = function() {
   };
 
   /**
+   * Make the scrollable area use the whole viewport.
+   * @tape {Callback}
+   */
+  var expandLogBox = (function() {
+    box.css("height", ($(window).height() - 240) + "px");
+  });
+  
+  /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Requests data from the ConfigurationProvider.
    */
   this.onopen = function() {
-    // make it using the full height
-    var onResize = (function() {
-      $("body.logs div#logBox div.scroll").css("height", ($(window).height() - 240) + "px");
-    });
-    $(document).ready(onResize);
-    $(window).resize(onResize);
+    $(document).ready(expandLogBox);
+    $(window).resize(expandLogBox);
 
     scc.order({"requestor": "Resources", "provider": "log"});
   }
@@ -310,6 +314,7 @@ scc.modules.Log = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
+    expandLogBox();
     var scrollDown = (Math.abs(boxInner.offset().top) + box.height() + box.offset().top >= boxInner.outerHeight());
     var fragments = [];
     var latest = null;
