@@ -50,7 +50,7 @@ import java.io.FileReader
 class ConsoleLogger extends Actor with Logger with ActorLogging {
 
   /** Defines the name of the file in which log messages are stored. */
-  def logFileName = "log_messages.txt"
+  def logFileName : String = "log_messages.txt"
 
   /** Stores the reader object used to read only new lines. */
   var logReader: BufferedReader = null
@@ -93,8 +93,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
       logClass: Class[_],
       message: Any): String = {
     val causeStr = {
-      if (cause == null) ""
-      else cause.getMessage()
+      if (cause == null) { "" }
+      else { cause.getMessage() }
     }
     val logClassStr = logClass.toString()
     val source = {

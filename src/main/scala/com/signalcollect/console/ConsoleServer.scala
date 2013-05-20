@@ -50,6 +50,7 @@ import net.liftweb.json.Extraction._
 import java.io.File
 import java.io.InputStream
 import akka.event.Logging
+import java.io.OutputStream
 
 /** Trait that defines the interface for our InteractiveExecution */
 trait Execution {
@@ -190,10 +191,10 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   println("WebSocket - Server started on port: " + sockets.getPort)
 
   /** Returns the HttpServer */
-  def getServer = server
+  def getServer: HttpServer = server
 
   /** Returns the WebSocketConsoleServer */
-  def getSockets = sockets
+  def getSockets: WebSocketConsoleServer[Id] = sockets
 
   /** Starts a new HTTP and WebSocket server, using the specified port for the
     * HTTP server if possible. Else attempts to find a pair of free ports and
@@ -237,7 +238,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     *  @param httpPort attempt to start the HTTP server on this port
     *  @return httpPort attempt to start the HTTP server on this port
     */
-  def getNewServers(httpPort: Int) = {
+  def getNewServers(httpPort: Int) : (HttpServer, WebSocketConsoleServer[Id]) = {
     val server: HttpServer =
       HttpServer.create(new InetSocketAddress(httpPort), 0)
     val sockets: WebSocketConsoleServer[Id] =
@@ -245,25 +246,25 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     (server, sockets)
   }
 
-  def setCoordinator(coordinatorActor: ActorRef) = {
+  def setCoordinator(coordinatorActor: ActorRef) {
     sockets.setCoordinator(coordinatorActor)
   }
 
-  def setExecution(e: Execution) = {
+  def setExecution(e: Execution) {
     sockets.setExecution(e)
   }
 
-  def setExecutionConfiguration(e: ExecutionConfiguration) = {
+  def setExecutionConfiguration(e: ExecutionConfiguration) {
     sockets.setExecutionConfiguration(e)
   }
 
-  def setExecutionStatistics(e: ExecutionStatistics) = {
+  def setExecutionStatistics(e: ExecutionStatistics) {
     sockets.setExecutionStatistics(e)
   }
 
 
   /** Stop both HTTP and WebSocket servers and exit */
-  def shutdown = {
+  def shutdown {
     println("Stopping http server...")
     server.stop(5)
     println("Stopping WebSocket...")
@@ -301,7 +302,7 @@ class FileServer() extends HttpHandler {
       case otherwise => "text/plain"
     }
 
-    def os = t.getResponseBody
+    def os : OutputStream = t.getResponseBody
     t.getResponseHeaders.set("Content-Type", fileType)
 
     // Log files are served as attachments
