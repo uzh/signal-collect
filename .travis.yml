@@ -1,6 +1,10 @@
 language: scala
+jdk:
+  - oraclejdk7
 scala:
   - "2.10.1"
 env:
   - JAVA_OPTS="-Xmx512m"
   - ISOLATED=true
+script: 
+  - "sbt -v ++$TRAVIS_SCALA_VERSION test"
