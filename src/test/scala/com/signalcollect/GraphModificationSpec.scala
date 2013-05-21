@@ -49,13 +49,13 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       graph.modifyGraph({ _.removeVertex(2, true) }, Some(2))
       statistics = graph.execute
       graph.aggregate(new CountVertices[GraphModificationVertex]) === 2
+      graph.shutdown
       statistics.aggregatedWorkerStatistics.numberOfVertices === 2
       statistics.aggregatedWorkerStatistics.verticesAdded === 4
       statistics.aggregatedWorkerStatistics.verticesRemoved === 2
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
-      graph.shutdown
     }
 
     "keep accurate statistics when using individual vertex removals" in {
@@ -78,13 +78,13 @@ class GraphModificationSpec extends SpecificationWithJUnit {
       graph.removeVertex(2, true)
       statistics = graph.execute
       graph.aggregate(new CountVertices[GraphModificationVertex]) === 2
+      graph.shutdown
       statistics.aggregatedWorkerStatistics.numberOfVertices === 2
       statistics.aggregatedWorkerStatistics.verticesAdded === 4
       statistics.aggregatedWorkerStatistics.verticesRemoved === 2
       statistics.aggregatedWorkerStatistics.numberOfOutgoingEdges === 1
       statistics.aggregatedWorkerStatistics.outgoingEdgesAdded === 2
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
-      graph.shutdown
     }
   }
 }

@@ -36,8 +36,8 @@ class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
       graph.addVertex(new BeforeRemovalVertex)
       graph.removeVertex(1)
       graph.execute
-      RemovalDetector.beforeRemovalWorked must_== true
       graph.shutdown
+      RemovalDetector.beforeRemovalWorked must_== true
     }
 
   }

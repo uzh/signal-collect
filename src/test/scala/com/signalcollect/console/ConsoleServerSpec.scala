@@ -43,7 +43,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
-
   "ConsoleServer" should {
 
     // console server address and ports
@@ -52,12 +51,10 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
     val socketPort = serverPort + 100
 
     // websocket connection
-    var websocket : WebSocketClient = null
+    var websocket: WebSocketClient = null
 
     // signal collect graph
-    var graph : DefaultGraph[Any, Any] = null
-
-
+    var graph: DefaultGraph[Any, Any] = null
 
     "start successfully" in {
       val serverConnection = new Socket
@@ -72,13 +69,11 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isServerOnline = true
         serverConnection.close()
       } catch {
-        case _ : Throwable =>
+        case _: Throwable =>
       }
 
       isServerOnline
     }
-
-
 
     "start socket successfully" in {
       val socketConnection = new Socket
@@ -91,27 +86,23 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isSocketOnline = true
         socketConnection.close()
       } catch {
-        case _ : Throwable =>
+        case _: Throwable =>
       }
 
       isSocketOnline
     }
 
-
-
     "establish websocket connection" in {
       try {
-        val websocketUri = new URI("ws://localhost:" + socketPort)
+        val websocketUri = new URI("ws://localhost:"+socketPort)
         websocket = new WebSocketClient(websocketUri)
         websocket.sendJsonOrderWithProvider("test")
         websocket.getJsonResponse
         true
       } catch {
-        case _ : Throwable => false
+        case _: Throwable => false
       }
     }
-
-
 
     "return valid API result for provider 'resources.workerStatistics'" in {
       websocket.sendJsonOrderWithProvider("resources")
@@ -138,14 +129,13 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "collectOperationsExecuted",
         "toCollectSize",
         "toSignalSize",
-        "workerId"
-      );
-
+        "workerId")
       val providerResults = (json \\ "workerStatistics").children
       val providerResultsMap = createMapFromJValueList(providerResults);
-      requiredProviderResults.foreach {
-        result => providerResultsMap.contains(result) === true
+      val allContained = requiredProviderResults.forall {
+        providerResultsMap.contains(_) === true
       }
+      allContained === true
     }
 
     "return valid API result for provider 'resources.nodeStatistics'" in {
@@ -163,17 +153,14 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "jmx_committed_vms",
         "runtime_mem_max",
         "runtime_mem_free",
-        "runtime_mem_total"
-      );
-
+        "runtime_mem_total")
       val providerResults = (json \\ "nodeStatistics").children
       val providerResultsMap = createMapFromJValueList(providerResults);
-      requiredProviderResults.foreach {
-        result => providerResultsMap.contains(result) === true
+      val allContained = requiredProviderResults.forall {
+        providerResultsMap.contains(_) === true
       }
+      allContained === true
     }
-
-
 
     "return valid API result for provider 'configuration.executionConfiguration'" in {
       // as we have no execution running, this test will only check whether we get
@@ -197,13 +184,13 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "heartbeatIntervalInMilliseconds",
         "nodeProvisioner",
         "consoleHttpPort",
-        "akkaDispatcher"
-      );
+        "akkaDispatcher")
       val providerResults = (json \\ "graphConfiguration").children
       val providerResultsMap = createMapFromJValueList(providerResults)
-      requiredProviderResults.foreach {
-        result => providerResultsMap.contains(result) === true
+      val allContained = requiredProviderResults.forall {
+        providerResultsMap.contains(_) === true
       }
+      allContained === true
     }
 
     "return valid API result for provider 'configuration.systemProperties'" in {
@@ -261,22 +248,20 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         "java.vendor.url.bug",
         "sun.io.unicode.encoding",
         "sun.cpu.endian",
-        "sun.cpu.isalist"
-        // the following properties seem to be unavailable on a Linux host
+        "sun.cpu.isalist" // the following properties seem to be unavailable on a Linux host
         // "user.country.format", "gopherProxySet", "http.nonProxyHosts", "socksNonProxyHosts", "ftp.nonProxyHosts",
-      );
+        );
       val providerResults = (json \\ "systemProperties").children
       var providerResultsMap: Map[String, Any] = Map()
       providerResults.foreach {
         v: JValue =>
           providerResultsMap = providerResultsMap ++ createMapFromJValueList(v.children)
       }
-      requiredProviderResults.foreach {
-        result => providerResultsMap.contains(result) === true
+      val allContained = requiredProviderResults.forall {
+        providerResultsMap.contains(_) === true
       }
+      allContained === true
     }
-
-
 
     "return valid API result for provider 'log'" in {
       websocket.sendJsonOrderWithProvider("log")
@@ -286,8 +271,6 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       createMapFromJValueList(providerResults).size == 0
     }
 
-
-
     "return valid API result for provider 'graph'" in {
       websocket.sendJsonOrderWithProvider("graph")
       val json = websocket.getJsonResponse
@@ -296,25 +279,19 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       true === true
     }
 
-
-
     "return valid API result for provider 'state'" in {
       websocket.sendJsonOrderWithProvider("state")
       val json = websocket.getJsonResponse
       (json \\ "state").values === "undetermined"
     }
 
-
-
     "return valid API result for provider 'controls'" in {
       websocket.sendJsonOrder("{\"provider\": \"controls\", \"control\": \"step\"}")
       val json = websocket.getJsonResponse
-      // we do not compute anything so we can't actually control anything.
+      // We do not compute anything so we can't actually control anything.
       // As long as we get back a result, it's OK.
       true === true
     }
-
-
 
     "return valid API result for provider 'breakconditions'" in {
       websocket.sendJsonOrderWithProvider("breakconditions")
@@ -322,24 +299,18 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       (json \\ "status").values === "noExecution"
     }
 
-
-
     "return valid API result for provider 'invalidDataProvider'" in {
       websocket.sendJsonOrderWithProvider("invalidDataProviderWhichDoesNotActuallyExist")
       val json = websocket.getJsonResponse
       (json \\ "provider").values === "invalid"
     }
 
-
-
     "close websocket connection" in {
       try {
         websocket.closeBlocking()
         true
-      } catch { case _ : Throwable => false }
+      } catch { case _: Throwable => false }
     }
-
-
 
     "shutdown successfully" in {
       val console = graph.getConsole
@@ -351,9 +322,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
   }
 
-
-
-  def createMapFromJValueList(json : List[JValue]) = {
+  def createMapFromJValueList(json: List[JValue]) = {
     var map: Map[String, Any] = Map()
     json.foreach {
       s: JValue =>
@@ -365,18 +334,18 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
 }
 
-class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClient(uri) {
+class WebSocketClient(uri: URI) extends org.java_websocket.client.WebSocketClient(uri) {
   connectBlocking()
   var response = ""
 
-  def sendJsonOrderWithProvider(provider : String) {
-    sendJsonOrder("{\"provider\":\"" + provider + "\"}")
+  def sendJsonOrderWithProvider(provider: String) {
+    sendJsonOrder("{\"provider\":\""+provider+"\"}")
   }
-  def sendJsonOrder(json : String) {
+  def sendJsonOrder(json: String) {
     try {
       send(json)
     } catch {
-      case _ : Throwable =>
+      case _: Throwable =>
     }
   }
   def getJsonResponse = {
@@ -385,14 +354,14 @@ class WebSocketClient(uri : URI) extends org.java_websocket.client.WebSocketClie
     response = ""
     json
   }
-  def onOpen(handshakedata : ServerHandshake) {
+  def onOpen(handshakedata: ServerHandshake) {
   }
-  def onMessage(message : String) {
+  def onMessage(message: String) {
     while (response.length() > 0) { Thread.sleep(100) }
     response = message
   }
-  def onClose(code : Int, reason : String, remote : Boolean) {
+  def onClose(code: Int, reason: String, remote: Boolean) {
   }
-  def onError(ex : Exception) {
+  def onError(ex: Exception) {
   }
 }
