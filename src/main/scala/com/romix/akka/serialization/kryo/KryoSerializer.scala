@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.TimeUnit
 import scala.util.Success
 import scala.util.Failure
+import scala.reflect.ClassTag
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
@@ -174,22 +175,49 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         for ((fqcn: String, idNum: String) <- mappings) {
           val id = idNum.toInt
           // Load class
-          system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
-            case Success(clazz) => kryo.register(clazz, id)
-            case Failure(e) => {
-              log.error("Class could not be loaded and/or registered: {} ", fqcn)
-              throw e
+          if (fqcn.startsWith("Array")) {
+            val arrayOfString = fqcn.substring(6, fqcn.length - 1)
+            system.dynamicAccess.getClassFor[AnyRef](arrayOfString) match {
+              case Success(clazz) =>
+                val exampleArray = ClassTag(clazz).newArray(1)
+                kryo.register(exampleArray.getClass, id)
+              case Failure(e) =>
+                log.error(s"Class could not be loaded and/or registered: $fqcn")
+                e.printStackTrace
+                throw e
+            }
+          } else {
+            system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
+              case Success(clazz) => kryo.register(clazz, id)
+              case Failure(e) => {
+                log.error("Class could not be loaded and/or registered: {} ", fqcn)
+                throw e
+              }
             }
           }
         }
 
         for (classname <- classnames) {
           // Load class
-          system.dynamicAccess.getClassFor[AnyRef](classname) match {
-            case Success(clazz) => kryo.register(clazz)
-            case Failure(e) => {
-              log.warning("Class could not be loaded and/or registered: {} ", classname)
-              /* throw e */
+          if (classname.startsWith("Array")) {
+            val arrayOfString = classname.substring(6, classname.length - 1)
+            system.dynamicAccess.getClassFor[AnyRef](arrayOfString) match {
+              case Success(clazz) =>
+                val exampleArray = ClassTag(clazz).newArray(1)
+                kryo.register(exampleArray.getClass)
+              case Failure(e) =>
+                log.error(s"Class could not be loaded and/or registered: $classname")
+                e.printStackTrace
+                throw e
+            }
+          } else {
+            system.dynamicAccess.getClassFor[AnyRef](classname) match {
+              case Success(clazz) => kryo.register(clazz)
+              case Failure(e) => {
+                log.warning("Class could not be loaded and/or registered: {} ", classname)
+                e.printStackTrace
+                throw e
+              }
             }
           }
         }
@@ -201,11 +229,25 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
         for ((fqcn: String, idNum: String) <- mappings) {
           val id = idNum.toInt
           // Load class
-          system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
-            case Success(clazz) => kryo.register(clazz, id)
-            case Failure(e) => {
-              log.error("Class could not be loaded and/or registered: {} ", fqcn)
-              throw e
+          if (fqcn.startsWith("Array")) {
+            val arrayOfString = fqcn.substring(6, fqcn.length - 1)
+            system.dynamicAccess.getClassFor[AnyRef](arrayOfString) match {
+              case Success(clazz) =>
+                val exampleArray = ClassTag(clazz).newArray(1)
+                kryo.register(exampleArray.getClass, id)
+              case Failure(e) =>
+                log.error(s"Class could not be loaded and/or registered: $fqcn")
+                e.printStackTrace
+                throw e
+            }
+          } else {
+            system.dynamicAccess.getClassFor[AnyRef](fqcn) match {
+              case Success(clazz) => kryo.register(clazz, id)
+              case Failure(e) => {
+                log.error("Class could not be loaded and/or registered: {} ", fqcn)
+                e.printStackTrace
+                throw e
+              }
             }
           }
         }
@@ -312,8 +354,9 @@ class ObjectPool[T](number: Int, newInstance: () => T) {
 
   private def create: T = {
     size.incrementAndGet match {
-      case e: Int if e > number => size.decrementAndGet; fetch()
-      case e: Int               => newInstance()
+      case e: Int if e > number =>
+        size.decrementAndGet; fetch()
+      case e: Int => newInstance()
     }
   }
 

@@ -18,10 +18,10 @@ akka {
     """ +
     {
       val level = loggingLevel match {
-        case Logging.ErrorLevel => "ERROR"
+        case Logging.ErrorLevel   => "ERROR"
         case Logging.WarningLevel => "WARNING"
-        case Logging.InfoLevel => "INFO"
-        case Logging.DebugLevel => "DEBUG"
+        case Logging.InfoLevel    => "INFO"
+        case Logging.DebugLevel   => "DEBUG"
       }
       s"""
   loglevel = $level
@@ -196,7 +196,7 @@ akka {
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 48
+        var highestUsedKryoId = 40
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
