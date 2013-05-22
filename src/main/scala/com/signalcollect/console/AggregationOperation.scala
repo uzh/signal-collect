@@ -52,6 +52,9 @@ import BreakConditionName._
  *
  * @constructor create the aggregator
  * @param vertexIds set of vertex ids to be loaded
+ * @param exposeVertices wether or not to call expose() on each vertex and put
+ *     the return value into the "info" property. If true, may increase
+ *     graph loading time significantly.
  */
 class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolean = false)
     extends AggregationOperation[(Double, Double, JObject)] {
@@ -90,7 +93,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
               JField("ss", i.scoreSignal),
               JField("cs", i.scoreCollect),
               JField("t", v.getClass.toString.split("""\.""").last),
-              JField("exposition",
+              JField("info",
                 if (exposeVertices) {
                   JObject(
                     (for ((k, v) <- i.expose) yield {

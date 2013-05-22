@@ -529,7 +529,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
                        "es": data.es, "ss": data.ss, "cs": data.cs,
-                       "info": data.exposition, "r": radius, "t": data.t});
+                       "info": data.info, "r": radius, "t": data.t});
         // Store the index of the vertex in the lookup table
         vertexRefs[id] = vertices.length - 1;
         newVertices = true;
@@ -542,7 +542,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         vertices[vertexRefs[id]].cs = data.cs;
         vertices[vertexRefs[id]].r = radius;
         vertices[vertexRefs[id]].t = data.t;
-        vertices[vertexRefs[id]].info = data.exposition;
+        vertices[vertexRefs[id]].info = data.info;
       }
     });
     var verticesToRemove = getOverflowingVertices()
