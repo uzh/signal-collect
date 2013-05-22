@@ -280,7 +280,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   /**
    * The interactive execution mode as used by the Console.
    *
-   * To use this mode, instantiate it and call its run() method, which is the
+   * To use this mode, instantiate it and call its 'run' method, which is the
    * main execution loop for the computation. The instance accepts calls to
    * functions which allow the client to interact with the computation. It
    * supports the following features:
@@ -288,7 +288,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
    *  - Performing a partial step (e.g. signal or collect)
    *  - Performing all steps up until before the next signal step
    *  - Continuously running the computation
-   *  - Pausing the computation if it's continuously running
+   *  - Pausing the computation if it is continuously running
    *  - Terminating the computation and Signal/Collect
    *  - Setting and getting multiple break conditions
    *  - GlobalTerminationCondition checking at intervals
