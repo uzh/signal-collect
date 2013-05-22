@@ -59,14 +59,14 @@ trait Execution {
   var conditionsReached: Map[String, String] // Map of fired conditions
   var state: String // Current state of the computation
   var iteration: Int // Computation iteration number
-  def step // Perform a partial step
-  def collect // Perform all steps until after the next collect
-  def continue // Continue the computation
-  def pause // Pause the computation
-  def reset // Reset the graph to its initial state
-  def terminate // Terminate the computation and Signal/Collect
-  def addCondition(condition: BreakCondition) // Add a condition
-  def removeCondition(id: String) // Remove a condition
+  def step: Unit // Perform a partial step
+  def collect: Unit // Perform all steps until after the next collect
+  def continue: Unit // Continue the computation
+  def pause: Unit // Pause the computation
+  def reset: Unit // Reset the graph to its initial state
+  def terminate: Unit // Terminate the computation and Signal/Collect
+  def addCondition(condition: BreakCondition): Unit // Add a condition
+  def removeCondition(id: String): Unit // Remove a condition
 }
 
 /** Enumeration of possible break conditions */

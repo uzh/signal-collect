@@ -67,7 +67,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
   }
 
   def extract(v: Vertex[_, _]): ((Double, Double, JObject)) = {
-      def state = interpretState(v.state)
+      def state: Double = interpretState(v.state)
     v match {
       case i: Inspectable[Id, _] => {
         if (vertexIds.contains(i.id)) {
@@ -85,7 +85,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
             case null  => "null"
             case other => other.toString
           }
-            def vertexProperties = (List(JField("s", stateString),
+            def vertexProperties: List[JField] = (List(JField("s", stateString),
               JField("es", targetVertices.size),
               JField("ss", i.scoreSignal),
               JField("cs", i.scoreCollect),
@@ -97,10 +97,10 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
                       JField(k, Toolkit.serializeAny(v))
                     }).toList)
                 } else { JNothing })))
-            def verticesObj = ("vertices",
+            def verticesObj: (String, JObject) = ("vertices",
               JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
 
-            def edgesObj = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+            def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
           (state, state, verticesObj ~ edgesObj)
         } else { (state, state, JObject(List())) }
 
@@ -297,7 +297,7 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
     extends AggregationOperation[List[Vertex[Id, _]]] {
 
-  def ids = idsList.toSet
+  def ids: Set[String] = idsList.toSet
 
   def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = v match {
     case i: Inspectable[Id, _] => {
@@ -375,29 +375,36 @@ class BreakConditionsAggregator(conditions: Map[String, BreakCondition], state: 
               state match {
                 case "checksAfterSignal" => c.name match {
                   case CollectScoreBelowThreshold =>
-                    if (i.scoreCollect < c.props("collectThreshold").toDouble)
+                    if (i.scoreCollect < c.props("collectThreshold").toDouble) {
                       results += (id -> i.scoreCollect.toString)
+                    }
                   case CollectScoreAboveThreshold =>
-                    if (i.scoreCollect > c.props("collectThreshold").toDouble)
+                    if (i.scoreCollect > c.props("collectThreshold").toDouble) {
                       results += (id -> i.scoreCollect.toString)
+                    }
                   case otherwise =>
                 }
                 case "checksAfterCollect" => c.name match {
                   case StateChanges =>
-                    if (i.state.toString != c.props("currentState"))
+                    if (i.state.toString != c.props("currentState")) {
                       results += (id -> i.state.toString)
+                    }
                   case StateAbove =>
-                    if (i.state.toString.toDouble > c.props("expectedState").toDouble)
+                    if (i.state.toString.toDouble > c.props("expectedState").toDouble) {
                       results += (id -> i.state.toString)
+                    }
                   case StateBelow =>
-                    if (i.state.toString.toDouble < c.props("expectedState").toDouble)
+                    if (i.state.toString.toDouble < c.props("expectedState").toDouble) {
                       results += (id -> i.state.toString)
+                    }
                   case SignalScoreBelowThreshold =>
-                    if (i.scoreSignal < c.props("signalThreshold").toDouble)
+                    if (i.scoreSignal < c.props("signalThreshold").toDouble) {
                       results += (id -> i.scoreSignal.toString)
+                    }
                   case SignalScoreAboveThreshold =>
-                    if (i.scoreSignal > c.props("signalThreshold").toDouble)
+                    if (i.scoreSignal > c.props("signalThreshold").toDouble) {
                       results += (id -> i.scoreSignal.toString)
+                    }
                   case otherwise =>
                 }
               }
