@@ -37,7 +37,7 @@ trait Inspectable[Id, State] extends Vertex[Id, State] {
    * Returns a map containing the edges this vertex is connected to. The map
    * uses the targetIds of the edges as keys.
    */ 
-  def outgoingEdges: collection.mutable.Map[Any, Edge[_]]
+  def edges: Iterable[Edge[_]]
 
   /**
    * The expose function can provide additional information about the vertex.

@@ -72,7 +72,7 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
       case i: Inspectable[Id, _] => {
         if (vertexIds.contains(i.id)) {
           // Get the list of target vertices that this vertex' edges point at
-          val targetVertices = i.outgoingEdges.values.filter { value =>
+          val targetVertices = i.edges.filter { value =>
             // This match is necessary because only an Edge[Id] will have a
             // targetId of type Id.
             value match {
@@ -159,9 +159,9 @@ class TopDegreeAggregator[Id](n: Int)
   def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
     case i: Inspectable[Id, _] =>
       // Create one map from this id to the number of outgoing edges
-      Map(i.id -> i.outgoingEdges.size) ++
+      Map(i.id -> i.edges.size) ++
         // Create several maps, one for each target id to 1
-        i.outgoingEdges.values.map {
+        i.edges.map {
           case v: Edge[Id] => (v.targetId -> 1)
         }
     case other => Map[Id, Int]()
@@ -267,13 +267,13 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
       // If this vertex is the target of a primary vertex, it's a vicinity vertex
-      if (i.outgoingEdges.values.view.map {
+      if (i.edges.view.map {
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise                                 => false
       }.toSet.contains(true)) { return Set(i.id) }
       // If this vertex is a primary vertex, all its targets are vicinity vertices
       if (ids.contains(i.id)) {
-        return i.outgoingEdges.values.map { case v: Edge[Id] => v.targetId }.toSet
+        return i.edges.map { case v: Edge[Id] => v.targetId }.toSet
       }
       // If neither is true, this vertex is irrelevant
       return Set()
