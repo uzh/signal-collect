@@ -269,7 +269,6 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     server.stop(5)
     println("Stopping WebSocket...")
     sockets.stop(5000)
-    sys.exit
   }
 }
 

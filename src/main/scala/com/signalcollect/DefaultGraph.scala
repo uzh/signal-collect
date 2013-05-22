@@ -488,6 +488,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
      * is simply an alias for -1.
      */
     def run() {
+      println("Entering interactive execution mode")
       lock.synchronized {
         while (!userTermination) {
           iteration += 1
@@ -543,6 +544,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
         stats.terminationReason = TerminationReason.TerminatedByUser
       }
 
+      println("Exiting interactive execution mode")
     }
   }
 
