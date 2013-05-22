@@ -88,14 +88,10 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     */
   def createJsonString(
       level: String,
-      cause: Throwable,
+      cause: String,
       logSource: String,
       logClass: Class[_],
       message: Any): String = {
-    val causeStr = {
-      if (cause == null) { "" }
-      else { cause.getMessage() }
-    }
     val logClassStr = logClass.toString()
     val source = {
       if (logClassStr.startsWith("class akka.")) {
@@ -112,7 +108,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     val json = ("level" -> level) ~
                ("source" -> source) ~
                ("date" -> date) ~
-               ("cause" -> causeStr) ~
+               ("cause" -> cause) ~
                ("logSource" -> logSource) ~
                ("logClass" -> logClassStr) ~
                ("message" -> message.toString)
@@ -120,17 +116,31 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
 
 
+  /** Creates a JSON string based on the passed log message arguments.
+    *
+    * @param level the level of the log message
+    * @param logSource the source of the log message
+    * @param logClass the class of the log message
+    * @param message the message of the log message
+    * @return the string representing a JSON object.
+    */
+  def createJsonString(
+      level: String,
+      logSource: String,
+      logClass: Class[_],
+      message: Any): String = createJsonString(level, "", logSource, logClass, message)
+
+
   /** Clears the file in which log messages are stored. */
   def resetLog {
-    if (!logFileExists) {
-      return
-    }
-    val fileWriter = new FileWriter(logFileName, false)
-    try {
-      fileWriter.write((new String()))
-    }
-    finally {
-      fileWriter.close()
+    if (logFileExists) {
+      val fileWriter = new FileWriter(logFileName, false)
+      try {
+        fileWriter.write((new String()))
+      }
+      finally {
+        fileWriter.close()
+      }
     }
   }
 
@@ -150,16 +160,15 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     */
   def getLogMessages: List[JValue] = {
     var logMessages: List[JValue] = List()
-    if (!logFileExists) {
-      return logMessages
-    }
-    if (logReader == null) {
-      logReader = new BufferedReader(new FileReader(logFileName))
-    }
-    var readLines = 0
-    while (logReader.ready() && readLines < maxReadLines) {
-      logMessages = logMessages ::: List(parse(logReader.readLine()))
-      readLines += 1
+    if (logFileExists) {
+      if (logReader == null) {
+        logReader = new BufferedReader(new FileReader(logFileName))
+      }
+      var readLines = 0
+      while (logReader.ready() && readLines < maxReadLines) {
+        logMessages = logMessages ::: List(parse(logReader.readLine()))
+        readLines += 1
+      }
     }
     logMessages
   }
@@ -170,16 +179,16 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     * Forwards any log message type that should be stored, sends a list of log messages if these
     * are requested.
     */
-  def receive = {
+  def receive: Receive = {
     case InitializeLogger(_) => sender ! LoggerInitialized
     case l @ Error(cause, logSource, logClass, message) =>
-      writeLog(createJsonString("Error", cause, logSource, logClass, message))
+      writeLog(createJsonString("Error", cause.getMessage(), logSource, logClass, message))
     case l @ Warning(logSource, logClass, message) =>
-      writeLog(createJsonString("Warning", null, logSource, logClass, message))
+      writeLog(createJsonString("Warning", logSource, logClass, message))
     case l @ Info(logSource, logClass, message) =>
-      writeLog(createJsonString("Info", null, logSource, logClass, message))
+      writeLog(createJsonString("Info", logSource, logClass, message))
     case l @ Debug(logSource, logClass, message) =>
-      writeLog(createJsonString("Debug", null, logSource, logClass, message))
+      writeLog(createJsonString("Debug", logSource, logClass, message))
     case Request(command, reply, incrementor) =>
       try {
         val result = command.asInstanceOf[Logger => Any](this)
