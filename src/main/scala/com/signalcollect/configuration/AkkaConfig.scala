@@ -79,7 +79,7 @@ akka {
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+        var bindingsBlock = kryoRegistrations filter (!_.startsWith("Array")) map { kryoRegistration =>
           s"""
              "$kryoRegistration" = kryo"""
         }
@@ -237,7 +237,7 @@ akka {
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
+        var bindingsBlock = kryoRegistrations filter (!_.startsWith("Array")) map { kryoRegistration =>
           s""",
              "$kryoRegistration""""
         }
