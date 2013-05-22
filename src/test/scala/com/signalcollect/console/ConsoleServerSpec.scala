@@ -69,7 +69,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isServerOnline = true
         serverConnection.close()
       } catch {
-        case _: Throwable =>
+        case t: Throwable => t.printStackTrace
       }
 
       isServerOnline
@@ -86,7 +86,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
         isSocketOnline = true
         socketConnection.close()
       } catch {
-        case _: Throwable =>
+        case t: Throwable => t.printStackTrace
       }
 
       isSocketOnline
@@ -94,13 +94,15 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
     "establish websocket connection" in {
       try {
-        val websocketUri = new URI("ws://localhost:"+socketPort)
+        val websocketUri = new URI("ws://localhost:" + socketPort)
         websocket = new WebSocketClient(websocketUri)
         websocket.sendJsonOrderWithProvider("test")
         websocket.getJsonResponse
         true
       } catch {
-        case _: Throwable => false
+        case t: Throwable =>
+          t.printStackTrace
+          false
       }
     }
 
@@ -309,7 +311,11 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       try {
         websocket.closeBlocking()
         true
-      } catch { case _: Throwable => false }
+      } catch {
+        case t: Throwable =>
+          t.printStackTrace
+          false
+      }
     }
 
     "shutdown successfully" in {
@@ -339,13 +345,13 @@ class WebSocketClient(uri: URI) extends org.java_websocket.client.WebSocketClien
   var response = ""
 
   def sendJsonOrderWithProvider(provider: String) {
-    sendJsonOrder("{\"provider\":\""+provider+"\"}")
+    sendJsonOrder("{\"provider\":\"" + provider + "\"}")
   }
   def sendJsonOrder(json: String) {
     try {
       send(json)
     } catch {
-      case _: Throwable =>
+      case t: Throwable => t.printStackTrace
     }
   }
   def getJsonResponse = {
