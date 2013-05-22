@@ -171,31 +171,33 @@
           </div>
           <div id="cGraphControl" class="panel_section">
             <div class="title expanded">Computation Break Conditions</div>
-            <div id="cGraphControlDisabled" class="contents hidden">
-              <span class="panel_span">The computation controls are only available when using the interactive execution mode</span>
-            </div>
-            <div id="cGraphControlEnabled" class="contents">
-              <form>
-                <h1><span>Breakpoint Conditions</span></h1>
-                <div class="bottom_border"><div id="gc_conditionList"></div></div>
-                <h1><span>Add New Condition</span></h1>
-                <label for="gc_vertexId">Vertex ID and condition:</label><br/>
-                <input id="gc_vertexId" type="text">
-                <button id="gc_useMouse" class="narrow">Select</button><br/>
-                <select id="gc_condition">
-                  <option>state changes</option>
-                  <option>state above:</option>
-                  <option>state below:</option>
-                  <option>signal score above threshold</option>
-                  <option>signal score below threshold</option>
-                  <option>collect score above threshold</option>
-                  <option>collect score below threshold</option>
-                </select>
-                <span id="gc_stateContainer">
-                  <input id="gc_state" type="text">
-                </span>
-                <button disabled="disabled" class="narrow" id="gc_addCondition">Add</button><br/>
-              </form> 
+            <div>
+	            <div id="cGraphControlDisabled" class="contents hidden">
+	              <span class="panel_span">The computation controls are only available when using the interactive execution mode</span>
+	            </div>
+	            <div id="cGraphControlEnabled" class="contents">
+	              <form>
+	                <h1><span>Breakpoint Conditions</span></h1>
+	                <div class="bottom_border"><div id="gc_conditionList"></div></div>
+	                <h1><span>Add New Condition</span></h1>
+	                <label for="gc_vertexId">Vertex ID and condition:</label><br/>
+	                <input id="gc_vertexId" type="text">
+	                <button id="gc_useMouse" class="narrow">Select</button><br/>
+	                <select id="gc_condition">
+	                  <option>state changes</option>
+	                  <option>state above:</option>
+	                  <option>state below:</option>
+	                  <option>signal score above threshold</option>
+	                  <option>signal score below threshold</option>
+	                  <option>collect score above threshold</option>
+	                  <option>collect score below threshold</option>
+	                </select>
+	                <span id="gc_stateContainer">
+	                  <input id="gc_state" type="text">
+	                </span>
+	                <button disabled="disabled" class="narrow" id="gc_addCondition">Add</button><br/>
+	              </form> 
+	            </div>
             </div>
           </div>
 
