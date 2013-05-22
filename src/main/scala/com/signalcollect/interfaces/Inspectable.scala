@@ -32,7 +32,21 @@ trait Inspectable[Id, State] extends Vertex[Id, State] {
    * Returns the ids of the target vertices of outgoing edges of the vertex.
    */
   def getTargetIdsOfOutgoingEdges: Traversable[_]
+
+  /**
+   * Returns a map containing the edges this vertex is connected to. The map
+   * uses the targetIds of the edges as keys.
+   */ 
   def outgoingEdges: collection.mutable.Map[Any, Edge[_]]
+
+  /**
+   * The expose function can provide additional information about the vertex.
+   * By default, it returns an empty map, but it can be overridden to return
+   * any kind of Map[String,Any]. The Map will be serialized to json
+   * recursively and can be viewed in the console when enabling the "expose
+   * vertex details on click" option. 
+   * @return a string-keyed map of details about the node.
+   */
   def expose: Map[String,Any] = Map[String,Any]()
 
 }

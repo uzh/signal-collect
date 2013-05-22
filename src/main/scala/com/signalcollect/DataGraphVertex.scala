@@ -99,7 +99,8 @@ abstract class DataGraphVertex[Id, State](
   }
 
   /**
-   * Implementing expose can provide additional information when using the Console
+   * Exposing the vertex details on a DataGraphVertex shows its 
+   * mostRecentSignalMap.
    * @return a map with a single element, the mostRecentSignalMap
    */
   override def expose(): Map[String,Any] = {
