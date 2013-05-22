@@ -47,7 +47,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
 
     // console server address and ports
     val serverHost = InetAddress.getByName(null)
-    val serverPort = 8086
+    val serverPort = 56783
     val socketPort = serverPort + 100
 
     // websocket connection
