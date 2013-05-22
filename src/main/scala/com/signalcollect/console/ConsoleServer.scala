@@ -54,19 +54,19 @@ import java.io.OutputStream
 
 /** Trait that defines the interface for our InteractiveExecution */
 trait Execution {
-  var stepTokens: Int         // How many partial steps remain until pausing
+  var stepTokens: Int // How many partial steps remain until pausing
   var conditions: Map[String, BreakCondition] // Map of active conditions
-  var conditionsReached: Map[String, String]  // Map of fired conditions
-  var state: String           // Current state of the computation
-  var iteration: Int          // Computation iteration number
-  def step()                  // Perform a partial step
-  def collect()               // Perform all steps until after the next collect
-  def continue()              // Continue the computation
-  def pause()                 // Pause the computation
-  def reset()                 // Reset the graph to its initial state
-  def terminate()             // Terminate the computation and Signal/Collect
+  var conditionsReached: Map[String, String] // Map of fired conditions
+  var state: String // Current state of the computation
+  var iteration: Int // Computation iteration number
+  def step // Perform a partial step
+  def collect // Perform all steps until after the next collect
+  def continue // Continue the computation
+  def pause // Pause the computation
+  def reset // Reset the graph to its initial state
+  def terminate // Terminate the computation and Signal/Collect
   def addCondition(condition: BreakCondition) // Add a condition
-  def removeCondition(id: String)             // Remove a condition
+  def removeCondition(id: String) // Remove a condition
 }
 
 /** Enumeration of possible break conditions */
@@ -82,27 +82,28 @@ object BreakConditionName extends Enumeration {
 }
 
 import BreakConditionName._
-/** A break condition for the interactive execution mode
-  *
-  * When creating a new break conditions, a number of checks are performed
-  * to check wether it is valid or not. If insufficient or invalid data has
-  * been provided then an IllegalArgumentException is thrown. This can occur
-  * if the propsMap doesn't contain everything a break condition of a
-  * particular type needs, or if the provided data is invalid. In any case,
-  * the reason for the validation failure is provided in the exception.
-  *
-  * @constructor create a new break condition
-  * @param graphConfiguration the current graph configuration
-  * @param executionConfiguration the current execution configuration
-  * @param name the name of the break condition as in BreakConditionName
-  * @param propsMap a map of properties supplied to this break condition
-  * @param workerApi a workerApi
-  */
+/**
+ * A break condition for the interactive execution mode
+ *
+ * When creating a new break conditions, a number of checks are performed
+ * to check wether it is valid or not. If insufficient or invalid data has
+ * been provided then an IllegalArgumentException is thrown. This can occur
+ * if the propsMap doesn't contain everything a break condition of a
+ * particular type needs, or if the provided data is invalid. In any case,
+ * the reason for the validation failure is provided in the exception.
+ *
+ * @constructor create a new break condition
+ * @param graphConfiguration the current graph configuration
+ * @param executionConfiguration the current execution configuration
+ * @param name the name of the break condition as in BreakConditionName
+ * @param propsMap a map of properties supplied to this break condition
+ * @param workerApi a workerApi
+ */
 class BreakCondition(val graphConfiguration: GraphConfiguration,
-  val executionConfiguration: ExecutionConfiguration,
-  val name: BreakConditionName,
-  val propsMap: Map[String, String],
-  val workerApi: WorkerApi[_, _]) {
+                     val executionConfiguration: ExecutionConfiguration,
+                     val name: BreakConditionName,
+                     val propsMap: Map[String, String],
+                     val workerApi: WorkerApi[_, _]) {
 
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
@@ -121,8 +122,7 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
           }
         case otherwise => false
       }
-    }
-    else {
+    } else {
       false
     }, "Missing or invalid vertexId!")
 
@@ -137,15 +137,13 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
       try {
         props("expectedState").toDouble
         true
-      }
-      catch {
+      } catch {
         case e: NumberFormatException =>
           false
       }
-    }
-    else {
+    } else {
       true
-  }, "Invalid state! Needs to be parseable as double.")
+    }, "Invalid state! Needs to be parseable as double.")
 
   name match {
     case SignalScoreBelowThreshold
@@ -159,20 +157,21 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
 
 }
 
-/** The main class representing the Console Server
-  *
-  * The ConsoleServer class sets up the WebSocket and HTTP servers needed to
-  * satisfy client requests. The ports used by the HTTP server can be set in
-  * the graphConfiguration using the consoleHttpPort option. The WebSocket
-  * server will always use a port 100 ports above the HTTP server. If the user
-  * has not supplied an option, the ConsoleServer will attempt to use the
-  * default port (8080) and it will automatically try ports above that if
-  * the port is already in use. This way, the ConsoleServer should always be
-  * able to start.
-  *
-  * @constructor create a new ConsoleServer
-  * @param graphConfiguration the current graph configuration
-  */
+/**
+ * The main class representing the Console Server
+ *
+ * The ConsoleServer class sets up the WebSocket and HTTP servers needed to
+ * satisfy client requests. The ports used by the HTTP server can be set in
+ * the graphConfiguration using the consoleHttpPort option. The WebSocket
+ * server will always use a port 100 ports above the HTTP server. If the user
+ * has not supplied an option, the ConsoleServer will attempt to use the
+ * default port (8080) and it will automatically try ports above that if
+ * the port is already in use. This way, the ConsoleServer should always be
+ * able to start.
+ *
+ * @constructor create a new ConsoleServer
+ * @param graphConfiguration the current graph configuration
+ */
 class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   // Start the HTTP and WebSocket servers on the configured port or the
@@ -196,12 +195,13 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   /** Returns the WebSocketConsoleServer */
   def getSockets: WebSocketConsoleServer[Id] = sockets
 
-  /** Starts a new HTTP and WebSocket server, using the specified port for the
-    * HTTP server if possible. Else attempts to find a pair of free ports and
-    * use those.
-    *
-    *  @param httpPort attempt to start the HTTP server on this port
-    */
+  /**
+   * Starts a new HTTP and WebSocket server, using the specified port for the
+   * HTTP server if possible. Else attempts to find a pair of free ports and
+   * use those.
+   *
+   *  @param httpPort attempt to start the HTTP server on this port
+   */
   def startServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
@@ -233,12 +233,13 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     }
   }
 
-  /** Attempt to instantiate HTTP and WebSocket servers.
-    *
-    *  @param httpPort attempt to start the HTTP server on this port
-    *  @return httpPort attempt to start the HTTP server on this port
-    */
-  def getNewServers(httpPort: Int) : (HttpServer, WebSocketConsoleServer[Id]) = {
+  /**
+   * Attempt to instantiate HTTP and WebSocket servers.
+   *
+   *  @param httpPort attempt to start the HTTP server on this port
+   *  @return httpPort attempt to start the HTTP server on this port
+   */
+  def getNewServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
     val server: HttpServer =
       HttpServer.create(new InetSocketAddress(httpPort), 0)
     val sockets: WebSocketConsoleServer[Id] =
@@ -262,7 +263,6 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     sockets.setExecutionStatistics(e)
   }
 
-
   /** Stop both HTTP and WebSocket servers and exit */
   def shutdown {
     println("Stopping http server...")
@@ -273,14 +273,15 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   }
 }
 
-/** An HttpHandler to server static files from the web-data directory
-  *
-  * The handler automatically sets the mime type for files ending in
-  * html, css, js, png, svg and ico. Other files are assumed to be
-  * plain text.
-  *
-  * @constructor create a new FileServer
-  */
+/**
+ * An HttpHandler to server static files from the web-data directory
+ *
+ * The handler automatically sets the mime type for files ending in
+ * html, css, js, png, svg and ico. Other files are assumed to be
+ * plain text.
+ *
+ * @constructor create a new FileServer
+ */
 class FileServer() extends HttpHandler {
   def handle(t: HttpExchange) {
 
@@ -294,15 +295,15 @@ class FileServer() extends HttpHandler {
     }
     val fileType = target match {
       case t if t.matches(".*\\.html$") => "text/html"
-      case t if t.matches(".*\\.css$") => "text/css"
-      case t if t.matches(".*\\.js$") => "application/javascript"
-      case t if t.matches(".*\\.png$") => "image/png"
-      case t if t.matches(".*\\.svg$") => "image/svg+xml"
-      case t if t.matches(".*\\.ico$") => "image/x-icon"
-      case otherwise => "text/plain"
+      case t if t.matches(".*\\.css$")  => "text/css"
+      case t if t.matches(".*\\.js$")   => "application/javascript"
+      case t if t.matches(".*\\.png$")  => "image/png"
+      case t if t.matches(".*\\.svg$")  => "image/svg+xml"
+      case t if t.matches(".*\\.ico$")  => "image/x-icon"
+      case otherwise                    => "text/plain"
     }
 
-    def os : OutputStream = t.getResponseBody
+      def os: OutputStream = t.getResponseBody
     t.getResponseHeaders.set("Content-Type", fileType)
 
     // Log files are served as attachments
@@ -321,22 +322,20 @@ class FileServer() extends HttpHandler {
         }
         try {
           inputStream = new FileInputStream(targetPath)
-        }
-        catch {
+        } catch {
           case e: java.io.FileNotFoundException =>
             t.sendResponseHeaders(404, 0)
             inputStream = new FileInputStream(root + "/html/404.html")
             t.getResponseHeaders.set("Content-Type", "text/html")
         }
-      }
-      // If the file doesn't exist, use the resource from the jar file
+      } // If the file doesn't exist, use the resource from the jar file
       else {
         inputStream = getClass().getClassLoader()
-                                .getResourceAsStream(folderName + "/" + target)
+          .getResourceAsStream(folderName + "/" + target)
         if (inputStream == null) {
           t.sendResponseHeaders(404, 0)
           inputStream = getClass().getClassLoader()
-                                  .getResourceAsStream(folderName + "/html/404.html")
+            .getResourceAsStream(folderName + "/html/404.html")
           t.getResponseHeaders.set("Content-Type", "text/html")
         }
       }
@@ -347,8 +346,7 @@ class FileServer() extends HttpHandler {
         .takeWhile(-1 !=)
         .foreach(os.write)
       file.close
-    }
-    catch {
+    } catch {
       case e: Exception => {
         t.getResponseHeaders.set("Content-Type", "text/plain")
         t.sendResponseHeaders(500, 0)
@@ -362,14 +360,15 @@ class FileServer() extends HttpHandler {
   }
 }
 
-/** The WebSocketServer implementation
-  *
-  * @constructor create a WebSocketConsoleServer
-  * @param port the port to start the server on
-  * @param config the current graph configuration
-  */
+/**
+ * The WebSocketServer implementation
+ *
+ * @constructor create a WebSocketConsoleServer
+ * @param port the port to start the server on
+ * @param config the current graph configuration
+ */
 class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
-  extends WebSocketServer(port) {
+    extends WebSocketServer(port) {
 
   // the coordinator, execution and executionConfiguration will be set at a
   // later instance, when they are ready. This is because we start the server
@@ -407,32 +406,32 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   def onMessage(socket: WebSocket, msg: String) {
     val j = parse(msg)
     val p = (j \ "provider").extract[String]
-    def provider: DataProvider = coordinator match {
-      case Some(c) => p match {
-        case "configuration" => new ConfigurationDataProvider(this, c)
-        case "log" => new LogDataProvider(c)
-        case "graph" => new GraphDataProvider(c, j)
-        case "resources" => new ResourcesDataProvider(c, j)
-        case "state" => new StateDataProvider(this)
-        case "controls" => new ControlsProvider(this, j)
-        case "breakconditions" => new BreakConditionsProvider(c, this, j)
-        case otherwise => new InvalidDataProvider(msg, "invalid provider")
+      def provider: DataProvider = coordinator match {
+        case Some(c) => p match {
+          case "configuration"   => new ConfigurationDataProvider(this, c)
+          case "log"             => new LogDataProvider(c)
+          case "graph"           => new GraphDataProvider(c, j)
+          case "resources"       => new ResourcesDataProvider(c, j)
+          case "state"           => new StateDataProvider(this)
+          case "controls"        => new ControlsProvider(this, j)
+          case "breakconditions" => new BreakConditionsProvider(c, this, j)
+          case otherwise         => new InvalidDataProvider(msg, "invalid provider")
+        }
+        case None => p match {
+          case "state"   => new StateDataProvider(this)
+          case otherwise => new NotReadyDataProvider(msg)
+        }
       }
-      case None => p match {
-        case "state" => new StateDataProvider(this)
-        case otherwise => new NotReadyDataProvider(msg)
-      }
-    }
 
     try {
       socket.send(compact(render(provider.fetch)))
     } catch {
       case e: NumberFormatException =>
         socket.send(compact(render(
-                    new InvalidDataProvider(msg, "number format exception").fetch)))
+          new InvalidDataProvider(msg, "number format exception").fetch)))
       case e: Exception =>
         socket.send(compact(render(
-                    new ErrorDataProvider(e).fetch)))
+          new ErrorDataProvider(e).fetch)))
       case e: WebsocketNotConnectedException =>
         println("Warning: Couldn't send message to websocket")
     }
@@ -465,15 +464,16 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 object Toolkit {
   implicit val formats = DefaultFormats
 
-  /** Yield all the properties of an object as a Map of strings to JValue
-    *
-    * Using introspection, this function prepares the serialization of
-    * arbitrary case classes. It will create a map of the property name to
-    * whatever is contained in the property as a JValue.
-    *
-    * @tparam T the ClassTag of the object to be unpacked
-    * @param obj the object to be unpacked
-    */
+  /**
+   * Yield all the properties of an object as a Map of strings to JValue
+   *
+   * Using introspection, this function prepares the serialization of
+   * arbitrary case classes. It will create a map of the property name to
+   * whatever is contained in the property as a JValue.
+   *
+   * @tparam T the ClassTag of the object to be unpacked
+   * @param obj the object to be unpacked
+   */
   def unpackObjectToMap[T: ClassTag: ru.TypeTag](obj: T): Map[String, JValue] = {
     // find out the names of the field methods
     val methods = ru.typeOf[T].members.filter { m =>
@@ -512,16 +512,16 @@ object Toolkit {
   /** Serialize objects or collections of arbitrary type  */
   def serializeAny(o: Any): JValue = {
     o match {
-      case x: Array[_] => JArray(x.toList.map(serializeAny(_)))
-      case x: List[_] => JArray(x.map(serializeAny(_)))
-      case x: Long => JInt(x)
-      case x: Int => JInt(x)
-      case x: String => JString(x)
-      case x: Double if x.isNaN => JDouble(0)
-      case x: Double => JDouble(x)
-      case x: Map[_, _] => decompose(x)
+      case x: Array[_]                 => JArray(x.toList.map(serializeAny(_)))
+      case x: List[_]                  => JArray(x.map(serializeAny(_)))
+      case x: Long                     => JInt(x)
+      case x: Int                      => JInt(x)
+      case x: String                   => JString(x)
+      case x: Double if x.isNaN        => JDouble(0)
+      case x: Double                   => JDouble(x)
+      case x: Map[_, _]                => decompose(x)
       case x: BreakConditionName.Value => JString(x.toString)
-      case other => JString(other.toString)
+      case other                       => JString(other.toString)
     }
   }
 }

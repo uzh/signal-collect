@@ -73,13 +73,13 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 object PageRank extends App {
   val graph = GraphBuilder.
     withConsole(true).
-    withNodeProvisioner(new TorqueNodeProvisioner(
-      torqueHost = new TorqueHost(
-        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
-        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
-        jvmParameters = "",
-        priority = TorquePriority.fast),
-      numberOfNodes = 2)).
+//    withNodeProvisioner(new TorqueNodeProvisioner(
+//      torqueHost = new TorqueHost(
+//        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
+//        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
+//        jvmParameters = "",
+//        priority = TorquePriority.fast),
+//      numberOfNodes = 2)).
     build
 
   graph.awaitIdle
