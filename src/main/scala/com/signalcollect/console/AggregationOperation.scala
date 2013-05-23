@@ -1,21 +1,20 @@
-/*
- *  @author Carol Alexandru
- *
- *  Copyright 2013 University of Zurich
- *
- *  Licensed below the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed below the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations below the License.
- *
- */
+/**
+  *  @author Carol Alexandru
+  *
+  *  Copyright 2013 University of Zurich
+  *
+  *  Licensed below the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *         http://www.apache.org/licenses/LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed below the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations below the License.
+  */
 
 package com.signalcollect.console
 
@@ -32,30 +31,30 @@ import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
 /**
- * Aggregator that loads a JObject representation of vertices and their edges.
- *
- * Given the set of ids, the aggregator retrieves the corresponding vertices and the
- * edges between the vertices. The aggregator returs a JObject, which contains
- * two objects, one for vertices, one for edges. The data structure is best
- * explained by an example:
- *
- * {{{
- * {"vertices":{"id1":{"s":"0.15","ss":0.0,"cs":1.0},
- *           "id2":{"s":"0.16","ss":1.0,"cs":1.0},
- *           "id3":{"s":"0.17","ss":1.0,"cs":1.0}},
- *  "edges":{"id1":["id2","id3"]}}}
- * }}}
- *
- * The vertices object uses a vertex id as key and stores the state, signal and
- * collect scores. The edges object uses a vertex id as key and stores the list
- * of target vertices.
- *
- * @constructor create the aggregator
- * @param vertexIds set of vertex ids to be loaded
- * @param exposeVertices wether or not to call expose() on each vertex and put
- *     the return value into the "info" property. If true, may increase
- *     graph loading time significantly.
- */
+  * Aggregator that loads a JObject representation of vertices and their edges.
+  *
+  * Given the set of ids, the aggregator retrieves the corresponding vertices and the
+  * edges between the vertices. The aggregator returs a JObject, which contains
+  * two objects, one for vertices, one for edges. The data structure is best
+  * explained by an example:
+  *
+  * {{{
+  * {"vertices":{"id1":{"s":"0.15","ss":0.0,"cs":1.0},
+  *           "id2":{"s":"0.16","ss":1.0,"cs":1.0},
+  *           "id3":{"s":"0.17","ss":1.0,"cs":1.0}},
+  *  "edges":{"id1":["id2","id3"]}}}
+  * }}}
+  *
+  * The vertices object uses a vertex id as key and stores the state, signal and
+  * collect scores. The edges object uses a vertex id as key and stores the list
+  * of target vertices.
+  *
+  * @constructor create the aggregator
+  * @param vertexIds set of vertex ids to be loaded
+  * @param exposeVertices wether or not to call expose() on each vertex and put
+  *     the return value into the "info" property. If true, may increase
+  *     graph loading time significantly.
+  */
 class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolean = false)
     extends AggregationOperation[(Double, Double, JObject)] {
 
@@ -127,11 +126,11 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
 }
 
 /**
- * Aggregator that retrieves a random sample of vertex ids.
- *
- * @constructor create the aggregator
- * @param sampleSize the number of vertex ids to retrieve
- */
+  * Aggregator that retrieves a random sample of vertex ids.
+  *
+  * @constructor create the aggregator
+  * @param sampleSize the number of vertex ids to retrieve
+  */
 class SampleAggregator[Id](sampleSize: Int)
     extends ModularAggregationOperation[Set[Id]] {
 
@@ -149,13 +148,13 @@ class SampleAggregator[Id](sampleSize: Int)
 }
 
 /**
- * Aggregator that retrieves vertices with the highest degree.
- *
- * The aggregator produces a map of vertex ids to degrees.
- *
- * @constructor create the aggregator
- * @param n the number of top elements to find
- */
+  * Aggregator that retrieves vertices with the highest degree.
+  *
+  * The aggregator produces a map of vertex ids to degrees.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  */
 class TopDegreeAggregator[Id](n: Int)
     extends AggregationOperation[Map[Id, Int]] {
 
@@ -177,15 +176,15 @@ class TopDegreeAggregator[Id](n: Int)
 }
 
 /**
- * Aggregator that retrieves vertices with the highest or lowest state.
- *
- * The aggregator produces a list of tuples, each containing the state and the
- * vertex id with that state.
- *
- * @constructor create the aggregator
- * @param n the number of top elements to find
- * @param inverted gather by lowest, not highest state
- */
+  * Aggregator that retrieves vertices with the highest or lowest state.
+  *
+  * The aggregator produces a list of tuples, each containing the state and the
+  * vertex id with that state.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  * @param inverted gather by lowest, not highest state
+  */
 class TopStateAggregator[Id](n: Int, inverted: Boolean)
     extends AggregationOperation[List[(Double, Id)]] {
 
@@ -219,15 +218,15 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
 }
 
 /**
- * Aggregator that retrieves vertices with the highest signal or collect scores.
- *
- * The aggregator produces a list of tuples, each containing the score and the
- * vertex id with that score.
- *
- * @constructor create the aggregator
- * @param n the number of top elements to find
- * @param scoreType the score to look at (signal or collect)
- */
+  * Aggregator that retrieves vertices with the highest signal or collect scores.
+  *
+  * The aggregator produces a list of tuples, each containing the score and the
+  * vertex id with that score.
+  *
+  * @constructor create the aggregator
+  * @param n the number of top elements to find
+  * @param scoreType the score to look at (signal or collect)
+  */
 class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
     extends AggregationOperation[List[(Double, Id)]] {
 
@@ -256,14 +255,14 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
 }
 
 /**
- * Aggregator that loads the ids of vertices in the vicinity of other vertices.
- *
- * The aggregator produces a new set of ids representing the vertices that are
- * connected to any of the vertices in the given set, be it incoming or outgoing.
- *
- * @constructor create the aggregator
- * @param ids set of vertex ids to be loaded
- */
+  * Aggregator that loads the ids of vertices in the vicinity of other vertices.
+  *
+  * The aggregator produces a new set of ids representing the vertices that are
+  * connected to any of the vertices in the given set, be it incoming or outgoing.
+  *
+  * @constructor create the aggregator
+  * @param ids set of vertex ids to be loaded
+  */
 class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
     extends AggregationOperation[Set[Id]] {
 
@@ -289,14 +288,14 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
 }
 
 /**
- * Aggregator that translates a list of strings to a list of vertices.
- *
- * The aggregator compares the string representation of the id of any vertex
- * to the strings supplied to it.
- *
- * @constructor create the aggregator
- * @param idsList the list of ids to compare vertex ids with
- */
+  * Aggregator that translates a list of strings to a list of vertices.
+  *
+  * The aggregator compares the string representation of the id of any vertex
+  * to the strings supplied to it.
+  *
+  * @constructor create the aggregator
+  * @param idsList the list of ids to compare vertex ids with
+  */
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
     extends AggregationOperation[List[Vertex[Id, _]]] {
 
@@ -317,12 +316,12 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 }
 
 /**
- * Aggregator that finds a list of node ids which contain a given substring.
- *
- * @constructor create the aggregator
- * @param s the substring that should be contained in the node id
- * @param limit maximum number of nodes to find
- */
+  * Aggregator that finds a list of node ids which contain a given substring.
+  *
+  * @constructor create the aggregator
+  * @param s the substring that should be contained in the node id
+  * @param limit maximum number of nodes to find
+  */
 class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
     extends ModularAggregationOperation[Set[Id]] {
 
@@ -343,21 +342,21 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 }
 
 /**
- * Aggregator that checks if any of the break conditions apply
- *
- * The aggregator takes a map of ids (strings used to identify break
- * conditions) to BreakCondition items. It produces a map of the same ids to
- * strings which represent the reason for the condition firing. For example,
- * one result item may be ("3" -> "0.15"), which would mean that the condition
- * identified as "3" fired because of a value "0.15". Depending on the state,
- * not all condition checks are performed. For example, the signal threshold
- * is only ever checked before the signalling step, because else it will be 0
- * anyway.
- *
- * @constructor create the aggregator
- * @param conditions map of conditions
- * @param state string denoting the current state
- */
+  * Aggregator that checks if any of the break conditions apply
+  *
+  * The aggregator takes a map of ids (strings used to identify break
+  * conditions) to BreakCondition items. It produces a map of the same ids to
+  * strings which represent the reason for the condition firing. For example,
+  * one result item may be ("3" -> "0.15"), which would mean that the condition
+  * identified as "3" fired because of a value "0.15". Depending on the state,
+  * not all condition checks are performed. For example, the signal threshold
+  * is only ever checked before the signalling step, because else it will be 0
+  * anyway.
+  *
+  * @constructor create the aggregator
+  * @param conditions map of conditions
+  * @param state string denoting the current state
+  */
 class BreakConditionsAggregator(conditions: Map[String, BreakCondition], state: String)
     extends AggregationOperation[Map[String, String]] {
 

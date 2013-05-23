@@ -1,23 +1,22 @@
-/*
- *  @author Philip Stutz
- *  @author Carol Alexandru
- *  @author Silvan Troxler
- *
- *  Copyright 2013 University of Zurich
- *
- *  Licensed below the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed below the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations below the License.
- *
- */
+/**
+  *  @author Philip Stutz
+  *  @author Carol Alexandru
+  *  @author Silvan Troxler
+  *
+  *  Copyright 2013 University of Zurich
+  *
+  *  Licensed below the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *         http://www.apache.org/licenses/LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed below the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations below the License.
+  */
 
 package com.signalcollect.console
 
@@ -83,22 +82,22 @@ object BreakConditionName extends Enumeration {
 
 import BreakConditionName._
 /**
- * A break condition for the interactive execution mode
- *
- * When creating a new break conditions, a number of checks are performed
- * to check wether it is valid or not. If insufficient or invalid data has
- * been provided then an IllegalArgumentException is thrown. This can occur
- * if the propsMap doesn't contain everything a break condition of a
- * particular type needs, or if the provided data is invalid. In any case,
- * the reason for the validation failure is provided in the exception.
- *
- * @constructor create a new break condition
- * @param graphConfiguration the current graph configuration
- * @param executionConfiguration the current execution configuration
- * @param name the name of the break condition as in BreakConditionName
- * @param propsMap a map of properties supplied to this break condition
- * @param workerApi a workerApi
- */
+  * A break condition for the interactive execution mode
+  *
+  * When creating a new break conditions, a number of checks are performed
+  * to check wether it is valid or not. If insufficient or invalid data has
+  * been provided then an IllegalArgumentException is thrown. This can occur
+  * if the propsMap doesn't contain everything a break condition of a
+  * particular type needs, or if the provided data is invalid. In any case,
+  * the reason for the validation failure is provided in the exception.
+  *
+  * @constructor create a new break condition
+  * @param graphConfiguration the current graph configuration
+  * @param executionConfiguration the current execution configuration
+  * @param name the name of the break condition as in BreakConditionName
+  * @param propsMap a map of properties supplied to this break condition
+  * @param workerApi a workerApi
+  */
 class BreakCondition(val graphConfiguration: GraphConfiguration,
                      val executionConfiguration: ExecutionConfiguration,
                      val name: BreakConditionName,
@@ -158,20 +157,20 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
 }
 
 /**
- * The main class representing the Console Server
- *
- * The ConsoleServer class sets up the WebSocket and HTTP servers needed to
- * satisfy client requests. The ports used by the HTTP server can be set in
- * the graphConfiguration using the consoleHttpPort option. The WebSocket
- * server will always use a port 100 ports above the HTTP server. If the user
- * has not supplied an option, the ConsoleServer will attempt to use the
- * default port (8080) and it will automatically try ports above that if
- * the port is already in use. This way, the ConsoleServer should always be
- * able to start.
- *
- * @constructor create a new ConsoleServer
- * @param graphConfiguration the current graph configuration
- */
+  * The main class representing the Console Server
+  *
+  * The ConsoleServer class sets up the WebSocket and HTTP servers needed to
+  * satisfy client requests. The ports used by the HTTP server can be set in
+  * the graphConfiguration using the consoleHttpPort option. The WebSocket
+  * server will always use a port 100 ports above the HTTP server. If the user
+  * has not supplied an option, the ConsoleServer will attempt to use the
+  * default port (8080) and it will automatically try ports above that if
+  * the port is already in use. This way, the ConsoleServer should always be
+  * able to start.
+  *
+  * @constructor create a new ConsoleServer
+  * @param graphConfiguration the current graph configuration
+  */
 class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   // Start the HTTP and WebSocket servers on the configured port or the
@@ -196,12 +195,12 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   def getSockets: WebSocketConsoleServer[Id] = sockets
 
   /**
-   * Starts a new HTTP and WebSocket server, using the specified port for the
-   * HTTP server if possible. Else attempts to find a pair of free ports and
-   * use those.
-   *
-   *  @param httpPort attempt to start the HTTP server on this port
-   */
+    * Starts a new HTTP and WebSocket server, using the specified port for the
+    * HTTP server if possible. Else attempts to find a pair of free ports and
+    * use those.
+    *
+    *  @param httpPort attempt to start the HTTP server on this port
+    */
   def startServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
@@ -234,11 +233,11 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
   }
 
   /**
-   * Attempt to instantiate HTTP and WebSocket servers.
-   *
-   *  @param httpPort attempt to start the HTTP server on this port
-   *  @return httpPort attempt to start the HTTP server on this port
-   */
+    * Attempt to instantiate HTTP and WebSocket servers.
+    *
+    *  @param httpPort attempt to start the HTTP server on this port
+    *  @return httpPort attempt to start the HTTP server on this port
+    */
   def getNewServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
     val server: HttpServer =
       HttpServer.create(new InetSocketAddress(httpPort), 0)
@@ -273,14 +272,14 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 }
 
 /**
- * An HttpHandler to server static files from the web-data directory
- *
- * The handler automatically sets the mime type for files ending in
- * html, css, js, png, svg and ico. Other files are assumed to be
- * plain text.
- *
- * @constructor create a new FileServer
- */
+  * An HttpHandler to server static files from the web-data directory
+  *
+  * The handler automatically sets the mime type for files ending in
+  * html, css, js, png, svg and ico. Other files are assumed to be
+  * plain text.
+  *
+  * @constructor create a new FileServer
+  */
 class FileServer() extends HttpHandler {
   def handle(t: HttpExchange) {
 
@@ -360,12 +359,12 @@ class FileServer() extends HttpHandler {
 }
 
 /**
- * The WebSocketServer implementation
- *
- * @constructor create a WebSocketConsoleServer
- * @param port the port to start the server on
- * @param config the current graph configuration
- */
+  * The WebSocketServer implementation
+  *
+  * @constructor create a WebSocketConsoleServer
+  * @param port the port to start the server on
+  * @param config the current graph configuration
+  */
 class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
     extends WebSocketServer(port) {
 
@@ -464,15 +463,15 @@ object Toolkit {
   implicit val formats = DefaultFormats
 
   /**
-   * Yield all the properties of an object as a Map of strings to JValue
-   *
-   * Using introspection, this function prepares the serialization of
-   * arbitrary case classes. It will create a map of the property name to
-   * whatever is contained in the property as a JValue.
-   *
-   * @tparam T the ClassTag of the object to be unpacked
-   * @param obj the object to be unpacked
-   */
+    * Yield all the properties of an object as a Map of strings to JValue
+    *
+    * Using introspection, this function prepares the serialization of
+    * arbitrary case classes. It will create a map of the property name to
+    * whatever is contained in the property as a JValue.
+    *
+    * @tparam T the ClassTag of the object to be unpacked
+    * @param obj the object to be unpacked
+    */
   def unpackObjectToMap[T: ClassTag: ru.TypeTag](obj: T): Map[String, JValue] = {
     // find out the names of the field methods
     val methods = ru.typeOf[T].members.filter { m =>
