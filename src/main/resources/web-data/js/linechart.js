@@ -267,7 +267,7 @@ scc.lib.resources.LineChart = function() {
     
     // set default prettyName to jsonName if needed
     if (this.config.prettyName == "") {
-      if (scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
+      if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
         this.config.prettyName = scc.lib.resources.chartInfo[this.config.jsonName].name;
       } else {
         this.config.prettyName = this.config.jsonName;
@@ -275,7 +275,7 @@ scc.lib.resources.LineChart = function() {
     }
 
     // set further description to the chart if available
-    if (scc.lib.resources.chartInfo[this.config.jsonName].info != null) {
+    if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].info != null) {
       this.config.info = scc.lib.resources.chartInfo[this.config.jsonName].info;
     }
     
@@ -494,7 +494,7 @@ scc.lib.resources.LineChart = function() {
    */
   this.update = function(newData) {
     var currentDate = new Date(newData.timestamp);
-    var workerIds = newData.workerStatistics.workerId;
+    var itemIds = newData[this.config.type + "Statistics"][this.config.type + "Id"];
     newData = this.config.dataCallback(newData);
     
     var shiftRight     = false;
@@ -510,8 +510,14 @@ scc.lib.resources.LineChart = function() {
     }
 
     var newMinMax = Array.getMinMax(newData);
-    var minText = "Min" + (this.config.type=="worker" ? " = Worker ID: "+workerIds[newMinMax.min.id] : "");
-    var maxText = "Max" + (this.config.type=="worker" ? " = Worker ID: "+workerIds[newMinMax.max.id] : "");
+    var itemName = (this.config.type=="worker" ? "Worker" : "Node");
+    // add core for these charts
+    var coreCharts = [ "jmx_system_load", "jmx_process_time", "jmx_process_load" ];
+    if (itemName == "Node" && coreCharts.indexOf(this.config.jsonName) >= 0) {
+      itemName = "Core in " + itemName;
+    }
+    var minText = "Min = " + itemName + " ID: " + itemIds[newMinMax.min.id];
+    var maxText = "Max = " + itemName + " ID: " + itemIds[newMinMax.max.id];
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average", type:"avg" });
     data[1].push({ date:currentDate, value:newMinMax.min.v, id:minText, type:"min" });
     data[2].push({ date:currentDate, value:newMinMax.max.v, id:maxText, type:"max" });
