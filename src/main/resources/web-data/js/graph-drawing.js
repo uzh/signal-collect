@@ -54,9 +54,9 @@ scc.lib.graph.GraphD3 = function (graphModule) {
   this.exposedVertexId = undefined;
 
   /**
-   * The VertexStorageAgent provides method for setting, getting and adding to the
+   * The VertexStorageAgent provides methods for setting, getting and adding to the
    * local storage which contains an array of vertexIds as strings. It represents
-   * the vertices which the user has loaded into the canvas
+   * the vertices which the user has loaded into the canvas.
    * @constructor
    */
   var VertexStorageAgent = function () {

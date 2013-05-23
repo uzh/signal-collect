@@ -43,7 +43,7 @@ scc.defaults.graph = {"layout": {
 };
 
 /**
- * The Graph module provides uses the GraphD3 class to draw the graph and
+ * The Graph module uses the GraphD3 class to draw the graph and
  * handles the panel UI functionality for the graph.
  * @constructor
  */
@@ -100,7 +100,7 @@ scc.modules.Graph = function() {
   }
 
   /**
-   * Wrapper function to do things that always come with a graph order
+   * Wrapper function to do things that always come with a graph order.
    */
   this.order = function (o, delay) {
     if (o == undefined) { o = {}; }
@@ -152,7 +152,7 @@ scc.modules.Graph = function() {
 
   /**
    * Loads the information into the exposition panel using the provided id and
-   * json data.
+   * JSON data.
    * @param {string} id the id of the vertex
    * @param {object} id the arbitrary json data to display
    */
@@ -210,7 +210,7 @@ scc.modules.Graph = function() {
   }
 
   /**
-   * Handler for when the user presses the mouse when resizing the exposition panel
+   * Handler for when the user presses the mouse when resizing the exposition panel.
    * @param {Event} e - The event that triggered the call
    */
   d3.select('#dragbar').on("mousedown.resizeExposition", function () {
@@ -229,7 +229,7 @@ scc.modules.Graph = function() {
   });
       
   /**
-   * Handler for when the user releases the mouse when resizing the exposition panel
+   * Handler for when the user releases the mouse when resizing the exposition panel.
    * @param {Event} e - The event that triggered the call
    */
   d3.select(document).on("mouseup.resizeExposition", function () {
@@ -246,7 +246,7 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Modify the panel html, setting options and adding dynamic fields
+   * Modifies the panel HTML, sets options and adds dynamic fields.
    */
   this.layout = function() {
     for (var i = 1; i<=4; i++) {
@@ -299,7 +299,7 @@ scc.modules.Graph = function() {
 
   /**
    * Function that is called by the main module when a new WebSocket connection
-   * is established. Create the SVG element and prepare the graph drawing
+   * is established. Creates the SVG element and prepares the graph drawing
    * functionality.
    * @param {Event} e - The event that triggered the call
    */
@@ -319,7 +319,7 @@ scc.modules.Graph = function() {
 
   /**
    * Function that is called by the main module when a requested piece of data
-   * is not (yet) available from the server. Show a message on the graph canvas
+   * is not (yet) available from the server. Shows a message on the graph canvas.
    */
   this.notready = function() {
     $("#graph_background").text("Data Provider not ready, retrying...");
