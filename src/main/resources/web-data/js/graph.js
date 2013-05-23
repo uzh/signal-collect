@@ -475,7 +475,7 @@ scc.modules.Graph = function() {
   }
 
   /**
-   * Bind the function to the vertex selection buttons
+   * Bind the function to the vertex selection buttons.
    */
   $("#gs_addVicinitiesBySelectAdd").click(function (e) { 
     executeAction(e, $("#gs_addVicinitiesBySelect"), 
@@ -501,7 +501,7 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler called when the user clicks on button to remove all vertices
+   * Handler called when the user clicks on the button to remove all vertices.
    * @param {Event} e - The event that triggered the call
    */
   $("#gd_removeOrphans").click(function (e) { 
@@ -510,7 +510,7 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler called when the user clicks on button to remove all vertices that
+   * Handler called when the user clicks on the button to remove all vertices that
    * do not belong to the latest query.
    * @param {Event} e - The event that triggered the call
    */
@@ -520,8 +520,8 @@ scc.modules.Graph = function() {
   });
 
   /**
-   * Handler that fires when pressing a key. It facilitates issuing some
-   * actions using the keyboard
+   * Handler that fires when pressing a key. It supports some
+   * actions using the keyboard.
    */
   $(document).keydown(function(e) {
     // If the user has selected vertices to be removed, DEL will do the same as
@@ -565,7 +565,7 @@ scc.modules.Graph = function() {
 
   /**
    * Handler called when a 'select' HTML element is changed. The choice is
-   * presisted to the settings hash.
+   * persisted to the settings hash.
    * @param {Event} e - The event that triggered the call
    */
   $("#cGraphDesign select").change(function (e) {
