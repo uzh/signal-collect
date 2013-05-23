@@ -91,6 +91,7 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       val droidFlag = "IS_ON_DROID_CI"
       if (System.getenv.containsKey(droidFlag)
         && System.getenv(droidFlag) == "TRUE") {
+        println("CI environment was detected, skipping socket test.")
         true
       } else {
         isSocketOnline
