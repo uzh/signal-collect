@@ -171,7 +171,7 @@ scc.modules.BreakConditions = function () {
      * Handler called upon clicking on a vertex id. It highlights the appropriate
      * vertex in the graph or loads the vertex if it's not yet represented in the
      * graph. This is done simply by using the addById function provided by
-     * the graph module
+     * the graph module.
      */
     $(".vertex_link").click(function (e) {
       var id = $(this).attr("title");
@@ -184,7 +184,7 @@ scc.modules.BreakConditions = function () {
 
   /**
    * Handler that allows the user to pick a vertex from the graph to fill in the
-   * id of the vertex which the break condition shall be applied to
+   * id of the vertex to which the break condition will be applied.
    */
   $("#gc_useMouse").click(function (e) { 
     e.preventDefault();
@@ -202,7 +202,7 @@ scc.modules.BreakConditions = function () {
 
   /**
    * Handler that is added to the #graph_canvas for when the user picks a vertex
-   * using the mouse. It only applies when the #graph_canas has the "picking"
+   * using the mouse. It only applies when the #graph_canvas has the "picking"
    * class.
    */
   d3.select("#graph_canvas").on("click.breakconditions", function (e) {
@@ -229,7 +229,7 @@ scc.modules.BreakConditions = function () {
    * Checks if the choices made by the user can be considered "sane" for
    * submission to the server. It doesn't necessarily mean that the supplied
    * ID or state is valid, but it's not empty or the default and the
-   * combination of choices is valid
+   * combination of choices is valid.
    */
   var formCompleted = function () {
     if ($("#gc_vertexId").val() == BSTR.pickVertex ||
