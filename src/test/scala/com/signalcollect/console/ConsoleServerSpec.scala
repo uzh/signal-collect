@@ -89,13 +89,8 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       } catch {
         case t: Throwable => t.printStackTrace
       }
-      val droneFlag = "IS_ON_DRONE_CI"
-      val flags = System.getenv.keySet
-      for (flag <- flags) {
-        println(s"DEBUG: $flag=${System.getenv(flag)}")
-      }
-      if (System.getenv.containsKey(droneFlag)
-        && System.getenv(droneFlag) == "TRUE") {
+      val droneFlag = "DRONE"
+      if (System.getenv.containsKey(droneFlag)) {
         println("CI environment detected, skipping socket test.")
         true
       } else {
