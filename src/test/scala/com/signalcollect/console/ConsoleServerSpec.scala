@@ -37,6 +37,7 @@ import org.java_websocket.handshake.ServerHandshake
 import java.io.FileWriter
 import com.signalcollect.Graph
 import com.signalcollect.DefaultGraph
+import collection.JavaConversions._
 
 @RunWith(classOf[JUnitRunner])
 class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
@@ -88,10 +89,14 @@ class ConsoleServerSpec extends SpecificationWithJUnit with Mockito {
       } catch {
         case t: Throwable => t.printStackTrace
       }
-      val droidFlag = "IS_ON_DROID_CI"
-      if (System.getenv.containsKey(droidFlag)
-        && System.getenv(droidFlag) == "TRUE") {
-        println("CI environment was detected, skipping socket test.")
+      val droneFlag = "IS_ON_DRONE_CI"
+      val flags = System.getenv.keySet
+      for (flag <- flags) {
+        println(s"DEBUG: $flag=${System.getenv(flag)}")
+      }
+      if (System.getenv.containsKey(droneFlag)
+        && System.getenv(droneFlag) == "TRUE") {
+        println("CI environment detected, skipping socket test.")
         true
       } else {
         isSocketOnline
