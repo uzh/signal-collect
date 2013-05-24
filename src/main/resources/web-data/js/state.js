@@ -68,7 +68,6 @@ scc.modules.State = function() {
   /**
    * Function that is called by the main module when a new WebSocket connection
    * is established. Orders state information for the first time.
-   * @param {Event} e - The event that triggered the call
    */
   this.onopen = function() {
     firstTry = true;
@@ -92,7 +91,7 @@ scc.modules.State = function() {
    * Function that is called by the main module when a message is received
    * from the WebSocket. Depending on the incoming state, activate or 
    * de-activate the different buttons. If the computation is running
-   * continuously, enable the graph autorefresh.
+   * continuously, enable the graph auto refresh.
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
@@ -108,7 +107,7 @@ scc.modules.State = function() {
       pendingCommand = false;
       return;
     }
-    // If there are no pending commands, remove the loading gif.
+    // If there are no pending commands, remove the loading GIF.
     if (!pendingCommand) {
       $("#pending_command").hide();
     }

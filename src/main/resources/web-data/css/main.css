@@ -434,10 +434,10 @@ a, a:visited {
   background-position: 32px 16px;
 }
 #gc_conditionList .condition.reached {
-  background : rgba(150,255,150,0.5);
+  background: rgba(150,255,150,0.5);
 }
 #gc_conditionList .condition.reached .goal {
-  color : rgba(000,100,000,1);
+  color: rgba(000,100,000,1);
   font-weight: bold;
 }
 

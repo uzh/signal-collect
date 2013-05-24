@@ -84,8 +84,8 @@ import BreakConditionName._
 /**
  * A break condition for the interactive execution mode
  *
- * When creating a new break conditions, a number of checks are performed
- * to check wether it is valid or not. If insufficient or invalid data has
+ * When creating a new break condition, a number of checks are performed
+ * to check whether it is valid or not. If insufficient or invalid data has
  * been provided then an IllegalArgumentException is thrown. This can occur
  * if the propsMap doesn't contain everything a break condition of a
  * particular type needs, or if the provided data is invalid. In any case,
@@ -274,7 +274,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 /**
  * An HttpHandler to server static files from the web-data directory
  *
- * The handler automatically sets the mime type for files ending in
+ * The handler automatically sets the MIME type for files ending in
  * html, css, js, png, svg and ico. Other files are assumed to be
  * plain text.
  *
@@ -463,7 +463,7 @@ object Toolkit {
   implicit val formats = DefaultFormats
 
   /**
-   * Yield all the properties of an object as a Map of strings to JValue
+   * Yield all the properties of an object as a Map of strings to JValue.
    *
    * Using introspection, this function prepares the serialization of
    * arbitrary case classes. It will create a map of the property name to

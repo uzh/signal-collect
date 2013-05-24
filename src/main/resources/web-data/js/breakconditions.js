@@ -65,7 +65,6 @@ scc.modules.BreakConditions = function () {
   /**
    * Function that is called by the main module when a requested piece of data
    * is not (yet) available from the server. Does nothing.
-   * @param {Event} e - The event that triggered the call
    */
   this.notready = function() { };
 
@@ -99,12 +98,12 @@ scc.modules.BreakConditions = function () {
 
     // Add each of the conditions to the list of conditions
     $.each(j.active, function (k, c) {
-      // Shorten long vertex ids
+      // Shorten long vertex IDs
       var s = c.props.vertexId;
       if (s.length > 30) {
         s = s.substring(s.length - 32, s.length);
       }
-      // Build the div element to be added...
+      // Build the DIV element to be added...
       var item = '<div class="condition';
       if (j.reached[c.id] != undefined) { item += ' reached' }
       item += ('">Vertex with id: <span class="vertex_link" title="' + 

@@ -440,7 +440,7 @@ scc.lib.resources.LineChart = function() {
    * Extends the Date class with a method to add (or subtract) a given amount of
    * milliseconds.
    * @param {number} ms - The amount of milliseconds to add to the date, or when
-   *     {@code ms} is negative, to substract from the date.
+   *     {@code ms} is negative, to subtract from the date.
    * @return {number} - The transformed date in Unix time in milliseconds.
    */
   Date.prototype.addMilliseconds = function(ms) {

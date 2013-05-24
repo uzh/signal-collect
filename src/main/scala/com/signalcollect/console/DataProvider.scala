@@ -87,7 +87,7 @@ class InvalidDataProvider(msg: JValue, comment: String = "No comment") extends D
 }
 
 /**
- * DataProvider used when another data provider can't satisfy the request
+ * DataProvider used when another data provider can't satisfy the request.
  *
  * It can occur that a valid request cannot be satisfied, for example because
  * the underlying data is not available yet. In that case, this data provider
@@ -168,7 +168,7 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
 }
 
 /**
- * DataProvider which serves akka log messages from the coordinator
+ * DataProvider which serves akka log messages from the coordinator.
  *
  * @constructor create a new LogDataProvider
  * @param coordinator the Coordinator
@@ -245,10 +245,10 @@ case class BreakConditionContainer(
  *
  * The break conditions are stored with the interactive execution mode. Each
  * condition has a unique ID which it receives when it's being created. During
- * the computation, various breakconditions will be checked at different
+ * the computation, various break conditions will be checked at different
  * times.
  *
- * Wether the client supplies an action (to add or remove a condition) or not,
+ * Whether the client supplies an action (to add or remove a condition) or not,
  * the provider will always answer with a list of configured conditions and a
  * list of reached conditions. If the action could not be performed (e.g. if
  * an invalid vertex ID has been supplied) an error message will be included.
@@ -377,10 +377,10 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
    * target one of the vertices we're interested in, hence it's an expensive
    * operation.
    *
-   * @param sourceIds set of vertex Ids to use in the search
+   * @param sourceIds set of vertex IDs to use in the search
    * @param radius how far to travel from the source vertices
    * @param incoming also consider incoming edges (costs {{radius}} aggregations)
-   * @return the original set plus the set of vertex Ids in the vicinity
+   * @return the original set plus the set of vertex IDs in the vicinity
    */
   def findVicinity(sourceIds: Set[Id], radius: Int = 3,
                    incoming: Boolean = false): Set[Id] = {
@@ -411,7 +411,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
    * All the other fetch functions make use of this function to finalize
    * the request.
    *
-   * @param vertexIds set of vertex Ids to load
+   * @param vertexIds set of vertex IDs to load
    * @return the JObject containing the requested vertices and their edges
    */
   def fetchGraph(vertexIds: Set[Id] = Set[Id]()): JObject = {
@@ -453,7 +453,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
     fetchGraph(vertexIds)
   }
 
-  /** Fetch vertices whose Ids contain the given substring {{s}}. */
+  /** Fetch vertices whose IDs contain the given substring {{s}}. */
   def fetchBySubstring(s: String): JObject = {
     val vertexIds = workerApi.aggregateAll(
       new FindVertexIdsBySubstringAggregator[Id](s, targetCount))

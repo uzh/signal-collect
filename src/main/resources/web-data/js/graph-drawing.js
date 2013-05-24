@@ -498,7 +498,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // edgeRefs["1111-3333"] = 1
     // edgeRefs["2222-3333"] = 3
     //
-    // This way, we can later update vertex states, for exmaple by re-assigning
+    // This way, we can later update vertex states, for example by re-assigning
     // to vertices[vertexRefs["1111"]], thereby updating the correct vertex in d3's
     // vertex array.
 

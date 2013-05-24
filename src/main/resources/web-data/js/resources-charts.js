@@ -288,7 +288,7 @@ scc.modules.Resources = function() {
     }
     
     scc.order({"requestor": "Resources", "provider": "resources"}, scc.conf.resources.intervalCharts);
-  }
+  };
   
   
   

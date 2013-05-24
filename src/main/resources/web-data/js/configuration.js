@@ -58,11 +58,11 @@ scc.conf.resources.resourceBoxes = {
     "nodecharts" : [
       "chartZoomer",
       // charts will be added according to the chart configuration
-     ],
-     "workercharts" : [
-       "chartZoomer",
-       // charts will be added according to the chart configuration
-      ],
+    ],
+    "workercharts" : [
+      "chartZoomer",
+      // charts will be added according to the chart configuration
+    ],
     
     "nostart" : [ 
       "chartZoomer",

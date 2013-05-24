@@ -126,7 +126,7 @@ scc.modules.Graph = function() {
   };
 
   /**
-   * Take a json document and transform it into a tree compatible with d3's
+   * Take a JSON document and transform it into a tree compatible with d3's
    * tree layout (with name and children attributes).
    * @param {object} json to transform
    * @return {object} tree for d3's tree layout
@@ -154,10 +154,10 @@ scc.modules.Graph = function() {
    * Loads the information into the exposition panel using the provided id and
    * JSON data.
    * @param {string} id the id of the vertex
-   * @param {object} id the arbitrary json data to display
+   * @param {object} id the arbitrary JSON data to display
    */
   this.expose = function (data) {
-    // Transform the json into a tree for d3's tree layout
+    // Transform the JSON into a tree for d3's tree layout
     var tree = { "name": "root", "children": jsonIntoTree(data.info)}
 
     // Clicking on the Id shall load the node
