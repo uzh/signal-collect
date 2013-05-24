@@ -33,7 +33,7 @@ Array.sumElements = function(sum, array) {
 };
 
 /**
- * Specific dataCallback function to some up the individual messageSent
+ * Specific dataCallback function to sum up the individual messageSent
  * statistics.
  * @param {Object} data - The data object that will be looked at.
  * @return {Array.<number>} - The summed array values.
@@ -52,7 +52,7 @@ scc.lib.resources.sumMessageSent = function(data) {
 };
 
 /**
- * Specific dataCallback function to some up the individual messageReceived
+ * Specific dataCallback function to sum up the individual messageReceived
  * statistics.
  * @param {Object} data - The data object that will be looked at.
  * @return {Array.<number>} - The summed array values.
@@ -98,6 +98,58 @@ scc.lib.resources.getFreeMemory = function(data) {
     freeMemory[i] = data.nodeStatistics.runtime_mem_max[i] - usedMemory[i];
   }
   return freeMemory;
+};
+
+/**
+ * Specific dataCallback function to the CPU usage per node.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {Array.<number>} - The summed array values.
+ */
+scc.lib.resources.getSystemLoad = function(data) {
+  var systemLoad = [];
+  for (var i=0; i < data.nodeStatistics.jmx_system_load.length; i++) {
+    systemLoad[i] = scc.lib.resources.getSum(data.nodeStatistics.jmx_system_load);
+  }
+  return systemLoad;
+};
+
+/**
+ * Specific dataCallback function to the CPU Time per node.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {Array.<number>} - The summed array values.
+ */
+scc.lib.resources.getProcessTime = function(data) {
+  var cpuTime = [];
+  for (var i=0; i < data.nodeStatistics.jmx_process_time.length; i++) {
+    cpuTime[i] = scc.lib.resources.getSum(data.nodeStatistics.jmx_process_time);
+  }
+  return cpuTime;
+};
+
+/**
+ * Specific dataCallback function to the Process Load per node.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {Array.<number>} - The summed array values.
+ */
+scc.lib.resources.getProcessLoad = function(data) {
+  var processLoad = [];
+  for (var i=0; i < data.nodeStatistics.jmx_process_load.length; i++) {
+    processLoad[i] = scc.lib.resources.getSum(data.nodeStatistics.jmx_process_load);
+  }
+  return processLoad;
+};
+
+/**
+ * dataCallback helper function to sum up array elements.
+ * @param {Object} data - The data object that will be looked at.
+ * @return {number} - The summed array values.
+ */
+scc.lib.resources.getSum = function(data) {
+  var sum = 0;
+  for (var i=0; i < data.length; i++) {
+    sum += data[i];
+  }
+  return sum;
 };
 
 /**

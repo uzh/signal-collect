@@ -209,16 +209,28 @@ scc.lib.resources.chartInfo = {
       info: "The number of available processor cores per node."
     },
     "jmx_system_load": { 
-      name: "System CPU Load (%)",
+      name: "System CPU Load per Core (%)",
       info: "CPU load of the whole system per processor core (most computers have more than one core). Value is between 0.0 and 1.0."
     },
+    "jmx_system_load_node": { 
+      name: "System CPU Load (%)",
+      info: "CPU load of the whole node. Value is between 0.0 and 1.0."
+    },
     "jmx_process_time": { 
-      name: "Process CPU Time (NS)",
+      name: "Process CPU Time per Core (NS)",
       info: "CPU time used by the process on which the JVM is running in nanoseconds per core."
     },
+    "jmx_process_time_node": { 
+      name: "Process CPU Time (NS)",
+      info: "CPU time used by the process on which the JVM is running in nanoseconds per node."
+    },
     "jmx_process_load": { 
-      name: "Process CPU Load (%)",
+      name: "Process CPU Load per Core (%)",
       info: "Recent CPU usage for the JVM process per core."
+    },
+    "jmx_process_load_node": { 
+      name: "Process CPU Load (%)",
+      info: "Recent CPU usage for the JVM process per node."
     },
     "jmx_swap_free": { 
       name: "Free Swap Space Size (B)",

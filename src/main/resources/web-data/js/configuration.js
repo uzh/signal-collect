@@ -177,8 +177,11 @@ scc.conf.resources.chartConfigWorkers = [
 scc.conf.resources.chartConfigNodes = [
                    {jsonName : "runtime_cores"},
                    {jsonName : "jmx_system_load"},
+                   {jsonName : "jmx_system_load_node", dataCallback: scc.lib.resources.getSystemLoad },
                    {jsonName : "jmx_process_time"},
+                   {jsonName : "jmx_process_time_node", dataCallback: scc.lib.resources.getProcessTime },
                    {jsonName : "jmx_process_load"},
+                   {jsonName : "jmx_process_load_node", dataCallback: scc.lib.resources.getProcessLoad },
                    {jsonName : "jmx_swap_free"},
                    {jsonName : "jmx_swap_total"},
                    {jsonName : "jmx_mem_total"},

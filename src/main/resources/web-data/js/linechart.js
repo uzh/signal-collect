@@ -514,10 +514,10 @@ scc.lib.resources.LineChart = function() {
     // add core for these charts
     var coreCharts = [ "jmx_system_load", "jmx_process_time", "jmx_process_load" ];
     if (itemName == "Node" && coreCharts.indexOf(this.config.jsonName) >= 0) {
-      itemName = "Core in " + itemName;
+      itemName = "Core";
     }
-    var minText = "Min = " + itemName + " ID: " + itemIds[newMinMax.min.id];
-    var maxText = "Max = " + itemName + " ID: " + itemIds[newMinMax.max.id];
+    var minText = "Min = " + itemName + (itemName != "Core" ? " ID: " + itemIds[newMinMax.min.id] : "");
+    var maxText = "Max = " + itemName + (itemName != "Core" ? " ID: " + itemIds[newMinMax.max.id] : "");
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average", type:"avg" });
     data[1].push({ date:currentDate, value:newMinMax.min.v, id:minText, type:"min" });
     data[2].push({ date:currentDate, value:newMinMax.max.v, id:maxText, type:"max" });
