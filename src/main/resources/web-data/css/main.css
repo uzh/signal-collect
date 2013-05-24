@@ -377,7 +377,6 @@ a, a:visited {
   font-size: 14px;
   -moz-appearance: toolbox;
   -webkit-appearance: none;
-  appearance: none;
   background: url(../img/select.png) no-repeat left #F5F5F5;
   border: none;
 }
@@ -410,7 +409,7 @@ a, a:visited {
   margin: 0;
   padding: 5px;
   border-bottom: 1px solid #bbb;
-  z-index -1;
+  z-index 1;
 }
 #gc_conditionList .condition.none {
   text-align: center;
@@ -812,7 +811,7 @@ a, a:visited {
   background-color: #ff9100;
 }
 .vertex_link {
-  padding: none;
+  padding: 0;
   color: #59b6e8;
   cursor: pointer;
 }
