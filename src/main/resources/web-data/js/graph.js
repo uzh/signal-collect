@@ -33,7 +33,7 @@ scc.defaults.graph = {"layout": {
                         "gd_vertexColor": "Outgoing degree",
                         "gd_vertexBorder": "Latest query",
                         "gp_vicinityIncoming": "Yes",
-                        "gp_exposeVertices": "No",
+                        "gp_exposeVertices": "Yes",
                         "gp_vicinityRadius": "1",
                         "gp_maxVertexCount": "250",
                         "gp_targetCount": "100",
