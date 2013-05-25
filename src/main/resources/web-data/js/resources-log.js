@@ -46,6 +46,12 @@ scc.modules.Log = function() {
   var boxInner = box.find("div");
   
   /**
+   * Selector of the style element in the HTML header.
+   * @type {Object}
+   */
+  var style = $('style');
+  
+  /**
    * Defines the maximum number of debug messages that will be stored in the
    * DOM. When there are more, old debug messages will be deleted from the DOM.
    * @type {number}
@@ -129,7 +135,7 @@ scc.modules.Log = function() {
    * @tape {Callback}
    */
   var expandLogBox = (function() {
-    box.css("height", ($(window).height() - 240) + "px");
+    style.text(" body.logs div#logBox div.scroll { height:" + ($(window).height() - 240) + "px; } ");
   });
   
   /**
