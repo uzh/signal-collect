@@ -714,7 +714,6 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     svgVertices.enter().append("circle")
         .attr("class", "vertex")
         .call(force.drag)
-        .on("mousedown.drag", null); // prevent grabbing of vertices
     svgVertices.exit()
       .style("opacity", 1)
       .transition()
