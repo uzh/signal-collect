@@ -40,7 +40,10 @@ scc.lib.resources.LineChart = function() {
       margin       : { top: 20, right: 20, bottom: 30, left: 50 },
       width        : 550,     // the width of a chart
       height       : 250,     // the height of a chart
-      type         : "worker" // the type of the chart, either 'worker' or 'node'
+      type         : "worker",// the type of the chart, either 'worker' or 'node'
+      unit         : "",      // the unit to show in the tooltip 
+      format       : d3.format("s"), // the number format of the Y-axes, default: 2k instead of 2000
+      formatTT     : null            // the number format of the tooltip, default: 2k instead of 2000
   };
   
   /**
@@ -265,6 +268,11 @@ scc.lib.resources.LineChart = function() {
       };
     }
     
+    // set default number format for the tooltip if needed
+    if (this.config.formatTT == null) {
+      this.config.formatTT = this.config.format;
+    }
+    
     // set default prettyName to jsonName if needed
     if (this.config.prettyName == "") {
       if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
@@ -298,10 +306,9 @@ scc.lib.resources.LineChart = function() {
         // add ticks (axis and vertical line)
         .tickSize(-this.config.height).tickPadding(6).ticks(5).orient("bottom");
 
-    var tickFormatY = d3.format("s"); // add SI-postfix (like 2k instead of 2000)
     yAxis = d3.svg.axis().scale(y)
         // add ticks (axis and vertical line)
-        .tickSize(-this.config.width).tickFormat(tickFormatY).tickPadding(6).ticks(5).orient("left");
+        .tickSize(-this.config.width).tickFormat(this.config.format).tickPadding(6).ticks(5).orient("left");
 
     line = d3.svg.line()
         .x(function(d) { return x(d.date); })
@@ -560,6 +567,7 @@ scc.lib.resources.LineChart = function() {
       return;
     }
     
+    var that = this; // access this
     var currentDate = data[0][data[0].length-1].date;
     
     d3.transition().ease("linear").duration(200).each(function() {
@@ -572,13 +580,14 @@ scc.lib.resources.LineChart = function() {
           .append("circle")
           .attr("class", function(d) { return "dot " + d.type; })
           .attr("r", 5)
-          .on("mouseover",
+          .on("mouseover", 
               function(d) {
                 var screenShift = ($(document).width() - d3.event.pageX < 180 ? 155 : 0);
                 divTooltip.transition()        
                    .duration(100)      
                    .style("opacity", .9);
-                divTooltip.html(formatTime(d.date) + "<br/>"  + d.value + "<br/>"  + d.id)  
+                divTooltip.html(formatTime(d.date) + "<br/>"
+                      + that.config.formatTT(d.value) + that.config.unit + "<br/>"  + d.id)  
                    .style("left", (d3.event.pageX - screenShift) + "px")     
                    .style("top", (d3.event.pageY - 28) + "px");
               })                  

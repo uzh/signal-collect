@@ -153,6 +153,45 @@ scc.lib.resources.getSum = function(data) {
 };
 
 /**
+ * Function to create a fake date based on a duration.
+ * @param {number} d - The duration to format.
+ * @return {callback} - The format of the duration.
+ */
+scc.lib.resources.tickDuration = function(d) {
+  return new Date(d/(1000*1000)).durationRounded();
+}
+
+/**
+ * Function to create a number format with a trailing "B" for byte.
+ * @param {number} d - The number to format.
+ * @return {callback} - The format of the byte size.
+ */
+scc.lib.resources.formatBytes = function(d) {
+  var format = d3.formatPrefix(d)
+  return format.scale(d) + format.symbol + "B";
+}
+
+/**
+ * Calculates the duration in the format "1h 2m" given a {@code Date}
+ * object whereas it rounds the values and only shows to units.
+ * @return {String} - Pretty printed duration in the format "1h 2m". 
+ */
+Date.prototype.durationRounded = function() {
+  var ms = +this;
+  var units = 0; // number of units added to the duration
+  var duration  = "";
+  var durations = {h:60*60*1000, m:60*1000, s:1000, ms:1};
+  $.each(durations, function(k, v) {
+    if (ms / v >= 1 && units <= 2) {
+      duration += " " + Math.floor(ms / v) + k;
+      ms = ms % v; // store the rest
+      units += 1;
+    }
+  });
+  return (duration.length > 0 ? duration : "0");
+};
+
+/**
  * Function that returns true when the passed DOM element is in the viewport,
  * false otherwise.
  * @param {Object} el - The element to check whether it is in the viewport.

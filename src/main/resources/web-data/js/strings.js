@@ -209,59 +209,59 @@ scc.lib.resources.chartInfo = {
       info: "The number of available processor cores per node."
     },
     "jmx_system_load": { 
-      name: "System CPU Load per Core (%)",
+      name: "System CPU Load per Core",
       info: "CPU load of the whole system per processor core (most computers have more than one core). Value is between 0.0 and 1.0."
     },
     "jmx_system_load_node": { 
-      name: "System CPU Load (%)",
-      info: "CPU load of the whole node. Value is between 0.0 and 1.0."
+      name: "System CPU Load",
+      info: "CPU load of the whole node. Value is between 0.0 and the number of cores."
     },
     "jmx_process_time": { 
-      name: "Process CPU Time per Core (NS)",
+      name: "Process CPU Time per Core",
       info: "CPU time used by the process on which the JVM is running in nanoseconds per core."
     },
     "jmx_process_time_node": { 
-      name: "Process CPU Time (NS)",
+      name: "Process CPU Time",
       info: "CPU time used by the process on which the JVM is running in nanoseconds per node."
     },
     "jmx_process_load": { 
-      name: "Process CPU Load per Core (%)",
+      name: "Process CPU Load per Core",
       info: "Recent CPU usage for the JVM process per core."
     },
     "jmx_process_load_node": { 
-      name: "Process CPU Load (%)",
+      name: "Process CPU Load",
       info: "Recent CPU usage for the JVM process per node."
     },
     "jmx_swap_free": { 
-      name: "Free Swap Space Size (B)",
+      name: "Free Swap Space Size",
       info: "Amount of free swap space in byte per node."
     },
     "jmx_swap_total": { 
-      name: "Total Swap Space Size (B)",
+      name: "Total Swap Space Size",
       info: "Total amount of swap space in byte per node."
     },
     "jmx_mem_total": { 
-      name: "Total Physical Memory Size (B)",
+      name: "Total Physical Memory Size",
       info: "Total physical memory (RAM) size in byte per node, not all of this may be used for the process."
     },
     "jmx_mem_free": { 
-      name: "Free Physical Memory Size (B)",
+      name: "Free Physical Memory Size",
       info: "Amount of free physical memory (RAM) size in byte per node, not all of this may be used for the process."
     },
     "jmx_committed_vms": { 
-      name: "Committed Virtual Memory Size (B)",
+      name: "Committed Virtual Memory Size",
       info: "Amount of virtual memory in bytes that is guaranteed to be available to the running process per node."
     },
     "runtime_mem_max": { 
-      name: "Max Memory (B)",
+      name: "Max Memory",
       info: "Maximum memory in bytes that can be used by the JVM per node. This value is configurable in the JVM."
     },
     "runtime_mem_free": { 
-      name: "Free Memory (B)",
+      name: "Free Memory",
       info: "Approximation of the free memory in bytes per node."
     },
     "runtime_mem_total": { 
-      name: "Used Memory (B)",
+      name: "Used Memory",
       info: "Total amount of allocated memory in bytes per node. This value may increase up to 'Max Memory'."
     }
 };
