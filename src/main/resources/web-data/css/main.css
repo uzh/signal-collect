@@ -409,7 +409,6 @@ a, a:visited {
   margin: 0;
   padding: 5px;
   border-bottom: 1px solid #bbb;
-  z-index: -1;
 }
 #gc_conditionList .condition.none {
   text-align: center;
