@@ -317,6 +317,11 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
     // Inform the console of our presence if it's enabled
     if (console != null) { console.setExecution(this) }
+    else {
+      println(
+        "warning: using interactive execution mode without console. To use the console,\n" +
+        "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
+    }
 
     // Create an initial snapshot of the graph (to be able to reset later)
     graph.snapshot
