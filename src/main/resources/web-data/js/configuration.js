@@ -218,6 +218,11 @@ scc.conf.resources.chartConfigNodes = [
                    {jsonName : "nodeId", skip: true },
                   ];
 
+/**
+ * Configures the infrastructure configuration items which should NOT be shown
+ * in the console server as they are irrelevant.
+ * @type {Array.<String>}
+ */
 scc.conf.resources.hideInfrastructureItems = [
   "sun.os.patch.level",
   "java.vendor.url.bug",
