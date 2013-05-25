@@ -397,8 +397,12 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   }
 
   def onError(socket: WebSocket, ex: Exception) {
-    println("WebSocket - an error occured: " + ex)
-    ex.printStackTrace
+    ex match {
+      case e: java.nio.channels.ClosedByInterruptException =>
+      case otherwise =>
+        println("WebSocket - an error occured: " + ex)
+        ex.printStackTrace
+    }
   }
 
   def onMessage(socket: WebSocket, msg: String) {
