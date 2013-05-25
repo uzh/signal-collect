@@ -67,7 +67,9 @@ scc.modules.Configuration = function() {
     var ul = $("#infrastructureStatBox ul").html('');
     $.each(msg.systemProperties, function(index) {
       $.each(msg.systemProperties[index], function(k, v) {
-        ul.append('<li>' + k + ': ' + v + '</li>');
+        if (scc.conf.resources.hideInfrastructureItems.indexOf(k) == -1) {
+          ul.append('<li>' + k + ': ' + v + '</li>');
+        }
       });
     });
     ul = $("#graphStatBox ul").html('');

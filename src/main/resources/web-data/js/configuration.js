@@ -217,3 +217,13 @@ scc.conf.resources.chartConfigNodes = [
                    {jsonName : "os", skip: true },
                    {jsonName : "nodeId", skip: true },
                   ];
+
+scc.conf.resources.hideInfrastructureItems = [
+  "sun.os.patch.level",
+  "java.vendor.url.bug",
+  "sun.cpu.isalist",
+  "gopherProxySet",
+  "java.awt.graphicsenv",
+  "java.awt.printerjob",
+  "awt.toolkit"
+];
