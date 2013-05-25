@@ -42,7 +42,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   var outgoingEdges: collection.mutable.Map[Any, Edge[_]] = new java.util.HashMap[Any, Edge[_]](0)
 
   /** The edges that this vertex is connected to. */
-  var edges: Iterable[Edge[_]] = outgoingEdges.values
+  def edges: Traversable[Edge[_]] = outgoingEdges.values
 
   /** The state of this vertex when it last signaled. */
   var lastSignalState: Option[State] = None
