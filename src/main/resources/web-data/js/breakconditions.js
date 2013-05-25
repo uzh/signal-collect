@@ -231,19 +231,22 @@ scc.modules.BreakConditions = function () {
    * combination of choices is valid.
    */
   var formCompleted = function () {
+    // If no vertex has been selected, return false
     if ($("#gc_vertexId").val() == BSTR.pickVertex ||
         $("#gc_vertexId").val().length == 0) {
       return false;
     }
-    else {
-      if ($("#gc_condition").val() == BSTR.stateChanges) {
-        return true;
-      }
-      else if ($("#gc_state").val() == BSTR.enterState ||
-               $("#gc_state").val().length == 0) {
-        return false;
-      }
+    // If we don't need a state for this condition, return true
+    else if (!([BSTR.stateAbove, BSTR.stateBelow].indexOf(
+              $("#gc_condition").val().replace(/\:/g, "")) != -1)) {
+      return true;
     }
+    // Otherwise, if no state has been entered, return false
+    else if ($("#gc_state").val() == BSTR.enterState ||
+             $("#gc_state").val().length == 0) {
+      return false;
+    }
+    // All checks passed
     return true;
   };
 
