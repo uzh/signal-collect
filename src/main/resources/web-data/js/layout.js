@@ -24,7 +24,9 @@
  */
 scc.lib.Layout = function() {
 
-  // Object-scope variables
+  /**
+   * Object-scope variable
+   */ 
   var hidingTimeout;
 
   /**

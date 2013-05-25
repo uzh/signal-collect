@@ -246,18 +246,22 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
     (server, sockets)
   }
 
+  /** Set an Actor to be the Coordinator */
   def setCoordinator(coordinatorActor: ActorRef) {
     sockets.setCoordinator(coordinatorActor)
   }
 
+  /** Set the Execution */
   def setExecution(e: Execution) {
     sockets.setExecution(e)
   }
 
+  /** Set the ExecutionConfiguration */
   def setExecutionConfiguration(e: ExecutionConfiguration) {
     sockets.setExecutionConfiguration(e)
   }
 
+  /** Set the ExecutionStatistics */
   def setExecutionStatistics(e: ExecutionStatistics) {
     sockets.setExecutionStatistics(e)
   }
@@ -281,10 +285,17 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
  * @constructor create a new FileServer
  */
 class FileServer() extends HttpHandler {
+  
+  /** Handles requests to files */
   def handle(t: HttpExchange) {
 
+    /** The name of the file to store the log messages to */
     val logFileName = "log_messages.txt"
+    
+    /** The name of the folder where all web data is stored */
     val folderName = "web-data"
+      
+    /** The URI of the current request without the leading slash */
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "")
 
     // the root location, /graph and /resources all point to main.html
@@ -301,7 +312,8 @@ class FileServer() extends HttpHandler {
       case otherwise                    => "text/plain"
     }
 
-      def os: OutputStream = t.getResponseBody
+    /** Get the responseBody of the stream */
+    def os: OutputStream = t.getResponseBody
     t.getResponseHeaders.set("Content-Type", fileType)
 
     // Log files are served as attachments

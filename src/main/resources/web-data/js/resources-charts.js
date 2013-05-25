@@ -292,6 +292,10 @@ scc.modules.Resources = function() {
   
   
   
+  /**
+   * Handles state changes of the interactive execution (e.g. resetting, converged, ...).
+   * @param {Object} msg - The message including the state
+   */
   this.handleStateChange = function(msg) {
     
     if (computationState == "" || msg.state == "resetting") {
