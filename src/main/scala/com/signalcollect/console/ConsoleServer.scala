@@ -264,10 +264,10 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
 
   /** Stop both HTTP and WebSocket servers and exit */
   def shutdown {
-    println("Stopping http server...")
-    server.stop(5)
     println("Stopping WebSocket...")
     sockets.stop(5000)
+    println("Stopping http server...")
+    server.stop(5)
   }
 }
 
@@ -402,36 +402,48 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
   }
 
   def onMessage(socket: WebSocket, msg: String) {
-    val j = parse(msg)
-    val p = (j \ "provider").extract[String]
-      def provider: DataProvider = coordinator match {
-        case Some(c) => p match {
-          case "configuration"   => new ConfigurationDataProvider(this, c)
-          case "log"             => new LogDataProvider(c)
-          case "graph"           => new GraphDataProvider(c, j)
-          case "resources"       => new ResourcesDataProvider(c, j)
-          case "state"           => new StateDataProvider(this)
-          case "controls"        => new ControlsProvider(this, j)
-          case "breakconditions" => new BreakConditionsProvider(c, this, j)
-          case otherwise         => new InvalidDataProvider(msg, "invalid provider")
-        }
-        case None => p match {
-          case "state"   => new StateDataProvider(this)
-          case otherwise => new NotReadyDataProvider(msg)
-        }
-      }
-
     try {
-      socket.send(compact(render(provider.fetch)))
+      val j = parse(msg)
+      val p = (j \ "provider").extract[String]
+        def provider: DataProvider = coordinator match {
+          case Some(c) => p match {
+            case "configuration"   => new ConfigurationDataProvider(this, c)
+            case "log"             => new LogDataProvider(c)
+            case "graph"           => new GraphDataProvider(c, j)
+            case "resources"       => new ResourcesDataProvider(c, j)
+            case "state"           => new StateDataProvider(this)
+            case "controls"        => new ControlsProvider(this, j)
+            case "breakconditions" => new BreakConditionsProvider(c, this, j)
+            case otherwise         => new InvalidDataProvider(msg, "invalid provider")
+          }
+          case None => p match {
+            case "state"   => new StateDataProvider(this)
+            case otherwise => new NotReadyDataProvider(msg)
+          }
+        }
+
+      try {
+        socket.send(compact(render(provider.fetch)))
+      } catch {
+        // Something went wrong during fetch, but it might be a minor exception
+        case e: NumberFormatException =>
+          socket.send(compact(render(
+            new InvalidDataProvider(msg, "number format exception").fetch)))
+        case e: Exception =>
+          socket.send(compact(render(
+            new ErrorDataProvider(e).fetch)))
+        case e: WebsocketNotConnectedException =>
+          println("Warning: Couldn't send message to websocket")
+      }
     } catch {
-      case e: NumberFormatException =>
-        socket.send(compact(render(
-          new InvalidDataProvider(msg, "number format exception").fetch)))
+      // Something is wrong with the WebSocket or the graph/coordinator is already terminated
+      case e @ (_: java.lang.InterruptedException |
+                _: akka.pattern.AskTimeoutException |
+                _: org.java_websocket.exceptions.WebsocketNotConnectedException) =>
+        println("Warning: Console communication interrupted " +
+                "(likely due to graph shutdown)")
       case e: Exception =>
-        socket.send(compact(render(
-          new ErrorDataProvider(e).fetch)))
-      case e: WebsocketNotConnectedException =>
-        println("Warning: Couldn't send message to websocket")
+        println("Warning: Unknown exception occured")
     }
   }
 

@@ -319,7 +319,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
     if (console != null) { console.setExecution(this) }
     else {
       println(
-        "warning: using interactive execution mode without console. To use the console,\n" +
+        "Warning: using interactive execution mode without console. To use the console,\n" +
         "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
     }
 
@@ -687,6 +687,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 
   def shutdown = {
     parallelBootstrapNodeProxies.foreach(_.shutdown)
+    if (console != null) { console.shutdown }
     system.shutdown
     system.awaitTermination
   }
