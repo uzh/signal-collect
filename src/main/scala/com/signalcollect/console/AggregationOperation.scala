@@ -272,13 +272,13 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
       if (i.edges.view.map {
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise                                 => false
-      }.toSet.contains(true)) { Set(i.id) }
+      }.toSet.contains(true)) { return Set(i.id) }
       // If this vertex is a primary vertex, all its targets are vicinity vertices
       if (ids.contains(i.id)) {
-        i.edges.map { case v: Edge[Id] => v.targetId }.toSet
+        return i.edges.map { case v: Edge[Id] => v.targetId }.toSet
       }
       // If neither is true, this vertex is irrelevant
-      Set()
+      return Set()
     case otherwise => Set()
   }
 
