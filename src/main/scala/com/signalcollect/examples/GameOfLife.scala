@@ -60,12 +60,12 @@ object GameOfLife extends App {
   val rows = 10
 
   println("Adding vertices ...") //Create all cells.
-  for (column <- 0 until columns; row <- 0 until rows) {
+  for (column <- 0 to columns; row <- 0 to rows) {
     graph.addVertex(new GameOfLifeCell((column, row), (math.random * 2.0).floor.toInt))
   }
 
   println("Adding edges ...") // Connect the neighboring cells.
-  for (column <- 0 until columns; row <- 0 until rows) {
+  for (column <- 0 to columns; row <- 0 to rows) {
     for (neighbor <- neighbors(column, row)) {
       if (inGrid(neighbor._1, neighbor._2)) {
         graph.addEdge((column, row), new StateForwarderEdge((neighbor._1, neighbor._2)))
