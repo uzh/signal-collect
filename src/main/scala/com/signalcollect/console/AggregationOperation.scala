@@ -272,13 +272,13 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
       if (i.edges.view.map {
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise                                 => false
-      }.toSet.contains(true)) { return Set(i.id) }
+      }.toSet.contains(true)) { Set(i.id) }
       // If this vertex is a primary vertex, all its targets are vicinity vertices
       if (ids.contains(i.id)) {
-        return i.edges.map { case v: Edge[Id] => v.targetId }.toSet
+        i.edges.map { case v: Edge[Id] => v.targetId }.toSet
       }
       // If neither is true, this vertex is irrelevant
-      return Set()
+      Set()
     case otherwise => Set()
   }
 
@@ -303,8 +303,8 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
   def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = v match {
     case i: Inspectable[Id, _] => {
-      if (ids.contains(i.id.toString)) { return List(i) }
-      else { return List() }
+      if (ids.contains(i.id.toString)) { List(i) }
+      else { List() }
     }
     case other => List()
   }
@@ -329,8 +329,8 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] => {
-      if (i.id.toString.contains(s)) { return Set(i.id) }
-      else { return Set() }
+      if (i.id.toString.contains(s)) { Set(i.id) }
+      else { Set() }
     }
     case other => Set()
   }
