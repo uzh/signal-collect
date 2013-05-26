@@ -72,25 +72,6 @@
             <div class="title expanded">Add and remove vertices from the canvas</div>
             <div class="contents">
               <form>
-                <div id="gp_container">
-                  <h1><span>Options impacting performance</span></h1>
-                  <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
-                  <select id="gp_vicinityRadius" class="setting"></select><br/>
-                  <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
-                  <select id="gp_vicinityIncoming" class="setting">
-                    <option>No</option>
-                    <option>Yes</option>
-                  </select><br/>
-                  <label for="gp_refreshRate">Autorefresh while running (sec):</label>
-                  <select id="gp_refreshRate" class="setting"></select><br/>
-                  <label for="gp_maxVertexCount">Maximum vertex count:</label>
-                  <select id="gp_maxVertexCount" class="setting"></select><br/>
-                  <label for="gp_exposeVertices">Expose vertex details on click:</label>
-                  <select id="gp_exposeVertices" class="setting">
-                    <option>No</option>
-                    <option>Yes</option>
-                  </select>
-                </div>
                 <div id="gs_container">
                   <h1><span>Add vertices</span></h1>
                   <label for="gs_autoAddVicinities">Load vertex vicinity on hover:</label>
@@ -98,7 +79,8 @@
                     <option>No</option>
                     <option>Yes</option>
                   </select><br/>
-                  <select id="gp_targetCount" class="setting"></select>
+                  <label for="gp_targetCount">Add exceptional vertices:</label><br/>
+                  <select id="gp_targetCount" class="setting" style="margin-left:30px"></select>
                   <span class="panel_span"> of </span>
                   <select id="gs_topCriterium" class="setting">
                     <option>Highest degree</option>
@@ -110,7 +92,7 @@
                   <button id="gs_addByTop" class="narrow">Add</button><br/>
                   <input id="gs_addBySubstring" type="text">
                   <button id="gs_addBySubstringAdd" class="narrow">Add</button><br/>
-                  <span class="panel_span">Vertex vicinity of:</span>
+                  <span class="panel_span" data-title="gs_vicinities">Add vertex vicinity of:</span>
                   <button id="gs_addRecentVicinitiesAdd" class="half">Latest query</button><br/>
                   <span class="panel_span">&nbsp;</span>
                   <button id="gs_addAllVicinitiesAdd" class="half">All vertices</button><br/>
@@ -131,11 +113,27 @@
               </form> 
             </div>
           </div>
-          <div id="cGraphDesign" class="panel_section">
-            <div class="title expanded">Graph Look and Feel</div>
+          <div id="cGraphAdvanced" class="panel_section">
+            <div class="title" id="cGraphAdvancedTitle">Advanced Graph Options</div>
             <div class="contents">
               <form>
                 <h1><span>Options impacting performance</span></h1>
+                <label for="gp_vicinityRadius">Hop radius when loading vicinities:</label>
+                <select id="gp_vicinityRadius" class="setting"></select><br/>
+                <label for="gp_vicinityIncoming">Also compute incoming vicinities:</label>
+                <select id="gp_vicinityIncoming" class="setting">
+                  <option>No</option>
+                  <option>Yes</option>
+                </select><br/>
+                <label for="gp_refreshRate">Autorefresh while running (sec):</label>
+                <select id="gp_refreshRate" class="setting"></select><br/>
+                <label for="gp_maxVertexCount">Maximum vertex count:</label>
+                <select id="gp_maxVertexCount" class="setting"></select><br/>
+                <label for="gp_exposeVertices">Expose vertex details on click:</label>
+                <select id="gp_exposeVertices" class="setting">
+                  <option>No</option>
+                  <option>Yes</option>
+                </select><br/>
                 <label for="gp_drawEdges">Draw edges:</label>
                 <select id="gp_drawEdges" class="setting">
                   <option>When graph is still</option>

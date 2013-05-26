@@ -272,6 +272,7 @@ a, a:visited {
   height: 18px;
   padding: 2px 0 6px 5px;
   display: inline-block;
+  cursor: default;
 }
 
 .panel input[type="text"] {
@@ -388,10 +389,6 @@ a, a:visited {
 .bottom_border {
   position: relative;
   box-shadow: inset 1px -5px 9px -6px #111; 
-}
-
-#cGraphDesign {
-  line-height:130%;
 }
 
 #gc_stateContainer {

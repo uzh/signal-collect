@@ -21,7 +21,7 @@
  */
 scc.defaults.graph = {"layout": {
                         "cVertexSelection": "show",
-                        "cGraphDesign": "show",
+                        "cGraphAdvanced": "hide",
                         "cGraphControl": "show",
                         "expositionWidth": "350"
                       },
@@ -294,6 +294,14 @@ scc.modules.Graph = function() {
     $("#exposition_background").text(GSTR.expositionEmpty);
     var val = parseInt($("#gp_maxVertexCount").val());
     populateTargetCountSelector(val);
+    $.each(GSTR.menuhelp, function (k, v) {
+      var subject = $('label[for="' + k + '"],' +
+                      '.panel_span[data-title="' + k + '"]')
+      if (subject.length == 0) {
+        subject = $('#' + k)
+      }
+      subject.attr("title", v);
+    });
   }
   this.layout();
 

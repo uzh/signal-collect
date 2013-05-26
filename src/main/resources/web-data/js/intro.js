@@ -48,14 +48,6 @@ $(document).ready(function() {
       "In the Graph view you can view and navigate the graph of your current computation. You start out with an empty " +
       "canvas onto which you add the vertices you're interested in. When the view becomes cluttered, you can remove vertices you don't " +
       "need anymore.",
-    "#gp_container":
-      "The choices you make here may have an impact on how quickly your query completes and on how smoothly the graph will be " +
-      "displayed. <br/>" +
-      "<ul><li>The <strong>hop radius</strong> determines the maximum distance travelled from the source vertex when loading its vicinity. Raising it is only useful in graphs where all vertices have a very low degree.</li>" +
-      "    <li><strong>computing incoming edges</strong> is somewhat more expensive than only computing outgoing ones when loading vicinities</li>" +
-      "    <li>The <strong>refresh rate</strong> determines how often the graph auto-reloads when running a computation continuously</li>" +
-      "    <li>The <strong>maximum vertex count</strong> sets an upper cap on how many vertices are displayed. If there are too many, those which have been added earliest will be removed to make way for the new ones.</li>" + 
-      "    <li><strong>Exposing vertex details</strong> allows you to view any information a vertex is exposing through its 'expose' function.</li></ul>",
     "#gs_container":
       "Add vertices..." +
       "<ul><li>by enabling an option to expand vertices on hover</li>" +
@@ -66,9 +58,8 @@ $(document).ready(function() {
       "Signal/Collect Console remembers which vertices have been previously added to the canvas even beyond a restart of the server or your browser.",
     "#gd_container":
       "Clear the entire canvas or remove vertices by drawing a rectangle around them. You can also remove all vertices except the ones most recently added to the canvas, or any vertices that don't have any edges (orphans).",
-    "#cGraphDesign":
-      "Choose how the vertices in the graph should look like. You can make the vertex size, fill color and outline color correspond to " +
-      "certain properties of the vertex.",
+    "#cGraphAdvanced":
+      "Click on a panel section to expand it. The advanced options may impact your performanced and affect the look and feel of the graph. Hover over the options to find out more about them.",
     "#cGraphControl":
       "Select a vertex and add break conditions to halt the computation when certain events occur.",
     "#controls":

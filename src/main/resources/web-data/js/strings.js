@@ -45,7 +45,29 @@ scc.STR = {
            "Canvas is empty: use the tools on the left to add and remove vertices. "  +
            "Older vertices will automatically be removed once the maximum vertex count is reached.",
          "addBySubstring": 
-           "Vertex with ID having this substring"
+           "Vertex with ID having this substring",
+         "menuhelp": {
+           "gs_autoAddVicinities": "When enabled, causes the vicinity of a vertex to be loaded automatically when the mouse is hovering over it.",
+           "gp_targetCount": "Add at most the specified number of vertices sorted by the given property.",
+           "gs_vicinities": "Add the vicinity of vertices that are already on the canvas",
+           "gs_addRecentVicinitiesAdd": "Add only the vicinity of vertices from the latest query",
+           "gs_addAllVicinitiesAdd": "Add the vicinity of all vertices on the canvas. You may exceed the maximum vertex count quickly doing this.",
+           "gs_addVicinitiesBySelect": "Click here and then draw a rectangle around the vertices whose vicinity you want to add.",
+           "gd_removeNonLatest": "Remove all vertices that are not from the most recent query.",
+           "gd_removeOrphans": "Remove vertices that are not connected to any other vertices on the canvas. Note that they may have edges with vertices not added onto the canvas.",
+           "gd_removeAll": "Remove all vertices from the canvas.",
+           "gd_removeBySelect": "Click here and then draw a rectangle around the vertices to be removed.",
+           "gp_vicinityRadius": "This determines how many hops the query travels from the source when traversing the vicinity of a vertex.",
+           "gp_vicinityIncoming": "Traversing outgoing vicinities is much cheaper than calculating incoming ones. This may affect the performance of your queries",
+           "gp_refreshRate": "When running the computation continously, this determines the minimum time to wait between refreshing the graph.",
+           "gp_maxVertexCount": "The maximum number of vertices to request from the server when doing queries or adding vicinities.",
+           "gp_exposeVertices": "When enabled, calls the 'expose' function of each vertex being loaded and shows the results in the side bar.",
+           "gp_drawEdges": "Wether or not to draw the edges between vertices. 'Only on hover' may improve the performance for large graphs.",
+           "gd_vertexSize": "Wether or not to map the state of a vertex to its size.",
+           "gd_vertexColor": "Determines the source data to use for the vertex color. Where it is a gradient, blue shades indicate low values, red shades high values.",
+           "gd_vertexBorder": "Determines the source data to use for the vertex border color. Where it is a gradient, blue shades indicate low values, red shades high values.",
+           "gc_vertexId": "Click on 'Select' and then pick a vertex on the canvas. Then, choose a condition and click 'Add' to create the new break condition."
+         }
        },
        "State": {
          "undetermined": [
