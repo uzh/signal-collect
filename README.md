@@ -23,7 +23,9 @@ How to Develop in Eclipse
 -------------------------
 Generate an Eclipse project as described above.
 
-Install the Typesafe IDE for Scala 2.10.1 from: http://www.typesafe.com/stack/downloads/scala-ide
+Install Eclipse Juno (4.2) from http://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/junosr2.
+
+Within Eclipse, install all the Scala IDE plugins: Help → Install New Software ... → Add → http://download.scala-ide.org/sdk/e38/scala210/stable/site
 
 Ensure that Eclipse uses the Java 7 library and JVM: Preferences → Java → Installed JREs → JRE/JDK 7 should be installed and selected.
 
