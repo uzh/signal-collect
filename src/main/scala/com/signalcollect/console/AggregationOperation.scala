@@ -268,17 +268,19 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
-      // If this vertex is the target of a primary vertex, it's a vicinity vertex
       if (i.edges.view.map {
         case v: Edge[Id] if (ids.contains(v.targetId)) => true
         case otherwise                                 => false
-      }.toSet.contains(true)) { return Set(i.id) }
-      // If this vertex is a primary vertex, all its targets are vicinity vertices
-      if (ids.contains(i.id)) {
-        return i.edges.map { case v: Edge[Id] => v.targetId }.toSet
+      }.toSet.contains(true)) {
+        // If this vertex is the target of a primary vertex, it's a vicinity vertex
+        Set(i.id)
+      } else if (ids.contains(i.id)) {
+        // If this vertex is a primary vertex, all its targets are vicinity vertices
+        i.edges.map { case v: Edge[Id] => v.targetId }.toSet
+      } else {
+        // If neither is true, this vertex is irrelevant
+        Set()
       }
-      // If neither is true, this vertex is irrelevant
-      return Set()
     case otherwise => Set()
   }
 
