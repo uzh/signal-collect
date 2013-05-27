@@ -211,7 +211,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
       for (port <- defaultPort to maxUserPort) {
         try {
           println("Websocket - Connecting to port " + port + "...")
-          getNewServers(port)
+          return getNewServers(port)
         } catch {
           case e: Exception =>
             println("Websocket - Starting server on port " +
@@ -223,7 +223,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
       sys.exit
     } else {
       try {
-        getNewServers(httpPort)
+        return getNewServers(httpPort)
       } catch {
         case e: Throwable =>
           println("Could not start server: " + e.getMessage)
