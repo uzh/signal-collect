@@ -51,7 +51,7 @@ $(document).ready(function() {
     "#gs_container":
       "Add vertices..." +
       "<ul><li>by enabling an option to expand vertices on hover</li>" +
-      "    <li>by their exceptional properties</li>" +
+      "    <li>by their properties</li>" +
       "    <li>by searching for vertices with an ID containing the given string</li>" + 
       "    <li>by <strong>double-clicking</strong> on a vertex to expand its vicinity</li>" +
       "    <li>by clicking on 'Selected vertices' and then using the mouse to draw a rectangle around several vertices to expand</li></ul>" +

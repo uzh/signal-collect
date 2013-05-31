@@ -78,8 +78,7 @@ scc.modules.Graph = function() {
 
   /**
    * Clears and then populates the select box that allows the user to choose
-   * the number of exceptional vertices with numbers ranging up to the
-   * specified maximum.
+   * the number of vertices with numbers ranging up to the specified maximum.
    * @param {int} maximum - Maximum option to show
    */
   var populateTargetCountSelector = function (maximum) {

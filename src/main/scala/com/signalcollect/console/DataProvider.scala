@@ -461,7 +461,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
   }
 
   /** Fetch a random sample of vertices. */
-  def fetchSample(): JObject = {
+  def fetchSample: JObject = {
     val vertexIds = workerApi.aggregateAll(new SampleAggregator[Id](targetCount))
     fetchGraph(vertexIds)
   }
@@ -512,9 +512,10 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case Some("top") => request.topCriterium match {
         case Some("Highest state")         => fetchByTopState()
         case Some("Lowest state")          => fetchByTopState(true)
-        case Some("Highest degree")        => fetchByTopDegree()
+        case Some("Highest degree")        => fetchByTopDegree
         case Some("Above signal thresh.")  => fetchByAboveThreshold("signal")
         case Some("Above collect thresh.") => fetchByAboveThreshold("collect")
+        case Some("Sample")                => fetchSample
         case otherwise                     => new InvalidDataProvider(msg, "invalid top criterium").fetch
       }
       case otherwise => fetchInvalid(msg, "missing query")
