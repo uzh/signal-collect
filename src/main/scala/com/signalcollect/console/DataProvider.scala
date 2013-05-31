@@ -393,7 +393,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       } else {
         sourceIds ++ findVicinity(sourceIds.map { id =>
           workerApi.forVertexWithId(id, { vertex: Inspectable[Id, _] =>
-            vertex.getTargetIdsOfOutgoingEdges.map(_.asInstanceOf[Id]).toSet
+            vertex.targetIds.asInstanceOf[Traversable[Id]].toSet
           })
         }.flatten, radius - 1, false)
       }

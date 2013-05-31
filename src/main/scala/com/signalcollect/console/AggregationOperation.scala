@@ -77,14 +77,8 @@ class GraphAggregator[Id](
         case i: Inspectable[Id, _] => {
           if (vertexIds.contains(i.id)) {
             // Get the list of target vertices that this vertex' edges point at
-            val targetVertices = i.getTargetIdsOfOutgoingEdges.filter { value =>
-              // This match is necessary because only an Edge[Id] will have a
-              // targetId of type Id.
-              value match {
-                case targetId: Id => vertexIds.contains(targetId)
-                case otherwise    => false
-              }
-            }.map { targetId => (JString(targetId.toString)) }.toList
+            val targetVertices = i.targetIds.filter { targetId => vertexIds.contains(targetId.asInstanceOf[Id])
+            } map { targetId => JString(targetId.toString) } toList
 
             val stateString = i.state match {
               case null  => "null"
@@ -171,17 +165,15 @@ class TopDegreeAggregator[Id](n: Int)
   def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
     case i: Inspectable[Id, _] =>
       // Create one map from this id to the number of outgoing edges
-      Map(i.id -> i.getTargetIdsOfOutgoingEdges.size) ++
+      Map(i.id -> i.targetIds.size) ++
         // Create several maps, one for each target id to 1
-        i.getTargetIdsOfOutgoingEdges.map {
-          case targetId: Id => (targetId -> 1)
-        }
+        i.targetIds map { _.asInstanceOf[Id] -> 1 } toMap
     case other => Map[Id, Int]()
   }
 
   def reduce(vertexToDegreeMap: Stream[Map[Id, Int]]): Map[Id, Int] = {
     // Combine the maps created above to count the total number of edges
-    Toolkit.mergeMaps(vertexToDegreeMap.toList)((v1, v2) => v1 + v2)
+    Toolkit.mergeMaps(vertexToDegreeMap)((v1, v2) => v1 + v2)
   }
 }
 
@@ -278,15 +270,12 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
-      if (i.getTargetIdsOfOutgoingEdges.view.map {
-        case targetId: Id if (ids.contains(targetId)) => true
-        case otherwise                                => false
-      }.toSet.contains(true)) {
-        // If this vertex is the target of a primary vertex, it's a vicinity vertex
+      if (!(i.targetIds.toStream.filter(targetId => ids.contains(targetId.asInstanceOf[Id])) isEmpty)) {
+        // If this has an outgoing edge to a primary vertex, it's a vicinity vertex.
         Set(i.id)
       } else if (ids.contains(i.id)) {
         // If this vertex is a primary vertex, all its targets are vicinity vertices
-        i.getTargetIdsOfOutgoingEdges.map { case targetId: Id => targetId }.toSet
+        i.targetIds.asInstanceOf[Traversable[Id]].toSet
       } else {
         // If neither is true, this vertex is irrelevant
         Set()

@@ -31,7 +31,7 @@ trait Inspectable[Id, State] extends Vertex[Id, State] {
   /**
    * Returns the ids of the target vertices of outgoing edges of the vertex.
    */
-  def getTargetIdsOfOutgoingEdges: Traversable[_]
+  def targetIds: Traversable[_]
 
   /**
    * The expose function can provide additional information about the vertex.

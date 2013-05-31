@@ -26,7 +26,7 @@ class ClusteringCoefficientVertex(id: Any) extends DataGraphVertex(id, 0.0) {
   type Signal = Set[Any]
 
   lazy val maxEdges = outgoingEdges.size * (outgoingEdges.size - 1)
-  lazy val neighbourIds = getTargetIdsOfOutgoingEdges.toSet
+  lazy val neighbourIds = targetIds.toSet
 
   def collect = {
     if (maxEdges != 0) {
