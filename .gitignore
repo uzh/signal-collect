@@ -3,7 +3,7 @@
 *.orig
 lib/*
 !/.gitignore
-!/.travis.yml
+bin/*
 project/target/
 project/project/
 project/scala*/

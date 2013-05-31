@@ -27,6 +27,8 @@ parallelExecution in Test := false
 
 scalacOptions += "-deprecation"
 
+EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
+
 EclipseKeys.withSource := true
 
 jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
