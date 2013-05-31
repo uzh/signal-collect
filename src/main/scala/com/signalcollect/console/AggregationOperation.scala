@@ -55,7 +55,9 @@ import BreakConditionName._
  *     the return value into the "info" property. If true, may increase
  *     graph loading time significantly.
  */
-class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolean = false)
+class GraphAggregator[Id](
+  vertexIds: Set[Id] = Set[Id](),
+  exposeVertices: Boolean = false)
     extends AggregationOperation[(Double, Double, JObject)] {
 
   def interpretState(s: Any): Double = {
@@ -70,44 +72,52 @@ class GraphAggregator[Id](vertexIds: Set[Id] = Set[Id](), exposeVertices: Boolea
 
   def extract(v: Vertex[_, _]): ((Double, Double, JObject)) = {
       def state: Double = interpretState(v.state)
-    v match {
-      case i: Inspectable[Id, _] => {
-        if (vertexIds.contains(i.id)) {
-          // Get the list of target vertices that this vertex' edges point at
-          val targetVertices = i.edges.filter { value =>
-            // This match is necessary because only an Edge[Id] will have a
-            // targetId of type Id.
-            value match {
-              case v: Edge[Id] => vertexIds.contains(v.targetId)
-              case otherwise   => false
+    try {
+      v match {
+        case i: Inspectable[Id, _] => {
+          if (vertexIds.contains(i.id)) {
+            // Get the list of target vertices that this vertex' edges point at
+            val targetVertices = i.getTargetIdsOfOutgoingEdges.filter { value =>
+              // This match is necessary because only an Edge[Id] will have a
+              // targetId of type Id.
+              value match {
+                case targetId: Id => vertexIds.contains(targetId)
+                case otherwise    => false
+              }
+            }.map { targetId => (JString(targetId.toString)) }.toList
+
+            val stateString = i.state match {
+              case null  => "null"
+              case other => other.toString
             }
-          }.map { e => (JString(e.targetId.toString)) }.toList
+              def vertexProperties: List[JField] = (List(JField("s", stateString),
+                JField("es", targetVertices.size),
+                JField("ss", i.scoreSignal),
+                JField("cs", i.scoreCollect),
+                JField("t", v.getClass.toString.split("""\.""").last),
+                JField("info",
+                  if (exposeVertices) {
+                    JObject(
+                      (for ((k, v) <- i.expose) yield {
+                        JField(k, Toolkit.serializeAny(v))
+                      }).toList)
+                  } else { JNothing })))
+              def verticesObj: (String, JObject) = ("vertices",
+                JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
 
-          val stateString = i.state match {
-            case null  => "null"
-            case other => other.toString
-          }
-            def vertexProperties: List[JField] = (List(JField("s", stateString),
-              JField("es", targetVertices.size),
-              JField("ss", i.scoreSignal),
-              JField("cs", i.scoreCollect),
-              JField("t", v.getClass.toString.split("""\.""").last),
-              JField("info",
-                if (exposeVertices) {
-                  JObject(
-                    (for ((k, v) <- i.expose) yield {
-                      JField(k, Toolkit.serializeAny(v))
-                    }).toList)
-                } else { JNothing })))
-            def verticesObj: (String, JObject) = ("vertices",
-              JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
+              def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+            (state, state, verticesObj ~ edgesObj)
+          } else { (state, state, JObject(List())) }
 
-            def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
-          (state, state, verticesObj ~ edgesObj)
-        } else { (state, state, JObject(List())) }
+        }
+        case other => (state, state, JObject(List()))
 
       }
-      case other => (state, state, JObject(List()))
+    } catch {
+      case t: Throwable =>
+        println(t.getMessage)
+        t.printStackTrace
+        throw t
     }
   }
 
@@ -161,10 +171,10 @@ class TopDegreeAggregator[Id](n: Int)
   def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
     case i: Inspectable[Id, _] =>
       // Create one map from this id to the number of outgoing edges
-      Map(i.id -> i.edges.size) ++
+      Map(i.id -> i.getTargetIdsOfOutgoingEdges.size) ++
         // Create several maps, one for each target id to 1
-        i.edges.map {
-          case v: Edge[Id] => (v.targetId -> 1)
+        i.getTargetIdsOfOutgoingEdges.map {
+          case targetId: Id => (targetId -> 1)
         }
     case other => Map[Id, Int]()
   }
@@ -268,15 +278,15 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
-      if (i.edges.view.map {
-        case v: Edge[Id] if (ids.contains(v.targetId)) => true
-        case otherwise                                 => false
+      if (i.getTargetIdsOfOutgoingEdges.view.map {
+        case targetId: Id if (ids.contains(targetId)) => true
+        case otherwise                                => false
       }.toSet.contains(true)) {
         // If this vertex is the target of a primary vertex, it's a vicinity vertex
         Set(i.id)
       } else if (ids.contains(i.id)) {
         // If this vertex is a primary vertex, all its targets are vicinity vertices
-        i.edges.map { case v: Edge[Id] => v.targetId }.toSet
+        i.getTargetIdsOfOutgoingEdges.map { case targetId: Id => targetId }.toSet
       } else {
         // If neither is true, this vertex is irrelevant
         Set()
