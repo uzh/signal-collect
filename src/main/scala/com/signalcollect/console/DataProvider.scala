@@ -554,3 +554,20 @@ class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
   }
 }
 
+/**
+ * Provider serving the idle status of the coordinator
+ *
+ * @constructor create a new GlobalInboxSizeDataProvider
+ * @param coordinator the Coordinator
+ */
+class CoordinatorIdleDataProvider(coordinator: Coordinator[_, _])
+    extends DataProvider {
+
+  def fetch(): JObject = {
+    ("provider" -> "coordinatoridle") ~
+      ("timestamp" -> System.currentTimeMillis) ~
+      ("idle" -> coordinator.isIdle)
+  }
+}
+
+

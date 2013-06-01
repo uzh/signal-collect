@@ -430,6 +430,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
             case "state"           => new StateDataProvider(this)
             case "controls"        => new ControlsProvider(this, j)
             case "breakconditions" => new BreakConditionsProvider(c, this, j)
+            case "coordinatoridle" => new CoordinatorIdleDataProvider(c)
             case otherwise         => new InvalidDataProvider(msg, "invalid provider")
           }
           case None => p match {

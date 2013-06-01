@@ -337,7 +337,7 @@ $(document).ready(function() {
     case "/graph": 
       var view = window.location.pathname.slice(1);
       scc.settings.set({"main": {"view": view}});
-      enableModules(["State"]);
+      enableModules(["State", "CoordinatorIdle"]);
       if (view == "resources") {
         enableModules(["Resources", "Configuration", "Log"]);
       }
@@ -348,7 +348,7 @@ $(document).ready(function() {
       break;
     default:
       enableModules(["Resources", "Configuration" , "Log", 
-                     "Graph", "BreakConditions", "State"]);
+                     "Graph", "BreakConditions", "State", "CoordinatorIdle"]);
       scc.layout.layout(["graph", "resources"]);
   }
 
