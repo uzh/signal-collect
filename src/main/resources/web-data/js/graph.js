@@ -575,7 +575,7 @@ scc.modules.Graph = function() {
    * persisted to the settings hash.
    * @param {Event} e - The event that triggered the call
    */
-  $("#cGraphDesign select").change(function (e) {
+  $(".graph_design").change(function (e) {
     var property = $(this);
     graphD3.setGraphDesign(property.attr("id"), property.val());
   });
