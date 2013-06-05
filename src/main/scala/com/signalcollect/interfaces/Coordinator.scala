@@ -26,7 +26,7 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 
 /**
- * Required because a Java Dynamic Proxy can only work with interfaces
+ * Required because a Java Dynamic Proxy can only work with interfaces.
  */
 trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logger {
 

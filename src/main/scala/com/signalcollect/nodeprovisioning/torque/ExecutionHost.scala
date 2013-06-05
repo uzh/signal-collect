@@ -20,6 +20,6 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-trait ExecutionHost {
+abstract class ExecutionHost {
   def executeJobs(jobs: List[Job])
 }

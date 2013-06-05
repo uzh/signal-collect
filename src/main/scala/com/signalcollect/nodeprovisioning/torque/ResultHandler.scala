@@ -19,6 +19,6 @@
 
 package com.signalcollect.nodeprovisioning.torque
 
-trait ResultHandler extends Serializable {
+abstract class ResultHandler extends Serializable {
   def addEntry(data: Map[String, String])
 }

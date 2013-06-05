@@ -39,8 +39,8 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 import akka.actor.ActorLogging
 
-/** The trait defining the interface every DataProvider has to implement. */
-trait DataProvider {
+/** Abstract class defining the interface every DataProvider has to implement. */
+abstract class DataProvider {
   def fetch(): JObject
   def fetchInvalid(msg: JValue = JString(""),
                    comment: String): JObject = {

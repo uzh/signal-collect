@@ -24,15 +24,10 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 /**
- * Companion object for DefaultSerializer
- */
-object DefaultSerializer extends DefaultSerializer
-
-/**
  * Default Serializer that uses standard java.io ObjectIn- and ObjectOutputStreams
  * and can serialize any object declared as serializable.
  */
-trait DefaultSerializer {
+object DefaultSerializer {
 
   /**
    * Serializes an object.

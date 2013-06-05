@@ -34,7 +34,7 @@ import com.signalcollect.interfaces.ComplexAggregation
  *
  *  @author Philip Stutz
  */
-trait Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
+abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
 
   /**
    *  Starts the execution of the computation using the default execution parameters and

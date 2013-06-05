@@ -51,8 +51,8 @@ import java.io.InputStream
 import akka.event.Logging
 import java.io.OutputStream
 
-/** Trait that defines the interface for our InteractiveExecution */
-trait Execution {
+/** Abstract class that defines the interface for our InteractiveExecution */
+abstract class Execution {
   var stepTokens: Int // How many partial steps remain until pausing
   var conditions: Map[String, BreakCondition] // Map of active conditions
   var conditionsReached: Map[String, String] // Map of fired conditions

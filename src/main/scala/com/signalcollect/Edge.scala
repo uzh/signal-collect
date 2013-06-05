@@ -22,11 +22,11 @@ package com.signalcollect
 import com.signalcollect.interfaces.EdgeId
 
 /**
- * This trait represents the framework's view of an edge.
+ * This abstract class represents the framework's view of an edge.
  *
  *  @author Philip Stutz
  */
-trait Edge[+TargetId] extends Serializable {
+abstract class Edge[+TargetId] extends Serializable {
 
   type Source <: Vertex[_, _]
 

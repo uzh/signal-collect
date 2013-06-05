@@ -20,11 +20,11 @@
 package com.signalcollect
 
 /**
- *  This trait represents the framework's view of a vertex.
+ *  This abstract class represents the framework's view of a vertex.
  *
  *  @author Philip Stutz
  */
-trait Vertex[+Id, State] extends Serializable {
+abstract class Vertex[+Id, State] extends Serializable {
 
   override def hashCode = id.hashCode
 

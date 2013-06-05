@@ -24,9 +24,9 @@ import scala.reflect.ClassTag
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 
-trait Factory extends Serializable
+abstract class Factory extends Serializable
 
-trait WorkerFactory extends Factory {
+abstract class WorkerFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
@@ -34,7 +34,7 @@ trait WorkerFactory extends Factory {
     config: GraphConfiguration): WorkerActor[Id, Signal]
 }
 
-trait MessageBusFactory extends Factory {
+abstract class MessageBusFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
     numberOfNodes: Int,
@@ -42,15 +42,15 @@ trait MessageBusFactory extends Factory {
     workerApiFactory: WorkerApiFactory = DefaultWorkerApiFactory): MessageBus[Id, Signal]
 }
 
-trait StorageFactory extends Factory {
+abstract class StorageFactory extends Factory {
   def createInstance[Id]: Storage[Id]
 }
 
-trait SchedulerFactory extends Factory {
+abstract class SchedulerFactory extends Factory {
   def createInstance[Id](worker: Worker[Id, _]): Scheduler[Id]
 }
 
-trait WorkerApiFactory extends Factory {
+abstract class WorkerApiFactory extends Factory {
   def createInstance[Id, Signal](
     workerProxies: Array[WorkerApi[Id, Signal]],
     mapper: VertexToWorkerMapper[Id]): WorkerApi[Id, Signal]

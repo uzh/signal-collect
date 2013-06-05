@@ -163,7 +163,7 @@ class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
   if (console != null) { console.setCoordinator(coordinatorActor) }
 
   // Bootstrap => sent and received messages are not counted for termination detection.
-  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[Worker[Id, Signal]](_)) // MessageBus not initialized at this point.
+  val bootstrapWorkerProxies = workerActors map (AkkaProxy.newInstance[MessageRecipientRegistry](_)) // MessageBus not initialized at this point.
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor) // MessageBus not initialized at this point.
 
   initializeMessageBuses

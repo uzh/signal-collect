@@ -68,11 +68,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
   loggerRef: ActorRef,
-  heartbeatIntervalInMilliseconds: Long) extends Actor
-  with MessageRecipientRegistry
-  with Coordinator[Id, Signal]
-  with ActorLogging
-  with ActorRestartLogging {
+  heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
+    with Actor
+    with ActorLogging
+    with ActorRestartLogging
+    with MessageRecipientRegistry {
 
   /**
    * Timeout for Akka actor idling
