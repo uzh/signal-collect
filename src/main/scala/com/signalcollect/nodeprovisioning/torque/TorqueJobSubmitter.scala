@@ -33,7 +33,7 @@ case class TorqueJobSubmitter(
   mailAddress: String = "",
   hostname: String,
   privateKeyFilePath: String = System.getProperty("user.home") + System.getProperty("file.separator") + ".ssh" + System.getProperty("file.separator") + "id_rsa",
-  port: Int = 22) extends AbstractJobSubmitter(mailAddress) {
+  port: Int = 22) extends AbstractJobSubmitter {
 
   override def copyFileToCluster(localPath: String, targetPath: String = "") {
     val commandCopy = "scp -v " + localPath + " " + username + "@" + hostname + ":" + targetPath

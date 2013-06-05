@@ -22,10 +22,21 @@ import java.io.File
 import scala.sys.process._
 import language.postfixOps
 
-class LocalJobSubmitter(mailAddress: String = "") extends AbstractJobSubmitter(mailAddress) {
+class LocalJobSubmitter extends AbstractJobSubmitter {
 
-  override def runOnClusterNode(jobId: String, jarname: String, mainClass: String, priority: String = TorquePriority.superfast, jvmParameters: String, jdkBinPath: String = ""): String = {
-    val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
+  override def runOnClusterNode(
+    jobId: String, jarname: String,
+    mainClass: String,
+    priority: String = TorquePriority.superfast,
+    jvmParameters: String,
+    jdkBinPath: String = "",
+    mailAddress: Option[String] = None): String = {
+    val script = getShellScript(jobId,
+      jarname, mainClass,
+      priority,
+      jvmParameters,
+      jdkBinPath,
+      mailAddress)
     val qsubCommand = """echo """ + script + """ | qsub"""
     Seq("echo", script) #| Seq("qsub")!!
   }
