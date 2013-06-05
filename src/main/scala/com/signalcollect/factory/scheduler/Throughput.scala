@@ -17,20 +17,20 @@
  *
  */
 
-package com.signalcollect.worker
+package com.signalcollect.factory.scheduler
 
-trait ThrottlingBulkScheduler[Id, Signal] extends AkkaWorker[Id, Signal] {
-  val batchSignalingSize = 10000
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.Scheduler
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.scheduler.ThroughputScheduler
 
-  override def scheduleOperations {
-    if (!worker.vertexStore.toCollect.isEmpty) {
-      worker.vertexStore.toCollect.process(worker.executeCollectOperationOfVertex(_))
-    }
-    if (!worker.vertexStore.toSignal.isEmpty) {
-      worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_), Some(batchSignalingSize))
-      if (!worker.vertexStore.toSignal.isEmpty) {
-        scheduleOperations
-      }
-    }
+/**
+ *  The low-latency scheduler tries to maximize the signaling/collecting
+ *  throughput and prevent excessive memory usage.
+ */
+object Throughput extends SchedulerFactory {
+  def createInstance[Id](worker: Worker[Id, _]): Scheduler[Id] = {
+    new ThroughputScheduler(worker)
   }
+  override def toString: String = "Throughput Scheduler Factory"
 }

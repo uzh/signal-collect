@@ -17,7 +17,7 @@
  *  limitations under the License.
  *
  */
- 
+
 package com.signalcollect.interfaces
 
 import com.signalcollect.Vertex
@@ -37,18 +37,25 @@ case class Heartbeat(maySignal: Boolean)
 case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def withTargetId(t: Id): EdgeId[Id] = EdgeId(sourceId, t)
   def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
-  def removeTargetId: EdgeId[Id] = EdgeId(sourceId, null.asInstanceOf[Id])
-  def removeSourceId: EdgeId[Id] = EdgeId(null.asInstanceOf[Id], targetId)
-  override def toString(): String = sourceId.toString + targetId.toString
+  override def toString: String = s"${sourceId.toString} -> ${targetId.toString}"
 }
 
-case class AddVertex[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) State](v: Vertex[Id, State])
+case class AddVertex[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) State](
+  v: Vertex[Id, State])
 
-case class AddEdge[@specialized(Int, Long) SourceId, @specialized(Int, Long) TargetId](sourceVertexId: SourceId, e: Edge[TargetId])
+case class AddEdge[@specialized(Int, Long) SourceId, @specialized(Int, Long) TargetId](
+  sourceVertexId: SourceId,
+  e: Edge[TargetId])
 
-case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val signals: Array[Signal], val targetIds: Array[Id], val sourceIds: Array[Id])
+case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+  val signals: Array[Signal],
+  val targetIds: Array[Id],
+  val sourceIds: Array[Id])
 
-case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](val targetId: Id, val sourceId: Option[Id], val signal: Signal)
+case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+  val targetId: Id,
+  val sourceId: Option[Id],
+  val signal: Signal)
 
 // Convergence/pause detection
 case class WorkerStatus(
@@ -65,39 +72,39 @@ case class NodeStatus(
   messagesReceived: Long)
 
 case class SentMessagesStats(
-  workers: Array[Int],
-  nodes: Array[Int],
-  coordinator: Int,
-  other: Int) {
-  def sumRelevant = 0l + workers.sum + nodes.sum + coordinator
+    workers: Array[Int],
+    nodes: Array[Int],
+    coordinator: Int,
+    other: Int) {
+  def sumRelevant: Long = 0L + workers.sum + nodes.sum + coordinator
 }
 
 case class WorkerStatistics(
-  workerId: Int = -1,
-  toSignalSize: Long = 0l,
-  toCollectSize: Long = 0l,
-  collectOperationsExecuted: Long = 0l,
-  signalOperationsExecuted: Long = 0l,
-  numberOfVertices: Long = 0l,
-  verticesAdded: Long = 0l,
-  verticesRemoved: Long = 0l,
-  numberOfOutgoingEdges: Long = 0l,
-  outgoingEdgesAdded: Long = 0l,
-  outgoingEdgesRemoved: Long = 0l,
-  receiveTimeoutMessagesReceived: Long = 0l,
-  heartbeatMessagesReceived: Long = 0l,
-  signalMessagesReceived: Long = 0l,
-  bulkSignalMessagesReceived: Long = 0l,
-  continueMessagesReceived: Long = 0l,
-  requestMessagesReceived: Long = 0l,
-  otherMessagesReceived: Long = 0l,
-  messagesSentToWorkers: Long = 0l,
-  messagesSentToNodes: Long = 0l,
-  messagesSentToCoordinator: Long = 0l,
-  messagesSentToOthers: Long = 0l) {
-  def +(other: WorkerStatistics): WorkerStatistics = {
+    workerId: Option[Int] = None,
+    toSignalSize: Long = 0L,
+    toCollectSize: Long = 0L,
+    collectOperationsExecuted: Long = 0L,
+    signalOperationsExecuted: Long = 0L,
+    numberOfVertices: Long = 0L,
+    verticesAdded: Long = 0L,
+    verticesRemoved: Long = 0L,
+    numberOfOutgoingEdges: Long = 0L,
+    outgoingEdgesAdded: Long = 0L,
+    outgoingEdgesRemoved: Long = 0L,
+    receiveTimeoutMessagesReceived: Long = 0L,
+    heartbeatMessagesReceived: Long = 0L,
+    signalMessagesReceived: Long = 0L,
+    bulkSignalMessagesReceived: Long = 0L,
+    continueMessagesReceived: Long = 0L,
+    requestMessagesReceived: Long = 0L,
+    otherMessagesReceived: Long = 0L,
+    messagesSentToWorkers: Long = 0L,
+    messagesSentToNodes: Long = 0L,
+    messagesSentToCoordinator: Long = 0L,
+    messagesSentToOthers: Long = 0L) {
+  def + (other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
-      -1,
+      None,
       toSignalSize + other.toSignalSize,
       toCollectSize + other.toCollectSize,
       collectOperationsExecuted + other.collectOperationsExecuted,
@@ -129,36 +136,35 @@ case class WorkerStatistics(
 }
 
 case class NodeStatistics(
-    nodeId: Int = -1, // give more meaningful ID when implemented on node
+    nodeId: Option[Int] = None,
     os: String = "",
-    runtime_mem_total: Long = 0l,
-    runtime_mem_max: Long = 0l,
-    runtime_mem_free: Long = 0l,
-    runtime_cores: Long = 0l,
-    jmx_committed_vms: Long = 0l,
-    jmx_mem_free: Long = 0l,
-    jmx_mem_total: Long = 0l,
-    jmx_swap_free: Long = 0l,
-    jmx_swap_total: Long = 0l,
+    runtime_mem_total: Long = 0L,
+    runtime_mem_max: Long = 0L,
+    runtime_mem_free: Long = 0L,
+    runtime_cores: Long = 0L,
+    jmx_committed_vms: Long = 0L,
+    jmx_mem_free: Long = 0L,
+    jmx_mem_total: Long = 0L,
+    jmx_swap_free: Long = 0L,
+    jmx_swap_total: Long = 0L,
     jmx_process_load: Double = 0.0,
     jmx_process_time: Double = 0.0,
-    jmx_system_load: Double = 0.0
-) {
-  def +(other: NodeStatistics): NodeStatistics = {
+    jmx_system_load: Double = 0.0) {
+  def + (other: NodeStatistics): NodeStatistics = {
     NodeStatistics(
-        -1,
-        os + other.os,
-        runtime_mem_total + other.runtime_mem_total,
-        runtime_mem_max + other.runtime_mem_max,
-        runtime_mem_free + other.runtime_mem_free,
-        runtime_cores + other.runtime_cores,
-        jmx_committed_vms + other.jmx_committed_vms,
-        jmx_mem_free + other.jmx_mem_free,
-        jmx_mem_total + other.jmx_mem_total,
-        jmx_swap_free + other.jmx_swap_free,
-        jmx_swap_total + other.jmx_swap_total,
-        (jmx_process_load + other.jmx_process_load) / 2,
-        jmx_process_time + other.jmx_process_time,
-        (jmx_system_load + other.jmx_system_load) / 2)
+      None,
+      os + other.os,
+      runtime_mem_total + other.runtime_mem_total,
+      runtime_mem_max + other.runtime_mem_max,
+      runtime_mem_free + other.runtime_mem_free,
+      runtime_cores + other.runtime_cores,
+      jmx_committed_vms + other.jmx_committed_vms,
+      jmx_mem_free + other.jmx_mem_free,
+      jmx_mem_total + other.jmx_mem_total,
+      jmx_swap_free + other.jmx_swap_free,
+      jmx_swap_total + other.jmx_swap_total,
+      (jmx_process_load + other.jmx_process_load) / 2,
+      jmx_process_time + other.jmx_process_time,
+      (jmx_system_load + other.jmx_system_load) / 2)
   }
 }

@@ -54,6 +54,7 @@ class ModularitySpec extends SpecificationWithJUnit with Analysis with Classycle
         "logging",
         "messaging",
         "nodeprovisioning",
+        "scheduler",
         "storage",
         "worker").withPrefix("com.signalcollect")
         .inTargetDir("target/scala-2.10")

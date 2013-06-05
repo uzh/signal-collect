@@ -46,6 +46,10 @@ trait StorageFactory extends Factory {
   def createInstance[Id]: Storage[Id]
 }
 
+trait SchedulerFactory extends Factory {
+  def createInstance[Id](worker: Worker[Id, _]): Scheduler[Id]
+}
+
 trait WorkerApiFactory extends Factory {
   def createInstance[Id, Signal](
     workerProxies: Array[WorkerApi[Id, Signal]],

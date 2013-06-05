@@ -66,10 +66,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
   val storageFactory: StorageFactory,
+  val schedulerFactory: SchedulerFactory,
   val heartbeatIntervalInMilliseconds: Int)
-  extends WorkerActor[Id, Signal]
-  with ActorLogging
-  with ActorRestartLogging {
+    extends WorkerActor[Id, Signal]
+    with ActorLogging
+    with ActorRestartLogging {
 
   override def postRestart(reason: Throwable): Unit = {
     val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
@@ -89,6 +90,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
+    schedulerFactory = schedulerFactory,
     signalThreshold = 0.01,
     collectThreshold = 0.0,
     undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
@@ -124,25 +126,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
-
-  def executeOperations {
-    if (messageQueue.isEmpty) {
-      if (!worker.vertexStore.toCollect.isEmpty) {
-        val collected = worker.vertexStore.toCollect.process(
-          vertex => {
-            worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-            if (vertex.scoreSignal > worker.signalThreshold) {
-              worker.executeSignalOperationOfVertex(vertex)
-            }
-          })
-        worker.messageBusFlushed = false
-      }
-      if (!worker.vertexStore.toSignal.isEmpty) {
-        worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
-        worker.messageBusFlushed = false
-      }
-    }
-  }
 
   /**
    * This method gets executed when the Akka actor receives a message.
@@ -199,29 +182,29 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case ScheduleOperations =>
       if (messageQueue.isEmpty) {
-        log.debug(s"Message queue on worker $workerId is empty")
+        //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
-          log.debug(s"Worker $workerId turns to idle")
+          //          log.debug(s"Worker $workerId turns to idle")
           worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
-          log.debug(s"Worker $workerId has work to do")
+          //          log.debug(s"Worker $workerId has work to do")
           if (worker.isPaused) {
-            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
+            //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
-            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            executeOperations
+            //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
+            worker.scheduler.executeOperations
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
             worker.messageBusFlushed = true
           }
-          log.debug(s"Worker $workerId will schedule operations.")
+          //          log.debug(s"Worker $workerId will schedule operations.")
           scheduleOperations
         }
       } else {
-        log.debug(s"Message queue on worker $workerId is NOT empty, will schedule operations")
+        //        log.debug(s"Message queue on worker $workerId is NOT empty, will schedule operations")
         scheduleOperations
       }
 

@@ -28,7 +28,6 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
-import com.signalcollect.factory.worker.DistributedWorker
 import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
 
@@ -43,18 +42,17 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
 
   "Bulk signaling" should {
     "deliver correct results on a 5-cycle graph" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.0001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
+          val state = v.state.asInstanceOf[Double]
+          val expectedState = 1.0
+          val correct = (state - expectedState).abs < 0.0001
+          if (!correct) {
+            System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+          }
+          correct
         }
-        correct
-      }
 
-      val graph = GraphBuilder.withWorkerFactory(DistributedWorker).
-        withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
+      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
         graph.addVertex(v)
@@ -75,15 +73,15 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "handle a bulk size of 1 correctly" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.0001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
+          val state = v.state.asInstanceOf[Double]
+          val expectedState = 1.0
+          val correct = (state - expectedState).abs < 0.0001
+          if (!correct) {
+            System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+          }
+          correct
         }
-        correct
-      }
 
       val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
       for (i <- 0 until 5) {

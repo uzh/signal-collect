@@ -17,28 +17,20 @@
  *
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect.factory.scheduler
 
-import com.signalcollect.GraphEditor
-
-import akka.actor.Actor
-import akka.event.Logging.LogLevel
-import akka.event.Logging.LogEvent
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.Scheduler
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.scheduler.LowLatencyScheduler
 
 /**
- * Required because a Java Dynamic Proxy can only work with interfaces
+ *  The low-latency scheduler tries to minimize the latency between
+ *  receiving a message, collecting and signaling.
  */
-trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logger {
-
-  override def toString: String = this.getClass.getSimpleName
-
-  def isIdle: Boolean
-
-  def getWorkerApi: WorkerApi[Id, Signal]
-
-  def getGraphEditor: GraphEditor[Id, Signal]
-
-  def getGlobalInboxSize: Long
-
-  def getWorkerStatuses: Array[WorkerStatus]
+object LowLatency extends SchedulerFactory {
+  def createInstance[Id](worker: Worker[Id, _]): Scheduler[Id] = {
+    new LowLatencyScheduler(worker)
+  }
+  override def toString: String = "Low-Latency Scheduler Factory"
 }

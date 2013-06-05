@@ -45,6 +45,9 @@ import com.signalcollect.interfaces.Worker
 import com.signalcollect.interfaces.SentMessagesStats
 import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.NodeStatistics
+import com.signalcollect.interfaces.SchedulerFactory
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -54,11 +57,13 @@ class WorkerImplementation[Id, Signal](
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory,
+  val schedulerFactory: SchedulerFactory,
   var signalThreshold: Double,
   var collectThreshold: Double,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
   extends Worker[Id, Signal] {
 
+  val scheduler = schedulerFactory.createInstance(this)
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
 
@@ -120,13 +125,12 @@ class WorkerImplementation[Id, Signal](
       messageBus.sendToCoordinator(status)
     } else {
       val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
-      println(msg)
       log.debug(msg)
       throw new Exception(msg)
     }
   }
 
-  def isConverged = {
+  def isConverged: Boolean = {
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
       messageBusFlushed
@@ -151,10 +155,7 @@ class WorkerImplementation[Id, Signal](
       if (vertex.deliverSignal(signal, sourceId, vertexGraphEditor)) {
         counters.collectOperationsExecuted += 1
         if (vertex.scoreSignal > signalThreshold) {
-          //vertexStore.toSignal.put(vertex)
-          // TODO: Unify scheduling related code. The policy here should be pluggable and the same as
-          // the one in AkkaWorker.executeOperations.
-          executeSignalOperationOfVertex(vertex)
+          scheduler.handleCollectOnDelivery(vertex)
         }
       } else {
         if (vertex.scoreCollect > collectThreshold) {
@@ -390,11 +391,11 @@ class WorkerImplementation[Id, Signal](
       messagesReceived = counters.messagesReceived)
   }
 
-  def getIndividualWorkerStatistics = List(getWorkerStatistics)
+  def getIndividualWorkerStatistics: List[WorkerStatistics] = List(getWorkerStatistics)
 
   def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
-      workerId = workerId,
+      workerId = Some(workerId),
       toSignalSize = vertexStore.toSignal.size,
       toCollectSize = vertexStore.toCollect.size,
       collectOperationsExecuted = counters.collectOperationsExecuted,
@@ -417,13 +418,15 @@ class WorkerImplementation[Id, Signal](
       messagesSentToOthers = messageBus.messagesSentToOthers)
   }
 
-  def getIndividualNodeStatistics = List(getNodeStatistics)
+  // TODO: Move this method to Node and use proper node id.
+  def getIndividualNodeStatistics: List[NodeStatistics] = List(getNodeStatistics)
 
+  // TODO: Move this method to Node and use proper node id.
   def getNodeStatistics: NodeStatistics = {
     val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
     val runtime: Runtime = Runtime.getRuntime()
     NodeStatistics(
-      nodeId = workerId,
+      nodeId = Some(workerId),
       os = System.getProperty("os.name"),
       runtime_mem_total = runtime.totalMemory(),
       runtime_mem_max = runtime.maxMemory(),
@@ -442,7 +445,6 @@ class WorkerImplementation[Id, Signal](
   protected def logIntialization {
     if (messageBus.isInitialized) {
       val msg = s"Worker $workerId has a fully initialized message bus."
-      //println(msg)
       log.debug(msg)
       sendStatusToCoordinator
     }

@@ -19,19 +19,9 @@
 
 package com.signalcollect.interfaces
 
-import akka.actor.{ Actor, ActorLogging }
-import net.liftweb.json.JValue
+import com.signalcollect.Vertex
 
-trait Logger {
-  def getLogMessages: List[JValue]
-}
-
-trait ActorRestartLogging {
-  self: Actor with ActorLogging =>
-
-  override def preRestart(t: Throwable, message: Option[Any]) {
-    val msg = s"Unhandled error: $message"
-    log.error(t, msg)
-    t.printStackTrace
-  }
+abstract class Scheduler[Id](val worker: Worker[Id, _]) {
+  def executeOperations
+  def handleCollectOnDelivery(v: Vertex[Id, _])
 }

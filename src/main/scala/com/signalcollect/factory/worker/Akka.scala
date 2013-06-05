@@ -25,12 +25,11 @@ import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.worker.AkkaWorker
-import com.signalcollect.worker.ThrottlingBulkScheduler
 
 /**
- *  The local worker factory creates worker instances that work in the local-machine scenario.
+ *  The default Akka worker implementation.
  */
-object LocalWorker extends WorkerFactory {
+object DefaultAkkaWorker extends WorkerFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
@@ -42,27 +41,8 @@ object LocalWorker extends WorkerFactory {
       numberOfNodes,
       config.messageBusFactory,
       config.storageFactory,
+      config.schedulerFactory,
       config.heartbeatIntervalInMilliseconds)
   }
-  override def toString = "LocalWorkerFactory"
-}
-
-/**
- *  The distributed worker factory creates worker instances that support throttling and bulk-sending.
- */
-object DistributedWorker extends WorkerFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
-    workerId: Int,
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    config: GraphConfiguration): WorkerActor[Id, Signal] = {
-    new AkkaWorker[Id, Signal](
-      workerId,
-      numberOfWorkers,
-      numberOfNodes,
-      config.messageBusFactory,
-      config.storageFactory,
-      config.heartbeatIntervalInMilliseconds) with ThrottlingBulkScheduler[Id, Signal]
-  }
-  override def toString = "DistributedWorkerFactory"
+  override def toString: String = "DefaultAkkaWorker"
 }
