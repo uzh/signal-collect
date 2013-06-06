@@ -18,9 +18,6 @@
 
 package com.signalcollect.storage
 
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
-
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.VertexStore
 
@@ -47,8 +44,8 @@ class VertexMap[Id](
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
 
-  final override def size = numberOfElements
-  final def isEmpty = numberOfElements == 0
+  final override def size: Long = numberOfElements
+  final def isEmpty: Boolean = numberOfElements == 0
   private[this] final var numberOfElements = 0
 
   def stream: Stream[Vertex[Id, _]] = {
