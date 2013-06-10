@@ -24,7 +24,7 @@ import com.signalcollect.interfaces.VertexStore
 /**
  *  Storage backed by a custom-tailored open hash map implementation for vertices.
  */
-class CustomVertexStorage[Id] extends Storage[Id] {
+class CustomVertexStorage[@specialized(Int, Long) Id] extends Storage[Id] {
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)

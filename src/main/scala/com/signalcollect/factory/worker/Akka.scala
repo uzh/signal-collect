@@ -30,7 +30,7 @@ import com.signalcollect.worker.AkkaWorker
  *  The default Akka worker implementation.
  */
 object DefaultAkkaWorker extends WorkerFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
+  def createInstance[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
