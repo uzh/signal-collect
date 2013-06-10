@@ -20,6 +20,7 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
+import com.signalcollect.configuration.ExecutionMode
 
 class Company(id: String, coreValue: Double) extends DataGraphVertex(id, coreValue) {
   type Signal = Double
@@ -38,12 +39,12 @@ class OwnedBy(targetId: String, percentage: Double) extends DefaultEdge(targetId
  * Source: http://en.wikipedia.org/wiki/Renault-Nissan_Alliance.
  */
 object CaompanyValuation extends App {
-  val graph = GraphBuilder.build
+  val graph = GraphBuilder.withConsole(true).build
   graph.addVertex(new Company("Nissan", coreValue = 37)) //market cap: ~ USD 42 billion
   graph.addVertex(new Company("Renault", coreValue = 14)) // market cap: ~ USD 33 billion
   graph.addEdge("Nissan", new OwnedBy("Renault", 0.444))
   graph.addEdge("Renault", new OwnedBy("Nissan", 0.15))
-  graph.execute
+  graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   graph.foreachVertex(println(_))
   graph.shutdown
 }
