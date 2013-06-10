@@ -92,7 +92,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
  *
  * Provisions the resources and initializes the workers and the coordinator.
  */
-class DefaultGraph[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.serializeMessages, config.loggingLevel, config.kryoRegistrations)

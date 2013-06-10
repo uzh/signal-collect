@@ -22,7 +22,7 @@ package com.signalcollect.messaging
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 
-class DefaultMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+class DefaultMessageBus[Id, Signal](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,

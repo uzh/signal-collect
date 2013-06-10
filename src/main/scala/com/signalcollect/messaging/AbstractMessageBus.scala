@@ -39,7 +39,7 @@ import akka.event.Logging.LogEvent
 import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
 
-abstract class AbstractMessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
+abstract class AbstractMessageBus[Id, Signal]
   extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def reset {}

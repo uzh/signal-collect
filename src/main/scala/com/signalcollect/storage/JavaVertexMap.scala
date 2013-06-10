@@ -29,7 +29,7 @@ import com.signalcollect.interfaces.VertexStore
 /**
  * Stores all vertices in a in-memory HashMap data structure.
  */
-class JavaVertexMap[@specialized(Int, Long) Id] extends VertexStore[Id] {
+class JavaVertexMap[Id] extends VertexStore[Id] {
   protected var vertexMap = new HashMap[Id, Vertex[Id, _]]()
 
   /**

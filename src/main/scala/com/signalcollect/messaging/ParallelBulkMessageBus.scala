@@ -90,7 +90,7 @@ class ParallelSignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(In
 /**
  * Does not support sending source ids.
  */
-class ParallelBulkMessageBus[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+class ParallelBulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   flushThreshold: Int,
