@@ -56,7 +56,7 @@ import java.net.InetSocketAddress
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
-case class WorkerCreator[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     workerFactory: WorkerFactory,
     numberOfWorkers: Int,

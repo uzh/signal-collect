@@ -52,7 +52,7 @@ import com.signalcollect.interfaces.SchedulerFactory
 /**
  * Main implementation of the WorkerApi interface.
  */
-class WorkerImplementation[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+class WorkerImplementation[Id, Signal](
   val workerId: Int,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,

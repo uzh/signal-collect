@@ -32,7 +32,7 @@ import com.signalcollect.configuration.ExecutionMode._
  * Run with JVM parameters:
  * -Xmx2000m -Xms2000m
  *
- * Computation ran in as little as 1675 milliseconds (best run) on a notebook
+ * Computation ran in as little as 2177 milliseconds (best run) on a notebook
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
