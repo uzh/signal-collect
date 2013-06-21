@@ -26,6 +26,7 @@ import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 import java.util.concurrent.atomic.AtomicInteger
 import com.signalcollect.GraphEditor
+import com.signalcollect.interfaces.VertexToWorkerMapper
 
 class ParallelSignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
     protected val size: Int,
@@ -93,6 +94,7 @@ class ParallelSignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(In
 class ParallelBulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
+  val mapper: VertexToWorkerMapper[Id],
   flushThreshold: Int,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)

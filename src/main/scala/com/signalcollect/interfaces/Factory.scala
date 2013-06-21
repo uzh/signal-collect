@@ -38,8 +38,13 @@ abstract class MessageBusFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers: Int,
     numberOfNodes: Int,
+    mapper: VertexToWorkerMapper[Id],
     sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory = DefaultWorkerApiFactory): MessageBus[Id, Signal]
+}
+
+abstract class MapperFactory extends Factory {
+  def createInstance[Id](numberOfWorkers: Int): VertexToWorkerMapper[Id]
 }
 
 abstract class StorageFactory extends Factory {

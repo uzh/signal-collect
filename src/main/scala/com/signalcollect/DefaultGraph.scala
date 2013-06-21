@@ -76,6 +76,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
+  mapperFactory: MapperFactory,
   logger: ActorRef,
   heartbeatIntervalInMilliseconds: Long)
     extends Creator[DefaultCoordinator[Id, Signal]] {
@@ -83,6 +84,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
     numberOfWorkers,
     numberOfNodes,
     messageBusFactory,
+    mapperFactory,
     logger,
     heartbeatIntervalInMilliseconds)
 }
@@ -120,7 +122,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
 
-  parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory))
+  parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
   parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
 
@@ -152,6 +154,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       numberOfWorkers,
       numberOfNodes,
       config.messageBusFactory,
+      config.mapperFactory,
       loggerActor,
       config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {

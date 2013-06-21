@@ -40,6 +40,7 @@ object DefaultAkkaWorker extends WorkerFactory {
       numberOfWorkers,
       numberOfNodes,
       config.messageBusFactory,
+      config.mapperFactory,
       config.storageFactory,
       config.schedulerFactory,
       config.heartbeatIntervalInMilliseconds)

@@ -29,6 +29,7 @@ import com.signalcollect.nodeprovisioning.NodeProvisioner
 import akka.event.Logging.LogLevel
 import akka.event.Logging
 import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.MapperFactory
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -100,6 +101,14 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) =
     builder(config.copy(messageBusFactory = newMessageBusFactory))
+
+  /**
+   *  Configures the mapper factory used by the graph to instantiate mappers that assign vertices to workers.
+   *
+   *  @param newMapperFactory The mapper factory used to instantiate vertex to worker mappers.
+   */
+  def withMapperFactory(newMapperFactory: MapperFactory) =
+    builder(config.copy(mapperFactory = newMapperFactory))
 
   /**
    *  Configures the storage factory used by the workers to instantiate vertex stores.

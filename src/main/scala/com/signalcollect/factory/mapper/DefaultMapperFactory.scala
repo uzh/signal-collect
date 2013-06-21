@@ -1,7 +1,8 @@
 /*
  *  @author Philip Stutz
+ *  @author Mihaela Verman
  *
- *  Copyright 2010 University of Zurich
+ *  Copyright 2013 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,17 +18,17 @@
  *
  */
 
-package com.signalcollect.messaging
+package com.signalcollect.factory.mapper
 
-import com.signalcollect.interfaces.WorkerApiFactory
-import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.messaging.DefaultVertexToWorkerMapper 
 
-class DefaultMessageBus[Id, Signal](
-    val numberOfWorkers: Int,
-    val numberOfNodes: Int,
-    val mapper: VertexToWorkerMapper[Id],
-    val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory) extends AbstractMessageBus[Id, Signal] {
-  lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
+/**
+ *  Default random hash partitioning mapper.
+ *  Has good load balancing but poor locality.
+ */
+object DefaultMapperFactory extends MapperFactory {
+  def createInstance[Id](numberOfWorkers: Int): VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
+  override def toString = "DefaultMapperFactory"
 }

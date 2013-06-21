@@ -65,6 +65,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory,
+  val mapperFactory: MapperFactory,
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
   val heartbeatIntervalInMilliseconds: Int)
@@ -82,6 +83,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+      mapperFactory.createInstance(numberOfWorkers),
       IncrementorForWorker(workerId).increment _)
   }
 

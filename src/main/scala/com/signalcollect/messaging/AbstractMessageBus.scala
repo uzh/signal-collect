@@ -54,7 +54,7 @@ abstract class AbstractMessageBus[Id, Signal]
   // the send count should be still credited to the actual recipient of the reply.
   protected def sendCountIncrementorForRequests: MessageBus[_, _] => Unit
 
-  protected val mapper: VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
+  protected val mapper: VertexToWorkerMapper[Id]
 
   protected val workers = new Array[ActorRef](numberOfWorkers)
 

@@ -44,13 +44,15 @@ import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.SentMessagesStats
 import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
+import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.interfaces.MapperFactory
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-  nodeId: Int,
-  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+    nodeId: Int,
+    nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     nodeProvisionerAddress)
@@ -73,8 +75,8 @@ class DefaultNodeActor(
   val nodeId: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor
-  with ActorLogging
-  with ActorRestartLogging {
+    with ActorLogging
+    with ActorRestartLogging {
 
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
@@ -134,9 +136,9 @@ class DefaultNodeActor(
 
   var nodeProvisioner: ActorRef = _
 
-  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory) {
+  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory) {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, IncrementorForNode(nodeId).increment _)
+    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfWorkers), IncrementorForNode(nodeId).increment _)
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis

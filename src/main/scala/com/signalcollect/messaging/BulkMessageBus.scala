@@ -23,6 +23,7 @@ import scala.reflect.ClassTag
 import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.VertexToWorkerMapper
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
   private var itemCount = 0
@@ -47,6 +48,7 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long,
 class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
+  val mapper: VertexToWorkerMapper[Id],
   flushThreshold: Int,
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,

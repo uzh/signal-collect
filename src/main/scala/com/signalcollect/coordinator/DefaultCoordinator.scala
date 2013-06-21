@@ -46,6 +46,7 @@ import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.ActorRestartLogging
+import com.signalcollect.interfaces.MapperFactory
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -67,6 +68,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
+  mapperFactory: MapperFactory,
   loggerRef: ActorRef,
   heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
     with Actor
@@ -85,6 +87,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+      mapperFactory.createInstance(numberOfWorkers),
       IncrementorForCoordinator.increment _)
   }
 
