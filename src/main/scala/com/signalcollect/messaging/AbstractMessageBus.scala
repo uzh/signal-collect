@@ -40,7 +40,7 @@ import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
 
 abstract class AbstractMessageBus[Id, Signal]
-  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   def reset {}
 
@@ -277,6 +277,28 @@ abstract class AbstractMessageBus[Id, Signal]
       val rand = new Random
       sendToWorker(rand.nextInt(numberOfWorkers), request)
     }
+  }
+
+  /**
+   *  Recalculates the signal/collect scores of the vertex with the id @vertexId.
+   *
+   *  @param vertexId The vertex id of the vertex which should have its scores recalculated.
+   *
+   *  @note If the scores are above the respective thresholds, the signal/collect operations
+   *  		will be executed when the computation is executed again.
+   *
+   *  @note This operation is meant to be used after the forVertexWithId operation in case
+   * 		the vertex signal/collect scores have changed.
+   *
+   *  @see `forVertexWithId`
+   */
+  def recalculateScoresForVertexWithId(vertexId: Id) {
+    val request = Request[WorkerApi[Id, Signal]](
+      (_.recalculateScoresForVertexWithId(vertexId)),
+      returnResult = false,
+      sendCountIncrementorForRequests)
+    val workerId = mapper.getWorkerIdForVertexId(vertexId)
+    sendToWorker(workerId, request)
   }
 
   //--------------------Access to high-level messaging constructs--------------------

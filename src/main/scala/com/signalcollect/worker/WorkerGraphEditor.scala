@@ -79,6 +79,10 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     }
   }
 
+  def recalculateScoresForVertexWithId(vertexId: Id) {
+    graphEditor.recalculateScoresForVertexWithId(vertexId)
+  }
+
   override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
     graphEditor.loadGraph(graphModifications, vertexIdHint)
   }

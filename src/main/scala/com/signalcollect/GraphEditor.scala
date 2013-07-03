@@ -160,6 +160,21 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id])
 
   /**
+   *  Recalculates the signal/collect scores of the vertex with the id @vertexId.
+   *
+   *  @param vertexId The vertex id of the vertex which should have its scores recalculated.
+   *
+   *  @note If the scores are above the respective thresholds, the signal/collect operations
+   *  		will be executed when the computation is executed again.
+   *
+   *  @note This operation is meant to be used after the forVertexWithId operation in case
+   * 		the vertex signal/collect scores have changed.
+   *
+   *  @see `forVertexWithId`
+   */
+  def recalculateScoresForVertexWithId(vertexId: Id)
+
+  /**
    * Forces the underlying MessageBus to send all messages immediately.
    */
   private[signalcollect] def flush

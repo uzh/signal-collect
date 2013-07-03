@@ -86,21 +86,6 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
   def recalculateScores
 
   /**
-   *  Recalculates the signal/collect scores of the vertex with the id @vertexId.
-   *
-   *  @param vertexId The vertex id of the vertex which should have its scores recalculated.
-   *
-   *  @note If the scores are above the respective thresholds, the signal/collect operations
-   *  		will be executed when the computation is executed again.
-   *
-   *  @note This operation is meant to be used after the forVertexWithId operation in case
-   * 		the vertex signal/collect scores have changed.
-   *
-   *  @see `forVertexWithId`
-   */
-  def recalculateScoresForVertexWithId(vertexId: Id)
-
-  /**
    *  Waits until all processing has finished.
    *
    *  @note Only used with continuous asynchronous execution.
