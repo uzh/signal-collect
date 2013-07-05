@@ -162,6 +162,7 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     kryo.register(classOf[Array[Double]], 23)
     kryo.register(classOf[Array[Boolean]], 24)
     kryo.register(classOf[Array[Object]], 25)
+    kryo.register(classOf[Array[Array[Int]]], 26)
 
     if (settings.KryoTrace)
       MiniLog.TRACE()

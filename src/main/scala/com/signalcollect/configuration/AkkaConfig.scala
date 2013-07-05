@@ -178,25 +178,25 @@ akka {
         # ids below it are used by Kryo internally e.g. for built-in Java and
         # Scala types
         mappings {
-            "scala.Int" = 26
-            "scala.Long" = 27
-            "scala.Float" = 28
-            "scala.Double" = 29
-            "scala.Some" = 30
-            "com.signalcollect.interfaces.SignalMessage" = 31
-            "com.signalcollect.interfaces.BulkSignal" = 32
-            "java.util.HashMap" = 33
-            "com.signalcollect.interfaces.EdgeId" = 34
-            "com.signalcollect.interfaces.WorkerStatus" = 35
-            "com.signalcollect.interfaces.NodeStatus" = 36
-            "com.signalcollect.interfaces.Heartbeat" = 37
-            "com.signalcollect.interfaces.WorkerStatistics" = 38
-            "com.signalcollect.interfaces.NodeStatistics" = 39
-            "com.signalcollect.interfaces.SentMessagesStats" = 40
+            "scala.Int" = 27
+            "scala.Long" = 28
+            "scala.Float" = 29
+            "scala.Double" = 30
+            "scala.Some" = 31
+            "com.signalcollect.interfaces.SignalMessage" = 32
+            "com.signalcollect.interfaces.BulkSignal" = 33
+            "java.util.HashMap" = 34
+            "com.signalcollect.interfaces.EdgeId" = 35
+            "com.signalcollect.interfaces.WorkerStatus" = 36
+            "com.signalcollect.interfaces.NodeStatus" = 37
+            "com.signalcollect.interfaces.Heartbeat" = 38
+            "com.signalcollect.interfaces.WorkerStatistics" = 39
+            "com.signalcollect.interfaces.NodeStatistics" = 40
+            "com.signalcollect.interfaces.SentMessagesStats" = 41
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 40
+        var highestUsedKryoId = 41
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
