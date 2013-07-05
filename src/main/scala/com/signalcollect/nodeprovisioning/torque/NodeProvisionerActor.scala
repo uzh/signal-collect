@@ -29,9 +29,9 @@ import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
 
 class NodeProvisionerActor(numberOfNodes: Int)
-  extends Actor
-  with ActorLogging
-  with ActorRestartLogging {
+    extends Actor
+    with ActorLogging
+    with ActorRestartLogging {
 
   var nodeListRequestor: Option[ActorRef] = None
 
@@ -42,6 +42,7 @@ class NodeProvisionerActor(numberOfNodes: Int)
       nodeListRequestor = Some(sender)
       sendNodesIfReady
     case NodeReady =>
+      println(s"Received registration from $sender")
       nodeControllers = sender :: nodeControllers
       sendNodesIfReady
   }

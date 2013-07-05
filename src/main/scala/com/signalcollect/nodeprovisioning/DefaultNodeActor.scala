@@ -187,6 +187,7 @@ class DefaultNodeActor(
 
   override def preStart() = {
     if (nodeProvisionerAddress.isDefined) {
+      println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
       nodeProvisioner = context.actorFor(nodeProvisionerAddress.get)
       nodeProvisioner ! NodeReady
     }
