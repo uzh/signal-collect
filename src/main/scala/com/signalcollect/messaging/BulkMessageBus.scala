@@ -53,7 +53,7 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
-  extends AbstractMessageBus[Id, Signal] {
+    extends AbstractMessageBus[Id, Signal] {
 
   override def reset {
     super.reset
@@ -78,10 +78,22 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
         val bulker = outgoingMessages(workerId)
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {
+          val signalsCopy = new Array[Signal](signalCount)
+          System.arraycopy(bulker.signals, 0, signalsCopy, 0, signalCount)
+          val targetIdsCopy = new Array[Id](signalCount)
+          System.arraycopy(bulker.targetIds, 0, targetIdsCopy, 0, signalCount)
           if (withSourceIds) {
-            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.slice(0, signalCount), bulker.targetIds.slice(0, signalCount), bulker.sourceIds.slice(0, signalCount)))
+            val sourceIdsCopy = new Array[Id](signalCount)
+            System.arraycopy(bulker.sourceIds, 0, sourceIdsCopy, 0, signalCount)
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](
+              signalsCopy,
+              targetIdsCopy,
+              sourceIdsCopy))
           } else {
-            super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.slice(0, signalCount), bulker.targetIds.slice(0, signalCount), null.asInstanceOf[Array[Id]]))
+            super.sendToWorker(workerId, BulkSignal[Id, Signal](
+              signalsCopy,
+              targetIdsCopy,
+              null.asInstanceOf[Array[Id]]))
           }
           outgoingMessages(workerId).clear
         }
