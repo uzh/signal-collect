@@ -163,7 +163,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Returns the ids of the target vertices of outgoing edges of the vertex.
    */
   def targetIds: Iterable[Any] = {
-    outgoingEdges.values map (_.targetId)
+    outgoingEdges.keys
   }
 
 }
