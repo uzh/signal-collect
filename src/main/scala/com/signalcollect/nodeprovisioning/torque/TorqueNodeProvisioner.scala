@@ -54,7 +54,7 @@ class TorqueNodeProvisioner(
   def getNodes(akkaConfig: Config): Array[ActorRef] = {
     val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes)
-    val nodeProvisioner = system.actorOf(Props[NodeProvisionerActor].withCreator(nodeProvisionerCreator.create), name = "NodeProvisioner")
+    val nodeProvisioner = system.actorOf(Props.create[NodeProvisionerActor](nodeProvisionerCreator), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
     var jobs = List[Job]()
     implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
@@ -63,7 +63,7 @@ class TorqueNodeProvisioner(
         () =>
           val system = ActorSystem("SignalCollect", akkaConfig)
           val nodeControllerCreator = NodeActorCreator(jobId, Some(nodeProvisionerAddress))
-          val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor" + jobId.toString)
+          val nodeController = system.actorOf(Props.create[NodeActor](nodeControllerCreator), name = "DefaultNodeActor" + jobId.toString)
       }
       jobs = new Job(jobId = jobId, execute = function) :: jobs
     }

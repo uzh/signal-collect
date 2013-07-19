@@ -34,6 +34,7 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.nodeprovisioning.Node
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.interfaces.NodeActor
 import org.specs2.runner.JUnitRunner
 import com.typesafe.config.Config
 import akka.actor.ActorRef
@@ -55,7 +56,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
             val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
             if (system != null) {
               val nodeControllerCreator = NodeActorCreator(0, None)
-              val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
+              val nodeController = system.actorOf(Props.create[NodeActor](nodeControllerCreator), name = "DefaultNodeActor")
               Array[ActorRef](nodeController)
             } else {
               Array[ActorRef]()

@@ -133,13 +133,13 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     var workerId = 0
     for (node <- bootstrapNodeProxies) {
       for (core <- 0 until node.numberOfCores) {
-        val workerCreator = WorkerCreator[Id, Signal](
+        val workerCreator = Props.create[WorkerActor[Id, Signal]](WorkerCreator[Id, Signal](
           workerId,
           config.workerFactory,
           numberOfWorkers,
           numberOfNodes,
-          config)
-        val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
+          config))
+        val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator)
         actors(workerId) = system.actorFor(workerName)
         workerId += 1
       }
@@ -158,8 +158,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       loggerActor,
       config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned     => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case EventBased => system.actorOf(Props.create[DefaultCoordinator[Id, Signal]](coordinatorCreator), name = "Coordinator")
+      case Pinned     => system.actorOf(Props.create[DefaultCoordinator[Id, Signal]](coordinatorCreator).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 

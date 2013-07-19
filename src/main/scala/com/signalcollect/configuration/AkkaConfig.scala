@@ -11,8 +11,8 @@ object AkkaConfig {
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
-  # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
-  event-handlers = ["com.signalcollect.console.ConsoleLogger"]
+  # Loggers to register at boot time (Logging$DefaultLogger logs to STDOUT)
+  akka.loggers = ["com.signalcollect.console.ConsoleLogger", "Logging$DefaultLogger"]
 
   logConfigOnStart=on
     """ +
@@ -252,6 +252,7 @@ akka {
   }
 
   remote {
+    enabled-transports = ["akka.remote.netty.tcp"]
     """ +
     {
       if (akkaMessageCompression) {
@@ -290,7 +291,7 @@ akka {
     # active client connections whenever sending to a destination which is not yet connected; if configured
     # it reuses inbound connections for replies, which is called a passive client connection (i.e. from server
     # to client).
-    netty {
+    netty.tcp {
 
       # (O) In case of increased latency / overflow how long
       # should we wait (blocking the sender) until we deem the send to be cancelled?
