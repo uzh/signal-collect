@@ -83,7 +83,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
-      mapperFactory.createInstance(numberOfWorkers),
+      mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
       IncrementorForWorker(workerId).increment _)
   }
 
@@ -114,7 +114,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           modification(worker.graphEditor)
         }
       } catch {
-        case t: Throwable => println(s"Worker $workerId had a problem during graph loading: $t")
+        case t: Throwable =>
+          println(s"Worker $workerId had a problem during graph loading: $t}")
+          t.printStackTrace
       }
       worker.messageBusFlushed = false
     }

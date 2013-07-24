@@ -44,7 +44,7 @@ abstract class MessageBusFactory extends Factory {
 }
 
 abstract class MapperFactory extends Factory {
-  def createInstance[Id](numberOfWorkers: Int): VertexToWorkerMapper[Id]
+  def createInstance[Id](numberOfNodes: Int, workersPerNode: Int): VertexToWorkerMapper[Id]
 }
 
 abstract class StorageFactory extends Factory {

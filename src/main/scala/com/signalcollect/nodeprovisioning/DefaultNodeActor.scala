@@ -52,9 +52,11 @@ import com.signalcollect.interfaces.MapperFactory
  */
 case class NodeActorCreator(
     nodeId: Int,
+    numberOfNodes: Int,
     nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
+    numberOfNodes,
     nodeProvisionerAddress)
 }
 
@@ -73,6 +75,7 @@ case class IncrementorForNode(nodeId: Int) {
  */
 class DefaultNodeActor(
   val nodeId: Int,
+  val numberOfNodes: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor
     with ActorLogging
@@ -138,7 +141,7 @@ class DefaultNodeActor(
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory) {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfWorkers), IncrementorForNode(nodeId).increment _)
+    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes), IncrementorForNode(nodeId).increment _)
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis

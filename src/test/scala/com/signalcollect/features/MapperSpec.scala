@@ -40,7 +40,7 @@ class Worker0Mapper[Id] extends VertexToWorkerMapper[Id] {
 }
 
 object Worker0MapperFactory extends MapperFactory {
-  def createInstance[Id](numberOfWorkers: Int) = new Worker0Mapper
+  def createInstance[Id](numberOfNodes: Int, workersPerNode: Int) = new Worker0Mapper
 }
 
 /**
@@ -52,7 +52,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
   sequential
 
   "Default mapper" should {
-    val mapper = new DefaultVertexToWorkerMapper[Int](10)
+    val mapper = new DefaultVertexToWorkerMapper[Int](1, 10)
     "correctly map a vertex to a worker" in {
       mapper.getWorkerIdForVertexId(13) === 3
     }

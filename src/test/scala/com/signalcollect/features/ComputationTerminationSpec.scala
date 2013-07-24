@@ -54,7 +54,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
           override def getNodes(akkaConfig: Config): Array[ActorRef] = {
             val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
             if (system != null) {
-              val nodeControllerCreator = NodeActorCreator(0, None)
+              val nodeControllerCreator = NodeActorCreator(0, 1, None)
               val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
               Array[ActorRef](nodeController)
             } else {

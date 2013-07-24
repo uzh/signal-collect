@@ -126,7 +126,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
 
-  val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
+  val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
@@ -323,7 +323,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     else {
       println(
         "Warning: using interactive execution mode without console. To use the console,\n" +
-        "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
+          "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
     }
 
     // Create an initial snapshot of the graph (to be able to reset later)

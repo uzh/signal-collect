@@ -22,13 +22,14 @@ package com.signalcollect.factory.mapper
 
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.VertexToWorkerMapper
-import com.signalcollect.messaging.DefaultVertexToWorkerMapper 
+import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 
 /**
  *  Default random hash partitioning mapper.
  *  Has good load balancing but poor locality.
  */
 object DefaultMapperFactory extends MapperFactory {
-  def createInstance[Id](numberOfWorkers: Int): VertexToWorkerMapper[Id] = new DefaultVertexToWorkerMapper[Id](numberOfWorkers)
+  def createInstance[Id](numberOfNodes: Int, workersPerNode: Int): VertexToWorkerMapper[Id] =
+    new DefaultVertexToWorkerMapper[Id](numberOfNodes, workersPerNode)
   override def toString = "DefaultMapperFactory"
 }
