@@ -161,9 +161,16 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     builder(config.copy(kryoRegistrations = newKryoRegistrations))
 
   /**
-   *  If true forces Akka message serialization even in local settings. For debugging purposes only.
+   *  If true forces Akka message serialization even in local settings.
    */
   def withMessageSerialization(newSerializeMessages: Boolean) =
     builder(config.copy(serializeMessages = newSerializeMessages))
+
+  /**
+   *  If true then Java serialization is used, unless a class is
+   *  explicitly registered with Kryo. Disable for debugging purposes only.
+   */
+  def withJavaSerialization(newUseJavaSerialization: Boolean) =
+    builder(config.copy(useJavaSerialization = newUseJavaSerialization))
 
 }

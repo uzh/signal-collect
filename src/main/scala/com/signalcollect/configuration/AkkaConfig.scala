@@ -5,9 +5,24 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging
 
 object AkkaConfig {
-  def get(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = ConfigFactory.parseString(
-    distributedConfig(akkaMessageCompression, serializeMessages, loggingLevel, kryoRegistrations))
-  def distributedConfig(akkaMessageCompression: Boolean, serializeMessages: Boolean, loggingLevel: LogLevel, kryoRegistrations: List[String]) = """
+  def get(
+    akkaMessageCompression: Boolean,
+    serializeMessages: Boolean,
+    loggingLevel: LogLevel,
+    kryoRegistrations: List[String],
+    useJavaSerialization: Boolean) = ConfigFactory.parseString(
+    distributedConfig(
+      akkaMessageCompression,
+      serializeMessages,
+      loggingLevel,
+      kryoRegistrations,
+      useJavaSerialization))
+  def distributedConfig(
+      akkaMessageCompression: Boolean,
+      serializeMessages: Boolean, 
+      loggingLevel: LogLevel, 
+      kryoRegistrations: List[String],
+      useJavaSerialization: Boolean) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
@@ -57,7 +72,15 @@ akka {
 
     serializers {
       kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
+    """ +
+    {
+      if (useJavaSerialization) {
+        """
       java = "akka.serialization.JavaSerializer"
+  """
+      } else ""
+    } +
+    """
     }
 
     serialization-bindings {

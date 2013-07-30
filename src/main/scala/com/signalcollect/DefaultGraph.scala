@@ -97,7 +97,12 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.serializeMessages, config.loggingLevel, config.kryoRegistrations)
+  val akkaConfig = AkkaConfig.get(
+      config.akkaMessageCompression, 
+      config.serializeMessages, 
+      config.loggingLevel, 
+      config.kryoRegistrations,
+      config.useJavaSerialization)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
