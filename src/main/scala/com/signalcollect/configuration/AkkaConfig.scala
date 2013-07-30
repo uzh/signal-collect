@@ -174,7 +174,7 @@ akka {
         serializer-pool-size = 24
 
         # Define a default size for byte buffers used during serialization
-        buffer-size = 4096
+        buffer-size = 65536
 
         # If set, akka uses manifests to put a class name
         # of the top-level object into each message

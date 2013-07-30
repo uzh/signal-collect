@@ -16,9 +16,9 @@ import com.esotericsoftware.kryo.io.OutputChunked
 
 class FixedDeflateSerializer[G](
   val serializer: Serializer[G],
-  val compressionLevel: Int = 4,
+  val compressionLevel: Int = -1,
   val noHeaders: Boolean = true,
-  val bufferSize: Int = 8 * 1024)
+  val bufferSize: Int = 128 * 1024)
     extends Serializer[G] {
 
   def write(kryo: Kryo, output: Output, toSerialize: G) {
@@ -31,15 +31,26 @@ class FixedDeflateSerializer[G](
     try {
       deflaterStream.finish
     } catch {
-      case io: IOException => throw new KryoException(io)
+      case io: IOException =>
+        outputChunked.endChunks
+        throw new KryoException(io)
     }
     outputChunked.endChunks
+    //    val in = deflater.getTotalIn
+    //    val out = deflater.getTotalOut
+    //    println(s"Compressed size: ${((out.toDouble / in) * 100).round}%")
+    //    println(s"Bytes saved: ${in - out}")
   }
 
   def read(kryo: Kryo, input: Input, tpe: Class[G]): G = {
-    // The inflater would read from input beyond the compressed bytes if chunked enoding wasn't used.
-    val inflaterStream = new InflaterInputStream(new InputChunked(input, bufferSize), new Inflater(noHeaders))
-    kryo.readObject(new Input(inflaterStream, bufferSize), tpe, serializer)
+    val inflater = new Inflater(noHeaders)
+    // The inflater would read from input beyond the compressed bytes
+    // if chunked enoding wasn't used.
+    val inputChunked = new InputChunked(input, bufferSize)
+    val inflaterStream = new InflaterInputStream(inputChunked, inflater)
+    val inflaterInput = new Input(inflaterStream, bufferSize)
+    val deserialized = kryo.readObject(inflaterInput, tpe, serializer)
+    deserialized
   }
 
   override def copy(kryo: Kryo, original: G): G = {
