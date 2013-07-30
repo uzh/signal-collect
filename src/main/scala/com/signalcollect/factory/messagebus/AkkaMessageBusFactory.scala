@@ -25,7 +25,6 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.messaging.BulkMessageBus
 import com.signalcollect.messaging.DefaultMessageBus
-import com.signalcollect.messaging.ParallelBulkMessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
 
 object AkkaMessageBusFactory extends MessageBusFactory {
@@ -66,22 +65,4 @@ class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) ext
       workerApiFactory)
   }
   override def toString = "BulkAkkaMessageBusFactory"
-}
-
-class ParallelBulkAkkaMessageBusFactory(flushThreshold: Int) extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    mapper: VertexToWorkerMapper[Id],
-    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
-    new ParallelBulkMessageBus[Id, Signal](
-      numberOfWorkers,
-      numberOfNodes,
-      mapper,
-      flushThreshold,
-      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-      workerApiFactory)
-  }
-  override def toString = "ParallelBulkAkkaMessageBusFactory"
 }

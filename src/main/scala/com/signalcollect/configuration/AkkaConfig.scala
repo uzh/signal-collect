@@ -93,6 +93,7 @@ akka {
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
+      "com.signalcollect.interfaces.BulkSignalNoSourceIds" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
       "com.signalcollect.interfaces.NodeStatus" = kryo
       "com.signalcollect.interfaces.Heartbeat" = kryo
@@ -208,18 +209,19 @@ akka {
             "scala.Some" = 31
             "com.signalcollect.interfaces.SignalMessage" = 32
             "com.signalcollect.interfaces.BulkSignal" = 33
-            "java.util.HashMap" = 34
-            "com.signalcollect.interfaces.EdgeId" = 35
-            "com.signalcollect.interfaces.WorkerStatus" = 36
-            "com.signalcollect.interfaces.NodeStatus" = 37
-            "com.signalcollect.interfaces.Heartbeat" = 38
-            "com.signalcollect.interfaces.WorkerStatistics" = 39
-            "com.signalcollect.interfaces.NodeStatistics" = 40
-            "com.signalcollect.interfaces.SentMessagesStats" = 41
+            "com.signalcollect.interfaces.BulkSignalNoSourceIds" = 34
+            "java.util.HashMap" = 35
+            "com.signalcollect.interfaces.EdgeId" = 36
+            "com.signalcollect.interfaces.WorkerStatus" = 37
+            "com.signalcollect.interfaces.NodeStatus" = 38
+            "com.signalcollect.interfaces.Heartbeat" = 39
+            "com.signalcollect.interfaces.WorkerStatistics" = 40
+            "com.signalcollect.interfaces.NodeStatistics" = 41
+            "com.signalcollect.interfaces.SentMessagesStats" = 42
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 41
+        var highestUsedKryoId = 42
         var bindingsBlock = kryoRegistrations map { kryoRegistration =>
           highestUsedKryoId += 1
           s"""
@@ -249,6 +251,7 @@ akka {
             "scala.Some",
             "com.signalcollect.interfaces.SignalMessage",
             "com.signalcollect.interfaces.BulkSignal",
+            "com.signalcollect.interfaces.BulkSignalNoSourceIds",
             "java.util.HashMap",
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",

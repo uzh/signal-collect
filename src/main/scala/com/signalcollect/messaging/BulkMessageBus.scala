@@ -24,6 +24,7 @@ import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
+import com.signalcollect.interfaces.BulkSignalNoSourceIds
 
 class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
   private var itemCount = 0
@@ -90,10 +91,9 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
               targetIdsCopy,
               sourceIdsCopy))
           } else {
-            super.sendToWorker(workerId, BulkSignal[Id, Signal](
+            super.sendToWorker(workerId, BulkSignalNoSourceIds[Id, Signal](
               signalsCopy,
-              targetIdsCopy,
-              null.asInstanceOf[Array[Id]]))
+              targetIdsCopy))
           }
           outgoingMessages(workerId).clear
         }
@@ -121,7 +121,7 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
         if (withSourceIds) {
           super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, bulker.sourceIds.clone))
         } else {
-          super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, null.asInstanceOf[Array[Id]]))
+          super.sendToWorker(workerId, BulkSignalNoSourceIds[Id, Signal](bulker.signals.clone, bulker.targetIds.clone))
         }
         bulker.clear
       }

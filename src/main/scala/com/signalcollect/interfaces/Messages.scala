@@ -51,6 +51,10 @@ case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float,
   val signals: Array[Signal],
   val targetIds: Array[Id],
   val sourceIds: Array[Id])
+  
+case class BulkSignalNoSourceIds[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+  val signals: Array[Signal],
+  val targetIds: Array[Id])
 
 case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
   val targetId: Id,
