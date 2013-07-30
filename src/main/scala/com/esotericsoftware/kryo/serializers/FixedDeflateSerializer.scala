@@ -17,14 +17,15 @@ import com.esotericsoftware.kryo.io.OutputChunked
 class FixedDeflateSerializer[G](
   val serializer: Serializer[G],
   val compressionLevel: Int = 4,
-  val noHeaders: Boolean = true)
+  val noHeaders: Boolean = true,
+  val bufferSize: Int = 8 * 1024)
     extends Serializer[G] {
 
   def write(kryo: Kryo, output: Output, toSerialize: G) {
     val deflater = new Deflater(compressionLevel, noHeaders)
-    val outputChunked = new OutputChunked(output, 256)
+    val outputChunked = new OutputChunked(output, bufferSize)
     val deflaterStream = new DeflaterOutputStream(outputChunked, deflater)
-    val deflaterOutput = new Output(deflaterStream, 256)
+    val deflaterOutput = new Output(deflaterStream, bufferSize)
     kryo.writeObject(deflaterOutput, toSerialize, serializer)
     deflaterOutput.flush
     try {
@@ -37,8 +38,8 @@ class FixedDeflateSerializer[G](
 
   def read(kryo: Kryo, input: Input, tpe: Class[G]): G = {
     // The inflater would read from input beyond the compressed bytes if chunked enoding wasn't used.
-    val inflaterStream = new InflaterInputStream(new InputChunked(input, 256), new Inflater(noHeaders))
-    kryo.readObject(new Input(inflaterStream, 256), tpe, serializer)
+    val inflaterStream = new InflaterInputStream(new InputChunked(input, bufferSize), new Inflater(noHeaders))
+    kryo.readObject(new Input(inflaterStream, bufferSize), tpe, serializer)
   }
 
   override def copy(kryo: Kryo, original: G): G = {
