@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit
 import scala.util.Success
 import scala.util.Failure
 import scala.reflect.ClassTag
+import com.esotericsoftware.kryo.serializers.FixedDeflateSerializer
 
 class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
 
@@ -156,13 +157,20 @@ class KryoSerializer(val system: ExtendedActorSystem) extends Serializer {
     kryo.addDefaultSerializer(None.getClass, new NoneSerializer)
     kryo.register(classOf[scala.Enumeration#Value], 10)
     kryo.register(None.getClass, 19)
-    kryo.register(classOf[Array[Int]], 20)
-    kryo.register(classOf[Array[Long]], 21)
-    kryo.register(classOf[Array[Float]], 22)
-    kryo.register(classOf[Array[Double]], 23)
-    kryo.register(classOf[Array[Boolean]], 24)
-    kryo.register(classOf[Array[Object]], 25)
-    kryo.register(classOf[Array[Array[Int]]], 26)
+
+      def registerWithCompression(c: Class[_], id: Int) {
+        kryo.register(c, id)
+        val s = kryo.getSerializer(c)
+        kryo.register(c, new FixedDeflateSerializer(s))
+      }
+
+    registerWithCompression(classOf[Array[Int]], 20)
+    registerWithCompression(classOf[Array[Long]], 21)
+    registerWithCompression(classOf[Array[Float]], 22)
+    registerWithCompression(classOf[Array[Double]], 23)
+    registerWithCompression(classOf[Array[Boolean]], 24)
+    registerWithCompression(classOf[Array[Object]], 25)
+    registerWithCompression(classOf[Array[Array[Int]]], 26)
 
     if (settings.KryoTrace)
       MiniLog.TRACE()
