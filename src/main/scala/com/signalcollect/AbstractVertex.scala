@@ -94,7 +94,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    */
   def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int = {
     val edgesRemoved = outgoingEdges.size
-    for (outgoingEdge <- outgoingEdges.keys) {
+    for (outgoingEdge <- outgoingEdges.keys.toSeq) { // Convert to sequence to avoid concurrent modification exception in Java map.
       removeEdge(outgoingEdge, graphEditor)
     }
     edgesRemoved
