@@ -423,23 +423,34 @@ class WorkerImplementation[Id, Signal](
 
   // TODO: Move this method to Node and use proper node id.
   def getNodeStatistics: NodeStatistics = {
-    val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
-    val runtime: Runtime = Runtime.getRuntime()
-    NodeStatistics(
-      nodeId = Some(workerId),
-      os = System.getProperty("os.name"),
-      runtime_mem_total = runtime.totalMemory(),
-      runtime_mem_max = runtime.maxMemory(),
-      runtime_mem_free = runtime.freeMemory(),
-      runtime_cores = runtime.availableProcessors(),
-      jmx_committed_vms = osBean.getCommittedVirtualMemorySize(),
-      jmx_mem_free = osBean.getFreePhysicalMemorySize(),
-      jmx_mem_total = osBean.getTotalPhysicalMemorySize(),
-      jmx_swap_free = osBean.getFreeSwapSpaceSize(),
-      jmx_swap_total = osBean.getTotalSwapSpaceSize(),
-      jmx_process_load = osBean.getProcessCpuLoad(),
-      jmx_process_time = osBean.getProcessCpuTime(),
-      jmx_system_load = osBean.getSystemCpuLoad())
+    val runtime: Runtime = Runtime.getRuntime
+    try {
+      val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
+      NodeStatistics(
+        nodeId = Some(workerId),
+        os = System.getProperty("os.name"),
+        runtime_mem_total = runtime.totalMemory,
+        runtime_mem_max = runtime.maxMemory,
+        runtime_mem_free = runtime.freeMemory,
+        runtime_cores = runtime.availableProcessors,
+        jmx_committed_vms = osBean.getCommittedVirtualMemorySize,
+        jmx_mem_free = osBean.getFreePhysicalMemorySize,
+        jmx_mem_total = osBean.getTotalPhysicalMemorySize,
+        jmx_swap_free = osBean.getFreeSwapSpaceSize,
+        jmx_swap_total = osBean.getTotalSwapSpaceSize,
+        jmx_process_load = osBean.getProcessCpuLoad,
+        jmx_process_time = osBean.getProcessCpuTime,
+        jmx_system_load = osBean.getSystemCpuLoad)
+    } catch {
+      case notSupported: NoSuchMethodError =>
+        NodeStatistics(
+          nodeId = Some(workerId),
+          os = System.getProperty("os.name"),
+          runtime_mem_total = runtime.totalMemory,
+          runtime_mem_max = runtime.maxMemory,
+          runtime_mem_free = runtime.freeMemory,
+          runtime_cores = runtime.availableProcessors)
+    }
   }
 
   protected def logIntialization {
