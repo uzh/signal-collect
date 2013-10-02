@@ -83,7 +83,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
-      mapperFactory.createInstance(numberOfWorkers),
+      mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
       IncrementorForWorker(workerId).increment _)
   }
 
@@ -114,7 +114,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           modification(worker.graphEditor)
         }
       } catch {
-        case t: Throwable => println(s"Worker $workerId had a problem during graph loading: $t")
+        case t: Throwable =>
+          println(s"Worker $workerId had a problem during graph loading: $t}")
+          t.printStackTrace
       }
       worker.messageBusFlushed = false
     }
@@ -144,21 +146,26 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
-      if (bulkSignal.sourceIds != null) {
-        while (i < size) {
-          val sourceId = bulkSignal.sourceIds(i)
-          if (sourceId != null) {
-            worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
-          } else {
-            worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-          }
-          i += 1
-        }
-      } else {
-        while (i < size) {
+      while (i < size) {
+        val sourceId = bulkSignal.sourceIds(i)
+        if (sourceId != null) {
+          worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
+        } else {
           worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-          i += 1
         }
+        i += 1
+      }
+      if (!worker.operationsScheduled && !worker.isPaused) {
+        scheduleOperations
+      }
+
+    case bulkSignal: BulkSignalNoSourceIds[Id, Signal] =>
+      worker.counters.bulkSignalMessagesReceived += 1
+      val size = bulkSignal.signals.length
+      var i = 0
+      while (i < size) {
+        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+        i += 1
       }
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations

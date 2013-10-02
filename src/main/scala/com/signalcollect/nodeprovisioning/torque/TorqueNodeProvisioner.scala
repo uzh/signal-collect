@@ -62,8 +62,13 @@ class TorqueNodeProvisioner(
       val function: () => Unit = {
         () =>
           val system = ActorSystem("SignalCollect", akkaConfig)
+<<<<<<< HEAD
           val nodeControllerCreator = NodeActorCreator(jobId, Some(nodeProvisionerAddress))
           val nodeController = system.actorOf(Props.create[NodeActor](nodeControllerCreator), name = "DefaultNodeActor" + jobId.toString)
+=======
+          val nodeControllerCreator = NodeActorCreator(jobId, numberOfNodes, Some(nodeProvisionerAddress))
+          val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor" + jobId.toString)
+>>>>>>> master
       }
       jobs = new Job(jobId = jobId, execute = function) :: jobs
     }

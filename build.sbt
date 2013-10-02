@@ -2,8 +2,6 @@ import AssemblyKeys._
 
 assemblySettings
 
-org.scalastyle.sbt.ScalastylePlugin.Settings
-
 /** Project */
 name := "signal-collect"
 

@@ -52,7 +52,7 @@ abstract class DataFlowVertex[Id, State](
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
-   *  @param uncollectedSignals all signals received by this vertex since the last time this function was executed
+   *  @param signal a signal that was received by this vertex and has not yet been collected. 
    *
    *  @return The new vertex state.
    *

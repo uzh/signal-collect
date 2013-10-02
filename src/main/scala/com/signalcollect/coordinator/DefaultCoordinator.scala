@@ -87,7 +87,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBusFactory.createInstance[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
-      mapperFactory.createInstance(numberOfWorkers),
+      mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
       IncrementorForCoordinator.increment _)
   }
 
@@ -104,28 +104,28 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var globalQueueSizeLimitPreviousHeartbeat = 0l
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
-//  def logMessages {
-//    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-//    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-//    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-//    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-//    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
-//    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
-//    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
-//    log.debug(s"Total sent         : ${totalMessagesSent}")
-//    log.debug(s"Total received     : ${totalMessagesReceived}")
-//    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
-//    log.debug(workerApi.getWorkerStatistics.toString)
-//    //    println("Worker RPC ...")
-//    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
-//    //    println("Worker RPC ...")
-//    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
-//    //    println("Worker RPC ...")
-//    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
-//    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
-//    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
-//    //    verboseIsIdle
-//  }
+  def logMessages {
+    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
+    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    log.debug(s"Total sent         : ${totalMessagesSent}")
+    log.debug(s"Total received     : ${totalMessagesReceived}")
+    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
+    log.debug(workerApi.getWorkerStatistics.toString)
+    //    println("Worker RPC ...")
+    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
+    //    println("Worker RPC ...")
+    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
+    //    println("Worker RPC ...")
+    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
+    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
+    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
+    //    verboseIsIdle
+  }
 
   def sendHeartbeat {
     //    log.debug("Coordinator is sending a heartbeat.")

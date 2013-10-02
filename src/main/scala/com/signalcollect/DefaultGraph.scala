@@ -97,7 +97,12 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(config.akkaMessageCompression, config.serializeMessages, config.loggingLevel, config.kryoRegistrations)
+  val akkaConfig = AkkaConfig.get(
+      config.akkaMessageCompression, 
+      config.serializeMessages, 
+      config.loggingLevel, 
+      config.kryoRegistrations,
+      config.useJavaSerialization)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
@@ -126,7 +131,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
 
-  val mapper = new DefaultVertexToWorkerMapper(numberOfWorkers)
+  val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
     val actors = new Array[ActorRef](numberOfWorkers)
@@ -323,7 +328,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     else {
       println(
         "Warning: using interactive execution mode without console. To use the console,\n" +
-        "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
+          "         build the graph with: val graph = GraphBuilder.withConsole(true).build")
     }
 
     // Create an initial snapshot of the graph (to be able to reset later)

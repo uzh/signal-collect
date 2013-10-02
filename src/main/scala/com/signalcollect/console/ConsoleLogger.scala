@@ -69,6 +69,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   def writeLog(message: String) {
     val fileWriter = new FileWriter(logFileName, true)
     try {
+      println(message)
       fileWriter.write(message + "\n")
     } finally {
       fileWriter.close()
