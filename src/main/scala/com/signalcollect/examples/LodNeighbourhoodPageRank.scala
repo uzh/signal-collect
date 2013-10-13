@@ -37,9 +37,9 @@ class LodNeighbourhoodPageRank(id: String, crawlDepth: Int = 3) extends PageRank
           "http://dbpedia.org/resource/",
           "http://dbpedia.org/data/") +
           ".ntriples"
-        val lodSite = Source.fromURL(dataUrl)(Codec.UTF8)
+        val lodSite = Source.fromURL(dataUrl)
         val triples = lodSite.getLines
-        val urls = triples.map(_.split("[\t]")).map(_(2)).flatMap(s =>
+        val urls = triples.map(_.split("\t")).map(_(2)).flatMap(s =>
           if (s.startsWith("<http://dbpedia.org/resource/")) {
             Some(s.substring(1, s.length - 3))
           } else {
