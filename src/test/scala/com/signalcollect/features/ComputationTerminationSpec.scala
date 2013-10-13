@@ -87,7 +87,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
           .withStepsLimit(1)
           .withExecutionMode(ExecutionMode.Synchronous)
         val info = graph.execute(execConfig)
-        val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
         graph.shutdown
         info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
         allResultsCorrect &= state === 0.2775
@@ -101,7 +101,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     "work for asynchronous computations with one worker" in {
       val graph = createCircleGraph(3, Some(1))
       val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
       state > 0.99
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
@@ -123,7 +123,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withGlobalTerminationCondition(terminationCondition)
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       graph.shutdown
       aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
@@ -137,7 +137,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         .withSignalThreshold(0)
         .withGlobalTerminationCondition(terminationCondition)
       val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex) => v.state)
+      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       if (aggregate <= 20.0) {
         println("Computation ended before global condition was met.")

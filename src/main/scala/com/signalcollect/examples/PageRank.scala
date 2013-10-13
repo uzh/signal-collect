@@ -32,9 +32,9 @@ import com.signalcollect.configuration.ExecutionMode
  *  @param s: the identifier of the source vertex
  *  @param t: the identifier of the target vertex
  */
-class PageRankEdge(t: Any) extends DefaultEdge(t) {
+class PageRankEdge[Id](t: Id) extends DefaultEdge(t) {
 
-  type Source = PageRankVertex
+  type Source = PageRankVertex[Id]
 
   /**
    * The signal function calculates how much rank the source vertex
@@ -50,7 +50,7 @@ class PageRankEdge(t: Any) extends DefaultEdge(t) {
  *  @param id: the identifier of this vertex
  *  @param dampingFactor: @see <a href="http://en.wikipedia.org/wiki/PageRank">PageRank algorithm</a>
  */
-class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVertex(id, 1 - dampingFactor) {
+class PageRankVertex[Id](id: Id, dampingFactor: Double = 0.85) extends DataGraphVertex[Id, Double](id, 1 - dampingFactor) {
 
   type Signal = Double
 
@@ -61,9 +61,13 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
   def collect: Double = 1 - dampingFactor + dampingFactor * signals.sum
 
   override def scoreSignal: Double = {
-    lastSignalState match {
-      case None => 1
-      case Some(oldState) => (state - oldState).abs
+    if (edgesModifiedSinceSignalOperation) {
+      1
+    } else {
+      lastSignalState match {
+        case None => 1
+        case Some(oldState) => (state - oldState).abs
+      }
     }
   }
 
@@ -73,13 +77,13 @@ class PageRankVertex(id: Any, dampingFactor: Double = 0.85) extends DataGraphVer
 object PageRank extends App {
   val graph = GraphBuilder.
     withConsole(true).
-//    withNodeProvisioner(new TorqueNodeProvisioner(
-//      torqueHost = new TorqueHost(
-//        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
-//        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
-//        jvmParameters = "",
-//        priority = TorquePriority.fast),
-//      numberOfNodes = 2)).
+    //    withNodeProvisioner(new TorqueNodeProvisioner(
+    //      torqueHost = new TorqueHost(
+    //        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
+    //        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
+    //        jvmParameters = "",
+    //        priority = TorquePriority.fast),
+    //      numberOfNodes = 2)).
     build
 
   graph.awaitIdle

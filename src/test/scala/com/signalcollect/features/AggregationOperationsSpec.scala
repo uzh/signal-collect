@@ -94,7 +94,7 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
 
     "count the number of PageRank vertices correctly" in {
       val graph = createGraph
-      val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex])
+      val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex[Any]])
       graph.shutdown
       numberOfPRVertices === 2
     }
