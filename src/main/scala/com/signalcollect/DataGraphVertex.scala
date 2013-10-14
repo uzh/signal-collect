@@ -57,7 +57,8 @@ abstract class DataGraphVertex[Id, State](
   def collect: State
 
   /**
-   *  A map that has edge ids as keys and stores the most recent signal received along the edge with that id as the value for that key.
+   *  A map that has sender ids (by default the id of the source vertex) as keys and stores the most recent signal
+   *  received along the edge with that id as the value for that key.
    *
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
@@ -99,11 +100,11 @@ abstract class DataGraphVertex[Id, State](
   }
 
   /**
-   * Exposing the vertex details on a DataGraphVertex shows its 
+   * Exposing the vertex details on a DataGraphVertex shows its
    * mostRecentSignalMap.
    * @return a map with a single element, the mostRecentSignalMap
    */
-  override def expose(): Map[String,Any] = {
+  override def expose(): Map[String, Any] = {
     Map(("mostRecentSignalMap", makeExposable(mostRecentSignalMap.toMap)))
   }
 
