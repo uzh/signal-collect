@@ -26,7 +26,6 @@ import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
-import com.signalcollect.factory.storage.DefaultStorage
 import akka.event.Logging.LogLevel
 import akka.event.Logging
 import com.signalcollect.factory.worker.DefaultAkkaWorker
@@ -34,6 +33,8 @@ import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.factory.scheduler.Throughput
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.factory.mapper.DefaultMapperFactory
+import com.signalcollect.storage.VertexMapStorage
+import com.signalcollect.factory.storage.MemoryEfficientStorage
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -45,7 +46,7 @@ case class GraphConfiguration(
   workerFactory: WorkerFactory = DefaultAkkaWorker,
   messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
   mapperFactory: MapperFactory = DefaultMapperFactory,
-  storageFactory: StorageFactory = DefaultStorage,
+  storageFactory: StorageFactory = MemoryEfficientStorage,
   schedulerFactory: SchedulerFactory = Throughput,
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,

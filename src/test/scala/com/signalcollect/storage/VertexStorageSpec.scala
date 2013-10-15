@@ -24,19 +24,19 @@ import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.factory.storage.DefaultStorage
-import com.signalcollect.factory.storage.JavaMapStorage
 import com.signalcollect.messaging.DefaultMessageBus
 import org.specs2.runner.JUnitRunner
+import com.signalcollect.factory.storage.MemoryEfficientStorage
+import com.signalcollect.factory.storage.JavaMapStorage
 
 @RunWith(classOf[JUnitRunner])
 class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
 
-  "Custom Vertex Storage" should {
+  "Memory Efficient Vertex Storage" should {
 
-    val storageFactory = DefaultStorage
+    val storageFactory = MemoryEfficientStorage
 
     "hold all vertices inserted" in {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
