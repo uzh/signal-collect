@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.EdgeId
+import akka.actor.ActorRef
 
 /**
  *  GraphEditor offers functions to modify the graph and to send signals.
@@ -181,4 +182,16 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
 
   private[signalcollect] def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 
+  private[signalcollect] def sendToActor(actor: ActorRef, message: Any)
+
+}
+
+/**
+ * In order to unlock advanced operations on GraphEditor, add this import to your program:
+ * 		import com.signalcollect.ExtendedGraphEditor._
+ */
+object ExtendedGraphEditor {
+  implicit class Editor(ge: GraphEditor[_, _]) {
+    def sendToActor(actor: ActorRef, message: Any) = ge.sendToActor(actor, message)
+  }
 }
