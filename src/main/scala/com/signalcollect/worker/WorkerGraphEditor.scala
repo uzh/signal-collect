@@ -22,6 +22,7 @@ package com.signalcollect.worker
 
 import com.signalcollect._
 import com.signalcollect.interfaces._
+import akka.actor.ActorRef
 
 /**
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
@@ -31,7 +32,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   workerId: Int,
   worker: WorkerApi[Id, Signal],
   messageBus: MessageBus[Id, Signal])
-    extends GraphEditor[Id, Signal] {
+  extends GraphEditor[Id, Signal] {
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
@@ -98,4 +99,9 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
   private[signalcollect] def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int) {
     graphEditor.sendToWorkerForVertexIdHash(message, vertexIdHash)
   }
+
+  private[signalcollect] def sendToActor(actor: ActorRef, message: Any) {
+    graphEditor.sendToActor(actor, message)
+  }
+
 }

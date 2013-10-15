@@ -57,11 +57,11 @@ import java.net.InetSocketAddress
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
 case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
-    workerId: Int,
-    workerFactory: WorkerFactory,
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
+  workerId: Int,
+  workerFactory: WorkerFactory,
+  numberOfWorkers: Int,
+  numberOfNodes: Int,
+  config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
   def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](
     workerId,
     numberOfWorkers,
@@ -79,7 +79,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory,
   logger: ActorRef,
   heartbeatIntervalInMilliseconds: Long)
-    extends Creator[DefaultCoordinator[Id, Signal]] {
+  extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
@@ -95,14 +95,14 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
-    val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(
-      config.akkaMessageCompression, 
-      config.serializeMessages, 
-      config.loggingLevel, 
-      config.kryoRegistrations,
-      config.useJavaSerialization)
+    config.akkaMessageCompression,
+    config.serializeMessages,
+    config.loggingLevel,
+    config.kryoRegistrations,
+    config.useJavaSerialization)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
@@ -164,7 +164,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
       case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned     => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 
@@ -275,14 +275,14 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     } else {
       stats.terminationReason = TerminationReason.TimeLimitReached
     }
-      def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
-      def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
-        val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
-        gtc.shouldTerminate(globalAggregateValue)
-      }
-      def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
-      def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
-      def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
+    def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
+    def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+      val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
+      gtc.shouldTerminate(globalAggregateValue)
+    }
+    def remainingTimeLimit = nanosecondLimit - (System.nanoTime - startTime)
+    def isTimeLimitReached = timeLimit.isDefined && remainingTimeLimit <= 0
+    def isStepsLimitReached = stepsLimit.isDefined && stats.collectSteps >= stepsLimit.get
   }
 
   /**
@@ -308,10 +308,10 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
    * @param parameters the ExecutionConfiguration instance
    */
   class InteractiveExecution[Id](
-      graph: Graph[Id, Signal],
-      console: ConsoleServer[Id],
-      stats: ExecutionStatistics,
-      parameters: ExecutionConfiguration) extends Execution {
+    graph: Graph[Id, Signal],
+    console: ConsoleServer[Id],
+    stats: ExecutionStatistics,
+    parameters: ExecutionConfiguration) extends Execution {
 
     var state = "initExecution"
     var iteration = 0
@@ -385,11 +385,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     def collect {
       lock.synchronized {
         stepTokens = state match {
-          case "pausedBeforeSignal"             => 4
-          case "pausedBeforeChecksAfterSignal"  => 3
-          case "pausedBeforeCollect"            => 2
+          case "pausedBeforeSignal" => 4
+          case "pausedBeforeChecksAfterSignal" => 3
+          case "pausedBeforeCollect" => 2
           case "pausedBeforeChecksAfterCollect" => 1
-          case "pausedBeforeGlobalChecks"       => 0
+          case "pausedBeforeGlobalChecks" => 0
         }
         if (shouldCheckGlobalCondition) { stepTokens += 1 }
         lock.notifyAll
@@ -610,14 +610,14 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
         } else {
           stats.terminationReason = TerminationReason.GlobalConstraintMet
         }
-          def intervalHasPassed = remainingIntervalTime <= 0
-          def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
-          def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
-            workerApi.pauseComputation
-            val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
-            workerApi.startComputation
-            gtc.shouldTerminate(globalAggregateValue)
-          }
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+          workerApi.pauseComputation
+          val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
+          workerApi.startComputation
+          gtc.shouldTerminate(globalAggregateValue)
+        }
       case (Some(limit), Some(globalCondition)) =>
         val aggregationOperation = globalCondition.aggregationOperation
         val timeLimitNanoseconds = limit * 1000000l
@@ -641,17 +641,17 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
         } else {
           stats.terminationReason = TerminationReason.TimeLimitReached
         }
-          def intervalHasPassed = remainingIntervalTime <= 0
-          def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
-            workerApi.pauseComputation
-            val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
-            workerApi.startComputation
-            gtc.shouldTerminate(globalAggregateValue)
-          }
-          def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
-          def elapsedTimeNanoseconds = System.nanoTime - startTime
-          def remainingTimeLimit = timeLimitNanoseconds - elapsedTimeNanoseconds
-          def isTimeLimitReached = remainingTimeLimit <= 0
+        def intervalHasPassed = remainingIntervalTime <= 0
+        def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+          workerApi.pauseComputation
+          val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
+          workerApi.startComputation
+          gtc.shouldTerminate(globalAggregateValue)
+        }
+        def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
+        def elapsedTimeNanoseconds = System.nanoTime - startTime
+        def remainingTimeLimit = timeLimitNanoseconds - elapsedTimeNanoseconds
+        def isTimeLimitReached = remainingTimeLimit <= 0
     }
     workerApi.pauseComputation
   }
@@ -801,6 +801,10 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   private[signalcollect] def flush {
     graphEditor.flush
+  }
+
+  private[signalcollect] def sendToActor(actor: ActorRef, message: Any) {
+    graphEditor.sendToActor(actor, message)
   }
 
   /**
