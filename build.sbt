@@ -42,6 +42,8 @@ libraryDependencies ++= Seq(
  "junit" % "junit" % "4.8.2"  % "test",
  "org.specs2" %% "specs2" % "2.0-RC2"  % "test",
  "org.specs2" % "classycle" % "1.4.1" % "test",
+ "org.scalatest" %% "scalatest" % "2.0.M7" % "test",
+ "org.scalacheck" %% "scalacheck" % "1.10.1" % "test",
  "org.mockito" % "mockito-all" % "1.9.0"  % "test"
   )
 
