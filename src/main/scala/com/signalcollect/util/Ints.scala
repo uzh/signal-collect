@@ -3,12 +3,21 @@ package com.signalcollect.util
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.util.Arrays
 
 /**
  * Utility for encoding/decoding unsigned variable length integers.
  */
 object Ints {
-  def create(ints: Array[Int]): Array[Byte] = {
+
+  def createSearchableSet(ints: Array[Int]): Array[Int] = {
+    // TODO: Make more efficient by sorting first, then filtering the sorted array.
+    val distinct = ints.distinct
+    Arrays.sort(distinct)
+    distinct
+  }
+
+  def createCompactSet(ints: Array[Int]): Array[Byte] = {
     val sorted = ints.sorted
     var i = 0
     var previous = -1
@@ -63,6 +72,31 @@ object Ints {
     } catch {
       case t: Throwable => -1
     }
+  }
+
+  implicit class SearchableIntSet(sorted: Array[Int]) extends Traversable[Int] {
+
+    /**
+     * Checks if `item` is contained by using binary search.
+     */
+    def contains(item: Int): Boolean = {
+      //  Arrays.binarySearch(childDeltasOptimized, toFind) >= 0
+      var lower = 0
+      var upper = sorted.length - 1
+      while (lower <= upper) {
+        val mid = lower + (upper - lower) / 2
+        val midItem = sorted(mid)
+        if (midItem < item) {
+          lower = mid + 1
+        } else if (midItem > item) {
+          upper = mid - 1
+        } else {
+          return true
+        }
+      }
+      false
+    }
+
   }
 
   implicit class IntSet(encoded: Array[Byte]) extends Traversable[Int] {

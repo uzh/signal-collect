@@ -79,7 +79,7 @@ object EfficientSsspLoader extends App {
           new EfficientSsspVertex(vertexId)
         }
       }
-      vertex.setTargetIds(edges.length, Ints.create(edges.toArray))
+      vertex.setTargetIds(edges.length, Ints.createCompact(edges.toArray))
       ge.addVertex(vertex)
       vertexId = Ints.readUnsignedVarInt(in)
     }

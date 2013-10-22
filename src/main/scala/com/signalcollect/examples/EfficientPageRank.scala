@@ -114,7 +114,7 @@ case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Do
     val numberOfEdges = readNext
     val edges = nextEdges(numberOfEdges)
     val vertex = new EfficientPageRankVertex(vertexId)
-    vertex.setTargetIds(edges.length, Ints.create(edges.toArray))
+    vertex.setTargetIds(edges.length, Ints.createCompact(edges.toArray))
     vertexId = Int.MinValue
     addVertex(vertex) _
   }
