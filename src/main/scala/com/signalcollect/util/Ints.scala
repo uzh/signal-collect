@@ -74,30 +74,30 @@ object Ints {
     }
   }
 
-  implicit class SearchableIntSet(sorted: Array[Int]) extends Traversable[Int] {
-
-    /**
-     * Checks if `item` is contained by using binary search.
-     */
-    def contains(item: Int): Boolean = {
-      //  Arrays.binarySearch(childDeltasOptimized, toFind) >= 0
-      var lower = 0
-      var upper = sorted.length - 1
-      while (lower <= upper) {
-        val mid = lower + (upper - lower) / 2
-        val midItem = sorted(mid)
-        if (midItem < item) {
-          lower = mid + 1
-        } else if (midItem > item) {
-          upper = mid - 1
-        } else {
-          return true
-        }
-      }
-      false
-    }
-
-  }
+//  implicit class SearchableIntSet(sorted: Array[Int]) extends Traversable[Int] {
+//
+//    /**
+//     * Checks if `item` is contained by using binary search.
+//     */
+//    def contains(item: Int): Boolean = {
+//      //  Arrays.binarySearch(childDeltasOptimized, toFind) >= 0
+//      var lower = 0
+//      var upper = sorted.length - 1
+//      while (lower <= upper) {
+//        val mid = lower + (upper - lower) / 2
+//        val midItem = sorted(mid)
+//        if (midItem < item) {
+//          lower = mid + 1
+//        } else if (midItem > item) {
+//          upper = mid - 1
+//        } else {
+//          return true
+//        }
+//      }
+//      false
+//    }
+//
+//  }
 
   implicit class IntSet(encoded: Array[Byte]) extends Traversable[Int] {
 

@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalacheck.Arbitrary
 import org.scalatest.prop.Checkers
 import org.scalacheck.Gen
-import com.signalcollect.util.Ints._
+import com.signalcollect.util.Ints.IntSet
 
 class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
 
@@ -38,14 +38,14 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
       minSuccessful(1000))
   }
 
-  "SearchableIntSet" should "store sets of Ints" in {
-    check(
-      (ints: Array[Int]) => {
-        val intSet = ints.toSet
-        val searchable = Ints.createSearchableSet(ints)
-        SearchableIntSet(searchable).toSet == intSet
-      },
-      minSuccessful(1000))
-  }
+//  "SearchableIntSet" should "store sets of Ints" in {
+//    check(
+//      (ints: Array[Int]) => {
+//        val intSet = ints.toSet
+//        val searchable = Ints.createSearchableSet(ints)
+//        SearchableIntSet(searchable).toSet == intSet
+//      },
+//      minSuccessful(1000))
+//  }
 
 }
