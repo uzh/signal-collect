@@ -25,6 +25,8 @@ import scala.collection.mutable.ArrayBuffer
 import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
+import com.signalcollect.util.Ints
+import com.signalcollect.util.Ints.IntSet
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -80,7 +82,7 @@ object EfficientPageRankLoader extends App {
 case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Double] => Unit] {
   var loaded = 0
 
-  def readNext: Int = CompactIntSet.readUnsignedVarInt(in)
+  def readNext: Int = Ints.readUnsignedVarInt(in)
 
   def nextEdges(length: Int): ArrayBuffer[Int] = {
     val edges = new ArrayBuffer[Int]
@@ -112,7 +114,7 @@ case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Do
     val numberOfEdges = readNext
     val edges = nextEdges(numberOfEdges)
     val vertex = new EfficientPageRankVertex(vertexId)
-    vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
+    vertex.setTargetIds(edges.length, Ints.create(edges.toArray))
     vertexId = Int.MinValue
     addVertex(vertex) _
   }
@@ -142,7 +144,8 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Double] {
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
       val signal = (state - lastSignalState) / outEdges
-      CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(signal, _, None))
+      IntSet(targetIdArray).foreach((targetId: Int) =>
+        graphEditor.sendSignal(signal, targetId, None))
     }
     lastSignalState = state
   }

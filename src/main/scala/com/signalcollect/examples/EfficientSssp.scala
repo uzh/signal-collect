@@ -25,6 +25,8 @@ import scala.collection.mutable.ArrayBuffer
 import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
+import com.signalcollect.util.Ints
+import com.signalcollect.util.Ints._
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -62,12 +64,12 @@ object EfficientSsspLoader extends App {
 
   def loadSplit(splitIndex: Int)(ge: GraphEditor[Int, Int]) {
     val in = splits(splitIndex)
-    var vertexId = CompactIntSet.readUnsignedVarInt(in)
+    var vertexId = Ints.readUnsignedVarInt(in)
     while (vertexId >= 0) {
-      val numberOfEdges = CompactIntSet.readUnsignedVarInt(in)
+      val numberOfEdges = Ints.readUnsignedVarInt(in)
       var edges = new ArrayBuffer[Int]
       while (edges.length < numberOfEdges) {
-        val nextEdge = CompactIntSet.readUnsignedVarInt(in)
+        val nextEdge = Ints.readUnsignedVarInt(in)
         edges += nextEdge
       }
       val vertex = {
@@ -77,9 +79,9 @@ object EfficientSsspLoader extends App {
           new EfficientSsspVertex(vertexId)
         }
       }
-      vertex.setTargetIds(edges.length, CompactIntSet.create(edges.toArray))
+      vertex.setTargetIds(edges.length, Ints.create(edges.toArray))
       ge.addVertex(vertex)
-      vertexId = CompactIntSet.readUnsignedVarInt(in)
+      vertexId = Ints.readUnsignedVarInt(in)
     }
   }
 }
@@ -106,7 +108,8 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   }
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
-      CompactIntSet.foreach(targetIdArray, graphEditor.sendSignal(state + 1, _, None))
+      IntSet(targetIdArray).foreach((targetId: Int) =>
+        graphEditor.sendSignal(state + 1, targetId, None))
     }
     lastSignalState = state
   }
