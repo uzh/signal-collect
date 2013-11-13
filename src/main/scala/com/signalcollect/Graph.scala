@@ -151,9 +151,18 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType
 
   /**
+   *  Sets the function that can intervene when a vertex with the same ID is added
+   *  repeatedly. The new vertex will be thrown out for sure, but some of its
+   *  information might be added to the existing vertex.
+   *
+   *  @note By default the addition of a vertex is ignored if an existing vertex has the same ID.
+   */
+  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit)
+
+  /**
    *  Sets the function that handles signals that could not be delivered to a vertex.
    *
-   *  @note By default nothing happens when a signal is not deliverable. The handler function
+   *  @note By default an exception is thrown when a signal is not deliverable. The handler function
    *  		receives the signal and an instance of GraphEditor as parameters in order to take some
    *  		action that handles this case.
    */

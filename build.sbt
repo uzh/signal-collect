@@ -31,20 +31,20 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
- "com.typesafe.akka" %% "akka-actor" % "2.1.4" ,
- "com.typesafe.akka" %% "akka-remote" % "2.1.4" ,
- "org.scala-lang" % "scala-library" % "2.10.3" % "compile",
- "com.esotericsoftware.kryo" % "kryo" % "2.21" % "compile",
- "ch.ethz.ganymed" % "ganymed-ssh2" % "build210"  % "compile",
- "commons-codec" % "commons-codec" % "1.7"  % "compile",
- "net.liftweb" % "lift-json_2.10" % "2.5-RC4" % "compile",
- "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
- "junit" % "junit" % "4.8.2"  % "test",
- "org.specs2" %% "specs2" % "2.0-RC2"  % "test",
- "org.specs2" % "classycle" % "1.4.1" % "test",
- "org.scalatest" %% "scalatest" % "2.0.M7" % "test",
- "org.scalacheck" %% "scalacheck" % "1.10.1" % "test",
- "org.mockito" % "mockito-all" % "1.9.0"  % "test"
+  "com.typesafe.akka" %% "akka-actor" % "2.1.4" ,
+  "com.typesafe.akka" %% "akka-remote" % "2.1.4" ,
+  "org.scala-lang" % "scala-library" % "2.10.3" % "compile",
+  "com.esotericsoftware.kryo" % "kryo" % "2.21" % "compile",
+  "ch.ethz.ganymed" % "ganymed-ssh2" % "build210"  % "compile",
+  "commons-codec" % "commons-codec" % "1.7"  % "compile",
+  "net.liftweb" % "lift-json_2.10" % "2.5-RC4" % "compile",
+  "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
+  "junit" % "junit" % "4.8.2"  % "test",
+  "org.specs2" % "classycle" % "1.4.1" % "test",
+  "org.mockito" % "mockito-all" % "1.9.0"  % "test",
+  "org.specs2" %% "specs2" % "2.3.3"  % "test",
+  "org.scalacheck" %% "scalacheck" % "1.10.1" % "test",
+  "org.scalatest" %% "scalatest" % "2.0.1-SNAP" % "test"
   )
 
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"

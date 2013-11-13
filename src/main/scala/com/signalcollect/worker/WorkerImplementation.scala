@@ -60,6 +60,7 @@ class WorkerImplementation[Id, Signal](
   val schedulerFactory: SchedulerFactory,
   var signalThreshold: Double,
   var collectThreshold: Double,
+  var existingVertexHandler: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
   extends Worker[Id, Signal] {
 
@@ -206,6 +207,7 @@ class WorkerImplementation[Id, Signal](
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
+      existingVertexHandler(existing, vertex, graphEditor)
     }
   }
 
@@ -265,6 +267,10 @@ class WorkerImplementation[Id, Signal](
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
     pendingModifications = pendingModifications ++ graphModifications
+  }
+
+  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+    existingVertexHandler = h
   }
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {

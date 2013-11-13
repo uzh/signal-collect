@@ -31,6 +31,12 @@ object ActorSystemRegistry {
     }
   }
 
+  def remove(system: ActorSystem) {
+    synchronized {
+      systems -= system.name
+    }
+  }
+
   def retrieve(name: String): Option[ActorSystem] = {
     synchronized {
       systems.get(name)

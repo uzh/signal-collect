@@ -26,7 +26,7 @@ import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
 import com.signalcollect.util.Ints
-import com.signalcollect.util.Ints._
+import com.signalcollect.util.IntSet
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -108,7 +108,7 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   }
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
-      IntSet(targetIdArray).foreach((targetId: Int) =>
+      new IntSet(targetIdArray).foreach((targetId: Int) =>
         graphEditor.sendSignal(state + 1, targetId, None))
     }
     lastSignalState = state
