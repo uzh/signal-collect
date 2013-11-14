@@ -44,7 +44,6 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
           v.deliverSignal(signal, Some(sourceId), mockGraphEditor)
         }
         if (!incomingSignals.isEmpty) {
-          //graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
           assert(v.scoreCollect > 0, "vertex received messages, should want to collect")
           v.executeCollectOperation(mockGraphEditor)
           v.state should equal(0.15 + 0.85 * incomingSignals.values.sum +- 0.0001)
@@ -52,7 +51,8 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
             assert(v.scoreSignal > 0, "vertex updated state, should want to signal")
             expecting {
               for (targetId <- outgoingEdges) {
-                call(mockGraphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(id), v.state / outgoingEdges.size), targetId.hashCode))
+                call(mockGraphEditor.sendToWorkerForVertexIdHash(
+                  SignalMessage(targetId, Some(id), v.state / outgoingEdges.size), targetId.hashCode))
               }
             }
             whenExecuting(mockGraphEditor) {
