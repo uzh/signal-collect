@@ -1,100 +1,67 @@
-package com.signalcollect.triplerush
+package com.signalcollect
 
 import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary.arbInt
-import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
+import org.scalacheck.Gen._
 import org.scalatest.FlatSpec
 import org.scalatest.ShouldMatchers
 import org.scalatest.prop.Checkers
-import com.signalcollect.GraphEditor
-import org.scalamock.scalatest.MockFactory
+import org.scalatest.mock.EasyMockSugar
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.interfaces.SignalMessage
 
-class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with MockFactory {
+class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
 
-  import Tree._
+  lazy val smallInt = Gen.chooseNum(0, 100)
+  lazy val smallDouble = Gen.chooseNum(0.0, 10.0)
 
-  val mockGraphEditor = mock[GraphEditor[Any, Any]]
-  
-  implicit def arbTree[G](implicit g: Arbitrary[G]): Arbitrary[Tree[G]] = Arbitrary(genTree[G])
+  lazy val signalMapEntry = for {
+    k <- smallInt
+    v <- smallDouble
+  } yield (k, v)
 
-  def genTree[G](implicit g: Arbitrary[G]): Gen[Tree[G]] = Gen.oneOf(Gen.const(Leaf), genInner[G])
+  lazy val signalMap = containerOf[Map, Int, Double](signalMapEntry)
 
-  def genInner[G](implicit g: Arbitrary[G]): Gen[Tree[G]] = for {
-    v <- arbitrary[G]
-    l <- genTree[G]
-    r <- genTree[G]
-  } yield Inner(v, l, r)
+  lazy val outEdgeIds = containerOf[Set, Int](smallInt)
 
-  "Tree" should "correctly sum integers" in {
+  implicit def arbSignalMap[Map[Int, Double]] = Arbitrary(signalMap)
+
+  implicit def arbEdgeIds[Set[Int]] = Arbitrary(outEdgeIds)
+
+  "PageRankVertex" should "correctly collect and signal" in {
     check(
-      (v: Int, l: Tree[Int], r: Tree[Int]) => {
-        val newTree = Inner(v, l, r)
-        sum(newTree) == v + sum(l) + sum(r)
-      })
-  }
-
-  it should "support pre-order traversal" in {
-    check(
-      (v: Int, l: Tree[Int], r: Tree[Int]) => {
-        val newTree = Inner(v, l, r)
-        preOrder(newTree) == v :: preOrder(l) ::: preOrder(r)
-      })
-  }
-
-  it should "support in-order traversal" in {
-    check(
-      (v: Int, l: Tree[Int], r: Tree[Int]) => {
-        val newTree = Inner(v, l, r)
-        Tree.inOrder(newTree) == Tree.inOrder(l) ::: (v :: Tree.inOrder(r))
-      })
-  }
-
-  it should "support post-order traversal" in {
-    check(
-      (v: Int, l: Tree[Int], r: Tree[Int]) => {
-        val newTree = Inner(v, l, r)
-        postOrder(newTree) == postOrder(l) ++ (postOrder(r) :+ v)
-      })
-  }
-
-}
-
-trait Tree[+G]
-
-case class Inner[G](value: G, left: Tree[G], right: Tree[G]) extends Tree[G]
-
-case object Leaf extends Tree[Nothing]
-
-object Tree {
-
-  def sum[G: Numeric](t: Tree[G]): G = {
-    val numeric = implicitly[Numeric[G]]
-    t match {
-      case Leaf => numeric.zero
-      case Inner(v, l, r) => numeric.plus(numeric.plus(v, sum(l)), sum(r))
-    }
-  }
-
-  def preOrder[G](t: Tree[G]): List[G] = {
-    t match {
-      case Leaf => Nil
-      case Inner(v, l, r) => v :: preOrder(l) ::: preOrder(r)
-    }
-  }
-
-  def inOrder[G](t: Tree[G]): List[G] = {
-    t match {
-      case Leaf => Nil
-      case Inner(v, l, r) => inOrder(l) ::: (v :: inOrder(r))
-    }
-  }
-
-  def postOrder[G](t: Tree[G]): List[G] = {
-    t match {
-      case Leaf => Nil
-      case Inner(v, l, r) => postOrder(l) ++ (postOrder(r) :+ v)
-    }
+      (incomingSignals: Map[Int, Double], outgoingEdges: Set[Int]) => {
+        val id = "test"
+        val mockGraphEditor = mock[GraphEditor[Any, Any]]
+        val v = new PageRankVertex(id)
+        for (id <- outgoingEdges) {
+          v.addEdge(new PageRankEdge(id), mockGraphEditor)
+        }
+        v.afterInitialization(mockGraphEditor)
+        for ((sourceId, signal) <- incomingSignals) {
+          v.deliverSignal(signal, Some(sourceId), mockGraphEditor)
+        }
+        if (!incomingSignals.isEmpty) {
+          //graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
+          assert(v.scoreCollect > 0, "vertex received messages, should want to collect")
+          v.executeCollectOperation(mockGraphEditor)
+          v.state should equal(0.15 + 0.85 * incomingSignals.values.sum +- 0.0001)
+          if (!outgoingEdges.isEmpty) {
+            assert(v.scoreSignal > 0, "vertex updated state, should want to signal")
+            expecting {
+              for (targetId <- outgoingEdges) {
+                call(mockGraphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(id), v.state / outgoingEdges.size), targetId.hashCode))
+              }
+            }
+            whenExecuting(mockGraphEditor) {
+              v.executeSignalOperation(mockGraphEditor)
+            }
+          }
+        }
+        true
+      }, minSuccessful(1000))
   }
 
 }
