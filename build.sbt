@@ -43,7 +43,7 @@ libraryDependencies ++= Seq(
   "org.specs2" % "classycle" % "1.4.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0"  % "test",
   "org.specs2" %% "specs2" % "2.3.3"  % "test",
-  "org.scalacheck" %% "scalacheck" % "1.10.1" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.11.0" % "test",
   "org.scalatest" %% "scalatest" % "2.0.1-SNAP" % "test",
   "org.easymock" % "easymock" % "3.2" % "test"
 )
