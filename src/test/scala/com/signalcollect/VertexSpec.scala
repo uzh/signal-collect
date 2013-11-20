@@ -1,5 +1,6 @@
 package com.signalcollect
 
+import language.higherKinds
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen
