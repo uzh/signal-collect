@@ -66,54 +66,19 @@ object Sudoku extends App {
 
   //Very simple Sudoku
   val sudoku1 = Map(
-    4 -> 9,
-    5 -> 6,
-    8 -> 5,
-    10 -> 9,
-    11 -> 4,
-    13 -> 2,
-    14 -> 1,
-    15 -> 8,
-    16 -> 6,
-    19 -> 1,
-    21 -> 4,
-    24 -> 3,
-    25 -> 2,
-    29 -> 3,
-    31 -> 4,
-    34 -> 7,
-    36 -> 1,
-    38 -> 6,
-    42 -> 4,
-    44 -> 2,
-    46 -> 4,
-    49 -> 6,
-    51 -> 5,
-    55 -> 5,
-    56 -> 2,
-    59 -> 4,
-    61 -> 1,
-    64 -> 6,
-    65 -> 1,
-    66 -> 2,
-    67 -> 3,
-    69 -> 7,
-    70 -> 8,
-    72 -> 4,
-    75 -> 8,
-    76 -> 1)
+    (4, 9), (5, 6), (8, 5), (10, 9), (11, 4), (13, 2), (14, 1), (15, 8),
+    (16, 6), (19, 1), (21, 4), (24, 3), (25, 2), (29, 3), (31, 4), (34, 7),
+    (36, 1), (38, 6), (42, 4), (44, 2), (46, 4), (49, 6), (51, 5), (55, 5),
+    (56, 2), (59, 4), (61, 1), (64, 6), (65, 1), (66, 2), (67, 3), (69, 7),
+    (70, 8), (72, 4), (75, 8), (76, 1))
 
   //bad-ass Sudoku Puzzle
   val sudoku2 = Map(
-    0 -> 9, 8 -> 4,
-    11 -> 5, 13 -> 3, 15 -> 8, 16 -> 9,
-    21 -> 6, 24 -> 2,
-    28 -> 9, 31 -> 8, 33 -> 3, 35 -> 7,
-    38 -> 1, 42 -> 4,
-    45 -> 7, 47 -> 3, 49 -> 2, 52 -> 8,
-    56 -> 9, 59 -> 6,
-    64 -> 7, 65 -> 8, 67 -> 5, 69 -> 1,
-    72 -> 6, 80 -> 3)
+    (0, 9), (8, 4), (11, 5), (13, 3), (15, 8), (16, 9),
+    (21, 6), (24, 2), (28, 9), (31, 8), (33, 3), (35, 7),
+    (38, 1), (42, 4), (45, 7), (47, 3), (49, 2), (52, 8),
+    (56, 9), (59, 6), (64, 7), (65, 8), (67, 5), (69, 1),
+    (72, 6), (80, 3))
 
   //select a sudoku puzzle
   val initialSeed = sudoku1
@@ -181,7 +146,7 @@ object Sudoku extends App {
       val iterator = candidate.get._2.iterator
       while (iterator.hasNext && !solutionFound) {
         var determinedValues = possibleValues.filter(_._2.size == 1).map(x => (x._1, x._2.head)).toMap[Int, Int]
-        determinedValues += (candidate.get._1 -> iterator.next)
+        determinedValues += ((candidate.get._1, iterator.next))
         var graphTry = computeGraphFactory(determinedValues)
         graphTry.execute
         if (isDone(graphTry)) {
