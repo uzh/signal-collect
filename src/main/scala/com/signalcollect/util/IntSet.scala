@@ -43,7 +43,7 @@ class IntSet(val encoded: Array[Byte]) extends AnyVal {
   def contains(item: Int): Boolean = findIndex(item) >= 0
 
   /**
-   * Inserts item into the set.
+   * Inserts item into a variable length and delta encoded int set.
    * Determines insert index, computes extra space, splices in inserted element, adjusts next delta
    * and uses arraycopy twice to perform insert.
    * If the item was contained already, returns the same array again (reference equal).
