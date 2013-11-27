@@ -28,19 +28,19 @@ class SearchableIntSet(val sorted: Array[Int]) extends AnyVal {
 
   def foreach[U](f: Int => U) = sorted.foreach(f)
 
+  /**
+   * Inserts item into the searchable int set.
+   * If the item was contained already, returns the same array again (reference equal).
+   */
   def insert(item: Int): Array[Int] = {
     val index = insertIndex(item)
     if (index < sorted.length && sorted(index) == item) {
       return sorted
     } else {
       val newArray = new Array[Int](sorted.length + 1)
-      if (sorted.length > 0) {
-        System.arraycopy(sorted, 0, newArray, 0, index)
-      }
+      System.arraycopy(sorted, 0, newArray, 0, index)
       newArray(index) = item
-      if (index < sorted.length) {
-        System.arraycopy(sorted, index, newArray, index + 1, sorted.length - index)
-      }
+      System.arraycopy(sorted, index, newArray, index + 1, sorted.length - index)
       return newArray
     }
   }
