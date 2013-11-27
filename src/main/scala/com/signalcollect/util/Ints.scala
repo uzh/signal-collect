@@ -65,9 +65,19 @@ object Ints {
   private[signalcollect] val leastSignificant7BitsMask = Integer.parseInt("01111111", 2)
   private[signalcollect] val everythingButLeastSignificant7Bits = ~leastSignificant7BitsMask
 
+  @inline def bytesForVarint(v: Int): Int = {
+    var bs = 1
+    var m = v
+    while ((m & everythingButLeastSignificant7Bits) != 0) {
+      bs += 1
+      m >>>= 7
+    }
+    bs
+  }
+
   // Same as https://developers.google.com/protocol-buffers/docs/encoding
-  def writeUnsignedVarInt(i: Int, out: DataOutputStream) {
-    var remainder = i
+  @inline def writeUnsignedVarInt(item: Int, out: DataOutputStream) {
+    var remainder = item
     // While this is not the last byte, write one bit to indicate if the
     // next byte is part of this number and 7 bytes of the number itself.
     while ((remainder & everythingButLeastSignificant7Bits) != 0) {
@@ -76,7 +86,23 @@ object Ints {
       remainder >>>= 7
     }
     // Final byte.
-    out.writeByte(remainder & 0x7F)
+    out.writeByte(remainder)
+  }
+
+  // Write a variable length integer at a given index into an array.
+  @inline def writeUnsignedVarInt(item: Int, a: Array[Byte], index: Int) {
+    var remainder = item
+    var currentIndex = index
+    // While this is not the last byte, write one bit to indicate if the
+    // next byte is part of this number and 7 bytes of the number itself.
+    while ((remainder & everythingButLeastSignificant7Bits) != 0) {
+      // First bit of byte indicates that the next byte is still part of this number, if set.
+      a(currentIndex) = ((remainder & leastSignificant7BitsMask) | hasAnotherByte).toByte
+      currentIndex += 1
+      remainder >>>= 7
+    }
+    // Final byte.
+    a(currentIndex) = remainder.toByte
   }
 
   def readUnsignedVarInt(in: DataInputStream): Int = {

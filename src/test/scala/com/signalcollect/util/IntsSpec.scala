@@ -1,10 +1,45 @@
 package com.signalcollect.util
 
+import org.scalacheck.Gen
+import org.scalacheck.Gen._
+import org.scalacheck.Arbitrary._
 import org.scalatest.FlatSpec
 import org.scalatest.ShouldMatchers
 import org.scalatest.prop.Checkers
+import java.io.DataOutputStream
+import java.io.ByteArrayOutputStream
+import org.scalacheck.Arbitrary
 
 class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
+
+  implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
+
+  "bytesForVarint" should "correctly compute the number of bytes required for a varint" in {
+    check(
+      (i: Int) => {
+        val baos = new ByteArrayOutputStream
+        val dos = new DataOutputStream(baos)
+        Ints.writeUnsignedVarInt(i, dos)
+        dos.flush
+        baos.flush
+        val bytes = baos.toByteArray.length
+        val computed = Ints.bytesForVarint(i)
+        dos.close
+        baos.close
+        bytes == computed
+      },
+      minSuccessful(100))
+  }
+
+  "writeUnsignedVarInt" should "correctly write to arrays of the proper size" in {
+    check(
+      (i: Int) => {
+        val a = new Array[Byte](Ints.bytesForVarint(i))
+        Ints.writeUnsignedVarInt(i, a, 0)
+        true
+      },
+      minSuccessful(100))
+  }
 
   "IntSet" should "store sets of Ints" in {
     check(
@@ -28,12 +63,19 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   it should "support the 'insert' operation" in {
     check(
-      (ints: Array[Int], item: Int) => {
-        val intSet = ints.toSet + item
-        val compact = Ints.createCompactSet(ints)
-        new IntSet(new IntSet(compact).insert(item)).toSet == intSet
+      (ints: Set[Int], item: Int) => {
+        try {
+          val intSet = ints + item
+          val compact = Ints.createCompactSet(ints.toArray)
+          val afterInsert = new IntSet(compact).insert(item)
+          intSet == new IntSet(afterInsert).toSet
+        } catch {
+          case t: Throwable =>
+            t.printStackTrace
+            throw t
+        }
       },
-      minSuccessful(1000))
+      minSuccessful(10000))
   }
 
   "SearchableIntSet" should "store sets of Ints" in {
