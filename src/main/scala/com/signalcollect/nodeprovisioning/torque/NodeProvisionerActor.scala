@@ -27,28 +27,46 @@ import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.NodeReady
 import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
+import akka.actor.ActorSystem
+import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.nodeprovisioning.NodeActorCreator
+import akka.actor.Props
+import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import com.signalcollect.nodeprovisioning.AkkaHelper
 
-class NodeProvisionerActor(numberOfNodes: Int)
-    extends Actor
-    with ActorLogging
-    with ActorRestartLogging {
+class NodeProvisionerActor(
+  numberOfNodes: Int,
+  allocateWorkersOnCoordinatorNode: Boolean)
+  extends Actor
+  with ActorLogging
+  with ActorRestartLogging {
+
+  if (allocateWorkersOnCoordinatorNode) {
+    val system = ActorSystemRegistry.retrieve("SignalCollect").
+      getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
+    val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(self, system)
+    val nodeControllerCreator = NodeActorCreator(0, numberOfNodes, Some(nodeProvisionerAddress))
+    val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(
+      nodeControllerCreator.create), name = "DefaultNodeActorOnCoordinatior")
+  }
 
   var nodeListRequestor: Option[ActorRef] = None
-
-  var nodeControllers = List[ActorRef]()
+  var nodesReady = 0
+  var nodeControllers = new Array[ActorRef](numberOfNodes)
 
   def receive = {
     case "GetNodes" =>
       nodeListRequestor = Some(sender)
       sendNodesIfReady
-    case NodeReady =>
+    case NodeReady(nodeId) =>
       println(s"Received registration from $sender")
-      nodeControllers = sender :: nodeControllers
+      nodesReady += 1
+      nodeControllers(nodeId) = sender
       sendNodesIfReady
   }
 
   def sendNodesIfReady {
-    if (nodeControllers.size == numberOfNodes && nodeListRequestor.isDefined) {
+    if (nodesReady == numberOfNodes && nodeListRequestor.isDefined) {
       nodeListRequestor.get ! nodeControllers
       self ! PoisonPill
     }

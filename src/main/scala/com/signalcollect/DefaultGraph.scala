@@ -118,7 +118,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   log.debug("Requesting nodes ...")
-  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig).sorted
+  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.

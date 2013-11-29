@@ -23,7 +23,7 @@ package com.signalcollect.interfaces
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
 
-case object NodeReady
+case class NodeReady(nodeId: Int)
 
 case class Request[ProxiedClass](
   command: ProxiedClass => Any,
