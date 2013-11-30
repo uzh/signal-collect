@@ -200,7 +200,6 @@ class DefaultNodeActor(
   def shutdown = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     context.system.shutdown
-    context.system.awaitTermination
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {
