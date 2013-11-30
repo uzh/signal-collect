@@ -1,9 +1,0 @@
-language: scala
-jdk:
-  - oraclejdk7
-scala:
-  - "2.10.3"
-env:
-  - JAVA_OPTS="-Xmx512m"
-script: 
-  - "sbt -v ++$TRAVIS_SCALA_VERSION test"
