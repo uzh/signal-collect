@@ -1,4 +1,3 @@
-.*
 *.snapshot
 *.orig
 lib/*
@@ -17,3 +16,13 @@ web-BerkStan.txt
 web-BerkStan.txt.gz
 
 web-split-*
+
+.cache
+
+.classpath
+
+.project
+
+.sbtconfig
+
+.settings/org.scala-ide.sdt.core.prefs
