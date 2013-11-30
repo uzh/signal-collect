@@ -119,24 +119,24 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
       case Some(e) =>
-        ("state" -> e.state) ~
-          ("steps" -> e.stepTokens) ~
-          ("iteration" -> e.iteration)
+        ("state", e.state) ~
+          ("steps", e.stepTokens) ~
+          ("iteration", e.iteration)
       case None => socket.executionConfiguration match {
         case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {
           case Some(es: ExecutionStatistics) =>
-            ("mode" -> ec.executionMode.toString) ~
-              ("state" -> es.terminationReason.toString) ~
-              ("totalExecutionTime" -> es.totalExecutionTime.toString) ~
-              ("computationTime" -> es.computationTime.toString)
+            ("mode", ec.executionMode.toString) ~
+              ("state", es.terminationReason.toString) ~
+              ("totalExecutionTime", es.totalExecutionTime.toString) ~
+              ("computationTime", es.computationTime.toString)
           case None =>
-            ("mode" -> ec.executionMode.toString())
+            ("mode", ec.executionMode.toString())
         }
         case None =>
-          ("state" -> "undetermined")
+          ("state", "undetermined")
       }
     }
-    ("provider" -> "state") ~ reply
+    ("provider", "state") ~ reply
   }
 }
 

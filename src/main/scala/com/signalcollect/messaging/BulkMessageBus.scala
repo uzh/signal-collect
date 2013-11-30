@@ -75,7 +75,6 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
     if (pendingSignals > 0) {
       var workerId = 0
       while (workerId < numberOfWorkers) {
-        //TODO: This could potentially be done in parallel. Evaluate.
         val bulker = outgoingMessages(workerId)
         val signalCount = bulker.numberOfItems
         if (signalCount > 0) {

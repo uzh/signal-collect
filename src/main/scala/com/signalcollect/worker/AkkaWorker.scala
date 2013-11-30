@@ -69,9 +69,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
   val heartbeatIntervalInMilliseconds: Int)
-    extends WorkerActor[Id, Signal]
-    with ActorLogging
-    with ActorRestartLogging {
+  extends WorkerActor[Id, Signal]
+  with ActorLogging
+  with ActorRestartLogging {
 
   override def postRestart(reason: Throwable): Unit = {
     val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
@@ -95,6 +95,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     schedulerFactory = schedulerFactory,
     signalThreshold = 0.01,
     collectThreshold = 0.0,
+    existingVertexHandler = (vOld, vNew, ge) => (),
     undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
       throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId")
       Unit

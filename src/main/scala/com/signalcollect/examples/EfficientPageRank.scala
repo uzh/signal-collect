@@ -26,7 +26,7 @@ import com.signalcollect._
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.configuration.ExecutionMode._
 import com.signalcollect.util.Ints
-import com.signalcollect.util.Ints.IntSet
+import com.signalcollect.util.IntSet
 
 /**
  * Use GraphSplitter to download the graph and generate the splits.
@@ -144,7 +144,7 @@ class EfficientPageRankVertex(val id: Int) extends Vertex[Int, Double] {
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
       val signal = (state - lastSignalState) / outEdges
-      IntSet(targetIdArray).foreach((targetId: Int) =>
+      new IntSet(targetIdArray).foreach((targetId: Int) =>
         graphEditor.sendSignal(signal, targetId, None))
     }
     lastSignalState = state

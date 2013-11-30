@@ -118,7 +118,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   log.debug("Requesting nodes ...")
-  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig).sorted
+  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
@@ -689,7 +689,9 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   def recalculateScores = workerApi.recalculateScores
 
-  def recalculateScoresForVertexWithId(vertexId: Id) = workerApi.recalculateScoresForVertexWithId(vertexId)
+  def recalculateScoresForVertexWithId(vertexId: Id) {
+    workerApi.recalculateScoresForVertexWithId(vertexId)
+  }
 
   def isIdle = coordinatorProxy.isIdle
 
@@ -698,21 +700,37 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     if (console != null) { console.shutdown }
     system.shutdown
     system.awaitTermination
+    ActorSystemRegistry.remove(system)
   }
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](
+    vertexId: Id, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[Id, _]) => Unit) = workerApi.foreachVertex(f)
+  def foreachVertex(f: (Vertex[Id, _]) => Unit) {
+    workerApi.foreachVertex(f)
+  }
 
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = workerApi.foreachVertexWithGraphEditor(f)
+  def foreachVertexWithGraphEditor(
+    f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
+    workerApi.foreachVertexWithGraphEditor(f)
+  }
 
-  def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
+  def aggregate[ResultType](
+    aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)
   }
 
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = workerApi.setUndeliverableSignalHandler(h)
+  def setExistingVertexHandler(
+    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+    workerApi.setExistingVertexHandler(h)
+  }
+
+  def setUndeliverableSignalHandler(
+    h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
+    workerApi.setUndeliverableSignalHandler(h)
+  }
 
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.

@@ -32,12 +32,13 @@ import com.signalcollect.interfaces.MessageBusFactory
 import scala.reflect.ClassTag
 
 class LocalNodeProvisioner()
-    extends NodeProvisioner {
+  extends NodeProvisioner {
   def getNodes(akkaConfig: Config): Array[ActorRef] = {
     val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
     if (system != null) {
       val nodeControllerCreator = NodeActorCreator(0, 1, None)
-      val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
+      val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(
+        nodeControllerCreator.create), name = "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } else {
       Array[ActorRef]()

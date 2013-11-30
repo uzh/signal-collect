@@ -46,7 +46,7 @@ import com.signalcollect.interfaces.NodeStatistics
 class DefaultWorkerApi[Id, Signal](
   val workers: Array[WorkerApi[Id, Signal]],
   val mapper: VertexToWorkerMapper[Id])
-    extends WorkerApi[Id, Signal] {
+  extends WorkerApi[Id, Signal] {
 
   protected val random = new Random
 
@@ -104,6 +104,10 @@ class DefaultWorkerApi[Id, Signal](
     //val aggregateArray = futures(_.aggregateOnWorker(aggregationOperation)) map get
     val workerAggregates = workers.par map (_.aggregateOnWorker(aggregationOperation))
     aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
+  }
+
+  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+    futures(_.setExistingVertexHandler(h)) foreach get
   }
 
   override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {

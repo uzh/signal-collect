@@ -48,12 +48,13 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.MapperFactory
 
 /**
- * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
+ * Creator in separate class to prevent excessive closure-capture of the
+ * TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-    nodeId: Int,
-    numberOfNodes: Int,
-    nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+  nodeId: Int,
+  numberOfNodes: Int,
+  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     numberOfNodes,
@@ -78,8 +79,8 @@ class DefaultNodeActor(
   val numberOfNodes: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor
-    with ActorLogging
-    with ActorRestartLogging {
+  with ActorLogging
+  with ActorRestartLogging {
 
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
@@ -192,7 +193,7 @@ class DefaultNodeActor(
     if (nodeProvisionerAddress.isDefined) {
       println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
       nodeProvisioner = context.actorFor(nodeProvisionerAddress.get)
-      nodeProvisioner ! NodeReady
+      nodeProvisioner ! NodeReady(nodeId)
     }
   }
 

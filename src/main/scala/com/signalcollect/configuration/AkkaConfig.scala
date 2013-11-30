@@ -29,6 +29,8 @@ akka {
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
   event-handlers = ["com.signalcollect.console.ConsoleLogger"]
 
+  event-handler-startup-timeout = 30s
+
   logConfigOnStart=on
     """ +
     {
