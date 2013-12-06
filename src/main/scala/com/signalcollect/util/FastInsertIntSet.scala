@@ -26,7 +26,15 @@ import scala.collection.mutable.Buffer
 
 import com.signalcollect.util.Ints._
 
-class IntSet(val encoded: Array[Byte]) extends AnyVal {
+/**
+ * Variant of IntSet that maintains extra space at the end of
+ * the array in order to allow for faster inserts.
+ * The number of used bytes is variable-length encoded reading from
+ * the end of the array backwards. In all other aspects the set
+ * is the same, using variable-length delta encoding to compactly store
+ * sets of ints.
+ */
+class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
 
   def toBuffer: Buffer[Int] = {
     val buffer = new ArrayBuffer[Int]
@@ -43,19 +51,40 @@ class IntSet(val encoded: Array[Byte]) extends AnyVal {
   def contains(item: Int): Boolean = findIndex(item) >= 0
 
   /**
+   * Returns the number of bytes that are free in between the
+   * variable length encoded deltas and the variable length encoded number
+   * that represents the free bytes at the end of the array.
+   */
+  @inline def freeBytes: Int = {
+    readUnsignedVarIntBackwards(encoded, encoded.length - 1)
+  }
+
+  /**
+   * Number of bytes that are dedicated to encoding the set items.
+   */
+  @inline def setEncodingBytes = {
+    val free = freeBytes
+    totalBytes - free - bytesForVarint(free)
+  }
+
+  @inline def totalBytes = encoded.length
+
+  /**
    * Inserts item into a variable length and delta encoded int set.
    * Determines insert index, computes extra space, splices in inserted element, adjusts next delta
    * and uses arraycopy twice to perform insert.
-   * If the item was contained already, returns the same array again (reference equal).
+   * Returns an array that contains the inserted item and a boolean that indicates if 
+   * an item had to be inserted (true) or if the array already contained the item (false).
    */
-  def insert(item: Int): Array[Byte] = {
+  def insert(item: Int, overheadPercentage: Float = 0.2f): (Array[Byte], Boolean) = {
+    val bytesThatAreEncodingSetItems = setEncodingBytes
     var i = 0
     var previousInt = -1
     var startingIndexOfCurrentDelta = 0
     var currentDecodedInt = 0
     var shift = 0
     // Inlining manually to ensure there is no boxing.
-    while (i < encoded.length) {
+    while (i < bytesThatAreEncodingSetItems) {
       val readByte = encoded(i)
       currentDecodedInt |= (readByte & leastSignificant7BitsMask) << shift
       shift += 7
@@ -64,7 +93,7 @@ class IntSet(val encoded: Array[Byte]) extends AnyVal {
         previousInt += currentDecodedInt + 1
         if (previousInt == item) {
           // Item already contained, return old encoded array.
-          return encoded
+          return (encoded, false)
         } else if (previousInt > item) {
           // The delta we have to encode for the newly inserted item.
           val itemDelta = currentDecodedInt - (previousInt - item)

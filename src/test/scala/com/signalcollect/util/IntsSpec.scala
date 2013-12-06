@@ -41,6 +41,23 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
       minSuccessful(100))
   }
 
+  "write/read-UnsignedVarIntBackwards" should "correctly write/read to arrays" in {
+    check(
+      (i: Int) => {
+        try {
+          val a = new Array[Byte](10)
+          Ints.writeUnsignedVarIntBackwards(i, a, a.length - 1)
+          val decoded = Ints.readUnsignedVarIntBackwards(a, a.length - 1)
+          i == decoded
+        } catch {
+          case t: Throwable =>
+            t.printStackTrace
+            false
+        }
+      },
+      minSuccessful(100))
+  }
+
   "IntSet" should "store sets of Ints" in {
     check(
       (ints: Array[Int]) => {

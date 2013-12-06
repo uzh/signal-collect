@@ -22,7 +22,7 @@ package com.signalcollect.configuration
 /**
  *  An execution mode specifies the order in which signal/collect
  *  operations get scheduled. There are currently four supported execution modes:
- * 		- SynchronousExecutionMode
+ * 	- SynchronousExecutionMode
  *  	- PureAsynchronousExecutionMode
  *  	- OptimizedAsynchronousExecutionMode
  *  	- ContinuousAsynchronousExecutionMode

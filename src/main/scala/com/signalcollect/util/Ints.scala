@@ -65,7 +65,7 @@ object Ints {
   private[signalcollect] val leastSignificant7BitsMask = Integer.parseInt("01111111", 2)
   private[signalcollect] val everythingButLeastSignificant7Bits = ~leastSignificant7BitsMask
 
-  @inline def bytesForVarint(v: Int): Int = {
+  def bytesForVarint(v: Int): Int = {
     var bs = 1
     var m = v
     while ((m & everythingButLeastSignificant7Bits) != 0) {
@@ -76,7 +76,7 @@ object Ints {
   }
 
   // Same as https://developers.google.com/protocol-buffers/docs/encoding
-  @inline def writeUnsignedVarInt(item: Int, out: DataOutputStream) {
+  def writeUnsignedVarInt(item: Int, out: DataOutputStream) {
     var remainder = item
     // While this is not the last byte, write one bit to indicate if the
     // next byte is part of this number and 7 bytes of the number itself.
@@ -90,7 +90,7 @@ object Ints {
   }
 
   // Write a variable length integer at a given index into an array.
-  @inline def writeUnsignedVarInt(item: Int, a: Array[Byte], index: Int) {
+  def writeUnsignedVarInt(item: Int, a: Array[Byte], index: Int) {
     var remainder = item
     var currentIndex = index
     // While this is not the last byte, write one bit to indicate if the
@@ -99,6 +99,23 @@ object Ints {
       // First bit of byte indicates that the next byte is still part of this number, if set.
       a(currentIndex) = ((remainder & leastSignificant7BitsMask) | hasAnotherByte).toByte
       currentIndex += 1
+      remainder >>>= 7
+    }
+    // Final byte.
+    a(currentIndex) = remainder.toByte
+  }
+
+  // Write a variable length integer at a given index into an array.
+  // The number is written from the insert index on backwards.
+  def writeUnsignedVarIntBackwards(item: Int, a: Array[Byte], index: Int) {
+    var remainder = item
+    var currentIndex = index
+    // While this is not the last byte, write one bit to indicate if the
+    // next byte is part of this number and 7 bytes of the number itself.
+    while ((remainder & everythingButLeastSignificant7Bits) != 0) {
+      // First bit of byte indicates that the next byte is still part of this number, if set.
+      a(currentIndex) = ((remainder & leastSignificant7BitsMask) | hasAnotherByte).toByte
+      currentIndex -= 1
       remainder >>>= 7
     }
     // Final byte.
@@ -119,6 +136,38 @@ object Ints {
     } catch {
       case t: Throwable => -1
     }
+  }
+
+  // Write a variable length integer at a given index into an array.
+  // The number is written from the insert index on.
+  @inline def readUnsignedVarInt(a: Array[Byte], index: Int): Int = {
+    var currentIndex = index
+    var readByte = a(currentIndex)
+    var decodedInt = readByte & leastSignificant7BitsMask
+    var shift = 7
+    while ((readByte & hasAnotherByte) != 0) {
+      currentIndex += 1
+      readByte = a(currentIndex)
+      decodedInt |= (readByte & leastSignificant7BitsMask) << shift
+      shift += 7
+    }
+    decodedInt
+  }
+
+  // Write a variable length integer at a given index into an array.
+  // The number is written from the insert index on backwards.
+  @inline def readUnsignedVarIntBackwards(a: Array[Byte], index: Int): Int = {
+    var currentIndex = index
+    var readByte = a(currentIndex)
+    var decodedInt = readByte & leastSignificant7BitsMask
+    var shift = 7
+    while ((readByte & hasAnotherByte) != 0) {
+      currentIndex -= 1
+      readByte = a(currentIndex)
+      decodedInt |= (readByte & leastSignificant7BitsMask) << shift
+      shift += 7
+    }
+    decodedInt
   }
 
 }
