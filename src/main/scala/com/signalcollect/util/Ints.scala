@@ -61,6 +61,10 @@ object Ints {
     baos.toByteArray
   }
 
+  def createEmptyFastInsertIntSet: Array[Byte] = {
+    Array(0, 0)
+  }
+
   private[signalcollect] val hasAnotherByte = Integer.parseInt("10000000", 2)
   private[signalcollect] val leastSignificant7BitsMask = Integer.parseInt("01111111", 2)
   private[signalcollect] val everythingButLeastSignificant7Bits = ~leastSignificant7BitsMask
