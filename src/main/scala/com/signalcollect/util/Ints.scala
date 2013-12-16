@@ -62,7 +62,8 @@ object Ints {
   }
 
   def createEmptyFastInsertIntSet: Array[Byte] = {
-    Array(0, 0)
+    // 0 entries and 1 free byte at the end that encodes that there is 1 free byte at the end.
+    Array(0, 1)
   }
 
   private[signalcollect] val hasAnotherByte = Integer.parseInt("10000000", 2)

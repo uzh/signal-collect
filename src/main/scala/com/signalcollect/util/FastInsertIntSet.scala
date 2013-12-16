@@ -99,9 +99,8 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
           // Item already contained, return old encoded array.
           return encoded
         } else if (previousInt > item) {
-          val updatedEncoded = handleInsert(
+          val updatedEncoded = handleInsertAnywhereButAtTheEnd(
             item,
-            false,
             startingIndexOfCurrentDelta,
             currentDecodedInt,
             previousInt,
@@ -116,38 +115,95 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
       }
       i += 1
     }
-    val updatedEncoded = handleInsert(
+    val updatedEncoded = handleInsertAtTheEnd(
       item,
-      true,
-      startingIndexOfCurrentDelta,
-      currentDecodedInt,
+      i,
       previousInt,
       numberOfIntsBeforeInsert,
       sizeOfSizeEntry,
       overheadFraction)
-    //    // Insert at the end of the array.
-    //    val itemDelta = (item - previousInt) - 1
-    //    val extraBytesRequired = bytesForVarint(itemDelta)
-    //    val newEncoded = new Array[Byte](encoded.length + extraBytesRequired)
-    //    // Copy old encoded up to insertion index.
-    //    System.arraycopy(encoded, 0, newEncoded, 0, startingIndexOfCurrentDelta)
-    //    writeUnsignedVarInt(itemDelta, newEncoded, i)
     return updatedEncoded
   }
 
-  /**
-   * I'm aware that this code is hard to understand and not sure how to
-   * fix that without sacrificing performance.
-   */
-  private def handleInsert(
+  private def handleInsertAtTheEnd(
     item: Int,
-    lastItemInSet: Boolean,
+    insertIndexBeforeSizeAdjustment: Int,
+    lastDecodedInt: Int,
+    numberOfIntsBeforeInsert: Int,
+    sizeOfSizeEntry: Int,
+    overheadFraction: Float): Array[Byte] = {
+//    println(
+//      s"""
+//$toString.handleInsertAtTheEnd(
+//      item=$item,
+//      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
+//      lastDecodedInt=$lastDecodedInt,
+//      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
+//      sizeOfSizeEntry=$sizeOfSizeEntry
+//""")
+    var insertIndex = insertIndexBeforeSizeAdjustment
+    val numberOfIntsAfterInsert = numberOfIntsBeforeInsert + 1
+    val bytesForSizeBeforeInsert = bytesForVarint(numberOfIntsBeforeInsert)
+    val bytesForSizeAfterInsert = bytesForVarint(numberOfIntsAfterInsert)
+    val extraBytesForSize = bytesForSizeAfterInsert - bytesForSizeBeforeInsert
+    val itemDelta = (item - lastDecodedInt) - 1
+    val bytesForItem = bytesForVarint(itemDelta)
+    val freeBytesBeforeInsert = freeBytes
+    val extraBytesRequired = extraBytesForSize + bytesForItem
+    val targetArray = if (freeBytesBeforeInsert < extraBytesRequired + 1) {
+      // We need to allocate a larger array.
+      allocateNewArray(extraBytesRequired, freeBytesBeforeInsert, overheadFraction)
+    } else {
+      // Current array size is sufficient.
+      encoded
+    }
+    val arraySizeIncrease = targetArray.length - encoded.length
+    val freeBytesAfterInsert = arraySizeIncrease + freeBytesBeforeInsert - extraBytesRequired
+    val encodedBytesUpToInsertPosition = insertIndex - sizeOfSizeEntry
+    if (bytesForSizeAfterInsert > sizeOfSizeEntry) {
+      // The size of the number of entries encoding has changed, we need to shift everything forward.
+      System.arraycopy(encoded, sizeOfSizeEntry, targetArray, bytesForSizeAfterInsert, encodedBytesUpToInsertPosition)
+      // Update starting index of current delta by the extra byte for the increased size.
+      insertIndex += 1
+    } else if (targetArray != encoded) {
+      // We have to copy the array up to the insertion index.
+      System.arraycopy(encoded, bytesForSizeAfterInsert, targetArray, bytesForSizeAfterInsert, encodedBytesUpToInsertPosition)
+    }
+    writeUnsignedVarInt(numberOfIntsAfterInsert, targetArray, 0)
+    writeUnsignedVarInt(itemDelta, targetArray, insertIndex)
+    writeUnsignedVarIntBackwards(freeBytesAfterInsert, targetArray, targetArray.length - 1)
+//    println("Encoded after insert: " + new FastInsertIntSet(targetArray).toString)
+    targetArray
+  }
+
+  override def toString: String = {
+    s"""Encoded(
+    size=$size,
+    totalBytes=$totalBytes,
+    freeBytes=$freeBytes,
+    entries=$toList
+)
+"""
+  }
+
+  private def handleInsertAnywhereButAtTheEnd(
+    item: Int,
     insertIndexBeforeSizeAdjustment: Int,
     lastDecodedDelta: Int,
     lastDecodedInt: Int,
     numberOfIntsBeforeInsert: Int,
     sizeOfSizeEntry: Int,
     overheadFraction: Float): Array[Byte] = {
+//    println(
+//      s"""
+//$toString.handleInsertAnywhereButAtTheEnd(
+//      item=$item,
+//      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
+//      lastDecodedDelta=$lastDecodedDelta,
+//      lastDecodedInt=$lastDecodedInt,
+//      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
+//      sizeOfSizeEntry=$sizeOfSizeEntry
+//""")
     var insertIndex = insertIndexBeforeSizeAdjustment
     val numberOfIntsAfterInsert = numberOfIntsBeforeInsert + 1
     val bytesForSizeBeforeInsert = bytesForVarint(numberOfIntsBeforeInsert)
@@ -162,33 +218,39 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     val extraBytesForNextAfterInsert = bytesForNextAfterInsert - bytesForNextBeforeInsert
     val freeBytesBeforeInsert = freeBytes
     val extraBytesRequired = extraBytesForSize + bytesForItem + extraBytesForNextAfterInsert
-    val freeBytesAfterInsert = freeBytesBeforeInsert - extraBytesRequired
     // +1 extra byte to encode that there are 0 free bytes.
-    var targetArray = encoded
-    if (freeBytesBeforeInsert < extraBytesRequired + 1) {
+    val targetArray = if (freeBytesBeforeInsert < extraBytesRequired + 1) {
       // We need to allocate a larger array.
-      targetArray = allocateNewArray(extraBytesRequired, overheadFraction)
+      allocateNewArray(extraBytesRequired, freeBytesBeforeInsert, overheadFraction)
+    } else {
+      // Current array size is sufficient.
+      encoded
     }
+    val arraySizeIncrease = targetArray.length - encoded.length
+    val freeBytesAfterInsert = arraySizeIncrease + freeBytesBeforeInsert - extraBytesRequired
+    val encodedBytesUpToInsertPosition = insertIndex - sizeOfSizeEntry
     if (bytesForSizeAfterInsert > sizeOfSizeEntry) {
       // The size of the number of entries encoding has changed, we need to shift everything forward.
-      val encodedBytesUpToInsertPosition = insertIndex - sizeOfSizeEntry
       System.arraycopy(encoded, sizeOfSizeEntry, targetArray, bytesForSizeAfterInsert, encodedBytesUpToInsertPosition)
       // Update starting index of current delta by the extra byte for the increased size.
       insertIndex += 1
+    } else if (targetArray != encoded) {
+      // We have to copy the array up to the insertion index.
+      System.arraycopy(encoded, bytesForSizeAfterInsert, targetArray, bytesForSizeAfterInsert, encodedBytesUpToInsertPosition)
     }
     val firstFreeByteBeforeInsert = encoded.length - freeBytesBeforeInsert
     val secondCopyBytes = firstFreeByteBeforeInsert - insertIndexBeforeSizeAdjustment - bytesForNextBeforeInsert
     val itemAfterItemDeltaIndexAfterInsert = insertIndex + bytesForItem
+    System.arraycopy(encoded, insertIndexBeforeSizeAdjustment + bytesForNextBeforeInsert, targetArray, itemAfterItemDeltaIndexAfterInsert + bytesForNextAfterInsert, secondCopyBytes)
     writeUnsignedVarInt(numberOfIntsAfterInsert, targetArray, 0)
     writeUnsignedVarInt(itemDelta, targetArray, insertIndex)
     writeUnsignedVarInt(itemAfterItemDelta, targetArray, itemAfterItemDeltaIndexAfterInsert)
     writeUnsignedVarIntBackwards(freeBytesAfterInsert, targetArray, targetArray.length - 1)
-    System.arraycopy(encoded, insertIndexBeforeSizeAdjustment + bytesForNextBeforeInsert, targetArray, itemAfterItemDeltaIndexAfterInsert + bytesForNextAfterInsert, secondCopyBytes)
     targetArray
   }
 
-  private def allocateNewArray(extraBytesRequired: Int, overheadFraction: Float): Array[Byte] = {
-    val minRequiredLength = encoded.length.toLong + extraBytesRequired + 1
+  private def allocateNewArray(extraBytesRequired: Int, freeBytesBeforeInsert: Int, overheadFraction: Float): Array[Byte] = {
+    val minRequiredLength = encoded.length.toLong + extraBytesRequired + 1 - freeBytesBeforeInsert
     if (minRequiredLength > Int.MaxValue) {
       throw new Exception(
         s"Could not allocate sufficiently large array to back FastInsertIntSet (required size: $minRequiredLength).")
