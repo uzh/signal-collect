@@ -230,7 +230,6 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
           if (!wasEqual) {
             println("Problematic set: " + compact.toList.toString +
               "\nShould have been: " + ints.toList.toString)
-            compact.print
             println("Done")
           }
         } catch {
