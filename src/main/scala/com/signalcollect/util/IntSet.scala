@@ -99,50 +99,6 @@ class IntSet(val encoded: Array[Byte]) extends AnyVal {
     return newEncoded
   }
 
-//  /**
-//   * Inserts item into the set.
-//   */
-//  def insertSlow(item: Int): Array[Byte] = {
-//    val baos = new ByteArrayOutputStream
-//    val dos = new DataOutputStream(baos)
-//    var itemPresentOrWritten = false
-//    var previous = -1
-//    // Inlining manually to ensure there is no boxing.
-//    var i = 0
-//    var previousInt = -1
-//    var currentDecodedInt = 0
-//    var shift = 0
-//    while (i < encoded.length) {
-//      val readByte = encoded(i)
-//      currentDecodedInt |= (readByte & leastSignificant7BitsMask) << shift
-//      shift += 7
-//      if ((readByte & hasAnotherByte) == 0) {
-//        // Next byte is no longer part of this Int.
-//        previousInt += currentDecodedInt + 1
-//        if (!itemPresentOrWritten) {
-//          if (previousInt == item) {
-//            itemPresentOrWritten = true
-//          } else if (previousInt > item) {
-//            writeUnsignedVarInt(item - previous - 1, dos)
-//            previous = item
-//            itemPresentOrWritten = true
-//          }
-//        }
-//        writeUnsignedVarInt(previousInt - previous - 1, dos)
-//        previous = previousInt
-//        currentDecodedInt = 0
-//        shift = 0
-//      }
-//      i += 1
-//    }
-//    if (!itemPresentOrWritten) {
-//      writeUnsignedVarInt(item - previous - 1, dos)
-//    }
-//    dos.flush
-//    baos.flush
-//    baos.toByteArray
-//  }
-
   /**
    * Returns the index of the first byte of element
    * item, iff item is contained in the set.

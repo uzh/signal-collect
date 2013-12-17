@@ -26,3 +26,5 @@ web-split-*
 .sbtconfig
 
 .settings/org.scala-ide.sdt.core.prefs
+
+*.class
