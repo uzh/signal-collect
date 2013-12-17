@@ -44,21 +44,29 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     buffer
   }
 
+  def split(overheadFraction: Float): (Array[Byte], Array[Byte]) = {
+    val totalItems = size
+    assert(totalItems >= 2)
+    val firstSize = totalItems / 2
+    var set1, set2 = Ints.createEmptyFastInsertIntSet
+    var itemsSplit = 0
+    foreach { item =>
+      if (itemsSplit < firstSize) {
+        set1 = new FastInsertIntSet(set1).insert(item, overheadFraction)
+        itemsSplit += 1
+      } else {
+        set2 = new FastInsertIntSet(set2).insert(item, overheadFraction)
+      }
+    }
+    (set1, set2)
+  }
+
   def toList: List[Int] = toBuffer.toList
   def toSet: Set[Int] = toBuffer.toSet
 
   def freeBytes = readUnsignedVarIntBackwards(encoded, encoded.length - 1)
 
   def totalBytes = encoded.length
-
-  //  /**
-  //   * Number of bytes that are dedicated to encoding the set items.
-  //   * Returns true iff item is in the set.
-  //   */
-  //  def setEncodingBytes = {
-  //    val free = freeBytes
-  //    totalBytes - free - bytesForVarint(free)
-  //  }
 
   /**
    * Returns the smallest item contained in the set.
