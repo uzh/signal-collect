@@ -61,6 +61,14 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
   //  }
 
   /**
+   * Returns the smallest item contained in the set.
+   * If the set is empty returns -1.
+   */
+  def min: Int = {
+    readUnsignedVarInt(encoded, bytesForVarint(size))
+  }
+
+  /**
    * Number of items.
    */
   def size: Int = readUnsignedVarInt(encoded, 0)
@@ -132,15 +140,15 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     numberOfIntsBeforeInsert: Int,
     sizeOfSizeEntry: Int,
     overheadFraction: Float): Array[Byte] = {
-//    println(
-//      s"""
-//$toString.handleInsertAtTheEnd(
-//      item=$item,
-//      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
-//      lastDecodedInt=$lastDecodedInt,
-//      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
-//      sizeOfSizeEntry=$sizeOfSizeEntry
-//""")
+    //    println(
+    //      s"""
+    //$toString.handleInsertAtTheEnd(
+    //      item=$item,
+    //      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
+    //      lastDecodedInt=$lastDecodedInt,
+    //      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
+    //      sizeOfSizeEntry=$sizeOfSizeEntry
+    //""")
     var insertIndex = insertIndexBeforeSizeAdjustment
     val numberOfIntsAfterInsert = numberOfIntsBeforeInsert + 1
     val bytesForSizeBeforeInsert = bytesForVarint(numberOfIntsBeforeInsert)
@@ -172,7 +180,7 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     writeUnsignedVarInt(numberOfIntsAfterInsert, targetArray, 0)
     writeUnsignedVarInt(itemDelta, targetArray, insertIndex)
     writeUnsignedVarIntBackwards(freeBytesAfterInsert, targetArray, targetArray.length - 1)
-//    println("Encoded after insert: " + new FastInsertIntSet(targetArray).toString)
+    //    println("Encoded after insert: " + new FastInsertIntSet(targetArray).toString)
     targetArray
   }
 
@@ -194,16 +202,16 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     numberOfIntsBeforeInsert: Int,
     sizeOfSizeEntry: Int,
     overheadFraction: Float): Array[Byte] = {
-//    println(
-//      s"""
-//$toString.handleInsertAnywhereButAtTheEnd(
-//      item=$item,
-//      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
-//      lastDecodedDelta=$lastDecodedDelta,
-//      lastDecodedInt=$lastDecodedInt,
-//      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
-//      sizeOfSizeEntry=$sizeOfSizeEntry
-//""")
+    //    println(
+    //      s"""
+    //$toString.handleInsertAnywhereButAtTheEnd(
+    //      item=$item,
+    //      insertIndexBeforeSizeAdjustment=$insertIndexBeforeSizeAdjustment,
+    //      lastDecodedDelta=$lastDecodedDelta,
+    //      lastDecodedInt=$lastDecodedInt,
+    //      numberOfIntsBeforeInsert=$numberOfIntsBeforeInsert,
+    //      sizeOfSizeEntry=$sizeOfSizeEntry
+    //""")
     var insertIndex = insertIndexBeforeSizeAdjustment
     val numberOfIntsAfterInsert = numberOfIntsBeforeInsert + 1
     val bytesForSizeBeforeInsert = bytesForVarint(numberOfIntsBeforeInsert)

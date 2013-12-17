@@ -212,7 +212,7 @@ class FastInsertIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
   //      minSuccessful(1000))
   //  }
   //
-  "And2" should "store sets of Ints" in {
+  "The FastInsertSet" should "store sets of Ints" in {
     check(
       (ints: Array[Int]) => {
         var wasEqual = false
@@ -235,6 +235,33 @@ class FastInsertIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
       },
       minSuccessful(1000))
   }
+
+  it should "be able to determine the smallest element" in {
+    check(
+      (ints: Array[Int]) => {
+        var found = true
+        var compact = Ints.createEmptyFastInsertIntSet
+        try {
+          val intSet = ints.toSet
+          if (!intSet.isEmpty) {
+            for (i <- ints) {
+              compact = new FastInsertIntSet(compact).insert(i)
+            }
+            found = new FastInsertIntSet(compact).min == intSet.min
+            if (!found) {
+              println("Problematic set: " + new FastInsertIntSet(compact).toString +
+                "\nShould have been: " + ints.toList.toString)
+            }
+          }
+        } catch {
+          case t: Throwable =>
+            t.printStackTrace
+        }
+        found
+      },
+      minSuccessful(1000))
+  }
+
   //
   //  it should "support the 'contains' operation" in {
   //    check(
