@@ -36,7 +36,7 @@ class FastInsertIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
   "FastInsertIntSet" should "support three inserts" in {
     try {
       val start = System.currentTimeMillis
-      val factor = 1.0f
+      val factor = 0.0f
       var fastInsertSet = Ints.createEmptyFastInsertIntSet
       val randomInts = (0 to 100000) //.map(x => Random.nextInt())
       for (i <- randomInts) {
@@ -220,7 +220,7 @@ class FastInsertIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
         try {
           val intSet = ints.toSet
           for (i <- ints) {
-            compact = new FastInsertIntSet(compact).insert(i)
+            compact = new FastInsertIntSet(compact).insert(i, 0.0f)
           }
           wasEqual = new FastInsertIntSet(compact).toSet == intSet
           if (!wasEqual) {

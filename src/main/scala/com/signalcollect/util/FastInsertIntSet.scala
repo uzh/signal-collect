@@ -266,14 +266,15 @@ class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
   }
 
   private def allocateNewArray(extraBytesRequired: Int, freeBytesBeforeInsert: Int, overheadFraction: Float): Array[Byte] = {
-    val minRequiredLength = encoded.length.toLong + extraBytesRequired + 1 - freeBytesBeforeInsert
+    val minRequiredLength = encoded.length.toLong + extraBytesRequired - freeBytesBeforeInsert
     if (minRequiredLength > Int.MaxValue) {
       throw new Exception(
         s"Could not allocate sufficiently large array to back FastInsertIntSet (required size: $minRequiredLength).")
     }
-    val newDesiredlength = minRequiredLength * (1.0 + overheadFraction).ceil
+    // + 1 to have space at the end to write how many free bytes there are
+    val newDesiredLength = (minRequiredLength * (1.0 + overheadFraction)).round + 1
     // If the desired length is too large, go with Int.MaxValue.
-    val newEncodedLength = math.min(Int.MaxValue, newDesiredlength).toInt
+    val newEncodedLength = math.min(Int.MaxValue, newDesiredLength).toInt
     val newEncoded = new Array[Byte](newEncodedLength)
     newEncoded
   }
