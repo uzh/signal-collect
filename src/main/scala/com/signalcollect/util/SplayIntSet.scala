@@ -22,23 +22,33 @@ class SplayNode {
     sizeAfter > sizeBefore
   }
 
-  def min: Int = new FastInsertIntSet(intSet).min
   /**
    * Assumes that the int set is not null.
    */
-  def foreach(f: Int => Unit) {
+  @tailrec final def foreach(f: Int => Unit, pending: List[SplayNode] = Nil) {
     // TODO: Parallelize using async if we can make the BulkMessageBus thread safe.
+    // Recursive impl: danger of stack overflow.
+    //    new FastInsertIntSet(intSet).foreach(f)
+    //    if (?(left)) left.foreach(f)
+    //    if (?(right)) right.foreach(f)
     new FastInsertIntSet(intSet).foreach(f)
-    if (?(left)) left.foreach(f)
-    if (?(right)) right.foreach(f)
+    if (?(left) && ?(right)) {
+      left.foreach(f, right :: pending)
+    } else if (?(left)) {
+      left.foreach(f, pending)
+    } else if (?(right)) {
+      right.foreach(f, pending)
+    } else {
+      pending match {
+        case Nil =>
+        case head :: tail =>
+          head.foreach(f, tail)
+      }
+    }
   }
 
-  def print {
-    println("PARENT")
-    new FastInsertIntSet(intSet).foreach(println(_))
-    if (?(left)) println("LEFT"); left.foreach(println(_))
-    if (?(right)) println("RIGHT"); right.foreach(println(_))
-  }
+  def min: Int = new FastInsertIntSet(intSet).min
+
 }
 
 abstract class SplayIntSet {
@@ -225,10 +235,6 @@ abstract class SplayIntSet {
     root.left = rootLeft.right
     rootLeft.right = root
     rootLeft
-  }
-
-  def print {
-    root.print
   }
 
 }
