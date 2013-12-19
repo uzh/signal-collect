@@ -35,7 +35,6 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
 import scala.reflect.ClassTag
 import akka.japi.Creator
-import com.signalcollect.interfaces.NodeReady
 import com.signalcollect.interfaces.NodeStatus
 import scala.language.postfixOps
 import scala.concurrent.duration.DurationInt
@@ -46,6 +45,7 @@ import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.NodeReady
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the

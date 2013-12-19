@@ -23,6 +23,8 @@ package com.signalcollect.interfaces
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
 
+case object GetNodes
+
 case class NodeReady(nodeId: Int)
 
 case class Request[ProxiedClass](
@@ -51,7 +53,7 @@ case class BulkSignal[@specialized(Int, Long) Id, @specialized(Int, Long, Float,
   val signals: Array[Signal],
   val targetIds: Array[Id],
   val sourceIds: Array[Id])
-  
+
 case class BulkSignalNoSourceIds[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
   val signals: Array[Signal],
   val targetIds: Array[Id])
@@ -76,37 +78,37 @@ case class NodeStatus(
   messagesReceived: Long)
 
 case class SentMessagesStats(
-    workers: Array[Int],
-    nodes: Array[Int],
-    coordinator: Int,
-    other: Int) {
+  workers: Array[Int],
+  nodes: Array[Int],
+  coordinator: Int,
+  other: Int) {
   def sumRelevant: Long = 0L + workers.sum + nodes.sum + coordinator
 }
 
 case class WorkerStatistics(
-    workerId: Option[Int] = None,
-    toSignalSize: Long = 0L,
-    toCollectSize: Long = 0L,
-    collectOperationsExecuted: Long = 0L,
-    signalOperationsExecuted: Long = 0L,
-    numberOfVertices: Long = 0L,
-    verticesAdded: Long = 0L,
-    verticesRemoved: Long = 0L,
-    numberOfOutgoingEdges: Long = 0L,
-    outgoingEdgesAdded: Long = 0L,
-    outgoingEdgesRemoved: Long = 0L,
-    receiveTimeoutMessagesReceived: Long = 0L,
-    heartbeatMessagesReceived: Long = 0L,
-    signalMessagesReceived: Long = 0L,
-    bulkSignalMessagesReceived: Long = 0L,
-    continueMessagesReceived: Long = 0L,
-    requestMessagesReceived: Long = 0L,
-    otherMessagesReceived: Long = 0L,
-    messagesSentToWorkers: Long = 0L,
-    messagesSentToNodes: Long = 0L,
-    messagesSentToCoordinator: Long = 0L,
-    messagesSentToOthers: Long = 0L) {
-  def + (other: WorkerStatistics): WorkerStatistics = {
+  workerId: Option[Int] = None,
+  toSignalSize: Long = 0L,
+  toCollectSize: Long = 0L,
+  collectOperationsExecuted: Long = 0L,
+  signalOperationsExecuted: Long = 0L,
+  numberOfVertices: Long = 0L,
+  verticesAdded: Long = 0L,
+  verticesRemoved: Long = 0L,
+  numberOfOutgoingEdges: Long = 0L,
+  outgoingEdgesAdded: Long = 0L,
+  outgoingEdgesRemoved: Long = 0L,
+  receiveTimeoutMessagesReceived: Long = 0L,
+  heartbeatMessagesReceived: Long = 0L,
+  signalMessagesReceived: Long = 0L,
+  bulkSignalMessagesReceived: Long = 0L,
+  continueMessagesReceived: Long = 0L,
+  requestMessagesReceived: Long = 0L,
+  otherMessagesReceived: Long = 0L,
+  messagesSentToWorkers: Long = 0L,
+  messagesSentToNodes: Long = 0L,
+  messagesSentToCoordinator: Long = 0L,
+  messagesSentToOthers: Long = 0L) {
+  def +(other: WorkerStatistics): WorkerStatistics = {
     WorkerStatistics(
       None,
       toSignalSize + other.toSignalSize,
@@ -140,21 +142,21 @@ case class WorkerStatistics(
 }
 
 case class NodeStatistics(
-    nodeId: Option[Int] = None,
-    os: String = "",
-    runtime_mem_total: Long = 0L,
-    runtime_mem_max: Long = 0L,
-    runtime_mem_free: Long = 0L,
-    runtime_cores: Long = 0L,
-    jmx_committed_vms: Long = 0L,
-    jmx_mem_free: Long = 0L,
-    jmx_mem_total: Long = 0L,
-    jmx_swap_free: Long = 0L,
-    jmx_swap_total: Long = 0L,
-    jmx_process_load: Double = 0.0,
-    jmx_process_time: Double = 0.0,
-    jmx_system_load: Double = 0.0) {
-  def + (other: NodeStatistics): NodeStatistics = {
+  nodeId: Option[Int] = None,
+  os: String = "",
+  runtime_mem_total: Long = 0L,
+  runtime_mem_max: Long = 0L,
+  runtime_mem_free: Long = 0L,
+  runtime_cores: Long = 0L,
+  jmx_committed_vms: Long = 0L,
+  jmx_mem_free: Long = 0L,
+  jmx_mem_total: Long = 0L,
+  jmx_swap_free: Long = 0L,
+  jmx_swap_total: Long = 0L,
+  jmx_process_load: Double = 0.0,
+  jmx_process_time: Double = 0.0,
+  jmx_system_load: Double = 0.0) {
+  def +(other: NodeStatistics): NodeStatistics = {
     NodeStatistics(
       None,
       os + other.os,

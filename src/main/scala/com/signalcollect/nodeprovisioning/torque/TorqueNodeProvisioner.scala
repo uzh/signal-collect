@@ -40,6 +40,7 @@ import com.signalcollect.interfaces.NodeActor
 import scala.reflect.ClassTag
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.nodeprovisioning.NodeActorCreator
+import com.signalcollect.interfaces.GetNodes
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -55,7 +56,8 @@ case class NodeProvisionerCreator(
 class TorqueNodeProvisioner(
   torqueHost: TorqueHost,
   numberOfNodes: Int,
-  allocateWorkersOnCoordinatorNode: Boolean = false) extends NodeProvisioner {
+  allocateWorkersOnCoordinatorNode: Boolean,
+  copyExecutable: Boolean) extends NodeProvisioner {
   def getNodes(akkaConfig: Config): Array[ActorRef] = {
     val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes, allocateWorkersOnCoordinatorNode)
@@ -82,10 +84,10 @@ class TorqueNodeProvisioner(
       }
       jobs = new Job(jobId = jobId, execute = function) :: jobs
     }
-    torqueHost.executeJobs(jobs)
-    val nodesFuture = nodeProvisioner ? "GetNodes"
+    torqueHost.executeJobs(jobs, copyExecutable)
+    val nodesFuture = nodeProvisioner ? GetNodes
     val result = Await.result(nodesFuture, timeout.duration)
-    val nodes: Array[ActorRef] = result.asInstanceOf[List[ActorRef]].toArray
+    val nodes: Array[ActorRef] = result.asInstanceOf[Array[ActorRef]]
     nodes
   }
 }

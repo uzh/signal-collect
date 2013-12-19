@@ -24,7 +24,6 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
-import com.signalcollect.interfaces.NodeReady
 import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
 import akka.actor.ActorSystem
@@ -33,6 +32,8 @@ import com.signalcollect.nodeprovisioning.NodeActorCreator
 import akka.actor.Props
 import com.signalcollect.nodeprovisioning.DefaultNodeActor
 import com.signalcollect.nodeprovisioning.AkkaHelper
+import com.signalcollect.interfaces.GetNodes
+import com.signalcollect.interfaces.NodeReady
 
 class NodeProvisionerActor(
   numberOfNodes: Int,
@@ -50,24 +51,24 @@ class NodeProvisionerActor(
       nodeControllerCreator.create), name = "DefaultNodeActorOnCoordinatior")
   }
 
-  var nodeListRequestor: Option[ActorRef] = None
+  var nodeArrayRequestor: Option[ActorRef] = None
   var nodesReady = 0
   var nodeControllers = new Array[ActorRef](numberOfNodes)
 
   def receive = {
-    case "GetNodes" =>
-      nodeListRequestor = Some(sender)
+    case GetNodes =>
+      nodeArrayRequestor = Some(sender)
       sendNodesIfReady
     case NodeReady(nodeId) =>
-      println(s"Received registration from $sender")
       nodesReady += 1
+      println(s"Received registration from $sender, $nodesReady/$numberOfNodes nodes ready.")
       nodeControllers(nodeId) = sender
       sendNodesIfReady
   }
 
   def sendNodesIfReady {
-    if (nodesReady == numberOfNodes && nodeListRequestor.isDefined) {
-      nodeListRequestor.get ! nodeControllers
+    if (nodesReady == numberOfNodes && nodeArrayRequestor.isDefined) {
+      nodeArrayRequestor.get ! nodeControllers
       self ! PoisonPill
     }
   }
