@@ -62,15 +62,20 @@ abstract class SplayIntSet {
 
   def toBuffer: Buffer[Int] = {
     val buffer = new ArrayBuffer[Int]
-    foreach(buffer.append(_))
+    if (size > 0) {
+      root.foreach(buffer.append(_))
+    }
     buffer
   }
 
   def toList: List[Int] = toBuffer.toList
   def toSet: Set[Int] = toBuffer.toSet
 
+  /**
+   * Asserts that the root has been set.
+   */
   @inline def foreach(f: Int => Unit) {
-    if (?(root)) {
+    if (size > 0) {
       root.foreach(f)
     }
   }
