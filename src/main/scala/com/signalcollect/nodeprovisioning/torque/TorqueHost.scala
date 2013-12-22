@@ -46,36 +46,38 @@ case class TorqueHost(
   def executeJobs(jobs: List[Job]) = executeJobs(jobs, true)
 
   def executeJobs(jobs: List[Job], copyExecutable: Boolean = true) = {
-    /** COPY EVAL JAR TO TORQUE HOME DIRECTORY */
-    if (copyExecutable) {
-      jobSubmitter.copyFileToCluster(localJarPath)
-    }
+    if (!jobs.isEmpty) {
+      /** COPY EVAL JAR TO TORQUE HOME DIRECTORY */
+      if (copyExecutable) {
+        jobSubmitter.copyFileToCluster(localJarPath)
+      }
 
-    /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
-    val jubSubmissions = jobs map {
-      job =>
-        future {
-          println("Submitting job " + job.jobId + " ...")
-          val config = DefaultSerializer.write(job)
-          val folder = new File("." + fileSeparator + "config-tmp")
-          if (!folder.exists) {
-            folder.mkdir
+      /** SUBMIT AN EVALUATION JOB FOR EACH CONFIGURATION */
+      val jubSubmissions = jobs map {
+        job =>
+          future {
+            println("Submitting job " + job.jobId + " ...")
+            val config = DefaultSerializer.write(job)
+            val folder = new File("." + fileSeparator + "config-tmp")
+            if (!folder.exists) {
+              folder.mkdir
+            }
+            val configPath = "." + fileSeparator + "config-tmp" + fileSeparator + job.jobId + ".config"
+            val out = new FileOutputStream(configPath)
+            out.write(config)
+            out.close
+            jobSubmitter.copyFileToCluster(configPath)
+            val deleteConfig = "rm " + configPath
+            deleteConfig !!
+            val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, jvmParameters, jdkBinPath)
+            println("Job " + job.jobId + " has been submitted.")
+            result
           }
-          val configPath = "." + fileSeparator + "config-tmp" + fileSeparator + job.jobId + ".config"
-          val out = new FileOutputStream(configPath)
-          out.write(config)
-          out.close
-          jobSubmitter.copyFileToCluster(configPath)
-          val deleteConfig = "rm " + configPath
-          deleteConfig !!
-          val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, jvmParameters, jdkBinPath)
-          println("Job " + job.jobId + " has been submitted.")
-          result
-        }
+      }
+      jubSubmissions foreach (Await.ready(_, Duration.Inf))
+      jubSubmissions map (_.onFailure({ case t: Throwable => println(t) }))
+      jubSubmissions map (_.onFailure({ case e: Exception => e.printStackTrace }))
     }
-    jubSubmissions foreach (Await.ready(_, Duration.Inf))
-    jubSubmissions map (_.onFailure({ case t: Throwable => println(t) }))
-    jubSubmissions map (_.onFailure({ case e: Exception => e.printStackTrace }))
     println("All jobs submitted.")
   }
 }
