@@ -31,7 +31,7 @@ object JobExecutor extends App {
   val job: Job = {
     if (args.size > 0) {
       try {
-        val jobId = args(0).toInt
+        val jobId = args(0)
         val configFile = new File(jobId + ".config")
         val jobArray = new Array[Byte](configFile.length.toInt)
         val fileInputStream = new FileInputStream(configFile)

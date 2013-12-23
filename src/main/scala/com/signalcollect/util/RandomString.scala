@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *
- *  Copyright 2011 University of Zurich
+ *  Copyright 2013 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,14 +14,25 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
  */
 
-package com.signalcollect.nodeprovisioning.torque
+package com.signalcollect.util
 
 import scala.util.Random
-import com.signalcollect.util.RandomString
 
-case class Job(
-  execute: () => Unit,
-  jobId: String = RandomString.generate(6))
+object RandomString {
+  def alpha = "abcdefghijklmnopqrstuvwxyz"
+  def numeric = "0123456789"
+  def alphaNumeric = alpha + numeric
+
+  def generate(length: Int, characters: String = alpha): String = {
+    def randomIndex = Random.nextInt(characters.length)
+    def randomChar = characters(randomIndex)
+    val sb = new StringBuilder(length)
+    for (i <- 0 until length) {
+      sb.append(randomChar)
+    }
+    sb.toString
+  }
+
+}

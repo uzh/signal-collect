@@ -41,6 +41,7 @@ import scala.reflect.ClassTag
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.nodeprovisioning.NodeActorCreator
 import com.signalcollect.interfaces.GetNodes
+import com.signalcollect.util.RandomString
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
@@ -67,21 +68,22 @@ class TorqueNodeProvisioner(
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
     var jobs = List[Job]()
     implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
-    val baseJobId = {
+    val baseNodeId = {
       if (allocateWorkersOnCoordinatorNode) {
         1
       } else {
         0
       }
     }
-    for (jobId <- baseJobId until numberOfNodes) {
+    for (nodeId <- baseNodeId until numberOfNodes) {
       val function: () => Unit = {
         () =>
           val system = ActorSystem("SignalCollect", akkaConfig)
-          val nodeControllerCreator = NodeActorCreator(jobId, numberOfNodes, Some(nodeProvisionerAddress))
+          val nodeControllerCreator = NodeActorCreator(nodeId, numberOfNodes, Some(nodeProvisionerAddress))
           val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(
-            nodeControllerCreator.create), name = "DefaultNodeActor" + jobId.toString)
+            nodeControllerCreator.create), name = "DefaultNodeActor" + nodeId.toString)
       }
+      val jobId = s"node-$nodeId-${RandomString.generate(6)}"
       jobs = new Job(jobId = jobId, execute = function) :: jobs
     }
     torqueHost.executeJobs(jobs, copyExecutable)
