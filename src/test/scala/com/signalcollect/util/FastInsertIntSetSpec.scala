@@ -18,18 +18,13 @@
 
 package com.signalcollect.util
 
-import org.scalacheck.Gen
-import org.scalacheck.Gen._
-import org.scalacheck.Arbitrary._
-import org.scalatest.FlatSpec
-import org.scalatest.ShouldMatchers
-import org.scalatest.prop.Checkers
-import java.io.DataOutputStream
-import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
-import scala.util.Random
+import org.scalacheck.Arbitrary.arbContainer
+import org.scalacheck.Gen
+import org.scalatest.FlatSpec
+import org.scalatest.prop.Checkers
 
-class FastInsertIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
+class FastInsertIntSetSpec extends FlatSpec with Checkers {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 
