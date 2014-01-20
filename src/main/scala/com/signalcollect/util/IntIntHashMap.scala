@@ -24,7 +24,10 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
-class IntValueHashMap[Key <: AnyRef: ClassTag](
+/*
+ * Special hash map with ints as keys and values. Key 0 is reserved and not usable.
+ */
+class IntIntHashMap(
   initialSize: Int = 32768,
   rehashFraction: Float = 0.75f) {
   assert(initialSize > 0)
@@ -33,7 +36,7 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
   private[this] final var values = new Array[Int](maxSize)
-  private[this] final var keys = new Array[Key](maxSize) // 0 means empty
+  private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
 
@@ -42,33 +45,33 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
   private[this] final var numberOfElements = 0
 
   final def clear {
-    keys = new Array[Key](maxSize)
+    keys = new Array[Int](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  def toScalaMap: Map[Key, Int] = {
-    keys.zip(values).filter(_._1 != null).toMap
+  def toScalaMap: Map[Int, Int] = {
+    keys.zip(values).filter(_._1 != 0).toMap
   }
 
   private[this] final def tryDouble {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
       val oldValues = values
-      val oldKeys = keys
+      val oldInts = keys
       val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
       values = new Array[Int](maxSize)
-      keys = new Array[Key](maxSize)
+      keys = new Array[Int](maxSize)
       mask = maxSize - 1
       numberOfElements = 0
       var i = 0
       var elementsMoved = 0
       while (elementsMoved < oldNumberOfElements) {
-        val oldKey = oldKeys(i)
-        if (oldKey != null) {
-          put(oldKey, oldValues(i))
+        val oldInt = oldInts(i)
+        if (oldInt != 0) {
+          put(oldInt, oldValues(i))
           elementsMoved += 1
         }
         i += 1
@@ -76,12 +79,12 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
     }
   }
 
-  final def foreach(f: (Key, Int) => Unit) {
+  final def foreach(f: (Int, Int) => Unit) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
       val key = keys(i)
-      if (key != null) {
+      if (key != 0) {
         val value = values(i)
         f(key, value)
         elementsProcessed += 1
@@ -90,20 +93,20 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
     }
   }
 
-  final def remove(key: Key) {
+  final def remove(key: Int) {
     remove(key, true)
   }
 
-  private final def remove(key: Key, optimize: Boolean) {
+  private final def remove(key: Int, optimize: Boolean) {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != null && key != keyAtPosition) {
+    while (keyAtPosition != 0 && key != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
     // We can only remove the entry if it was found.
-    if (keyAtPosition != null) {
-      keys(position) = null.asInstanceOf[Key]
+    if (keyAtPosition != 0) {
+      keys(position) = 0
       numberOfElements -= 1
       if (optimize) {
         optimizeFromPosition((position + 1) & mask)
@@ -131,43 +134,43 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
       keyAtPosition = keys(currentPosition)
     }
     @inline def isCurrentPositionOccupied = {
-      keyAtPosition != null
+      keyAtPosition != 0
     }
     @inline def removeCurrentEntry {
-      keys(currentPosition) = null.asInstanceOf[Key]
+      keys(currentPosition) = 0
       numberOfElements -= 1
     }
   }
 
-  final def apply(key: Key) = get(key)
+  final def apply(key: Int) = get(key)
 
-  @inline final def get(key: Key): Int = {
+  @inline final def get(key: Int): Int = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != null && key != keyAtPosition) {
+    while (keyAtPosition != 0 && key != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    if (keyAtPosition != null) {
+    if (keyAtPosition != 0) {
       values(position)
     } else {
       0
     }
   }
 
-  def update(key: Key, value: Int) {
+  def update(key: Int, value: Int) {
     put(key, value)
   }
 
   /**
-   * Key 0 is not allowed!
+   * Int 0 is not allowed!
    * Returns if an existing entry was overridden.
    */
-  def put(key: Key, value: Int): Boolean = {
-    assert(key != null, "Key cannot be null")
+  def put(key: Int, value: Int): Boolean = {
+    assert(key != 0, "Key cannot be 0.")
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != null && key != keyAtPosition) {
+    while (keyAtPosition != 0 && key != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
@@ -188,8 +191,8 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
     overridden
   }
 
-  private[this] final def keyToPosition(key: Key) = {
-    key.hashCode & mask
+  private[this] final def keyToPosition(key: Int) = {
+    key & mask
   }
 
   private[this] final def nextPowerOfTwo(x: Int): Int = {
