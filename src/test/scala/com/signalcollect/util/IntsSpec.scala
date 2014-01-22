@@ -46,7 +46,7 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
       (item: Int) => {
         val fastInsertSet = Ints.createEmptyFastInsertIntSet
         val updatedSet = new FastInsertIntSet(fastInsertSet).insert(item)
-        new FastInsertIntSet(fastInsertSet).contains(item) == true
+        new FastInsertIntSet(updatedSet).contains(item) == true
       },
       minSuccessful(1000))
   }
