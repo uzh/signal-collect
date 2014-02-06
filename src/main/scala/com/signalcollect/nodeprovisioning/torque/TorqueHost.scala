@@ -75,9 +75,10 @@ case class TorqueHost(
             result
           }
       }
-      jubSubmissions foreach (Await.ready(_, Duration.Inf))
-      jubSubmissions map (_.onFailure({ case t: Throwable => println(t) }))
-      jubSubmissions map (_.onFailure({ case e: Exception => e.printStackTrace }))
+      jubSubmissions.foreach(Await.ready(_, Duration.Inf))
+      jubSubmissions.foreach(_.onSuccess({ case message => println(message) }))
+      jubSubmissions.map(_.onFailure({ case t: Throwable => println(t) }))
+      jubSubmissions.map(_.onFailure({ case e: Exception => e.printStackTrace }))
     }
     println("All jobs submitted.")
   }
