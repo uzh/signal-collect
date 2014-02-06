@@ -33,6 +33,7 @@ import scala.util.Random
 
 case class TorqueHost(
   jobSubmitter: AbstractJobSubmitter,
+  coresPerNode: Int,
   localJarPath: String,
   jarDescription: String = (Random.nextInt.abs % 1000).toString,
   jvmParameters: String = "-Xmx63000m -Xms63000m",
@@ -69,7 +70,7 @@ case class TorqueHost(
             jobSubmitter.copyFileToCluster(configPath)
             val deleteConfig = "rm " + configPath
             deleteConfig !!
-            val result = jobSubmitter.runOnClusterNode(job.jobId.toString, jarName, mainClass, priority, jvmParameters, jdkBinPath)
+            val result = jobSubmitter.runOnClusterNode(job.jobId.toString, coresPerNode, jarName, mainClass, priority, jvmParameters, jdkBinPath)
             println("Job " + job.jobId + " has been submitted.")
             result
           }

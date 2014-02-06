@@ -26,13 +26,14 @@ abstract class AbstractJobSubmitter extends Serializable {
 
   def runOnClusterNode(
     jobId: String,
+    coresPerNode: Int,
     jarname: String,
     mainClass: String,
     priority: String = TorquePriority.superfast,
     jvmParameters: String,
     jdkBinPath: String,
     mailAddress: Option[String] = None): String = {
-    val script = getShellScript(jobId, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
+    val script = getShellScript(jobId, coresPerNode, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
     val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
     val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
     executeCommandOnClusterManager(qsubCommand)
@@ -44,6 +45,7 @@ abstract class AbstractJobSubmitter extends Serializable {
 
   def getShellScript(
     jobId: String,
+    coresPerNode: Int,
     jarname: String,
     mainClass: String,
     priority: String,
@@ -53,7 +55,7 @@ abstract class AbstractJobSubmitter extends Serializable {
     val script = """
 #!/bin/bash
 #PBS -N """ + jobId + """
-#PBS -l nodes=1:ppn=23
+#PBS -l nodes=1:ppn=""" + coresPerNode + """
 """ + priority + """
 #PBS -j oe
 #PBS -m b
