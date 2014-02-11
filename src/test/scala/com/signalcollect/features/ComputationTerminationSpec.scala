@@ -55,7 +55,8 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
             val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
             if (system != null) {
               val nodeControllerCreator = NodeActorCreator(0, 1, None)
-              val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
+              val nodeController: ActorRef = ???
+              //system.actorOf(Props[DefaultNodeActor].withCreator(nodeControllerCreator.create), name = "DefaultNodeActor")
               Array[ActorRef](nodeController)
             } else {
               Array[ActorRef]()
@@ -105,7 +106,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       state > 0.99
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
-        println("Computation ended for the wrong reason: "+info.executionStatistics.terminationReason)
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       graph.shutdown
       aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
@@ -143,10 +144,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         println("Computation ended before global condition was met.")
       }
       if (aggregate > 99.99999999) {
-        println("Computation converged completely instead of ending when the global constraint was met: "+aggregate)
+        println("Computation converged completely instead of ending when the global constraint was met: " + aggregate)
       }
       if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
-        println("Computation ended for the wrong reason: "+info.executionStatistics.terminationReason)
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       graph.shutdown
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet

@@ -174,11 +174,13 @@ class DefaultNodeActor(
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased =>
-        val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
+        val worker: ActorRef = ???
+        //context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()), name = workerName)
         workers = worker :: workers
         AkkaHelper.getRemoteAddress(worker, context.system)
       case Pinned =>
-        val worker = context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+        val worker: ActorRef = ???
+        //context.system.actorOf(Props[WorkerActor[_, _]].withCreator(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
         workers = worker :: workers
         AkkaHelper.getRemoteAddress(worker, context.system)
     }

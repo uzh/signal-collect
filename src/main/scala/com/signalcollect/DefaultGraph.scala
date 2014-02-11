@@ -163,8 +163,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       loggerActor,
       config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case EventBased => 
+        //system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
+        ???
+      case Pinned => 
+        //system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+        ???
     }
   }
 

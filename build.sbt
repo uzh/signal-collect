@@ -5,7 +5,7 @@ assemblySettings
 /** Project */
 name := "signal-collect"
 
-version := "2.1.0-SNAPSHOT"
+version := "3.0.0-SNAPSHOT"
 
 organization := "com.signalcollect"
 
@@ -19,6 +19,8 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
   cp filter {_.data.getName == "minlog-1.2.jar"}
 }
 
+test in assembly := {}
+
 parallelExecution in Test := false
 
 scalacOptions += "-deprecation"
@@ -31,8 +33,8 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.1.4" ,
-  "com.typesafe.akka" %% "akka-remote" % "2.1.4" ,
+  "com.typesafe.akka" %% "akka-actor" % "2.3.0-RC2",
+  "com.typesafe.akka" %% "akka-remote" % "2.3.0-RC2",
   "org.scala-lang" % "scala-library" % "2.10.3" % "compile",
   "com.esotericsoftware.kryo" % "kryo" % "2.21" % "compile",
   "ch.ethz.ganymed" % "ganymed-ssh2" % "build210"  % "compile",
@@ -48,7 +50,10 @@ libraryDependencies ++= Seq(
   "org.easymock" % "easymock" % "3.2" % "test"
 )
 
+
+
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"
 
 resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "Sonatype Releases Repository" at "https://oss.sonatype.org/content/repositories/releases/"
