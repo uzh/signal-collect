@@ -29,18 +29,18 @@ object KrakenExecutable extends App {
   def assemblyPath = "./target/scala-2.10/signal-collect-2.1-SNAPSHOT.jar"
   val kraken = new TorqueHost(
     jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
-    coresPerNode = 1,
+    coresPerNode = 23,
     localJarPath = assemblyPath, priority = TorquePriority.fast)
   val executionHost = kraken
   val jobId = s"j-${RandomString.generate(6)}"
-  executionHost.executeJobs(List(Job(TorqueExecutable.job, jobId)))
+  executionHost.executeJobs(List(Job(2, TorqueExecutable.job, jobId)))
 }
 
 /**
  * On separate object to circumvent serialization issues.
  */
 object TorqueExecutable {
-  
+
   def job(): List[Map[String, String]] = {
     println(s"Job is being executed ...")
     val nodesFilePath = System.getenv("PBS_NODEFILE")
@@ -50,7 +50,7 @@ object TorqueExecutable {
       println(s"Node name: $node")
       val address = InetAddress.getByName(node)
       println(s"That node has IP: ${address.getHostAddress}")
-      //java.net.InetAddress.getLocalHost().getHostName();
+      println(s"Local host name: ${InetAddress.getLocalHost.getHostName}")
     }
     println("Done.")
     List()

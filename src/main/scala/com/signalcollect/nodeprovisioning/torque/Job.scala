@@ -23,5 +23,6 @@ import scala.util.Random
 import com.signalcollect.util.RandomString
 
 case class Job(
+  numberOfNodes: Int,
   execute: () => Unit,
   jobId: String = RandomString.generate(6))

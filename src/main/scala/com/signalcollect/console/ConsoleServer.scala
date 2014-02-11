@@ -79,8 +79,6 @@ object BreakConditionName extends Enumeration {
   val CollectScoreAboveThreshold = Value("collect score above threshold")
   val CollectScoreBelowThreshold = Value("collect score below threshold")
 }
-
-import BreakConditionName._
 /**
  * A break condition for the interactive execution mode
  *
@@ -100,10 +98,12 @@ import BreakConditionName._
  */
 class BreakCondition(val graphConfiguration: GraphConfiguration,
                      val executionConfiguration: ExecutionConfiguration,
-                     val name: BreakConditionName,
+                     val name: BreakConditionName.Value,
                      val propsMap: Map[String, String],
                      val workerApi: WorkerApi[_, _]) {
 
+  import BreakConditionName._
+  
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
   // Find the graph vertex matching the vertexId which is supplied as a string

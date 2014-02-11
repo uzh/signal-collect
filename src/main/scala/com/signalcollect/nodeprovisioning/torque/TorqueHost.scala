@@ -70,7 +70,7 @@ case class TorqueHost(
             jobSubmitter.copyFileToCluster(configPath)
             val deleteConfig = "rm " + configPath
             deleteConfig !!
-            val result = jobSubmitter.runOnClusterNode(job.jobId.toString, coresPerNode, jarName, mainClass, priority, jvmParameters, jdkBinPath)
+            val result = jobSubmitter.runOnClusterNode(job.jobId.toString, job.numberOfNodes, coresPerNode, jarName, mainClass, priority, jvmParameters, jdkBinPath)
             println("Job " + job.jobId + " has been submitted.")
             result
           }

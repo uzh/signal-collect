@@ -63,9 +63,9 @@ class TorqueNodeProvisioner(
     val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").get
     val nodeProvisionerCreator = NodeProvisionerCreator(numberOfNodes, allocateWorkersOnCoordinatorNode)
     val nodeProvisioner: ActorRef = ???
-//      system.actorOf(
-//      Props[NodeProvisionerActor].withCreator(
-//        nodeProvisionerCreator.create), name = "NodeProvisioner")
+    //      system.actorOf(
+    //      Props[NodeProvisionerActor].withCreator(
+    //        nodeProvisionerCreator.create), name = "NodeProvisioner")
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(nodeProvisioner, system)
     var jobs = List[Job]()
     implicit val timeout = new Timeout(Duration.create(1800, TimeUnit.SECONDS))
@@ -76,18 +76,19 @@ class TorqueNodeProvisioner(
         0
       }
     }
-    for (nodeId <- baseNodeId until numberOfNodes) {
-      val function: () => Unit = {
-        () =>
-          val system = ActorSystem("SignalCollect", akkaConfig)
-          val nodeControllerCreator = NodeActorCreator(nodeId, numberOfNodes, Some(nodeProvisionerAddress))
-          val nodeController = ??? 
-//            system.actorOf(Props[DefaultNodeActor].withCreator(
-//            nodeControllerCreator.create), name = "DefaultNodeActor" + nodeId.toString)
-      }
-      val jobId = s"node-$nodeId-${RandomString.generate(6)}"
-      jobs = new Job(jobId = jobId, execute = function) :: jobs
+    val numberOfNodesToAllocate = numberOfNodes - baseNodeId
+    //for (nodeId <- baseNodeId until numberOfNodes) {
+    val function: () => Unit = {
+      () =>
+        val system = ActorSystem("SignalCollect", akkaConfig)
+        val nodeControllerCreator = NodeActorCreator(numberOfNodes, Some(nodeProvisionerAddress))
+        val nodeController = ???
+      //            system.actorOf(Props[DefaultNodeActor].withCreator(
+      //            nodeControllerCreator.create), name = "DefaultNodeActor" + nodeId.toString)
     }
+    val jobId = s"S/C-${RandomString.generate(6)}"
+    jobs = new Job(numberOfNodes = numberOfNodesToAllocate, execute = function, jobId = jobId) :: jobs
+    //}
     torqueHost.executeJobs(jobs, copyExecutable)
     val nodesFuture = nodeProvisioner ? GetNodes
     val result = Await.result(nodesFuture, timeout.duration)

@@ -52,11 +52,9 @@ import com.signalcollect.interfaces.NodeReady
  * TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
  */
 case class NodeActorCreator(
-  nodeId: Int,
   numberOfNodes: Int,
   nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
-    nodeId,
     numberOfNodes,
     nodeProvisionerAddress)
 }
@@ -75,13 +73,14 @@ case class IncrementorForNode(nodeId: Int) {
  * Class that controls a node on which Signal/Collect workers run.
  */
 class DefaultNodeActor(
-  val nodeId: Int,
   val numberOfNodes: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor
   with ActorLogging
   with ActorRestartLogging {
 
+  val nodeId = ???
+  
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 

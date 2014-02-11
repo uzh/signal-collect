@@ -46,7 +46,7 @@ class NodeProvisionerActor(
     val system = ActorSystemRegistry.retrieve("SignalCollect").
       getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
     val nodeProvisionerAddress = AkkaHelper.getRemoteAddress(self, system)
-    val nodeControllerCreator = NodeActorCreator(0, numberOfNodes, Some(nodeProvisionerAddress))
+    val nodeControllerCreator = NodeActorCreator(0, Some(nodeProvisionerAddress))
     val nodeController: ActorRef = ??? 
 //      system.actorOf(Props[DefaultNodeActor].withCreator(
 //      nodeControllerCreator.create), name = "DefaultNodeActorOnCoordinatior")

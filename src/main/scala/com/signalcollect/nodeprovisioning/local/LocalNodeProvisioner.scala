@@ -36,7 +36,7 @@ class LocalNodeProvisioner()
   def getNodes(akkaConfig: Config): Array[ActorRef] = {
     val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
     if (system != null) {
-      val nodeControllerCreator = NodeActorCreator(0, 1, None)
+      val nodeControllerCreator = NodeActorCreator(0, None)
       val nodeController: ActorRef = ???
 //      system.actorOf(Props[DefaultNodeActor].withCreator(
 //        nodeControllerCreator.create), name = "DefaultNodeActor")
