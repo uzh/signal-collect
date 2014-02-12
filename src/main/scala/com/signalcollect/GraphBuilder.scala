@@ -30,6 +30,7 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.MapperFactory
+import akka.actor.ActorRef
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -137,6 +138,15 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   def withAkkaDispatcher(newAkkaDispatcher: AkkaDispatcher) =
     builder(config.copy(akkaDispatcher = newAkkaDispatcher))
+
+  /**
+   *  Initializes S/C with preallocated node actors.
+   *  When using preallocated nodes, then the node provisioner will not be used.
+   *
+   *  @param nodes The nodes on which Signal/Collect will deploy the workers.
+   */
+  def withPreallocatedNodes(nodes: Array[ActorRef]) =
+    builder(config.copy(preallocatedNodes = Some(nodes)))
 
   /**
    *  Configures the node provider.
