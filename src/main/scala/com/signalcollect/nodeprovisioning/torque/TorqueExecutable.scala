@@ -24,6 +24,10 @@ import collection.JavaConversions._
 import com.signalcollect.util.RandomString
 import java.io.File
 import java.net.InetAddress
+import akka.actor.ActorSystem
+import com.signalcollect.configuration.AkkaConfig
+import akka.event.Logging
+import akka.cluster.Cluster
 
 object KrakenExecutable extends App {
   def assemblyPath = "./target/scala-2.10/signal-collect-2.1-SNAPSHOT.jar"
@@ -50,8 +54,18 @@ object TorqueExecutable {
       println(s"Node name: $node")
       val address = InetAddress.getByName(node)
       println(s"That node has IP: ${address.getHostAddress}")
-      println(s"Local host name: ${InetAddress.getLocalHost.getHostName}")
     }
+    val seedAddress = nodes.min
+    println(s"Local host name: ${InetAddress.getLocalHost.getHostName}")
+    val akkaConfig = AkkaConfig.get(
+      akkaMessageCompression = false,
+      serializeMessages = false,
+      loggingLevel = Logging.WarningLevel,
+      kryoRegistrations = List(),
+      useJavaSerialization = false)
+    val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
+    val c = Cluster.get(system).join
+    c.join
     println("Done.")
     List()
   }
