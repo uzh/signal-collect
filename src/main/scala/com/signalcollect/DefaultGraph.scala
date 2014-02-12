@@ -105,9 +105,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     config.useJavaSerialization)
   override def toString: String = "DefaultGraph"
 
-  val system: ActorSystem = ActorSystem("SignalCollect", akkaConfig)
+  val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(ActorSystem("SignalCollect", akkaConfig))
+  if (!ActorSystemRegistry.contains(system)) {
+    ActorSystemRegistry.register(system)
+  }
   val log = system.log
-  ActorSystemRegistry.register(system)
 
   val console = {
     if (config.consoleEnabled) {
@@ -117,8 +119,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  log.debug("Requesting nodes ...")
-  val nodeActors = config.nodeProvisioner.getNodes(akkaConfig)
+  log.debug("Provisioning nodes ...")
+  val nodeActors = if (config.preallocatedNodes.isDefined) {
+    config.preallocatedNodes.get
+  } else {
+    config.nodeProvisioner.getNodes(akkaConfig)
+  }
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
   val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.

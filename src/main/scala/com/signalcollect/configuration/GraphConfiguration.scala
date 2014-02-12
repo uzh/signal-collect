@@ -35,6 +35,7 @@ import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.factory.mapper.DefaultMapperFactory
 import com.signalcollect.storage.VertexMapStorage
 import com.signalcollect.factory.storage.MemoryEfficientStorage
+import akka.actor.ActorRef
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -51,6 +52,7 @@ case class GraphConfiguration(
   statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
+  preallocatedNodes: Option[Array[ActorRef]] = None,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),

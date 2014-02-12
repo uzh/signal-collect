@@ -31,6 +31,12 @@ object ActorSystemRegistry {
     }
   }
 
+  def contains(system: ActorSystem): Boolean = {
+    synchronized {
+      systems.contains(system.name)
+    }
+  }
+
   def remove(system: ActorSystem) {
     synchronized {
       systems -= system.name
