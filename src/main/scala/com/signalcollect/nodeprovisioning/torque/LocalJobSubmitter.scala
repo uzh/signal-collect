@@ -24,8 +24,9 @@ import language.postfixOps
 
 class LocalJobSubmitter extends AbstractJobSubmitter {
 
-  override def runOnClusterNode(
+  override def runOnClusterNodes(
     jobId: String,
+    numberOfNodes: Int,
     coresPerNode: Int,
     jarname: String,
     mainClass: String,
@@ -35,6 +36,7 @@ class LocalJobSubmitter extends AbstractJobSubmitter {
     mailAddress: Option[String] = None): String = {
     val script = getShellScript(
       jobId,
+      numberOfNodes,
       coresPerNode,
       jarname,
       mainClass,
