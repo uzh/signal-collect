@@ -10,19 +10,22 @@ object AkkaConfig {
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
-    useJavaSerialization: Boolean) = ConfigFactory.parseString(
+    useJavaSerialization: Boolean,
+    port: Int = 0) = ConfigFactory.parseString(
     distributedConfig(
       akkaMessageCompression,
       serializeMessages,
       loggingLevel,
       kryoRegistrations,
-      useJavaSerialization))
+      useJavaSerialization,
+      port))
   def distributedConfig(
-      akkaMessageCompression: Boolean,
-      serializeMessages: Boolean, 
-      loggingLevel: LogLevel, 
-      kryoRegistrations: List[String],
-      useJavaSerialization: Boolean) = """
+    akkaMessageCompression: Boolean,
+    serializeMessages: Boolean,
+    loggingLevel: LogLevel,
+    kryoRegistrations: List[String],
+    useJavaSerialization: Boolean,
+    port: Int) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
@@ -35,10 +38,10 @@ akka {
     """ +
     {
       val level = loggingLevel match {
-        case Logging.ErrorLevel   => "ERROR"
+        case Logging.ErrorLevel => "ERROR"
         case Logging.WarningLevel => "WARNING"
-        case Logging.InfoLevel    => "INFO"
-        case Logging.DebugLevel   => "DEBUG"
+        case Logging.InfoLevel => "INFO"
+        case Logging.DebugLevel => "DEBUG"
       }
       s"""
   loglevel = $level
@@ -347,7 +350,7 @@ akka {
 
       # (I) The default remote server port clients should connect to.
       # Default is 2552 (AKKA), use 0 if you want a random available port
-      port = 0
+      port = """ + port + """
 
       # (O) The address of a local network interface (IP Address) to bind to when creating
       # outbound connections. Set to "" or "auto" for automatic selection of local address.
