@@ -33,8 +33,9 @@ abstract class AbstractJobSubmitter extends Serializable {
     priority: String = TorquePriority.superfast,
     jvmParameters: String,
     jdkBinPath: String,
+    workingDir: String,
     mailAddress: Option[String] = None): String = {
-    val script = getShellScript(jobId, numberOfNodes, coresPerNode, jarname, mainClass, priority, jvmParameters, jdkBinPath, mailAddress)
+    val script = getShellScript(jobId, numberOfNodes, coresPerNode, jarname, mainClass, priority, jvmParameters, jdkBinPath, workingDir, mailAddress)
     val scriptBase64 = Base64.encodeBase64String(script.getBytes).replace("\n", "").replace("\r", "")
     val qsubCommand = """echo """ + scriptBase64 + """ | base64 -d | qsub"""
     executeCommandOnClusterManager(qsubCommand)
@@ -53,6 +54,7 @@ abstract class AbstractJobSubmitter extends Serializable {
     priority: String,
     jvmParameters: String,
     jdkBinPath: String,
+    workingDir: String,
     mailAddress: Option[String]): String = {
     val script = """
 #!/bin/bash
@@ -70,15 +72,14 @@ abstract class AbstractJobSubmitter extends Serializable {
 
 jarname=""" + jarname + """
 mainClass=""" + mainClass + """
-workingDir=/home/torque/tmp/${USER}.${PBS_JOBID}
+workingDir=""" + workingDir + """
 vm_args="""" + jvmParameters + """"
 
 # copy jar
-cp ~/$jarname $workingDir/
+pbsdsh -u cp ~/$jarname $workingDir/
 
 # run test
-cmd="""" + jdkBinPath + """java $vm_args -cp $workingDir/$jarname $mainClass """ + jobId + """"
-$cmd
+pbsdsh -u """ + jdkBinPath + """java $vm_args -cp $workingDir/$jarname $mainClass """ + jobId + """
 """
     script
   }

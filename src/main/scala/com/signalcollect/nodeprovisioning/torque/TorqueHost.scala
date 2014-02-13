@@ -39,7 +39,8 @@ case class TorqueHost(
   jvmParameters: String = "-Xmx63000m -Xms63000m",
   jdkBinPath: String = "",
   mainClass: String = "com.signalcollect.nodeprovisioning.torque.JobExecutor",
-  priority: String = TorquePriority.superfast) extends ExecutionHost {
+  priority: String = TorquePriority.superfast,
+  workingDir: String = "/home/torque/tmp/${USER}.${PBS_JOBID}") extends ExecutionHost {
 
   val fileSeparator = System.getProperty("file.separator")
   val jarName = localJarPath.substring(localJarPath.lastIndexOf(fileSeparator) + 1, localJarPath.size)
@@ -70,7 +71,7 @@ case class TorqueHost(
             jobSubmitter.copyFileToCluster(configPath)
             val deleteConfig = "rm " + configPath
             deleteConfig !!
-            val result = jobSubmitter.runOnClusterNodes(job.jobId.toString, job.numberOfNodes, coresPerNode, jarName, mainClass, priority, jvmParameters, jdkBinPath)
+            val result = jobSubmitter.runOnClusterNodes(job.jobId.toString, job.numberOfNodes, coresPerNode, jarName, mainClass, priority, jvmParameters, jdkBinPath, workingDir)
             println("Job " + job.jobId + " has been submitted.")
             result
           }

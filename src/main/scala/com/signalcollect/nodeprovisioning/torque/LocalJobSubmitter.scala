@@ -33,6 +33,7 @@ class LocalJobSubmitter extends AbstractJobSubmitter {
     priority: String = TorquePriority.superfast,
     jvmParameters: String,
     jdkBinPath: String = "",
+    workingDir: String = "/home/torque/tmp/${USER}.${PBS_JOBID}",
     mailAddress: Option[String] = None): String = {
     val script = getShellScript(
       jobId,
@@ -43,6 +44,7 @@ class LocalJobSubmitter extends AbstractJobSubmitter {
       priority,
       jvmParameters,
       jdkBinPath,
+      workingDir,
       mailAddress)
     val qsubCommand = """echo """ + script + """ | qsub"""
     Seq("echo", script) #| Seq("qsub")!!
