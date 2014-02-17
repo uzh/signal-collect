@@ -75,6 +75,9 @@ mainClass=""" + mainClass + """
 workingDir=""" + workingDir + """
 vm_args="""" + jvmParameters + """"
 
+#create scratch, if it does not exist
+pbsdsh -u mkdir $workingDir/
+
 # copy jar
 pbsdsh -u cp ~/$jarname $workingDir/
 
