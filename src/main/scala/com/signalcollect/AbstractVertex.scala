@@ -20,8 +20,12 @@
 package com.signalcollect
 
 import scala.collection.JavaConversions.mapAsScalaMap
-
 import com.signalcollect.interfaces.Inspectable
+import akka.event.LoggingAdapter
+import akka.event.Logging
+import com.signalcollect.configuration.ActorSystemRegistry
+import scala.annotation.elidable
+import scala.annotation.elidable._
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
 
@@ -31,6 +35,13 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   override lazy val hashCode = id.hashCode // Lazy to prevent premature initialization when using Java API.
 
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
+
+  /**
+   * Logging is supported and has no memory overhead for a reference.
+   * It should in general not be used and has to be enabled by
+   * increasing the default S/C "-Xelide-below" from "INFO" to "ALL".
+   */
+  @elidable(FINEST) def log: LoggingAdapter = Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this)
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.

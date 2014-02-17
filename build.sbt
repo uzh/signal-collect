@@ -11,7 +11,7 @@ organization := "com.signalcollect"
 
 scalaVersion := "2.10.3"
 
-scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecation")
+scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO" )
 
 assembleArtifact in packageScala := true
 
