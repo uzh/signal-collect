@@ -485,12 +485,6 @@ class WorkerImplementation[Id, Signal](
     logIntialization
   }
 
-  def registerLogger(logger: ActorRef) {
-    counters.requestMessagesReceived -= 1 // Registration messages are not counted.
-    messageBus.registerLogger(logger)
-    logIntialization
-  }
-
 }
 
 

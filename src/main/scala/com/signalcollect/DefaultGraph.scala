@@ -190,7 +190,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
     for (registry <- registries.par) {
       registry.registerCoordinator(coordinatorActor)
-      registry.registerLogger(loggerActor)
       for (workerId <- (0 until numberOfWorkers).par) {
         registry.registerWorker(workerId, workerActors(workerId))
       }

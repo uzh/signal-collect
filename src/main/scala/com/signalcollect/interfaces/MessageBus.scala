@@ -109,10 +109,4 @@ trait MessageRecipientRegistry {
    */
   def registerCoordinator(coordinator: ActorRef)
 
-  /**
-   *  Registers a logger.
-   *
-   *  @param logger is the logger to be registered
-   */
-  def registerLogger(logger: ActorRef)
 }

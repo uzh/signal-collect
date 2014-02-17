@@ -21,32 +21,31 @@
 package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
-import scala.Array.canBuildFrom
-import scala.collection.JavaConversions.collectionAsScalaIterable
+
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationLong
-import scala.language.postfixOps
 import scala.reflect.ClassTag
+
+import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.Logger
+import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
-import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.messaging.AkkaProxy
 import com.sun.management.OperatingSystemMXBean
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
-import com.signalcollect.interfaces.ActorRestartLogging
-import com.signalcollect.interfaces.MapperFactory
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -372,7 +371,4 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messageBus.registerCoordinator(coordinator)
   }
 
-  def registerLogger(logger: ActorRef) {
-    messageBus.registerLogger(logger)
-  }
 }

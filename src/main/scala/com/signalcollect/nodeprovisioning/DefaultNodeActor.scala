@@ -217,9 +217,4 @@ class DefaultNodeActor(
     messageBus.registerCoordinator(coordinator)
   }
 
-  def registerLogger(logger: ActorRef) {
-    receivedMessagesCounter -= 1 // Registration messages are not counted.
-    messageBus.registerLogger(logger)
-  }
-
 }

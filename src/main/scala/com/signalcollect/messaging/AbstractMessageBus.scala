@@ -35,7 +35,6 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
-import akka.event.Logging.LogEvent
 import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
 
@@ -48,7 +47,7 @@ abstract class AbstractMessageBus[Id, Signal]
 
   def flush = {}
 
-  def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 2
+  def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 1
 
   // Results of requests are received using temporary actors, but for termination detection to work,
   // the send count should be still credited to the actual recipient of the reply.
@@ -61,8 +60,6 @@ abstract class AbstractMessageBus[Id, Signal]
   protected val nodes = new Array[ActorRef](numberOfNodes)
 
   protected val workerIds = (0 until numberOfWorkers).toList
-
-  protected var logger: ActorRef = _
 
   protected var coordinator: ActorRef = _
 
@@ -122,11 +119,6 @@ abstract class AbstractMessageBus[Id, Signal]
 
   override def registerCoordinator(c: ActorRef) {
     coordinator = c
-    registrations.incrementAndGet
-  }
-
-  override def registerLogger(l: ActorRef) {
-    logger = l
     registrations.incrementAndGet
   }
 

@@ -174,7 +174,7 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *  @see `forVertexWithId`
    */
   def recalculateScoresForVertexWithId(vertexId: Id)
-
+  
   /**
    * Forces the underlying MessageBus to send all messages immediately.
    */
