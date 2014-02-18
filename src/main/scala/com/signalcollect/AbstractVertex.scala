@@ -37,27 +37,30 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
 
   /**
-   * Debug level logging is supported and has no memory overhead for a reference.
-   * Calls to this are by default elided to make them free.
-   * To enable increase the default S/C "-Xelide-below" from "INFO" to "ALL".
+   * Calls to debug level logging are by default disregarded by the compiler and do not get executed. 
+   * To enable them decrease the default S/C "-Xelide-below" compiler parameter from "INFO" to "ALL".
+   *
+   * Note: this logging has no memory overhead for a reference.
    */
   @elidable(FINEST) def debug(message: String) {
     Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
   }
 
   /**
-   * Info level logging is supported and has no memory overhead for a reference.
-   * Calls to this are by default not elided and very expensive.
-   * To disable increase the default S/C "-Xelide-below" from "INFO" to "WARNING".
+   * Info level logging is by default enabled and very expensive.
+   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "WARNING".
+   *
+   * Note: this logging has no memory overhead for a reference.
    */
   @elidable(INFO) def info(message: String) {
     Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
   }
 
   /**
-   * Warning level logging is supported and has no memory overhead for a reference.
-   * Calls to this are by default not elided and very expensive.
-   * To disable increase the default S/C "-Xelide-below" from "INFO" to "SEVERE".
+   * Warning level logging is by default enabled and very expensive.
+   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "SEVERE".
+   *
+   * Note: this logging has no memory overhead for a reference.
    */
   @elidable(WARNING) def warning(message: String) {
     Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
