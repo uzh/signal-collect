@@ -37,10 +37,14 @@ import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
+import akka.event.Logging
+import com.signalcollect.configuration.ActorSystemRegistry
 
 abstract class AbstractMessageBus[Id, Signal]
     extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
+  val log = Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this)
+  
   def reset {}
 
   protected val registrations = new AtomicInteger()

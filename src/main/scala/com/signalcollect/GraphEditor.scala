@@ -21,6 +21,7 @@ package com.signalcollect
 
 import com.signalcollect.interfaces.EdgeId
 import akka.actor.ActorRef
+import akka.event.LoggingAdapter
 
 /**
  *  GraphEditor offers functions to modify the graph and to send signals.
@@ -174,6 +175,11 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *  @see `forVertexWithId`
    */
   def recalculateScoresForVertexWithId(vertexId: Id)
+  
+  /**
+   * Akka logging.
+   */
+  def log: LoggingAdapter
   
   /**
    * Forces the underlying MessageBus to send all messages immediately.

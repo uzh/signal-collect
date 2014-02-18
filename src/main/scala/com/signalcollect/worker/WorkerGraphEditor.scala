@@ -36,6 +36,8 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
 
   private[signalcollect] val graphEditor = messageBus.getGraphEditor
 
+  val log = graphEditor.log
+
   def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     graphEditor.sendSignal(signal, targetId, sourceId, blocking)
   }
