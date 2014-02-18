@@ -37,11 +37,31 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
 
   /**
-   * Logging is supported and has no memory overhead for a reference.
-   * It should in general not be used and has to be enabled by
-   * increasing the default S/C "-Xelide-below" from "INFO" to "ALL".
+   * Debug level logging is supported and has no memory overhead for a reference.
+   * Calls to this are by default elided to make them free.
+   * To enable increase the default S/C "-Xelide-below" from "INFO" to "ALL".
    */
-  @elidable(FINEST) def log: LoggingAdapter = Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this)
+  @elidable(FINEST) def debug(message: String) {
+    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
+  }
+
+  /**
+   * Info level logging is supported and has no memory overhead for a reference.
+   * Calls to this are by default not elided and very expensive.
+   * To disable increase the default S/C "-Xelide-below" from "INFO" to "WARNING".
+   */
+  @elidable(INFO) def info(message: String) {
+    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
+  }
+
+  /**
+   * Warning level logging is supported and has no memory overhead for a reference.
+   * Calls to this are by default not elided and very expensive.
+   * To disable increase the default S/C "-Xelide-below" from "INFO" to "SEVERE".
+   */
+  @elidable(WARNING) def warning(message: String) {
+    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
+  }
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.
