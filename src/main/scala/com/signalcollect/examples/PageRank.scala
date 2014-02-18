@@ -20,10 +20,6 @@
 package com.signalcollect.examples
 
 import com.signalcollect._
-import com.signalcollect.nodeprovisioning.torque.TorqueNodeProvisioner
-import com.signalcollect.nodeprovisioning.torque.TorqueHost
-import com.signalcollect.nodeprovisioning.torque.TorqueJobSubmitter
-import com.signalcollect.nodeprovisioning.torque.TorquePriority
 import com.signalcollect.configuration.ExecutionMode
 
 /**
@@ -77,13 +73,6 @@ class PageRankVertex[Id](id: Id, dampingFactor: Double = 0.85) extends DataGraph
 object PageRank extends App {
   val graph = GraphBuilder.
     withConsole(true).
-    //    withNodeProvisioner(new TorqueNodeProvisioner(
-    //      torqueHost = new TorqueHost(
-    //        jobSubmitter = new TorqueJobSubmitter(username = System.getProperty("user.name"), hostname = "kraken.ifi.uzh.ch"),
-    //        localJarPath = "./target/signal-collect-2.1-SNAPSHOT.jar",
-    //        jvmParameters = "",
-    //        priority = TorquePriority.fast),
-    //      numberOfNodes = 2)).
     build
 
   graph.awaitIdle
