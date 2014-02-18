@@ -127,8 +127,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def sendHeartbeat {
-    //    log.debug("Coordinator is sending a heartbeat.")
-//    logMessages
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -153,7 +151,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def receive = {
     case ws: WorkerStatus =>
-      log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
+      //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
@@ -164,7 +162,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         sendHeartbeat
       }
     case ns: NodeStatus =>
-      log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
+      //log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
       updateNodeStatusMap(ns)
@@ -172,12 +170,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         sendHeartbeat
       }
     case ReceiveTimeout =>
-      log.debug("Coordinator got a receive timeout.")
+      //log.debug("Coordinator got a receive timeout.")
       if (shouldSendHeartbeat) {
         sendHeartbeat
       }
     case OnIdle(action) =>
-      log.debug(s"Coordinator received an OnIdle request from $sender")
+      //log.debug(s"Coordinator received an OnIdle request from $sender")
       context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
       // Not counting these messages, because they only come from the local graph.
       onIdleList = (sender, action) :: onIdleList
@@ -188,7 +186,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         sendHeartbeat
       }
     case Request(command, reply, incrementor) =>
-      log.debug(s"Coordinator received a request.")
+      //log.debug(s"Coordinator received a request.")
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
@@ -328,17 +326,17 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def verboseIsIdle: Boolean = {
     val statusReceivedFromAllWorkers = workerStatus.forall(workerStatus => workerStatus != null)
     if (!statusReceivedFromAllWorkers) {
-      log.debug("Coordinator not idle because not all workers have sent a status.")
+      //log.debug("Coordinator not idle because not all workers have sent a status.")
       return false
     }
     val allIdle = workerStatus.forall(workerStatus => workerStatus.isIdle)
     if (!allIdle) {
-      log.debug("Coordinator not idle because not all workers are idle.")
+      //log.debug("Coordinator not idle because not all workers are idle.")
       return false
     }
     val allSentReceived = allSentMessagesReceived
     if (!allSentReceived) {
-      log.debug("Coordinator not idle because not all sent messages were received.")
+      //log.debug("Coordinator not idle because not all sent messages were received.")
       return false
     }
     return true
