@@ -36,6 +36,9 @@ import com.signalcollect.interfaces.ComplexAggregation
  */
 abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
 
+  def numberOfNodes: Int
+  def numberOfWorkers: Int
+  
   /**
    *  Starts the execution of the computation using the default execution parameters and
    *  returns information about the execution. The method blocks until the computation has ended.
