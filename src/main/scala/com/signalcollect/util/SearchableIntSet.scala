@@ -26,7 +26,13 @@ class SearchableIntSet(val sorted: Array[Int]) extends AnyVal {
   def toList: List[Int] = sorted.toList
   def toSet: Set[Int] = sorted.toSet
 
-  def foreach[U](f: Int => U) = sorted.foreach(f)
+  @inline def foreach(f: Int => Unit) = {
+    var i = 0
+    while (i < sorted.length) {
+      f(sorted(i))
+      i += 1
+    }
+  }
 
   /**
    * Inserts item into the searchable int set.
