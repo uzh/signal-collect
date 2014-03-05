@@ -69,11 +69,11 @@ case class ExecutionStatistics(
   var terminationReason: TerminationReason.Value = TerminationReason.Converged) {
 
   override def toString: String = {
-    "# signal steps \t\t" + signalSteps + "\n" +
-      "# collect steps \t" + collectSteps + "\n" +
-      "Computation time \t" + computationTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
-      "JVM CPU time \t\t" + jvmCpuTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
-      "Termination reason \t" + terminationReason
+    "# signal steps\t\t" + signalSteps + "\n" +
+      "# collect steps\t\t" + collectSteps + "\n" +
+      "Computation time\t\t" + computationTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
+      "Master JVM CPU time\t" + jvmCpuTime.toUnit(TimeUnit.MILLISECONDS).toInt + " milliseconds\n" +
+      "Termination reason\t" + terminationReason
   }
 
 }
