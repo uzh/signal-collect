@@ -1,4 +1,5 @@
- scala:
+language: scala
+scala:
     - 2.10.3
   jdk:
     - openjdk7
