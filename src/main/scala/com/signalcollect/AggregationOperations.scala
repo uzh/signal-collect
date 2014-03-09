@@ -35,9 +35,7 @@ import com.signalcollect.interfaces.ModularAggregationOperation
 case class IdStateMapAggregator[IdType, StateType]() extends ModularAggregationOperation[Map[IdType, StateType]] {
   val neutralElement = Map[IdType, StateType]()
   def extract(v: Vertex[_, _]): Map[IdType, StateType] = {
-    try {
-      Map[IdType, StateType]((v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType]))
-    }
+    Map[IdType, StateType]((v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType]))
   }
   def aggregate(a: Map[IdType, StateType], b: Map[IdType, StateType]): Map[IdType, StateType] = a ++ b
 }
