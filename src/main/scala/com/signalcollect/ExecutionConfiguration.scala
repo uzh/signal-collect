@@ -145,5 +145,5 @@ case class ExecutionConfiguration(
 trait GlobalTerminationCondition[ResultType] {
   def aggregationOperation: ComplexAggregation[_, ResultType]
   def aggregationInterval: Long = 1000
-  def shouldTerminate: ResultType => Boolean
+  def shouldTerminate(r: ResultType): Boolean
 }
