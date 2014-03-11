@@ -28,6 +28,26 @@ import com.signalcollect.interfaces.ComplexAggregation
 import com.signalcollect.interfaces.ModularAggregationOperation
 
 /**
+ * Aggregator that executes two aggregation operations 'aggrA' and 'aggrB'
+ * at the same time and returns a tuple with the result of 'aggrA' as the
+ * first element and the result of 'aggrB' as the second element.
+ */
+case class MultiAggregator[ResultTypeA, ResultTypeB](
+  aggrA: ModularAggregationOperation[ResultTypeA],
+  aggrB: ModularAggregationOperation[ResultTypeB])
+  extends ModularAggregationOperation[(ResultTypeA, ResultTypeB)] {
+  def extract(v: Vertex[_, _]) = {
+    (aggrA.extract(v), aggrB.extract(v))
+  }
+  def aggregate(a: (ResultTypeA, ResultTypeB), b: (ResultTypeA, ResultTypeB)) = {
+    (aggrA.aggregate(a._1, b._1), aggrB.aggregate(a._2, b._2))
+  }
+  def neutralElement = {
+    (aggrA.neutralElement, aggrB.neutralElement)
+  }
+}
+
+/**
  *  Builds a map with the vertex ids as keys and the vertex states as values.
  *
  *  Only works on graphs where this information fits into memory.
