@@ -252,7 +252,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     stats: ExecutionStatistics,
     timeLimit: Option[Long],
     stepsLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) {
+    globalTerminationCondition: Option[GlobalTerminationCondition]) {
     var converged = false
     var globalTermination = false
     var interval = 0l
@@ -281,7 +281,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       stats.terminationReason = TerminationReason.TimeLimitReached
     }
     def shouldCheckGlobalCondition = interval > 0 && stats.collectSteps % interval == 0
-    def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+    def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition): Boolean = {
       val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
       gtc.shouldTerminate(globalAggregateValue)
     }
@@ -352,7 +352,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
      * @param gtc the GlobalTerminationCondition to check
      */
     private def isGlobalTerminationConditionMet[ResultType](
-      gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+      gtc: GlobalTerminationCondition): Boolean = {
       val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
       gtc.shouldTerminate(globalAggregateValue)
     }
@@ -569,7 +569,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   protected def optimizedAsynchronousExecution(
     stats: ExecutionStatistics,
     timeLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) = {
+    globalTerminationCondition: Option[GlobalTerminationCondition]) = {
     val startTime = System.nanoTime
     workerApi.signalStep
     stats.signalSteps += 1
@@ -584,7 +584,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   protected def pureAsynchronousExecution(
     stats: ExecutionStatistics,
     timeLimit: Option[Long],
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]]) {
+    globalTerminationCondition: Option[GlobalTerminationCondition]) {
     workerApi.startComputation
     (timeLimit, globalTerminationCondition) match {
       case (None, None) =>
@@ -617,7 +617,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
         }
         def intervalHasPassed = remainingIntervalTime <= 0
         def remainingIntervalTime = interval - (System.nanoTime - lastAggregationOperationTime)
-        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition[ValueType]): Boolean = {
+        def isGlobalTerminationConditionMet[ValueType](gtc: GlobalTerminationCondition): Boolean = {
           workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation
@@ -647,7 +647,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           stats.terminationReason = TerminationReason.TimeLimitReached
         }
         def intervalHasPassed = remainingIntervalTime <= 0
-        def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition[ResultType]): Boolean = {
+        def isGlobalTerminationConditionMet[ResultType](gtc: GlobalTerminationCondition): Boolean = {
           workerApi.pauseComputation
           val globalAggregateValue = workerApi.aggregateAll(gtc.aggregationOperation)
           workerApi.startComputation

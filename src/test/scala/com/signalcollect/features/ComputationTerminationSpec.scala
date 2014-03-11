@@ -105,7 +105,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       state > 0.99
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
       if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
-        println("Computation ended for the wrong reason: "+info.executionStatistics.terminationReason)
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       graph.shutdown
       aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
@@ -116,11 +116,15 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for synchronous computations" in {
       val graph = createCircleGraph(30)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1, (sum: Option[Double]) =>
-        sum.isDefined && sum.get > 20.0 && sum.get < 29.0)
+      case object GlobalTermination extends GlobalTerminationCondition {
+        type ResultType = Option[Double]
+        override val aggregationInterval: Long = 1
+        val aggregationOperation = new SumOfStates[Double]
+        def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0 && sum.get < 29.0
+      }
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
-        .withGlobalTerminationCondition(terminationCondition)
+        .withGlobalTerminationCondition(GlobalTermination)
         .withExecutionMode(ExecutionMode.Synchronous)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
@@ -131,11 +135,15 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for asynchronous computations" in {
       val graph = createCircleGraph(100)
-      val terminationCondition = new GlobalTerminationCondition(new SumOfStates[Double], 1l, (sum: Option[Double]) =>
-        sum.isDefined && sum.get > 20.0)
+      case object GlobalTermination extends GlobalTerminationCondition {
+        type ResultType = Option[Double]
+        override val aggregationInterval: Long = 1
+        val aggregationOperation = new SumOfStates[Double]
+        def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0
+      }
       val execConfig = ExecutionConfiguration
         .withSignalThreshold(0)
-        .withGlobalTerminationCondition(terminationCondition)
+        .withGlobalTerminationCondition(GlobalTermination)
       val info = graph.execute(execConfig)
       val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
       val aggregate = graph.aggregate(new SumOfStates[Double]).get
@@ -143,10 +151,10 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
         println("Computation ended before global condition was met.")
       }
       if (aggregate > 99.99999999) {
-        println("Computation converged completely instead of ending when the global constraint was met: "+aggregate)
+        println("Computation converged completely instead of ending when the global constraint was met: " + aggregate)
       }
       if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
-        println("Computation ended for the wrong reason: "+info.executionStatistics.terminationReason)
+        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
       }
       graph.shutdown
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet

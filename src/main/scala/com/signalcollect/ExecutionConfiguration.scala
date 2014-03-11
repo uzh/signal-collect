@@ -49,7 +49,7 @@ case class ExecutionConfiguration(
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,
   stepsLimit: Option[Long] = None,
-  globalTerminationCondition: Option[GlobalTerminationCondition[_]] = None) {
+  globalTerminationCondition: Option[GlobalTerminationCondition] = None) {
 
   /**
    *  Configures the execution mode used in a computation.
@@ -101,7 +101,7 @@ case class ExecutionConfiguration(
    *
    *  @param stepsLimit The maximum number of computation steps executed in a computation.
    */
-  def withGlobalTerminationCondition(globalTerminationCondition: GlobalTerminationCondition[_]) = newExecutionConfiguration(globalTerminationCondition = Some(globalTerminationCondition))
+  def withGlobalTerminationCondition(globalTerminationCondition: GlobalTerminationCondition) = newExecutionConfiguration(globalTerminationCondition = Some(globalTerminationCondition))
 
   /**
    *  Internal function to create a new configuration instance that defaults
@@ -113,7 +113,7 @@ case class ExecutionConfiguration(
     collectThreshold: Double = collectThreshold,
     timeLimit: Option[Long] = timeLimit,
     stepsLimit: Option[Long] = stepsLimit,
-    globalTerminationCondition: Option[GlobalTerminationCondition[_]] = globalTerminationCondition): ExecutionConfiguration = {
+    globalTerminationCondition: Option[GlobalTerminationCondition] = globalTerminationCondition): ExecutionConfiguration = {
     ExecutionConfiguration(
       executionMode = executionMode,
       signalThreshold = signalThreshold,
@@ -142,7 +142,8 @@ case class ExecutionConfiguration(
  *  @param shouldTerminate Function that takes a global aggregate and returns true iff the computation should
  *                         be terminated.
  */
-trait GlobalTerminationCondition[ResultType] {
+trait GlobalTerminationCondition {
+  type ResultType
   def aggregationOperation: ComplexAggregation[_, ResultType]
   def aggregationInterval: Long = 1000
   def shouldTerminate(r: ResultType): Boolean
