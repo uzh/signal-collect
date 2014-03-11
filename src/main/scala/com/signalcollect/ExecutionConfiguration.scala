@@ -142,7 +142,8 @@ case class ExecutionConfiguration(
  *  @param shouldTerminate Function that takes a global aggregate and returns true iff the computation should
  *                         be terminated.
  */
-case class GlobalTerminationCondition[ResultType](
-  aggregationOperation: ComplexAggregation[_, ResultType],
-  aggregationInterval: Long = 1000,
-  shouldTerminate: ResultType => Boolean)
+trait GlobalTerminationCondition[ResultType] {
+  def aggregationOperation: ComplexAggregation[_, ResultType]
+  def aggregationInterval: Long = 1000
+  def shouldTerminate: ResultType => Boolean
+}
