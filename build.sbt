@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.9.0"  % "test",
   "org.specs2" %% "specs2" % "2.3.3"  % "test",
   "org.scalacheck" %% "scalacheck" % "1.11.0" % "test",
-  "org.scalatest" %% "scalatest" % "2.0.1-SNAP" % "test",
+  "org.scalatest" %% "scalatest" % "2.1.0" % "test",
   "org.easymock" % "easymock" % "3.2" % "test"
 )
 
