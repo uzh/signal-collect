@@ -42,8 +42,8 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
   sequential
 
   val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withMessageSerialization(true).
-//      withLoggingLevel(Logging.DebugLevel).
-      build)
+    //      withLoggingLevel(Logging.DebugLevel).
+    build)
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 
@@ -54,17 +54,20 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     for (executionMode <- executionModes) {
       for (graphProvider <- graphProviders) {
         val graph = graphProvider()
-        buildGraph(graph)
-        val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-        correct &= graph.aggregate(new ModularAggregationOperation[Boolean] {
-          val neutralElement = true
-          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _]): Boolean = verify(v)
-        })
-        if (!correct) {
-          System.err.println("Test failed. Computation stats: " + stats)
+        try {
+          buildGraph(graph)
+          val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
+          correct &= graph.aggregate(new ModularAggregationOperation[Boolean] {
+            val neutralElement = true
+            def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+            def extract(v: Vertex[_, _]): Boolean = verify(v)
+          })
+          if (!correct) {
+            System.err.println("Test failed. Computation stats: " + stats)
+          }
+        } finally {
+          graph.shutdown
         }
-        graph.shutdown
       }
     }
     correct

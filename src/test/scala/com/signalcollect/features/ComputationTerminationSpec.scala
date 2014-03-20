@@ -82,15 +82,18 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       var allResultsCorrect = true
       for (i <- 1 to 10) {
         val graph = createCircleGraph(1000)
-        val execConfig = ExecutionConfiguration
-          .withSignalThreshold(0)
-          .withStepsLimit(1)
-          .withExecutionMode(ExecutionMode.Synchronous)
-        val info = graph.execute(execConfig)
-        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
-        graph.shutdown
-        info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
-        allResultsCorrect &= state === 0.2775
+        try {
+          val execConfig = ExecutionConfiguration
+            .withSignalThreshold(0)
+            .withStepsLimit(1)
+            .withExecutionMode(ExecutionMode.Synchronous)
+          val info = graph.execute(execConfig)
+          val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
+          info.executionStatistics.terminationReason === TerminationReason.ComputationStepLimitReached
+          allResultsCorrect &= state === 0.2775
+        } finally {
+          graph.shutdown
+        }
       }
       allResultsCorrect === true
     }
@@ -100,15 +103,18 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for asynchronous computations with one worker" in {
       val graph = createCircleGraph(3, Some(1))
-      val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
-      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
-      state > 0.99
-      val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
-        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+      try {
+        val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
+        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
+        state > 0.99
+        val aggregate = graph.aggregate(new SumOfStates[Double]).get
+        if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
+          println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+        }
+        aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
+      } finally {
+        graph.shutdown
       }
-      graph.shutdown
-      aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
     }
   }
 
@@ -116,48 +122,54 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
     "work for synchronous computations" in {
       val graph = createCircleGraph(30)
-      case object GlobalTermination extends GlobalTerminationCondition {
-        type ResultType = Option[Double]
-        override val aggregationInterval: Long = 1
-        val aggregationOperation = new SumOfStates[Double]
-        def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0 && sum.get < 29.0
+      try {
+        case object GlobalTermination extends GlobalTerminationCondition {
+          type ResultType = Option[Double]
+          override val aggregationInterval: Long = 1
+          val aggregationOperation = new SumOfStates[Double]
+          def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0 && sum.get < 29.0
+        }
+        val execConfig = ExecutionConfiguration
+          .withSignalThreshold(0)
+          .withGlobalTerminationCondition(GlobalTermination)
+          .withExecutionMode(ExecutionMode.Synchronous)
+        val info = graph.execute(execConfig)
+        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
+        val aggregate = graph.aggregate(new SumOfStates[Double]).get
+        aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
+      } finally {
+        graph.shutdown
       }
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withGlobalTerminationCondition(GlobalTermination)
-        .withExecutionMode(ExecutionMode.Synchronous)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
-      val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      graph.shutdown
-      aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
 
     "work for asynchronous computations" in {
       val graph = createCircleGraph(100)
-      case object GlobalTermination extends GlobalTerminationCondition {
-        type ResultType = Option[Double]
-        override val aggregationInterval: Long = 1
-        val aggregationOperation = new SumOfStates[Double]
-        def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0
+      try {
+        case object GlobalTermination extends GlobalTerminationCondition {
+          type ResultType = Option[Double]
+          override val aggregationInterval: Long = 1
+          val aggregationOperation = new SumOfStates[Double]
+          def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0
+        }
+        val execConfig = ExecutionConfiguration
+          .withSignalThreshold(0)
+          .withGlobalTerminationCondition(GlobalTermination)
+        val info = graph.execute(execConfig)
+        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
+        val aggregate = graph.aggregate(new SumOfStates[Double]).get
+        if (aggregate <= 20.0) {
+          println("Computation ended before global condition was met.")
+        }
+        if (aggregate > 99.99999999) {
+          println("Computation converged completely instead of ending when the global constraint was met: " + aggregate)
+        }
+        if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
+          println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+        }
+        aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
+      } finally {
+        graph.shutdown
       }
-      val execConfig = ExecutionConfiguration
-        .withSignalThreshold(0)
-        .withGlobalTerminationCondition(GlobalTermination)
-      val info = graph.execute(execConfig)
-      val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
-      val aggregate = graph.aggregate(new SumOfStates[Double]).get
-      if (aggregate <= 20.0) {
-        println("Computation ended before global condition was met.")
-      }
-      if (aggregate > 99.99999999) {
-        println("Computation converged completely instead of ending when the global constraint was met: " + aggregate)
-      }
-      if (info.executionStatistics.terminationReason != TerminationReason.GlobalConstraintMet) {
-        println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
-      }
-      graph.shutdown
-      aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     }
   }
 

@@ -50,27 +50,30 @@ class SnapshotSpec extends SpecificationWithJUnit with Serializable {
         correct
       }
       val graph = GraphBuilder.build
-      graph.deleteSnapshot
-      graph.restore
-      for (i <- 0 until 5) {
-        val v = new PageRankVertex(i)
-        graph.addVertex(v)
-        graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+      try {
+        graph.deleteSnapshot
+        graph.restore
+        for (i <- 0 until 5) {
+          val v = new PageRankVertex(i)
+          graph.addVertex(v)
+          graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+        }
+        graph.snapshot
+        graph.execute(ExecutionConfiguration.
+          withExecutionMode(ExecutionMode.PureAsynchronous).
+          withCollectThreshold(0).
+          withSignalThreshold(0.00001))
+        graph.restore
+        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex[_, _]): Boolean = verify(v, 0.15)
+        })
+        graph.deleteSnapshot
+        allcorrect
+      } finally {
+        graph.shutdown
       }
-      graph.snapshot
-      graph.execute(ExecutionConfiguration.
-        withExecutionMode(ExecutionMode.PureAsynchronous).
-        withCollectThreshold(0).
-        withSignalThreshold(0.00001))
-      graph.restore
-      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
-        val neutralElement = true
-        def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-        def extract(v: Vertex[_, _]): Boolean = verify(v, 0.15)
-      })
-      graph.deleteSnapshot
-      graph.shutdown
-      allcorrect
     }
 
   }

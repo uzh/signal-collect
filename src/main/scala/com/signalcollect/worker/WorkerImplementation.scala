@@ -61,7 +61,8 @@ class WorkerImplementation[Id, Signal](
   var signalThreshold: Double,
   var collectThreshold: Double,
   var existingVertexHandler: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit,
-  var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
+  var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit,
+  var edgeAddedToNonExistentVertexHandler: (Edge[Id], Id) => Option[Vertex[Id, _]])
   extends Worker[Id, Signal] {
 
   val scheduler = schedulerFactory.createInstance(this)
@@ -212,16 +213,23 @@ class WorkerImplementation[Id, Signal](
   }
 
   override def addEdge(sourceId: Id, edge: Edge[Id]) {
-    val vertex = vertexStore.vertices.get(sourceId)
-    if (vertex != null) {
+    def addEdgeToVertex(vertex: Vertex[Id, _]) {
       if (vertex.addEdge(edge, vertexGraphEditor)) {
         counters.outgoingEdgesAdded += 1
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
         }
       }
+    }
+    val v = vertexStore.vertices.get(sourceId)
+    if (v == null) {
+      val vertexOption = edgeAddedToNonExistentVertexHandler(edge, sourceId)
+      if (vertexOption.isDefined) {
+        addVertex(vertexOption.get)
+        addEdgeToVertex(vertexOption.get)
+      }
     } else {
-      log.warning("Did not find vertex with id " + sourceId + " when trying to add outgoing edge (" + sourceId + ", " + edge.targetId + ")")
+      addEdgeToVertex(v)
     }
   }
 
@@ -275,6 +283,10 @@ class WorkerImplementation[Id, Signal](
 
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
     undeliverableSignalHandler = h
+  }
+
+  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
+    edgeAddedToNonExistentVertexHandler = h
   }
 
   def setSignalThreshold(st: Double) {

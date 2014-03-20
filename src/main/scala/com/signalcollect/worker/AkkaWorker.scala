@@ -97,8 +97,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     collectThreshold = 0.0,
     existingVertexHandler = (vOld, vNew, ge) => (),
     undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
-      throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId")
+      throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId.")
       Unit
+    },
+    edgeAddedToNonExistentVertexHandler = (edge: Edge[Id], vertexId: Id) => {
+      throw new Exception(s"Could not add edge: $edge, because vertex with id $vertexId does not exist.")
+      None
     })
 
   /**

@@ -64,31 +64,34 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
 
   "Custom mapper" should {
     "correctly support PageRank computation" in {
-        def verify(v: Vertex[_, _], expectedState: Double): Boolean = {
-          val state = v.state.asInstanceOf[Double]
-          val correct = (state - expectedState).abs < 0.0001
-          if (!correct) {
-            System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
-          }
-          correct
+      def verify(v: Vertex[_, _], expectedState: Double): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val correct = (state - expectedState).abs < 0.0001
+        if (!correct) {
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
         }
-      val graph = GraphBuilder.withMapperFactory(Worker0MapperFactory).build
-      for (i <- 0 until 5) {
-        val v = new PageRankVertex(i)
-        graph.addVertex(v)
-        graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+        correct
       }
-      graph.execute(ExecutionConfiguration.
-        withExecutionMode(ExecutionMode.PureAsynchronous).
-        withCollectThreshold(0).
-        withSignalThreshold(0.00001))
-      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
-        val neutralElement = true
-        def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-        def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
-      })
-      graph.shutdown
-      allcorrect
+      val graph = GraphBuilder.withMapperFactory(Worker0MapperFactory).build
+      try {
+        for (i <- 0 until 5) {
+          val v = new PageRankVertex(i)
+          graph.addVertex(v)
+          graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+        }
+        graph.execute(ExecutionConfiguration.
+          withExecutionMode(ExecutionMode.PureAsynchronous).
+          withCollectThreshold(0).
+          withSignalThreshold(0.00001))
+        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
+        })
+        allcorrect
+      } finally {
+        graph.shutdown
+      }
     }
 
   }

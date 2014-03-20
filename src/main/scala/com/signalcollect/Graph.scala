@@ -38,7 +38,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
 
   def numberOfNodes: Int
   def numberOfWorkers: Int
-  
+
   /**
    *  Starts the execution of the computation using the default execution parameters and
    *  returns information about the execution. The method blocks until the computation has ended.
@@ -170,6 +170,16 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *  		action that handles this case.
    */
   def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
+
+  /**
+   *  Sets the handler that gets triggered, when the vertex to which an edge should be added does not exist.
+   *  Optionally returns the vertex that should be created and to whioch the edge can then be added.
+   *
+   *  @note By default an exception is thrown when an edge cannot be added. The handler function
+   *  		receives the edge, the id of the vertex that does not exist and an instance of GraphEditor as parameters in order to
+   *    		potentially create a vertex to which the edge should be added.
+   */
+  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]])
 
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.

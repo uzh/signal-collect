@@ -33,11 +33,14 @@ class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
 
     "call the beforeRemoval function of a vertex before removing it" in {
       val graph = GraphBuilder.build
-      graph.addVertex(new BeforeRemovalVertex)
-      graph.removeVertex(1)
-      graph.execute
-      graph.shutdown
-      RemovalDetector.beforeRemovalWorked must_== true
+      try {
+        graph.addVertex(new BeforeRemovalVertex)
+        graph.removeVertex(1)
+        graph.execute
+        RemovalDetector.beforeRemovalWorked must_== true
+      } finally {
+        graph.shutdown
+      }
     }
 
   }

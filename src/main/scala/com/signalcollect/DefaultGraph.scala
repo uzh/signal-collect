@@ -737,6 +737,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     workerApi.setUndeliverableSignalHandler(h)
   }
 
+  def setEdgeAddedToNonExistentVertexHandler(
+      h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
+    workerApi.setEdgeAddedToNonExistentVertexHandler(h)
+  }
+
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.

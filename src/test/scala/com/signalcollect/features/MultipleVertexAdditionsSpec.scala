@@ -35,25 +35,31 @@ class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
 
   "Adding the same vertex multiple times" should "be ignored" in {
     val g = GraphBuilder.build
-    g.addVertex(new DummyVertex(133))
-    g.addVertex(new DummyVertex(134))
-    g.addVertex(new DummyVertex(133))
-    val numberOfDummies = g.aggregate(SumOfStates[Double])
-    g.shutdown
-    numberOfDummies.get should equal(2.0)
+    try {
+      g.addVertex(new DummyVertex(133))
+      g.addVertex(new DummyVertex(134))
+      g.addVertex(new DummyVertex(133))
+      val numberOfDummies = g.aggregate(SumOfStates[Double])
+      numberOfDummies.get should equal(2.0)
+    } finally {
+      g.shutdown
+    }
   }
 
   it should "support merges via handler" in {
     val g = GraphBuilder.build
-    g.setExistingVertexHandler((oldVertex, newVertex, ge) => {
-      oldVertex.asInstanceOf[DummyVertex].state += 1.0
-    })
-    g.addVertex(new DummyVertex(133))
-    g.addVertex(new DummyVertex(134))
-    g.addVertex(new DummyVertex(133))
-    val stateSum = g.aggregate(SumOfStates[Double])
-    g.shutdown
-    stateSum.get should equal(3.0)
+    try {
+      g.setExistingVertexHandler((oldVertex, newVertex, ge) => {
+        oldVertex.asInstanceOf[DummyVertex].state += 1.0
+      })
+      g.addVertex(new DummyVertex(133))
+      g.addVertex(new DummyVertex(134))
+      g.addVertex(new DummyVertex(133))
+      val stateSum = g.aggregate(SumOfStates[Double])
+      stateSum.get should equal(3.0)
+    } finally {
+      g.shutdown
+    }
   }
 
 }

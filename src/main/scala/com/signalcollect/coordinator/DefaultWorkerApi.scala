@@ -106,12 +106,19 @@ class DefaultWorkerApi[Id, Signal](
     aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
   }
 
-  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+  override def setExistingVertexHandler(
+    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
     futures(_.setExistingVertexHandler(h)) foreach get
   }
 
-  override def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
+  override def setUndeliverableSignalHandler(
+    h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
     futures(_.setUndeliverableSignalHandler(h)) foreach get
+  }
+
+  def setEdgeAddedToNonExistentVertexHandler(
+    h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
+    futures(_.setEdgeAddedToNonExistentVertexHandler(h)) foreach get
   }
 
   override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
