@@ -158,11 +158,11 @@ class IntValueHashMap[Key <: AnyRef: ClassTag](
   @inline final def increment(key: Key) = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
-    while (keyAtPosition != 0 && key != keyAtPosition) {
+    while (keyAtPosition != null && key != keyAtPosition) {
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    if (keyAtPosition != 0) {
+    if (keyAtPosition != null) {
       // Increment existing
       values(position) += 1
     } else {
