@@ -158,6 +158,21 @@ class IntIntHashMap(
     }
   }
 
+  @inline final def increment(key: Int) = {
+    var position = keyToPosition(key)
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0 && key != keyAtPosition) {
+      position = (position + 1) & mask
+      keyAtPosition = keys(position)
+    }
+    if (keyAtPosition != 0) {
+      // Increment existing
+      values(position) += 1
+    } else {
+      put(key, 1)
+    }
+  }
+
   def update(key: Int, value: Int) {
     put(key, value)
   }
