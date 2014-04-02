@@ -332,7 +332,8 @@ class WorkerImplementation[Id, Signal](
   }
 
   override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
-    vertexStore.vertices.foreach(f(graphEditor))
+    val function = f(graphEditor)
+    vertexStore.vertices.foreach(function)
     messageBusFlushed = false
   }
 

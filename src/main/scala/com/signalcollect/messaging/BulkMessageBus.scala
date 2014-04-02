@@ -54,12 +54,17 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory)
-    extends AbstractMessageBus[Id, Signal] {
+  extends AbstractMessageBus[Id, Signal] {
 
   override def reset {
     super.reset
     pendingSignals = 0
-    outgoingMessages foreach (_.clear)
+    var i = 0
+    val bulkers = outgoingMessages.length
+    while (i < bulkers) {
+      outgoingMessages(i).clear
+      i += 1
+    }
   }
 
   protected var pendingSignals = 0

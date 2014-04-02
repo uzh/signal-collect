@@ -27,7 +27,7 @@ object SplayIntSet {
   @inline def ?(n: AnyRef) = n != null
 }
 
-class SplayNode {
+final class SplayNode {
   import SplayIntSet._
   var intSet: Array[Byte] = Ints.createEmptyFastInsertIntSet
   var left: SplayNode = _

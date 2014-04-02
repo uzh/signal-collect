@@ -36,7 +36,7 @@ import com.signalcollect.util.Ints._
  * is the same, using variable-length delta encoding to compactly store
  * sets of ints.
  */
-class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
+final class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
 
   def toBuffer: Buffer[Int] = {
     val buffer = new ArrayBuffer[Int]
