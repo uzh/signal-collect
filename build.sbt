@@ -33,7 +33,7 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.1.4" ,
   "com.typesafe.akka" %% "akka-remote" % "2.1.4" ,
-  "org.scala-lang" % "scala-library" % "2.10.3" % "compile",
+  "org.scala-lang" % "scala-library" % "2.10.4" % "compile",
   "com.esotericsoftware.kryo" % "kryo" % "2.21" % "compile",
   "net.liftweb" % "lift-json_2.10" % "2.5-RC4" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
