@@ -21,8 +21,6 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 parallelExecution in Test := false
 
-scalacOptions += "-deprecation"
-
 EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
 
 EclipseKeys.withSource := true
