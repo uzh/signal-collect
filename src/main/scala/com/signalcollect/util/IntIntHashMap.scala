@@ -158,7 +158,7 @@ class IntIntHashMap(
     }
   }
 
-  @inline final def increment(key: Int) = {
+  @inline final def increment(key: Int) {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != 0 && key != keyAtPosition) {
