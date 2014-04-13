@@ -27,8 +27,6 @@ object AkkaConfig {
     useJavaSerialization: Boolean,
     port: Int) = """
 akka {
-  extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
-
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
   event-handlers = ["com.signalcollect.console.ConsoleLogger"]
 
@@ -76,7 +74,7 @@ akka {
   	}
 
     serializers {
-      kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
+      kryo = "com.twitter.chill.akka.AkkaSerializer"
     """ +
     {
       if (useJavaSerialization) {
@@ -93,7 +91,7 @@ akka {
       "scala.Long" = kryo
       "scala.Float" = kryo
       "scala.Double" = kryo
-      "scala.Some" = kryo
+      "scala.Option" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo

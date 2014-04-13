@@ -15,10 +15,6 @@ scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecatio
 
 assembleArtifact in packageScala := true
 
-excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  cp filter {_.data.getName == "minlog-1.2.jar"}
-}
-
 parallelExecution in Test := false
 
 EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
@@ -30,9 +26,9 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 /** Dependencies */
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.1.4" ,
-  "com.typesafe.akka" %% "akka-remote" % "2.1.4" ,
+  "com.typesafe.akka" %% "akka-remote" % "2.1.4",
+  "com.twitter" % "chill-akka-custom" % "0.3.6",
   "org.scala-lang" % "scala-library" % "2.10.4" % "compile",
-  "com.esotericsoftware.kryo" % "kryo" % "2.21" % "compile",
   "net.liftweb" % "lift-json_2.10" % "2.5-RC4" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
   "junit" % "junit" % "4.8.2"  % "test",
@@ -48,3 +44,4 @@ resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/group
 
 resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/public/"
