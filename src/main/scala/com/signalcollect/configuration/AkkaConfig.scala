@@ -89,11 +89,13 @@ akka {
     }
 
     serialization-bindings {
+      "java.io.Serializable" = none
       "scala.Int" = kryo
       "scala.Long" = kryo
       "scala.Float" = kryo
       "scala.Double" = kryo
       "scala.Option" = kryo
+      "scala.collection.Traversable" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
@@ -252,6 +254,8 @@ akka {
             "scala.collection.immutable.Set$Set2",
             "scala.collection.immutable.Set$Set3",
             "scala.collection.immutable.Set$Set4",
+            "scala.collection.immutable.Nil$",
+            "scala.collection.immutable.$colon$colon",
             "scala.None$"
     """ +
     {

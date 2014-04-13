@@ -39,45 +39,12 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       val g = GraphBuilder.build
       try {
         // Scala uses special representations for small maps.
-        val akka = ActorSystemRegistry.retrieve("SignalCollect").get
-        val serialization = SerializationExtension(akka)
-        val m0 = Some(Map.empty[Int, Double])
-        val m1 = Some(Map(1 -> 1.5))
-        val m2 = Some(Map(1 -> 1.5, 2 -> 5.4))
-        val m3 = Some(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5))
-        val m4 = Some(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2))
-        val m5 = Some(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2, 6 -> 3.2))
-        val s0 = serialization.findSerializerFor(m0)
-        val s1 = serialization.findSerializerFor(m1)
-        val s2 = serialization.findSerializerFor(m2)
-        val s3 = serialization.findSerializerFor(m3)
-        val s4 = serialization.findSerializerFor(m4)
-        val s5 = serialization.findSerializerFor(m5)
-        assert(s0.isInstanceOf[KryoSerializer])
-        assert(s1.isInstanceOf[KryoSerializer])
-        assert(s2.isInstanceOf[KryoSerializer])
-        assert(s3.isInstanceOf[KryoSerializer])
-        assert(s4.isInstanceOf[KryoSerializer])
-        assert(s5.isInstanceOf[KryoSerializer])
-        assert(s5.isInstanceOf[KryoSerializer])
-        val bytes0 = s0.toBinary(m0)
-        val bytes1 = s1.toBinary(m1)
-        val bytes2 = s2.toBinary(m2)
-        val bytes3 = s3.toBinary(m3)
-        val bytes4 = s4.toBinary(m4)
-        val bytes5 = s5.toBinary(m5)
-        val b0 = s0.fromBinary(bytes0, manifest = None)
-        val b1 = s1.fromBinary(bytes1, manifest = None)
-        val b2 = s2.fromBinary(bytes2, manifest = None)
-        val b3 = s3.fromBinary(bytes3, manifest = None)
-        val b4 = s4.fromBinary(bytes4, manifest = None)
-        val b5 = s5.fromBinary(bytes5, manifest = None)
-        assert(b0 == m0)
-        assert(b1 == m1)
-        assert(b2 == m2)
-        assert(b3 == m3)
-        assert(b4 == m4)
-        assert(b5 == m5)
+        kryoSerializeAndDeserialize(Map.empty[Int, Double])
+        kryoSerializeAndDeserialize(Map(1 -> 1.5))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2, 6 -> 3.2))
         true
       } finally {
         g.shutdown
@@ -87,46 +54,13 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
     "correctly serialize Scala immutable sets" in {
       val g = GraphBuilder.build
       try {
-        // Scala uses special representations for small maps.
-        val akka = ActorSystemRegistry.retrieve("SignalCollect").get
-        val serialization = SerializationExtension(akka)
-        val m0 = Some(Set.empty[Int])
-        val m1 = Some(Set(1))
-        val m2 = Some(Set(1, 2))
-        val m3 = Some(Set(1, 2, 3))
-        val m4 = Some(Set(1, 2, 3, 4))
-        val m5 = Some(Set(1, 2, 3, 4, 5))
-        val s0 = serialization.findSerializerFor(m0)
-        val s1 = serialization.findSerializerFor(m1)
-        val s2 = serialization.findSerializerFor(m2)
-        val s3 = serialization.findSerializerFor(m3)
-        val s4 = serialization.findSerializerFor(m4)
-        val s5 = serialization.findSerializerFor(m5)
-        assert(s0.isInstanceOf[KryoSerializer])
-        assert(s1.isInstanceOf[KryoSerializer])
-        assert(s2.isInstanceOf[KryoSerializer])
-        assert(s3.isInstanceOf[KryoSerializer])
-        assert(s4.isInstanceOf[KryoSerializer])
-        assert(s5.isInstanceOf[KryoSerializer])
-        assert(s5.isInstanceOf[KryoSerializer])
-        val bytes0 = s0.toBinary(m0)
-        val bytes1 = s1.toBinary(m1)
-        val bytes2 = s2.toBinary(m2)
-        val bytes3 = s3.toBinary(m3)
-        val bytes4 = s4.toBinary(m4)
-        val bytes5 = s5.toBinary(m5)
-        val b0 = s0.fromBinary(bytes0, manifest = None)
-        val b1 = s1.fromBinary(bytes1, manifest = None)
-        val b2 = s2.fromBinary(bytes2, manifest = None)
-        val b3 = s3.fromBinary(bytes3, manifest = None)
-        val b4 = s4.fromBinary(bytes4, manifest = None)
-        val b5 = s5.fromBinary(bytes5, manifest = None)
-        assert(b0 == m0)
-        assert(b1 == m1)
-        assert(b2 == m2)
-        assert(b3 == m3)
-        assert(b4 == m4)
-        assert(b5 == m5)
+        // Scala uses special representations for small sets.
+        kryoSerializeAndDeserialize(Set.empty[Int])
+        kryoSerializeAndDeserialize(Set(1))
+        kryoSerializeAndDeserialize(Set(1, 2))
+        kryoSerializeAndDeserialize(Set(1, 2, 3))
+        kryoSerializeAndDeserialize(Set(1, 2, 3, 4))
+        kryoSerializeAndDeserialize(Set(1, 2, 3, 4, 5))
         true
       } finally {
         g.shutdown
@@ -136,19 +70,32 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
     "correctly serialize Scala None" in {
       val g = GraphBuilder.build
       try {
-        // Scala uses special representations for small maps.
-        val akka = ActorSystemRegistry.retrieve("SignalCollect").get
-        val serialization = SerializationExtension(akka)
-        val none = None
-        val s = serialization.findSerializerFor(none)
-        assert(s.isInstanceOf[KryoSerializer])
-        val bytes = s.toBinary(none)
-        val b = s.fromBinary(bytes, manifest = None)
-        assert(b == none)
+        kryoSerializeAndDeserialize(None)
         true
       } finally {
         g.shutdown
       }
+    }
+
+    "correctly serialize Scala List" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(List.empty[Int])
+        kryoSerializeAndDeserialize(List(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    def kryoSerializeAndDeserialize(instance: AnyRef) {
+      val akka = ActorSystemRegistry.retrieve("SignalCollect").get
+      val serialization = SerializationExtension(akka)
+      val s = serialization.findSerializerFor(instance)
+      assert(s.isInstanceOf[KryoSerializer])
+      val bytes = s.toBinary(instance)
+      val b = s.fromBinary(bytes, manifest = None)
+      assert(b == instance)
     }
 
   }

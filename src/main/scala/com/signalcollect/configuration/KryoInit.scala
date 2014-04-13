@@ -38,6 +38,9 @@ class KryoInit {
     kryo.register(classOf[Array[Boolean]])
     kryo.register(classOf[Array[Object]])
     kryo.register(classOf[Array[Array[Int]]])
+    kryo.register(classOf[Array[Array[Int]]])
+    kryo.register(classOf[Array[Array[Int]]])
+    kryo.register(classOf[Array[Array[Int]]])
     //registerWithCompression(kryo, classOf[Array[Array[Int]]])
   }
 
