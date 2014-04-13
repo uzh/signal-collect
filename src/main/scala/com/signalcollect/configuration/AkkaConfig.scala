@@ -93,7 +93,7 @@ akka {
       "scala.Long" = kryo
       "scala.Float" = kryo
       "scala.Double" = kryo
-      "scala.Some" = kryo
+      "scala.Option" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
@@ -228,6 +228,7 @@ akka {
             "scala.Float",
             "scala.Double",
             "scala.Some",
+            "scala.None",
             "com.signalcollect.interfaces.SignalMessage",
             "com.signalcollect.interfaces.BulkSignal",
             "com.signalcollect.interfaces.BulkSignalNoSourceIds",
@@ -238,7 +239,13 @@ akka {
             "com.signalcollect.interfaces.Heartbeat",
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.NodeStatistics",
-            "com.signalcollect.interfaces.SentMessagesStats"
+            "com.signalcollect.interfaces.SentMessagesStats",
+            "scala.collection.immutable.HashMap$HashTrieMap",
+            "scala.collection.immutable.Map$Map1",
+            "scala.collection.immutable.Map$Map2",
+            "scala.collection.immutable.Map$Map3",
+            "scala.collection.immutable.Map$Map4",
+            "scala.None$"
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
