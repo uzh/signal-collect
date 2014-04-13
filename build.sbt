@@ -48,3 +48,4 @@ resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/group
 
 resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/public/"
