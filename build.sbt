@@ -15,10 +15,6 @@ scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecatio
 
 assembleArtifact in packageScala := true
 
-excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  cp filter {_.data.getName == "minlog-1.2.jar"}
-}
-
 parallelExecution in Test := false
 
 EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
