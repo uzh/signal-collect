@@ -25,7 +25,6 @@ import com.esotericsoftware.kryo.serializers.DeflateSerializer
 class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
-
     kryo.setReferences(false)
     kryo.setCopyReferences(false)
     register(kryo)
@@ -38,7 +37,8 @@ class KryoInit {
     kryo.register(classOf[Array[Double]])
     kryo.register(classOf[Array[Boolean]])
     kryo.register(classOf[Array[Object]])
-    registerWithCompression(kryo, classOf[Array[Array[Int]]])
+    kryo.register(classOf[Array[Array[Int]]])
+    //registerWithCompression(kryo, classOf[Array[Array[Int]]])
   }
 
   protected def registerWithCompression(kryo: Kryo, c: Class[_]) {
