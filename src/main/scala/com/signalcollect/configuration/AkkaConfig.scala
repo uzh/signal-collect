@@ -194,6 +194,11 @@ akka {
         # Useful for debugging and lowl-level tweaking
         kryo-trace = false
 
+        # If proviced, Kryo uses the class specified by a fully qualified class name
+        # to perform a custom initialization of Kryo instances in addition to what
+        # is done automatically based on the config file.
+        kryo-custom-serializer-init = "com.signalcollect.configuration.KryoInit"
+    
         kryo-reference-map = false
 
         # Define mappings from a fully qualified class name to a numeric id.
@@ -207,37 +212,6 @@ akka {
         # ids below it are used by Kryo internally e.g. for built-in Java and
         # Scala types
         mappings {
-            "scala.Int" = 27
-            "scala.Long" = 28
-            "scala.Float" = 29
-            "scala.Double" = 30
-            "scala.Some" = 31
-            "com.signalcollect.interfaces.SignalMessage" = 32
-            "com.signalcollect.interfaces.BulkSignal" = 33
-            "com.signalcollect.interfaces.BulkSignalNoSourceIds" = 34
-            "java.util.HashMap" = 35
-            "com.signalcollect.interfaces.EdgeId" = 36
-            "com.signalcollect.interfaces.WorkerStatus" = 37
-            "com.signalcollect.interfaces.NodeStatus" = 38
-            "com.signalcollect.interfaces.Heartbeat" = 39
-            "com.signalcollect.interfaces.WorkerStatistics" = 40
-            "com.signalcollect.interfaces.NodeStatistics" = 41
-            "com.signalcollect.interfaces.SentMessagesStats" = 42
-    """ +
-    {
-      if (!kryoRegistrations.isEmpty) {
-        var highestUsedKryoId = 42
-        var bindingsBlock = kryoRegistrations map { kryoRegistration =>
-          highestUsedKryoId += 1
-          s"""
-             "$kryoRegistration" = $highestUsedKryoId"""
-        }
-        bindingsBlock.foldLeft("")(_ + _)
-      } else {
-        ""
-      }
-    } +
-    """
         }
 
         # Define a set of fully qualified class names for
