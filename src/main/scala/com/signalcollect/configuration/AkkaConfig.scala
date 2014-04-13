@@ -246,6 +246,12 @@ akka {
             "scala.collection.immutable.Map$Map2",
             "scala.collection.immutable.Map$Map3",
             "scala.collection.immutable.Map$Map4",
+            "scala.collection.immutable.HashSet$HashTrieSet",    
+            "scala.collection.immutable.Set$EmptySet$",
+            "scala.collection.immutable.Set$Set1",
+            "scala.collection.immutable.Set$Set2",
+            "scala.collection.immutable.Set$Set3",
+            "scala.collection.immutable.Set$Set4",
             "scala.None$"
     """ +
     {

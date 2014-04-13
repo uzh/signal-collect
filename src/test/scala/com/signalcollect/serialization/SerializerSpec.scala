@@ -84,6 +84,55 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       }
     }
 
+    "correctly serialize Scala immutable sets" in {
+      val g = GraphBuilder.build
+      try {
+        // Scala uses special representations for small maps.
+        val akka = ActorSystemRegistry.retrieve("SignalCollect").get
+        val serialization = SerializationExtension(akka)
+        val m0 = Some(Set.empty[Int])
+        val m1 = Some(Set(1))
+        val m2 = Some(Set(1, 2))
+        val m3 = Some(Set(1, 2, 3))
+        val m4 = Some(Set(1, 2, 3, 4))
+        val m5 = Some(Set(1, 2, 3, 4, 5))
+        val s0 = serialization.findSerializerFor(m0)
+        val s1 = serialization.findSerializerFor(m1)
+        val s2 = serialization.findSerializerFor(m2)
+        val s3 = serialization.findSerializerFor(m3)
+        val s4 = serialization.findSerializerFor(m4)
+        val s5 = serialization.findSerializerFor(m5)
+        assert(s0.isInstanceOf[KryoSerializer])
+        assert(s1.isInstanceOf[KryoSerializer])
+        assert(s2.isInstanceOf[KryoSerializer])
+        assert(s3.isInstanceOf[KryoSerializer])
+        assert(s4.isInstanceOf[KryoSerializer])
+        assert(s5.isInstanceOf[KryoSerializer])
+        assert(s5.isInstanceOf[KryoSerializer])
+        val bytes0 = s0.toBinary(m0)
+        val bytes1 = s1.toBinary(m1)
+        val bytes2 = s2.toBinary(m2)
+        val bytes3 = s3.toBinary(m3)
+        val bytes4 = s4.toBinary(m4)
+        val bytes5 = s5.toBinary(m5)
+        val b0 = s0.fromBinary(bytes0, manifest = None)
+        val b1 = s1.fromBinary(bytes1, manifest = None)
+        val b2 = s2.fromBinary(bytes2, manifest = None)
+        val b3 = s3.fromBinary(bytes3, manifest = None)
+        val b4 = s4.fromBinary(bytes4, manifest = None)
+        val b5 = s5.fromBinary(bytes5, manifest = None)
+        assert(b0 == m0)
+        assert(b1 == m1)
+        assert(b2 == m2)
+        assert(b3 == m3)
+        assert(b4 == m4)
+        assert(b5 == m5)
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
     "correctly serialize Scala None" in {
       val g = GraphBuilder.build
       try {
