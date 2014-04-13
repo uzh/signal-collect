@@ -241,6 +241,7 @@ akka {
             "com.signalcollect.interfaces.NodeStatistics",
             "com.signalcollect.interfaces.SentMessagesStats",
             "scala.collection.immutable.HashMap$HashTrieMap",
+            "scala.collection.immutable.Map$EmptyMap$",
             "scala.collection.immutable.Map$Map1",
             "scala.collection.immutable.Map$Map2",
             "scala.collection.immutable.Map$Map3",
