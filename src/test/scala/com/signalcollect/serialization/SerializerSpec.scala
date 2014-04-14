@@ -216,6 +216,26 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       }
     }
 
+    "correctly serialize Tuple2" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize((1, "second"))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Tuple3" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize((1, "second", 3.0))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
     def kryoSerializeAndDeserialize(instance: AnyRef) {
       val akka = ActorSystemRegistry.retrieve("SignalCollect").get
       val serialization = SerializationExtension(akka)
