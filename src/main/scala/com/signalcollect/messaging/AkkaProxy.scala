@@ -38,8 +38,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.signalcollect.interfaces.MessageBus
 
-case class EmptyIncrementor() {
-  def increment(mb: MessageBus[_, _]): Unit = {}
+object Incrementor {
+  val empty: MessageBus[_, _] => Unit = {
+    mb: MessageBus[_, _] => Unit
+  }
 }
 
 /**
@@ -74,7 +76,7 @@ object AkkaProxy {
       c.getClassLoader,
       Array[Class[_]](c),
       new AkkaProxy(actor,
-        EmptyIncrementor().increment _,
+        Incrementor.empty,
         sentMessagesCounter,
         receivedMessagesCounter,
         timeout)).asInstanceOf[T]

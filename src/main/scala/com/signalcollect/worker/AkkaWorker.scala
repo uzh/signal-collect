@@ -107,7 +107,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       Unit
     },
     edgeAddedToNonExistentVertexHandler = (edge: Edge[Id], vertexId: Id) => {
-      throw new Exception(s"Could not add edge: $edge, because vertex with id $vertexId does not exist.")
+      throw new Exception(
+        s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")
       None
     })
 

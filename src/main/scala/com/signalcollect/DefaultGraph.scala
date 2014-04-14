@@ -61,12 +61,15 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   workerFactory: WorkerFactory,
   numberOfWorkers: Int,
   numberOfNodes: Int,
-  config: GraphConfiguration) extends Creator[WorkerActor[Id, Signal]] {
-  def create: WorkerActor[Id, Signal] = workerFactory.createInstance[Id, Signal](
-    workerId,
-    numberOfWorkers,
-    numberOfNodes,
-    config)
+  config: GraphConfiguration) {
+  def create: () => WorkerActor[Id, Signal] = {
+    () =>
+      workerFactory.createInstance[Id, Signal](
+        workerId,
+        numberOfWorkers,
+        numberOfNodes,
+        config)
+  }
 }
 
 /**
@@ -150,7 +153,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           numberOfWorkers,
           numberOfNodes,
           config)
-        val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create _)
+        val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create)
         actors(workerId) = system.actorFor(workerName)
         workerId += 1
       }
@@ -738,7 +741,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   def setEdgeAddedToNonExistentVertexHandler(
-      h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
+    h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
     workerApi.setEdgeAddedToNonExistentVertexHandler(h)
   }
 

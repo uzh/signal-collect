@@ -39,7 +39,7 @@ case class Heartbeat(maySignal: Boolean)
 case class EdgeId[Id](val sourceId: Id, val targetId: Id) {
   def withTargetId(t: Id): EdgeId[Id] = EdgeId(sourceId, t)
   def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
-  override def toString: String = s"${sourceId.toString} -> ${targetId.toString}"
+  override def toString: String = s"${sourceId} -> ${targetId}"
 }
 
 case class AddVertex[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) State](

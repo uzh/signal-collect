@@ -23,11 +23,139 @@ import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationWithJUnit
 import org.specs2.runner.JUnitRunner
+import com.signalcollect.GraphBuilder
+import com.signalcollect.configuration.ActorSystemRegistry
+import akka.serialization.SerializationExtension
+import com.romix.akka.serialization.kryo.KryoSerializer
 
 @RunWith(classOf[JUnitRunner])
 class SerializerSpec extends SpecificationWithJUnit with Mockito {
 
   sequential
+
+  "Kryo" should {
+
+    "correctly serialize Scala immutable maps" in {
+      val g = GraphBuilder.build
+      try {
+        // Scala uses special representations for small maps.
+        kryoSerializeAndDeserialize(Map.empty[Int, Double])
+        kryoSerializeAndDeserialize(Map(1 -> 1.5))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2))
+        kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2, 6 -> 3.2))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala immutable sets" in {
+      val g = GraphBuilder.build
+      try {
+        // Scala uses special representations for small sets.
+        kryoSerializeAndDeserialize(Set.empty[Int])
+        kryoSerializeAndDeserialize(Set(1))
+        kryoSerializeAndDeserialize(Set(1, 2))
+        kryoSerializeAndDeserialize(Set(1, 2, 3))
+        kryoSerializeAndDeserialize(Set(1, 2, 3, 4))
+        kryoSerializeAndDeserialize(Set(1, 2, 3, 4, 5))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala None" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(None)
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala List" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(List.empty[Int])
+        kryoSerializeAndDeserialize(List(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala Vector" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Vector.empty[Int])
+        kryoSerializeAndDeserialize(Vector(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala Seq" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Seq.empty[Int])
+        kryoSerializeAndDeserialize(Seq(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala Array" in {
+      val g = GraphBuilder.build
+      try {
+        assert(kryoSerializeAndDeserializeSpecial(Array.empty[Int]).toList == List())
+        assert(kryoSerializeAndDeserializeSpecial(Array(1)).toList == List(1))
+        assert(kryoSerializeAndDeserializeSpecial(Array(1.0)).toList == List(1.0))
+        assert(kryoSerializeAndDeserializeSpecial(Array(1l)).toList == List(1l))
+        assert(kryoSerializeAndDeserializeSpecial(Array("abc")).toList == List("abc"))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Array[Array[Int]]" in {
+      val g = GraphBuilder.build
+      try {
+        assert(kryoSerializeAndDeserializeSpecial(
+          Array(Array(1, 2, 3), Array(3, 4, 5))).map(_.toList).toList == List(List(1, 2, 3), List(3, 4, 5)))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    def kryoSerializeAndDeserialize(instance: AnyRef) {
+      val akka = ActorSystemRegistry.retrieve("SignalCollect").get
+      val serialization = SerializationExtension(akka)
+      val s = serialization.findSerializerFor(instance)
+      assert(s.isInstanceOf[KryoSerializer])
+      val bytes = s.toBinary(instance)
+      val b = s.fromBinary(bytes, manifest = None)
+      assert(b == instance)
+    }
+
+    def kryoSerializeAndDeserializeSpecial[T <: AnyRef](instance: T): T = {
+      val akka = ActorSystemRegistry.retrieve("SignalCollect").get
+      val serialization = SerializationExtension(akka)
+      val s = serialization.findSerializerFor(instance)
+      assert(s.isInstanceOf[KryoSerializer])
+      val bytes = s.toBinary(instance)
+      val b = s.fromBinary(bytes, manifest = None).asInstanceOf[T]
+      b
+    }
+
+  }
 
   "DefaultSerializer" should {
 
