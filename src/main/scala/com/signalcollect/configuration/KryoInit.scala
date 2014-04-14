@@ -21,6 +21,8 @@ package com.signalcollect.configuration
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.serializers.DeflateSerializer
+import java.util.HashMap
+import com.esotericsoftware.kryo.serializers.MapSerializer
 
 class KryoInit {
 
@@ -38,6 +40,8 @@ class KryoInit {
     kryo.register(classOf[Array[Boolean]])
     kryo.register(classOf[Array[String]])
     kryo.register(classOf[Array[Object]])
+    kryo.register(classOf[Array[java.lang.StackTraceElement]])
+    kryo.register(classOf[Array[Object]])
     kryo.register(classOf[Array[Array[Int]]])
     kryo.register(classOf[Array[Array[Long]]])
     kryo.register(classOf[Array[Array[Float]]])
@@ -45,6 +49,8 @@ class KryoInit {
     kryo.register(classOf[Array[Array[Boolean]]])
     kryo.register(classOf[Array[Array[String]]])
     kryo.register(classOf[Array[Array[Object]]])
+//    val mapSerializer: MapSerializer = new MapSerializer
+//    kryo.register(classOf[HashMap[Any, Any]], mapSerializer)
     //registerWithCompression(kryo, classOf[Array[Array[Int]]])
   }
 

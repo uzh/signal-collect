@@ -90,6 +90,10 @@ akka {
 
     serialization-bindings {
       "java.io.Serializable" = none
+      "akka.dispatch.NullMessage$" = kryo
+      "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
+      "akka.event.Logging$Error" = kryo
+      "akka.actor.ReceiveTimeout$" = kryo
       "scala.Int" = kryo
       "scala.Long" = kryo
       "scala.Float" = kryo
@@ -112,6 +116,8 @@ akka {
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.NodeStatistics" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
+      "com.signalcollect.interfaces.AddVertex" = kryo
+      "com.signalcollect.interfaces.Request" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
@@ -239,7 +245,31 @@ akka {
             "com.signalcollect.interfaces.SignalMessage",
             "com.signalcollect.interfaces.BulkSignal",
             "com.signalcollect.interfaces.BulkSignalNoSourceIds",
-            "java.util.HashMap",
+            "com.signalcollect.interfaces.AddVertex",
+            "com.signalcollect.interfaces.Request",
+            "com.signalcollect.messaging.Command",
+            "com.signalcollect.messaging.AkkaProxy$$anonfun$newInstance$1",
+            "com.signalcollect.messaging.EmptyIncrementor",
+            "com.signalcollect.factory.messagebus.AkkaMessageBusFactory$",
+            "com.signalcollect.factory.mapper.DefaultMapperFactory$",
+            "com.signalcollect.configuration.Pinned$",
+            "com.signalcollect.DefaultGraph$$anonfun$7$$anonfun$apply$1$$anonfun$8",
+            "com.signalcollect.WorkerCreator",
+            "com.signalcollect.configuration.GraphConfiguration",
+            "com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner",
+            "com.signalcollect.factory.scheduler.Throughput$",
+            "com.signalcollect.factory.storage.MemoryEfficientStorage$",
+            "com.signalcollect.factory.worker.DefaultAkkaWorker$",
+            "scala.reflect.ManifestFactory$$anon$1",
+            "java.lang.Class",
+            "java.lang.Object",
+            "akka.actor.RepointableActorRef",
+            "com.signalcollect.interfaces.Request",
+            "com.signalcollect.messaging.Command",
+            "com.signalcollect.interfaces.Request",
+            "com.signalcollect.messaging.AkkaProxy$$anonfun$newInstance$1",
+            "com.signalcollect.messaging.EmptyIncrementor",
+            "scala.collection.convert.Wrappers$JMapWrapper",    
             "com.signalcollect.interfaces.EdgeId",
             "com.signalcollect.interfaces.WorkerStatus",
             "com.signalcollect.interfaces.NodeStatus",
@@ -247,6 +277,7 @@ akka {
             "com.signalcollect.interfaces.WorkerStatistics",
             "com.signalcollect.interfaces.NodeStatistics",
             "com.signalcollect.interfaces.SentMessagesStats",
+            "scala.collection.mutable.HashMap",
             "scala.collection.immutable.HashMap$HashTrieMap",
             "scala.collection.immutable.Map$EmptyMap$",
             "scala.collection.immutable.Map$Map1",
@@ -262,7 +293,21 @@ akka {
             "scala.collection.immutable.Nil$",
             "scala.collection.immutable.$colon$colon",
             "scala.collection.immutable.Vector",
-            "scala.None$"
+            "akka.dispatch.NullMessage$",
+            "akka.actor.SystemGuardian$RegisterTerminationHook$",
+            "akka.actor.ReceiveTimeout$",
+            "akka.actor.ReceiveTimeout$",
+            "akka.event.Logging$Error",
+            "com.esotericsoftware.kryo.KryoException",
+            "java.lang.NullPointerException",
+            "akka.event.Logging$Error",
+            "java.lang.StackOverflowError",
+            "com.signalcollect.console.ConsoleLogger",
+            "akka.event.Logging$Error",
+            "com.esotericsoftware.kryo.KryoException",
+            "java.io.NotSerializableException",
+            "scala.None$",
+            "com.signalcollect.examples.PageRankVertex"
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
