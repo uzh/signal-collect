@@ -69,7 +69,6 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   def writeLog(message: String) {
     val fileWriter = new FileWriter(logFileName, true)
     try {
-      println(message)
       fileWriter.write(message + "\n")
     } finally {
       fileWriter.close()
@@ -170,6 +169,14 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     logMessages
   }
 
+  def printException(t: Throwable) {
+    System.err.append(s"${t.getClass.getSimpleName}")
+    if (t.getCause != null) println(t.getCause)
+    if (t.getMessage != null) println(t.getMessage)
+    t.printStackTrace
+    if (t.getSuppressed != null) println(t.getSuppressed.mkString("\n"))
+  }
+
   /**
    * Handles requests regarding logging.
    *
@@ -179,7 +186,8 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   def receive: Receive = {
     case InitializeLogger(_) => sender ! LoggerInitialized
     case l @ Error(cause, logSource, logClass, message) =>
-      writeLog(createJsonString("Error", cause.getMessage(), logSource, logClass, message))
+      printException(cause)
+      writeLog(createJsonString("Error", cause.getMessage + "\n" + cause.getStackTrace.mkString("\n"), logSource, logClass, message))
     case l @ Warning(logSource, logClass, message) =>
       writeLog(createJsonString("Warning", logSource, logClass, message))
     case l @ Info(logSource, logClass, message) =>
