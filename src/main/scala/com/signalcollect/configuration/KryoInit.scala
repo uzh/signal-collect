@@ -125,6 +125,7 @@ class KryoInit {
       register("com.signalcollect.factory.mapper.DefaultMapperFactory$")
       register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory")
       register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$1")
+      register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$3")
       register("com.signalcollect.worker.AkkaWorker$$anonfun$1")
       register("com.signalcollect.worker.IncrementorForWorker")
       register("akka.remote.RemoteActorRef")
