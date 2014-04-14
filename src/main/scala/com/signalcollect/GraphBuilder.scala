@@ -176,11 +176,4 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withMessageSerialization(newSerializeMessages: Boolean) =
     builder(config.copy(serializeMessages = newSerializeMessages))
 
-  /**
-   *  If true then Java serialization is used, unless a class is
-   *  explicitly registered with Kryo. Disable for debugging purposes only.
-   */
-  def withJavaSerialization(newUseJavaSerialization: Boolean) =
-    builder(config.copy(useJavaSerialization = newUseJavaSerialization))
-
 }

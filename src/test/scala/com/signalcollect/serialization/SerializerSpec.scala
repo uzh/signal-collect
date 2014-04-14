@@ -139,6 +139,7 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       val akka = ActorSystemRegistry.retrieve("SignalCollect").get
       val serialization = SerializationExtension(akka)
       val s = serialization.findSerializerFor(instance)
+//      println(s"${s.getClass} for ${instance.getClass}")
       assert(s.isInstanceOf[KryoSerializer])
       val bytes = s.toBinary(instance)
       val b = s.fromBinary(bytes, manifest = None)

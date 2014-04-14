@@ -10,21 +10,18 @@ object AkkaConfig {
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
-    useJavaSerialization: Boolean,
     port: Int = 0) = ConfigFactory.parseString(
     distributedConfig(
       akkaMessageCompression,
       serializeMessages,
       loggingLevel,
       kryoRegistrations,
-      useJavaSerialization,
       port))
   def distributedConfig(
     akkaMessageCompression: Boolean,
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
-    useJavaSerialization: Boolean,
     port: Int) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
@@ -77,21 +74,14 @@ akka {
 
     serializers {
       kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
-    """ +
-    {
-      if (useJavaSerialization) {
-        """
+      bytes = "akka.serialization.ByteArraySerializer"
       java = "akka.serialization.JavaSerializer"
-  """
-      } else ""
-    } +
-    """
     }
 
     serialization-bindings {
-      #"java.io.Serializable" = none
-      #"java.lang.Throwable" = java
-      #"akka.event.Logging$Error" = java
+      "java.io.Serializable" = none
+      "java.lang.Throwable" = java
+      "akka.event.Logging$Error" = java
       "akka.dispatch.NullMessage$" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
@@ -100,6 +90,7 @@ akka {
       "scala.Float" = kryo
       "scala.Double" = kryo
       "scala.Option" = kryo
+      "scala.collection.immutable.Map" = kryo
       "scala.collection.Traversable" = kryo
       "[B" = kryo
       "[I" = kryo

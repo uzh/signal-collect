@@ -104,8 +104,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     config.akkaMessageCompression,
     config.serializeMessages,
     config.loggingLevel,
-    config.kryoRegistrations,
-    config.useJavaSerialization)
+    config.kryoRegistrations)
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(ActorSystem("SignalCollect", akkaConfig))

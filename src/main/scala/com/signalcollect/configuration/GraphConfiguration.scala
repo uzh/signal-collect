@@ -56,8 +56,7 @@ case class GraphConfiguration(
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),
-  serializeMessages: Boolean = false,
-  useJavaSerialization: Boolean = true)
+  serializeMessages: Boolean = false)
 
 sealed trait AkkaDispatcher
 object EventBased extends AkkaDispatcher
