@@ -33,7 +33,13 @@ abstract class Edge[+TargetId] extends Serializable {
   /** An edge id uniquely identifies an edge in the graph. */
   def id: EdgeId[_]
 
-  def sourceId: Any = source.id
+  def sourceId: Any = {
+    if (source != null) {
+      source.id
+    } else {
+      null
+    }
+  }
   def targetId: TargetId
   def source: Source
 
@@ -53,7 +59,7 @@ abstract class Edge[+TargetId] extends Serializable {
   override def equals(other: Any): Boolean =
     other match {
       case e: Edge[_] => e.id == id
-      case _          => false
+      case _ => false
     }
 
   /**

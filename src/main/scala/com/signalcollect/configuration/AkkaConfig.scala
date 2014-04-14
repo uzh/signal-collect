@@ -89,7 +89,7 @@ akka {
     }
 
     serialization-bindings {
-      "java.io.Serializable" = none
+      #"java.io.Serializable" = none
       "akka.dispatch.NullMessage$" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.event.Logging$Error" = kryo
@@ -311,6 +311,8 @@ akka {
             "akka.event.Logging$Error",
             "com.esotericsoftware.kryo.KryoException",
             "java.io.NotSerializableException",
+            "akka.actor.PreRestartException",
+            "java.lang.Exception",
             "scala.None$",
             "com.signalcollect.examples.PageRankVertex"
     """ +
