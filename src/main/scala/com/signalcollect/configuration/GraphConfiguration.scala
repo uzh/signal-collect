@@ -60,5 +60,5 @@ case class GraphConfiguration(
   useJavaSerialization: Boolean = true)
 
 sealed trait AkkaDispatcher
-case object EventBased extends AkkaDispatcher
-case object Pinned extends AkkaDispatcher
+object EventBased extends AkkaDispatcher
+object Pinned extends AkkaDispatcher

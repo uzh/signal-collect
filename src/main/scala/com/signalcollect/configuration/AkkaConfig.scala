@@ -90,9 +90,10 @@ akka {
 
     serialization-bindings {
       #"java.io.Serializable" = none
+      #"java.lang.Throwable" = java
+      #"akka.event.Logging$Error" = java
       "akka.dispatch.NullMessage$" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
-      "akka.event.Logging$Error" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
       "scala.Int" = kryo
       "scala.Long" = kryo
@@ -122,7 +123,12 @@ akka {
       "com.signalcollect.interfaces.NodeStatistics" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
+      "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
+      "com.signalcollect.coordinator.OnIdle" = kryo
+      "com.signalcollect.worker.ScheduleOperations$" = kryo
+      "akka.actor.Terminated" = kryo
+      "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
@@ -241,79 +247,7 @@ akka {
         # This section is ignored   for idstrategy=default
         # This section is optional  for idstrategy=explicit
         classes = [
-            "scala.Int",
-            "scala.Long",
-            "scala.Float",
-            "scala.Double",
-            "scala.Some",
-            "scala.None",
-            "com.signalcollect.interfaces.SignalMessage",
-            "com.signalcollect.interfaces.BulkSignal",
-            "com.signalcollect.interfaces.BulkSignalNoSourceIds",
-            "com.signalcollect.interfaces.AddVertex",
-            "com.signalcollect.interfaces.Request",
-            "com.signalcollect.messaging.Command",
-            "com.signalcollect.messaging.AkkaProxy$$anonfun$newInstance$1",
-            "com.signalcollect.messaging.EmptyIncrementor",
-            "com.signalcollect.factory.messagebus.AkkaMessageBusFactory$",
-            "com.signalcollect.factory.mapper.DefaultMapperFactory$",
-            "com.signalcollect.configuration.Pinned$",
-            "com.signalcollect.DefaultGraph$$anonfun$7$$anonfun$apply$1$$anonfun$8",
-            "com.signalcollect.WorkerCreator",
-            "com.signalcollect.configuration.GraphConfiguration",
-            "com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner",
-            "com.signalcollect.factory.scheduler.Throughput$",
-            "com.signalcollect.factory.storage.MemoryEfficientStorage$",
-            "com.signalcollect.factory.worker.DefaultAkkaWorker$",
-            "scala.reflect.ManifestFactory$$anon$1",
-            "java.lang.Class",
-            "java.lang.Object",
-            "akka.actor.RepointableActorRef",
-            "com.signalcollect.interfaces.Request",
-            "com.signalcollect.messaging.Command",
-            "com.signalcollect.interfaces.Request",
-            "com.signalcollect.messaging.AkkaProxy$$anonfun$newInstance$1",
-            "com.signalcollect.messaging.EmptyIncrementor",
-            "scala.collection.convert.Wrappers$JMapWrapper",    
-            "com.signalcollect.interfaces.EdgeId",
-            "com.signalcollect.interfaces.WorkerStatus",
-            "com.signalcollect.interfaces.NodeStatus",
-            "com.signalcollect.interfaces.Heartbeat",
-            "com.signalcollect.interfaces.WorkerStatistics",
-            "com.signalcollect.interfaces.NodeStatistics",
-            "com.signalcollect.interfaces.SentMessagesStats",
-            "scala.collection.mutable.HashMap",
-            "scala.collection.immutable.HashMap$HashTrieMap",
-            "scala.collection.immutable.Map$EmptyMap$",
-            "scala.collection.immutable.Map$Map1",
-            "scala.collection.immutable.Map$Map2",
-            "scala.collection.immutable.Map$Map3",
-            "scala.collection.immutable.Map$Map4",
-            "scala.collection.immutable.HashSet$HashTrieSet",    
-            "scala.collection.immutable.Set$EmptySet$",
-            "scala.collection.immutable.Set$Set1",
-            "scala.collection.immutable.Set$Set2",
-            "scala.collection.immutable.Set$Set3",
-            "scala.collection.immutable.Set$Set4",
-            "scala.collection.immutable.Nil$",
-            "scala.collection.immutable.$colon$colon",
-            "scala.collection.immutable.Vector",
-            "akka.dispatch.NullMessage$",
-            "akka.actor.SystemGuardian$RegisterTerminationHook$",
-            "akka.actor.ReceiveTimeout$",
-            "akka.actor.ReceiveTimeout$",
-            "akka.event.Logging$Error",
-            "com.esotericsoftware.kryo.KryoException",
-            "java.lang.NullPointerException",
-            "akka.event.Logging$Error",
-            "java.lang.StackOverflowError",
-            "com.signalcollect.console.ConsoleLogger",
-            "akka.event.Logging$Error",
-            "com.esotericsoftware.kryo.KryoException",
-            "java.io.NotSerializableException",
-            "akka.actor.PreRestartException",
-            "java.lang.Exception",
-            "scala.None$",
+            "com.signalcollect.examples.PageRankEdge",
             "com.signalcollect.examples.PageRankVertex"
     """ +
     {

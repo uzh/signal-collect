@@ -21,36 +21,112 @@ package com.signalcollect.configuration
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.serializers.DeflateSerializer
-import java.util.HashMap
-import com.esotericsoftware.kryo.serializers.MapSerializer
+import com.esotericsoftware.kryo.Serializer
+import com.signalcollect.interfaces.Request
+import com.signalcollect.messaging.Command
+import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.messaging.Incrementor
+import com.signalcollect.factory.messagebus._
+import com.signalcollect.factory.mapper.DefaultMapperFactory
+import com.signalcollect.worker.AkkaWorker
+import com.signalcollect.WorkerCreator
+import com.signalcollect.factory.worker.DefaultAkkaWorker
 
 class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
-    kryo.setReferences(false)
+    kryo.setReferences(true) // Required for cycle between edges and vertices.
     kryo.setCopyReferences(false)
     register(kryo)
   }
 
   protected def register(kryo: Kryo): Unit = {
-    kryo.register(classOf[Array[Int]])
-    kryo.register(classOf[Array[Long]])
-    kryo.register(classOf[Array[Float]])
-    kryo.register(classOf[Array[Double]])
-    kryo.register(classOf[Array[Boolean]])
-    kryo.register(classOf[Array[String]])
-    kryo.register(classOf[Array[Object]])
-    kryo.register(classOf[Array[java.lang.StackTraceElement]])
-    kryo.register(classOf[Array[Object]])
-    kryo.register(classOf[Array[Array[Int]]])
-    kryo.register(classOf[Array[Array[Long]]])
-    kryo.register(classOf[Array[Array[Float]]])
-    kryo.register(classOf[Array[Array[Double]]])
-    kryo.register(classOf[Array[Array[Boolean]]])
-    kryo.register(classOf[Array[Array[String]]])
-    kryo.register(classOf[Array[Array[Object]]])
-//    val mapSerializer: MapSerializer = new MapSerializer
-//    kryo.register(classOf[HashMap[Any, Any]], mapSerializer)
+    try {
+      def register(s: String) {
+        kryo.register(Class.forName(s))
+      }
+      def registerClass(c: Class[_]) {
+        kryo.register(c)
+      }
+      register("scala.Some")
+      register("scala.None$")
+      register("com.signalcollect.interfaces.SignalMessage")
+      register("com.signalcollect.interfaces.BulkSignal")
+      register("com.signalcollect.interfaces.BulkSignalNoSourceIds")
+      register("com.signalcollect.interfaces.AddVertex")
+      register("com.signalcollect.interfaces.AddEdge")
+      register("com.signalcollect.WorkerCreator")
+      register("com.signalcollect.configuration.GraphConfiguration")
+      register("com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner")
+      register("com.signalcollect.factory.scheduler.Throughput$")
+      register("java.lang.Class")
+      register("java.lang.Object")
+      register("akka.actor.RepointableActorRef")
+      register("scala.collection.convert.Wrappers$JMapWrapper")
+      register("com.signalcollect.interfaces.EdgeId")
+      register("com.signalcollect.interfaces.WorkerStatus")
+      register("com.signalcollect.interfaces.NodeStatus")
+      register("com.signalcollect.interfaces.Heartbeat")
+      register("com.signalcollect.interfaces.WorkerStatistics")
+      register("com.signalcollect.interfaces.NodeStatistics")
+      register("com.signalcollect.interfaces.SentMessagesStats")
+      register("scala.collection.mutable.HashMap")
+      register("scala.collection.immutable.HashMap$HashTrieMap")
+      register("scala.collection.immutable.Map$EmptyMap$")
+      register("scala.collection.immutable.Map$Map1")
+      register("scala.collection.immutable.Map$Map2")
+      register("scala.collection.immutable.Map$Map3")
+      register("scala.collection.immutable.Map$Map4")
+      register("scala.collection.immutable.HashSet$HashTrieSet")
+      register("scala.collection.immutable.Set$EmptySet$")
+      register("scala.collection.immutable.Set$Set1")
+      register("scala.collection.immutable.Set$Set2")
+      register("scala.collection.immutable.Set$Set3")
+      register("scala.collection.immutable.Set$Set4")
+      register("scala.collection.immutable.Nil$")
+      register("scala.collection.immutable.$colon$colon")
+      register("scala.collection.immutable.Vector")
+      register("akka.dispatch.NullMessage$")
+      register("akka.actor.SystemGuardian$RegisterTerminationHook$")
+      register("akka.actor.ReceiveTimeout$")
+      register("com.signalcollect.WorkerCreator$$anonfun$create$1")
+      register("scala.reflect.ManifestFactory$$anon$1")
+      register("com.signalcollect.factory.storage.MemoryEfficientStorage$")
+      register("com.signalcollect.factory.worker.DefaultAkkaWorker$")
+      register("com.signalcollect.coordinator.OnIdle")
+      register("com.signalcollect.worker.ScheduleOperations$")
+      register("akka.actor.Terminated")
+      register("akka.actor.LocalActorRef")
+      register("akka.actor.SystemGuardian$TerminationHookDone$")
+      register("com.signalcollect.configuration.EventBased$")
+      register("com.signalcollect.configuration.Pinned$")
+      register("com.signalcollect.interfaces.Request")
+      register("com.signalcollect.messaging.Command")
+      register("com.signalcollect.messaging.Incrementor$$anonfun$1")
+      register("com.signalcollect.coordinator.DefaultCoordinator$$anonfun$1")
+      register("com.signalcollect.DefaultGraph$$anonfun$11")
+      register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory$")
+      register("com.signalcollect.factory.mapper.DefaultMapperFactory$")
+      register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory")
+      registerClass(classOf[Array[Int]])
+      registerClass(classOf[Array[Long]])
+      registerClass(classOf[Array[Float]])
+      registerClass(classOf[Array[Double]])
+      registerClass(classOf[Array[Boolean]])
+      registerClass(classOf[Array[String]])
+      registerClass(classOf[Array[Object]])
+      registerClass(classOf[Array[java.lang.StackTraceElement]])
+      registerClass(classOf[Array[Object]])
+      registerClass(classOf[Array[Array[Int]]])
+      registerClass(classOf[Array[Array[Long]]])
+      registerClass(classOf[Array[Array[Float]]])
+      registerClass(classOf[Array[Array[Double]]])
+      registerClass(classOf[Array[Array[Boolean]]])
+      registerClass(classOf[Array[Array[String]]])
+      registerClass(classOf[Array[Array[Object]]])
+    } catch {
+      case t: Throwable => t.printStackTrace
+    }
     //registerWithCompression(kryo, classOf[Array[Array[Int]]])
   }
 
