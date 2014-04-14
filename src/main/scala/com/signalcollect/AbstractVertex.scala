@@ -19,7 +19,6 @@
 
 package com.signalcollect
 
-import scala.collection.JavaConversions.mapAsScalaMap
 import com.signalcollect.interfaces.Inspectable
 import akka.event.LoggingAdapter
 import akka.event.Logging
@@ -73,7 +72,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */
-  var outgoingEdges: collection.mutable.Map[Any, Edge[_]] = new java.util.HashMap[Any, Edge[_]](0)
+  var outgoingEdges = Map.empty[Any, Edge[_]]
 
   /** The edges that this vertex is connected to. */
   def edges: Traversable[Edge[_]] = outgoingEdges.values
@@ -97,7 +96,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
       case None =>
         edgesModifiedSinceSignalOperation = true
         edgesModifiedSinceCollectOperation = true
-        outgoingEdges.put(edge.targetId, edge)
+        outgoingEdges += ((edge.targetId, edge))
         edge.onAttach(this, graphEditor)
         true
       case Some(edge) =>
@@ -117,7 +116,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
       case Some(edge) =>
         edgesModifiedSinceSignalOperation = true
         edgesModifiedSinceCollectOperation = true
-        outgoingEdges.remove(targetId)
+        outgoingEdges -= targetId
         true
     }
   }

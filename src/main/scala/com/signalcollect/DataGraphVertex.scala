@@ -63,11 +63,11 @@ abstract class DataGraphVertex[Id, State](
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */
-  protected val mostRecentSignalMap: collection.mutable.Map[Any, Signal] = new java.util.HashMap[Any, Signal](0)
+  protected var mostRecentSignalMap = Map.empty[Any, Signal]
 
   override def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
-    mostRecentSignalMap.put(sourceId.get, signal.asInstanceOf[Signal])
+    mostRecentSignalMap += ((sourceId.get, signal.asInstanceOf[Signal]))
     false
   }
 
