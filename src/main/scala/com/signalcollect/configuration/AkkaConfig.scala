@@ -105,6 +105,11 @@ akka {
       "[D" = kryo
       "[J" = kryo
       "[Ljava.lang.String;" = kryo
+      "[[B" = kryo
+      "[[I" = kryo
+      "[[D" = kryo
+      "[[J" = kryo
+      "[[Ljava.lang.String;" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
