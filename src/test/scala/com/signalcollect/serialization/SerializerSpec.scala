@@ -135,11 +135,71 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       }
     }
 
+    "correctly serialize integers" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Integer.valueOf(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize longs" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Long.box(1l))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize floats" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Float.box(1.0f))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize doubles" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Double.box(1.0d))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize booleans" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Boolean.box(true))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize shorts" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Short.box(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
     def kryoSerializeAndDeserialize(instance: AnyRef) {
       val akka = ActorSystemRegistry.retrieve("SignalCollect").get
       val serialization = SerializationExtension(akka)
       val s = serialization.findSerializerFor(instance)
-//      println(s"${s.getClass} for ${instance.getClass}")
+      //      println(s"${s.getClass} for ${instance.getClass}")
       assert(s.isInstanceOf[KryoSerializer])
       val bytes = s.toBinary(instance)
       val b = s.fromBinary(bytes, manifest = None)

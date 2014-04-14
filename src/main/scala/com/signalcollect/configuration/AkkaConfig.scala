@@ -82,6 +82,12 @@ akka {
       "java.io.Serializable" = none
       "java.lang.Throwable" = java
       "akka.event.Logging$Error" = java
+      "java.lang.Integer" = kryo
+      "java.lang.Long" = kryo
+      "java.lang.Float" = kryo
+      "java.lang.Double" = kryo
+      "java.lang.Boolean" = kryo
+      "java.lang.Short" = kryo
       "akka.dispatch.NullMessage$" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
@@ -89,6 +95,8 @@ akka {
       "scala.Long" = kryo
       "scala.Float" = kryo
       "scala.Double" = kryo
+      "scala.Boolean" = kryo
+      "scala.Short" = kryo
       "scala.Option" = kryo
       "scala.collection.immutable.Map" = kryo
       "scala.collection.Traversable" = kryo
