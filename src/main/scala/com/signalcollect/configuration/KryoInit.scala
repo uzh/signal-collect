@@ -36,11 +36,15 @@ class KryoInit {
     kryo.register(classOf[Array[Float]])
     kryo.register(classOf[Array[Double]])
     kryo.register(classOf[Array[Boolean]])
+    kryo.register(classOf[Array[String]])
     kryo.register(classOf[Array[Object]])
     kryo.register(classOf[Array[Array[Int]]])
-    kryo.register(classOf[Array[Array[Int]]])
-    kryo.register(classOf[Array[Array[Int]]])
-    kryo.register(classOf[Array[Array[Int]]])
+    kryo.register(classOf[Array[Array[Long]]])
+    kryo.register(classOf[Array[Array[Float]]])
+    kryo.register(classOf[Array[Array[Double]]])
+    kryo.register(classOf[Array[Array[Boolean]]])
+    kryo.register(classOf[Array[Array[String]]])
+    kryo.register(classOf[Array[Array[Object]]])
     //registerWithCompression(kryo, classOf[Array[Array[Int]]])
   }
 

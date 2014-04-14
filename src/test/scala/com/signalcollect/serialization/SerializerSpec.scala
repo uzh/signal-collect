@@ -88,6 +88,42 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       }
     }
 
+    "correctly serialize Scala Vector" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Vector.empty[Int])
+        kryoSerializeAndDeserialize(Vector(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala Seq" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize(Seq.empty[Int])
+        kryoSerializeAndDeserialize(Seq(1))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Scala Array" in {
+      val g = GraphBuilder.build
+      try {
+        assert(kryoSerializeAndDeserializeSpecial(Array.empty[Int]).toList == List())
+        assert(kryoSerializeAndDeserializeSpecial(Array(1)).toList == List(1))
+        assert(kryoSerializeAndDeserializeSpecial(Array(1.0)).toList == List(1.0))
+        assert(kryoSerializeAndDeserializeSpecial(Array(1l)).toList == List(1l))
+        assert(kryoSerializeAndDeserializeSpecial(Array("abc")).toList == List("abc"))
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
     def kryoSerializeAndDeserialize(instance: AnyRef) {
       val akka = ActorSystemRegistry.retrieve("SignalCollect").get
       val serialization = SerializationExtension(akka)
@@ -98,9 +134,17 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       assert(b == instance)
     }
 
-  }
+    def kryoSerializeAndDeserializeSpecial[T <: AnyRef](instance: T): T = {
+      val akka = ActorSystemRegistry.retrieve("SignalCollect").get
+      val serialization = SerializationExtension(akka)
+      val s = serialization.findSerializerFor(instance)
+      assert(s.isInstanceOf[KryoSerializer])
+      val bytes = s.toBinary(instance)
+      val b = s.fromBinary(bytes, manifest = None).asInstanceOf[T]
+      b
+    }
 
-  // TODO: None test
+  }
 
   "DefaultSerializer" should {
 

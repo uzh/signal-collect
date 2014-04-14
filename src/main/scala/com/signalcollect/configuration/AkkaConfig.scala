@@ -96,6 +96,11 @@ akka {
       "scala.Double" = kryo
       "scala.Option" = kryo
       "scala.collection.Traversable" = kryo
+      "[B" = kryo
+      "[I" = kryo
+      "[D" = kryo
+      "[J" = kryo
+      "[Ljava.lang.String;" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
       "com.signalcollect.interfaces.SignalMessage" = kryo
@@ -256,6 +261,7 @@ akka {
             "scala.collection.immutable.Set$Set4",
             "scala.collection.immutable.Nil$",
             "scala.collection.immutable.$colon$colon",
+            "scala.collection.immutable.Vector",
             "scala.None$"
     """ +
     {
