@@ -195,6 +195,27 @@ class SerializerSpec extends SpecificationWithJUnit with Mockito {
       }
     }
 
+    "correctly serialize strings" in {
+      val g = GraphBuilder.build
+      try {
+        kryoSerializeAndDeserialize("abc")
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
+    "correctly serialize Java strings" in {
+      val g = GraphBuilder.build
+      try {
+        val javaString: java.lang.String = "abc"
+        kryoSerializeAndDeserialize(javaString)
+        true
+      } finally {
+        g.shutdown
+      }
+    }
+
     def kryoSerializeAndDeserialize(instance: AnyRef) {
       val akka = ActorSystemRegistry.retrieve("SignalCollect").get
       val serialization = SerializationExtension(akka)

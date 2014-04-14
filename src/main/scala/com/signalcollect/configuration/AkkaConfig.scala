@@ -97,6 +97,7 @@ akka {
       "scala.Double" = kryo
       "scala.Boolean" = kryo
       "scala.Short" = kryo
+      "java.lang.String" = kryo
       "scala.Option" = kryo
       "scala.collection.immutable.Map" = kryo
       "scala.collection.Traversable" = kryo
