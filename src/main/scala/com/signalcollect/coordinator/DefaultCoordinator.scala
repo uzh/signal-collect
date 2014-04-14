@@ -70,10 +70,22 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory,
   loggerRef: ActorRef,
   heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
-    with Actor
-    with ActorLogging
-    with ActorRestartLogging
-    with MessageRecipientRegistry {
+  with Actor
+  with ActorLogging
+  with ActorRestartLogging
+  with MessageRecipientRegistry {
+
+  override def postStop {
+    log.debug(s"Coordinator has stopped.")
+  }
+
+  override def postRestart(reason: Throwable): Unit = {
+    super.postRestart(reason)
+    val msg = s"Coordinator crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
+    println(msg)
+    log.error(msg)
+    context.stop(self)
+  }
 
   /**
    * Timeout for Akka actor idling

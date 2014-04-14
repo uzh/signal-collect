@@ -73,10 +73,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   with ActorLogging
   with ActorRestartLogging {
 
+  override def postStop {
+    log.debug(s"Worker $workerId has stopped.")
+  }
+
   override def postRestart(reason: Throwable): Unit = {
+    super.postRestart(reason)
     val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
     println(msg)
-    log.debug(msg)
+    log.error(msg)
+    context.stop(self)
   }
 
   val messageBus: MessageBus[Id, Signal] = {
@@ -235,11 +241,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           }
         }
       } catch {
-        case e: Exception =>
-          val msg = s"Problematic request on worker $workerId: ${e.getStackTraceString}"
+        case t: Throwable =>
+          val msg = s"Problematic request on worker $workerId: ${t.getStackTraceString}"
           println(msg)
           log.debug(msg)
-          throw e
+          throw t
       }
       if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
         scheduleOperations
@@ -254,7 +260,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       worker.counters.otherMessagesReceived += 1
       val msg = s"Worker $workerId could not handle message $other"
       println(msg)
-      log.debug(msg)
+      log.error(msg)
       throw new UnsupportedOperationException(s"Unsupported message: $other")
   }
 
