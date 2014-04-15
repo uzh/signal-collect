@@ -23,6 +23,11 @@ EclipseKeys.withSource := true
 
 jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 
+excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
+  cp filter {_.data.getName == "minlog-1.2.jar"}
+}
+
+
 /** Dependencies */
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.1.4" % "compile",
