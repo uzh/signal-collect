@@ -128,12 +128,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     builder(config.copy(schedulerFactory = newSchedulerFactory))
 
   /**
-   *  Configures the status update interval (in milliseconds).
-   */
-  def withStatusUpdateInterval(newStatusUpdateInterval: Long) =
-    builder(config.copy(statusUpdateIntervalInMilliseconds = newStatusUpdateInterval))
-
-  /**
    *  Configures the Akka dispatcher for the worker actors.
    */
   def withAkkaDispatcher(newAkkaDispatcher: AkkaDispatcher) =

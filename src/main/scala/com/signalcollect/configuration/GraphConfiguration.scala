@@ -49,7 +49,6 @@ case class GraphConfiguration(
   mapperFactory: MapperFactory = DefaultMapperFactory,
   storageFactory: StorageFactory = MemoryEfficientStorage,
   schedulerFactory: SchedulerFactory = Throughput,
-  statusUpdateIntervalInMilliseconds: Long = 500l,
   akkaDispatcher: AkkaDispatcher = Pinned,
   akkaMessageCompression: Boolean = false,
   preallocatedNodes: Option[Array[ActorRef]] = None,
