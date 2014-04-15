@@ -10,18 +10,21 @@ object AkkaConfig {
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
+    kryoInitializer: String,
     port: Int = 0) = ConfigFactory.parseString(
     distributedConfig(
       akkaMessageCompression,
       serializeMessages,
       loggingLevel,
       kryoRegistrations,
+      kryoInitializer,
       port))
   def distributedConfig(
     akkaMessageCompression: Boolean,
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
+    kryoInitializer: String,
     port: Int) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
@@ -237,7 +240,7 @@ akka {
         # If proviced, Kryo uses the class specified by a fully qualified class name
         # to perform a custom initialization of Kryo instances in addition to what
         # is done automatically based on the config file.
-        kryo-custom-serializer-init = "com.signalcollect.configuration.KryoInit"
+        kryo-custom-serializer-init = """" + kryoInitializer + """"
     
         kryo-reference-map = false
 

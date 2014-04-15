@@ -56,6 +56,7 @@ case class GraphConfiguration(
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),
+  kryoInitializer: String = "com.signalcollect.configuration.KryoInit",
   serializeMessages: Boolean = false)
 
 sealed trait AkkaDispatcher

@@ -176,4 +176,13 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withMessageSerialization(newSerializeMessages: Boolean) =
     builder(config.copy(serializeMessages = newSerializeMessages))
 
+  /**
+   *  Sets the fully qualified class name of the Kryo initializer. This class can be used to
+   *  set advanced Kryo configuration parameters.
+   *  Additional documentation can be found at https://github.com/romix/akka-kryo-serialization,
+   *  in the section "How to create a custom initializer for Kryo".
+   */
+  def withKryoInitializer(newKryoInitializer: String) =
+    builder(config.copy(kryoInitializer = newKryoInitializer))
+
 }
