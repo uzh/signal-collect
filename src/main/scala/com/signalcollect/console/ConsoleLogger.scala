@@ -170,7 +170,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   }
 
   def printException(t: Throwable) {
-    System.err.append(s"${t.getClass.getSimpleName}")
+    System.err.append(s"${t.getClass.toString}")
     if (t.getCause != null) println(t.getCause)
     if (t.getMessage != null) println(t.getMessage)
     t.printStackTrace
