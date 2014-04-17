@@ -40,9 +40,10 @@ trait Node {
 
 object AkkaHelper {
   def getRemoteAddress(actorRef: ActorRef, system: ActorSystem): String = {
-    val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
+    /*val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
     val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
     val nodeProvisionerAddress = actorRef.path.toStringWithAddress(akkaSystemAddress.get)
-    nodeProvisionerAddress.toString
+    nodeProvisionerAddress.toString*/
+    actorRef.path.toStringWithAddress(actorRef.path.address).toString()
   }
 }

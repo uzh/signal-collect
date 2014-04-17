@@ -26,6 +26,7 @@ import com.signalcollect.util.Ints
 import com.signalcollect._
 import com.signalcollect.examples.PageRankVertex
 import org.scalatest.Matchers
+import akka.event.Logging
 
 class DummyVertex(id: Int) extends PageRankVertex(id) {
   state = 1
@@ -34,7 +35,7 @@ class DummyVertex(id: Int) extends PageRankVertex(id) {
 class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
 
   "Adding the same vertex multiple times" should "be ignored" in {
-    val g = GraphBuilder.build
+    val g = GraphBuilder.withLoggingLevel(Logging.DebugLevel).build
     try {
       g.addVertex(new DummyVertex(133))
       g.addVertex(new DummyVertex(134))

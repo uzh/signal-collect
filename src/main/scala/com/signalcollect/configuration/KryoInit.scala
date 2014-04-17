@@ -36,7 +36,7 @@ class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
     kryo.setReferences(true) // Required for cycle between edges and vertices.
-    kryo.setCopyReferences(false)
+    //kryo.setCopyReferences(false)
     register(kryo)
   }
 
@@ -102,7 +102,7 @@ class KryoInit {
       register("scala.collection.immutable.Nil$")
       register("scala.collection.immutable.$colon$colon")
       register("scala.collection.immutable.Vector")
-      register("akka.dispatch.NullMessage$")
+      /*register("akka.dispatch.NullMessage$")*/ // Removed this class in akka 2.3.2
       register("akka.actor.SystemGuardian$RegisterTerminationHook$")
       register("akka.actor.ReceiveTimeout$")
       register("com.signalcollect.WorkerCreator$$anonfun$create$1")
@@ -120,7 +120,7 @@ class KryoInit {
       register("com.signalcollect.messaging.Command")
       register("com.signalcollect.messaging.Incrementor$$anonfun$1")
       register("com.signalcollect.coordinator.DefaultCoordinator$$anonfun$1")
-      register("com.signalcollect.DefaultGraph$$anonfun$11")
+      register("com.signalcollect.DefaultGraph$$anonfun$10")
       register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory$")
       register("com.signalcollect.factory.mapper.DefaultMapperFactory$")
       register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory")
@@ -129,6 +129,9 @@ class KryoInit {
       register("com.signalcollect.worker.AkkaWorker$$anonfun$1")
       register("com.signalcollect.worker.IncrementorForWorker")
       register("akka.remote.RemoteActorRef")
+      register("akka.remote.RemoteWatcher$HeartbeatTick$")
+      register("akka.remote.RemoteWatcher$ReapUnreachableTick$")
+      //register("akka.actor.Identify")
       registerClass(classOf[Array[Int]])
       registerClass(classOf[Array[Long]])
       registerClass(classOf[Array[Short]])

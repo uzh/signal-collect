@@ -52,6 +52,9 @@ import com.signalcollect.coordinator.IsIdle
 import scala.language.postfixOps
 import com.signalcollect.interfaces.ComplexAggregation
 import java.net.InetSocketAddress
+import akka.actor.ActorSelection
+import scala.concurrent.duration.DurationInt
+
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -154,14 +157,20 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           numberOfNodes,
           config)
         val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create)
-        actors(workerId) = system.actorFor(workerName)
+        actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
       }
     }
     actors
   }
 
-  val loggerActor: ActorRef = system.actorFor("akka://SignalCollect/system/log1-ConsoleLogger")
+  def getActorRefFromSelection(actorSel: ActorSelection)={
+    implicit val timeout = Timeout(30 seconds)
+    val actorRef = Await.result(actorSel.resolveOne,30 seconds)
+    actorRef
+  }
+  
+  val loggerActor: ActorRef = getActorRefFromSelection(system.actorSelection("/system/log1-ConsoleLogger"))
 
   val coordinatorActor: ActorRef = {
     val coordinatorCreator = CoordinatorCreator[Id, Signal](
@@ -172,8 +181,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       loggerActor,
       config.heartbeatIntervalInMilliseconds)
     config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create), name = "Coordinator")
-      case Pinned => system.actorOf(Props[DefaultCoordinator[Id, Signal]].withCreator(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+      case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]], name = "Coordinator")
+      case Pinned => system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
     }
   }
 
@@ -665,7 +674,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   def awaitIdle {
-    awaitIdle(Duration.create(1000, TimeUnit.DAYS).toNanos)
+    awaitIdle(Duration.create(100, TimeUnit.DAYS).toNanos)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {

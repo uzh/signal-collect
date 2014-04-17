@@ -30,7 +30,8 @@ akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
-  event-handlers = ["com.signalcollect.console.ConsoleLogger"]
+  #event-handlers = ["com.signalcollect.console.ConsoleLogger"]
+  loggers = ["com.signalcollect.console.ConsoleLogger"]
 
   event-handler-startup-timeout = 30s
 
@@ -69,6 +70,7 @@ akka {
     } +
     """
     provider = "akka.remote.RemoteActorRefProvider"
+    #provider = "akka.cluster.ClusterActorRefProvider"
 
   	pinned-dispatcher {
 	  type = PinnedDispatcher
@@ -107,7 +109,7 @@ akka {
       "scala.util.Left" = kryo
       "scala.util.Right" = kryo
       "scala.collection.SortedMap" = kryo
-      "akka.dispatch.NullMessage$" = kryo
+      #"akka.dispatch.NullMessage$" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
       "scala.Int" = kryo
@@ -148,6 +150,14 @@ akka {
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
+      "akka.remote.RemoteWatcher$HeartbeatTick$" = java
+      "akka.remote.RemoteWatcher$ReapUnreachableTick$" = java
+      "akka.dispatch.sysmsg.Terminate" = java
+      "akka.actor.SystemGuardian$TerminationHook$" = java
+      "scala.runtime.BoxedUnit" = java
+      "akka.actor.PoisonPill$" = java
+      "akka.actor.Identify" = java
+      "akka.actor.ActorRef" = java
     """ +
     {
       if (!kryoRegistrations.isEmpty) {

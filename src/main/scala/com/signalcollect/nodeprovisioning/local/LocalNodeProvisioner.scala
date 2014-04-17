@@ -39,8 +39,7 @@ class LocalNodeProvisioner()
     if (system != null) {
       try {
         val nodeControllerCreator = NodeActorCreator(0, 1, None)
-        val nodeController = system.actorOf(Props[DefaultNodeActor].withCreator(
-          nodeControllerCreator.create), name = "DefaultNodeActor")
+        val nodeController = system.actorOf(Props(classOf[DefaultNodeActor],0,1,None), name = "DefaultNodeActor")
         Array[ActorRef](nodeController)
       } catch {
         case e: InvalidActorNameException =>
