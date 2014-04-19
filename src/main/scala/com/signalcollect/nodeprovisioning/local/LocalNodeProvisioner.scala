@@ -27,7 +27,6 @@ import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
 import com.signalcollect.nodeprovisioning.DefaultNodeActor
-import com.signalcollect.nodeprovisioning.NodeActorCreator
 import com.signalcollect.interfaces.MessageBusFactory
 import scala.reflect.ClassTag
 import akka.actor.InvalidActorNameException
@@ -38,7 +37,6 @@ class LocalNodeProvisioner()
     val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
     if (system != null) {
       try {
-        val nodeControllerCreator = NodeActorCreator(0, 1, None)
         val nodeController = system.actorOf(Props(classOf[DefaultNodeActor],0,1,None), name = "DefaultNodeActor")
         Array[ActorRef](nodeController)
       } catch {

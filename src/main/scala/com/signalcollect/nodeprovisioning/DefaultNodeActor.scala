@@ -21,9 +21,6 @@
 
 package com.signalcollect.nodeprovisioning
 
-import com.signalcollect.configuration.AkkaDispatcher
-import com.signalcollect.configuration.EventBased
-import com.signalcollect.configuration.Pinned
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -34,7 +31,6 @@ import com.signalcollect.interfaces.NodeActor
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
 import scala.reflect.ClassTag
-import akka.japi.Creator
 import com.signalcollect.interfaces.NodeStatus
 import scala.language.postfixOps
 import scala.concurrent.duration.DurationInt
@@ -46,20 +42,8 @@ import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.NodeReady
-
-/**
- * Creator in separate class to prevent excessive closure-capture of the
- * TorqueNodeProvisioner class (Error[java.io.NotSerializableException TorqueNodeProvisioner])
- */
-case class NodeActorCreator(
-  nodeId: Int,
-  numberOfNodes: Int,
-  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
-  def create: NodeActor = new DefaultNodeActor(
-    nodeId,
-    numberOfNodes,
-    nodeProvisionerAddress)
-}
+import akka.util.Timeout
+import scala.concurrent.Await
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -169,19 +153,12 @@ class DefaultNodeActor(
 
   def isInitialized = messageBus != null && messageBus.isInitialized
 
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
+  def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     val workerName = "Worker" + workerId
-    dispatcher match {
-      case EventBased =>
-        val worker = context.system.actorOf(Props(creator()), name = workerName)
-        workers = worker :: workers
-        AkkaHelper.getRemoteAddress(worker, context.system)
-      case Pinned =>
-        val worker = context.system.actorOf(Props(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
-        workers = worker :: workers
-        AkkaHelper.getRemoteAddress(worker, context.system)
-    }
+    val worker = context.system.actorOf(Props(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+    workers = worker :: workers
+    AkkaHelper.getRemoteAddress(worker, context.system)
   }
 
   def numberOfCores = {
@@ -192,7 +169,9 @@ class DefaultNodeActor(
   override def preStart() = {
     if (nodeProvisionerAddress.isDefined) {
       println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
-      nodeProvisioner = context.actorFor(nodeProvisionerAddress.get)
+      val selection = context.actorSelection(nodeProvisionerAddress.get)
+      implicit val timeout = Timeout(30 seconds)
+      val nodeProvisioner = Await.result(selection.resolveOne, 30 seconds)
       nodeProvisioner ! NodeReady(nodeId)
     }
   }

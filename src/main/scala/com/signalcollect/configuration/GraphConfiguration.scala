@@ -49,15 +49,9 @@ case class GraphConfiguration(
   mapperFactory: MapperFactory = DefaultMapperFactory,
   storageFactory: StorageFactory = MemoryEfficientStorage,
   schedulerFactory: SchedulerFactory = Throughput,
-  akkaDispatcher: AkkaDispatcher = Pinned,
-  akkaMessageCompression: Boolean = false,
   preallocatedNodes: Option[Array[ActorRef]] = None,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),
   kryoInitializer: String = "com.signalcollect.configuration.KryoInit",
   serializeMessages: Boolean = false)
-
-sealed trait AkkaDispatcher
-object EventBased extends AkkaDispatcher
-object Pinned extends AkkaDispatcher

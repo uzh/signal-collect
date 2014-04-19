@@ -20,18 +20,17 @@
 
 package com.signalcollect.nodeprovisioning
 
-import com.signalcollect.configuration.AkkaDispatcher
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.WorkerActor
+
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import akka.actor.Address
 import akka.actor.ExtendedActorSystem
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MapperFactory
 
 // Has to be a trait to be proxied.
 trait Node {
-  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
+  def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String // string = remote actor address
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory)
   def setStatusReportingInterval(statusReportingInterval: Int)
   def numberOfCores: Int
@@ -40,10 +39,8 @@ trait Node {
 
 object AkkaHelper {
   def getRemoteAddress(actorRef: ActorRef, system: ActorSystem): String = {
-    /*val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
-    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
-    val nodeProvisionerAddress = actorRef.path.toStringWithAddress(akkaSystemAddress.get)
-    nodeProvisionerAddress.toString*/
-    actorRef.path.toStringWithAddress(actorRef.path.address).toString()
+    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getDefaultAddress
+    val remoteAddress = actorRef.path.toStringWithAddress(akkaSystemAddress)
+    remoteAddress.toString
   }
 }

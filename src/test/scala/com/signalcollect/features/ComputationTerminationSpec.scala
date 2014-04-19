@@ -39,7 +39,6 @@ import com.typesafe.config.Config
 import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
-import com.signalcollect.nodeprovisioning.NodeActorCreator
 import com.signalcollect.nodeprovisioning.DefaultNodeActor
 
 @RunWith(classOf[JUnitRunner])
@@ -54,7 +53,6 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
           override def getNodes(akkaConfig: Config): Array[ActorRef] = {
             val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
             if (system != null) {
-              val nodeControllerCreator = NodeActorCreator(0, 1, None)
               val nodeController = system.actorOf(Props(classOf[DefaultNodeActor],0,1,None), name = "DefaultNodeActor")
               Array[ActorRef](nodeController)
             } else {

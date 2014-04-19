@@ -55,7 +55,6 @@ import java.net.InetSocketAddress
 import akka.actor.ActorSelection
 import scala.concurrent.duration.DurationInt
 
-
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
@@ -104,7 +103,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(
-    config.akkaMessageCompression,
     config.serializeMessages,
     config.loggingLevel,
     config.kryoRegistrations,
@@ -156,7 +154,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           numberOfWorkers,
           numberOfNodes,
           config)
-        val workerName = node.createWorker(workerId, config.akkaDispatcher, workerCreator.create)
+        val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
       }
@@ -164,12 +162,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     actors
   }
 
-  def getActorRefFromSelection(actorSel: ActorSelection)={
+  def getActorRefFromSelection(actorSel: ActorSelection) = {
     implicit val timeout = Timeout(30 seconds)
-    val actorRef = Await.result(actorSel.resolveOne,30 seconds)
+    val actorRef = Await.result(actorSel.resolveOne, 30 seconds)
     actorRef
   }
-  
+
   val loggerActor: ActorRef = getActorRefFromSelection(system.actorSelection("/system/log1-ConsoleLogger"))
 
   val coordinatorActor: ActorRef = {
@@ -180,10 +178,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       config.mapperFactory,
       loggerActor,
       config.heartbeatIntervalInMilliseconds)
-    config.akkaDispatcher match {
-      case EventBased => system.actorOf(Props[DefaultCoordinator[Id, Signal]], name = "Coordinator")
-      case Pinned => system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
-    }
+    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
   }
 
   if (console != null) { console.setCoordinator(coordinatorActor) }

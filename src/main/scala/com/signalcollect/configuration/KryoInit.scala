@@ -36,7 +36,7 @@ class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
     kryo.setReferences(true) // Required for cycle between edges and vertices.
-    //kryo.setCopyReferences(false)
+    kryo.setCopyReferences(false)
     register(kryo)
   }
 
@@ -114,8 +114,6 @@ class KryoInit {
       register("akka.actor.Terminated")
       register("akka.actor.LocalActorRef")
       register("akka.actor.SystemGuardian$TerminationHookDone$")
-      register("com.signalcollect.configuration.EventBased$")
-      register("com.signalcollect.configuration.Pinned$")
       register("com.signalcollect.interfaces.Request")
       register("com.signalcollect.messaging.Command")
       register("com.signalcollect.messaging.Incrementor$$anonfun$1")

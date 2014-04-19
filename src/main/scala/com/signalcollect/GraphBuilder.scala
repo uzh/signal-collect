@@ -20,7 +20,6 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
@@ -65,12 +64,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   def withConsole(newConsoleEnabled: Boolean, newConsoleHttpPort: Int) =
     builder(config.copy(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort))
-
-  /**
-   *  Configures if Akka message compression is enabled.
-   */
-  def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) =
-    builder(config.copy(akkaMessageCompression = newAkkaMessageCompression))
 
   /**
    *  Configures the logging level.
@@ -126,12 +119,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   def withSchedulerFactory(newSchedulerFactory: SchedulerFactory) =
     builder(config.copy(schedulerFactory = newSchedulerFactory))
-
-  /**
-   *  Configures the Akka dispatcher for the worker actors.
-   */
-  def withAkkaDispatcher(newAkkaDispatcher: AkkaDispatcher) =
-    builder(config.copy(akkaDispatcher = newAkkaDispatcher))
 
   /**
    *  Initializes S/C with preallocated node actors.
