@@ -268,11 +268,11 @@ akka {
 
       # Sets the send buffer size of the Sockets,
       # set to 0b for platform default
-      send-buffer-size = 2097152b
+      send-buffer-size = 0b
  
       # Sets the receive buffer size of the Sockets,
       # set to 0b for platform default
-      receive-buffer-size = 2097152b
+      receive-buffer-size = 0b
  
       # Maximum message size the transport will accept, but at least
       # 32000 bytes.
@@ -280,12 +280,42 @@ akka {
       # so this setting has to be chosen carefully when using UDP.
       # Both send-buffer-size and receive-buffer-size settings has to
       # be adjusted to be able to buffer messages of maximum size.
-      maximum-frame-size = 1048576b
+      maximum-frame-size = 524288b
 
       # (I) Sets the size of the connection backlog
       backlog = 8192
+      
+    # Used to configure the number of I/O worker threads on server sockets
+      #server-socket-worker-pool {
+        # Min number of threads to cap factor-based number to
+        #pool-size-min = 8
+ 
+        # The pool size factor is used to determine thread pool size
+        # using the following formula: ceil(available processors * factor).
+        # Resulting size is then bounded by the pool-size-min and
+        # pool-size-max values.
+        #pool-size-factor = 1.0
+ 
+        # Max number of threads to cap factor-based number to
+        #pool-size-max = 8
+      #}
+      
+      # Used to configure the number of I/O worker threads on client sockets
+      #client-socket-worker-pool {
+        # Min number of threads to cap factor-based number to
+        #pool-size-min = 8
+ 
+        # The pool size factor is used to determine thread pool size
+        # using the following formula: ceil(available processors * factor).
+        # Resulting size is then bounded by the pool-size-min and
+        # pool-size-max values.
+        #pool-size-factor = 1.0
+ 
+        # Max number of threads to cap factor-based number to
+        #pool-size-max = 8
+      #}
     }
-
+      
   }
 }
 """
