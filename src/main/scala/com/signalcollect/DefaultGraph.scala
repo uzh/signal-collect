@@ -264,14 +264,21 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
     val startTime = System.nanoTime
     val nanosecondLimit = timeLimit.getOrElse(0l) * 1000000l
+    log.debug("Starting synchronous execution.")
     while (!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
+      log.debug(s"Starting signal step #${stats.signalSteps + 1}.")
       workerApi.signalStep
       awaitIdle
       stats.signalSteps += 1
+      log.debug(s"Signal step #${stats.signalSteps} completed.")
+      log.debug(s"Starting collect step #${stats.collectSteps + 1}.")
       converged = workerApi.collectStep
       stats.collectSteps += 1
+      log.debug(s"Collect step #${stats.collectSteps} completed.")
       if (shouldCheckGlobalCondition) {
+        log.debug(s"Checking global termination condition.")
         globalTermination = isGlobalTerminationConditionMet(globalTerminationCondition.get)
+        log.debug(s"Global termination condition met: $globalTermination.")
       }
     }
     if (converged) {
