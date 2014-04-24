@@ -57,18 +57,17 @@ abstract class MemoryEfficientDataGraphVertex[State](
 
   protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
-  val incomingSignalsMap = new IntHashMap[IncomingSignalType](1, 0.85f)
+  val mostRecentSignalMap = new IntHashMap[IncomingSignalType](1, 0.85f)
 
   def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     val s = signal.asInstanceOf[IncomingSignalType]
-    incomingSignalsMap.put(sourceId.get.asInstanceOf[Int], s)
+    mostRecentSignalMap.put(sourceId.get.asInstanceOf[Int], s)
     false
   }
 
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     targetIds.foreach { targetId =>
-      val signal = computeSignal(targetId)
-      graphEditor.sendSignal(signal, targetId, Some(id))
+      graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
     lastSignalState = state
   }
