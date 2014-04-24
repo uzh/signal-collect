@@ -43,9 +43,10 @@ import org.java_websocket.WebSocketImpl
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import org.java_websocket.exceptions.WebsocketNotConnectedException
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json.Extraction._
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.Extraction._
+import org.json4s.native.JsonMethods._
 import java.io.File
 import java.io.InputStream
 import akka.event.Logging

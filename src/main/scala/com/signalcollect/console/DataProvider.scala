@@ -28,9 +28,10 @@ import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json.Extraction._
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.Extraction._
+import org.json4s.native.JsonMethods._
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.ExecutionStatistics

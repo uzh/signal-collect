@@ -22,8 +22,8 @@ import scala.language.postfixOps
 import com.signalcollect.DataGraphVertex
 import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ModularAggregationOperation
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
+import org.json4s._
+import org.json4s.JsonDSL._
 import com.signalcollect.TopKFinder
 import com.signalcollect.Edge
 import com.signalcollect.Vertex

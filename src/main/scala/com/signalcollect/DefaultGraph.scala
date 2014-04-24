@@ -32,8 +32,8 @@ import com.signalcollect.console._
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.sun.management.OperatingSystemMXBean
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
+import org.json4s._
+import org.json4s.JsonDSL._
 import com.signalcollect.configuration._
 import com.signalcollect.coordinator._
 import com.signalcollect.interfaces._
