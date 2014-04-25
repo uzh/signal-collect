@@ -36,18 +36,15 @@ final class MemoryEfficientSplayIntSet extends SplayIntSet {
  * The signal function is the same for all edges and defined in
  * the 'computeSignal' function.
  */
-abstract class MemoryEfficientDataGraphVertex[State](
+abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTag](
   val id: Int,
   var state: State) extends Vertex[Int, State] {
+
+  type OutgoingSignalType
 
   def collect: State
 
   def computeSignal(targetId: Int): OutgoingSignalType
-
-  type IncomingSignalType
-  implicit def tag: ClassTag[IncomingSignalType]
-
-  type OutgoingSignalType
 
   var lastSignalState: State = null.asInstanceOf[State]
 
