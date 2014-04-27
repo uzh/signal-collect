@@ -45,7 +45,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(FINEST) def debug(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).debug(message)
+      case None =>
+    }
   }
 
   /**
@@ -55,7 +59,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(INFO) def info(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).info(message)
+      case None =>
+    }
   }
 
   /**
@@ -65,7 +73,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(WARNING) def warning(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).warning(message)
+      case None =>
+    }
   }
 
   var source: Source = _

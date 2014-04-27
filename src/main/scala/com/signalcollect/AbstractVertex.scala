@@ -36,13 +36,17 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
 
   /**
-   * Calls to debug level logging are by default disregarded by the compiler and do not get executed. 
+   * Calls to debug level logging are by default disregarded by the compiler and do not get executed.
    * To enable them decrease the default S/C "-Xelide-below" compiler parameter from "INFO" to "ALL".
    *
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(FINEST) def debug(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).debug(message)
+      case None =>
+    }
   }
 
   /**
@@ -52,7 +56,11 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(INFO) def info(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).info(message)
+      case None =>
+    }
   }
 
   /**
@@ -62,7 +70,11 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(WARNING) def warning(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).warning(message)
+      case None =>
+    }
   }
 
   /**
