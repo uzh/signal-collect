@@ -100,10 +100,10 @@ import BreakConditionName._
  * @param workerApi a workerApi
  */
 class BreakCondition(val graphConfiguration: GraphConfiguration,
-                     val executionConfiguration: ExecutionConfiguration,
-                     val name: BreakConditionName,
-                     val propsMap: Map[String, String],
-                     val workerApi: WorkerApi[_, _]) {
+  val executionConfiguration: ExecutionConfiguration,
+  val name: BreakConditionName,
+  val propsMap: Map[String, String],
+  val workerApi: WorkerApi[_, _]) {
 
   val props = collection.mutable.Map(propsMap.toSeq: _*)
 
@@ -286,16 +286,16 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
  * @constructor create a new FileServer
  */
 class FileServer() extends HttpHandler {
-  
+
   /** Handles requests to files */
   def handle(t: HttpExchange) {
 
     /** The name of the file to store the log messages to */
     val logFileName = "log_messages.txt"
-    
+
     /** The name of the folder where all web data is stored */
     val folderName = "web-data"
-      
+
     /** The URI of the current request without the leading slash */
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "")
 
@@ -305,12 +305,12 @@ class FileServer() extends HttpHandler {
     }
     val fileType = target match {
       case t if t.matches(".*\\.html$") => "text/html"
-      case t if t.matches(".*\\.css$")  => "text/css"
-      case t if t.matches(".*\\.js$")   => "application/javascript"
-      case t if t.matches(".*\\.png$")  => "image/png"
-      case t if t.matches(".*\\.svg$")  => "image/svg+xml"
-      case t if t.matches(".*\\.ico$")  => "image/x-icon"
-      case otherwise                    => "text/plain"
+      case t if t.matches(".*\\.css$") => "text/css"
+      case t if t.matches(".*\\.js$") => "application/javascript"
+      case t if t.matches(".*\\.png$") => "image/png"
+      case t if t.matches(".*\\.svg$") => "image/svg+xml"
+      case t if t.matches(".*\\.ico$") => "image/x-icon"
+      case otherwise => "text/plain"
     }
 
     /** Get the responseBody of the stream */
@@ -379,7 +379,7 @@ class FileServer() extends HttpHandler {
  * @param config the current graph configuration
  */
 class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
-    extends WebSocketServer(port) {
+  extends WebSocketServer(port) {
 
   // the coordinator, execution and executionConfiguration will be set at a
   // later instance, when they are ready. This is because we start the server
@@ -422,22 +422,23 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
     try {
       val j = parse(msg)
       val p = (j \ "provider").extract[String]
-        def provider: DataProvider = coordinator match {
-          case Some(c) => p match {
-            case "configuration"   => new ConfigurationDataProvider(this, c)
-            case "log"             => new LogDataProvider(c)
-            case "graph"           => new GraphDataProvider(c, j)
-            case "resources"       => new ResourcesDataProvider(c, j)
-            case "state"           => new StateDataProvider(this)
-            case "controls"        => new ControlsProvider(this, j)
-            case "breakconditions" => new BreakConditionsProvider(c, this, j)
-            case otherwise         => new InvalidDataProvider(msg, "invalid provider")
-          }
-          case None => p match {
-            case "state"   => new StateDataProvider(this)
-            case otherwise => new NotReadyDataProvider(msg)
-          }
+      def provider: DataProvider = coordinator match {
+        case Some(c) => p match {
+          case "configuration" => new ConfigurationDataProvider(this, c)
+          // Temporary workaround, delivering log msgs via coordinator was not a good idea.
+          case "log" => new NotReadyDataProvider(msg)
+          case "graph" => new GraphDataProvider(c, j)
+          case "resources" => new ResourcesDataProvider(c, j)
+          case "state" => new StateDataProvider(this)
+          case "controls" => new ControlsProvider(this, j)
+          case "breakconditions" => new BreakConditionsProvider(c, this, j)
+          case otherwise => new InvalidDataProvider(msg, "invalid provider")
         }
+        case None => p match {
+          case "state" => new StateDataProvider(this)
+          case otherwise => new NotReadyDataProvider(msg)
+        }
+      }
 
       try {
         socket.send(compact(render(provider.fetch)))
@@ -455,10 +456,10 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
     } catch {
       // Something is wrong with the WebSocket or the graph/coordinator is already terminated
       case e @ (_: java.lang.InterruptedException |
-                _: akka.pattern.AskTimeoutException |
-                _: org.java_websocket.exceptions.WebsocketNotConnectedException) =>
+        _: akka.pattern.AskTimeoutException |
+        _: org.java_websocket.exceptions.WebsocketNotConnectedException) =>
         println("Warning: Console communication interrupted " +
-                "(likely due to graph shutdown)")
+          "(likely due to graph shutdown)")
       case e: Exception =>
         println("Warning: Unknown exception occured")
     }
@@ -539,16 +540,16 @@ object Toolkit {
   /** Serialize objects or collections of arbitrary type  */
   def serializeAny(o: Any): JValue = {
     o match {
-      case x: Array[_]                 => JArray(x.toList.map(serializeAny(_)))
-      case x: List[_]                  => JArray(x.map(serializeAny(_)))
-      case x: Long                     => JInt(x)
-      case x: Int                      => JInt(x)
-      case x: String                   => JString(x)
-      case x: Double if x.isNaN        => JDouble(0)
-      case x: Double                   => JDouble(x)
-      case x: Map[_, _]                => decompose(x)
+      case x: Array[_] => JArray(x.toList.map(serializeAny(_)))
+      case x: List[_] => JArray(x.map(serializeAny(_)))
+      case x: Long => JInt(x)
+      case x: Int => JInt(x)
+      case x: String => JString(x)
+      case x: Double if x.isNaN => JDouble(0)
+      case x: Double => JDouble(x)
+      case x: Map[_, _] => decompose(x)
       case x: BreakConditionName.Value => JString(x.toString)
-      case other                       => JString(other.toString)
+      case other => JString(other.toString)
     }
   }
 }
