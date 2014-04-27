@@ -64,11 +64,6 @@ akka {
     """
     provider = "akka.remote.RemoteActorRefProvider"
     
-  	pinned-dispatcher {
-	  type = PinnedDispatcher
-	  executor = "thread-pool-executor"
-  	}
-    
     serializers {
       kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
     }
