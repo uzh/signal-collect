@@ -36,11 +36,14 @@ import com.signalcollect.factory.mapper.DefaultMapperFactory
 import com.signalcollect.storage.VertexMapStorage
 import com.signalcollect.factory.storage.MemoryEfficientStorage
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
 
 /**
  * All the graph configuration parameters with their defaults.
  */
 case class GraphConfiguration(
+  actorSystem: Option[ActorSystem] = None,
+  actorNamePrefix: String = "",
   consoleEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,

@@ -21,11 +21,9 @@
 package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationLong
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.Heartbeat
@@ -39,13 +37,14 @@ import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.messaging.AkkaProxy
+import com.signalcollect.util.AkkaUtil._
 import com.sun.management.OperatingSystemMXBean
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
+import org.json4s.JsonAST.JValue
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -68,7 +67,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
   mapperFactory: MapperFactory,
-  loggerRef: ActorRef,
   heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
   with Actor
   with ActorLogging
@@ -92,10 +90,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
    */
   context.setReceiveTimeout(Duration.Undefined)
 
-  val logger = AkkaProxy.newInstance[Logger](loggerRef)
-
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
+      context.system,
       numberOfWorkers,
       numberOfNodes,
       mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
@@ -363,10 +360,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     } else {
       (bean.asInstanceOf[OperatingSystemMXBean]).getProcessCpuTime
     }
-  }
-
-  def getLogMessages = {
-    logger.getLogMessages
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

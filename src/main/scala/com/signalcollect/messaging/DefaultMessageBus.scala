@@ -22,8 +22,10 @@ package com.signalcollect.messaging
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
+import akka.actor.ActorSystem
 
 class DefaultMessageBus[Id, Signal](
+    val system: ActorSystem,
     val numberOfWorkers: Int,
     val numberOfNodes: Int,
     val mapper: VertexToWorkerMapper[Id],

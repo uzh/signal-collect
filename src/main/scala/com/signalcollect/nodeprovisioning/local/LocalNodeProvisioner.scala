@@ -30,18 +30,17 @@ import com.signalcollect.nodeprovisioning.DefaultNodeActor
 import com.signalcollect.interfaces.MessageBusFactory
 import scala.reflect.ClassTag
 import akka.actor.InvalidActorNameException
+import akka.actor.ActorSystem
 
-class LocalNodeProvisioner()
+class LocalNodeProvisioner
   extends NodeProvisioner {
-  def getNodes(akkaConfig: Config): Array[ActorRef] = {
-    val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
-    if (system != null) {
-      try {
-        val nodeController = system.actorOf(Props(classOf[DefaultNodeActor],0,1,None), name = "DefaultNodeActor")
-        Array[ActorRef](nodeController)
-      } catch {
-        case e: InvalidActorNameException =>
-          throw new Exception("""An instance of Signal/Collect is already running on this JVM.
+  def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
+    try {
+      val nodeController = localSystem.actorOf(Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None), name = actorNamePrefix + "DefaultNodeActor")
+      Array[ActorRef](nodeController)
+    } catch {
+      case e: InvalidActorNameException =>
+        throw new Exception("""An instance of Signal/Collect is already running on this JVM and using the same actor name prefix.
 This often happens during test executions. If you are using SBT, try setting "parallelExecution in Test := false"
 If the problem persists, then maybe Signal/Collect is not properly shut down after a test?
 You might want to use this pattern in all tests:
@@ -54,9 +53,6 @@ try {
   graph.shutdown
 }
 """)
-      }
-    } else {
-      throw new Exception("No suitable actor system found in ActorSystemRegistry.")
     }
   }
 }

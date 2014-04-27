@@ -26,15 +26,18 @@ import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.messaging.BulkMessageBus
 import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
+import akka.actor.ActorSystem
 
 object AkkaMessageBusFactory extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
+    system: ActorSystem,
     numberOfWorkers: Int,
     numberOfNodes: Int,
     mapper: VertexToWorkerMapper[Id],
     sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
     new DefaultMessageBus[Id, Signal](
+      system,
       numberOfWorkers,
       numberOfNodes,
       mapper,
@@ -50,12 +53,14 @@ object AkkaMessageBusFactory extends MessageBusFactory {
  */
 class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) extends MessageBusFactory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
+    system: ActorSystem,
     numberOfWorkers: Int,
     numberOfNodes: Int,
     mapper: VertexToWorkerMapper[Id],
     sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
     new BulkMessageBus[Id, Signal](
+      system,
       numberOfWorkers,
       numberOfNodes,
       mapper,

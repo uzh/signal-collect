@@ -40,28 +40,13 @@ import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
 import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import akka.actor.ActorSystem
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
-  def createCircleGraph(vertices: Int, numberOfWorkers: Option[Int] = None): Graph[Any, Any] = {
-    val graph = {
-      if (numberOfWorkers.isEmpty) {
-        GraphBuilder.build
-      } else {
-        GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner {
-          override def getNodes(akkaConfig: Config): Array[ActorRef] = {
-            val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(throw new Exception("No actor system with name \"SignalCollect\" found!"))
-            if (system != null) {
-              val nodeController = system.actorOf(Props(classOf[DefaultNodeActor],0,1,None), name = "DefaultNodeActor")
-              Array[ActorRef](nodeController)
-            } else {
-              Array[ActorRef]()
-            }
-          }
-        }).build
-      }
-    }
+  def createCircleGraph(vertices: Int): Graph[Any, Any] = {
+    val graph = GraphBuilder.build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -97,24 +82,23 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
   }
 
-  "Convergence detection" should {
-
-    "work for asynchronous computations with one worker" in {
-      val graph = createCircleGraph(3, Some(1))
-      try {
-        val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
-        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
-        state > 0.99
-        val aggregate = graph.aggregate(new SumOfStates[Double]).get
-        if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
-          println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
-        }
-        aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
-      } finally {
-        graph.shutdown
-      }
-    }
-  }
+  //  "Convergence detection" should {
+  //    "work for asynchronous computations with one worker" in {
+  //      val graph = createCircleGraph(3, Some(1))
+  //      try {
+  //        val info = graph.execute(ExecutionConfiguration.withSignalThreshold(0.0001))
+  //        val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
+  //        state > 0.99
+  //        val aggregate = graph.aggregate(new SumOfStates[Double]).get
+  //        if (info.executionStatistics.terminationReason != TerminationReason.Converged) {
+  //          println("Computation ended for the wrong reason: " + info.executionStatistics.terminationReason)
+  //        }
+  //        aggregate > 2.99 && info.executionStatistics.terminationReason == TerminationReason.Converged
+  //      } finally {
+  //        graph.shutdown
+  //      }
+  //    }
+  //  }
 
   "Global convergence" should {
 

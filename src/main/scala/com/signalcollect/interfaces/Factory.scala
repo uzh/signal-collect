@@ -20,9 +20,9 @@
 package com.signalcollect.interfaces
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
+import akka.actor.ActorSystem
 
 abstract class Factory extends Serializable
 
@@ -36,6 +36,7 @@ abstract class WorkerFactory extends Factory {
 
 abstract class MessageBusFactory extends Factory {
   def createInstance[Id: ClassTag, Signal: ClassTag](
+    system: ActorSystem,
     numberOfWorkers: Int,
     numberOfNodes: Int,
     mapper: VertexToWorkerMapper[Id],

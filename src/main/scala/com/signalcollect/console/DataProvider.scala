@@ -39,6 +39,7 @@ import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 import akka.actor.ActorLogging
+import com.signalcollect.interfaces.Logger
 
 /** Abstract class defining the interface every DataProvider has to implement. */
 abstract class DataProvider {
@@ -174,10 +175,10 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
  * @constructor create a new LogDataProvider
  * @param coordinator the Coordinator
  */
-class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
+class LogDataProvider[Id](logger: Logger) extends DataProvider {
   def fetch(): JObject = {
     ("provider" -> "log") ~
-      ("messages" -> coordinator.getLogMessages)
+      ("messages" -> logger.getLogMessages)
   }
 }
 

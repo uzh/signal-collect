@@ -28,17 +28,31 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-import com.signalcollect.console._
+import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.configuration.AkkaConfig
+import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.configuration.GraphConfiguration
+import com.signalcollect.configuration.TerminationReason
+import com.signalcollect.console.BreakCondition
+import com.signalcollect.console.BreakConditionsAggregator
+import com.signalcollect.console.ConsoleServer
+import com.signalcollect.console.Execution
+import com.signalcollect.coordinator.DefaultCoordinator
+import com.signalcollect.coordinator.IsIdle
+import com.signalcollect.coordinator.OnIdle
+import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.MessageRecipientRegistry
+import com.signalcollect.interfaces.NodeActor
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.interfaces.WorkerFactory
+import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
-import com.sun.management.OperatingSystemMXBean
-import org.json4s._
-import org.json4s.JsonDSL._
-import com.signalcollect.configuration._
-import com.signalcollect.coordinator._
-import com.signalcollect.interfaces._
-import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.messaging.DefaultVertexToWorkerMapper
+import com.signalcollect.util.AkkaUtil.getActorRefFromSelection
 import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
@@ -47,13 +61,7 @@ import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
-import com.signalcollect.coordinator.OnIdle
-import com.signalcollect.coordinator.IsIdle
-import scala.language.postfixOps
-import com.signalcollect.interfaces.ComplexAggregation
-import java.net.InetSocketAddress
-import akka.actor.ActorSelection
-import scala.concurrent.duration.DurationInt
+import akka.actor.PoisonPill
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -82,7 +90,6 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory,
   mapperFactory: MapperFactory,
-  logger: ActorRef,
   heartbeatIntervalInMilliseconds: Long)
   extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
@@ -90,7 +97,6 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
     numberOfNodes,
     messageBusFactory,
     mapperFactory,
-    logger,
     heartbeatIntervalInMilliseconds)
 }
 
@@ -109,7 +115,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     config.kryoInitializer)
   override def toString: String = "DefaultGraph"
 
-  val system: ActorSystem = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(ActorSystem("SignalCollect", akkaConfig))
+  val system: ActorSystem = config.actorSystem.getOrElse(ActorSystem("SignalCollect", akkaConfig))
+
   if (!ActorSystemRegistry.contains(system)) {
     ActorSystemRegistry.register(system)
   }
@@ -127,7 +134,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   val nodeActors = if (config.preallocatedNodes.isDefined) {
     config.preallocatedNodes.get
   } else {
-    config.nodeProvisioner.getNodes(akkaConfig)
+    config.nodeProvisioner.getNodes(system, config.actorNamePrefix, akkaConfig)
   }
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
@@ -162,23 +169,14 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     actors
   }
 
-  def getActorRefFromSelection(actorSel: ActorSelection) = {
-    implicit val timeout = Timeout(30 seconds)
-    val actorRef = Await.result(actorSel.resolveOne, 30 seconds)
-    actorRef
-  }
-
-  val loggerActor: ActorRef = getActorRefFromSelection(system.actorSelection("/system/log1-ConsoleLogger"))
-
   val coordinatorActor: ActorRef = {
     val coordinatorCreator = CoordinatorCreator[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
       config.messageBusFactory,
       config.mapperFactory,
-      loggerActor,
       config.heartbeatIntervalInMilliseconds)
-    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.actor.pinned-dispatcher"), name = "Coordinator")
+    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.io.pinned-dispatcher"), name = config.actorNamePrefix + "Coordinator")
   }
 
   if (console != null) { console.setCoordinator(coordinatorActor) }
@@ -707,12 +705,23 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   def isIdle = coordinatorProxy.isIdle
 
-  def shutdown = {
-    parallelBootstrapNodeProxies.foreach(_.shutdown)
+  def shutdown {
     if (console != null) { console.shutdown }
-    system.shutdown
-    system.awaitTermination
-    ActorSystemRegistry.remove(system)
+    // Only shut down the actor system if we created it.
+    if (config.actorSystem.isEmpty) {
+      // The node proxies also shutdown their respective actor systems.
+      parallelBootstrapNodeProxies.foreach(_.shutdown)
+      system.shutdown
+      system.awaitTermination
+      ActorSystemRegistry.remove(system)
+    } else {
+      // If the system is preserved, just cleanup the actors.
+      workerActors.foreach(_ ! PoisonPill)
+      nodeActors.foreach(_ ! PoisonPill)
+      // Give the status messages a few milliseconds, to avoid dead letter msgs.
+      Thread.sleep(50)
+      coordinatorActor ! PoisonPill
+    }
   }
 
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](

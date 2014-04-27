@@ -1,8 +1,7 @@
 /*
  *  @author Philip Stutz
- *  @author Thomas Keller
  *
- *  Copyright 2012 University of Zurich
+ *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,15 +14,21 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
  */
 
-package com.signalcollect.nodeprovisioning
+package com.signalcollect.util
 
-import com.typesafe.config.Config
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
+import scala.language.postfixOps
 
-trait NodeProvisioner extends Serializable {
-  def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef]
+import akka.actor.ActorSelection
+import akka.util.Timeout
+
+object AkkaUtil {
+  def getActorRefFromSelection(actorSel: ActorSelection) = {
+    implicit val timeout = Timeout(30 seconds)
+    val actorRef = Await.result(actorSel.resolveOne, 30 seconds)
+    actorRef
+  }
 }

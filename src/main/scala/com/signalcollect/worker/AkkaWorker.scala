@@ -87,6 +87,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val messageBus: MessageBus[Id, Signal] = {
     messageBusFactory.createInstance[Id, Signal](
+      context.system,
       numberOfWorkers,
       numberOfNodes,
       mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),

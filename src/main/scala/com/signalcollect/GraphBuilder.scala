@@ -30,6 +30,7 @@ import akka.event.Logging
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.MapperFactory
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -128,6 +129,31 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    */
   def withPreallocatedNodes(nodes: Array[ActorRef]) =
     builder(config.copy(preallocatedNodes = Some(nodes)))
+
+  /**
+   *  Initializes S/C with an already existing actor system.
+   *
+   *  Using this option will mean that the user is responsible for
+   *  configuring options related to serialization, networking,
+   *  port, etc in a way that agrees with S/C.
+   *
+   *  @note: The logging inside the default vertices and edges only works when the
+   *  actor system is called "SignalCollect".
+   *
+   *  @param system: The actor system on which S/C will be deployed.
+   */
+  def withActorSystem(system: ActorSystem) =
+    builder(config.copy(actorSystem = Some(system)))
+
+  /**
+   * Instructs S/C to use a prefix for all actor names.
+   * This allows multiple instances of S/C to run on the
+   * same actor system, as long as they use different prefixes.
+   *
+   * @param prefix: The prefix that S/C uses for actor names.
+   */
+  def withActorNamePrefix(prefix: String) =
+    builder(config.copy(actorNamePrefix = prefix))
 
   /**
    *  Configures the node provider.

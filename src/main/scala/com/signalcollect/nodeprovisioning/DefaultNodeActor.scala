@@ -59,6 +59,7 @@ case class IncrementorForNode(nodeId: Int) {
  * Class that controls a node on which Signal/Collect workers run.
  */
 class DefaultNodeActor(
+  val actorNamePrefix: String,
   val nodeId: Int,
   val numberOfNodes: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
@@ -126,7 +127,8 @@ class DefaultNodeActor(
 
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory) {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    messageBus = messageBusFactory.createInstance(numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes), IncrementorForNode(nodeId).increment _)
+    messageBus = messageBusFactory.createInstance(
+      context.system, numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes), IncrementorForNode(nodeId).increment _)
   }
 
   protected var lastStatusUpdate = System.currentTimeMillis
@@ -156,7 +158,9 @@ class DefaultNodeActor(
   def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     val workerName = "Worker" + workerId
-    val worker = context.system.actorOf(Props(creator()).withDispatcher("akka.actor.pinned-dispatcher"), name = workerName)
+    val worker = context.system.actorOf(
+      Props(creator()).withDispatcher("akka.io.pinned-dispatcher"),
+      name = actorNamePrefix + workerName)
     workers = worker :: workers
     AkkaHelper.getRemoteAddress(worker, context.system)
   }
