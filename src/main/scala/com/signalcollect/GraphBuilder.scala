@@ -179,4 +179,10 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   def withKryoInitializer(newKryoInitializer: String) =
     builder(config.copy(kryoInitializer = newKryoInitializer))
 
+  /**
+   * Sets if the ActorSystem should be shutdown as well when the graph is shutting down
+   */
+  def withShutdownActorSystem(newShutdownActorSystem: Boolean) = 
+    builder(config.copy(shutdownActorSystem = newShutdownActorSystem))
+  
 }

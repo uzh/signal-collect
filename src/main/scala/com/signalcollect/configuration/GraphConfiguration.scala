@@ -56,7 +56,8 @@ case class GraphConfiguration(
   heartbeatIntervalInMilliseconds: Int = 100,
   kryoRegistrations: List[String] = List(),
   kryoInitializer: String = "com.signalcollect.configuration.KryoInit",
-  serializeMessages: Boolean = false)
+  serializeMessages: Boolean = false,
+  shutdownActorSystem: Boolean = true)
 
 sealed trait AkkaDispatcher
 object EventBased extends AkkaDispatcher

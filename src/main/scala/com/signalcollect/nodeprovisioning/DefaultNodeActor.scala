@@ -54,11 +54,13 @@ import com.signalcollect.interfaces.NodeReady
 case class NodeActorCreator(
   nodeId: Int,
   numberOfNodes: Int,
-  nodeProvisionerAddress: Option[String]) extends Creator[NodeActor] {
+  nodeProvisionerAddress: Option[String],
+  shutdownActorSystem: Boolean = true) extends Creator[NodeActor] {
   def create: NodeActor = new DefaultNodeActor(
     nodeId,
     numberOfNodes,
-    nodeProvisionerAddress)
+    nodeProvisionerAddress,
+    shutdownActorSystem)
 }
 
 /**
@@ -77,7 +79,8 @@ case class IncrementorForNode(nodeId: Int) {
 class DefaultNodeActor(
   val nodeId: Int,
   val numberOfNodes: Int,
-  val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
+  val nodeProvisionerAddress: Option[String],
+  val shutdownActorSystem: Boolean = true// Specify if the worker should report when it is ready.
   ) extends NodeActor
   with ActorLogging
   with ActorRestartLogging {
@@ -199,7 +202,9 @@ class DefaultNodeActor(
 
   def shutdown = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    context.system.shutdown
+    if(shutdownActorSystem){
+    	context.system.shutdown
+    }
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

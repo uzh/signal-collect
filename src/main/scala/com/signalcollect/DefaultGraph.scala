@@ -713,9 +713,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   def shutdown = {
     parallelBootstrapNodeProxies.foreach(_.shutdown)
     if (console != null) { console.shutdown }
-    system.shutdown
-    system.awaitTermination
-    ActorSystemRegistry.remove(system)
+    println("shutdown:" +config.shutdownActorSystem)
+    if(config.shutdownActorSystem){
+    	system.shutdown
+    	system.awaitTermination
+    	ActorSystemRegistry.remove(system)
+    }
   }
 
   def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](
