@@ -713,7 +713,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   def shutdown = {
     parallelBootstrapNodeProxies.foreach(_.shutdown)
     if (console != null) { console.shutdown }
-    println("shutdown:" +config.shutdownActorSystem)
     if(config.shutdownActorSystem){
     	system.shutdown
     	system.awaitTermination
