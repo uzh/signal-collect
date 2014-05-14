@@ -31,12 +31,14 @@ import com.signalcollect.factory.mapper.DefaultMapperFactory
 import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.WorkerCreator
 import com.signalcollect.factory.worker.DefaultAkkaWorker
+import com.romix.scala.serialization.kryo.EnumerationSerializer
 
 class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
     kryo.setReferences(true) // Required for cycle between edges and vertices.
     kryo.setCopyReferences(false)
+    kryo.addDefaultSerializer(classOf[scala.Enumeration#Value], classOf[EnumerationSerializer])
     register(kryo)
   }
 
@@ -129,6 +131,11 @@ class KryoInit {
       register("com.signalcollect.worker.AkkaWorker$$anonfun$1")
       register("com.signalcollect.worker.IncrementorForWorker")
       register("akka.remote.RemoteActorRef")
+      register("akka.remote.RemoteClientConnected")
+      register("akka.remote.RemoteServerClientConnected")
+      register("akka.remote.RemoteClientStarted")
+      register("akka.remote.RemoteServerClientDisconnected")
+      register("akka.remote.RemoteClientShutdown")
       registerClass(classOf[Array[Int]])
       registerClass(classOf[Array[Long]])
       registerClass(classOf[Array[Short]])

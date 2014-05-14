@@ -85,6 +85,11 @@ akka {
       "java.io.Serializable" = none
       "java.lang.Throwable" = java
       "akka.event.Logging$Error" = java
+      "akka.remote.RemoteServerClientConnected" = kryo
+      "akka.remote.RemoteClientConnected" = kryo
+      "akka.remote.RemoteServerClientDisconnected" = kryo
+      "akka.remote.RemoteServerClientClosed" = kryo
+      "akka.remote.RemoteClientShutdown" = kryo
       "java.lang.Integer" = kryo
       "java.lang.Long" = kryo
       "java.lang.Float" = kryo
