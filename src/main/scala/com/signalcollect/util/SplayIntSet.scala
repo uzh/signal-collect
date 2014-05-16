@@ -27,11 +27,17 @@ object SplayIntSet {
   @inline def ?(n: AnyRef) = n != null
 }
 
-final class SplayNode {
+final class SplayNode(
+  var intSet: Array[Byte],
+  var intervalFrom: Int = Int.MinValue,
+  var intervalTo: Int = Int.MaxValue) {
   import SplayIntSet._
-  var intSet: Array[Byte] = Ints.createEmptyFastInsertIntSet
   var left: SplayNode = _
   var right: SplayNode = _
+
+  override def toString = {
+    s"SplayNode([$intervalFrom to $intervalTo], smallest element = $minElement, #entries = $size)"
+  }
 
   def insert(i: Int, overheadFraction: Float): Boolean = {
     val sizeBefore = new FastInsertIntSet(intSet).size
@@ -44,11 +50,6 @@ final class SplayNode {
    * Assumes that the int set is not null.
    */
   @tailrec final def foreach(f: Int => Unit, pending: List[SplayNode] = Nil) {
-    // TODO: Parallelize using async if we can make the BulkMessageBus thread safe.
-    // Recursive impl: danger of stack overflow.
-    //    new FastInsertIntSet(intSet).foreach(f)
-    //    if (?(left)) left.foreach(f)
-    //    if (?(right)) right.foreach(f)
     new FastInsertIntSet(intSet).foreach(f)
     if (?(left) && ?(right)) {
       left.foreach(f, right :: pending)
@@ -65,10 +66,48 @@ final class SplayNode {
     }
   }
 
-  def min: Int = new FastInsertIntSet(intSet).min
+  final def validate {
+    foreachNode {
+      node =>
+        if (?(node.left)) {
+          assert(node.intervalFrom > node.left.intervalTo)
+        }
+        if (?(node.right)) {
+          assert(node.intervalTo < node.right.intervalFrom)
+        }
+    }
+  }
+
+  @tailrec final def foreachNode(f: SplayNode => Unit, pending: List[SplayNode] = Nil) {
+    f(this)
+    if (?(left) && ?(right)) {
+      left.foreachNode(f, right :: pending)
+    } else if (?(left)) {
+      left.foreachNode(f, pending)
+    } else if (?(right)) {
+      right.foreachNode(f, pending)
+    } else {
+      pending match {
+        case Nil =>
+        case head :: tail =>
+          head.foreachNode(f, tail)
+      }
+    }
+  }
+
+  def size: Int = new FastInsertIntSet(intSet).size
+
+  def minElement: Int = new FastInsertIntSet(intSet).min
 
 }
 
+/**
+ * Uses Splay trees to efficiently store integer sets.
+ * Whilst an ordinary Splay tree contains one number per node, here each node
+ * is responsible for a whole interval. The initial interval of the root node
+ * spans all integers. Whenever a node reaches 'maxNodeIntSetSize', that node is split into
+ * two nodes, and the interval for which the nodes are responsible is also split.
+ */
 abstract class SplayIntSet {
   import SplayIntSet._
 
@@ -103,21 +142,29 @@ abstract class SplayIntSet {
    */
   def insert(i: Int): Boolean = {
     if (?(root)) {
-      root = splay(root, i, false)
+      root = splay(root, i)
       val inserted = root.insert(i, overheadFraction)
+      //println(s"Inserted $i into ${new FastInsertIntSet(root.intSet).toList}")
       if (inserted) size += 1
       val nodeIntSet = new FastInsertIntSet(root.intSet)
       val nodeIntSetSize = nodeIntSet.size
       if (nodeIntSetSize > maxNodeIntSetSize) {
+        //println(s"Has now more than $maxNodeIntSetSize entires, splitting")
         val (set1, set2) = new FastInsertIntSet(root.intSet).split(overheadFraction)
-        root.intSet = set1
-        root = splay(root, new FastInsertIntSet(set2).min, true)
+        val set2Min = new FastInsertIntSet(set2).min
+        val newNode = new SplayNode(set1, root.intervalFrom, set2Min - 1)
         root.intSet = set2
+        root.intervalFrom = set2Min
+        //        println(s"Root: $root")
+        //        println(s"New node: $newNode")
+        insertNode(root, newNode)
       }
       return inserted
     } else {
       // Tree is empty.
-      root = new SplayNode
+      val repr = Ints.createEmptyFastInsertIntSet
+      new FastInsertIntSet(repr).insert(i, overheadFraction)
+      root = new SplayNode(repr)
       root.insert(i, overheadFraction)
       size += 1
       return true
@@ -125,135 +172,96 @@ abstract class SplayIntSet {
   }
 
   /**
-   * Searches for the node that is responsible for key i, starting from node 'root'.
-   * Splays the responsible node to the where 'root' is initially and returns it.
-   * If create is set, then a new node for that key is created and splayed up to the root,
-   * but only if it is not already contained.
+   * Searches from root for an insertion point for 'newNode'.
+   * There can be no other node in the tree that intersects with the interval of 'newNode'.
    */
-  @tailrec private def splay(root: SplayNode, i: Int, create: Boolean): SplayNode = {
-    val rootMin = root.min
-    if (i < rootMin) {
+  @tailrec private def insertNode(root: SplayNode, newNode: SplayNode) {
+    if (newNode.intervalTo < root.intervalFrom) {
       val rootLeft = root.left
       if (?(rootLeft)) {
-        val rootLeftMin = rootLeft.min
-        if (i < rootLeftMin) {
-          val rootLeftLeft = rootLeft.left
-          if (?(rootLeftLeft)) {
-            splay(rightRight(root, rootLeft, rootLeftLeft), i, create)
-          } else {
-            if (create) {
-              val newNode = new SplayNode
-              rootLeft.left = newNode
-              rightRight(root, rootLeft, newNode)
-            } else {
-              right(root, rootLeft)
-            }
-          }
-        } else if (i > rootLeftMin) {
-          val rootLeftRight = rootLeft.right
-          if (?(rootLeftRight)) {
-            splay(leftRight(root, rootLeft, rootLeftRight), i, create)
-          } else {
-            if (create) {
-              val newNode = new SplayNode
-              rootLeft.right = newNode
-              leftRight(root, rootLeft, newNode)
-            } else {
-              // no creation necessary.
-              right(root, rootLeft)
-            }
-          }
-        } else {
-          // i == root.left.min, no creation necessary.
-          right(root, rootLeft)
-        }
+        insertNode(rootLeft, newNode)
       } else {
-        // rootLeft == null
-        if (create) {
-          val newNode = new SplayNode
-          root.left = newNode
-          right(root, newNode)
-        } else {
-          root
-        }
+        root.left = newNode
       }
-    } else if (i > rootMin) {
+    } else if (newNode.intervalFrom > root.intervalTo) {
       val rootRight = root.right
       if (?(rootRight)) {
-        val rootRightMin = rootRight.min
-        if (i < rootRightMin) {
-          val rootRightLeft = rootRight.left
-          if (?(rootRightLeft)) {
-            splay(rightLeft(root, rootRight, rootRightLeft), i, create)
-          } else {
-            if (create) {
-              val newNode = new SplayNode
-              rootRight.left = newNode
-              rightLeft(root, rootRight, newNode)
-            } else {
-              left(root, rootRight)
-            }
-          }
-        } else if (i > rootRightMin) {
-          val rootRightRight = rootRight.right
-          if (?(rootRightRight)) {
-            splay(leftLeft(root, rootRight, rootRightRight), i, create)
-          } else {
-            if (create) {
-              val newNode = new SplayNode
-              rootRight.right = newNode
-              leftLeft(root, rootRight, newNode)
-            } else {
-              // no creation necessary.
-              left(root, rootRight)
-            }
-          }
-        } else {
-          // i == root.right.min, no creation necessary.
-          left(root, rootRight)
-        }
+        insertNode(rootRight, newNode)
       } else {
-        // rootRight == null
-        if (create) {
-          val newNode = new SplayNode
-          root.right = newNode
-          left(root, newNode)
-        } else {
-          root
-        }
+        root.right = newNode
       }
     } else {
-      // i == root.min, no creation necessary.
+      throw new Exception(
+        s"The new node interval from ${newNode.intervalFrom} to ${newNode.intervalTo} " +
+          s"intersects with the interval ${root.intervalFrom} to ${root.intervalTo} of an existing node.")
+    }
+  }
+
+  /**
+   * Searches for the node that is responsible for key i, starting from node 'root'.
+   * Splays the responsible node to the where 'root' is initially and returns it.
+   */
+  @tailrec private def splay(root: SplayNode, i: Int): SplayNode = {
+    if (i < root.intervalFrom) {
+      val rootLeft = root.left
+      // We're going down to the left of the root.
+      if (i < rootLeft.intervalFrom) {
+        // We're going down left twice, rotate root.left.left up to be the new root, continue search from there.
+        splay(rightRight(root, rootLeft, rootLeft.left), i)
+      } else if (i > rootLeft.intervalTo) {
+        // We're going down left and then right, rotate root.left.right up to be the new root, continue search from there.
+        splay(leftRight(root, rootLeft, rootLeft.right), i)
+      } else {
+        // root.left is the new root, rotate it up.
+        right(root, rootLeft)
+      }
+    } else if (i > root.intervalTo) {
+      val rootRight = root.right
+      // We're going down to the right of the root.
+      if (i < rootRight.intervalFrom) {
+        // We're going down right and then left, rotate root.right.left up to be the new root, continue search from there.
+        splay(rightLeft(root, rootRight, rootRight.left), i)
+      } else if (i > rootRight.intervalTo) {
+        // We're going down right and then left, rotate root.right.right up to be the new root, continue search from there.
+        splay(leftLeft(root, rootRight, rootRight.right), i)
+      } else {
+        // root.right is the new root, rotate it up.
+        left(root, rootRight)
+      }
+    } else {
+      // i falls into the interval of the root already. We're done.
       root
     }
   }
 
   def leftRight(root: SplayNode, rootLeft: SplayNode, rootLeftRight: SplayNode): SplayNode = {
-    val splayed = left(rootLeft, rootLeftRight)
-    root.left = splayed
-    right(splayed, root)
+    right(root, left(rootLeft, rootLeftRight))
   }
 
   def rightLeft(root: SplayNode, rootRight: SplayNode, rootRightLeft: SplayNode): SplayNode = {
-    val splayed = right(rootRight, rootRightLeft)
-    root.right = splayed
-    left(root, splayed)
+    left(root, right(rootRight, rootRightLeft))
   }
 
   def rightRight(root: SplayNode, rootLeft: SplayNode, rootLeftLeft: SplayNode): SplayNode = {
-    right(right(root, rootLeft), rootLeftLeft)
+    right(root, right(rootLeft, rootLeftLeft))
   }
 
   def leftLeft(root: SplayNode, rootRight: SplayNode, rootRightRight: SplayNode): SplayNode = {
-    left(left(root, rootRight), rootRightRight)
+    left(root, left(rootRight, rootRightRight))
   }
 
+  /**
+   * Rotates 'rootRight' left in order to make it the new root, returns that new root.
+   */
   def left(root: SplayNode, rootRight: SplayNode): SplayNode = {
     root.right = rootRight.left
     rootRight.left = root
     rootRight
   }
 
+  /**
+   * Rotates 'rootLeft' right in order to make it the new root, returns that new root.
+   */
   def right(root: SplayNode, rootLeft: SplayNode): SplayNode = {
     root.left = rootLeft.right
     rootLeft.right = root
