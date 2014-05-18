@@ -29,7 +29,7 @@ import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
 import scala.util.Random
 
-final class SimpleSplayIntSet(
+case class SimpleSplayIntSet(
   val overheadFraction: Float,
   val maxNodeIntSetSize: Int) extends SplayIntSet
 
@@ -68,10 +68,10 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
     }
   }
 
-  it should "support 1 million inserts with split size 200 and 20% overhead" in {
+  it should "support 1 million inserts with split size 10 and 5% overhead" in {
     try {
       val start = System.currentTimeMillis
-      var splaySet = new SimpleSplayIntSet(0.0f, 3)
+      var splaySet = new SimpleSplayIntSet(0.05f, 10)
       var standardSet = Set.empty[Int]
       var i = 0
       while (i < 1000000) {
