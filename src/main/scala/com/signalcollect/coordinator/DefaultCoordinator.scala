@@ -90,7 +90,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(Duration.Undefined)
+  context.setReceiveTimeout(1000.milliseconds)
 
   val logger = AkkaProxy.newInstance[Logger](loggerRef)
 
@@ -147,10 +147,26 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
     val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
     val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
+    val timeSinceLast = System.nanoTime - lastHeartbeatTimestamp
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
-    //    debug(s"maySignal=$maySignal")
+    println("===================================================")
+    println(s"Time since last: ${(timeSinceLast / 10000000.0).round / 100.0} seconds")
+    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+    println(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    println(s"Total sent         : ${totalMessagesSent}")
+    println(s"Total received     : ${totalMessagesReceived}")
+    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
+    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
+    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }

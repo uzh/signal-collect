@@ -213,7 +213,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           if (worker.isPaused) {
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
-          } else {
+          } else if (!worker.systemOverloaded) {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
             worker.scheduler.executeOperations
           }

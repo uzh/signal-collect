@@ -20,9 +20,6 @@ package com.signalcollect.util
 
 import java.lang.management.ManagementFactory
 import scala.collection.JavaConversions._
-import java.lang.reflect.Modifier
-import java.lang.reflect.Field
-import sun.misc.Unsafe
 
 case class Stats(
   description: String,
@@ -56,14 +53,17 @@ object Benchmark {
       nanosecondsPerExecution.toLong)
   }
 
-  def sleepUntilGcInactiveForXSeconds(x: Int) {
+  def sleepUntilGcInactiveForXSeconds(x: Int, maxSeconds: Int = 600) {
+    def getTime = System.currentTimeMillis / 1000
+    val startTime = getTime
     val gcs = ManagementFactory.getGarbageCollectorMXBeans
     val sunGcs = gcs.map(_.asInstanceOf[com.sun.management.GarbageCollectorMXBean])
     def collectionTime = sunGcs.map(_.getCollectionTime).sum
     def collectionDelta(oldGcTime: Long) = collectionTime - oldGcTime
+    def secondsPassed = getTime - startTime
     var secondsWithoutGc = 0
     var lastGcTime = collectionTime
-    while (secondsWithoutGc < x) {
+    while (secondsWithoutGc < x && secondsPassed < maxSeconds) {
       Thread.sleep(1000)
       val delta = collectionDelta(lastGcTime)
       if (delta > 0) {
