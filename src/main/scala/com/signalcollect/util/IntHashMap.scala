@@ -35,7 +35,7 @@ class IntHashMap[Value: ClassTag](
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
-  private[this] final var values = new Array[Value](maxSize)
+  final var values = new Array[Value](maxSize)
   private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
