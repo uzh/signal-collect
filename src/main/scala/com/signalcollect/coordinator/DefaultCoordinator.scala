@@ -90,7 +90,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(1000.milliseconds)
+  context.setReceiveTimeout(100.milliseconds)
 
   val logger = AkkaProxy.newInstance[Logger](loggerRef)
 
@@ -157,8 +157,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
     println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
     println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-    println(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-    println(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
     println(s"Coordinator sent to: ${messagesSentToCoordinator}")
     println(s"Coord. received by : ${messagesReceivedByCoordinator}")
     println(s"Total sent         : ${totalMessagesSent}")
@@ -166,7 +164,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
     println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
     println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
-    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }

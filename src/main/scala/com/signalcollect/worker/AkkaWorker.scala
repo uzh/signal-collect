@@ -127,8 +127,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       } catch {
         case t: Throwable =>
-          println(s"Worker $workerId had a problem during graph loading: $t}")
-          t.printStackTrace
+          println(s"Worker $workerId had a problem during graph loading: ${t.toString}")
+          println(t.getStackTrace.mkString("\n"))
       }
       worker.messageBusFlushed = false
     }
@@ -213,9 +213,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           if (worker.isPaused) {
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
-          } else if (!worker.systemOverloaded) {
+          } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations
+            worker.scheduler.executeOperations(worker.systemOverloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush

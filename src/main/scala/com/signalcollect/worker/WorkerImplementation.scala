@@ -121,10 +121,11 @@ class WorkerImplementation[Id, Signal](
   }
 
   def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)
+      messageBus.flush
+      messageBusFlushed = true
     } else {
       val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
       log.debug(msg)

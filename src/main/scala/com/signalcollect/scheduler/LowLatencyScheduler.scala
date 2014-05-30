@@ -24,7 +24,7 @@ import com.signalcollect.interfaces.Scheduler
 import com.signalcollect.interfaces.Worker
 
 class LowLatencyScheduler[Id](w: Worker[Id, _]) extends Scheduler[Id](w) {
-  override def executeOperations {
+  override def executeOperations(systemOverloaded: Boolean) {
     if (!worker.vertexStore.toCollect.isEmpty) {
       val collected = worker.vertexStore.toCollect.process(
         vertex => {
