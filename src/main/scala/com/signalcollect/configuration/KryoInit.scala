@@ -88,6 +88,8 @@ class KryoInit {
       register("com.signalcollect.interfaces.WorkerStatistics")
       register("com.signalcollect.interfaces.NodeStatistics")
       register("com.signalcollect.interfaces.SentMessagesStats")
+      register("com.signalcollect.interfaces.Request")
+      register("com.signalcollect.interfaces.AddVertex")
       register("scala.collection.mutable.HashMap")
       register("scala.collection.immutable.HashMap$HashTrieMap")
       register("scala.collection.immutable.Map$EmptyMap$")

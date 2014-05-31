@@ -157,6 +157,7 @@ akka {
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
+        kryoRegistrations.foreach(println(_))
         var bindingsBlock = kryoRegistrations filter (!_.startsWith("Array")) map { kryoRegistration =>
           s"""
              "$kryoRegistration" = kryo"""
