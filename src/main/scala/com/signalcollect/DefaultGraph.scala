@@ -62,6 +62,8 @@ import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.actor.PoisonPill
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.SchedulerFactory
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -71,14 +73,22 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   workerFactory: WorkerFactory,
   numberOfWorkers: Int,
   numberOfNodes: Int,
-  config: GraphConfiguration) {
+  messageBusFactory: MessageBusFactory,
+  mapperFactory: MapperFactory,
+  storageFactory: StorageFactory,
+  schedulerFactory: SchedulerFactory,
+  heartbeatIntervalInMilliseconds: Int) {
   def create: () => WorkerActor[Id, Signal] = {
     () =>
       workerFactory.createInstance[Id, Signal](
         workerId,
         numberOfWorkers,
         numberOfNodes,
-        config)
+        messageBusFactory,
+        mapperFactory,
+        storageFactory,
+        schedulerFactory,
+        heartbeatIntervalInMilliseconds)
   }
 }
 
@@ -160,7 +170,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.workerFactory,
           numberOfWorkers,
           numberOfNodes,
-          config)
+          config.messageBusFactory,
+          config.mapperFactory,
+          config.storageFactory,
+          config.schedulerFactory,
+          config.heartbeatIntervalInMilliseconds)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1

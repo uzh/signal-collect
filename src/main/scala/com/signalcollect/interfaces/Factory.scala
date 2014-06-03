@@ -20,7 +20,6 @@
 package com.signalcollect.interfaces
 
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 import akka.actor.ActorSystem
 
@@ -31,7 +30,11 @@ abstract class WorkerFactory extends Factory {
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
-    config: GraphConfiguration): WorkerActor[Id, Signal]
+    messageBusFactory: MessageBusFactory,
+    mapperFactory: MapperFactory,
+    storageFactory: StorageFactory,
+    schedulerFactory: SchedulerFactory,
+    heartbeatIntervalInMilliseconds: Int): WorkerActor[Id, Signal]
 }
 
 abstract class MessageBusFactory extends Factory {

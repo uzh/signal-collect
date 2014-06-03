@@ -20,11 +20,14 @@
 package com.signalcollect.factory.worker
 
 import scala.reflect.ClassTag
-
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.worker.AkkaWorker
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.SchedulerFactory
 
 /**
  *  The default Akka worker implementation.
@@ -34,16 +37,20 @@ object DefaultAkkaWorker extends WorkerFactory {
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
-    config: GraphConfiguration): WorkerActor[Id, Signal] = {
+    messageBusFactory: MessageBusFactory,
+    mapperFactory: MapperFactory,
+    storageFactory: StorageFactory,
+    schedulerFactory: SchedulerFactory,
+    heartbeatIntervalInMilliseconds: Int): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
       numberOfNodes,
-      config.messageBusFactory,
-      config.mapperFactory,
-      config.storageFactory,
-      config.schedulerFactory,
-      config.heartbeatIntervalInMilliseconds)
+      messageBusFactory,
+      mapperFactory,
+      storageFactory,
+      schedulerFactory,
+      heartbeatIntervalInMilliseconds)
   }
   override def toString: String = "DefaultAkkaWorker"
 }
