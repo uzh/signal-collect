@@ -90,7 +90,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(100.milliseconds)
+  context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
 
   val logger = AkkaProxy.newInstance[Logger](loggerRef)
 
@@ -104,7 +104,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
 
-  var lastHeartbeatTimestamp = 0l
+  var lastHeartbeatTimestamp = System.nanoTime
 
   var allWorkersInitialized = false
 
@@ -117,10 +117,10 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def logMessages {
     log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+    //    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    //    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    //    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+    //    log.debug(s"Worker inbox sizes : ${workerInboxSizes.toList}")
     log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
     log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
     log.debug(s"Total sent         : ${totalMessagesSent}")
@@ -138,7 +138,13 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     //    verboseIsIdle
   }
 
+  var lastMaySignal = true
+
   def sendHeartbeat {
+    val currentTime = System.nanoTime
+    val lastHeartbeatBackup = lastHeartbeatTimestamp
+    val timeSinceLast = currentTime - lastHeartbeatTimestamp
+    lastHeartbeatTimestamp = currentTime
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
@@ -147,18 +153,26 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
     val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
     val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
-    val timeSinceLast = System.nanoTime - lastHeartbeatTimestamp
-    lastHeartbeatTimestamp = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(maySignal), false)
-    messageBus.sendToNodes(Heartbeat(maySignal), false)
+//    if (maySignal != lastMaySignal) {
+//      messageBus.sendToWorkers(Heartbeat(maySignal), false)
+//    }
+    def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
     println("===================================================")
-    println(s"Time since last: ${(timeSinceLast / 10000000.0).round / 100.0} seconds")
+    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
     println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
     println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    //    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+    //    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
+    val current = System.nanoTime
+    val receiveAge = statusReceivedTimestamp.map(t => nanoseondsToSeconds(current - t))
+    val creationAge = workerStatus.map(s => nanoseondsToSeconds(current - s.creationTimeStamp))
+    println(s"Worker status received X seconds ago: " + receiveAge.toList)
+    println(s"Worker status created X seconds ago : " + creationAge.toList)
     println(s"Coordinator sent to: ${messagesSentToCoordinator}")
     println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
     println(s"Total sent         : ${totalMessagesSent}")
     println(s"Total received     : ${totalMessagesReceived}")
     def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
@@ -170,6 +184,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
+  protected var statusReceivedTimestamp: Array[Long] = new Array[Long](numberOfWorkers)
   protected var nodeStatus: Array[NodeStatus] = new Array[NodeStatus](numberOfNodes)
 
   var nodeStatusReceived = 0
@@ -178,6 +193,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def receive = {
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
+//      println(s"Coordinator received a worker status from worker ${ws.workerId}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
@@ -189,6 +205,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
     case ns: NodeStatus =>
       //log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
+//      println(s"Coordinator received a node status from node ${ns.nodeId}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
       updateNodeStatusMap(ns)
@@ -213,6 +230,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
     case Request(command, reply, incrementor) =>
       //log.debug(s"Coordinator received a request.")
+//      println(s"Coordinator received a request.")
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
@@ -234,6 +252,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     // Only update worker status if no status received so far or if the current status is newer.
     if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant < ws.messagesSent.sumRelevant) {
       workerStatus(ws.workerId) = ws
+      statusReceivedTimestamp(ws.workerId) = System.nanoTime
       if (!allWorkersInitialized) {
         allWorkersInitialized = workerStatus forall (_ != null)
       }

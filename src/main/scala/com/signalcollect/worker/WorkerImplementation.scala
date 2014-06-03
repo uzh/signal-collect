@@ -20,34 +20,35 @@
 
 package com.signalcollect.worker
 
-import com.signalcollect.interfaces.Storage
-import com.signalcollect.interfaces.ComplexAggregation
-import com.signalcollect.GraphEditor
-import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.Vertex
-import com.signalcollect.Edge
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.WorkerApi
-import akka.event.LoggingAdapter
-import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.NodeStatistics
 import java.io.DataInputStream
-import com.signalcollect.serialization.DefaultSerializer
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.WorkerStatus
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.Worker
-import com.signalcollect.interfaces.SentMessagesStats
-import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
-import com.signalcollect.interfaces.WorkerStatistics
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.serialization.DefaultSerializer
+import com.sun.management.OperatingSystemMXBean
+
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -113,24 +114,19 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
+  /**
+   * For fast convergence detection we only need to report the new idle state when it's true and used to be false.
+   */
   def setIdle(newIdleState: Boolean) {
-    if (messageBus.isInitialized && isIdle != newIdleState) {
-      isIdle = newIdleState
-      sendStatusToCoordinator
-    }
+    //    if (messageBus.isInitialized && isIdle == false && newIdleState == true) {
+    isIdle = newIdleState
+    //      reportStatusToCoordinator
+    //    }
   }
 
-  def sendStatusToCoordinator {
-    if (messageBus.isInitialized) {
-      val status = getWorkerStatus
-      messageBus.sendToCoordinator(status)
-      messageBus.flush
-      messageBusFlushed = true
-    } else {
-      val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
-      log.debug(msg)
-      throw new Exception(msg)
-    }
+  def reportStatusToCoordinator {
+    val status = getWorkerStatus
+    messageBus.sendToCoordinator(status)
   }
 
   def isConverged: Boolean = {
@@ -176,12 +172,12 @@ class WorkerImplementation[Id, Signal](
       log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
     }
     isPaused = false
-    sendStatusToCoordinator
+    reportStatusToCoordinator
   }
 
   def pauseComputation {
     isPaused = true
-    sendStatusToCoordinator
+    reportStatusToCoordinator
   }
 
   def signalStep: Boolean = {
@@ -401,6 +397,7 @@ class WorkerImplementation[Id, Signal](
   def getWorkerStatus: WorkerStatus = {
     WorkerStatus(
       workerId = workerId,
+      creationTimeStamp = System.nanoTime,
       isIdle = isIdle,
       isPaused = isPaused,
       messagesSent = SentMessagesStats(
@@ -477,7 +474,7 @@ class WorkerImplementation[Id, Signal](
     if (messageBus.isInitialized) {
       val msg = s"Worker $workerId has a fully initialized message bus."
       log.debug(msg)
-      sendStatusToCoordinator
+      reportStatusToCoordinator
     }
   }
 

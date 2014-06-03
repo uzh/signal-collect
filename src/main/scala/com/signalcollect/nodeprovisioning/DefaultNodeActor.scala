@@ -159,12 +159,12 @@ class DefaultNodeActor(
   }
 
   protected def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
-      lastStatusUpdate = currentTime
-      val status = getNodeStatus
-      messageBus.sendToCoordinator(status)
-    }
+//    val currentTime = System.currentTimeMillis
+//    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
+//      lastStatusUpdate = currentTime
+//      val status = getNodeStatus
+//      messageBus.sendToCoordinator(status)
+//    }
   }
 
   def isInitialized = messageBus != null && messageBus.isInitialized
