@@ -41,10 +41,10 @@ import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 
 abstract class AbstractMessageBus[Id, Signal]
-    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   val log = Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this)
-  
+
   def reset {}
 
   protected val registrations = new AtomicInteger()
@@ -147,11 +147,19 @@ abstract class AbstractMessageBus[Id, Signal]
     workers(workerId) ! message
   }
 
-  override def sendToWorkers(message: Any, messageCounting: Boolean) {
+  def sendToWorkerUncounted(workerId: Int, message: Any) {
+    workers(workerId) ! message
+  }
+
+  override def sendToWorkers(message: Any) {
     for (workerId <- 0 until numberOfWorkers) {
-      if (messageCounting) {
-        incrementMessagesSentToWorker(workerId)
-      }
+      workers(workerId) ! message
+    }
+  }
+
+  def sendToWorkersUncounted(message: Any) {
+    for (workerId <- 0 until numberOfWorkers) {
+      incrementMessagesSentToWorker(workerId)
       workers(workerId) ! message
     }
   }

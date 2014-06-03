@@ -159,7 +159,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
     println("===================================================")
     println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
-    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+    println(s"globalInboxSize=$currentGlobalQueueSize") // maySignal=$maySignal
     println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
     //    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
     //    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")

@@ -53,7 +53,7 @@ case class GraphConfiguration(
   akkaMessageCompression: Boolean = false,
   preallocatedNodes: Option[Array[ActorRef]] = None,
   nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
-  heartbeatIntervalInMilliseconds: Int = 100,
+  heartbeatIntervalInMilliseconds: Int = 1000,
   kryoRegistrations: List[String] = List(),
   kryoInitializer: String = "com.signalcollect.configuration.KryoInit",
   serializeMessages: Boolean = false)

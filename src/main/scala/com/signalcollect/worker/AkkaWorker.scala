@@ -158,7 +158,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     worker.operationsScheduled = true
   }
 
-  val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
+  //val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   /**
    * This method gets executed when the Akka actor receives a message.
@@ -224,6 +224,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case ScheduleOperations(timestamp) =>
+      println(s"Scheduled $workerId")
       if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
         worker.setIdle(true)
         worker.operationsScheduled = false
@@ -239,7 +240,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             println("WTF1")
           }
         } else {
-          worker.scheduler.executeOperations(largeInboxSize || worker.systemOverloaded)
+          if (!largeInboxSize && !worker.systemOverloaded) {
+            worker.scheduler.executeOperations(largeInboxSize || worker.systemOverloaded)
+          } else {
+            println("WTF3")
+            worker.scheduler.executeOperations(largeInboxSize || worker.systemOverloaded)
+          }
         }
         if (!worker.messageBusFlushed) {
           messageBus.flush
@@ -275,12 +281,18 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     //      worker.counters.heartbeatMessagesReceived += 1
     //      worker.systemOverloaded = !maySignal
 
-    case StartPingPongExchange(partner) =>
-      pingSentTimestamp = System.nanoTime
-      messageBus.sendToWorker(partner, Ping(workerId))
+    case s @ StartPingPongExchange(partner) =>
+      if (messageBus.isInitialized) {
+        pingSentTimestamp = System.nanoTime
+        //println(s"Ping($workerId) -> $partner")
+        messageBus.sendToWorkerUncounted(partner, Ping(workerId))
+      } else {
+        context.system.scheduler.scheduleOnce(pingPongSchedulingIntervalInMilliseconds.milliseconds, self, s)
+      }
 
     case Ping(fromWorker) =>
-      messageBus.sendToWorker(fromWorker, Pong(workerId))
+      //println(s"Pong($workerId) -> $fromWorker")
+      messageBus.sendToWorkerUncounted(fromWorker, Pong(workerId))
 
     case Pong(fromWorker) =>
       val exchangeDuration = System.nanoTime - pingSentTimestamp
@@ -289,7 +301,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         worker.systemOverloaded = true
         pingSentTimestamp = System.nanoTime
         // Immediately play ping-pong with the same slow partner again.
-        messageBus.sendToWorker(fromWorker, Ping(workerId))
+        println(s"Ping($workerId) -> $fromWorker")
+        messageBus.sendToWorkerUncounted(fromWorker, Ping(workerId))
       } else {
         worker.systemOverloaded = false
         // Wait a bit and then play ping pong with another random partner.

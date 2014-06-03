@@ -59,9 +59,13 @@ abstract class MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Fl
 
   def sendToWorkerForVertexId(message: Any, vertexId: Id)
 
+  def sendToWorkerUncounted(workerId: Int, message: Any)
+
   def sendToWorker(workerId: Int, message: Any)
 
-  def sendToWorkers(message: Any, messageCounting: Boolean)
+  def sendToWorkers(message: Any)
+  
+  def sendToWorkersUncounted(message: Any)
 
   def sendToNode(nodeId: Int, message: Any)
 
