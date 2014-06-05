@@ -75,7 +75,7 @@ class WorkerImplementation[Id, Signal](
   var messageBusFlushed: Boolean = _
   var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
-  var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
+  //var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
   var isPaused: Boolean = _
   var allWorkDoneWhenContinueSent: Boolean = _
   var lastStatusUpdate: Long = _
@@ -87,7 +87,7 @@ class WorkerImplementation[Id, Signal](
     messageBusFlushed = true
     systemOverloaded = false
     operationsScheduled = false
-    isIdle = true
+    //    isIdle = true
     isPaused = true
     allWorkDoneWhenContinueSent = false
     lastStatusUpdate = System.currentTimeMillis
@@ -114,19 +114,21 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
-  /**
-   * For fast convergence detection we only need to report the new idle state when it's true and used to be false.
-   */
-  def setIdle(newIdleState: Boolean) {
-    //    if (messageBus.isInitialized && isIdle == false && newIdleState == true) {
-    isIdle = newIdleState
-    //      reportStatusToCoordinator
-    //    }
-  }
+  //  /**
+  //   * For fast convergence detection we only need to report the new idle state when it's true and used to be false.
+  //   */
+  //  def setIdle(newIdleState: Boolean) {
+  //    println(s"$workerId idle $isIdle -> $newIdleState, converged=$isConverged")
+  //    if (messageBus.isInitialized) { // && newIdleState == true
+  //      reportStatusToCoordinator
+  //    }
+  //    isIdle = newIdleState
+  //  }
 
   def reportStatusToCoordinator {
+    //    println(s"$workerId is reporting its status")
     val status = getWorkerStatus
-    messageBus.sendToCoordinator(status)
+    messageBus.sendToCoordinatorUncounted(status)
   }
 
   def isConverged: Boolean = {
@@ -398,12 +400,12 @@ class WorkerImplementation[Id, Signal](
     WorkerStatus(
       workerId = workerId,
       creationTimeStamp = System.nanoTime,
-      isIdle = isIdle,
+      isIdle = isAllWorkDone,
       isPaused = isPaused,
       messagesSent = SentMessagesStats(
         messageBus.messagesSentToWorkers,
         messageBus.messagesSentToNodes,
-        messageBus.messagesSentToCoordinator + 1, // +1 to account for the status message itself.
+        messageBus.messagesSentToCoordinator,
         messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
   }
@@ -497,5 +499,3 @@ class WorkerImplementation[Id, Signal](
   }
 
 }
-
-

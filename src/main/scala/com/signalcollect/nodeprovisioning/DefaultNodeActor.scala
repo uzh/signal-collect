@@ -163,7 +163,7 @@ class DefaultNodeActor(
 //    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
 //      lastStatusUpdate = currentTime
 //      val status = getNodeStatus
-//      messageBus.sendToCoordinator(status)
+//      messageBus.sendToCoordinatorUncounted(status)
 //    }
   }
 

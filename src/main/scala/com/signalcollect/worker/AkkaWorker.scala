@@ -45,6 +45,7 @@ import akka.dispatch.MessageQueue
 import akka.actor.Actor
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
+import scala.sys.process._
 
 case object ReportStatusToCoordinator
 
@@ -78,15 +79,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
   val reportingIntervalInMilliseconds: Int,
-  val pingPongSchedulingIntervalInMilliseconds: Int = 50)
+  val pingPongSchedulingIntervalInMilliseconds: Int = 100)
   extends WorkerActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
 
   def getRandomPingPongPartner = Random.nextInt(numberOfWorkers)
   var pingSentTimestamp: Long = _
-
-  context.system.scheduler.scheduleOnce(pingPongSchedulingIntervalInMilliseconds.milliseconds, self, StartPingPongExchange(getRandomPingPongPartner))
 
   context.system.scheduler.schedule(reportingIntervalInMilliseconds.milliseconds, reportingIntervalInMilliseconds.milliseconds, self, ReportStatusToCoordinator)
 
@@ -97,7 +96,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   override def postRestart(reason: Throwable): Unit = {
     super.postRestart(reason)
     val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
-    println(msg)
+    //println(msg)
     log.error(msg)
     context.stop(self)
   }
@@ -152,7 +151,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
     self ! ScheduleOperations(System.nanoTime)
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
@@ -165,13 +163,17 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
    */
   def receive = {
     case s: SignalMessage[Id, Signal] =>
+      //println(s"$workerId Id received a signal")
       worker.counters.signalMessagesReceived += 1
       worker.processSignal(s.signal, s.targetId, s.sourceId)
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     case bulkSignal: BulkSignal[Id, Signal] =>
+      //println(s"$workerId Id received a bulk signal")
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
@@ -186,9 +188,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     case bulkSignal: BulkSignalNoSourceIds[Id, Signal] =>
+      //println(s"$workerId Id received a bulk signal without source ids")
       worker.counters.bulkSignalMessagesReceived += 1
       val size = bulkSignal.signals.length
       var i = 0
@@ -198,52 +203,66 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
       if (!worker.operationsScheduled && !worker.isPaused) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     case AddVertex(vertex) =>
+      //println(s"$workerId Id received an add vertex message")
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
       worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
       // TODO: Reevaluate, if we really need to schedule operations.
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (!worker.operationsScheduled && !worker.isAllWorkDone) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     case AddEdge(sourceVertexId, edge) =>
+      //println(s"$workerId Id received an add edge message")
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
       worker.addEdge(sourceVertexId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
       // TODO: Reevaluate, if we really need to schedule operations.
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (!worker.operationsScheduled && !worker.isAllWorkDone) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     case ReportStatusToCoordinator =>
+      //println(s"$workerId was told to report its status to the coordinator")
       if (messageBus.isInitialized) {
         worker.reportStatusToCoordinator
       }
 
     case ScheduleOperations(timestamp) =>
-      println(s"Scheduled $workerId")
+      //println(s"$workerId was told to schedule operations")
       if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
-        worker.setIdle(true)
         worker.operationsScheduled = false
+        //worker.reportStatusToCoordinator
       } else {
         val largeInboxSize = System.nanoTime - timestamp > 100000000 // 100 milliseconds
         if (largeInboxSize) {
-          println(s"Schedule operations for $workerId took too long.")
+          def bytesToGigabytes(bytes: Long) = ((bytes / 1073741824.0) * 10.0).round / 10.0
+          val free = bytesToGigabytes(Runtime.getRuntime.freeMemory).toString + "GB"
+          val freeSystem = "free -m" !!
+          
+          println(s"$workerId has a large inbox size, free memory = $free, on system: $freeSystem")
         }
         if (worker.isPaused) {
           if (!largeInboxSize && !worker.systemOverloaded) {
             applyPendingGraphModifications
-          } else {
-            println("WTF1")
           }
+          //          else {
+          //            println(s"$workerId is paused and either has a large inbox or the system is overloaded")
+          //          }
         } else {
           if (!largeInboxSize && !worker.systemOverloaded) {
             worker.scheduler.executeOperations(largeInboxSize || worker.systemOverloaded)
           } else {
-            println("WTF3")
+            //println(s"$workerId is not paused and has a large inbox ($largeInboxSize) or the system is overloaded (${worker.systemOverloaded})")
             worker.scheduler.executeOperations(largeInboxSize || worker.systemOverloaded)
           }
         }
@@ -255,6 +274,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Request(command, reply, incrementor) =>
+      //println(s"$workerId got a request")
       worker.counters.requestMessagesReceived += 1
       try {
         val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
@@ -273,8 +293,14 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           log.debug(msg)
           throw t
       }
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (pingSentTimestamp == 0 && messageBus.isInitialized) {
+        pingSentTimestamp = 1
+        context.system.scheduler.scheduleOnce(pingPongSchedulingIntervalInMilliseconds.milliseconds, self, StartPingPongExchange(getRandomPingPongPartner))
+      }
+      if (!worker.operationsScheduled && !worker.isAllWorkDone) {
         scheduleOperations
+      } else {
+        //worker.reportStatusToCoordinator
       }
 
     //    case Heartbeat(maySignal) =>
@@ -282,6 +308,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     //      worker.systemOverloaded = !maySignal
 
     case s @ StartPingPongExchange(partner) =>
+      //println(s"$workerId was told to start a pingpong exchange")
       if (messageBus.isInitialized) {
         pingSentTimestamp = System.nanoTime
         //println(s"Ping($workerId) -> $partner")
@@ -290,18 +317,25 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         context.system.scheduler.scheduleOnce(pingPongSchedulingIntervalInMilliseconds.milliseconds, self, s)
       }
 
-    case Ping(fromWorker) =>
+    case p @ Ping(fromWorker) =>
+      //println(s"$workerId got a ping from $fromWorker")
       //println(s"Pong($workerId) -> $fromWorker")
-      messageBus.sendToWorkerUncounted(fromWorker, Pong(workerId))
+      if (messageBus.isInitialized) {
+        messageBus.sendToWorkerUncounted(fromWorker, Pong(workerId))
+      } else {
+        // Schedule message for later.
+        context.system.scheduler.scheduleOnce(pingPongSchedulingIntervalInMilliseconds.milliseconds, self, p)
+      }
 
     case Pong(fromWorker) =>
+      //println(s"$workerId got a pong from $fromWorker")
       val exchangeDuration = System.nanoTime - pingSentTimestamp
       if (System.nanoTime - pingSentTimestamp > 50000000) { // 50 milliseconds
         println(s"Exchange between $workerId and $fromWorker took too long.")
         worker.systemOverloaded = true
         pingSentTimestamp = System.nanoTime
         // Immediately play ping-pong with the same slow partner again.
-        println(s"Ping($workerId) -> $fromWorker")
+        //println(s"Ping($workerId) -> $fromWorker")
         messageBus.sendToWorkerUncounted(fromWorker, Ping(workerId))
       } else {
         worker.systemOverloaded = false
@@ -310,6 +344,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case other =>
+      //println(s"$workerId some other message $other")
       worker.counters.otherMessagesReceived += 1
       val msg = s"Worker $workerId could not handle message $other"
       println(msg)

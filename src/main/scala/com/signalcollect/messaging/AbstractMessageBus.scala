@@ -183,6 +183,10 @@ abstract class AbstractMessageBus[Id, Signal]
     coordinator ! message
   }
 
+  def sendToCoordinatorUncounted(message: Any) {
+    coordinator ! message
+  }
+
   override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
 
   override def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)

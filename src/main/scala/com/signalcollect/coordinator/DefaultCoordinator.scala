@@ -22,13 +22,14 @@ package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
 
+import scala.Array.canBuildFrom
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationLong
 import scala.reflect.ClassTag
 
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.Logger
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
@@ -53,6 +54,8 @@ case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
 // special reply from coordinator
 case class IsIdle(b: Boolean)
 
+case object PrintStatus
+
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
@@ -74,6 +77,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   with ActorLogging
   with ActorRestartLogging
   with MessageRecipientRegistry {
+
+  context.system.scheduler.schedule(1000.milliseconds, 1000.milliseconds, self, PrintStatus)
 
   override def postStop {
     log.debug(s"Coordinator has stopped.")
@@ -140,7 +145,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   var lastMaySignal = true
 
-  def sendHeartbeat {
+  def logStats {
     val currentTime = System.nanoTime
     val lastHeartbeatBackup = lastHeartbeatTimestamp
     val timeSinceLast = currentTime - lastHeartbeatTimestamp
@@ -153,9 +158,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
     val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
     val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
-//    if (maySignal != lastMaySignal) {
-//      messageBus.sendToWorkers(Heartbeat(maySignal), false)
-//    }
     def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
     println("===================================================")
     println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
@@ -191,46 +193,52 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var workerStatusReceived = 0
 
   def receive = {
+    case PrintStatus =>
+      if (workerStatus.forall(_ != null)) logStats
+
     case ws: WorkerStatus =>
+      //      println(s"Coordinator received worker status from ${ws.workerId}")
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
-//      println(s"Coordinator received a worker status from worker ${ws.workerId}")
-      messageBus.getReceivedMessagesCounter.incrementAndGet
+      //      println(s"Coordinator received a worker status from worker ${ws.workerId}")
+      //      messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
       updateWorkerStatusMap(ws)
+      //if (workerStatus.forall(_ != null)) logStats
       if (isIdle) {
         onIdle
-      }
-      if (shouldSendHeartbeat) {
-        sendHeartbeat
       }
     case ns: NodeStatus =>
+      //      println("Received node status")
       //log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
-//      println(s"Coordinator received a node status from node ${ns.nodeId}")
-      messageBus.getReceivedMessagesCounter.incrementAndGet
+      //      println(s"Coordinator received a node status from node ${ns.nodeId}")
+      //      messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
       updateNodeStatusMap(ns)
-      if (shouldSendHeartbeat) {
-        sendHeartbeat
-      }
-    case ReceiveTimeout =>
-      //log.debug("Coordinator got a receive timeout.")
-      if (shouldSendHeartbeat) {
-        sendHeartbeat
-      }
-    case OnIdle(action) =>
-      //log.debug(s"Coordinator received an OnIdle request from $sender")
-      context.setReceiveTimeout(heartbeatIntervalInMilliseconds.milliseconds)
-      // Not counting these messages, because they only come from the local graph.
-      onIdleList = (sender, action) :: onIdleList
+      //if (workerStatus.forall(_ != null)) logStats
       if (isIdle) {
         onIdle
       }
-      if (shouldSendHeartbeat) {
-        sendHeartbeat
+    case ReceiveTimeout =>
+      //      println("Received timeout")
+      //if (workerStatus.forall(_ != null)) logStats
+      if (isIdle) {
+        onIdle
+      }
+    //log.debug("Coordinator got a receive timeout.")
+    case OnIdle(action) =>
+      //log.debug(s"Coordinator received an OnIdle request from $sender")
+      context.setReceiveTimeout(10.milliseconds)
+      // Not counting these messages, because they only come from the local graph.
+      onIdleList = (sender, action) :: onIdleList
+      //      println("Received on idle: " + onIdleList)
+      //if (workerStatus.forall(_ != null)) logStats
+      if (isIdle) {
+        onIdle
       }
     case Request(command, reply, incrementor) =>
+      //      println("Received request")
       //log.debug(s"Coordinator received a request.")
-//      println(s"Coordinator received a request.")
+      //      println(s"Coordinator received a request.")
       try {
         val result = command.asInstanceOf[Coordinator[Id, Signal] => Any](this)
         if (reply) {
@@ -250,20 +258,20 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
     // Only update worker status if no status received so far or if the current status is newer.
-    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant < ws.messagesSent.sumRelevant) {
-      workerStatus(ws.workerId) = ws
-      statusReceivedTimestamp(ws.workerId) = System.nanoTime
-      if (!allWorkersInitialized) {
-        allWorkersInitialized = workerStatus forall (_ != null)
-      }
+    //    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant <= ws.messagesSent.sumRelevant) {
+    workerStatus(ws.workerId) = ws
+    statusReceivedTimestamp(ws.workerId) = System.nanoTime
+    if (!allWorkersInitialized) {
+      allWorkersInitialized = workerStatus forall (_ != null)
     }
+    //    }
   }
 
   def updateNodeStatusMap(ns: NodeStatus) {
     // Only update node status if no status received so far or if the current status is newer.
-    if (nodeStatus(ns.nodeId) == null || nodeStatus(ns.nodeId).messagesSent.sumRelevant < ns.messagesSent.sumRelevant) {
-      nodeStatus(ns.nodeId) = ns
-    }
+    //if (nodeStatus(ns.nodeId) == null || nodeStatus(ns.nodeId).messagesSent.sumRelevant <= ns.messagesSent.sumRelevant) {
+    nodeStatus(ns.nodeId) = ns
+    //}
   }
 
   def onIdle {
@@ -371,19 +379,20 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def verboseIsIdle: Boolean = {
     val statusReceivedFromAllWorkers = workerStatus.forall(workerStatus => workerStatus != null)
     if (!statusReceivedFromAllWorkers) {
-      //log.debug("Coordinator not idle because not all workers have sent a status.")
+      println("Coordinator not idle because not all workers have sent a status.")
       return false
     }
     val allIdle = workerStatus.forall(workerStatus => workerStatus.isIdle)
     if (!allIdle) {
-      //log.debug("Coordinator not idle because not all workers are idle.")
+      println("Coordinator not idle because not all workers are idle.")
       return false
     }
     val allSentReceived = allSentMessagesReceived
     if (!allSentReceived) {
-      //log.debug("Coordinator not idle because not all sent messages were received.")
+      println("Coordinator not idle because not all sent messages were received.")
       return false
     }
+    println("Coordinator is idle.")
     return true
   }
 

@@ -72,6 +72,8 @@ abstract class MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Fl
   def sendToNodes(message: Any, messageCounting: Boolean)
 
   def sendToCoordinator(message: Any)
+  
+  def sendToCoordinatorUncounted(message: Any)
 
   /**
    * Resets the message but does not touch the counters.
