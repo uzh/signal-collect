@@ -224,10 +224,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def updateNodeStatusMap(ns: NodeStatus) {
-    // Only update node status if no status received so far or if the current status is newer.
-    if (nodeStatus(ns.nodeId) == null || nodeStatus(ns.nodeId).messagesSent.sumRelevant < ns.messagesSent.sumRelevant) {
-      nodeStatus(ns.nodeId) = ns
-    }
+    nodeStatus(ns.nodeId) = ns
   }
 
   def onIdle {
