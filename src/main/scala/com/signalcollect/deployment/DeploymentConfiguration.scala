@@ -17,25 +17,7 @@
  *
  */
 
-package com.signalcollect.configuration
-
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
-import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
-import akka.event.Logging.LogLevel
-import akka.event.Logging
-import com.signalcollect.factory.worker.DefaultAkkaWorker
-import com.signalcollect.interfaces.SchedulerFactory
-import com.signalcollect.factory.scheduler.Throughput
-import com.signalcollect.interfaces.MapperFactory
-import com.signalcollect.factory.mapper.DefaultMapperFactory
-import com.signalcollect.storage.VertexMapStorage
-import com.signalcollect.factory.storage.MemoryEfficientStorage
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+package com.signalcollect.deployment
 
 /**
  * All the deployment parameters 
