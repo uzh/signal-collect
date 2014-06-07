@@ -151,7 +151,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     case s: SignalMessage[Id, Signal] =>
       worker.counters.signalMessagesReceived += 1
       worker.processSignal(s.signal, s.targetId, s.sourceId)
-      if (!worker.operationsScheduled && !worker.isPaused) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
@@ -168,7 +168,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
         i += 1
       }
-      if (!worker.operationsScheduled && !worker.isPaused) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
@@ -180,7 +180,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
         i += 1
       }
-      if (!worker.operationsScheduled && !worker.isPaused) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
@@ -189,7 +189,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       worker.counters.requestMessagesReceived += 1
       worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
       // TODO: Reevaluate, if we really need to schedule operations.
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
@@ -198,7 +198,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       worker.counters.requestMessagesReceived += 1
       worker.addEdge(sourceVertexId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
       // TODO: Reevaluate, if we really need to schedule operations.
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
@@ -249,7 +249,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           log.debug(msg)
           throw t
       }
-      if (!worker.operationsScheduled && (!worker.isIdle || !worker.isAllWorkDone)) {
+      if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
