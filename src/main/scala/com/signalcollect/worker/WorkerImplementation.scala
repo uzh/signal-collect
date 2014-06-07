@@ -114,7 +114,7 @@ class WorkerImplementation[Id, Signal](
   }
 
   def setIdle(newIdleState: Boolean) {
-    if (messageBus.isInitialized && isIdle != newIdleState) {
+    if (messageBus.isInitialized && newIdleState == true) {
       isIdle = newIdleState
       sendStatusToCoordinator
     }
@@ -125,10 +125,6 @@ class WorkerImplementation[Id, Signal](
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)
-    } else {
-      val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
-      log.debug(msg)
-      throw new Exception(msg)
     }
   }
 
