@@ -217,12 +217,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def updateWorkerStatusMap(ws: WorkerStatus) {
-    // Only update worker status if no status received so far or if the current status is newer.
-    if (workerStatus(ws.workerId) == null || workerStatus(ws.workerId).messagesSent.sumRelevant < ws.messagesSent.sumRelevant) {
-      workerStatus(ws.workerId) = ws
-      if (!allWorkersInitialized) {
-        allWorkersInitialized = workerStatus forall (_ != null)
-      }
+    workerStatus(ws.workerId) = ws
+    if (!allWorkersInitialized) {
+      allWorkersInitialized = workerStatus forall (_ != null)
     }
   }
 
