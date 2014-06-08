@@ -74,7 +74,7 @@ class ClusterSpec extends FlatSpec with Checkers with Matchers {
     try {
       val cluster = createCluster(deploymentConfiguration)
     } catch {
-      case e: Exception => assert(e.getMessage() === "Class for YarnCluster could not be found. Make sure you are using signal-collect-yarn project as dependency.")
+      case e: Exception => assert(e.getMessage() === "Class for YarnCluster could not be found. Make sure you are using signal-collect-yarn project.")
     }
   }
 
