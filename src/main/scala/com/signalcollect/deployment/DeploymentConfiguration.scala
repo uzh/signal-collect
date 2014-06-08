@@ -41,9 +41,15 @@ case class DeploymentConfiguration(
  */
 object DeploymentConfigurationCreator {
   val deployment = ConfigFactory.parseFile(new File("deployment.conf"))
-
+  
+  /**
+   * creates DeploymentConfiguration out of 'deployment.conf'
+   */
   def getDeploymentConfiguration: DeploymentConfiguration = getDeploymentConfiguration(deployment)
   
+  /**
+   * can be called with another Config, useful for testing or injecting another configuration than 'deployment.conf'
+   */
   def getDeploymentConfiguration(config: Config): DeploymentConfiguration =
     new DeploymentConfiguration(
       algorithm = config.getString("deployment.algorithm"),
