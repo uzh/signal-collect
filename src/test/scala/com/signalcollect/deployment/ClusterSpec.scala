@@ -21,8 +21,9 @@ package com.signalcollect.deployment
 import org.scalatest.prop.Checkers
 import org.scalatest.FlatSpec
 import com.typesafe.config.ConfigFactory
+import org.scalatest.Matchers
 
-class ClusterSpec extends FlatSpec with Checkers {
+class ClusterSpec extends FlatSpec with Checkers with Matchers {
 
   def createDeploymentConfiguration(cluster: String): DeploymentConfiguration = {
     val configAsString =
@@ -40,9 +41,9 @@ class ClusterSpec extends FlatSpec with Checkers {
     val config = ConfigFactory.parseString(configAsString)
     DeploymentConfigurationCreator.getDeploymentConfiguration(config)
   }
-  
+
   def createCluster(config: DeploymentConfiguration): Cluster = {
-    
+
     ClusterCreator.getCluster(config)
   }
 
@@ -52,11 +53,36 @@ class ClusterSpec extends FlatSpec with Checkers {
     assert(cluster.deploy(deploymentConfiguration) === true)
   }
 
+  it should "throw an error when specified class for Cluster not exists" in {
+    val deploymentConfiguration = createDeploymentConfiguration("not.existing.class")
+    a[ClassNotFoundException] should be thrownBy {
+      val cluster = createCluster(deploymentConfiguration)
+    }
+  }
+
+  it should "when an error is thrown contain a clear message" in {
+    val deploymentConfiguration = createDeploymentConfiguration("not.existing.class")
+    try {
+      val cluster = createCluster(deploymentConfiguration)
+    } catch {
+      case e: Exception => assert(e.getMessage() === "Class for Cluster could not be found. Make sure class specified in deployment.conf exists.")
+    }
+  }
+
+  it should "when try to use yarn throw error with clear message" in {
+    val deploymentConfiguration = createDeploymentConfiguration("com.signalcollect.deployment.yarn.YarnCluster")
+    try {
+      val cluster = createCluster(deploymentConfiguration)
+    } catch {
+      case e: Exception => assert(e.getMessage() === "Class for YarnCluster could not be found. Make sure you are using signal-collect-yarn project as dependency.")
+    }
+  }
+
 }
 
 class TestCluster extends Cluster {
   val successful = true
   override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
-	successful
+    successful
   }
 }

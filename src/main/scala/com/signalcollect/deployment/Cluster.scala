@@ -33,8 +33,15 @@ trait Cluster {
  */
 object ClusterCreator {
   def getCluster(deploymentConfiguration: DeploymentConfiguration): Cluster = {
-    val clusterClass = deploymentConfiguration.cluster 
-    Class.forName(clusterClass).newInstance.asInstanceOf[Cluster]
+    val clusterClass = deploymentConfiguration.cluster
+    try {
+      Class.forName(clusterClass).newInstance.asInstanceOf[Cluster]
+    } catch {
+      case e: ClassNotFoundException => if (clusterClass == "com.signalcollect.deployment.yarn.YarnCluster")
+        throw new ClassNotFoundException("Class for YarnCluster could not be found. Make sure you are using signal-collect-yarn project as dependency.")
+      else
+        throw new ClassNotFoundException("Class for Cluster could not be found. Make sure class specified in deployment.conf exists.")
+    }
   }
 }
 
