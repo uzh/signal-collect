@@ -35,7 +35,7 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
 	       algorithm-parameters {
 		     "parameter-name" = "some-parameter"
 	       }
-	       cluster = "com.signalcollect.yarn.deployment.YarnCluster"
+	       cluster = "com.signalcollect.deployment.TestCluster"
          }"""
     val config = ConfigFactory.parseString(configAsString)
     DeploymentConfigurationCreator.getDeploymentConfiguration(config)
@@ -68,7 +68,7 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
   
   it should "contain clusterType" in {
     val deploymentConfig = createDeploymentConfiguration
-    assert(deploymentConfig.cluster  === "com.signalcollect.yarn.deployment.YarnCluster")
+    assert(deploymentConfig.cluster  === "com.signalcollect.deployment.TestCluster")
   }
   
   it should "contain jvmArguments" in {
