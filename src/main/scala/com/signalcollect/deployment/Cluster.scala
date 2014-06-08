@@ -26,3 +26,10 @@ trait Cluster {
   def deploy(deploymentConfiguration: DeploymentConfiguration)
 }
 
+object ClusterCreator {
+  def getCluster(deploymentConfiguration: DeploymentConfiguration): Cluster = {
+    val clusterClass = deploymentConfiguration.cluster 
+    Class.forName(clusterClass).newInstance.asInstanceOf[Cluster]
+  }
+}
+

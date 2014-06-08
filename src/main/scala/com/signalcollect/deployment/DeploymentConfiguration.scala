@@ -33,7 +33,7 @@ case class DeploymentConfiguration(
   memoryPerNode: Int = 512,
   numberOfNodes: Int = 1,
   copyFiles: List[String] = Nil, // list of paths to files
-  clusterType: String = "yarn",
+  cluster: String = "com.signalcollect.deployment.yarn.YarnCluster",
   jvmArguments: String = "")
 
 /**
@@ -57,7 +57,7 @@ object DeploymentConfigurationCreator {
       memoryPerNode = config.getInt("deployment.memory-per-node"),
       numberOfNodes = config.getInt("deployment.number-of-nodes"),
       copyFiles = config.getStringList("deployment.copy-files").toList, // list of paths to files
-      clusterType = config.getString("deployment.type"),
+      cluster = config.getString("deployment.cluster"),
       jvmArguments = config.getString("deployment.jvm-arguments"))
 
   private def getAlgorithmParameters(config: Config): Map[String, String] = {
