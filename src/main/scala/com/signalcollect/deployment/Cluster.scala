@@ -23,9 +23,14 @@ package com.signalcollect.deployment
  * Interface for Cluster where you can deploy an algorithm
  */
 trait Cluster {
-  def deploy(deploymentConfiguration: DeploymentConfiguration)
+  /**
+   * deploys the given configuration to the cluster and returns true when it was successful
+   */
+  def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean
 }
-
+/**
+ * creates a cluster from the class name given in DeploymentConfiguration.cluster
+ */
 object ClusterCreator {
   def getCluster(deploymentConfiguration: DeploymentConfiguration): Cluster = {
     val clusterClass = deploymentConfiguration.cluster 
