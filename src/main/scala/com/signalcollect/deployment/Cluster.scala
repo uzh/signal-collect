@@ -23,6 +23,6 @@ package com.signalcollect.deployment
  * Interface for Cluster where you can deploy an algorithm
  */
 trait Cluster {
-  def start(deploymentConfiguration: DeploymentConfiguration)
+  def deploy(deploymentConfiguration: DeploymentConfiguration)
 }
 
