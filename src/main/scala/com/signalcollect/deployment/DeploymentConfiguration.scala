@@ -28,4 +28,4 @@ case class DeploymentConfiguration(
   memoryPerNode: Int = 512,
   numberOfNodes: Int = 1,
   copyFiles: List[String] = Nil, // list of paths to files
-  clustertype: String = "yarn")
+  clusterType: String = "yarn")
