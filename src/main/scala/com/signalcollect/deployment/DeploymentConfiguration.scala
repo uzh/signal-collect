@@ -19,14 +19,41 @@
 
 package com.signalcollect.deployment
 
+import com.typesafe.config.ConfigFactory
+import java.io.File
+import scala.collection.JavaConversions._
+
 /**
- * All the deployment parameters 
+ * All the deployment parameters
  */
 case class DeploymentConfiguration(
   algorithm: String, //class name of a DeployableAlgorithm
-  algorithmParameters: Map[String,String],
+  algorithmParameters: Map[String, String],
   memoryPerNode: Int = 512,
   numberOfNodes: Int = 1,
   copyFiles: List[String] = Nil, // list of paths to files
   clusterType: String = "yarn",
-  jvmArguments:String = "")
+  jvmArguments: String = "")
+
+/**
+ * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
+ */
+object DeploymentConfigurationCreator {
+  val deployment = ConfigFactory.parseFile(new File("deployment.conf"))
+
+  def getDeploymentConfiguration: DeploymentConfiguration =
+    new DeploymentConfiguration(
+      algorithm = deployment.getString("deployment.algorithm"),
+      algorithmParameters = getAlgorithmParameters,
+      memoryPerNode = deployment.getInt("deployment.memory-per-node"),
+      numberOfNodes = deployment.getInt("deployment.number-of-nodes"),
+      copyFiles = deployment.getStringList("deployment.copy-files").toList, // list of paths to files
+      clusterType = deployment.getString("deployment.type"),
+      jvmArguments = deployment.getString("deployment.jvm-arguments"))
+
+  private def getAlgorithmParameters: Map[String, String] = {
+    deployment.getConfig("deployment.algorithm-parameters").entrySet.map {
+      entry => (entry.getKey, entry.getValue.unwrapped.toString)
+    }.toMap
+  }
+}
