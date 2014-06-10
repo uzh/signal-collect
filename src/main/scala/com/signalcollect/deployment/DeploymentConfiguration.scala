@@ -40,7 +40,8 @@ case class DeploymentConfiguration(
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
  */
 object DeploymentConfigurationCreator {
-  val deployment = ConfigFactory.parseFile(new File("deployment.conf"))
+  val testdeployment =  ConfigFactory.parseFile(new File("testdeployment.conf"))
+  val deployment = ConfigFactory.parseFile(new File("deployment.conf")).withFallback(testdeployment)
   
   /**
    * creates DeploymentConfiguration out of 'deployment.conf'
@@ -59,6 +60,14 @@ object DeploymentConfigurationCreator {
       copyFiles = config.getStringList("deployment.copy-files").toList, // list of paths to files
       cluster = config.getString("deployment.cluster"),
       jvmArguments = config.getString("deployment.jvm-arguments"))
+  
+  /**
+   * useful for testing or injecting another configuration than 'deployment.conf'
+   */
+  def getDeploymentConfiguration(configPath: String): DeploymentConfiguration = {
+    val config = ConfigFactory.parseFile(new File(configPath))
+    getDeploymentConfiguration(config)
+  }
 
   private def getAlgorithmParameters(config: Config): Map[String, String] = {
     config.getConfig("deployment.algorithm-parameters").entrySet.map {
