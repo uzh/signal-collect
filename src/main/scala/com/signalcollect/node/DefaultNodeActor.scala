@@ -98,7 +98,7 @@ class DefaultNodeActor(
   /**
    * Timeout for Akka actor idling
    */
-  context.setReceiveTimeout(statusReportingInterval milliseconds)
+  context.setReceiveTimeout(statusReportingInterval.milliseconds)
 
   def receive = {
     /**
