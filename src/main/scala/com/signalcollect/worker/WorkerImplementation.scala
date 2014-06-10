@@ -72,6 +72,7 @@ class WorkerImplementation[Id, Signal](
   initialize
 
   var messageBusFlushed: Boolean = _
+  var isIdleDetectionEnabled: Boolean = _
   var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
@@ -84,6 +85,7 @@ class WorkerImplementation[Id, Signal](
 
   def initialize {
     messageBusFlushed = true
+    isIdleDetectionEnabled = false
     systemOverloaded = false
     operationsScheduled = false
     isIdle = true
@@ -113,15 +115,11 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
-  def setIdle(newIdleState: Boolean) {
-    if (messageBus.isInitialized && newIdleState == true) {
-      isIdle = newIdleState
-      sendStatusToCoordinator
-    }
+  def initializeIdleDetection {
+    isIdleDetectionEnabled = true
   }
 
   def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
     if (messageBus.isInitialized) {
       val status = getWorkerStatus
       messageBus.sendToCoordinator(status)

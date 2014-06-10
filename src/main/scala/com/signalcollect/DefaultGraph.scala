@@ -185,6 +185,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   initializeMessageBuses
 
+  parallelBootstrapNodeProxies.foreach(_.initializeIdleDetection)
+  lazy val graphEditor = coordinatorProxy.getGraphEditor
+  lazy val workerApi = coordinatorProxy.getWorkerApi
+  workerApi.initializeIdleDetection
+
   /** Returns the ConsoleServer */
   def getConsole = console
 
@@ -202,9 +207,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
     log.debug("All registries have been fully initialized.")
   }
-
-  lazy val workerApi = coordinatorProxy.getWorkerApi
-  lazy val graphEditor = coordinatorProxy.getGraphEditor
 
   /** GraphApi */
 

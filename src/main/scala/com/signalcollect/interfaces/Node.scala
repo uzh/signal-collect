@@ -27,6 +27,7 @@ trait Node {
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory)
   def setStatusReportingInterval(statusReportingInterval: Int)
+  def initializeIdleDetection
   def numberOfCores: Int
   def shutdown
 }

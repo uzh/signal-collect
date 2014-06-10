@@ -135,7 +135,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
     self ! ScheduleOperations
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
@@ -206,7 +205,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
-          worker.setIdle(true)
+
+          //Worker is now idle, do idle detection, if enabled.
+          if (worker.isIdleDetectionEnabled) {
+            worker.sendStatusToCoordinator
+          }
           worker.operationsScheduled = false
         } else {
           //          log.debug(s"Worker $workerId has work to do")

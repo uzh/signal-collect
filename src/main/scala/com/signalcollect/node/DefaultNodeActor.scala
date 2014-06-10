@@ -21,29 +21,31 @@
 
 package com.signalcollect.node
 
+import scala.concurrent.duration.DurationInt
 import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.EventBased
 import com.signalcollect.configuration.Pinned
+import com.signalcollect.interfaces.ActorRestartLogging
+import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Node
+import com.signalcollect.interfaces.NodeActor
+import com.signalcollect.interfaces.NodeReady
+import com.signalcollect.interfaces.NodeStatus
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.WorkerActor
+import com.signalcollect.interfaces.WorkerApi
+import com.signalcollect.util.AkkaRemoteAddress
+import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.Props
-import akka.actor.actorRef2Scala
-import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.WorkerActor
-import com.signalcollect.interfaces.NodeActor
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageBus
-import akka.japi.Creator
-import com.signalcollect.interfaces.NodeStatus
-import scala.concurrent.duration.DurationInt
 import akka.actor.ReceiveTimeout
-import com.signalcollect.interfaces.Heartbeat
-import com.signalcollect.interfaces.SentMessagesStats
-import akka.actor.ActorLogging
-import com.signalcollect.interfaces.ActorRestartLogging
-import com.signalcollect.interfaces.MapperFactory
-import com.signalcollect.interfaces.NodeReady
-import com.signalcollect.interfaces.Node
-import com.signalcollect.util.AkkaRemoteAddress
+import akka.actor.actorRef2Scala
+import akka.japi.Creator
+import com.signalcollect.interfaces.WorkerStatus
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the
@@ -89,12 +91,18 @@ class DefaultNodeActor(
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
+  var workerStatus: Array[WorkerStatus] = _
 
   def setStatusReportingInterval(interval: Int) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
     this.statusReportingInterval = interval
   }
 
+  def initializeIdleDetection {
+    receivedMessagesCounter -= 1
+    workerStatus = new Array[WorkerStatus](workers.size)
+  }
+  
   def receive = {
     /**
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
