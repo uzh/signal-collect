@@ -215,7 +215,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations
+            worker.scheduler.executeOperations(worker.systemOverloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
