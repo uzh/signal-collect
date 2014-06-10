@@ -1,7 +1,8 @@
 /*
  *  @author Philip Stutz
+ *  @author Thomas Keller
  *
- *  Copyright 2013 University of Zurich
+ *  Copyright 2012 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,10 +20,13 @@
 
 package com.signalcollect.interfaces
 
-import akka.actor.Actor
-import com.signalcollect.interfaces.Node
+import com.signalcollect.configuration.AkkaDispatcher
 
 // Has to be a trait to be proxied.
-trait NodeActor extends Node
-  with Actor
-  with MessageRecipientRegistry
+trait Node {
+  def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String // string = remote actor address
+  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory)
+  def setStatusReportingInterval(statusReportingInterval: Int)
+  def numberOfCores: Int
+  def shutdown
+}
