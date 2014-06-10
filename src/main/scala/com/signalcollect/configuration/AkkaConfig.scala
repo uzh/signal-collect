@@ -96,6 +96,14 @@ akka {
       "scala.collection.SortedMap" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
+      "akka.remote.ReliableDeliverySupervisor$GotUid" = kryo
+      "akka.remote.EndpointWriter$AckIdleCheckTimer$" = kryo
+      "akka.remote.EndpointWriter$StoppedReading" = kryo
+      "akka.remote.ReliableDeliverySupervisor$Ungate$" = kryo
+      "akka.remote.EndpointWriter$FlushAndStop$" = kryo
+      "akka.remote.EndpointWriter$OutboundAck" = kryo
+      "akka.remote.EndpointWriter$StopReading" = kryo
+      "akka.remote.Ack" = kryo
       "scala.Int" = kryo
       "scala.Long" = kryo
       "scala.Float" = kryo

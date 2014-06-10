@@ -176,7 +176,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.schedulerFactory,
           config.heartbeatIntervalInMilliseconds)
         val workerName = node.createWorker(workerId, workerCreator.create)
-        actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
+        actors(workerId) = system.actorFor(workerName)
         workerId += 1
       }
     }

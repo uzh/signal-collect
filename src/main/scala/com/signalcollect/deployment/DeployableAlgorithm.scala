@@ -23,5 +23,5 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 
 trait DeployableAlgorithm {
-  def execute(parameters: Map[String, String], nodeActors: Array[ActorRef], actorSystem: Option[ActorSystem] = None)
+  def execute(parameters: Map[String, String], nodeActors: Option[Array[ActorRef]], actorSystem: Option[ActorSystem] = None)
 }
