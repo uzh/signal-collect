@@ -54,6 +54,7 @@ import com.signalcollect.interfaces.SchedulerFactory
  */
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
+  val nodeId: Int,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory,
@@ -119,9 +120,16 @@ class WorkerImplementation[Id, Signal](
     isIdleDetectionEnabled = true
   }
 
+  def setIdle(newIdleState: Boolean) {
+    isIdle = newIdleState
+    if (isIdleDetectionEnabled) {
+      messageBus.sendToNode(nodeId, getWorkerStatusForNode)
+    }
+  }
+
   def sendStatusToCoordinator {
     if (messageBus.isInitialized) {
-      val status = getWorkerStatus
+      val status = getWorkerStatusForCoordinator
       messageBus.sendToCoordinator(status)
     }
   }
@@ -391,9 +399,10 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
-  def getWorkerStatus: WorkerStatus = {
+  def getWorkerStatusForCoordinator: WorkerStatus = {
     WorkerStatus(
       workerId = workerId,
+      timeStamp = System.nanoTime,
       isIdle = isIdle,
       isPaused = isPaused,
       messagesSent = SentMessagesStats(
@@ -402,6 +411,22 @@ class WorkerImplementation[Id, Signal](
         messageBus.messagesSentToCoordinator + 1, // +1 to account for the status message itself.
         messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
+  }
+
+  def getWorkerStatusForNode: WorkerStatus = {
+    val ws = WorkerStatus(
+      workerId = workerId,
+      timeStamp = System.nanoTime,
+      isIdle = isIdle,
+      isPaused = isPaused,
+      messagesSent = SentMessagesStats(
+        messageBus.messagesSentToWorkers,
+        messageBus.messagesSentToNodes,
+        messageBus.messagesSentToCoordinator,
+        messageBus.messagesSentToOthers),
+      messagesReceived = counters.messagesReceived)
+    ws.messagesSent.nodes(nodeId) = ws.messagesSent.nodes(nodeId) + 1 // +1 to account for the status message itself.
+    ws
   }
 
   def getIndividualWorkerStatistics: List[WorkerStatistics] = List(getWorkerStatistics)

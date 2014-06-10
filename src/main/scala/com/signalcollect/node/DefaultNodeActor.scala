@@ -85,33 +85,56 @@ class DefaultNodeActor(
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
-  var statusReportingInterval = 10 // Report every 10 milliseconds.
-
   var receivedMessagesCounter = 0
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
   var workerStatus: Array[WorkerStatus] = _
-  var numberOfWorkersOnNode = 0
+  var workerStatusAlreadyForwardedToCoordinator: Array[Boolean] = _
 
-  def setStatusReportingInterval(interval: Int) {
-    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
-    this.statusReportingInterval = interval
-  }
+  var numberOfIdleWorkers = 0
+  var isWorkerIdle: Array[Boolean] = _
+  var numberOfWorkersOnNode = 0
 
   def initializeIdleDetection {
     receivedMessagesCounter -= 1
     workerStatus = new Array[WorkerStatus](numberOfWorkersOnNode)
+    isWorkerIdle = new Array[Boolean](numberOfWorkersOnNode)
+    workerStatusAlreadyForwardedToCoordinator = new Array[Boolean](numberOfWorkersOnNode)
   }
 
   def receive = {
-    /**
-     * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
-     */
-    case ReceiveTimeout =>
-      sendStatusToCoordinator
     case Heartbeat(maySignal) =>
       sendStatusToCoordinator
+    case w: WorkerStatus =>
+      receivedMessagesCounter += 1
+      val arrayIndex = w.workerId % numberOfWorkersOnNode
+      if (isWorkerIdle(arrayIndex)) {
+        if (!w.isIdle) {
+          numberOfIdleWorkers -= 1
+        }
+      } else {
+        if (w.isIdle) {
+          numberOfIdleWorkers += 1
+        }
+      }
+      workerStatus(arrayIndex) = w
+      isWorkerIdle(arrayIndex) = w.isIdle
+      workerStatusAlreadyForwardedToCoordinator(arrayIndex) = false
+      if (numberOfIdleWorkers == numberOfWorkersOnNode) {
+        var i = 0
+        while (i < numberOfWorkersOnNode) {
+          if (!workerStatusAlreadyForwardedToCoordinator(i)) {
+            val status = workerStatus(i)
+            if (status != null) {
+              messageBus.sendToCoordinator(status)
+              workerStatusAlreadyForwardedToCoordinator(i) = true
+            }
+          }
+          i += 1
+        }
+        sendStatusToCoordinator // After the worker messages, so the counts for sending them is included.
+      }
     case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
       val result = command.asInstanceOf[Node => Any](this)
@@ -161,9 +184,7 @@ class DefaultNodeActor(
   }
 
   protected def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
-      lastStatusUpdate = currentTime
+    if (isInitialized) {
       val status = getNodeStatus
       messageBus.sendToCoordinator(status)
     }
@@ -192,7 +213,7 @@ class DefaultNodeActor(
     Runtime.getRuntime.availableProcessors
   }
 
-  override def preStart() = {
+  override def preStart = {
     if (nodeProvisionerAddress.isDefined) {
       println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
       nodeProvisioner = context.actorFor(nodeProvisionerAddress.get)

@@ -115,43 +115,46 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var globalQueueSizeLimitPreviousHeartbeat = 0l
   var globalReceivedMessagesPreviousHeartbeat = 0l
 
-  def logMessages {
-    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
-    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
-    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
-    log.debug(s"Total sent         : ${totalMessagesSent}")
-    log.debug(s"Total received     : ${totalMessagesReceived}")
-    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
-    log.debug(workerApi.getWorkerStatistics.toString)
-    //    println("Worker RPC ...")
-    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
-    //    println("Worker RPC ...")
-    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
-    //    println("Worker RPC ...")
-    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
-    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
-    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
-    //    verboseIsIdle
-  }
+  //  def logMessages {
+  //    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+  //    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+  //    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+  //    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+  //    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+  //    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
+  //    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
+  //    log.debug(s"Total sent         : ${totalMessagesSent}")
+  //    log.debug(s"Total received     : ${totalMessagesReceived}")
+  //    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
+  //    log.debug(workerApi.getWorkerStatistics.toString)
+  //    //    println("Worker RPC ...")
+  //    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
+  //    //    println("Worker RPC ...")
+  //    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
+  //    //    println("Worker RPC ...")
+  //    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
+  //    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
+  //    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
+  //    //    verboseIsIdle
+  //  }
 
   def sendHeartbeat {
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
     // Linear interpolation to predict future queue size.
     val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
-    val currentMessagesReceived = totalMessagesReceived
-    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
-    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
-    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
+    //    val currentMessagesReceived = totalMessagesReceived
+    //    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
+    //    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
+    //    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
+    //TODO: fix.
+    val maySignal = true
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
     //    debug(s"maySignal=$maySignal")
-    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
+    //TODO: fix.
+    //globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
 
@@ -161,14 +164,59 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var nodeStatusReceived = 0
   var workerStatusReceived = 0
 
+  //  def logStats {
+  //    val currentTime = System.nanoTime
+  //    val lastHeartbeatBackup = lastHeartbeatTimestamp
+  //    val timeSinceLast = currentTime - lastHeartbeatTimestamp
+  //    lastHeartbeatTimestamp = currentTime
+  //    val currentGlobalQueueSize = getGlobalInboxSize
+  //    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
+  //    // Linear interpolation to predict future queue size.
+  //    val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
+  //    val currentMessagesReceived = totalMessagesReceived
+  //    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
+  //    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
+  //    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
+  //    def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
+  //    println("===================================================")
+  //    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
+  //    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+  //    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+  //    //    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+  //    //    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+  //    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+  //    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
+  //    val current = System.nanoTime
+  //    //    val receiveAge = statusReceivedTimestamp.map(t => nanoseondsToSeconds(current - t))
+  //    //val creationAge = workerStatus.map(s => nanoseondsToSeconds(current - s.creationTimeStamp))
+  //    //    println(s"Worker status received X seconds ago: " + receiveAge.toList)
+  //    //println(s"Worker status created X seconds ago : " + creationAge.toList)
+  //    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+  //    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+  //    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
+  //    println(s"Total sent         : ${totalMessagesSent}")
+  //    println(s"Total received     : ${totalMessagesReceived}")
+  //    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
+  //    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+  //    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
+  //    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
+  //    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
+  //    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
+  //  }
+
   def receive = {
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
       messageBus.getReceivedMessagesCounter.incrementAndGet
       workerStatusReceived += 1
-      updateWorkerStatusMap(ws)
-      if (isIdle) {
-        onIdle
+      // A status might be sent indirectly via the node actor, which means that there is no FIFO
+      // guarantee. To get FIFO back, we check the time stamp of the status.
+      val oldWs = workerStatus(ws.workerId)
+      if (oldWs == null || ws.timeStamp > oldWs.timeStamp) {
+        updateWorkerStatusMap(ws)
+        if (isIdle) {
+          onIdle
+        }
       }
       if (shouldSendHeartbeat) {
         sendHeartbeat
@@ -178,6 +226,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       messageBus.getReceivedMessagesCounter.incrementAndGet
       nodeStatusReceived += 1
       updateNodeStatusMap(ns)
+      if (isIdle) {
+        onIdle
+      }
       if (shouldSendHeartbeat) {
         sendHeartbeat
       }
@@ -247,51 +298,35 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   def getWorkerStatuses: Array[WorkerStatus] = workerStatus.clone
 
-  val messagesSentToWorkers: Array[Long] = new Array(numberOfWorkers)
-  val messagesSentToNodes: Array[Long] = new Array(numberOfNodes)
-  var messagesSentToCoordinator: Long = 0
-
   def totalMessagesSent = messagesSentToWorkers.sum + messagesSentToNodes.sum + messagesSentToCoordinator
-
-  val messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
-  val messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
-  var messagesReceivedByCoordinator: Long = 0
-
   def totalMessagesReceived = messagesReceivedByWorkers.sum + messagesReceivedByNodes.sum + messagesReceivedByCoordinator
 
+  var messagesSentToCoordinator: Long = 0
+  var messagesReceivedByCoordinator: Long = 0
+  var messagesSentToWorkers: Array[Long] = new Array(numberOfWorkers)
+  var messagesSentToNodes: Array[Long] = new Array(numberOfNodes)
+  var messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
+  var messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
+
   def resetMessagingStats {
-    for (workerId <- 0 until numberOfWorkers) {
-      messagesSentToWorkers(workerId) = 0
-      messagesReceivedByWorkers(workerId) = 0
-    }
-    for (nodeId <- 0 until numberOfNodes) {
-      messagesSentToNodes(nodeId) = 0
-      messagesReceivedByNodes(nodeId) = 0
-    }
     messagesSentToCoordinator = 0
     messagesReceivedByCoordinator = 0
-  }
-
-  def allSentMessagesReceived: Boolean = {
-    computeMessagingStats
-    for (workerId <- 0 until numberOfWorkers) {
-      if (messagesSentToWorkers(workerId) != messagesReceivedByWorkers(workerId)) {
-        return false
-      }
-    }
-    for (nodeId <- 0 until numberOfNodes) {
-      if (messagesSentToNodes(nodeId) != messagesReceivedByNodes(nodeId)) {
-        return false
-      }
-    }
-    if (messagesSentToCoordinator != messagesReceivedByCoordinator) {
-      return false
-    }
-    true
+    messagesSentToWorkers = new Array(numberOfWorkers)
+    messagesSentToNodes = new Array(numberOfNodes)
+    messagesReceivedByWorkers = new Array(numberOfWorkers)
+    messagesReceivedByNodes = new Array(numberOfNodes)
   }
 
   def computeMessagingStats {
-    resetMessagingStats
+    def updateSentMessages(stats: SentMessagesStats) {
+      messagesSentToCoordinator += stats.coordinator
+      for (recipientId <- 0 until numberOfWorkers) {
+        messagesSentToWorkers(recipientId) += stats.workers(recipientId)
+      }
+      for (recipientId <- 0 until numberOfNodes) {
+        messagesSentToNodes(recipientId) += stats.nodes(recipientId)
+      }
+    }
     for (workerId <- 0 until numberOfWorkers) {
       val status = workerStatus(workerId)
       if (status != null) {
@@ -311,14 +346,23 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     updateSentMessages(coordinatorMessagesSent)
   }
 
-  def updateSentMessages(stats: SentMessagesStats) {
-    for (recipientId <- 0 until numberOfWorkers) {
-      messagesSentToWorkers(recipientId) += stats.workers(recipientId)
+  def allSentMessagesReceived: Boolean = {
+    resetMessagingStats
+    computeMessagingStats
+    if (messagesSentToCoordinator != messagesReceivedByCoordinator) {
+      return false
     }
-    for (recipientId <- 0 until numberOfNodes) {
-      messagesSentToNodes(recipientId) += stats.nodes(recipientId)
+    for (nodeId <- 0 until numberOfNodes) {
+      if (messagesSentToNodes(nodeId) != messagesReceivedByNodes(nodeId)) {
+        return false
+      }
     }
-    messagesSentToCoordinator += stats.coordinator
+    for (workerId <- 0 until numberOfWorkers) {
+      if (messagesSentToWorkers(workerId) != messagesReceivedByWorkers(workerId)) {
+        return false
+      }
+    }
+    true
   }
 
   def messagesSentByCoordinator = SentMessagesStats(

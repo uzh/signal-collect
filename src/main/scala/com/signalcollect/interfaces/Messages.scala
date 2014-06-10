@@ -66,6 +66,7 @@ case class SignalMessage[@specialized(Int, Long) Id, @specialized(Int, Long, Flo
 // Convergence/pause detection
 case class WorkerStatus(
   workerId: Int,
+  timeStamp: Long,
   isIdle: Boolean,
   isPaused: Boolean,
   messagesSent: SentMessagesStats,

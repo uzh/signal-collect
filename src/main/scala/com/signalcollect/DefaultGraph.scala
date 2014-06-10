@@ -138,8 +138,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
-  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
-
   val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
