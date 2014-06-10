@@ -95,11 +95,6 @@ class DefaultNodeActor(
     this.statusReportingInterval = interval
   }
 
-  /**
-   * Timeout for Akka actor idling
-   */
-  context.setReceiveTimeout(statusReportingInterval.milliseconds)
-
   def receive = {
     /**
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
