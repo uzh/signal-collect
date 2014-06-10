@@ -92,6 +92,7 @@ class DefaultNodeActor(
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
   var workerStatus: Array[WorkerStatus] = _
+  var numberOfWorkersOnNode = 0
 
   def setStatusReportingInterval(interval: Int) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
@@ -100,9 +101,9 @@ class DefaultNodeActor(
 
   def initializeIdleDetection {
     receivedMessagesCounter -= 1
-    workerStatus = new Array[WorkerStatus](workers.size)
+    workerStatus = new Array[WorkerStatus](numberOfWorkersOnNode)
   }
-  
+
   def receive = {
     /**
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
@@ -172,6 +173,7 @@ class DefaultNodeActor(
 
   def createWorker(workerId: Int, dispatcher: AkkaDispatcher, creator: () => WorkerActor[_, _]): String = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
+    numberOfWorkersOnNode += 1
     val workerName = "Worker" + workerId
     dispatcher match {
       case EventBased =>
