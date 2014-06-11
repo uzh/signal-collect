@@ -43,7 +43,8 @@ object DefaultAkkaWorker extends WorkerFactory {
       config.mapperFactory,
       config.storageFactory,
       config.schedulerFactory,
-      config.heartbeatIntervalInMilliseconds)
+      config.heartbeatIntervalInMilliseconds,
+      config.eagerIdleDetection)
   }
   override def toString: String = "DefaultAkkaWorker"
 }

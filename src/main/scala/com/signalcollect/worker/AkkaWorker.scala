@@ -68,7 +68,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val mapperFactory: MapperFactory,
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
-  val heartbeatIntervalInMilliseconds: Int)
+  val heartbeatIntervalInMilliseconds: Int,
+  val eagerIdleDetection: Boolean)
   extends WorkerActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
@@ -142,7 +143,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
+    if (eagerIdleDetection) worker.setIdle(false)
     self ! ScheduleOperations
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
@@ -215,7 +216,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           //          log.debug(s"Worker $workerId turns to idle")
 
           //Worker is now idle, do idle detection, if enabled.
-          worker.setIdle(true)
+          if (eagerIdleDetection) worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
           //          log.debug(s"Worker $workerId has work to do")

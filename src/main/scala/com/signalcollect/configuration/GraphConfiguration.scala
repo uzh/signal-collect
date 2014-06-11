@@ -41,6 +41,7 @@ import akka.actor.ActorRef
  * All the graph configuration parameters with their defaults.
  */
 case class GraphConfiguration(
+  eagerIdleDetection: Boolean = true,
   consoleEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,
