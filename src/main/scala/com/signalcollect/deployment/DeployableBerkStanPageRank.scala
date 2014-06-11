@@ -16,9 +16,9 @@ class DeployableBerkStanPageRank extends DeployableAlgorithm {
       GraphBuilder.withActorSystem(actorSystem.get)
     else GraphBuilder
     val graph = if (nodeActors.isDefined)
-      graphBuilder.withPreallocatedNodes(nodeActors.get).build
-    else graphBuilder.build
-    val edgeTuple = readFile(parameters, graph)
+      graphBuilder.withPreallocatedNodes(nodeActors.get).withMessageSerialization(true).build
+    else graphBuilder.withMessageSerialization(true).build
+    readFile(parameters, graph)
 
     println("Graph has been built, awaiting idle ...")
     graph.awaitIdle
@@ -28,7 +28,7 @@ class DeployableBerkStanPageRank extends DeployableAlgorithm {
     graph.shutdown
   }
 
-  private def readFile(parameters: Map[String,String], graph: com.signalcollect.Graph[Any,Any]): List[String] = {
+  private def readFile(parameters: Map[String,String], graph: com.signalcollect.Graph[Any,Any]){
     val filename = parameters.get("filename").getOrElse("web-BerkStan.txt")
     val in = new BufferedReader(new InputStreamReader(new FileInputStream(filename)))
     var line = in.readLine
@@ -49,14 +49,15 @@ class DeployableBerkStanPageRank extends DeployableAlgorithm {
       printProgress(cnt, begin)
       cnt = cnt + 1
     }
-    edgeTuple
+    val time = System.currentTimeMillis() -begin
+    println(s"read graph in $time")
   }
 
   private def printProgress(cnt: Int, begin: Long): Unit = {
     if (cnt % 100000 == 0) {
       val time = (System.currentTimeMillis - begin)/1000
       val memory = Runtime.getRuntime.totalMemory
-      println(s"$cnt edges read. memory = $memory time: $time s" )
+      println(memory)
     }
   }
   
