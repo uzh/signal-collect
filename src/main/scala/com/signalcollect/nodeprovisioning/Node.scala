@@ -34,6 +34,7 @@ trait Node {
   def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory)
   def setStatusReportingInterval(statusReportingInterval: Int)
   def numberOfCores: Int
+  def initializeIdleDetection
   def shutdown
 }
 

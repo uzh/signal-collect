@@ -20,7 +20,6 @@
 
 package com.signalcollect.nodeprovisioning.local
 
-import com.signalcollect.interfaces.Node
 import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
 import akka.actor.ActorRef

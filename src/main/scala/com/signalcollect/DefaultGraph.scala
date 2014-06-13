@@ -77,7 +77,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory,
   storageFactory: StorageFactory,
   schedulerFactory: SchedulerFactory,
-  heartbeatIntervalInMilliseconds: Int) {
+  heartbeatIntervalInMilliseconds: Int,
+  eagerIdleDetection: Boolean) {
   def create: () => WorkerActor[Id, Signal] = {
     () =>
       workerFactory.createInstance[Id, Signal](
@@ -88,7 +89,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         mapperFactory,
         storageFactory,
         schedulerFactory,
-        heartbeatIntervalInMilliseconds)
+        heartbeatIntervalInMilliseconds,
+        eagerIdleDetection)
   }
 }
 
@@ -172,7 +174,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.mapperFactory,
           config.storageFactory,
           config.schedulerFactory,
-          config.heartbeatIntervalInMilliseconds)
+          config.heartbeatIntervalInMilliseconds,
+          config.eagerIdleDetection )
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
