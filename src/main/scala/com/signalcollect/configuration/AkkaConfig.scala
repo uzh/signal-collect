@@ -94,6 +94,7 @@ akka {
       "scala.util.Left" = kryo
       "scala.util.Right" = kryo
       "scala.collection.SortedMap" = kryo
+      "scala.collection.mutable.WrappedArray$ofRef" = kryo
       "akka.actor.SystemGuardian$RegisterTerminationHook$" = kryo
       "akka.actor.ReceiveTimeout$" = kryo
       "akka.remote.ReliableDeliverySupervisor$GotUid" = kryo
@@ -104,6 +105,8 @@ akka {
       "akka.remote.EndpointWriter$OutboundAck" = kryo
       "akka.remote.EndpointWriter$StopReading" = kryo
       "akka.remote.Ack" = kryo
+      "akka.actor.Address" = kryo
+      "akka.remote.SeqNo" = kryo
       "scala.Int" = kryo
       "scala.Long" = kryo
       "scala.Float" = kryo
@@ -140,6 +143,9 @@ akka {
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
+      "com.signalcollect.deployment.SplitLoader" = kryo
+      "com.signalcollect.deployment.EfficientPageRankVertex" = kryo
+      "com.signalcollect.interfaces.AddVertex" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java
