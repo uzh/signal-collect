@@ -61,7 +61,7 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
       }
       val finish = System.currentTimeMillis
       val time = finish - start
-      println("It took " + (time.toDouble / 1000) + " seconds with factor " + factor + ".")
+      //println("It took " + (time.toDouble / 1000) + " seconds with factor " + factor + ".")
       assert(splaySet.toSet == randomInts.toSet)
     } catch {
       case t: Throwable => t.printStackTrace
@@ -79,9 +79,6 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
         val splaySizeBefore = splaySet.size
         splaySet.insert(insertValue)
         standardSet += insertValue
-        if (i % 10000 == 0) {
-          println(i)
-        }
         if (splaySet.size != standardSet.size) {
           println(s"Problematic insert: $insertValue")
           println(s"Splay size ${splaySet.size}")
