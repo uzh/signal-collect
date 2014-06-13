@@ -56,7 +56,9 @@ case class ExecutionConfiguration(
    *
    *  @param executionMode The execution mode used in a computation.
    */
-  def withExecutionMode(executionMode: ExecutionMode.Value) = newExecutionConfiguration(executionMode = executionMode)
+  def withExecutionMode(executionMode: ExecutionMode.Value) = {
+    newExecutionConfiguration(executionMode = executionMode)
+  }
 
   /**
    *  Configures the signal threshold used in a computation.

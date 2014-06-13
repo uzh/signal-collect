@@ -68,13 +68,20 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val mapperFactory: MapperFactory,
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
-  val heartbeatIntervalInMilliseconds: Int)
+  val heartbeatIntervalInMilliseconds: Int,
+  val eagerIdleDetection: Boolean)
   extends WorkerActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
 
   override def postStop {
     log.debug(s"Worker $workerId has stopped.")
+  }
+
+  // Assumes that there is the same number of workers on all nodes.
+  def nodeId: Int = {
+    val workersPerNode = numberOfWorkers / numberOfNodes
+    workerId / workersPerNode
   }
 
   override def postRestart(reason: Throwable): Unit = {
@@ -96,6 +103,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
+    nodeId = nodeId,
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
@@ -136,7 +144,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
+    if (eagerIdleDetection) worker.setIdle(false)
     self ! ScheduleOperations
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
@@ -207,7 +215,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
-          worker.setIdle(true)
+
+          //Worker is now idle, do idle detection, if enabled.
+          if (eagerIdleDetection) worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
           //          log.debug(s"Worker $workerId has work to do")
@@ -216,7 +226,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations
+            worker.scheduler.executeOperations(worker.systemOverloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush

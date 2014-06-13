@@ -33,7 +33,7 @@ import com.signalcollect.interfaces.SchedulerFactory
  *  The default Akka worker implementation.
  */
 object DefaultAkkaWorker extends WorkerFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
+  override def createInstance[Id: ClassTag, Signal: ClassTag](
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
@@ -41,7 +41,8 @@ object DefaultAkkaWorker extends WorkerFactory {
     mapperFactory: MapperFactory,
     storageFactory: StorageFactory,
     schedulerFactory: SchedulerFactory,
-    heartbeatIntervalInMilliseconds: Int): WorkerActor[Id, Signal] = {
+    heartbeatIntervalInMilliseconds: Int,
+    eagerIdleDetection:Boolean): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
@@ -50,7 +51,8 @@ object DefaultAkkaWorker extends WorkerFactory {
       mapperFactory,
       storageFactory,
       schedulerFactory,
-      heartbeatIntervalInMilliseconds)
+      heartbeatIntervalInMilliseconds,
+      eagerIdleDetection)
   }
   override def toString: String = "DefaultAkkaWorker"
 }

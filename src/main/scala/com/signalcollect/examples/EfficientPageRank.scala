@@ -38,17 +38,13 @@ import com.signalcollect.util.IntSet
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientPageRankLoader extends App {
-  val g = new GraphBuilder[Int, Double].withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).build
+  val g = new GraphBuilder[Int, Double].
+    withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).
+    //withMessageSerialization(true).
+    build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
-  val splits = {
-    val s = new Array[DataInputStream](numberOfSplits)
-    for (i <- 0 until numberOfSplits) {
-      s(i) = new DataInputStream(new FileInputStream(s"web-split-$i"))
-    }
-    s
-  }
   for (i <- 0 until numberOfSplits) {
-    g.loadGraph(SplitLoader(splits(i)), Some(i))
+    g.loadGraph(SplitLoader(s"web-split-$i"), Some(i))
   }
   print("Loading graph ...")
   g.awaitIdle
@@ -79,7 +75,10 @@ object EfficientPageRankLoader extends App {
   //  }
 }
 
-case class SplitLoader(in: DataInputStream) extends Iterator[GraphEditor[Int, Double] => Unit] {
+case class SplitLoader(splitFileName: String) extends Iterator[GraphEditor[Int, Double] => Unit] {
+
+  lazy val in = new DataInputStream(new FileInputStream(splitFileName))
+
   var loaded = 0
 
   def readNext: Int = Ints.readUnsignedVarInt(in)

@@ -156,8 +156,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
-  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
-
   val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
@@ -201,6 +199,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   initializeMessageBuses
 
+  parallelBootstrapNodeProxies.foreach(_.initializeIdleDetection)
+  lazy val graphEditor = coordinatorProxy.getGraphEditor
+  lazy val workerApi = coordinatorProxy.getWorkerApi
+  workerApi.initializeIdleDetection
+
   /** Returns the ConsoleServer */
   def getConsole = console
 
@@ -218,9 +221,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
     log.debug("All registries have been fully initialized.")
   }
-
-  lazy val workerApi = coordinatorProxy.getWorkerApi
-  lazy val graphEditor = coordinatorProxy.getGraphEditor
 
   /** GraphApi */
 

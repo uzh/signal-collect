@@ -32,7 +32,7 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.nodeprovisioning.Node
+import com.signalcollect.interfaces.Node
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import org.specs2.runner.JUnitRunner
 import com.typesafe.config.Config
