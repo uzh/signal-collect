@@ -127,6 +127,8 @@ class DefaultWorkerApi[Id, Signal](
 
   override def reset = futures(_.reset) foreach get
 
+  override def initializeIdleDetection = futures(_.initializeIdleDetection) foreach get
+
   //----------------GraphEditor, BLOCKING variant-------------------------
 
   /**

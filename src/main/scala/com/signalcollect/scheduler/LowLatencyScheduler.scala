@@ -24,18 +24,18 @@ import com.signalcollect.interfaces.Scheduler
 import com.signalcollect.interfaces.Worker
 
 class LowLatencyScheduler[Id](w: Worker[Id, _]) extends Scheduler[Id](w) {
-  override def executeOperations {
+  override def executeOperations(systemOverloaded: Boolean) {
     if (!worker.vertexStore.toCollect.isEmpty) {
       val collected = worker.vertexStore.toCollect.process(
         vertex => {
           worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-          if (vertex.scoreSignal > worker.signalThreshold) {
+          if (!systemOverloaded && vertex.scoreSignal > worker.signalThreshold) {
             worker.executeSignalOperationOfVertex(vertex)
           }
         })
       worker.messageBusFlushed = false
     }
-    if (!worker.vertexStore.toSignal.isEmpty) {
+    if (!systemOverloaded && !worker.vertexStore.toSignal.isEmpty) {
       worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_))
       worker.messageBusFlushed = false
     }

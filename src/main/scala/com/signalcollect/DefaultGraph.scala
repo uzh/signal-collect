@@ -77,7 +77,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory,
   storageFactory: StorageFactory,
   schedulerFactory: SchedulerFactory,
-  heartbeatIntervalInMilliseconds: Int) {
+  heartbeatIntervalInMilliseconds: Int,
+  eagerIdleDetection: Boolean) {
   def create: () => WorkerActor[Id, Signal] = {
     () =>
       workerFactory.createInstance[Id, Signal](
@@ -88,7 +89,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         mapperFactory,
         storageFactory,
         schedulerFactory,
-        heartbeatIntervalInMilliseconds)
+        heartbeatIntervalInMilliseconds,
+        eagerIdleDetection)
   }
 }
 
@@ -156,8 +158,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
-  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
-
   val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
@@ -174,7 +174,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.mapperFactory,
           config.storageFactory,
           config.schedulerFactory,
-          config.heartbeatIntervalInMilliseconds)
+          config.heartbeatIntervalInMilliseconds,
+          config.eagerIdleDetection )
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = system.actorFor(workerName)
         workerId += 1
@@ -201,6 +202,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   initializeMessageBuses
 
+  parallelBootstrapNodeProxies.foreach(_.initializeIdleDetection)
+  lazy val graphEditor = coordinatorProxy.getGraphEditor
+  lazy val workerApi = coordinatorProxy.getWorkerApi
+  workerApi.initializeIdleDetection
+
   /** Returns the ConsoleServer */
   def getConsole = console
 
@@ -218,9 +224,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
     log.debug("All registries have been fully initialized.")
   }
-
-  lazy val workerApi = coordinatorProxy.getWorkerApi
-  lazy val graphEditor = coordinatorProxy.getGraphEditor
 
   /** GraphApi */
 

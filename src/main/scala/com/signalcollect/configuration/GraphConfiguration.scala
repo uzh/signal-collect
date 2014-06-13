@@ -44,6 +44,7 @@ import akka.actor.ActorSystem
 case class GraphConfiguration(
   actorSystem: Option[ActorSystem] = None,
   actorNamePrefix: String = "",
+  eagerIdleDetection: Boolean = true,
   consoleEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,

@@ -54,6 +54,7 @@ import com.signalcollect.interfaces.SchedulerFactory
  */
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
+  val nodeId: Int,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory,
@@ -72,6 +73,7 @@ class WorkerImplementation[Id, Signal](
   initialize
 
   var messageBusFlushed: Boolean = _
+  var isIdleDetectionEnabled: Boolean = _
   var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
@@ -84,6 +86,7 @@ class WorkerImplementation[Id, Signal](
 
   def initialize {
     messageBusFlushed = true
+    isIdleDetectionEnabled = false
     systemOverloaded = false
     operationsScheduled = false
     isIdle = true
@@ -113,22 +116,21 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
+  def initializeIdleDetection {
+    isIdleDetectionEnabled = true
+  }
+
   def setIdle(newIdleState: Boolean) {
-    if (messageBus.isInitialized && isIdle != newIdleState) {
-      isIdle = newIdleState
-      sendStatusToCoordinator
+    isIdle = newIdleState
+    if (isIdleDetectionEnabled) {
+      messageBus.sendToNode(nodeId, getWorkerStatusForNode)
     }
   }
 
   def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
     if (messageBus.isInitialized) {
-      val status = getWorkerStatus
+      val status = getWorkerStatusForCoordinator
       messageBus.sendToCoordinator(status)
-    } else {
-      val msg = s"Worker $workerId  $this is ignoring status request from coordinator because its MessageBus ${messageBus} is not initialized."
-      log.debug(msg)
-      throw new Exception(msg)
     }
   }
 
@@ -397,9 +399,10 @@ class WorkerImplementation[Id, Signal](
     }
   }
 
-  def getWorkerStatus: WorkerStatus = {
+  def getWorkerStatusForCoordinator: WorkerStatus = {
     WorkerStatus(
       workerId = workerId,
+      timeStamp = System.nanoTime,
       isIdle = isIdle,
       isPaused = isPaused,
       messagesSent = SentMessagesStats(
@@ -408,6 +411,22 @@ class WorkerImplementation[Id, Signal](
         messageBus.messagesSentToCoordinator + 1, // +1 to account for the status message itself.
         messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
+  }
+
+  def getWorkerStatusForNode: WorkerStatus = {
+    val ws = WorkerStatus(
+      workerId = workerId,
+      timeStamp = System.nanoTime,
+      isIdle = isIdle,
+      isPaused = isPaused,
+      messagesSent = SentMessagesStats(
+        messageBus.messagesSentToWorkers,
+        messageBus.messagesSentToNodes,
+        messageBus.messagesSentToCoordinator,
+        messageBus.messagesSentToOthers),
+      messagesReceived = counters.messagesReceived)
+    ws.messagesSent.nodes(nodeId) = ws.messagesSent.nodes(nodeId) + 1 // +1 to account for the status message itself.
+    ws
   }
 
   def getIndividualWorkerStatistics: List[WorkerStatistics] = List(getWorkerStatistics)

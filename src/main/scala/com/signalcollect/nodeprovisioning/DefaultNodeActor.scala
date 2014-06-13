@@ -44,6 +44,7 @@ import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.NodeReady
 import akka.util.Timeout
 import scala.concurrent.Await
+import com.signalcollect.interfaces.WorkerStatus
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -76,6 +77,19 @@ class DefaultNodeActor(
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
+  var workerStatus: Array[WorkerStatus] = _
+  var workerStatusAlreadyForwardedToCoordinator: Array[Boolean] = _
+
+  var numberOfIdleWorkers = 0
+  var isWorkerIdle: Array[Boolean] = _
+  var numberOfWorkersOnNode = 0
+
+  def initializeIdleDetection {
+    receivedMessagesCounter -= 1
+    workerStatus = new Array[WorkerStatus](numberOfWorkersOnNode)
+    isWorkerIdle = new Array[Boolean](numberOfWorkersOnNode)
+    workerStatusAlreadyForwardedToCoordinator = new Array[Boolean](numberOfWorkersOnNode)
+  }
 
   def setStatusReportingInterval(interval: Int) {
     receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
@@ -95,6 +109,35 @@ class DefaultNodeActor(
       sendStatusToCoordinator
     case Heartbeat(maySignal) =>
       sendStatusToCoordinator
+    case w: WorkerStatus =>
+      receivedMessagesCounter += 1
+      val arrayIndex = w.workerId % numberOfWorkersOnNode
+      if (isWorkerIdle(arrayIndex)) {
+        if (!w.isIdle) {
+          numberOfIdleWorkers -= 1
+        }
+      } else {
+        if (w.isIdle) {
+          numberOfIdleWorkers += 1
+        }
+      }
+      workerStatus(arrayIndex) = w
+      isWorkerIdle(arrayIndex) = w.isIdle
+      workerStatusAlreadyForwardedToCoordinator(arrayIndex) = false
+      if (numberOfIdleWorkers == numberOfWorkersOnNode) {
+        var i = 0
+        while (i < numberOfWorkersOnNode) {
+          if (!workerStatusAlreadyForwardedToCoordinator(i)) {
+            val status = workerStatus(i)
+            if (status != null) {
+              messageBus.sendToCoordinator(status)
+              workerStatusAlreadyForwardedToCoordinator(i) = true
+            }
+          }
+          i += 1
+        }
+        sendStatusToCoordinator // After the worker messages, so the counts for sending them is included.
+      }
     case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
       val result = command.asInstanceOf[Node => Any](this)
@@ -157,6 +200,7 @@ class DefaultNodeActor(
 
   def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
+    numberOfWorkersOnNode += 1
     val workerName = "Worker" + workerId
     val worker = context.system.actorOf(
       Props(creator()).withDispatcher("akka.io.pinned-dispatcher"),

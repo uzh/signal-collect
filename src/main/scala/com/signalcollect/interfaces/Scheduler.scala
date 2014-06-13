@@ -22,6 +22,6 @@ package com.signalcollect.interfaces
 import com.signalcollect.Vertex
 
 abstract class Scheduler[Id](val worker: Worker[Id, _]) {
-  def executeOperations
+  def executeOperations(systemOverloaded: Boolean)
   def handleCollectOnDelivery(v: Vertex[Id, _])
 }

@@ -60,6 +60,8 @@ trait WorkerApi[Id, Signal] {
 
   def reset
 
+  def initializeIdleDetection
+
   //TODO: Implement system information accessors on node instead.
   def getNodeStatistics: NodeStatistics
   def getIndividualNodeStatistics: List[NodeStatistics]
