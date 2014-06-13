@@ -74,6 +74,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   with ActorLogging
   with ActorRestartLogging {
 
+  var schedulingTimestamp = System.nanoTime
+
   override def postStop {
     log.debug(s"Worker $workerId has stopped.")
   }
@@ -145,6 +147,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   def scheduleOperations {
     if (eagerIdleDetection) worker.setIdle(false)
     self ! ScheduleOperations
+    schedulingTimestamp = System.nanoTime
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
   }
@@ -210,7 +213,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case ScheduleOperations =>
-      if (messageQueue.isEmpty) {
+      if (messageQueue.isEmpty && System.nanoTime - schedulingTimestamp < 1000000) { // 1 millisecond
         //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
