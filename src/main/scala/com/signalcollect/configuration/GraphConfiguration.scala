@@ -43,6 +43,7 @@ import akka.actor.ActorRef
 case class GraphConfiguration(
   eagerIdleDetection: Boolean = true,
   consoleEnabled: Boolean = false,
+  throttlingEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,
   workerFactory: WorkerFactory = DefaultAkkaWorker,
