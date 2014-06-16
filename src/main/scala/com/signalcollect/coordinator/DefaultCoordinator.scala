@@ -65,6 +65,7 @@ case object IncrementorForCoordinator {
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
+  throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory,
   mapperFactory: MapperFactory,
   heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
@@ -101,7 +102,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
 
-  var lastHeartbeatTimestamp = 0l
+  var lastHeartbeatTimestamp = System.nanoTime
 
   var allWorkersInitialized = false
 
@@ -136,22 +137,43 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   //  }
 
   def sendHeartbeat {
+    val currentTime = System.nanoTime
+    val timeSinceLast = currentTime - lastHeartbeatTimestamp
     val currentGlobalQueueSize = getGlobalInboxSize
     val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
+    val currentMessagesReceived = totalMessagesReceived
     // Linear interpolation to predict future queue size.
-    val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
-    //    val currentMessagesReceived = totalMessagesReceived
-    //    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
-    //    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
-    //    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
-    //TODO: fix.
-    val maySignal = true
+    val maySignal = {
+      if (throttlingEnabled) {
+        val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
+        val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
+        val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
+        predictedGlobalQueueSize <= globalQueueSizeLimit
+      } else {
+        true
+      }
+    }
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
-    //    debug(s"maySignal=$maySignal")
-    //TODO: fix.
-    //globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
+    //    println("===================================================")
+    //    def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
+    //    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
+    //    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+    //    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+    //    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+    //    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
+    //    val current = System.nanoTime
+    //    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+    //    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+    //    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
+    //    println(s"Total sent         : ${totalMessagesSent}")
+    //    println(s"Total received     : ${totalMessagesReceived}")
+    //    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
+    //    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+    //    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
+    //    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
+    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
 
@@ -160,46 +182,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   var nodeStatusReceived = 0
   var workerStatusReceived = 0
-
-  //  def logStats {
-  //    val currentTime = System.nanoTime
-  //    val lastHeartbeatBackup = lastHeartbeatTimestamp
-  //    val timeSinceLast = currentTime - lastHeartbeatTimestamp
-  //    lastHeartbeatTimestamp = currentTime
-  //    val currentGlobalQueueSize = getGlobalInboxSize
-  //    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
-  //    // Linear interpolation to predict future queue size.
-  //    val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
-  //    val currentMessagesReceived = totalMessagesReceived
-  //    val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
-  //    val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
-  //    val maySignal = predictedGlobalQueueSize <= globalQueueSizeLimit
-  //    def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
-  //    println("===================================================")
-  //    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
-  //    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
-  //    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-  //    //    println(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-  //    //    println(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-  //    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
-  //    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
-  //    val current = System.nanoTime
-  //    //    val receiveAge = statusReceivedTimestamp.map(t => nanoseondsToSeconds(current - t))
-  //    //val creationAge = workerStatus.map(s => nanoseondsToSeconds(current - s.creationTimeStamp))
-  //    //    println(s"Worker status received X seconds ago: " + receiveAge.toList)
-  //    //println(s"Worker status created X seconds ago : " + creationAge.toList)
-  //    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
-  //    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
-  //    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
-  //    println(s"Total sent         : ${totalMessagesSent}")
-  //    println(s"Total received     : ${totalMessagesReceived}")
-  //    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
-  //    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
-  //    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
-  //    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
-  //    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
-  //    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
-  //  }
 
   def receive = {
     case ws: WorkerStatus =>

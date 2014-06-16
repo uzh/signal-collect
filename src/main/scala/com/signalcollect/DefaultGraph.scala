@@ -100,6 +100,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
 case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
+  throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory,
   mapperFactory: MapperFactory,
   heartbeatIntervalInMilliseconds: Long)
@@ -107,6 +108,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
+    throttlingEnabled,
     messageBusFactory,
     mapperFactory,
     heartbeatIntervalInMilliseconds)
@@ -188,6 +190,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val coordinatorCreator = CoordinatorCreator[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+      config.throttlingEnabled: Boolean,
       config.messageBusFactory,
       config.mapperFactory,
       config.heartbeatIntervalInMilliseconds)

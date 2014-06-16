@@ -46,6 +46,7 @@ case class GraphConfiguration(
   actorNamePrefix: String = "",
   eagerIdleDetection: Boolean = true,
   consoleEnabled: Boolean = false,
+  throttlingEnabled: Boolean = false,
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,
   workerFactory: WorkerFactory = DefaultAkkaWorker,

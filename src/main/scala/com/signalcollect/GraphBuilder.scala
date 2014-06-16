@@ -64,6 +64,15 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
   }
 
   /**
+   *  When throttling is enabled, the coordinator monitors the
+   *  messaging load of the system and stops signaling in case
+   *  the system should get overloaded.
+   */
+  def withThrottlingEnabled(newThrottlingEnabled: Boolean) = {
+    builder(config.copy(throttlingEnabled = newThrottlingEnabled))
+  }
+
+  /**
    *  Configures if the console website on port 8080 is enabled.
    */
   def withConsole(newConsoleEnabled: Boolean) =
