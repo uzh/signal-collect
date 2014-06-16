@@ -50,7 +50,7 @@ class DeployableEfficientPageRankLoader extends DeployableAlgorithm {
       graphBuilder.withActorSystem(actorSystem.get)
       else 
       graphBuilder
-    val g = graphBuilder2.
+    val g = graphBuilder2.withEagerIdleDetection(false).withThrottlingEnabled(true).
       withMessageBusFactory(new BulkAkkaMessageBusFactory(1024, false)).
       //withMessageSerialization(true).
       build
