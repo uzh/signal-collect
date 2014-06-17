@@ -36,13 +36,13 @@ import scala.language.reflectiveCalls
 import scala.reflect.ClassTag
 import com.signalcollect._
 import com.signalcollect.interfaces._
-import com.signalcollect.serialization.DefaultSerializer
 import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
+import akka.serialization.SerializationExtension
 
 case object ScheduleOperations
 
@@ -105,6 +105,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
     nodeId = nodeId,
+    serialization = SerializationExtension(context.system),
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
