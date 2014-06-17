@@ -58,20 +58,20 @@ import BreakConditionName._
 class GraphAggregator[Id](
   vertexIds: Set[Id] = Set[Id](),
   exposeVertices: Boolean = false)
-    extends AggregationOperation[(Double, Double, JObject)] {
+  extends AggregationOperation[(Double, Double, JObject)] {
 
   def interpretState(s: Any): Double = {
     s match {
       case x: Double => x
-      case x: Int    => x.toDouble
-      case x: Long   => x.toDouble
-      case x: Float  => x.toDouble
+      case x: Int => x.toDouble
+      case x: Long => x.toDouble
+      case x: Float => x.toDouble
       case otherwise => 0.0
     }
   }
 
   def extract(v: Vertex[_, _]): ((Double, Double, JObject)) = {
-      def state: Double = interpretState(v.state)
+    def state: Double = interpretState(v.state)
     try {
       v match {
         case i: Inspectable[Id, _] => {
@@ -81,25 +81,25 @@ class GraphAggregator[Id](
             } map { targetId => JString(targetId.toString) } toList
 
             val stateString = i.state match {
-              case null  => "null"
+              case null => "null"
               case other => other.toString
             }
-              def vertexProperties: List[JField] = (List(JField("s", stateString),
-                JField("es", targetVertices.size),
-                JField("ss", i.scoreSignal),
-                JField("cs", i.scoreCollect),
-                JField("t", v.getClass.toString.split("""\.""").last),
-                JField("info",
-                  if (exposeVertices) {
-                    JObject(
-                      (for ((k, v) <- i.expose) yield {
-                        JField(k, Toolkit.serializeAny(v))
-                      }).toList)
-                  } else { JNothing })))
-              def verticesObj: (String, JObject) = ("vertices",
-                JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
+            def vertexProperties: List[JField] = (List(JField("s", stateString),
+              JField("es", targetVertices.size),
+              JField("ss", i.scoreSignal),
+              JField("cs", i.scoreCollect),
+              JField("t", v.getClass.toString.split("""\.""").last),
+              JField("info",
+                if (exposeVertices) {
+                  JObject(
+                    (for ((k, v) <- i.expose) yield {
+                      JField(k, Toolkit.serializeAny(v))
+                    }).toList)
+                } else { JNothing })))
+            def verticesObj: (String, JObject) = ("vertices",
+              JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
 
-              def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+            def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
             (state, state, verticesObj ~ edgesObj)
           } else { (state, state, JObject(List())) }
 
@@ -136,7 +136,7 @@ class GraphAggregator[Id](
  * @param sampleSize the number of vertex IDs to retrieve
  */
 class SampleAggregator[Id](sampleSize: Int)
-    extends ModularAggregationOperation[Set[Id]] {
+  extends ModularAggregationOperation[Set[Id]] {
 
   val neutralElement = Set[Id]()
 
@@ -160,7 +160,7 @@ class SampleAggregator[Id](sampleSize: Int)
  * @param n the number of top elements to find
  */
 class TopDegreeAggregator[Id](n: Int)
-    extends AggregationOperation[Map[Id, Int]] {
+  extends AggregationOperation[Map[Id, Int]] {
 
   def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
     case i: Inspectable[Id, _] =>
@@ -188,16 +188,16 @@ class TopDegreeAggregator[Id](n: Int)
  * @param inverted gather by lowest, not highest state
  */
 class TopStateAggregator[Id](n: Int, inverted: Boolean)
-    extends AggregationOperation[List[(Double, Id)]] {
+  extends AggregationOperation[List[(Double, Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
     case i: Inspectable[Id, _] =>
       // Try to interpret different types of numberic states
       val state: Option[Double] = i.state match {
         case x: Double => Some(x)
-        case x: Int    => Some(x.toDouble)
-        case x: Long   => Some(x.toDouble)
-        case x: Float  => Some(x.toDouble)
+        case x: Int => Some(x.toDouble)
+        case x: Long => Some(x.toDouble)
+        case x: Float => Some(x.toDouble)
         case otherwise => None
       }
       state match {
@@ -230,12 +230,12 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
  * @param scoreType the score to look at (signal or collect)
  */
 class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
-    extends AggregationOperation[List[(Double, Id)]] {
+  extends AggregationOperation[List[(Double, Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
     case i: Inspectable[Id, _] =>
       val score = scoreType match {
-        case "signal"  => i.scoreSignal
+        case "signal" => i.scoreSignal
         case "collect" => i.scoreCollect
       }
       // Yield score and id only if the score is above the threshold
@@ -266,7 +266,7 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
  * @param ids set of vertex IDs to be loaded
  */
 class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
-    extends AggregationOperation[Set[Id]] {
+  extends AggregationOperation[Set[Id]] {
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
@@ -298,7 +298,7 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
  * @param idsList the list of IDs to compare vertex IDs with
  */
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
-    extends AggregationOperation[List[Vertex[Id, _]]] {
+  extends AggregationOperation[List[Vertex[Id, _]]] {
 
   def ids: Set[String] = idsList.toSet
 
@@ -324,7 +324,7 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
  * @param limit maximum number of nodes to find
  */
 class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
-    extends ModularAggregationOperation[Set[Id]] {
+  extends ModularAggregationOperation[Set[Id]] {
 
   val neutralElement = Set[Id]()
 
@@ -359,64 +359,63 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
  * @param state string denoting the current state
  */
 class BreakConditionsAggregator(conditions: Map[String, BreakCondition], state: String)
-    extends AggregationOperation[Map[String, String]] {
+  extends AggregationOperation[Map[String, String]] {
 
   val relevantVertexIds = conditions.map(_._2.props("vertexId")).toSet
 
-  def extract(v: Vertex[_, _]): Map[String, String] = v match {
-    case i: Inspectable[_, _] => {
-      var results = Map[String, String]()
-      if (relevantVertexIds.contains(i.id.toString)) {
-        conditions.foreach {
-          case (id, c) =>
-            if (i.id.toString == c.props("vertexId")) {
-              // It depends on the state which checks are performed, because
-              // some checks would falsely return true during some states. For
-              // example, checking the signal scores right after a signal step
-              // would yield a value below the threshold every time. In this
-              // case, we only check the signal scores after a collect step.
-              state match {
-                case "checksAfterSignal" => c.name match {
-                  case CollectScoreBelowThreshold =>
-                    if (i.scoreCollect < c.props("collectThreshold").toDouble) {
-                      results += (id -> i.scoreCollect.toString)
-                    }
-                  case CollectScoreAboveThreshold =>
-                    if (i.scoreCollect > c.props("collectThreshold").toDouble) {
-                      results += (id -> i.scoreCollect.toString)
-                    }
-                  case otherwise =>
-                }
-                case "checksAfterCollect" => c.name match {
-                  case StateChanges =>
-                    if (i.state.toString != c.props("currentState")) {
-                      results += (id -> i.state.toString)
-                    }
-                  case StateAbove =>
-                    if (i.state.toString.toDouble > c.props("expectedState").toDouble) {
-                      results += (id -> i.state.toString)
-                    }
-                  case StateBelow =>
-                    if (i.state.toString.toDouble < c.props("expectedState").toDouble) {
-                      results += (id -> i.state.toString)
-                    }
-                  case SignalScoreBelowThreshold =>
-                    if (i.scoreSignal < c.props("signalThreshold").toDouble) {
-                      results += (id -> i.scoreSignal.toString)
-                    }
-                  case SignalScoreAboveThreshold =>
-                    if (i.scoreSignal > c.props("signalThreshold").toDouble) {
-                      results += (id -> i.scoreSignal.toString)
-                    }
-                  case otherwise =>
-                }
+  def extract(v: Vertex[_, _]): Map[String, String] = {
+    var results = Map[String, String]()
+    if (relevantVertexIds.contains(v.id.toString)) {
+      conditions.foreach {
+        case (id, c) =>
+          if (v.id.toString == c.props("vertexId")) {
+            // It depends on the state which checks are performed, because
+            // some checks would falsely return true during some states. For
+            // example, checking the signal scores right after a signal step
+            // would yield a value below the threshold every time. In this
+            // case, we only check the signal scores after a collect step.
+            state match {
+              case "checksAfterSignal" => c.name match {
+                case CollectScoreBelowThreshold =>
+                  if (v.scoreCollect < c.props("collectThreshold").toDouble) {
+                    results += (id -> v.scoreCollect.toString)
+                  }
+                case CollectScoreAboveThreshold =>
+                  if (v.scoreCollect > c.props("collectThreshold").toDouble) {
+                    results += (id -> v.scoreCollect.toString)
+                  }
+                case otherwise =>
+              }
+              case "checksAfterCollect" => c.name match {
+                case StateChanges =>
+                  if (v.state.toString != c.props("currentState")) {
+                    results += (id -> v.state.toString)
+                  }
+                case StateAbove =>
+                  if (v.state.toString.toDouble > c.props("expectedState").toDouble) {
+                    results += (id -> v.state.toString)
+                  }
+                case StateBelow =>
+                  if (v.state.toString.toDouble < c.props("expectedState").toDouble) {
+                    results += (id -> v.state.toString)
+                  }
+                case SignalScoreBelowThreshold =>
+                  if (v.scoreSignal < c.props("signalThreshold").toDouble) {
+                    results += (id -> v.scoreSignal.toString)
+                  }
+                case SignalScoreAboveThreshold =>
+                  if (v.scoreSignal > c.props("signalThreshold").toDouble) {
+                    results += (id -> v.scoreSignal.toString)
+                  }
+                case otherwise =>
               }
             }
-        }
+          }
       }
-      results
     }
+    results
   }
+
   def reduce(results: Stream[Map[String, String]]): Map[String, String] = {
     Toolkit.mergeMaps(results.toList)((v1, v2) => v1 + v2)
   }
