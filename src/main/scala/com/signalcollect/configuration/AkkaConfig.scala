@@ -148,6 +148,7 @@ akka {
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
+      "com.signalcollect.Vertex" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
