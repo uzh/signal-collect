@@ -22,11 +22,7 @@ package com.signalcollect
 import com.signalcollect.util.SplayIntSet
 import com.signalcollect.util.IntHashMap
 import scala.reflect.ClassTag
-
-final class MemoryEfficientSplayIntSet extends SplayIntSet {
-  final val overheadFraction = 0.05f
-  final val maxNodeIntSetSize = 10000
-}
+import com.signalcollect.util.MemoryEfficientSplayIntSet
 
 /**
  * A memory efficient implementation of a data graph vertex

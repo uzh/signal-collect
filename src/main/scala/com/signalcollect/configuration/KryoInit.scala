@@ -136,7 +136,7 @@ class KryoInit {
       register("com.signalcollect.TopKFinder")
       register("com.signalcollect.TopKFinder$$anonfun$1")
       register("com.signalcollect.Vertex")
-      register("com.signalcollect.MemoryEfficientSplayIntSet")
+      register("com.signalcollect.util.MemoryEfficientSplayIntSet")
       register("scala.math.Ordering$$anon$9")
       register("scala.math.Ordering$$anonfun$by$1")
       register("scala.math.Ordering$Double$")

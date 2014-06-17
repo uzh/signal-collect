@@ -19,10 +19,10 @@
 
 package com.signalcollect
 
-import com.signalcollect.util.SplayIntSet
-import com.signalcollect.util.IntHashMap
 import scala.reflect.ClassTag
+
 import com.signalcollect.util.MemoryEfficientSplayIntSet
+import com.signalcollect.util.SplayIntSet
 
 /**
  * A memory efficient implementation of a data flow vertex
