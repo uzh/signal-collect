@@ -108,7 +108,7 @@ final class SplayNode(
  * spans all integers. Whenever a node reaches 'maxNodeIntSetSize', that node is split into
  * two nodes, and the interval for which the nodes are responsible is also split.
  */
-abstract class SplayIntSet {
+abstract class SplayIntSet extends Traversable[Int] {
   import SplayIntSet._
 
   def overheadFraction: Float

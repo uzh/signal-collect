@@ -48,7 +48,7 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
     state = s
   }
 
-  protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
+  var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
   def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     setState(collect(signal.asInstanceOf[IncomingSignalType]))
@@ -61,7 +61,7 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
   def scoreCollect = 0
 
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
-    targetIds.foreach { targetId =>
+    targetIds.foreach { targetId: Int =>
       graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
     lastSignalState = state

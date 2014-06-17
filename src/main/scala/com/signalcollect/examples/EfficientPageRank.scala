@@ -40,7 +40,9 @@ class EfficientPageRankVertex(id: Int)
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (edgeCount != 0) {
       val signal = (state - lastSignalState) / edgeCount
-      targetIds.foreach(graphEditor.sendSignal(signal, _, None))
+      targetIds.foreach { targetId: Int =>
+        graphEditor.sendSignal(signal, targetId, None)
+      }
     }
     lastSignalState = state
   }

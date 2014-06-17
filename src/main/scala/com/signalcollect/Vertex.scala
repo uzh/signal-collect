@@ -114,4 +114,9 @@ abstract class Vertex[+Id, State] extends Serializable {
    */
   def beforeRemoval(graphEditor: GraphEditor[Any, Any])
 
+  /**
+   * Returns all vertex ids to which this vertex has an edge.
+   * The same id may appear multiple times.
+   */
+  def targetIds: Traversable[Any]
 }

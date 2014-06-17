@@ -106,10 +106,20 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
     state = math.min(s, state)
     true
   }
+
+  def targetIds: Traversable[Int] = new Traversable[Int] {
+    def foreach[U](f: Int => U) = {
+      new IntSet(targetIdArray).foreach { targetId: Int =>
+        f(targetId)
+      }
+    }
+  }
+
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     if (outEdges != 0) {
-      new IntSet(targetIdArray).foreach((targetId: Int) =>
-        graphEditor.sendSignal(state + 1, targetId, None))
+      new IntSet(targetIdArray).foreach { targetId: Int =>
+        graphEditor.sendSignal(state + 1, targetId, None)
+      }
     }
     lastSignalState = state
   }

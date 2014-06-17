@@ -74,32 +74,33 @@ class GraphAggregator[Id](
     def state: Double = interpretState(v.state)
     try {
       v match {
-        case i: Inspectable[Id, _] => {
-          if (vertexIds.contains(i.id)) {
+        case v: Vertex[Id, _] => {
+          if (vertexIds.contains(v.id)) {
             // Get the list of target vertices that this vertex' edges point at
-            val targetVertices = i.targetIds.filter { targetId => vertexIds.contains(targetId.asInstanceOf[Id])
+            val targetVertices = v.targetIds.filter { targetId => vertexIds.contains(targetId.asInstanceOf[Id])
             } map { targetId => JString(targetId.toString) } toList
 
-            val stateString = i.state match {
+            val stateString = v.state match {
               case null => "null"
               case other => other.toString
             }
             def vertexProperties: List[JField] = (List(JField("s", stateString),
               JField("es", targetVertices.size),
-              JField("ss", i.scoreSignal),
-              JField("cs", i.scoreCollect),
+              JField("ss", v.scoreSignal),
+              JField("cs", v.scoreCollect),
               JField("t", v.getClass.toString.split("""\.""").last),
               JField("info",
-                if (exposeVertices) {
+                if (exposeVertices && v.isInstanceOf[Inspectable[Id, _]]) {
+                  val i = v.asInstanceOf[Inspectable[Id, _]]
                   JObject(
                     (for ((k, v) <- i.expose) yield {
                       JField(k, Toolkit.serializeAny(v))
                     }).toList)
                 } else { JNothing })))
             def verticesObj: (String, JObject) = ("vertices",
-              JObject(List(JField(i.id.toString, JObject(vertexProperties)))))
+              JObject(List(JField(v.id.toString, JObject(vertexProperties)))))
 
-            def edgesObj: (String, JObject) = ("edges", JObject(List(JField(i.id.toString, JArray(targetVertices)))))
+            def edgesObj: (String, JObject) = ("edges", JObject(List(JField(v.id.toString, JArray(targetVertices)))))
             (state, state, verticesObj ~ edgesObj)
           } else { (state, state, JObject(List())) }
 
@@ -145,9 +146,8 @@ class SampleAggregator[Id](sampleSize: Int)
     combinedSet.slice(0, math.min(sampleSize, combinedSet.size)).toSet
   }
 
-  def extract(v: Vertex[_, _]): Set[Id] = v match {
-    case i: Inspectable[Id, _] =>
-      List(i.id).toSet
+  def extract(v: Vertex[_, _]): Set[Id] = {
+    List(v.id.asInstanceOf[Id]).toSet
   }
 }
 
@@ -163,12 +163,11 @@ class TopDegreeAggregator[Id](n: Int)
   extends AggregationOperation[Map[Id, Int]] {
 
   def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
-    case i: Inspectable[Id, _] =>
+    case v: Vertex[Id, _] =>
       // Create one map from this id to the number of outgoing edges
-      Map(i.id -> i.targetIds.size) ++
+      Map(v.id -> v.edgeCount) ++
         // Create several maps, one for each target id to 1
-        i.targetIds map { _.asInstanceOf[Id] -> 1 } toMap
-    case other => Map[Id, Int]()
+        v.targetIds map { _.asInstanceOf[Id] -> 1 } toMap
   }
 
   def reduce(vertexToDegreeMap: Stream[Map[Id, Int]]): Map[Id, Int] = {
@@ -191,9 +190,9 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
   extends AggregationOperation[List[(Double, Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
-    case i: Inspectable[Id, _] =>
+    case v: Vertex[Id, _] =>
       // Try to interpret different types of numberic states
-      val state: Option[Double] = i.state match {
+      val state: Option[Double] = v.state match {
         case x: Double => Some(x)
         case x: Int => Some(x.toDouble)
         case x: Long => Some(x.toDouble)
@@ -202,10 +201,9 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
       }
       state match {
         case Some(number) =>
-          List[(Double, Id)]((number, i.id))
+          List[(Double, Id)]((number, v.id))
         case otherwise => List[(Double, Id)]()
       }
-    case otherwise => List[(Double, Id)]()
   }
 
   def reduce(statesAndIds: Stream[List[(Double, Id)]]): List[(Double, Id)] = {
@@ -233,18 +231,17 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
   extends AggregationOperation[List[(Double, Id)]] {
 
   def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
-    case i: Inspectable[Id, _] =>
+    case v: Vertex[Id, _] =>
       val score = scoreType match {
-        case "signal" => i.scoreSignal
-        case "collect" => i.scoreCollect
+        case "signal" => v.scoreSignal
+        case "collect" => v.scoreCollect
       }
       // Yield score and id only if the score is above the threshold
       if (score > threshold) {
-        List[(Double, Id)]((score, i.id))
+        List[(Double, Id)]((score, v.id))
       } else {
         List[(Double, Id)]()
       }
-    case otherwise => List[(Double, Id)]()
   }
 
   def reduce(thresholdsAndIds: Stream[List[(Double, Id)]]): List[(Double, Id)] = {
@@ -269,18 +266,17 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
   extends AggregationOperation[Set[Id]] {
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
-    case i: Inspectable[Id, _] =>
-      if (!(i.targetIds.toStream.filter(targetId => ids.contains(targetId.asInstanceOf[Id])) isEmpty)) {
+    case v: Vertex[Id, _] =>
+      if (!(v.targetIds.toStream.filter(targetId => ids.contains(targetId.asInstanceOf[Id])) isEmpty)) {
         // If this has an outgoing edge to a primary vertex, it's a vicinity vertex.
-        Set(i.id)
-      } else if (ids.contains(i.id)) {
+        Set(v.id)
+      } else if (ids.contains(v.id)) {
         // If this vertex is a primary vertex, all its targets are vicinity vertices
-        i.targetIds.asInstanceOf[Traversable[Id]].toSet
+        v.targetIds.asInstanceOf[Traversable[Id]].toSet
       } else {
         // If neither is true, this vertex is irrelevant
         Set()
       }
-    case otherwise => Set()
   }
 
   def reduce(vertexIds: Stream[Set[Id]]): Set[Id] = {
@@ -304,7 +300,7 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
   def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = v match {
     case i: Inspectable[Id, _] => {
-      if (ids.contains(i.id.toString)) { List(i) }
+      if (ids.contains(v.id.toString)) { List(i) }
       else { List() }
     }
     case other => List()
@@ -329,8 +325,8 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
   val neutralElement = Set[Id]()
 
   def extract(v: Vertex[_, _]): Set[Id] = v match {
-    case i: Inspectable[Id, _] => {
-      if (i.id.toString.contains(s)) { Set(i.id) }
+    case v: Inspectable[Id, _] => {
+      if (v.id.toString.contains(s)) { Set(v.id) }
       else { Set() }
     }
     case other => Set()
