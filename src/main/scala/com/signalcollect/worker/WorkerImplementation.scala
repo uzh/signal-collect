@@ -32,7 +32,6 @@ import akka.event.LoggingAdapter
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
 import java.io.DataInputStream
-import com.signalcollect.serialization.DefaultSerializer
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -48,6 +47,7 @@ import java.lang.management.ManagementFactory
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.interfaces.SchedulerFactory
+import akka.serialization.Serialization
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -55,6 +55,7 @@ import com.signalcollect.interfaces.SchedulerFactory
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
   val nodeId: Int,
+  val serialization: Serialization, // Used for snapshot/restore
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory,
@@ -356,12 +357,19 @@ class WorkerImplementation[Id, Signal](
   override def snapshot {
     // Overwrites previous file if it should exist.
     val snapshotFileOutput = new DataOutputStream(new FileOutputStream(s"$workerId.snapshot"))
-    vertexStore.vertices.foreach { vertex =>
-      val bytes = DefaultSerializer.write(vertex)
-      snapshotFileOutput.writeInt(bytes.length)
-      snapshotFileOutput.write(bytes)
+    try {
+      val serializer = serialization.serializerFor(classOf[Vertex[_, _]])
+      vertexStore.vertices.foreach { vertex =>
+        val bytes = serializer.toBinary(vertex)
+        snapshotFileOutput.writeInt(bytes.length)
+        snapshotFileOutput.write(bytes)
+      }
+    } catch {
+      case t: Throwable =>
+        t.printStackTrace()
+    } finally {
+      snapshotFileOutput.close
     }
-    snapshotFileOutput.close
   }
 
   /**
@@ -375,6 +383,7 @@ class WorkerImplementation[Id, Signal](
     val snapshotFile = new File(s"$workerId.snapshot")
     val buffer = new Array[Byte](maxSerializedSize)
     if (snapshotFile.exists) {
+      val serializer = serialization.serializerFor(classOf[Vertex[_, _]])
       val snapshotFileInput = new DataInputStream(new FileInputStream(snapshotFile))
       val buffer = new Array[Byte](maxSerializedSize)
       while (snapshotFileInput.available > 0) {
@@ -382,7 +391,7 @@ class WorkerImplementation[Id, Signal](
         assert(serializedLength <= maxSerializedSize)
         val bytesRead = snapshotFileInput.read(buffer, 0, serializedLength)
         assert(bytesRead == serializedLength)
-        val vertex = DefaultSerializer.read[Vertex[Id, _]](buffer)
+        val vertex = serializer.fromBinary(buffer).asInstanceOf[Vertex[Id, _]]
         addVertex(vertex)
       }
       snapshotFileInput.close

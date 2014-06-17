@@ -157,6 +157,7 @@ akka {
       "akka.actor.Identify" = java
       "akka.actor.ActorRef" = java
       "akka.actor.ActorIdentity" = java
+      "com.signalcollect.Vertex" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {

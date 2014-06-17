@@ -19,26 +19,26 @@
 
 package com.signalcollect
 
-import com.signalcollect.util.SplayIntSet
-import com.signalcollect.util.IntHashMap
 import scala.reflect.ClassTag
+
 import com.signalcollect.util.MemoryEfficientSplayIntSet
+import com.signalcollect.util.SplayIntSet
 
 /**
- * A memory efficient implementation of a data graph vertex
+ * A memory efficient implementation of a data flow vertex
  * with an Int id and a memory efficient edge representation
  * that can only represent edges without additional attributes
  * that point to a vertex with an Int id.
  * The signal function is the same for all edges and defined in
  * the 'computeSignal' function.
  */
-abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTag](
+abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag](
   val id: Int,
   var state: State) extends Vertex[Int, State] {
 
   type OutgoingSignalType
 
-  def collect: State
+  def collect(signal: IncomingSignalType): State
 
   def computeSignal(targetId: Int): OutgoingSignalType
 
@@ -50,13 +50,15 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
 
   protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
-  val mostRecentSignalMap = new IntHashMap[IncomingSignalType](1, 0.85f)
-
   def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
-    val s = signal.asInstanceOf[IncomingSignalType]
-    mostRecentSignalMap.put(sourceId.get.asInstanceOf[Int], s)
-    false
+    setState(collect(signal.asInstanceOf[IncomingSignalType]))
+    true
   }
+
+  /**
+   * We always collect on delivery.
+   */
+  def scoreCollect = 0
 
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
     targetIds.foreach { targetId =>
@@ -70,7 +72,6 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
   override def toString = s"${this.getClass.getName}(state=$state)"
 
   def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
-    setState(collect)
   }
 
   override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
