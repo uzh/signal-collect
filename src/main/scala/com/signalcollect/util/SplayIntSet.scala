@@ -49,7 +49,7 @@ final class SplayNode(
   /**
    * Assumes that the int set is not null.
    */
-  @tailrec final def foreach[U](f: Int => U, pending: List[SplayNode] = Nil) {
+  @tailrec def foreach[U](f: Int => U, pending: List[SplayNode] = Nil) {
     new FastInsertIntSet(intSet).foreach(f)
     if (?(left) && ?(right)) {
       left.foreach(f, right :: pending)
@@ -122,7 +122,7 @@ abstract class SplayIntSet extends Traversable[Int] {
   /**
    * Asserts that the root has been set.
    */
-  @inline def foreach[U](f: Int => U) {
+  @inline override def foreach[U](f: Int => U) {
     if (size > 0) {
       root.foreach(f)
     }

@@ -33,6 +33,8 @@ class PlaceholderEdge[Id](targetId: Any) extends DefaultEdge(targetId) {
 class EfficientPageRankVertex(id: Int)
   extends MemoryEfficientDataFlowVertex[Double, Double](id = id, state = 0.15) {
 
+  lastSignalState = 0
+
   type OutgoingSignalType = Double
 
   def computeSignal(edgeId: Int) = ???
@@ -51,7 +53,7 @@ class EfficientPageRankVertex(id: Int)
     state + 0.85 * signal
   }
 
-  def scoreSignal = {
+  override def scoreSignal: Double = {
     state - lastSignalState
   }
 
@@ -60,7 +62,7 @@ class EfficientPageRankVertex(id: Int)
 /** Builds a PageRank compute graph and executes the computation */
 object MemoryEfficientPageRank extends App {
   val graph = GraphBuilder.
-    //    withConsole(true).
+    withConsole(true).
     build
 
   graph.awaitIdle
@@ -73,7 +75,7 @@ object MemoryEfficientPageRank extends App {
   graph.addEdge(3, new PlaceholderEdge(2))
 
   graph.awaitIdle
-  val stats = graph.execute //(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
+  val stats = graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   println(stats)
 
   graph.foreachVertex(println(_))
