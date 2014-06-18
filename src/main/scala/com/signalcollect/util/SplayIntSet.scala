@@ -122,7 +122,7 @@ abstract class SplayIntSet extends Traversable[Int] {
   /**
    * Asserts that the root has been set.
    */
-  @inline override def foreach[U](f: Int => U) {
+  override def foreach[U](f: Int => U) {
     if (size > 0) {
       root.foreach(f)
     }
