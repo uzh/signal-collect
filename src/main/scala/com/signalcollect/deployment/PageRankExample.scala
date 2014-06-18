@@ -26,16 +26,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 
 class PageRankExample extends DeployableAlgorithm {
-  def execute(parameters: Map[String, String], nodeActors: Option[Array[ActorRef]], actorSystem: Option[ActorSystem] = None) {
-    println("create graphbuilder with Actorsystem")
-    val graphBuilder = if (actorSystem.isDefined)
-      GraphBuilder.withActorSystem(actorSystem.get)
-    else GraphBuilder
-    println("add nodeActors to GraphBuilder")
-    
-    val graph = if (nodeActors.isDefined)
-      graphBuilder.withPreallocatedNodes(nodeActors.get).build
-      else graphBuilder.build
+  override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
+
+    val graph =  graphBuilder.build
     println("add vertices")
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))

@@ -144,7 +144,6 @@ class KryoInit {
       register("com.signalcollect.interfaces.AddVertex")
       register("scala.reflect.ManifestFactory$$anon$9")
       register("scala.reflect.ManifestFactory$$anon$12")
-      register("com.signalcollect.examples.SplitLoader")
       register("com.signalcollect.worker.IncrementorForWorker")
       register("akka.remote.RemoteActorRef")
       register("akka.remote.RemoteWatcher$HeartbeatTick$")

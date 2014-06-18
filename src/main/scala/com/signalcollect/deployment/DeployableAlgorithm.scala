@@ -1,4 +1,5 @@
-/**
+/*
+ *  @author Philip Stutz
  *  @author Tobias Bachmann
  *
  *  Copyright 2014 University of Zurich
@@ -19,9 +20,24 @@
 
 package com.signalcollect.deployment
 
+import com.signalcollect.Graph
+import com.signalcollect.GraphBuilder
+
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 
 trait DeployableAlgorithm {
-  def execute(parameters: Map[String, String], nodeActors: Option[Array[ActorRef]], actorSystem: Option[ActorSystem] = None)
+  def execute(parameters: Map[String, String], nodeActors: Option[Array[ActorRef]], actorSystem: Option[ActorSystem] = None) {
+    val g1 = if (actorSystem.isDefined)
+      GraphBuilder.withActorSystem(actorSystem.get)
+    else GraphBuilder
+    val g2 = if (nodeActors.isDefined)
+      g1.withPreallocatedNodes(nodeActors.get)
+    else
+      g1
+    execute(parameters, g2)
+  }
+
+  def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any])
+
 }
