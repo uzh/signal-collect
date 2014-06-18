@@ -29,6 +29,8 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
+import com.signalcollect.examples.EfficientPageRankVertex
+import com.signalcollect.examples.PlaceholderEdge
 
 /**
  * Hint: For information on how to run specs see the specs v.1 website
@@ -76,5 +78,42 @@ class SnapshotSpec extends SpecificationWithJUnit with Serializable {
       }
     }
 
+    "correctly store and load a small graph with SplayIntSet edges" in {
+      def verify(v: Vertex[_, _], expectedState: Double): Boolean = {
+        val state = v.state.asInstanceOf[Double]
+        val correct = (state - expectedState).abs < 0.0001
+        if (!correct) {
+          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+        }
+        correct
+      }
+      val graph = GraphBuilder.build
+      try {
+        graph.deleteSnapshot
+        graph.restore
+        for (i <- 0 until 5) {
+          val v = new EfficientPageRankVertex(i)
+          graph.addVertex(v)
+          graph.addEdge(i, new PlaceholderEdge((i + 1) % 5))
+        }
+        graph.snapshot
+        graph.execute(ExecutionConfiguration.
+          withExecutionMode(ExecutionMode.PureAsynchronous).
+          withCollectThreshold(0).
+          withSignalThreshold(0.00001))
+        graph.restore
+        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex[_, _]): Boolean = verify(v, 0.15)
+        })
+        graph.deleteSnapshot
+        allcorrect
+      } finally {
+        graph.shutdown
+      }
+    }
+
   }
+
 }
