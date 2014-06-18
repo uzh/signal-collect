@@ -49,7 +49,7 @@ final class SplayNode(
   /**
    * Assumes that the int set is not null.
    */
-  @tailrec final def foreach(f: Int => Unit, pending: List[SplayNode] = Nil) {
+  @tailrec final def foreach[U](f: Int => U, pending: List[SplayNode] = Nil) {
     new FastInsertIntSet(intSet).foreach(f)
     if (?(left) && ?(right)) {
       left.foreach(f, right :: pending)
@@ -114,24 +114,15 @@ abstract class SplayIntSet extends Traversable[Int] {
   def overheadFraction: Float
   def maxNodeIntSetSize: Int
 
-  var size: Int = 0
+  override def size = _size
+  
+  protected var _size: Int = 0
   var root: SplayNode = _
-
-  def toBuffer: Buffer[Int] = {
-    val buffer = new ArrayBuffer[Int]
-    if (size > 0) {
-      root.foreach(buffer.append(_))
-    }
-    buffer
-  }
-
-  def toList: List[Int] = toBuffer.toList
-  def toSet: Set[Int] = toBuffer.toSet
 
   /**
    * Asserts that the root has been set.
    */
-  @inline def foreach(f: Int => Unit) {
+  @inline def foreach[U](f: Int => U) {
     if (size > 0) {
       root.foreach(f)
     }
@@ -145,7 +136,7 @@ abstract class SplayIntSet extends Traversable[Int] {
       root = splay(root, i)
       val inserted = root.insert(i, overheadFraction)
       //println(s"Inserted $i into ${new FastInsertIntSet(root.intSet).toList}")
-      if (inserted) size += 1
+      if (inserted) _size += 1
       val nodeIntSet = new FastInsertIntSet(root.intSet)
       val nodeIntSetSize = nodeIntSet.size
       if (nodeIntSetSize > maxNodeIntSetSize) {
@@ -166,7 +157,7 @@ abstract class SplayIntSet extends Traversable[Int] {
       new FastInsertIntSet(repr).insert(i, overheadFraction)
       root = new SplayNode(repr)
       root.insert(i, overheadFraction)
-      size += 1
+      _size += 1
       return true
     }
   }

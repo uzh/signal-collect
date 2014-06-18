@@ -317,7 +317,7 @@ final class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     return notFound
   }
 
-  @inline def foreach(f: Int => Unit) {
+  @inline def foreach[U](f: Int => U) {
     val intsTotal = size
     var intsTraversedSoFar = 0
     // Shift starting point by number of bytes spent on encoding the size.
