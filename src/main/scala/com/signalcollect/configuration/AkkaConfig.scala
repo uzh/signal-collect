@@ -143,8 +143,6 @@ akka {
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
-      "com.signalcollect.deployment.SplitLoader" = kryo
-      "com.signalcollect.deployment.EfficientPageRankVertex" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
