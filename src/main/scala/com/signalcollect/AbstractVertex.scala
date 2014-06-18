@@ -19,14 +19,13 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.Inspectable
-import akka.event.LoggingAdapter
-import akka.event.Logging
-import com.signalcollect.configuration.ActorSystemRegistry
 import scala.annotation.elidable
 import scala.annotation.elidable._
+import com.signalcollect.configuration.ActorSystemRegistry
 
-abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
+import akka.event.Logging
+
+abstract class AbstractVertex[Id, State] extends Vertex[Id, State] {
 
   /**
    * hashCode is cached for better performance

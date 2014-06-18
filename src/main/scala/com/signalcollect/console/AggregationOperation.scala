@@ -27,7 +27,6 @@ import net.liftweb.json.JsonDSL._
 import com.signalcollect.TopKFinder
 import com.signalcollect.Edge
 import com.signalcollect.Vertex
-import com.signalcollect.interfaces.Inspectable
 import BreakConditionName._
 
 /**
@@ -90,10 +89,9 @@ class GraphAggregator[Id](
               JField("cs", v.scoreCollect),
               JField("t", v.getClass.toString.split("""\.""").last),
               JField("info",
-                if (exposeVertices && v.isInstanceOf[Inspectable[Id, _]]) {
-                  val i = v.asInstanceOf[Inspectable[Id, _]]
+                if (exposeVertices) {
                   JObject(
-                    (for ((k, v) <- i.expose) yield {
+                    (for ((k, v) <- v.expose) yield {
                       JField(k, Toolkit.serializeAny(v))
                     }).toList)
                 } else { JNothing })))
@@ -298,12 +296,12 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
 
   def ids: Set[String] = idsList.toSet
 
-  def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = v match {
-    case i: Inspectable[Id, _] => {
-      if (ids.contains(v.id.toString)) { List(i) }
-      else { List() }
+  def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = {
+    if (ids.contains(v.id.toString)) {
+      List(v.asInstanceOf[Vertex[Id, _]])
+    } else {
+      List()
     }
-    case other => List()
   }
 
   def reduce(vertices: Stream[List[Vertex[Id, _]]]): List[Vertex[Id, _]] = {
@@ -324,12 +322,12 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 
   val neutralElement = Set[Id]()
 
-  def extract(v: Vertex[_, _]): Set[Id] = v match {
-    case v: Inspectable[Id, _] => {
-      if (v.id.toString.contains(s)) { Set(v.id) }
-      else { Set() }
+  def extract(v: Vertex[_, _]): Set[Id] = {
+    if (v.id.toString.contains(s)) {
+      Set(v.id.asInstanceOf[Id])
+    } else {
+      Set()
     }
-    case other => Set()
   }
 
   def aggregate(a: Set[Id], b: Set[Id]): Set[Id] = {

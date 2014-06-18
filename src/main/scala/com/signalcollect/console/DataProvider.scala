@@ -25,7 +25,6 @@ import scala.collection.JavaConversions.propertiesAsScalaMap
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
 import net.liftweb.json._
@@ -38,12 +37,13 @@ import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 import akka.actor.ActorLogging
+import com.signalcollect.Vertex
 
 /** Abstract class defining the interface every DataProvider has to implement. */
 abstract class DataProvider {
   def fetch(): JObject
   def fetchInvalid(msg: JValue = JString(""),
-                   comment: String): JObject = {
+    comment: String): JObject = {
     new InvalidDataProvider(msg, comment).fetch
   }
 }
@@ -115,7 +115,7 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
  * @param socket the WebSocketConsoleServer
  */
 class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
-    extends DataProvider {
+  extends DataProvider {
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
       case Some(e) =>
@@ -153,12 +153,12 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
  * @param coordinator the Coordinator (who knows the graph conf)
  */
 class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
-                                    coordinator: Coordinator[Id, _])
-    extends DataProvider {
+  coordinator: Coordinator[Id, _])
+  extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
       case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(e)
-      case otherwise                       => JString("unknown")
+      case otherwise => JString("unknown")
     }
     ("provider" -> "configuration") ~
       ("executionConfiguration" -> executionConfiguration) ~
@@ -192,18 +192,18 @@ case class ControlsRequest(
  * @param msg the request by the client
  */
 class ControlsProvider(socket: WebSocketConsoleServer[_],
-                       msg: JValue) extends DataProvider {
+  msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
 
   def command(e: Execution, command: String): JObject = {
     command match {
-      case "step"      => e.step
-      case "collect"   => e.collect
-      case "pause"     => e.pause
-      case "continue"  => e.continue
-      case "reset"     => e.reset
+      case "step" => e.step
+      case "collect" => e.collect
+      case "pause" => e.pause
+      case "continue" => e.continue
+      case "reset" => e.reset
       case "terminate" => e.terminate
     }
     ("msg" -> "command accepted")
@@ -259,8 +259,8 @@ case class BreakConditionContainer(
  * @param msg the request by the client
  */
 class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
-                                  socket: WebSocketConsoleServer[Id],
-                                  msg: JValue) extends DataProvider {
+  socket: WebSocketConsoleServer[Id],
+  msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
@@ -352,7 +352,7 @@ case class GraphDataRequest(
  * @param msg the request by the client
  */
 class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
-    extends DataProvider {
+  extends DataProvider {
 
   implicit val formats = DefaultFormats
 
@@ -383,7 +383,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
    * @return the original set plus the set of vertex IDs in the vicinity
    */
   def findVicinity(sourceIds: Set[Id], radius: Int = 3,
-                   incoming: Boolean = false): Set[Id] = {
+    incoming: Boolean = false): Set[Id] = {
     if (radius == 0) { sourceIds }
     else {
       if (incoming) {
@@ -392,7 +392,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         sourceIds ++ findVicinity(vicinityIds, radius - 1, true)
       } else {
         sourceIds ++ findVicinity(sourceIds.map { id =>
-          workerApi.forVertexWithId(id, { vertex: Inspectable[Id, _] =>
+          workerApi.forVertexWithId(id, { vertex: Vertex[Id, _] =>
             vertex.targetIds.asInstanceOf[Traversable[Id]].toSet
           })
         }.flatten, radius - 1, false)
@@ -475,34 +475,34 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
       case otherwise =>
     }
     request.targetCount match {
-      case Some(t)   => targetCount = List(t, 1000).min
+      case Some(t) => targetCount = List(t, 1000).min
       case otherwise =>
     }
     request.vicinityRadius match {
-      case Some(r)   => vicinityRadius = List(r, 4).min
+      case Some(r) => vicinityRadius = List(r, 4).min
       case otherwise =>
     }
     request.vicinityIncoming match {
-      case Some(b)   => vicinityIncoming = b
+      case Some(b) => vicinityIncoming = b
       case otherwise =>
     }
     request.exposeVertices match {
-      case Some(b)   => exposeVertices = b
+      case Some(b) => exposeVertices = b
       case otherwise =>
     }
     request.signalThreshold match {
-      case Some(t)   => signalThreshold = t
+      case Some(t) => signalThreshold = t
       case otherwise =>
     }
     request.collectThreshold match {
-      case Some(t)   => collectThreshold = t
+      case Some(t) => collectThreshold = t
       case otherwise =>
     }
 
     // route request and fetch graph data
     val graphData = request.query match {
       case Some("substring") => request.substring match {
-        case Some(s)   => fetchBySubstring(s)
+        case Some(s) => fetchBySubstring(s)
         case otherwise => fetchInvalid(msg, "missing substring")
       }
       case Some("vertexIds") => request.vertexIds match {
@@ -510,13 +510,13 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
         case otherwise => fetchInvalid(msg, "missing vertexIds")
       }
       case Some("top") => request.topCriterium match {
-        case Some("Highest state")         => fetchByTopState()
-        case Some("Lowest state")          => fetchByTopState(true)
-        case Some("Highest degree")        => fetchByTopDegree
-        case Some("Above signal thresh.")  => fetchByAboveThreshold("signal")
+        case Some("Highest state") => fetchByTopState()
+        case Some("Lowest state") => fetchByTopState(true)
+        case Some("Highest degree") => fetchByTopDegree
+        case Some("Above signal thresh.") => fetchByAboveThreshold("signal")
         case Some("Above collect thresh.") => fetchByAboveThreshold("collect")
-        case Some("Sample")                => fetchSample
-        case otherwise                     => new InvalidDataProvider(msg, "invalid top criterium").fetch
+        case Some("Sample") => fetchSample
+        case otherwise => new InvalidDataProvider(msg, "invalid top criterium").fetch
       }
       case otherwise => fetchInvalid(msg, "missing query")
     }
@@ -534,7 +534,7 @@ class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
  * @param msg the request by the client
  */
 class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
-    extends DataProvider {
+  extends DataProvider {
 
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize

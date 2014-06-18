@@ -119,4 +119,15 @@ abstract class Vertex[+Id, State] extends Serializable {
    * The same id may appear multiple times.
    */
   def targetIds: Traversable[Any]
+
+  /**
+   * The expose function can provide additional information about the vertex.
+   * By default, it returns an empty map, but it can be overridden to return
+   * any kind of Map[String,Any]. The Map will be serialized to json
+   * recursively and can be viewed in the console when enabling the "expose
+   * vertex details on click" option.
+   * @return a string-keyed map of details about the node.
+   */
+  def expose: Map[String, Any] = Map[String, Any]()
+
 }
