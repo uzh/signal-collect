@@ -71,9 +71,20 @@ class SnapshotSpec extends SpecificationWithJUnit with Serializable {
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
           def extract(v: Vertex[_, _]): Boolean = verify(v, 0.15)
         })
-        graph.deleteSnapshot
+        assert(allcorrect)
+        graph.execute(ExecutionConfiguration.
+          withExecutionMode(ExecutionMode.PureAsynchronous).
+          withCollectThreshold(0).
+          withSignalThreshold(0.00001))
+        allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
+        })
+        assert(allcorrect)
         allcorrect
       } finally {
+        graph.deleteSnapshot
         graph.shutdown
       }
     }
@@ -107,9 +118,20 @@ class SnapshotSpec extends SpecificationWithJUnit with Serializable {
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
           def extract(v: Vertex[_, _]): Boolean = verify(v, 0.15)
         })
-        graph.deleteSnapshot
+        assert(allcorrect)
+        graph.execute(ExecutionConfiguration.
+          withExecutionMode(ExecutionMode.PureAsynchronous).
+          withCollectThreshold(0).
+          withSignalThreshold(0.00001))
+        allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+          val neutralElement = true
+          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+          def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
+        })
+        assert(allcorrect)
         allcorrect
       } finally {
+        graph.deleteSnapshot
         graph.shutdown
       }
     }
