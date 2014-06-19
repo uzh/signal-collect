@@ -44,6 +44,10 @@ final class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     buffer
   }
 
+  def toList: List[Int] = toBuffer.toList
+  
+  def toSet: Set[Int] = toBuffer.toSet
+
   def split(overheadFraction: Float): (Array[Byte], Array[Byte]) = {
     val totalItems = size
     assert(totalItems >= 2)
@@ -60,9 +64,6 @@ final class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
     }
     (set1, set2)
   }
-
-  def toList: List[Int] = toBuffer.toList
-  def toSet: Set[Int] = toBuffer.toSet
 
   def freeBytes = readUnsignedVarIntBackwards(encoded, encoded.length - 1)
 

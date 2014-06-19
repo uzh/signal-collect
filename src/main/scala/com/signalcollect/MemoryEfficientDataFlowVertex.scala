@@ -48,7 +48,9 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
     state = s
   }
 
-  var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
+  def targetIds = targetIdSet.toBuffer
+  
+  protected var targetIdSet: SplayIntSet = new MemoryEfficientSplayIntSet
 
   def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     setState(collect(signal.asInstanceOf[IncomingSignalType]))
@@ -61,7 +63,7 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
   def scoreCollect = 0
 
   override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
-    targetIds.foreach { targetId: Int =>
+    targetIdSet.foreach { targetId: Int =>
       graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
     lastSignalState = state
@@ -75,7 +77,7 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
   }
 
   override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
-    targetIds.insert(e.targetId.asInstanceOf[Int])
+    targetIdSet.insert(e.targetId.asInstanceOf[Int])
   }
 
   override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
