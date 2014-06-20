@@ -144,6 +144,8 @@ akka {
       "com.signalcollect.coordinator.OnIdle" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
+      "com.signalcollect.examples.PlaceholderEdge" = kryo
+      "com.signalcollect.deployment.DeployableEfficientPageRank$$anonfun$execute$1" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java

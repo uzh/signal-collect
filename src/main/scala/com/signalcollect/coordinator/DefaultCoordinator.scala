@@ -156,23 +156,23 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
-    //    println("===================================================")
-    //    def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
-    //    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
-    //    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
-    //    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-    //    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
-    //    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
-    //    val current = System.nanoTime
-    //    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
-    //    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
-    //    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
-    //    println(s"Total sent         : ${totalMessagesSent}")
-    //    println(s"Total received     : ${totalMessagesReceived}")
-    //    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
-    //    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
-    //    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
-    //    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
+//        println("===================================================")
+//        def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
+//        println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
+//        println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+//        println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+//        val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+//        println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
+//        val current = System.nanoTime
+//        println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+//        println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+//        println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
+//        println(s"Total sent         : ${totalMessagesSent}")
+//        println(s"Total received     : ${totalMessagesReceived}")
+//        def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
+//        println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+//        println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
+//        println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
     globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
     globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
