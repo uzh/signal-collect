@@ -35,40 +35,63 @@ import com.signalcollect.GraphEditor
 import scala.collection.mutable.ArrayBuffer
 import com.signalcollect.Vertex
 import com.signalcollect.Edge
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 
-/** Builds a PageRank compute graph and executes the computation */
+object Handlers {
+  def nonExistingVertex: (Edge[Any], Any) => Option[Vertex[Any, _]] = {
+    (edgedId, vertexId) => Some(new EfficientPageRankVertex(vertexId.asInstanceOf[Int]))
+  }
+  def undeliverableSignal: (Any, Any, Option[Any], GraphEditor[Any, Any]) => Unit = {
+    case (signal, id, sourceId, ge) =>
+      ge.addVertex(new EfficientPageRankVertex(id.asInstanceOf[Int]))
+      ge.sendSignal(signal, id, sourceId)
+  }
+}
+
 class TwitterGraphSlow extends DeployableAlgorithm {
   override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
-//    println("download graph")
-//    FileDownloader.downloadFile(new URL("https://s3-eu-west-1.amazonaws.com/signalcollect/user/hadoop/twitter_rv.net.gz"), "twitter_rv.net.gz")
-//    println("decompress graph")
-//    FileDownloader.decompressGzip("twitter_rv.net.gz", "twitter_rv.net")
-//    Thread.sleep(1000)
-//    val in = new BufferedReader(new FileReader("twitter_rv.net"))
     println("download graph")
-    FileDownloader.downloadFile(new URL("https://s3-eu-west-1.amazonaws.com/signalcollect/user/hadoop/twitterSmall.txt.gz"), "twitter.txt.gz")
-    println("decompress graph")
-    FileDownloader.decompressGzip("twitter.txt.gz", "twitter.txt")
-    Thread.sleep(1000)
-    val in = new BufferedReader(new FileReader("twitter.txt"))
+    val url = parameters.get("url").getOrElse("https://s3-eu-west-1.amazonaws.com/signalcollect/user/hadoop/twitterSmall.txt")
+    FileDownloader.downloadFile(new URL(url), "twitter_rv.net")
+    println("build graph")
     val graph = graphBuilder.
-     withEagerIdleDetection(false).
-      withThrottlingEnabled(true).
+      withMessageSerialization(true).
+      //      withThrottlingEnabled(false).
+      //      withMessageBusFactory(new BulkAkkaMessageBusFactory(10000, false)).
+      //      withAkkaMessageCompression(false).
+      //      withHeartbeatInterval(100).
+      //      withEagerIdleDetection(true).
+      //      withThrottlingEnabled(true).
       //    withConsole(true).
       build
+    println("set Handlers")
+    graph.setEdgeAddedToNonExistentVertexHandler {
+      Handlers.nonExistingVertex
+    }
+    graph.setUndeliverableSignalHandler {
+      Handlers.undeliverableSignal
+    }
     graph.awaitIdle
-    println("read file and build graph")
+    println("read file and load graph")
+    //    val in = new BufferedReader(new FileReader("twitter.txt"))
+    val in = new BufferedReader(new FileReader("twitter_rv.net"))
     val beginTime = System.currentTimeMillis()
 
-        var line = in.readLine()
-        while (line != null) {
-          val edge = line.split("\\s").map(_.toInt)
-          graph.addVertex(new EfficientPageRankVertex(edge(0)))
-          graph.addVertex(new EfficientPageRankVertex(edge(1)))
-          graph.addEdge(edge(1), new PlaceholderEdge(edge(0)))
-          line = in.readLine()
-        }
-    println("loading graph")
+    var line = in.readLine()
+    var cnt = 0
+
+    while (line != null) {
+      if (cnt % 1000000 == 0) {
+        val elapsedTime = System.currentTimeMillis() - beginTime
+        println(s"read $cnt edges in $elapsedTime ms")
+      }
+      val edge = line.split("\\s").map(_.toInt)
+      //      graph.addVertex(new EfficientPageRankVertex(edge(0)))
+      //      graph.addVertex(new EfficientPageRankVertex(edge(1)))
+      graph.addEdge(edge(1), new PlaceholderEdge(edge(0)))
+      line = in.readLine()
+      cnt += 1
+    }
     graph.awaitIdle
     val end = System.currentTimeMillis() - beginTime
     println(s"file read in $end ms")

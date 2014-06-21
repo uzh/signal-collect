@@ -24,15 +24,20 @@ import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.EfficientPageRankVertex
 import com.signalcollect.examples.PlaceholderEdge
+import java.io.FileInputStream
+import scala.collection.mutable.ArrayBuffer
+import com.signalcollect.util.Ints
+import java.io.DataInputStream
 
 /** Builds a PageRank compute graph and executes the computation */
 class DeployableEfficientPageRank extends DeployableAlgorithm {
   override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
     val graph = graphBuilder.
+      withEagerIdleDetection(false).
       //    withConsole(true).
       build
-
     graph.awaitIdle
+    println("build graph")
     graph.addVertex(new EfficientPageRankVertex(1))
     graph.addVertex(new EfficientPageRankVertex(2))
     graph.addVertex(new EfficientPageRankVertex(3))
@@ -40,12 +45,58 @@ class DeployableEfficientPageRank extends DeployableAlgorithm {
     graph.addEdge(2, new PlaceholderEdge(1))
     graph.addEdge(2, new PlaceholderEdge(3))
     graph.addEdge(3, new PlaceholderEdge(2))
-
+    println("await idle")
     graph.awaitIdle
+    println("execute")
     val stats = graph.execute //(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
     println(stats)
 
     graph.foreachVertex(println(_))
     graph.shutdown
+    
+   
   }
+  
+  
 }
+
+//case class SplitLoader(splitFileName: String) extends Iterator[GraphEditor[Int, Double] => Unit] {
+//
+//  lazy val in = new DataInputStream(new FileInputStream(splitFileName))
+//
+//  var loaded = 0
+//
+//  def readNext: Int = Ints.readUnsignedVarInt(in)
+//
+//  def nextVertices(length: Int): ArrayBuffer[Int] = {
+//    val vertices = new ArrayBuffer[Int]
+//    while (vertices.length < length) {
+//      val nextVertex = readNext
+//      vertices += nextVertex
+//    }
+//    vertices
+//  }
+//
+//  def addVertex(vertex: Vertex[Int, Double])(graphEditor: GraphEditor[Int, Double]) {
+//    graphEditor.addVertex(vertex)
+//  }
+//
+//  var vertexId = Int.MinValue
+//
+//  def hasNext = {
+//    if (vertexId == Int.MinValue) {
+//      vertexId = readNext
+//    }
+//    vertexId >= 0
+//  }
+//
+//  def next: GraphEditor[Int, Double] => Unit = {
+//    loaded += 1
+//    if (loaded % 10000 == 0) {
+//      println(loaded)
+//    }
+//    val verticesIds = nextVertices(1000)
+//    val vertices = verticesIds.foreach( v => addVertex(new EfficientPageRankVertex(v)) _)
+////    vertex.setTargetIds(edges.length, Ints.createCompactSet(edges.toArray))
+//  }
+//}

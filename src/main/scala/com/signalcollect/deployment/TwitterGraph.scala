@@ -40,29 +40,31 @@ import com.signalcollect.Edge
 class TwitterGraph extends DeployableAlgorithm {
   override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
     println("download graph")
-    FileDownloader.downloadFile(new URL("https://s3-eu-west-1.amazonaws.com/signalcollect/user/hadoop/twitterSmall.txt.gz"), "twitter.txt.gz")
-    println("decompress graph")
-    FileDownloader.decompressGzip("twitter.txt.gz", "twitter.txt")
+    val url = parameters.get("url").getOrElse("https://s3-eu-west-1.amazonaws.com/signalcollect/user/hadoop/twitterSmall.txt")
+    FileDownloader.downloadFile(new URL(url), "twitter_rv.net")
     Thread.sleep(1000)
-    val in = new BufferedReader(new FileReader("twitter.txt"))
+    println("build graph")
     val graph = graphBuilder.
-      withEagerIdleDetection(false).
+      withMessageSerialization(true).
+      //            withEagerIdleDetection(false).
       withThrottlingEnabled(true).
       //    withConsole(true).
       build
+    println("set handlers")
+    graph.setEdgeAddedToNonExistentVertexHandler {
+
+      Handlers.nonExistingVertex
+
+    }
+    graph.setUndeliverableSignalHandler {
+      Handlers.undeliverableSignal
+    }
+    println("await idle")
     graph.awaitIdle
-    println("read file and build graph")
+    println("read file and load graph")
     val beginTime = System.currentTimeMillis()
-    val fileLoader = FileLoader(in).asInstanceOf[Iterator[GraphEditor[Any, Any] => Unit]]
+    val fileLoader = FileLoader("twitter_rv.net").asInstanceOf[Iterator[GraphEditor[Any, Any] => Unit]]
     graph.loadGraph(fileLoader, None)
-//        var line = in.readLine()
-//        while (line != null) {
-//          val edge = line.split("\\s").map(_.toInt)
-//          graph.addVertex(new EfficientPageRankVertex(edge(0)))
-//          graph.addVertex(new EfficientPageRankVertex(edge(1)))
-//          graph.addEdge(edge(1), new PlaceholderEdge(edge(0)))
-//          line = in.readLine()
-//        }
     println("loading graph")
     graph.awaitIdle
     val end = System.currentTimeMillis() - beginTime
@@ -76,11 +78,12 @@ class TwitterGraph extends DeployableAlgorithm {
   }
 }
 
-case class FileLoader(in: BufferedReader) extends Iterator[GraphEditor[Int, Double] => Unit] {
+case class FileLoader(fileName: String) extends Iterator[GraphEditor[Int, Double] => Unit] {
+  lazy val in = new BufferedReader(new FileReader(fileName))
   var cnt = 0
   def addEdge(vertices: (Vertex[Int, _], Vertex[Int, _]))(graphEditor: GraphEditor[Int, Double]) {
-    graphEditor.addVertex(vertices._1)
-    graphEditor.addVertex(vertices._2)
+    //    graphEditor.addVertex(vertices._1)
+    //    graphEditor.addVertex(vertices._2)
     graphEditor.addEdge(vertices._2.id, new PlaceholderEdge[Int](vertices._1.id).asInstanceOf[Edge[Int]])
   }
 
