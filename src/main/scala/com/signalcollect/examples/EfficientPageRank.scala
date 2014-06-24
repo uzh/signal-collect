@@ -61,7 +61,6 @@ object MemoryEfficientPageRank extends App {
     //    withConsole(true).
     build
 
-  graph.awaitIdle
   graph.addVertex(new EfficientPageRankVertex(1))
   graph.addVertex(new EfficientPageRankVertex(2))
   graph.addVertex(new EfficientPageRankVertex(3))
