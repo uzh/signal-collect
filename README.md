@@ -1,4 +1,4 @@
-Signal/Collect [![Build Status](https://travis-ci.org/uzh/signal-collect.png)](https://travis-ci.org/uzh/signal-collect)
+Signal/Collect [![Build Status](https://travis-ci.org/uzh/signal-collect/builds)](https://api.travis-ci.org/uzh/signal-collect?branch=master)
 ========================================================================================================================
 
 Signal/Collect is a framework for computations on large graphs. The model allows to concisely express many iterated and data-flow algorithms, while the framework parallelizes and distributes the computation.
