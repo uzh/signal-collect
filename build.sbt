@@ -32,7 +32,7 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.1.4" % "compile",
   "com.typesafe.akka" %% "akka-remote" % "2.1.4" % "compile",
-  "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.2" % "compile",
+  "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.4" % "compile",
   "org.scala-lang" % "scala-library" % "2.10.4" % "compile",
   "net.liftweb" % "lift-json_2.10" % "2.5-RC4" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
