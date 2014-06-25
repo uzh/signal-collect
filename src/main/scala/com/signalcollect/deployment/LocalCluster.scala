@@ -23,7 +23,7 @@ package com.signalcollect.deployment
 
 class LocalCluster extends Cluster {
 
-  def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
+  override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
    val algorithm = deploymentConfiguration.algorithm
     val parameters = deploymentConfiguration.algorithmParameters
     val algorithmObject = Class.forName(algorithm).newInstance.asInstanceOf[DeployableAlgorithm]

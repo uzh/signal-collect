@@ -24,35 +24,45 @@ import java.io.File
 import scala.collection.JavaConversions._
 import com.typesafe.config.Config
 
+trait DeploymentConfiguration {
+  def algorithm: String
+  def algorithmParameters: Map[String, String]
+  def memoryPerNode: Int
+  def numberOfNodes: Int
+  def copyFiles: List[String]
+  def cluster: String
+  def jvmArguments: String
+}
+
 /**
- * All the deployment parameters
+ * All the basic deployment parameters
  */
-case class DeploymentConfiguration(
-  algorithm: String, //class name of a DeployableAlgorithm
-  algorithmParameters: Map[String, String],
-  memoryPerNode: Int = 512,
-  numberOfNodes: Int = 1,
-  copyFiles: List[String] = Nil, // list of paths to files
-  cluster: String = "com.signalcollect.deployment.yarn.YarnCluster",
-  jvmArguments: String = "")
+case class BasicDeploymentConfiguration(
+  override val algorithm: String, //class name of a DeployableAlgorithm
+  override val algorithmParameters: Map[String, String],
+  override val memoryPerNode: Int = 512,
+  override val numberOfNodes: Int = 1,
+  override val copyFiles: List[String] = Nil, // list of paths to files
+  override val cluster: String = "com.signalcollect.deployment.LeaderCluster",
+  override val jvmArguments: String = "") extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
  */
 object DeploymentConfigurationCreator {
-  val testdeployment =  ConfigFactory.parseFile(new File("testdeployment.conf"))
+  val testdeployment = ConfigFactory.parseFile(new File("testdeployment.conf"))
   val deployment = ConfigFactory.parseFile(new File("deployment.conf")).withFallback(testdeployment)
-  
+
   /**
    * creates DeploymentConfiguration out of 'deployment.conf'
    */
   def getDeploymentConfiguration: DeploymentConfiguration = getDeploymentConfiguration(deployment)
-  
+
   /**
    * can be called with another Config, useful for testing or injecting another configuration than 'deployment.conf'
    */
   def getDeploymentConfiguration(config: Config): DeploymentConfiguration =
-    new DeploymentConfiguration(
+    new BasicDeploymentConfiguration(
       algorithm = config.getString("deployment.algorithm"),
       algorithmParameters = getAlgorithmParameters(config),
       memoryPerNode = config.getInt("deployment.memory-per-node"),
@@ -60,7 +70,7 @@ object DeploymentConfigurationCreator {
       copyFiles = config.getStringList("deployment.copy-files").toList, // list of paths to files
       cluster = config.getString("deployment.cluster"),
       jvmArguments = config.getString("deployment.jvm-arguments"))
-  
+
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'
    */
@@ -69,6 +79,9 @@ object DeploymentConfigurationCreator {
     getDeploymentConfiguration(config)
   }
 
+  /**
+   * extracts the algorithmParameters from the typesafe config
+   */
   private def getAlgorithmParameters(config: Config): Map[String, String] = {
     config.getConfig("deployment.algorithm-parameters").entrySet.map {
       entry => (entry.getKey, entry.getValue.unwrapped.toString)

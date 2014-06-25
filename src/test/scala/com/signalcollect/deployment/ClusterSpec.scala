@@ -80,6 +80,9 @@ class ClusterSpec extends FlatSpec with Checkers with Matchers {
 
 }
 
+/**
+ * Mocking class for a cluster that always succeeds
+ */
 class TestCluster extends Cluster {
   val successful = true
   override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
