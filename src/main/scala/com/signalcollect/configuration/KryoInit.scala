@@ -35,7 +35,7 @@ import com.signalcollect.factory.worker.DefaultAkkaWorker
 class KryoInit {
 
   def customize(kryo: Kryo): Unit = {
-    kryo.setReferences(true) // Required for cycle between edges and vertices.
+    kryo.setReferences(false)
     kryo.setCopyReferences(false)
     register(kryo)
   }
@@ -132,6 +132,7 @@ class KryoInit {
       register("com.signalcollect.worker.AkkaWorker$$anonfun$1")
       register("com.signalcollect.worker.IncrementorForWorker")
       register("akka.remote.RemoteActorRef")
+      register("com.signalcollect.examples.PlaceholderEdge")
       register("com.signalcollect.examples.EfficientPageRankVertex")
       register("com.signalcollect.TopKFinder")
       register("com.signalcollect.TopKFinder$$anonfun$1")
