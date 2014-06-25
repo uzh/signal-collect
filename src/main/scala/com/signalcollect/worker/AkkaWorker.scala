@@ -106,6 +106,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
     nodeId = nodeId,
+    eagerIdleDetection = eagerIdleDetection,
     serialization = SerializationExtension(context.system),
     messageBus = messageBus,
     log = log,
@@ -147,7 +148,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    if (eagerIdleDetection) worker.setIdle(false)
+    worker.setIdle(false)
     self ! ScheduleOperations
     schedulingTimestamp = System.nanoTime
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
@@ -220,8 +221,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
 
-          //Worker is now idle, do idle detection, if enabled.
-          if (eagerIdleDetection) worker.setIdle(true)
+          //Worker is now idle.
+          worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
           //          log.debug(s"Worker $workerId has work to do")

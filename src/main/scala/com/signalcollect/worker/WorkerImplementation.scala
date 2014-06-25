@@ -55,6 +55,7 @@ import akka.serialization.Serialization
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
   val nodeId: Int,
+  val eagerIdleDetection: Boolean,
   val serialization: Serialization, // Used for snapshot/restore
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
@@ -123,7 +124,7 @@ class WorkerImplementation[Id, Signal](
 
   def setIdle(newIdleState: Boolean) {
     isIdle = newIdleState
-    if (isIdleDetectionEnabled) {
+    if (eagerIdleDetection && isIdleDetectionEnabled) {
       messageBus.sendToNode(nodeId, getWorkerStatusForNode)
     }
   }

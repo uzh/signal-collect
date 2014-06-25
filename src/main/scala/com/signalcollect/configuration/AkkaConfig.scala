@@ -104,8 +104,15 @@ akka {
       "akka.remote.EndpointWriter$FlushAndStop$" = kryo
       "akka.remote.EndpointWriter$OutboundAck" = kryo
       "akka.remote.EndpointWriter$StopReading" = kryo
+      "akka.remote.EndpointWriter$BackoffTimer$" = kryo
+      "akka.remote.transport.AkkaProtocolException" = kryo
       "akka.remote.Ack" = kryo
       "akka.actor.Address" = kryo
+      "akka.actor.Status$Failure" = kryo
+      "akka.remote.transport.Transport$InvalidAssociationException" = kryo
+      "[Ljava.lang.StackTraceElement;" = kryo
+      "java.lang.StackTraceElement" = kryo
+      "java.util.Collections$UnmodifiableRandomAccessList" = kryo
       "akka.remote.SeqNo" = kryo
       "scala.Int" = kryo
       "scala.Long" = kryo
