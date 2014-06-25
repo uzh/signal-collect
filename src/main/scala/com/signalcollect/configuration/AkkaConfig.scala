@@ -153,9 +153,6 @@ akka {
       "com.signalcollect.interfaces.AddVertex" = kryo
       "com.signalcollect.examples.PlaceholderEdge" = kryo
       "com.signalcollect.deployment.DeployableEfficientPageRank$$anonfun$execute$1" = kryo
-      "com.signalcollect.deployment.Handlers$$anonfun$nonExistingVertex$1" = kryo
-      "com.signalcollect.deployment.Handlers$$anonfun$undeliverableSignal$1" = kryo
-      "com.signalcollect.deployment.FileLoader" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java
