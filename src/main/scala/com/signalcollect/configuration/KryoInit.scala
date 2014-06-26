@@ -143,6 +143,8 @@ class KryoInit {
       register("scala.math.Ordering$Double$")
       register("com.signalcollect.util.SplayNode")
       register("com.signalcollect.util.IntHashMap")
+      register("com.signalcollect.SumOfStates")
+      register("scala.math.Numeric$DoubleIsFractional$")
       registerClass(classOf[Array[Byte]])
       registerClass(classOf[Array[Int]])
       registerClass(classOf[Array[Long]])
