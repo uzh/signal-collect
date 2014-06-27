@@ -75,6 +75,7 @@ class KryoInit {
       register("com.signalcollect.configuration.GraphConfiguration")
       register("com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner")
       register("com.signalcollect.factory.scheduler.Throughput$")
+      register("com.signalcollect.factory.scheduler.LowLatency$")
       register("java.lang.Class")
       register("java.lang.Object")
       register("akka.actor.RepointableActorRef")
