@@ -27,7 +27,7 @@ akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
-  loggers = ["com.signalcollect.console.ConsoleLogger"]
+  loggers = ["akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger"]
 
     """ +
     {
