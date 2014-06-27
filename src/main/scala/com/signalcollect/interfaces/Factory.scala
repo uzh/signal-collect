@@ -34,7 +34,8 @@ abstract class WorkerFactory extends Factory {
     mapperFactory: MapperFactory,
     storageFactory: StorageFactory,
     schedulerFactory: SchedulerFactory,
-    heartbeatIntervalInMilliseconds: Int): WorkerActor[Id, Signal]
+    heartbeatIntervalInMilliseconds: Int,
+    eagerIdleDetection: Boolean): WorkerActor[Id, Signal]
 }
 
 abstract class MessageBusFactory extends Factory {

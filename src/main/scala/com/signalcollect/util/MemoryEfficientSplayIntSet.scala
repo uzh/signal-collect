@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *
- *  Copyright 2013 University of Zurich
+ *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
  *
  */
 
-package com.signalcollect.interfaces
+package com.signalcollect.util
 
-import akka.actor.Actor
-
-// Has to be a trait to be proxied.
-trait NodeActor extends Node
-  with Actor
-  with MessageRecipientRegistry
+final class MemoryEfficientSplayIntSet extends SplayIntSet {
+  def overheadFraction = 0.01f
+  def maxNodeIntSetSize = 1000
+}

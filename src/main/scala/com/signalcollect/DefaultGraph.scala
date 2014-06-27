@@ -77,7 +77,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory,
   storageFactory: StorageFactory,
   schedulerFactory: SchedulerFactory,
-  heartbeatIntervalInMilliseconds: Int) {
+  heartbeatIntervalInMilliseconds: Int,
+  eagerIdleDetection: Boolean) {
   def create: () => WorkerActor[Id, Signal] = {
     () =>
       workerFactory.createInstance[Id, Signal](
@@ -88,7 +89,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         mapperFactory,
         storageFactory,
         schedulerFactory,
-        heartbeatIntervalInMilliseconds)
+        heartbeatIntervalInMilliseconds,
+        eagerIdleDetection)
   }
 }
 
@@ -98,6 +100,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
 case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
+  throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory,
   mapperFactory: MapperFactory,
   heartbeatIntervalInMilliseconds: Long)
@@ -105,6 +108,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
+    throttlingEnabled,
     messageBusFactory,
     mapperFactory,
     heartbeatIntervalInMilliseconds)
@@ -156,8 +160,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
-  parallelBootstrapNodeProxies.foreach(_.setStatusReportingInterval(config.heartbeatIntervalInMilliseconds))
-
   val mapper = new DefaultVertexToWorkerMapper(numberOfNodes, numberOfWorkers / numberOfNodes)
 
   val workerActors: Array[ActorRef] = {
@@ -174,7 +176,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.mapperFactory,
           config.storageFactory,
           config.schedulerFactory,
-          config.heartbeatIntervalInMilliseconds)
+          config.heartbeatIntervalInMilliseconds,
+          config.eagerIdleDetection)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
@@ -187,6 +190,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     val coordinatorCreator = CoordinatorCreator[Id, Signal](
       numberOfWorkers,
       numberOfNodes,
+      config.throttlingEnabled: Boolean,
       config.messageBusFactory,
       config.mapperFactory,
       config.heartbeatIntervalInMilliseconds)
@@ -200,6 +204,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   val coordinatorProxy = AkkaProxy.newInstance[Coordinator[Id, Signal]](coordinatorActor) // MessageBus not initialized at this point.
 
   initializeMessageBuses
+
+  parallelBootstrapNodeProxies.foreach(_.initializeIdleDetection)
+  lazy val graphEditor = coordinatorProxy.getGraphEditor
+  lazy val workerApi = coordinatorProxy.getWorkerApi
+  workerApi.initializeIdleDetection
 
   /** Returns the ConsoleServer */
   def getConsole = console
@@ -218,9 +227,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
     log.debug("All registries have been fully initialized.")
   }
-
-  lazy val workerApi = coordinatorProxy.getWorkerApi
-  lazy val graphEditor = coordinatorProxy.getGraphEditor
 
   /** GraphApi */
 

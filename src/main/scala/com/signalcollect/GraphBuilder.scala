@@ -55,6 +55,24 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     new GraphBuilder[Id, Signal](config)
 
   /**
+   *  Configures if workers should eagerly notify the node about their idle state.
+   *  This speeds up idle detection and with it the latency between computation steps,
+   *  but at the cost of an increased messaging overhead.
+   */
+  def withEagerIdleDetection(newEagerIdleDetection: Boolean) = {
+    builder(config.copy(eagerIdleDetection = newEagerIdleDetection))
+  }
+
+  /**
+   *  When throttling is enabled, the coordinator monitors the
+   *  messaging load of the system and stops signaling in case
+   *  the system should get overloaded.
+   */
+  def withThrottlingEnabled(newThrottlingEnabled: Boolean) = {
+    builder(config.copy(throttlingEnabled = newThrottlingEnabled))
+  }
+
+  /**
    *  Configures if the console website on port 8080 is enabled.
    */
   def withConsole(newConsoleEnabled: Boolean) =

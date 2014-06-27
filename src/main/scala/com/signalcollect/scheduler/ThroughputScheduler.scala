@@ -26,20 +26,24 @@ import com.signalcollect.interfaces.Worker
 class ThroughputScheduler[Id](
   w: Worker[Id, _],
   val batchSize: Int = 10000)
-    extends Scheduler[Id](w) {
+  extends Scheduler[Id](w) {
 
-  override def executeOperations {
+  override def executeOperations(systemOverloaded: Boolean) {
     if (!worker.vertexStore.toCollect.isEmpty) {
       val collected = worker.vertexStore.toCollect.process(
         vertex => {
           worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
           if (vertex.scoreSignal > worker.signalThreshold) {
-            worker.executeSignalOperationOfVertex(vertex)
+            if (systemOverloaded) {
+              worker.vertexStore.toSignal.put(vertex)
+            } else {
+              worker.executeSignalOperationOfVertex(vertex)
+            }
           }
         }, Some(batchSize))
       worker.messageBusFlushed = false
     }
-    if (!worker.vertexStore.toSignal.isEmpty) {
+    if (!systemOverloaded && !worker.vertexStore.toSignal.isEmpty) {
       worker.vertexStore.toSignal.process(worker.executeSignalOperationOfVertex(_), Some(batchSize))
       worker.messageBusFlushed = false
     }

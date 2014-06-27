@@ -36,13 +36,13 @@ import scala.language.reflectiveCalls
 import scala.reflect.ClassTag
 import com.signalcollect._
 import com.signalcollect.interfaces._
-import com.signalcollect.serialization.DefaultSerializer
 import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
+import akka.serialization.SerializationExtension
 
 case object ScheduleOperations
 
@@ -68,13 +68,22 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val mapperFactory: MapperFactory,
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
-  val heartbeatIntervalInMilliseconds: Int)
+  val heartbeatIntervalInMilliseconds: Int,
+  val eagerIdleDetection: Boolean)
   extends WorkerActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
 
+  var schedulingTimestamp = System.nanoTime
+
   override def postStop {
     log.debug(s"Worker $workerId has stopped.")
+  }
+
+  // Assumes that there is the same number of workers on all nodes.
+  def nodeId: Int = {
+    val workersPerNode = numberOfWorkers / numberOfNodes
+    workerId / workersPerNode
   }
 
   override def postRestart(reason: Throwable): Unit = {
@@ -96,6 +105,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
+    nodeId = nodeId,
+    eagerIdleDetection = eagerIdleDetection,
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
@@ -138,6 +149,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   def scheduleOperations {
     worker.setIdle(false)
     self ! ScheduleOperations
+    schedulingTimestamp = System.nanoTime
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
     worker.operationsScheduled = true
   }
@@ -203,10 +215,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case ScheduleOperations =>
-      if (messageQueue.isEmpty) {
+      if (messageQueue.isEmpty && System.nanoTime - schedulingTimestamp < 1000000) { // 1 millisecond
         //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
+
+          //Worker is now idle.
           worker.setIdle(true)
           worker.operationsScheduled = false
         } else {
@@ -216,7 +230,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations
+            worker.scheduler.executeOperations(worker.systemOverloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
