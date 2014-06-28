@@ -37,6 +37,14 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
 	       }
 	       cluster = "com.signalcollect.deployment.TestCluster"
            timeout = 400
+           akka {
+	         port: 2552
+    		 kryo-initializer = "com.signalcollect.configuration.KryoInit"
+    		 kryo-registrations = [
+    		   "some.class.to.be.registered"
+             ]
+    	     serialize-messages = true
+	       }
          }"""
     val config = ConfigFactory.parseString(configAsString)
     DeploymentConfigurationCreator.getDeploymentConfiguration(config)
@@ -51,34 +59,39 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.algorithmParameters === Map[String, String]("parameter-name" -> "some-parameter"))
   }
-  
+
   it should "contain memoryPerNode" in {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.memoryPerNode === 512)
   }
-  
+
   it should "contain numberOfNodes" in {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.numberOfNodes === 1)
   }
-  
+
   it should "contain copyFiles" in {
     val deploymentConfig = createDeploymentConfiguration
-    assert(deploymentConfig.copyFiles  === List("some/file"))
+    assert(deploymentConfig.copyFiles === List("some/file"))
   }
-  
+
   it should "contain clusterType" in {
     val deploymentConfig = createDeploymentConfiguration
-    assert(deploymentConfig.cluster  === "com.signalcollect.deployment.TestCluster")
+    assert(deploymentConfig.cluster === "com.signalcollect.deployment.TestCluster")
   }
-  
+
   it should "contain jvmArguments" in {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.jvmArguments === "-XX:+AggressiveOpts")
   }
-  
+
   it should "contain timeout" in {
-	  val deploymentConfig = createDeploymentConfiguration
-			  assert(deploymentConfig.timeout === 400)
+    val deploymentConfig = createDeploymentConfiguration
+    assert(deploymentConfig.timeout === 400)
+  }
+  
+  it should "contain akka config" in {
+    val deploymentConfig = createDeploymentConfiguration
+    assert(deploymentConfig.akkaBasePort === 2552)
   }
 }

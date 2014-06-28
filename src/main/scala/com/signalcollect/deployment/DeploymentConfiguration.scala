@@ -33,6 +33,7 @@ trait DeploymentConfiguration {
   def cluster: String
   def jvmArguments: String
   def timeout: Int
+  def akkaBasePort: Int
 }
 
 /**
@@ -46,7 +47,8 @@ case class BasicDeploymentConfiguration(
   override val copyFiles: List[String] = Nil, // list of paths to files
   override val cluster: String = "com.signalcollect.deployment.LeaderCluster",
   override val jvmArguments: String = "",
-  override val timeout: Int = 400) extends DeploymentConfiguration
+  override val timeout: Int = 400,
+  override val akkaBasePort: Int = 2552) extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
@@ -72,7 +74,8 @@ object DeploymentConfigurationCreator {
       copyFiles = config.getStringList("deployment.copy-files").toList, // list of paths to files
       cluster = config.getString("deployment.cluster"),
       jvmArguments = config.getString("deployment.jvm-arguments"),
-      timeout = config.getInt("deployment.timeout"))
+      timeout = config.getInt("deployment.timeout"),
+      akkaBasePort = config.getInt("deployment.akka.port"))
 
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'
