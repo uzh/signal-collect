@@ -37,6 +37,7 @@ class ClusterSpec extends FlatSpec with Checkers with Matchers {
 		     "parameter-name" = "some-parameter"
 	       }
 	       cluster = "${cluster}"
+           timeout = 500
          }"""
     val config = ConfigFactory.parseString(configAsString)
     DeploymentConfigurationCreator.getDeploymentConfiguration(config)
