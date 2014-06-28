@@ -36,6 +36,7 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
 		     "parameter-name" = "some-parameter"
 	       }
 	       cluster = "com.signalcollect.deployment.TestCluster"
+           timeout = 400
          }"""
     val config = ConfigFactory.parseString(configAsString)
     DeploymentConfigurationCreator.getDeploymentConfiguration(config)
@@ -74,5 +75,10 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
   it should "contain jvmArguments" in {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.jvmArguments === "-XX:+AggressiveOpts")
+  }
+  
+  it should "contain timeout" in {
+	  val deploymentConfig = createDeploymentConfiguration
+			  assert(deploymentConfig.timeout === 400)
   }
 }

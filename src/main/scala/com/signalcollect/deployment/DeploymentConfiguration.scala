@@ -32,6 +32,7 @@ trait DeploymentConfiguration {
   def copyFiles: List[String]
   def cluster: String
   def jvmArguments: String
+  def timeout: Int
 }
 
 /**
@@ -44,7 +45,8 @@ case class BasicDeploymentConfiguration(
   override val numberOfNodes: Int = 1,
   override val copyFiles: List[String] = Nil, // list of paths to files
   override val cluster: String = "com.signalcollect.deployment.LeaderCluster",
-  override val jvmArguments: String = "") extends DeploymentConfiguration
+  override val jvmArguments: String = "",
+  override val timeout: Int = 400) extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
@@ -69,7 +71,8 @@ object DeploymentConfigurationCreator {
       numberOfNodes = config.getInt("deployment.number-of-nodes"),
       copyFiles = config.getStringList("deployment.copy-files").toList, // list of paths to files
       cluster = config.getString("deployment.cluster"),
-      jvmArguments = config.getString("deployment.jvm-arguments"))
+      jvmArguments = config.getString("deployment.jvm-arguments"),
+      timeout = config.getInt("deployment.timeout"))
 
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'

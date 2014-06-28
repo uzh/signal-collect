@@ -29,3 +29,7 @@ web-split-*
 .settings/org.scala-ide.sdt.core.prefs
 
 *.class
+/twitter_rv.net
+/twitter.txt
+/twitter.txt.gz
+/target/
