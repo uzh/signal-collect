@@ -34,6 +34,9 @@ trait DeploymentConfiguration {
   def jvmArguments: String
   def timeout: Int
   def akkaBasePort: Int
+  def kryoInit: String
+  def kryoRegistrations: List[String]
+  def serializeMessages: Boolean
 }
 
 /**
@@ -48,7 +51,10 @@ case class BasicDeploymentConfiguration(
   override val cluster: String = "com.signalcollect.deployment.LeaderCluster",
   override val jvmArguments: String = "",
   override val timeout: Int = 400,
-  override val akkaBasePort: Int = 2552) extends DeploymentConfiguration
+  override val akkaBasePort: Int = 2552,
+  override val kryoInit: String,
+  override val kryoRegistrations: List[String] = Nil,
+  override val serializeMessages: Boolean = false) extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
@@ -75,7 +81,10 @@ object DeploymentConfigurationCreator {
       cluster = config.getString("deployment.cluster"),
       jvmArguments = config.getString("deployment.jvm-arguments"),
       timeout = config.getInt("deployment.timeout"),
-      akkaBasePort = config.getInt("deployment.akka.port"))
+      akkaBasePort = config.getInt("deployment.akka.port"),
+      kryoInit = config.getString("deployment.akka.kryo-initializer"),
+      kryoRegistrations = config.getStringList("deployment.akka.kryo-registrations").toList,
+      serializeMessages = config.getBoolean("deployment.akka.serialize-messages"))
 
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'

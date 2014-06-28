@@ -93,5 +93,8 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
   it should "contain akka config" in {
     val deploymentConfig = createDeploymentConfiguration
     assert(deploymentConfig.akkaBasePort === 2552)
+    assert(deploymentConfig.kryoInit === "com.signalcollect.configuration.KryoInit")
+    assert(deploymentConfig.kryoRegistrations === List("some.class.to.be.registered"))
+    assert(deploymentConfig.serializeMessages === true)
   }
 }
