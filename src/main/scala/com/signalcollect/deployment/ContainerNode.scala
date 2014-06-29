@@ -1,0 +1,142 @@
+/*
+ *  @author Tobias Bachmann
+ *
+ *  Copyright 2014 University of Zurich
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+package com.signalcollect.deployment
+
+import akka.actor.ActorSystem
+import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.nodeprovisioning.AkkaHelper
+import akka.actor.ActorRef
+import akka.actor.Actor
+import akka.actor.Props
+import scala.concurrent._
+import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import com.typesafe.config.Config
+import scala.concurrent.duration._
+import akka.actor.PoisonPill
+import akka.actor.actorRef2Scala
+import com.signalcollect.nodeprovisioning.DefaultNodeActor
+
+trait ContainerNode {
+  def start
+  def shutdown
+  def waitForTermination
+  def isSuccessful: Boolean
+}
+
+class DefaultContainerNode(id: Int,
+  leaderIp: String,
+  basePort: Int,
+  akkaConfig: Config,
+  deploymentConfig: DeploymentConfiguration) extends ContainerNode {
+
+  val leaderAddress = s"akka.tcp://SignalCollect@$leaderIp:$basePort/user/leaderactor"
+  val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
+  val shutdownActor = system.actorOf(Props(classOf[ShutdownActor], this), s"shutdownactor$id")
+  val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor], id.toString, id, deploymentConfig.numberOfNodes, None), name = id.toString + "DefaultNodeActor")
+
+  private var terminated = false
+  
+  private var successful = false
+
+  def getShutdownActor(): ActorRef = {
+    shutdownActor
+  }
+
+  def getNodeActor(): ActorRef = {
+    nodeActor
+  }
+
+  def getLeaderActor(): ActorRef = {
+    system.actorFor(leaderAddress)
+  }
+
+  def isTerminated: Boolean = terminated
+  
+  def isSuccessful: Boolean = successful
+
+  def start {
+    register
+  }
+
+  def register {
+    getLeaderActor ! AkkaHelper.getRemoteAddress(nodeActor, system)
+    getLeaderActor ! AkkaHelper.getRemoteAddress(shutdownActor, system)
+  }
+
+  def waitForTermination {
+    val begin = System.currentTimeMillis()
+    while (!shutdownNow && timeoutNotReached(begin) && terminated == false) {
+      Thread.sleep(100)
+    }
+    terminated = true
+  }
+  
+  def timeoutNotReached(begin: Long): Boolean = {
+    val timeout = deploymentConfig.timeout
+    (System.currentTimeMillis() - begin) / 1000 < timeout
+  }
+
+  def shutdown {
+    terminated = true
+    shutdownActor ! PoisonPill
+    nodeActor ! PoisonPill
+  }
+
+  def startActorSystem: ActorSystem = {
+    try {
+    val system = ActorSystem("SignalCollect", akkaConfig)
+    ActorSystemRegistry.register(system)
+    } catch {
+      case e:Throwable => {
+        println("failed to start Actorsystem")
+        throw e
+      }
+    }
+    ActorSystemRegistry.retrieve("SignalCollect").get
+  }
+
+  private var shutdownNow = false
+
+  def setShutdown = {
+    synchronized {
+      shutdownNow = true
+    }
+  }
+
+  def shuttingdown: Boolean = {
+    shutdownNow
+  }
+
+  def reset {
+    synchronized {
+      shutdownNow = false
+    }
+  }
+  
+}
+
+class ShutdownActor(container: DefaultContainerNode) extends Actor {
+  override def receive = {
+    case "shutdown" => {
+      container.setShutdown
+      container.shutdown
+    }
+    case whatever => println("received unexpected message")
+  }
+}
