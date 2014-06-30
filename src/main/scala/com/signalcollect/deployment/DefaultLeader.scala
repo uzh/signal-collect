@@ -20,23 +20,21 @@ package com.signalcollect.deployment
 
 import scala.async.Async.async
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import com.signalcollect.configuration.ActorSystemRegistry
-import com.signalcollect.nodeprovisioning.AkkaHelper
 import com.typesafe.config.Config
-
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
+import com.signalcollect.util.AkkaRemoteAddress
 
 class DefaultLeader(
   akkaConfig: Config ,
   deploymentConfig: DeploymentConfiguration) extends Leader {
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
   val leaderactor = system.actorOf(Props(classOf[LeaderActor], this), "leaderactor")
-  val leaderAddress = AkkaHelper.getRemoteAddress(leaderactor, system)
+  val leaderAddress = AkkaRemoteAddress.get(leaderactor, system)
   private var executionStarted = false
   private var executionFinished = false
 

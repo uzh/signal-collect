@@ -19,9 +19,8 @@
  *
  */
 
-package com.signalcollect.nodeprovisioning
+package com.signalcollect.node
 
-import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.actorRef2Scala
@@ -30,21 +29,30 @@ import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.NodeActor
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageBus
-import scala.reflect.ClassTag
-import com.signalcollect.interfaces.NodeStatus
-import scala.language.postfixOps
 import scala.concurrent.duration.DurationInt
-import akka.actor.ReceiveTimeout
+import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Node
+import com.signalcollect.interfaces.NodeActor
+import com.signalcollect.interfaces.NodeReady
+import com.signalcollect.interfaces.NodeStatus
+import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
 import akka.actor.ActorLogging
 import com.signalcollect.interfaces.ActorRestartLogging
-import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.NodeReady
 import akka.util.Timeout
 import scala.concurrent.Await
+import akka.actor.ActorRef
+import akka.actor.Props
+import akka.actor.ReceiveTimeout
+import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.util.AkkaRemoteAddress
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -90,17 +98,7 @@ class DefaultNodeActor(
     isWorkerIdle = new Array[Boolean](numberOfWorkersOnNode)
     workerStatusAlreadyForwardedToCoordinator = new Array[Boolean](numberOfWorkersOnNode)
   }
-
-  def setStatusReportingInterval(interval: Int) {
-    receivedMessagesCounter -= 1 // Bootstrapping messages are not counted.
-    this.statusReportingInterval = interval
-  }
-
-  /**
-   * Timeout for Akka actor idling
-   */
-  context.setReceiveTimeout(statusReportingInterval milliseconds)
-
+  
   def receive = {
     /**
      * ReceiveTimeout message only gets sent after Akka actor mailbox has been empty for "receiveTimeout" milliseconds
@@ -188,9 +186,7 @@ class DefaultNodeActor(
   }
 
   protected def sendStatusToCoordinator {
-    val currentTime = System.currentTimeMillis
-    if (isInitialized && currentTime - lastStatusUpdate > statusReportingInterval) {
-      lastStatusUpdate = currentTime
+    if (isInitialized) {
       val status = getNodeStatus
       messageBus.sendToCoordinator(status)
     }
@@ -206,7 +202,7 @@ class DefaultNodeActor(
       Props(creator()).withDispatcher("akka.io.pinned-dispatcher"),
       name = actorNamePrefix + workerName)
     workers = worker :: workers
-    AkkaHelper.getRemoteAddress(worker, context.system)
+    AkkaRemoteAddress.get(worker, context.system)
   }
 
   def numberOfCores = {
@@ -218,8 +214,8 @@ class DefaultNodeActor(
     if (nodeProvisionerAddress.isDefined) {
       println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
       val selection = context.actorSelection(nodeProvisionerAddress.get)
-      implicit val timeout = Timeout(30 seconds)
-      val nodeProvisioner = Await.result(selection.resolveOne, 30 seconds)
+      implicit val timeout = Timeout(30.seconds)
+      val nodeProvisioner = Await.result(selection.resolveOne, 30.seconds)
       nodeProvisioner ! NodeReady(nodeId)
     }
   }

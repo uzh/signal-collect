@@ -20,7 +20,6 @@
 package com.signalcollect.interfaces
 
 import akka.actor.Actor
-import com.signalcollect.nodeprovisioning.Node
 
 // Has to be a trait to be proxied.
 trait NodeActor extends Node

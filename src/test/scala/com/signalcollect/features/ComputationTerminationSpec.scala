@@ -38,8 +38,8 @@ import com.typesafe.config.Config
 import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
-import com.signalcollect.nodeprovisioning.DefaultNodeActor
 import akka.actor.ActorSystem
+import com.signalcollect.node.DefaultNodeActor
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {

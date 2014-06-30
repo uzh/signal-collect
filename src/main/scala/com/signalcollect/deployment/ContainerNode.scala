@@ -20,17 +20,17 @@ package com.signalcollect.deployment
 
 import akka.actor.ActorSystem
 import com.signalcollect.configuration.ActorSystemRegistry
-import com.signalcollect.nodeprovisioning.AkkaHelper
 import akka.actor.ActorRef
 import akka.actor.Actor
 import akka.actor.Props
 import scala.concurrent._
-import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import com.signalcollect.node.DefaultNodeActor
 import com.typesafe.config.Config
 import scala.concurrent.duration._
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
-import com.signalcollect.nodeprovisioning.DefaultNodeActor
+import com.signalcollect.node.DefaultNodeActor
+import com.signalcollect.util.AkkaRemoteAddress
 
 trait ContainerNode {
   def start
@@ -75,8 +75,8 @@ class DefaultContainerNode(id: Int,
   }
 
   def register {
-    getLeaderActor ! AkkaHelper.getRemoteAddress(nodeActor, system)
-    getLeaderActor ! AkkaHelper.getRemoteAddress(shutdownActor, system)
+    getLeaderActor ! AkkaRemoteAddress.get(nodeActor, system)
+    getLeaderActor ! AkkaRemoteAddress.get(shutdownActor, system)
   }
 
   def waitForTermination {

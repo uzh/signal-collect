@@ -114,11 +114,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       container.shuttingdown === true
     }
 
-    "shutdown actorsystem after execution" in new Execution {
-      Thread.sleep(10000)
-      ActorSystemRegistry.retrieve("SignalCollect").isDefined === false
-    }
-
   }
   "ContainerNode creation" should {
     sequential
@@ -165,13 +160,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       val leaderActor = container.getLeaderActor
       leaderActor.path.toString === "akka://SignalCollect/user/leaderactor"
     }
-
-    "register with leader" in new LeaderContainerScope {
-      container.register
-      Thread.sleep(1000)
-      leader.getNodeActorAddresses.exists(_.contains("DefaultNodeActor")) === true
-      leader.getShutdownAddresses.exists(_.contains("shutdown")) === true
-    }
   }
 
 }
@@ -188,7 +176,7 @@ trait StopActorSystemAfter extends After {
     if (!system.isTerminated) {
       system.shutdown
       try {
-        system.awaitTermination(20.seconds)
+        system.awaitTermination(5.seconds)
       } catch {
         case e: Exception => println("couldn't wait for shutdown of actorsystem")
       }
