@@ -5,10 +5,9 @@ import org.scalatest.FlatSpec
 import org.scalatest.ShouldMatchers
 import org.scalatest.mock.EasyMockSugar
 import org.scalatest.prop.Checkers
+
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.EfficientPageRankVertex
-import com.signalcollect.examples.PlaceholderEdge
 
 class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
 
@@ -17,13 +16,13 @@ class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Che
       withMessageSerialization(true).
       build
     try {
-      graph.addVertex(new EfficientPageRankVertex(1))
-      graph.addVertex(new EfficientPageRankVertex(2))
-      graph.addVertex(new EfficientPageRankVertex(3))
-      graph.addEdge(1, new PlaceholderEdge(2))
-      graph.addEdge(2, new PlaceholderEdge(1))
-      graph.addEdge(2, new PlaceholderEdge(3))
-      graph.addEdge(3, new PlaceholderEdge(2))
+      graph.addVertex(new PageRankVertex(1))
+      graph.addVertex(new PageRankVertex(2))
+      graph.addVertex(new PageRankVertex(3))
+      graph.addEdge(1, new PageRankEdge(2))
+      graph.addEdge(2, new PageRankEdge(1))
+      graph.addEdge(2, new PageRankEdge(3))
+      graph.addEdge(3, new PageRankEdge(2))
       val stats = graph.execute
     } finally {
       graph.shutdown

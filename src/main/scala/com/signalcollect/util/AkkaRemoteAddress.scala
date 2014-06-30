@@ -19,14 +19,16 @@
 
 package com.signalcollect.util
 
-import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import akka.actor.ActorRef
+import akka.actor.Address
 import akka.actor.ExtendedActorSystem
 
 object AkkaRemoteAddress {
   def get(actorRef: ActorRef, system: ActorSystem): String = {
-    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getDefaultAddress
-    val remoteAddress = actorRef.path.toStringWithAddress(akkaSystemAddress)
-    remoteAddress.toString
+    val dummyDestination = Address("akka", "sys", "someHost", 42) // see http://groups.google.com/group/akka-user/browse_thread/thread/9448d8f628d38cc0
+    val akkaSystemAddress = system.asInstanceOf[ExtendedActorSystem].provider.getExternalAddressFor(dummyDestination)
+    val nodeProvisionerAddress = actorRef.path.toStringWithAddress(akkaSystemAddress.get)
+    nodeProvisionerAddress.toString
   }
 }

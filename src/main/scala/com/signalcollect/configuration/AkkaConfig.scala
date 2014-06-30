@@ -27,7 +27,7 @@ akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
-  loggers = ["akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger"]
+  loggers = ["com.signalcollect.console.ConsoleLogger"]
 
     """ +
     {
@@ -164,6 +164,7 @@ akka {
       "akka.actor.Identify" = java
       "akka.actor.ActorRef" = java
       "akka.actor.ActorIdentity" = java
+      "com.signalcollect.Vertex" = kryo
     """ +
     {
       if (!kryoRegistrations.isEmpty) {
