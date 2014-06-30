@@ -25,8 +25,7 @@ import com.typesafe.config.Config
 import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.Props
-import com.signalcollect.nodeprovisioning.DefaultNodeActor
-
+import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.interfaces.MessageBusFactory
 import scala.reflect.ClassTag
 import akka.actor.InvalidActorNameException
