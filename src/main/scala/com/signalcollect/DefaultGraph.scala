@@ -202,7 +202,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       config.messageBusFactory,
       config.mapperFactory,
       config.heartbeatIntervalInMilliseconds)
-    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.io.pinned-dispatcher"), name = config.actorNamePrefix + "Coordinator")
+    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.worker-node-and-coordinator-dispatcher"), name = config.actorNamePrefix + "Coordinator")
   }
 
   if (console != null) { console.setCoordinator(coordinatorActor) }

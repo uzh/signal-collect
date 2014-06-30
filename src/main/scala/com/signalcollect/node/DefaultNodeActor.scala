@@ -198,7 +198,7 @@ class DefaultNodeActor(
     numberOfWorkersOnNode += 1
     val workerName = "Worker" + workerId
     val worker = context.system.actorOf(
-      Props(creator()).withDispatcher("akka.io.pinned-dispatcher"),
+      Props(creator()).withDispatcher("akka.worker-node-and-coordinator-dispatcher"),
       name = actorNamePrefix + workerName)
     workers = worker :: workers
     AkkaRemoteAddress.get(worker, context.system)

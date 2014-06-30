@@ -36,7 +36,9 @@ class LocalNodeProvisioner
   extends NodeProvisioner {
   def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     try {
-      val nodeController = localSystem.actorOf(Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None), name = actorNamePrefix + "DefaultNodeActor")
+      val nodeController = localSystem.actorOf(
+        Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None).
+          withDispatcher("akka.worker-node-and-coordinator-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } catch {
       case e: InvalidActorNameException =>
