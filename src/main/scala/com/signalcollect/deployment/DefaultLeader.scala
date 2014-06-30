@@ -42,7 +42,10 @@ class DefaultLeader(
 
   def isExecutionStarted = executionStarted
   def isExecutionFinished = executionFinished
-
+  
+  /**
+   * starts the leader and the lifecycle of the execution, that will be performed
+   */
   def start {
     async {
       
@@ -52,7 +55,9 @@ class DefaultLeader(
       shutdown
     }
   }
-
+  /**
+   * starts the algorithm provided in the DeploymentConfiguration on the NodeActors
+   */
   def startExecution {
     val algorithm = deploymentConfig.algorithm
     val parameters = deploymentConfig.algorithmParameters
@@ -61,11 +66,14 @@ class DefaultLeader(
     println(s"start algorithm: $algorithm")
     algorithmObject.execute(parameters, Some(nodeActors), Some(system))
   }
-
+  
+  /**
+   * tells all nodes to shutdown and stops actorsystem
+   */
   def shutdown {
     try {
       val shutdownActor = getShutdownActors.foreach(_ ! "shutdown")
-      Thread.sleep(10000)
+      Thread.sleep(5000) // make sure all Containers are down
     } finally {
       if (!system.isTerminated) {
         system.shutdown
@@ -74,11 +82,17 @@ class DefaultLeader(
       }
     }
   }
-
+  
+  /**
+   * gets the ActorRef of the leader
+   */
   def getActorRef(): ActorRef = {
     leaderactor
   }
-
+  
+  /**
+   * starts the actorsystem with the akkaConifg provided in the DeploymentConfiguration
+   */
   def startActorSystem: ActorSystem = {
     try {
       val system = ActorSystem("SignalCollect", akkaConfig)
@@ -90,14 +104,18 @@ class DefaultLeader(
       }
     }
   }
-
+  /**
+   * Blocking call which waits for all nodes to be registered at the leader
+   */
   def waitForAllNodes {
     while (!allNodesRunning) {
       Thread.sleep(100)
     }
     executionStarted = true
   }
-
+  /**
+   * checks if all Nodes are up and ready to start the execution
+   */
   def allNodesRunning: Boolean = {
     
     getNumberOfNodes == deploymentConfig.numberOfNodes
@@ -120,6 +138,7 @@ class DefaultLeader(
   
   private var nodeActorAddresses: List[String] = Nil
   private var shutdownAddresses: List[String] = Nil
+  
   def getNodeActorAddresses: List[String] = {
     synchronized {
       nodeActorAddresses
