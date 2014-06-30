@@ -47,6 +47,8 @@ import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.NodeActor
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.interfaces.WorkerStatistics
@@ -56,14 +58,12 @@ import com.signalcollect.util.AkkaUtil.getActorRefFromSelection
 import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import akka.actor.PoisonPill
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.actor.PoisonPill
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.SchedulerFactory
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -129,11 +129,16 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     config.kryoInitializer)
   override def toString: String = "DefaultGraph"
 
-  val system: ActorSystem = config.actorSystem.getOrElse(ActorSystem("SignalCollect", akkaConfig))
+  val system: ActorSystem = {
+    config.actorSystem.getOrElse(
+      ActorSystemRegistry.retrieve("SignalCollect").
+        getOrElse(ActorSystem("SignalCollect", akkaConfig)))
+  }
 
   if (!ActorSystemRegistry.contains(system)) {
     ActorSystemRegistry.register(system)
   }
+
   val log = system.log
 
   val console = {
@@ -177,9 +182,9 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.storageFactory,
           config.schedulerFactory,
           config.heartbeatIntervalInMilliseconds,
-          config.eagerIdleDetection )
+          config.eagerIdleDetection)
         val workerName = node.createWorker(workerId, workerCreator.create)
-        actors(workerId) = system.actorFor(workerName)
+        actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
       }
     }

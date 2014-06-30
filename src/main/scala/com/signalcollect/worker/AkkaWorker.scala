@@ -107,7 +107,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     workerId = workerId,
     nodeId = nodeId,
     eagerIdleDetection = eagerIdleDetection,
-    serialization = SerializationExtension(context.system),
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
