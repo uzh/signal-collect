@@ -40,7 +40,10 @@ class DefaultLeader(
 
   def isExecutionStarted = executionStarted
   def isExecutionFinished = executionFinished
-
+  
+  /**
+   * starts the lifecycle of the leader and an execution.
+   */
   def start {
     async {
       
@@ -50,8 +53,21 @@ class DefaultLeader(
       shutdown
     }
   }
-
+  
+  /**
+   * waits till enough Containers are registered
+   */
+  def waitForAllNodes {
+	  while (!allNodesRunning) {
+		  Thread.sleep(100)
+	  }
+  }
+  
+  /**
+   * starts the algorithm given 
+   */
   def startExecution {
+	executionStarted = true
     val algorithm = deploymentConfig.algorithm
     val parameters = deploymentConfig.algorithmParameters
     val nodeActors = getNodeActors.toArray
@@ -89,12 +105,6 @@ class DefaultLeader(
     }
   }
 
-  def waitForAllNodes {
-    while (!allNodesRunning) {
-      Thread.sleep(100)
-    }
-    executionStarted = true
-  }
 
   def allNodesRunning: Boolean = {
     
