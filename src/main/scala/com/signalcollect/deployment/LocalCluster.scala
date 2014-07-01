@@ -19,8 +19,11 @@
 
 package com.signalcollect.deployment
 
-
-
+/**
+ * This is a simple implementation of a Cluster. Useful for testing an algorithm. 
+ * It ignores most of the parameters in the DeploymentConfiguration.
+ * It only takes the algorithm and the algorithmParameters for the execution 
+ */
 class LocalCluster extends Cluster {
 
   override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {

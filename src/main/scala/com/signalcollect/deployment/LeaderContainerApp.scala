@@ -35,7 +35,8 @@ object LeaderApp extends App {
 object NodeContainerApp extends App {
   val id = args(0).toInt
   val ip = args(1)
-  val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip)
+  val deploymentConfig = DeploymentConfigurationCreator.getDeploymentConfiguration
+  val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip, deploymentConfig = deploymentConfig)
   container.start
   container.waitForTermination
   val system = ActorSystemRegistry.retrieve("SignalCollect")

@@ -22,26 +22,31 @@ package com.signalcollect.deployment
 import java.net.InetAddress
 /**
  * implementing the Cluster trait, with the Leader and NodeContainer.
- * It is useful to the test a DeployableAlgorithm locally
+ * The cluster is running in single Jvm.
+ * It is useful to the test a DeployableAlgorithm locally.
+ * But it ignores the DeploymentConfiguration parameters memory-per-node, jvm-arguments and copy-files
  */
 class LeaderCluster extends Cluster {
 
   def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
     val leader = LeaderCreator.getLeader(deploymentConfiguration)
     leader.start
-    val ip = InetAddress.getLocalHost().getHostAddress()
-    val numberOfNodes = deploymentConfiguration.numberOfNodes 
-    var id = 0
-    for (id <- 0 until numberOfNodes) {
-      println(s"create node $id")
-      val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip)
-      println(s"start node $id")
-      container.start
-    }
+    startContainers(deploymentConfiguration)
+    
     while(!leader.isExecutionFinished){
       Thread.sleep(100)
     }
     true
+  }
+
+  private def startContainers(deploymentConfiguration: DeploymentConfiguration) {
+    val ip = InetAddress.getLocalHost().getHostAddress()
+    val numberOfNodes = deploymentConfiguration.numberOfNodes 
+    var id = 0
+    for (id <- 0 until numberOfNodes) {
+      val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip)
+      container.start
+    }
   }
   
 }
