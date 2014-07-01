@@ -547,7 +547,9 @@ object Toolkit {
       case x: String => JString(x)
       case x: Double if x.isNaN => JDouble(0)
       case x: Double => JDouble(x)
-      case x: Map[_, _] => decompose(x)
+      case x: Map[_, _] =>
+        try { decompose(x) }
+        catch { case e: MatchError => { JString(x.toString) } }
       case x: BreakConditionName.Value => JString(x.toString)
       case other => JString(other.toString)
     }

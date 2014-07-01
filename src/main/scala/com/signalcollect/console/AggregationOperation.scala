@@ -148,6 +148,8 @@ class SampleAggregator[Id](sampleSize: Int)
   def extract(v: Vertex[_, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
       List(i.id).toSet
+    case other =>
+      Set()
   }
 }
 
