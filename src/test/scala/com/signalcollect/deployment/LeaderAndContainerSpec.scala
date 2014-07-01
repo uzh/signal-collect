@@ -33,6 +33,16 @@ import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class LeaderAndContainerSpec extends SpecificationWithJUnit {
+  /**
+   * Helper function for waiting on a condition for a given time
+   */
+  def waitOrTimeout(waitCondition: () => Boolean, until: Int) {
+    var cnt = until
+    while (waitCondition() && cnt < 100) {
+      Thread.sleep(10)
+      cnt += 1
+    }
+  }
 
   sequential
   "Leader" should {
@@ -50,16 +60,12 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     "detect if all nodes are ready " in new LeaderScope {
       leader.clear
-      async { //is needed because waitForAllNodes is blocking
-        leader.waitForAllNodes
-      }
       leader.isExecutionStarted === false
       leader.allNodesRunning === false
       val address = s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
       leaderActor ! address
-      Thread.sleep(1000)
+      leader.waitForAllNodes
       leader.allNodesRunning === true
-      leader.isExecutionStarted === true
 
       val nodeActors = leader.getNodeActorAddresses
       nodeActors must not be empty
@@ -68,9 +74,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     "filter address on DefaultNodeActor" in new LeaderScope {
       leader.clear
-      async { //is needed because wait is blocking
-        leader.waitForAllNodes
-      }
       val invalidAddress = "akka.tcp://SignalCollect@invalid"
       leaderActor ! invalidAddress
       leader.getNodeActorAddresses.isEmpty === true
@@ -78,12 +81,9 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     "save shutdown address" in new LeaderScope {
       leader.clear
-      async { //is needed because wait is blocking
-        leader.waitForAllNodes
-      }
       val shutdownAddress = s"akka.tcp://SignalCollect@$ip:2553/user/shutdownactor$id"
       leaderActor ! shutdownAddress
-      Thread.sleep(1000)
+      waitOrTimeout(() => leader.getShutdownAddresses.isEmpty, 100)
       leader.getShutdownAddresses.isEmpty === false
     }
 
@@ -100,35 +100,36 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     sequential //this is preventing the tests from being executed parallel
     "start execution when all nodes are registered" in new Execution {
+      waitOrTimeout(() => leader.isExecutionFinished, 100)
       leader.isExecutionFinished === true
     }
 
     "get shutdownActors" in new LeaderContainerScope {
-      Thread.sleep(1000)
+      waitOrTimeout(() => leader.getShutdownActors.size == 1, 100)
       leader.getShutdownActors.size === 1
       leader.getShutdownActors.head.path.toString.contains("shutdown") === true
     }
 
     "shutdown after execution" in new Execution {
-      Thread.sleep(1000)
+      waitOrTimeout(() => container.shuttingdown, 100)
       container.shuttingdown === true
     }
 
   }
+
   "ContainerNode creation" should {
     sequential
     "be created" in new ContainerScope {
       container must not be None
     }
     "container node should start actor system" in new ContainerScope {
-      container must not be None
       ActorSystemRegistry.retrieve("SignalCollect").isDefined === true
 
     }
 
     "create shutdown actor" in new ContainerScope {
       val actor = container.getShutdownActor
-      actor must not be None
+      actor.toString.contains("SignalCollect/user/shutdownactor0") === true
     }
 
     "receive shutdown message" in new ContainerScope {
@@ -136,7 +137,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       container must not be None
       val actor = container.getShutdownActor
       actor ! "shutdown"
-      Thread.sleep(1000)
+      waitOrTimeout(() => container.shuttingdown, 100)
       container.shuttingdown === true
     }
 
@@ -148,7 +149,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       }
       container.isTerminated === false
       container.getShutdownActor ! "shutdown"
-      Thread.sleep(1000)
+      waitOrTimeout(() => container.isTerminated, 100)
       container.isTerminated === true
     }
 
@@ -200,18 +201,16 @@ trait LeaderScope extends StopActorSystemAfter {
 }
 
 trait Execution extends LeaderContainerScope {
-  Thread.sleep(1000)
   var cnt = 0
   while (!leader.isExecutionFinished && cnt < 1000) {
     Thread.sleep(100)
     cnt += 1
   }
-  Thread.sleep(1000)
 }
 
 trait ContainerScope extends StopActorSystemAfter {
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
-  val akkaConfig = AkkaConfigCreator.getConfig(2552,DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+  val akkaConfig = AkkaConfigCreator.getConfig(2552, DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
   val container = new DefaultContainerNode(id = 0,
     leaderIp = leaderIp,
     basePort = 2552,
@@ -220,10 +219,10 @@ trait ContainerScope extends StopActorSystemAfter {
 
 }
 trait LeaderContainerScope extends StopActorSystemAfter {
-//  ActorAddresses.clear
-//  ShutdownHelper.reset
+  //  ActorAddresses.clear
+  //  ShutdownHelper.reset
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
-  val akkaConfig = AkkaConfigCreator.getConfig(2552,DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+  val akkaConfig = AkkaConfigCreator.getConfig(2552, DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
   val leader = new DefaultLeader(akkaConfig = akkaConfig, deploymentConfig = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
   leader.start
   val container = new DefaultContainerNode(id = 0,
