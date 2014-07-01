@@ -18,7 +18,14 @@
  */
 package com.signalcollect.deployment
 
-object ContainerNodeCreator {
+/**
+ * creates a new NodeContainer
+ */
+object NodeContainerCreator {
+  
+  /**
+   * creates a new DefaultNodeContainer
+   */
   def getContainer(id: Int, leaderIp: String): NodeContainer = {
     val deploymentConfig = DeploymentConfigurationCreator.getDeploymentConfiguration
     val basePort = deploymentConfig.akkaBasePort

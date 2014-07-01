@@ -23,8 +23,15 @@ import com.signalcollect.configuration.AkkaConfig
 import com.typesafe.config.Config
 
 import akka.event.Logging
-
+/**
+ * Creates an akkaConfig out of the DeploymentConfiguration.
+ * Port is passed seperate, because it is different on every machine
+ */
 object AkkaConfigCreator {
+  /**
+   * Creates an akkaConfig out of the DeploymentConfiguration.
+   * Port is passed seperate, because it is different on every machine
+   */
   def getConfig(port: Int, deploymentConfig: DeploymentConfiguration): Config = {
     val kryoRegistrations: List[String] = deploymentConfig.kryoRegistrations
     val kryoInit = deploymentConfig.kryoInit

@@ -13,7 +13,7 @@ object NodeContainerApp extends App {
   val id = args(0).toInt
   val ip = args(1)
   println("create Node")
-  val container = ContainerNodeCreator.getContainer(id = id, leaderIp = ip)
+  val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip)
   println("Node")
   container.start
   container.waitForTermination

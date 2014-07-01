@@ -18,6 +18,9 @@
  */
 package com.signalcollect.deployment
 
+/**
+ * App for deploying an algorithm to a cluster.
+ */
 object ClusterDeployer extends App {
   val deploymentConf = DeploymentConfigurationCreator.getDeploymentConfiguration
   val cluster = ClusterCreator.getCluster(deploymentConf)
