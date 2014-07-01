@@ -20,7 +20,10 @@
 package com.signalcollect.deployment
 
 import java.net.InetAddress
-
+/**
+ * implementing the Cluster trait, with the Leader and NodeContainer.
+ * It is useful to the test a DeployableAlgorithm locally
+ */
 class LeaderCluster extends Cluster {
 
   def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
