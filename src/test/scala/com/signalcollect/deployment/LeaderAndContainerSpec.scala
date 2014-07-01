@@ -62,36 +62,36 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     "detect if all nodes are ready " in new LeaderScope {
       leader.clear
       leader.isExecutionStarted === false
-      leader.allNodesRunning === false
+      leader.allNodeContainersRunning === false
       val address = s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
       leaderActor ! address
-      leader.waitForAllNodes
-      leader.allNodesRunning === true
+      leader.waitForAllNodeContainers
+      leader.allNodeContainersRunning === true
 
-      val nodeActors = leader.getNodeActorAddresses
+      val nodeActors = leader.getNodeActors
       nodeActors must not be empty
-      nodeActors.head === s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
+      nodeActors.head.path.toString === s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
     }
 
     "filter address on DefaultNodeActor" in new LeaderScope {
       leader.clear
       val invalidAddress = "akka.tcp://SignalCollect@invalid"
       leaderActor ! invalidAddress
-      leader.getNodeActorAddresses.isEmpty === true
+      leader.getNodeActors.isEmpty === true
     }
 
     "save shutdown address" in new LeaderScope {
       leader.clear
       val shutdownAddress = s"akka.tcp://SignalCollect@$ip:2553/user/shutdownactor$id"
       leaderActor ! shutdownAddress
-      waitOrTimeout(() => leader.getShutdownAddresses.isEmpty, 500)
-      leader.getShutdownAddresses.isEmpty === false
+      waitOrTimeout(() => leader.getShutdownActors.isEmpty, 500)
+      leader.getShutdownActors.isEmpty === false
     }
 
     "clear ActorAddresses" in new LeaderScope {
       leader.clear
-      leader.getNodeActorAddresses.isEmpty === true
-      leader.getShutdownAddresses.isEmpty === true
+      leader.getNodeActors.isEmpty === true
+      leader.getShutdownActors.isEmpty === true
     }
 
   }
@@ -138,7 +138,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     }
 
     "receive shutdown message" in new ContainerScope {
-      container.reset
       container must not be None
       val actor = container.getShutdownActor
       actor ! "shutdown"
@@ -147,7 +146,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     }
 
     "wait for shutdown message" in new ContainerScope {
-      container.reset
       container.shuttingdown === false
       container.isTerminated === false
       container.getShutdownActor ! "shutdown"
@@ -211,7 +209,7 @@ trait ContainerScope extends StopActorSystemAfter {
   val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
   val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
-  val container = new DefaultContainerNode(id = 0,
+  val container = new DefaultNodeContainer(id = 0,
     leaderIp = leaderIp,
     basePort = 2552,
     akkaConfig = akkaConfig,
@@ -225,7 +223,7 @@ trait LeaderContainerScope extends StopActorSystemAfter {
   val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
   val leader = new DefaultLeader(akkaConfig = akkaConfig, deploymentConfig = config)
   leader.start
-  val container = new DefaultContainerNode(id = 0,
+  val container = new DefaultNodeContainer(id = 0,
     leaderIp = leaderIp,
     basePort = 2552,
     akkaConfig = akkaConfig,
@@ -235,7 +233,6 @@ trait LeaderContainerScope extends StopActorSystemAfter {
   abstract override def after {
     super.after
     leader.clear
-    container.reset
   }
 
 }

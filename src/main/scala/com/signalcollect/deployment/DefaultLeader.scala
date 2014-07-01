@@ -37,6 +37,8 @@ class DefaultLeader(
   val leaderAddress = AkkaRemoteAddress.get(leaderactor, system)
   private var executionStarted = false
   private var executionFinished = false
+  private var nodeActors: List[ActorRef] = Nil
+  private var shutdownAddresses: List[ActorRef] = Nil
 
   def isExecutionStarted = executionStarted
   def isExecutionFinished = executionFinished
@@ -46,7 +48,7 @@ class DefaultLeader(
    */
   def start {
     async {
-      waitForAllNodes
+      waitForAllNodeContainers
       startExecution
       executionFinished = true
       shutdown
@@ -54,10 +56,10 @@ class DefaultLeader(
   }
 
   /**
-   * waits till enough Containers are registered
+   * waits till enough NodeContainers are registered
    */
-  def waitForAllNodes {
-    while (!allNodesRunning) {
+  def waitForAllNodeContainers {
+    while (!allNodeContainersRunning) {
       Thread.sleep(100)
     }
   }
@@ -99,59 +101,43 @@ class DefaultLeader(
     ActorSystemRegistry.register(system)
     system
   }
-  
+
   /**
    * checks if enough nodes are registered to fulfill the needs in the deploymentConfiguration
    */
-  def allNodesRunning: Boolean = {
-    getNumberOfNodes == deploymentConfig.numberOfNodes
+  def allNodeContainersRunning: Boolean = {
+    getNumberOfRegisteredNodes == deploymentConfig.numberOfNodes
 
   }
-
-//  def shutdownAllNodes {
-//    getShutdownActors.foreach(_ ! "shutdown")
-//  }
 
   def getNodeActors: List[ActorRef] = {
-    val nodeActors = getNodeActorAddresses.map(nodeAddress => system.actorFor(nodeAddress))
-    nodeActors
-  }
-
-  def getShutdownActors: List[ActorRef] = {
-    val shutdownActors = getShutdownAddresses.map(address => system.actorFor(address))
-    shutdownActors
-  }
-
-  private var nodeActorAddresses: List[String] = Nil
-  private var shutdownAddresses: List[String] = Nil
-  def getNodeActorAddresses: List[String] = {
     synchronized {
-      nodeActorAddresses
+      nodeActors
     }
   }
-  def getShutdownAddresses: List[String] = {
-      shutdownAddresses
+  
+  def getShutdownActors: List[ActorRef] = {
+    shutdownAddresses
   }
+  
   def addNodeActorAddress(address: String) {
     synchronized {
-      (
-        nodeActorAddresses = address :: nodeActorAddresses)
+      nodeActors = system.actorFor(address) :: nodeActors
     }
   }
+  
   def addShutdownAddress(address: String) {
     synchronized {
-      (
-        shutdownAddresses = address :: shutdownAddresses)
+      shutdownAddresses = system.actorFor(address) :: shutdownAddresses
     }
   }
-  def getNumberOfNodes: Int = {
-    synchronized {
-      nodeActorAddresses.size
-    }
+  def getNumberOfRegisteredNodes: Int = {
+    nodeActors.size
   }
+  
   def clear = {
     synchronized {
-      nodeActorAddresses = Nil
+      nodeActors = Nil
       shutdownAddresses = Nil
     }
   }

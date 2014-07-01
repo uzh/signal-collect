@@ -32,27 +32,35 @@ import akka.actor.actorRef2Scala
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.util.AkkaRemoteAddress
 
-trait ContainerNode {
+trait NodeContainer {
   def start
   def shutdown
   def waitForTermination
   def isSuccessful: Boolean
 }
 
-class DefaultContainerNode(id: Int,
+class DefaultNodeContainer(id: Int,
   leaderIp: String,
   basePort: Int,
   akkaConfig: Config,
-  deploymentConfig: DeploymentConfiguration) extends ContainerNode {
+  deploymentConfig: DeploymentConfiguration) extends NodeContainer {
 
   val leaderAddress = s"akka.tcp://SignalCollect@$leaderIp:$basePort/user/leaderactor"
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
   val shutdownActor = system.actorOf(Props(classOf[ShutdownActor], this), s"shutdownactor$id")
-  val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor], id.toString, id, deploymentConfig.numberOfNodes, None), name = id.toString + "DefaultNodeActor")
+  val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor],
+    id.toString,
+    id,
+    deploymentConfig.numberOfNodes,
+    None),
+    name = id.toString + "DefaultNodeActor")
 
   private var terminated = false
-  
   private var successful = false
+  private var shutdownNow = false
+  def isTerminated: Boolean = terminated
+  def isSuccessful: Boolean = successful
+  def shuttingdown: Boolean = shutdownNow
 
   def getShutdownActor(): ActorRef = {
     shutdownActor
@@ -66,15 +74,7 @@ class DefaultContainerNode(id: Int,
     system.actorFor(leaderAddress)
   }
 
-  def isTerminated: Boolean = terminated
-  
-  def isSuccessful: Boolean = successful
-
   def start {
-    register
-  }
-
-  def register {
     getLeaderActor ! AkkaRemoteAddress.get(nodeActor, system)
     getLeaderActor ! AkkaRemoteAddress.get(shutdownActor, system)
   }
@@ -86,7 +86,7 @@ class DefaultContainerNode(id: Int,
     }
     terminated = true
   }
-  
+
   def timeoutNotReached(begin: Long): Boolean = {
     val timeout = deploymentConfig.timeout
     (System.currentTimeMillis() - begin) / 1000 < timeout
@@ -94,47 +94,28 @@ class DefaultContainerNode(id: Int,
 
   def shutdown {
     terminated = true
+    shutdownNow = true
     shutdownActor ! PoisonPill
     nodeActor ! PoisonPill
   }
 
   def startActorSystem: ActorSystem = {
     try {
-    val system = ActorSystem("SignalCollect", akkaConfig)
-    ActorSystemRegistry.register(system)
+      val system = ActorSystem("SignalCollect", akkaConfig)
+      ActorSystemRegistry.register(system)
     } catch {
-      case e:Throwable => {
+      case e: Throwable => {
         println("failed to start Actorsystem")
         throw e
       }
     }
     ActorSystemRegistry.retrieve("SignalCollect").get
   }
-
-  private var shutdownNow = false
-
-  def setShutdown = {
-    synchronized {
-      shutdownNow = true
-    }
-  }
-
-  def shuttingdown: Boolean = {
-    shutdownNow
-  }
-
-  def reset {
-    synchronized {
-      shutdownNow = false
-    }
-  }
-  
 }
 
-class ShutdownActor(container: DefaultContainerNode) extends Actor {
+class ShutdownActor(container: DefaultNodeContainer) extends Actor {
   override def receive = {
     case "shutdown" => {
-      container.setShutdown
       container.shutdown
     }
     case whatever => println("received unexpected message")

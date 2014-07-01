@@ -7,7 +7,7 @@ object LeaderApp extends App {
   leader.start
 }
 
-object ContainerNodeApp extends App {
+object NodeContainerApp extends App {
 //  NodeKiller.killOtherMasterAndNodes
   println("start container")
   val id = args(0).toInt

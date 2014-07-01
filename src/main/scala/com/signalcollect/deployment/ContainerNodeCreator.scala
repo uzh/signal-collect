@@ -19,12 +19,12 @@
 package com.signalcollect.deployment
 
 object ContainerNodeCreator {
-  def getContainer(id: Int, leaderIp: String): ContainerNode = {
+  def getContainer(id: Int, leaderIp: String): NodeContainer = {
     val deploymentConfig = DeploymentConfigurationCreator.getDeploymentConfiguration
     val basePort = deploymentConfig.akkaBasePort
     val numberOfNodes = deploymentConfig.numberOfNodes
     val akkaConfig = AkkaConfigCreator.getConfig(basePort + id + 1, deploymentConfig)
-    val container = new DefaultContainerNode(id = id,
+    val container = new DefaultNodeContainer(id = id,
       leaderIp = leaderIp,
       basePort = basePort,
       akkaConfig = akkaConfig,
