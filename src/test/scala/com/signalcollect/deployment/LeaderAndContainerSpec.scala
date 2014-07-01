@@ -33,12 +33,13 @@ import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class LeaderAndContainerSpec extends SpecificationWithJUnit {
+  
   /**
    * Helper function for waiting on a condition for a given time
    */
-  def waitOrTimeout(waitCondition: () => Boolean, until: Int) {
-    var cnt = until
-    while (waitCondition() && cnt < 100) {
+  def waitOrTimeout(waitCondition: () => Boolean, untilIn10Ms: Int) {
+    var cnt = 0
+    while (waitCondition() && cnt < untilIn10Ms) {
       Thread.sleep(10)
       cnt += 1
     }
@@ -83,7 +84,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       leader.clear
       val shutdownAddress = s"akka.tcp://SignalCollect@$ip:2553/user/shutdownactor$id"
       leaderActor ! shutdownAddress
-      waitOrTimeout(() => leader.getShutdownAddresses.isEmpty, 100)
+      waitOrTimeout(() => leader.getShutdownAddresses.isEmpty, 500)
       leader.getShutdownAddresses.isEmpty === false
     }
 
@@ -100,21 +101,25 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     sequential //this is preventing the tests from being executed parallel
     "start execution when all nodes are registered" in new Execution {
-      waitOrTimeout(() => leader.isExecutionFinished, 100)
+      waitOrTimeout(() => !leader.isExecutionFinished, 500)
       leader.isExecutionFinished === true
     }
 
     "get shutdownActors" in new LeaderContainerScope {
-      waitOrTimeout(() => leader.getShutdownActors.size == 1, 100)
+      waitOrTimeout(() => leader.getShutdownActors.isEmpty, 500)
       leader.getShutdownActors.size === 1
       leader.getShutdownActors.head.path.toString.contains("shutdown") === true
     }
 
     "shutdown after execution" in new Execution {
-      waitOrTimeout(() => container.shuttingdown, 100)
+      waitOrTimeout(() => !container.shuttingdown, 500)
       container.shuttingdown === true
     }
 
+    "get LeaderActor" in new LeaderContainerScope {
+    	val leaderActor = container.getLeaderActor
+    			leaderActor.path.toString === "akka://SignalCollect/user/leaderactor"
+    }
   }
 
   "ContainerNode creation" should {
@@ -137,19 +142,16 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       container must not be None
       val actor = container.getShutdownActor
       actor ! "shutdown"
-      waitOrTimeout(() => container.shuttingdown, 100)
+      waitOrTimeout(() => !container.shuttingdown, 500)
       container.shuttingdown === true
     }
 
     "wait for shutdown message" in new ContainerScope {
       container.reset
       container.shuttingdown === false
-      async {
-        container.waitForTermination
-      }
       container.isTerminated === false
       container.getShutdownActor ! "shutdown"
-      waitOrTimeout(() => container.isTerminated, 100)
+      waitOrTimeout(() => !container.isTerminated, 500)
       container.isTerminated === true
     }
 
@@ -157,10 +159,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
       container.getNodeActor must not be None
     }
 
-    "get LeaderActor" in new LeaderContainerScope {
-      val leaderActor = container.getLeaderActor
-      leaderActor.path.toString === "akka://SignalCollect/user/leaderactor"
-    }
   }
 
 }
@@ -191,8 +189,9 @@ trait LeaderScope extends StopActorSystemAfter {
   val akkaPort = 2552
   val ip = InetAddress.getLocalHost.getHostAddress
   val id = 0
-  val leader = LeaderCreator.getLeader(DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")).asInstanceOf[DefaultLeader]
-  val leaderActor: ActorRef = leader.getActorRef()
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
+  val leader = LeaderCreator.getLeader(config).asInstanceOf[DefaultLeader]
+  val leaderActor: ActorRef = leader.leaderactor 
 
   abstract override def after {
     super.after
@@ -209,27 +208,28 @@ trait Execution extends LeaderContainerScope {
 }
 
 trait ContainerScope extends StopActorSystemAfter {
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
-  val akkaConfig = AkkaConfigCreator.getConfig(2552, DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+  val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
   val container = new DefaultContainerNode(id = 0,
     leaderIp = leaderIp,
     basePort = 2552,
     akkaConfig = akkaConfig,
-    DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+    config)
 
 }
+
 trait LeaderContainerScope extends StopActorSystemAfter {
-  //  ActorAddresses.clear
-  //  ShutdownHelper.reset
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
-  val akkaConfig = AkkaConfigCreator.getConfig(2552, DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
-  val leader = new DefaultLeader(akkaConfig = akkaConfig, deploymentConfig = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+  val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
+  val leader = new DefaultLeader(akkaConfig = akkaConfig, deploymentConfig = config)
   leader.start
   val container = new DefaultContainerNode(id = 0,
     leaderIp = leaderIp,
     basePort = 2552,
     akkaConfig = akkaConfig,
-    DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
+    config)
   container.start
 
   abstract override def after {

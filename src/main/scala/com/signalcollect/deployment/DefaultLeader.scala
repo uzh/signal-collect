@@ -30,7 +30,7 @@ import akka.actor.actorRef2Scala
 import com.signalcollect.util.AkkaRemoteAddress
 
 class DefaultLeader(
-  akkaConfig: Config ,
+  akkaConfig: Config,
   deploymentConfig: DeploymentConfiguration) extends Leader {
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
   val leaderactor = system.actorOf(Props(classOf[LeaderActor], this), "leaderactor")
@@ -40,34 +40,33 @@ class DefaultLeader(
 
   def isExecutionStarted = executionStarted
   def isExecutionFinished = executionFinished
-  
+
   /**
-   * starts the lifecycle of the leader and an execution.
+   * starts the lifecycle of the leader and an execution. This method is Non-Blocking
    */
   def start {
     async {
-      
       waitForAllNodes
       startExecution
       executionFinished = true
       shutdown
     }
   }
-  
+
   /**
    * waits till enough Containers are registered
    */
   def waitForAllNodes {
-	  while (!allNodesRunning) {
-		  Thread.sleep(100)
-	  }
+    while (!allNodesRunning) {
+      Thread.sleep(100)
+    }
   }
-  
+
   /**
-   * starts the algorithm given 
+   * starts the algorithm given in the DeploymentConfiguration on the registered NodeActors
    */
   def startExecution {
-	executionStarted = true
+    executionStarted = true
     val algorithm = deploymentConfig.algorithm
     val parameters = deploymentConfig.algorithmParameters
     val nodeActors = getNodeActors.toArray
@@ -76,6 +75,9 @@ class DefaultLeader(
     algorithmObject.execute(parameters, Some(nodeActors), Some(system))
   }
 
+  /**
+   * tells all NodeContainers to shutdown and then terminates the ActorSystem
+   */
   def shutdown {
     try {
       val shutdownActor = getShutdownActors.foreach(_ ! "shutdown")
@@ -89,32 +91,26 @@ class DefaultLeader(
     }
   }
 
-  def getActorRef(): ActorRef = {
-    leaderactor
-  }
-
+  /**
+   * starts an ActorSystem with the name SignalCollect and registers it, in the ActorSystemRegistry
+   */
   def startActorSystem: ActorSystem = {
-    try {
-      val system = ActorSystem("SignalCollect", akkaConfig)
-      ActorSystemRegistry.register(system)
-      system
-    } catch {
-      case e: Exception => {
-        throw e
-      }
-    }
+    val system = ActorSystem("SignalCollect", akkaConfig)
+    ActorSystemRegistry.register(system)
+    system
   }
-
-
+  
+  /**
+   * checks if enough nodes are registered to fulfill the needs in the deploymentConfiguration
+   */
   def allNodesRunning: Boolean = {
-    
     getNumberOfNodes == deploymentConfig.numberOfNodes
 
   }
 
-  def shutdownAllNodes {
-    getShutdownActors.foreach(_ ! "shutdown")
-  }
+//  def shutdownAllNodes {
+//    getShutdownActors.foreach(_ ! "shutdown")
+//  }
 
   def getNodeActors: List[ActorRef] = {
     val nodeActors = getNodeActorAddresses.map(nodeAddress => system.actorFor(nodeAddress))
@@ -125,7 +121,7 @@ class DefaultLeader(
     val shutdownActors = getShutdownAddresses.map(address => system.actorFor(address))
     shutdownActors
   }
-  
+
   private var nodeActorAddresses: List[String] = Nil
   private var shutdownAddresses: List[String] = Nil
   def getNodeActorAddresses: List[String] = {
@@ -134,9 +130,7 @@ class DefaultLeader(
     }
   }
   def getShutdownAddresses: List[String] = {
-    synchronized {
       shutdownAddresses
-    }
   }
   def addNodeActorAddress(address: String) {
     synchronized {
