@@ -34,7 +34,7 @@ import com.signalcollect.ExecutionInformation
 trait DeployableAlgorithm {
 
   /**
-   * defines a default lifecycle of a algorithm
+   * defines a default lifecycle of an algorithm
    */
   def lifecycle(parameters: Map[String, String] = new HashMap[String, String],
     nodeActors: Option[Array[ActorRef]] = None,
@@ -49,18 +49,35 @@ trait DeployableAlgorithm {
     reportResults(executionResult._1, executionResult._2)
     tearDown(loadedGraph)
   }
-
+  
+  /**
+   * can be overridden to configure the GraphBuilder to be used.
+   * Per default it gives back the untouched GraphBuilder, which is passed in.
+   */
   def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = gb
-
+  
+  /**
+   * must be implemented to load vertices and edges into the graph.
+   */
   def loadGraph(g: Graph[Any, Any]): Graph[Any, Any]
 
+  /**
+   * default implementation for the execution
+   */
   def execute(g: Graph[Any, Any]): (ExecutionInformation, Graph[Any, Any]) = {
     val stats = g.execute
     (stats, g)
   }
 
+  /**
+   * default implementation of the reporting, prints out stats to console
+   */
   def reportResults(stats: ExecutionInformation, graph: Graph[Any, Any]) = println(stats)
 
+  /**
+   * default implementation of the teardown,
+   * shutsdown the graph
+   */
   def tearDown(g: Graph[Any, Any]) = g.shutdown
 
   /**
