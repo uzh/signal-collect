@@ -29,9 +29,10 @@ class LocalCluster extends Cluster {
   override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
    val algorithm = deploymentConfiguration.algorithm
     val parameters = deploymentConfiguration.algorithmParameters
-    val algorithmObject = Class.forName(algorithm).newInstance.asInstanceOf[DeployableAlgorithm]
+    val clazz = Class.forName(algorithm)
+    val algorithmObject = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
     println(s"start algorithm: $algorithm")
-    algorithmObject.execute(parameters, None, None)
+    algorithmObject.lifecycle(parameters, None, None)
     true
   }
 }

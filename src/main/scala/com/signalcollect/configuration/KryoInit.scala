@@ -89,6 +89,7 @@ class KryoInit {
       register("com.signalcollect.interfaces.SentMessagesStats")
       register("com.signalcollect.examples.PlaceholderEdge")
       register("com.signalcollect.deployment.DeployableEfficientPageRank$$anonfun$execute$1")
+      register("com.signalcollect.deployment.DeployableEfficientPageRank$$anonfun$reportResults$1")
       register("scala.collection.mutable.HashMap")
       register("scala.collection.immutable.HashMap$HashTrieMap")
       register("scala.collection.immutable.Map$EmptyMap$")

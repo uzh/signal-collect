@@ -72,9 +72,11 @@ class DefaultLeader(
     val algorithm = deploymentConfig.algorithm
     val parameters = deploymentConfig.algorithmParameters
     val nodeActors = getNodeActors.toArray
-    val algorithmObject = Class.forName(algorithm).newInstance.asInstanceOf[DeployableAlgorithm]
+    val clazz = Class.forName(algorithm)
+    val algorithmObject = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
+//    val algorithmObject = Class.forName(algorithm).newInstance.asInstanceOf[DeployableAlgorithm]
     println(s"start algorithm: $algorithm")
-    algorithmObject.execute(parameters, Some(nodeActors), Some(system))
+    algorithmObject.lifecycle(parameters, Some(nodeActors), Some(system))
   }
 
   /**

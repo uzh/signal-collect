@@ -112,6 +112,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     }
 
     "shutdown after execution" in new Execution {
+      println("is it this one")
       waitOrTimeout(() => !container.shuttingdown, 500)
       container.shuttingdown === true
     }
