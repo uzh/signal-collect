@@ -32,9 +32,15 @@ import com.signalcollect.ExecutionInformation
  * implement your algorithm with this trait to deploy it to a cluster
  */
 trait DeployableAlgorithm {
-
+  
+  /**
+   * can be called to run the algorithm locally
+   */
   def runLocal = lifecycle()
-
+  
+  /**
+   * deploys this algorithm to a cluster specified in the deployment.conf
+   */
   def runOnCluster {
     val deploymentConf: DeploymentConfiguration = DeploymentConfigurationCreator.getDeploymentConfiguration
       .asInstanceOf[BasicDeploymentConfiguration]
