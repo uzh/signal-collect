@@ -32,6 +32,7 @@ import com.signalcollect.util.AkkaRemoteAddress
 class DefaultLeader(
   akkaConfig: Config,
   deploymentConfig: DeploymentConfiguration) extends Leader {
+  println(deploymentConfig)
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
   val leaderactor = system.actorOf(Props(classOf[LeaderActor], this), "leaderactor")
   val leaderAddress = AkkaRemoteAddress.get(leaderactor, system)

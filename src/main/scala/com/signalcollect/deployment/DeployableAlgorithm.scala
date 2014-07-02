@@ -33,6 +33,15 @@ import com.signalcollect.ExecutionInformation
  */
 trait DeployableAlgorithm {
 
+  def runLocal = lifecycle()
+
+  def runOnCluster {
+    val deploymentConf: DeploymentConfiguration = DeploymentConfigurationCreator.getDeploymentConfiguration
+      .asInstanceOf[BasicDeploymentConfiguration]
+      .copy(algorithm = this.getClass.getName)
+    val cluster = ClusterCreator.getCluster(deploymentConf)
+    cluster.deploy(deploymentConf)
+  }
   /**
    * defines a default lifecycle of an algorithm
    */
@@ -47,19 +56,25 @@ trait DeployableAlgorithm {
     loadedGraph.awaitIdle
     val executionResult = execute(loadedGraph)
     reportResults(executionResult._1, executionResult._2)
-    tearDown(loadedGraph)
+    tearDown(executionResult._2)
   }
-  
+
   /**
    * can be overridden to configure the GraphBuilder to be used.
    * Per default it gives back the untouched GraphBuilder, which is passed in.
    */
   def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = gb
-  
+
   /**
    * must be implemented to load vertices and edges into the graph.
    */
   def loadGraph(g: Graph[Any, Any]): Graph[Any, Any]
+
+  /**
+   * parameters for the Algorithm as a Map
+   * per default this is an empty Map
+   */
+  def parameters: Map[String, String] = HashMap[String, String]()
 
   /**
    * default implementation for the execution
@@ -84,7 +99,7 @@ trait DeployableAlgorithm {
    *
    * this function should be called by an implementation of a Cluster (like in the @see com.signalcollect.deployment.DefaultLeader)
    * it creates a GraphBuilder with the nodeActors and ActorSystem if they exist.
-   * @param nodeActors are the nodeActors which should be provided by the cluster
+   * @param nodeActors are the nodeActors provided
    * @param actorSystem if already an actorSystem is defined, it should be passed in, so that not a new one has to be created
    */
   def createDefaultGraphBuilder(nodeActors: Option[Array[ActorRef]],

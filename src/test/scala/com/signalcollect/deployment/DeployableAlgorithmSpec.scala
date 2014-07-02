@@ -33,6 +33,7 @@ import akka.testkit.TestActorRef
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.ExecutionInformation
 import org.easymock.EasyMock
+import scala.collection.immutable.HashMap
 
 class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
 
@@ -126,6 +127,11 @@ class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar 
         defaultAlgorithm.reportResults(statsMock, graphMock)
       }
     }
+  
+  it should "have a default implementation of paramets, which returns an empty Map" in
+    new DefaultAlgorithm {
+      assert(defaultAlgorithm.parameters === HashMap[String, String]())
+    }
 
   it should "have a default lifecycle" in
     new NodeActorArray {
@@ -140,7 +146,7 @@ class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar 
         assert(lifecycleAlgorithm.order === List(0, 1, 2, 3, 4, 5))
       }
     }
-  
+
   /**
    * Algorithm that is using MockObjects and records the order of the function calls is called.
    * only the lifecycle function is not overridden

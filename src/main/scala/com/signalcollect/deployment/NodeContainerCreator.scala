@@ -28,7 +28,7 @@ object NodeContainerCreator {
    */
   def getContainer(id: Int,
       leaderIp: String,
-      deploymentConfig: DeploymentConfiguration = DeploymentConfigurationCreator.getDeploymentConfiguration): NodeContainer = {
+      deploymentConfig: DeploymentConfiguration): NodeContainer = {
     val basePort = deploymentConfig.akkaBasePort
     val numberOfNodes = deploymentConfig.numberOfNodes
     val akkaConfig = AkkaConfigCreator.getConfig(basePort + id + 1, deploymentConfig)

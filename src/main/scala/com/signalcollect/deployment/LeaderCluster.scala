@@ -29,6 +29,7 @@ import java.net.InetAddress
 class LeaderCluster extends Cluster {
 
   def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
+    println("before get leader:" + deploymentConfiguration)
     val leader = LeaderCreator.getLeader(deploymentConfiguration)
     leader.start
     startContainers(deploymentConfiguration)
@@ -44,7 +45,7 @@ class LeaderCluster extends Cluster {
     val numberOfNodes = deploymentConfiguration.numberOfNodes 
     var id = 0
     for (id <- 0 until numberOfNodes) {
-      val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip)
+      val container = NodeContainerCreator.getContainer(id = id, leaderIp = ip, deploymentConfiguration)
       container.start
     }
   }

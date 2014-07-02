@@ -26,7 +26,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.signalcollect.Graph
 
-object PageRankExample extends DeployableAlgorithm with App {
+object PageRankExample extends DeployableAlgorithm with App{
+//  runLocal
+  runOnCluster
   override def loadGraph(graph: Graph[Any,Any]): Graph[Any,Any] = {
      println("add vertices")
     graph.addVertex(new PageRankVertex(1))
