@@ -20,17 +20,15 @@
 
 package com.signalcollect.nodeprovisioning.local
 
-import com.signalcollect.interfaces.Node
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.typesafe.config.Config
-import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
-import akka.actor.Props
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.node.NodeActorCreator
-import com.signalcollect.interfaces.MessageBusFactory
-import scala.reflect.ClassTag
+import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.typesafe.config.Config
+
+import akka.actor.ActorRef
 import akka.actor.InvalidActorNameException
+import akka.actor.Props
 
 class LocalNodeProvisioner()
   extends NodeProvisioner {
