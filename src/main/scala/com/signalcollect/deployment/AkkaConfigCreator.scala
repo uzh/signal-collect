@@ -36,11 +36,13 @@ object AkkaConfigCreator {
     val kryoRegistrations: List[String] = deploymentConfig.kryoRegistrations
     val kryoInit = deploymentConfig.kryoInit
     val serializeMessages = deploymentConfig.serializeMessages
+    val loggers = deploymentConfig.loggers
     AkkaConfig.get(
       serializeMessages = serializeMessages,
       loggingLevel = Logging.DebugLevel, //Logging.DebugLevel,Logging.WarningLevel
       kryoRegistrations = kryoRegistrations,
       kryoInitializer = kryoInit,
-      port = port)
+      port = port,
+      loggers = loggers)
   }
 }

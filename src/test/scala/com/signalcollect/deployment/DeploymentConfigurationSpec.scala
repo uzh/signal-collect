@@ -44,6 +44,9 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
     		   "some.class.to.be.registered"
              ]
     	     serialize-messages = true
+             loggers = [
+    			"akka.event.Logging$DefaultLogger"
+             ]
 	       }
          }"""
     val config = ConfigFactory.parseString(configAsString)
@@ -96,5 +99,6 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
     assert(deploymentConfig.kryoInit === "com.signalcollect.configuration.KryoInit")
     assert(deploymentConfig.kryoRegistrations === List("some.class.to.be.registered"))
     assert(deploymentConfig.serializeMessages === true)
+    assert(deploymentConfig.loggers === List("akka.event.Logging$DefaultLogger"))
   }
 }

@@ -10,26 +10,33 @@ object AkkaConfig {
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
     kryoInitializer: String,
-    port: Int = 0) = ConfigFactory.parseString(
+    port: Int = 0,
+    loggers: List[String] = List("akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger")) = ConfigFactory.parseString(
     distributedConfig(
       serializeMessages,
       loggingLevel,
       kryoRegistrations,
       kryoInitializer,
-      port))
+      port,
+      loggers))
   def distributedConfig(
     serializeMessages: Boolean,
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
     kryoInitializer: String,
-    port: Int) = """
+    port: Int,
+    loggers: List[String]) = """
 akka {
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
 
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
-  loggers = ["akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger"]
-
-    """ +
+      """ +{
+    val loggersAsString = loggers.mkString("\"","\", \"", "\"")
+  
+  s"""
+  loggers = [$loggersAsString]
+  
+    """ }+
     {
       val level = loggingLevel match {
         case Logging.ErrorLevel => "ERROR"

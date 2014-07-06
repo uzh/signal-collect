@@ -37,6 +37,7 @@ trait DeploymentConfiguration {
   def kryoInit: String
   def kryoRegistrations: List[String]
   def serializeMessages: Boolean
+  def loggers: List[String]
 }
 
 /**
@@ -54,7 +55,8 @@ case class BasicDeploymentConfiguration(
   override val akkaBasePort: Int = 2552,
   override val kryoInit: String,
   override val kryoRegistrations: List[String] = Nil,
-  override val serializeMessages: Boolean = false) extends DeploymentConfiguration
+  override val serializeMessages: Boolean = false,
+  override val loggers: List[String] = Nil) extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
@@ -84,7 +86,8 @@ object DeploymentConfigurationCreator {
       akkaBasePort = config.getInt("deployment.akka.port"),
       kryoInit = config.getString("deployment.akka.kryo-initializer"),
       kryoRegistrations = config.getStringList("deployment.akka.kryo-registrations").toList,
-      serializeMessages = config.getBoolean("deployment.akka.serialize-messages"))
+      serializeMessages = config.getBoolean("deployment.akka.serialize-messages"),
+      loggers = config.getStringList("deployment.akka.loggers").toList)
 
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'
