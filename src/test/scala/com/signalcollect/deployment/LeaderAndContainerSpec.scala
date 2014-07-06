@@ -103,6 +103,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     "start execution when all nodes are registered" in new Execution {
       waitOrTimeout(() => !leader.isExecutionFinished, 500)
       leader.isExecutionFinished === true
+      leader.isExecutionSuccessful === true
     }
 
     "get shutdownActors" in new LeaderContainerScope {
@@ -112,7 +113,6 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     }
 
     "shutdown after execution" in new Execution {
-      println("is it this one")
       waitOrTimeout(() => !container.shuttingdown, 500)
       container.shuttingdown === true
     }

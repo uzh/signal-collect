@@ -40,9 +40,11 @@ class DefaultLeader(
   private var executionFinished = false
   private var nodeActors: List[ActorRef] = Nil
   private var shutdownAddresses: List[ActorRef] = Nil
+  private var executionSuccessful = false
 
   def isExecutionStarted = executionStarted
   def isExecutionFinished = executionFinished
+  def isExecutionSuccessful = executionSuccessful
 
   /**
    * starts the lifecycle of the leader and an execution. This method is Non-Blocking
@@ -70,14 +72,34 @@ class DefaultLeader(
    */
   def startExecution {
     executionStarted = true
-    val algorithm = deploymentConfig.algorithm
     val parameters = deploymentConfig.algorithmParameters
     val nodeActors = getNodeActors.toArray
-    val clazz = Class.forName(algorithm)
-    val algorithmObject = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
-//    val algorithmObject = Class.forName(algorithm).newInstance.asInstanceOf[DeployableAlgorithm]
-    println(s"start algorithm: $algorithm")
-    algorithmObject.lifecycle(parameters, Some(nodeActors), Some(system))
+    val algorithm = instantiatAlgorithm(deploymentConfig.algorithm)
+    if (algorithm.isDefined) {
+      println(s"start algorithm: $algorithm")
+      algorithm.get.lifecycle(parameters, Some(nodeActors), Some(system))
+      executionSuccessful = true
+    } 
+  }
+
+  private def instantiatAlgorithm(algorithmName: String): Option[DeployableAlgorithm] = {
+    try {
+      val clazz = Class.forName(algorithmName)
+      val algorithm = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
+      Some(algorithm)
+    } catch {
+      case classNotFound: ClassNotFoundException => {
+        println("""class defined in deployment.conf does not exist.
+        A common mistake is to forget a '$' for a scala object""")
+        None
+      }
+      case noSuchField: NoSuchFieldException => {
+        println("""class defined in deployment.conf does not exist.
+        A common mistake is to forget a '$' for a scala object""")
+        None
+      }
+      case e: Throwable => throw e
+    }
   }
 
   /**
@@ -109,8 +131,8 @@ class DefaultLeader(
    * checks if enough nodes are registered to fulfill the needs in the deploymentConfiguration
    */
   def allNodeContainersRunning: Boolean = {
-    getNumberOfRegisteredNodes == deploymentConfig.numberOfNodes
-
+    val allRunning = getNumberOfRegisteredNodes == deploymentConfig.numberOfNodes
+    allRunning
   }
 
   def getNodeActors: List[ActorRef] = {
@@ -118,26 +140,31 @@ class DefaultLeader(
       nodeActors
     }
   }
-  
+
   def getShutdownActors: List[ActorRef] = {
     shutdownAddresses
   }
-  
+
   def addNodeActorAddress(address: String) {
+    println(s"received: $address")
     synchronized {
+      println(s"received in sync: $address")
       nodeActors = system.actorFor(address) :: nodeActors
     }
   }
-  
+
   def addShutdownAddress(address: String) {
+    println(s"received: $address")
     synchronized {
+      println(s"received in sync: $address")
       shutdownAddresses = system.actorFor(address) :: shutdownAddresses
     }
   }
+
   def getNumberOfRegisteredNodes: Int = {
     nodeActors.size
   }
-  
+
   def clear = {
     synchronized {
       nodeActors = Nil
