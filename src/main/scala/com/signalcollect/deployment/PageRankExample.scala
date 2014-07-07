@@ -19,27 +19,29 @@
 
 package com.signalcollect.deployment
 
-import com.signalcollect.GraphBuilder
-import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.PageRankEdge
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
 import com.signalcollect.Graph
+import com.signalcollect.GraphBuilder
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
+import akka.event.Logging
 
 object PageRankExample extends DeployableAlgorithm with App{
-//  runLocal
-  runOnCluster
+  runLocal
+//  runOnCluster
   override def loadGraph(graph: Graph[Any,Any]): Graph[Any,Any] = {
-     println("add vertices")
+     log.info("add vertices")
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addVertex(new PageRankVertex(3))
-    println("add edges")
+    log.info("add edges")
     graph.addEdge(1, new PageRankEdge(2))
     graph.addEdge(2, new PageRankEdge(1))
     graph.addEdge(2, new PageRankEdge(3))
     graph.addEdge(3, new PageRankEdge(2))
     graph
+  }
+  override def configureGraphBuilder(gb: GraphBuilder[Any,Any]): GraphBuilder[Any,Any] = {
+    gb.withLoggingLevel(Logging.DebugLevel)
   }
 //  override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
 //

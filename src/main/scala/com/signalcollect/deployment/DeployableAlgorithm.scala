@@ -27,12 +27,18 @@ import akka.actor.ActorSystem
 import scala.collection.immutable.HashMap
 import com.signalcollect.ExecutionInformation
 import com.signalcollect.ExecutionInformation
+import com.signalcollect.deployment.SimpleAkkaLogger
+import com.signalcollect.PrivateGraph
 
 /**
  * implement your algorithm with this trait to deploy it to a cluster
  */
 trait DeployableAlgorithm {
-  
+  /**
+   * logger which can be dynamically exchanged
+   */
+  private var logger: SimpleLogger = SimpleConsoleLogger
+  def log: SimpleLogger = logger
   /**
    * can be called to run the algorithm locally
    */
@@ -48,15 +54,19 @@ trait DeployableAlgorithm {
     val cluster = ClusterCreator.getCluster(deploymentConf)
     cluster.deploy(deploymentConf)
   }
+  
   /**
    * defines a default lifecycle of an algorithm
    */
   def lifecycle(parameters: Map[String, String] = new HashMap[String, String],
     nodeActors: Option[Array[ActorRef]] = None,
     actorSystem: Option[ActorSystem] = None) {
+    logger = changeLogger(actorSystem)
     val defaultGraphBuilder = createDefaultGraphBuilder(nodeActors, actorSystem)
     val configuredGraphBuilder = configureGraphBuilder(defaultGraphBuilder)
     val graph = configuredGraphBuilder.build
+    val graphSystem = graph.asInstanceOf[PrivateGraph].getCoordinatorActorSystem
+    logger = changeLogger(Some(graphSystem))
     graph.awaitIdle
     val loadedGraph = loadGraph(graph)
     loadedGraph.awaitIdle
@@ -64,7 +74,18 @@ trait DeployableAlgorithm {
     reportResults(executionResult._1, executionResult._2)
     tearDown(executionResult._2)
   }
-
+  
+  /**
+   * this method makes it possible to change the logger dynamically
+   */
+  def changeLogger(system:Option[ActorSystem]): SimpleLogger = {
+   if (system.isDefined){
+     new SimpleAkkaLogger(system.get, this.getClass.getName)
+   } else {
+     SimpleConsoleLogger
+   }
+  }
+  
   /**
    * can be overridden to configure the GraphBuilder to be used.
    * Per default it gives back the untouched GraphBuilder, which is passed in.
@@ -93,7 +114,7 @@ trait DeployableAlgorithm {
   /**
    * default implementation of the reporting, prints out stats to console
    */
-  def reportResults(stats: ExecutionInformation, graph: Graph[Any, Any]) = println(stats)
+  def reportResults(stats: ExecutionInformation, graph: Graph[Any, Any]) = log.info(stats)
 
   /**
    * default implementation of the teardown,

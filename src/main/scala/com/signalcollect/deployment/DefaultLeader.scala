@@ -28,12 +28,13 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import com.signalcollect.util.AkkaRemoteAddress
+import akka.event.Logging
 
 class DefaultLeader(
   akkaConfig: Config,
   deploymentConfig: DeploymentConfiguration) extends Leader {
-  println(deploymentConfig)
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
+  val log = Logging.getLogger(system, this)
   val leaderactor = system.actorOf(Props(classOf[LeaderActor], this), "leaderactor")
   val leaderAddress = AkkaRemoteAddress.get(leaderactor, system)
   private var executionStarted = false
@@ -146,7 +147,6 @@ class DefaultLeader(
   }
 
   def addNodeActorAddress(address: String) {
-    println(s"received: $address")
     synchronized {
       println(s"received in sync: $address")
       nodeActors = system.actorFor(address) :: nodeActors
@@ -154,7 +154,6 @@ class DefaultLeader(
   }
 
   def addShutdownAddress(address: String) {
-    println(s"received: $address")
     synchronized {
       println(s"received in sync: $address")
       shutdownAddresses = system.actorFor(address) :: shutdownAddresses

@@ -32,7 +32,7 @@ akka {
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
       """ +{
     val loggersAsString = loggers.mkString("\"","\", \"", "\"")
-  
+    println("used loggers" + loggersAsString)
   s"""
   loggers = [$loggersAsString]
   

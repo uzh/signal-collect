@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.ComplexAggregation
+import akka.actor.ActorSystem
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -206,7 +207,11 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    * Deletes the worker snapshots if they exist.
    */
   private[signalcollect] def deleteSnapshot
+}
 
+// Do not use, only here for the deployment code.
+trait PrivateGraph {
+  def getCoordinatorActorSystem: ActorSystem
 }
 
 

@@ -75,7 +75,6 @@ class DefaultNodeContainer(id: Int,
   }
 
   def start {
-    println("register at leader")
     getLeaderActor ! AkkaRemoteAddress.get(nodeActor, system)
     getLeaderActor ! AkkaRemoteAddress.get(shutdownActor, system)
   }

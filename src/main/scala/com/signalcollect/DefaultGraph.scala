@@ -120,7 +120,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
-  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] with PrivateGraph{
 
   val akkaConfig = AkkaConfig.get(
     config.serializeMessages,
@@ -217,7 +217,10 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   /** Returns the ConsoleServer */
   def getConsole = console
-
+  
+  /** returns actorSystem   */
+  def getCoordinatorActorSystem: ActorSystem = system
+  
   def initializeMessageBuses {
     log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
