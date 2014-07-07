@@ -363,6 +363,12 @@ class WorkerImplementation[Id, Signal](
         snapshotFileOutput.writeInt(bytes.length)
         snapshotFileOutput.write(bytes)
       }
+    } catch {
+      case t: Throwable =>
+        val msg = s"Problem while serializing a vertex, this will prevent 'restore' from working correctly: ${t.getMessage}"
+        println(msg)
+        t.printStackTrace
+        log.error(t, msg)
     } finally {
       snapshotFileOutput.close
     }
