@@ -133,52 +133,6 @@ class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar 
       assert(defaultAlgorithm.parameters === HashMap[String, String]())
     }
 
-  it should "have a default lifecycle" in
-    new NodeActorArray {
-      val lifecycleAlgorithm = LifecycleTestAlogrithm
-      expecting {
-        lifecycleAlgorithm.gbMock.build.andReturn(lifecycleAlgorithm.graphMock)
-        lifecycleAlgorithm.graphMock.awaitIdle
-        lifecycleAlgorithm.graphMock.awaitIdle
-      }
-      whenExecuting(lifecycleAlgorithm.graphMock, lifecycleAlgorithm.gbMock) {
-        lifecycleAlgorithm.lifecycle(nodeActors = Some(nodeActors), actorSystem = Some(system))
-        assert(lifecycleAlgorithm.order === List(0, 1, 2, 3, 4, 5))
-      }
-    }
-
-  /**
-   * Algorithm that is using MockObjects and records the order of the function calls is called.
-   * only the lifecycle function is not overridden
-   */
-  object LifecycleTestAlogrithm extends DeployableAlgorithm with GbMock with GraphMock with StatsMock {
-    var order: List[Int] = Nil
-    override def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = {
-      order = order :+ 1
-      gbMock
-    }
-
-    override def loadGraph(g: Graph[Any, Any]): Graph[Any, Any] = {
-      order = order :+ 2
-      graphMock
-    }
-
-    override def execute(g: Graph[Any, Any]): (ExecutionInformation, Graph[Any, Any]) = {
-      order = order :+ 3
-      (statsMock, graphMock)
-    }
-
-    override def reportResults(stats: ExecutionInformation, graph: Graph[Any, Any]) = order = order :+ 4
-
-    override def tearDown(g: Graph[Any, Any]) = order = order :+ 5
-
-    override def createDefaultGraphBuilder(nodeActors: Option[Array[ActorRef]],
-      actorSystem: Option[ActorSystem] = None,
-      graphBuilder: GraphBuilder[Any, Any] = GraphBuilder): GraphBuilder[Any, Any] = {
-      order = order :+ 0
-      gbMock
-    }
-  }
   object TestAlgorithm extends DeployableAlgorithm {
     override def loadGraph(graph: Graph[Any, Any]): Graph[Any, Any] = {
       graph.addVertex(new PageRankVertex(1))
