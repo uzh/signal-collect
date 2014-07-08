@@ -22,6 +22,7 @@
 
 package com.signalcollect.worker
 
+import scala.concurrent.duration._
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -43,8 +44,12 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 import akka.serialization.SerializationExtension
+import akka.actor.Cancellable
+import akka.actor.Scheduler
 
 case object ScheduleOperations
+
+case object StatsDue
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -74,9 +79,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   with ActorLogging
   with ActorRestartLogging {
 
+  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
+  var lastHeartbeatTimestamp = System.nanoTime
   var schedulingTimestamp = System.nanoTime
 
   override def postStop {
+    //statsReportScheduling.cancel
     log.debug(s"Worker $workerId has stopped.")
   }
 
@@ -85,6 +93,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     val workersPerNode = numberOfWorkers / numberOfNodes
     workerId / workersPerNode
   }
+
+  implicit val executor = context.system.dispatcher
+  val statsReportScheduling = context.system.scheduler.
+    schedule(0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, StatsDue)
 
   override def postRestart(reason: Throwable): Unit = {
     super.postRestart(reason)
@@ -230,7 +242,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations(worker.systemOverloaded)
+            val timeSinceLastHeartbeat = System.nanoTime - lastHeartbeatTimestamp
+            def heartbeatDelayed = timeSinceLastHeartbeat > heartbeatInterval
+            val overloaded = heartbeatDelayed || worker.systemOverloaded
+            worker.scheduler.executeOperations(overloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
@@ -269,8 +284,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case Heartbeat(maySignal) =>
       worker.counters.heartbeatMessagesReceived += 1
-      worker.sendStatusToCoordinator
+      lastHeartbeatTimestamp = System.nanoTime
       worker.systemOverloaded = !maySignal
+
+    case StatsDue =>
+      worker.sendStatusToCoordinator
 
     case other =>
       worker.counters.otherMessagesReceived += 1

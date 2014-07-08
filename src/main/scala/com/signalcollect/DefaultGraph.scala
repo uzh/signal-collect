@@ -202,7 +202,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       config.messageBusFactory,
       config.mapperFactory,
       config.heartbeatIntervalInMilliseconds)
-    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.worker-node-and-coordinator-dispatcher"), name = config.actorNamePrefix + "Coordinator")
+    system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.io.pinned-dispatcher"), name = config.actorNamePrefix + "Coordinator")
   }
 
   if (console != null) { console.setCoordinator(coordinatorActor) }
@@ -702,7 +702,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   def awaitIdle {
-    awaitIdle(Duration.create(100, TimeUnit.DAYS).toNanos)
+    awaitIdle(Duration.create(1, TimeUnit.DAYS).toNanos)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
@@ -753,8 +753,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       // If the system is preserved, just cleanup the actors.
       workerActors.foreach(_ ! PoisonPill)
       nodeActors.foreach(_ ! PoisonPill)
-      // Give the status messages a few milliseconds, to avoid dead letter msgs.
-      Thread.sleep(50)
       coordinatorActor ! PoisonPill
     }
   }

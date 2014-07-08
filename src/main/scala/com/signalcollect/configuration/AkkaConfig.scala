@@ -24,15 +24,9 @@ object AkkaConfig {
     kryoInitializer: String,
     port: Int) = """
 akka {
-
-  worker-node-and-coordinator-dispatcher {
-    executor = "thread-pool-executor"
-    type = PinnedDispatcher
-    thread-pool-executor.allow-core-timeout = off
-  }
       
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
-
+      
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
   loggers = ["akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger"]
 
@@ -59,6 +53,8 @@ akka {
     # log-received-messages = on
   # }
 
+  scheduler.tick-duration = 2ms
+    
   actor {
     """ +
     {

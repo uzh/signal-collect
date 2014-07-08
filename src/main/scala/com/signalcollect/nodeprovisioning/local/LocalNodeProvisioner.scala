@@ -38,7 +38,7 @@ class LocalNodeProvisioner
     try {
       val nodeController = localSystem.actorOf(
         Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None).
-          withDispatcher("akka.worker-node-and-coordinator-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
+          withDispatcher("akka.io.pinned-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } catch {
       case e: InvalidActorNameException =>
