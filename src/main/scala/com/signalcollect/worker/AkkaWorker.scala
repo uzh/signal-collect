@@ -84,7 +84,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var schedulingTimestamp = System.nanoTime
 
   override def postStop {
-    //statsReportScheduling.cancel
+    statsReportScheduling.cancel
     log.debug(s"Worker $workerId has stopped.")
   }
 
