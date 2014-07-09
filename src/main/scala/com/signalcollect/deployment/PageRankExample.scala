@@ -1,6 +1,7 @@
 /**
  *  @author Philip Stutz
- *
+ *  @author Tobias Bachmann
+ *  
  *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +26,10 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import akka.event.Logging
 
-object PageRankExample extends DeployableAlgorithm with App{
-  runLocal
-//  runOnCluster
+object PageRankExample extends DeployableAlgorithm {
+  
+  override def deploy: Boolean = false
+  
   override def loadGraph(graph: Graph[Any,Any]): Graph[Any,Any] = {
      log.info("add vertices")
     graph.addVertex(new PageRankVertex(1))

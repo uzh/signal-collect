@@ -27,34 +27,49 @@ import akka.actor.ActorSystem
 import scala.collection.immutable.HashMap
 import com.signalcollect.ExecutionInformation
 import com.signalcollect.ExecutionInformation
-import com.signalcollect.deployment.SimpleAkkaLogger
 import com.signalcollect.PrivateGraph
 
 /**
  * implement your algorithm with this trait to deploy it to a cluster
  */
-trait DeployableAlgorithm {
+abstract class DeployableAlgorithm extends App {
+  private var logger: SimpleLogger = SimpleConsoleLogger
+  runLocal
+
+  def deploy: Boolean = false
+
   /**
    * logger which can be dynamically exchanged
    */
-  private var logger: SimpleLogger = SimpleConsoleLogger
   def log: SimpleLogger = logger
+
   /**
-   * can be called to run the algorithm locally
+   * runs the algorithm locally if it is started as App
    */
-  def runLocal = lifecycle()
-  
+  def runLocal = {
+    if (startedFromApp && !deploy) lifecycle()
+    if (startedFromApp && deploy) deployToCluster
+
+  }
+
+  /**
+   * detects if algorithm is started as App
+   */
+  def startedFromApp: Boolean = {
+    args != null // if args exists it must be started as App
+  }
+
   /**
    * deploys this algorithm to a cluster specified in the deployment.conf
    */
-  def runOnCluster {
+  def deployToCluster {
     val deploymentConf: DeploymentConfiguration = DeploymentConfigurationCreator.getDeploymentConfiguration
       .asInstanceOf[BasicDeploymentConfiguration]
       .copy(algorithm = this.getClass.getName)
     val cluster = ClusterCreator.getCluster(deploymentConf)
     cluster.deploy(deploymentConf)
   }
-  
+
   /**
    * defines a default lifecycle of an algorithm
    */
@@ -74,18 +89,18 @@ trait DeployableAlgorithm {
     reportResults(executionResult._1, executionResult._2)
     tearDown(executionResult._2)
   }
-  
+
   /**
    * this method makes it possible to change the logger dynamically
    */
-  def changeLogger(system:Option[ActorSystem]): SimpleLogger = {
-   if (system.isDefined){
-     new SimpleAkkaLogger(system.get, this.getClass.getName)
-   } else {
-     SimpleConsoleLogger
-   }
+  def changeLogger(system: Option[ActorSystem]): SimpleLogger = {
+    if (system.isDefined) {
+      new SimpleAkkaLogger(system.get, this.getClass.getName)
+    } else {
+      SimpleConsoleLogger
+    }
   }
-  
+
   /**
    * can be overridden to configure the GraphBuilder to be used.
    * Per default it gives back the untouched GraphBuilder, which is passed in.
