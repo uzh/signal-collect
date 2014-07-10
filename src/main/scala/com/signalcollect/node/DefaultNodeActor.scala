@@ -107,7 +107,6 @@ class DefaultNodeActor(
     case Heartbeat(maySignal) =>
       sendStatusToCoordinator
     case w: WorkerStatus =>
-      receivedMessagesCounter += 1
       val arrayIndex = w.workerId % numberOfWorkersOnNode
       if (isWorkerIdle(arrayIndex)) {
         if (!w.isIdle) {
@@ -127,7 +126,7 @@ class DefaultNodeActor(
           if (!workerStatusAlreadyForwardedToCoordinator(i)) {
             val status = workerStatus(i)
             if (status != null) {
-              messageBus.sendToCoordinator(status)
+              messageBus.sendToCoordinatorUncounted(status)
               workerStatusAlreadyForwardedToCoordinator(i) = true
             }
           }
@@ -179,7 +178,7 @@ class DefaultNodeActor(
       messagesSent = SentMessagesStats(
         messageBus.messagesSentToWorkers,
         messageBus.messagesSentToNodes,
-        messageBus.messagesSentToCoordinator + bootstrapMessagesSentToCoordinator + 1, // +1 to account for the status message itself.
+        messageBus.messagesSentToCoordinator + bootstrapMessagesSentToCoordinator,
         messageBus.messagesSentToOthers),
       messagesReceived = receivedMessagesCounter)
   }
@@ -187,7 +186,7 @@ class DefaultNodeActor(
   protected def sendStatusToCoordinator {
     if (isInitialized) {
       val status = getNodeStatus
-      messageBus.sendToCoordinator(status)
+      messageBus.sendToCoordinatorUncounted(status)
     }
   }
 

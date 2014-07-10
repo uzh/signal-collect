@@ -85,7 +85,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   override def postRestart(reason: Throwable): Unit = {
     super.postRestart(reason)
-    val msg = s"Coordinator crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
+    val msg = s"Coordinator crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTrace.mkString("\n")}, not recoverable."
     println(msg)
     log.error(msg)
     context.stop(self)
@@ -144,56 +144,52 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     val currentMessagesReceived = totalMessagesReceived
     // Linear interpolation to predict future queue size.
     val maySignal = {
-      if (throttlingEnabled) {
-        val oldestTimestamp = workerStatusTimestamps.min
-        if (System.nanoTime - oldestTimestamp > heartbeatInterval) {
-          false
-        } else {
-          val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
-          val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
-          val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
-          predictedGlobalQueueSize <= globalQueueSizeLimit
-        }
-      } else {
+//      if (throttlingEnabled) {
+//        val oldestTimestamp = workerStatusTimestamps.min
+//        if (System.nanoTime - oldestTimestamp > heartbeatInterval) {
+//          false
+//        } else {
+//          val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
+//          val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
+//          val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
+//          predictedGlobalQueueSize <= globalQueueSizeLimit
+//        }
+//      } else {
         true
-      }
+//      }
     }
     lastHeartbeatTimestamp = System.nanoTime
     messageBus.sendToWorkers(Heartbeat(maySignal), false)
     messageBus.sendToNodes(Heartbeat(maySignal), false)
-        println("===================================================")
-        def nanoseondsToSeconds(n: Long) = (n / 100000000.0).round / 10.0
-        println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
-        println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
-        println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-        val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
-        println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
-        val current = System.nanoTime
-        println(s"Coordinator sent to: ${messagesSentToCoordinator}")
-        println(s"Coord. received by : ${messagesReceivedByCoordinator}")
-        println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
-        println(s"Total sent         : ${totalMessagesSent}")
-        println(s"Total received     : ${totalMessagesReceived}")
-        def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
-        println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
-        println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
-        println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
-    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
-    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
+//    println("===================================================")
+//    def nanoseondsToSeconds(n: Long) = (n / 10000000.0).round / 100.0
+//    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
+//    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
+//    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+//    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
+//    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
+//    val current = System.nanoTime
+//    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
+//    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
+//    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
+//    println(s"Total sent         : ${totalMessagesSent}")
+//    println(s"Total received     : ${totalMessagesReceived}")
+//    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
+//    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
+//    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
+//    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
+//    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
+//    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
   }
 
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var workerStatusTimestamps: Array[Long] = new Array[Long](numberOfWorkers)
   protected var nodeStatus: Array[NodeStatus] = new Array[NodeStatus](numberOfNodes)
 
-  var nodeStatusReceived = 0
-  var workerStatusReceived = 0
-
   def receive = {
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
-      messageBus.getReceivedMessagesCounter.incrementAndGet
-      workerStatusReceived += 1
+      //messageBus.getReceivedMessagesCounter.incrementAndGet
       // A status might be sent indirectly via the node actor, which means that there is no FIFO
       // guarantee. To get FIFO back, we check the time stamp of the status.
       val oldWs = workerStatus(ws.workerId)
@@ -205,8 +201,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
     case ns: NodeStatus =>
       //log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
-      messageBus.getReceivedMessagesCounter.incrementAndGet
-      nodeStatusReceived += 1
+      //messageBus.getReceivedMessagesCounter.incrementAndGet
       updateNodeStatusMap(ns)
       if (isIdle) {
         onIdle

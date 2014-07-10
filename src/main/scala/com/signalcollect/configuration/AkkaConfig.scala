@@ -134,7 +134,12 @@ akka {
       "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
+      "com.signalcollect.coordinator.HeartbeatDue$" = kryo
+      "com.signalcollect.worker.StatsDue$" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
+      "com.signalcollect.worker.Ping" = kryo
+      "com.signalcollect.worker.Pong" = kryo
+      "com.signalcollect.worker.StartPingPongExchange" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java
