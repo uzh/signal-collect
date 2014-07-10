@@ -30,7 +30,7 @@ class LocalCluster extends Cluster {
    val algorithm = deploymentConfiguration.algorithm
     val parameters = deploymentConfiguration.algorithmParameters
     val clazz = Class.forName(algorithm)
-    val algorithmObject = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
+    val algorithmObject = clazz.getField("MODULE$").get(classOf[Algorithm]).asInstanceOf[Algorithm]
     println(s"start algorithm: $algorithm")
     algorithmObject.lifecycle(parameters, None, None)
     true

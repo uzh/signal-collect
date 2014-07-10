@@ -83,10 +83,10 @@ class DefaultLeader(
     } 
   }
 
-  private def instantiatAlgorithm(algorithmName: String): Option[DeployableAlgorithm] = {
+  private def instantiatAlgorithm(algorithmName: String): Option[Algorithm] = {
     try {
       val clazz = Class.forName(algorithmName)
-      val algorithm = clazz.getField("MODULE$").get(classOf[DeployableAlgorithm]).asInstanceOf[DeployableAlgorithm]
+      val algorithm = clazz.getField("MODULE$").get(classOf[Algorithm]).asInstanceOf[Algorithm]
       Some(algorithm)
     } catch {
       case classNotFound: ClassNotFoundException => {

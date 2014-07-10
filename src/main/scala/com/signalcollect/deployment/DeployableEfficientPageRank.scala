@@ -30,7 +30,7 @@ import com.signalcollect.util.Ints
 import java.io.DataInputStream
 
 /** Builds a PageRank compute graph and executes the computation */
-object DeployableEfficientPageRank extends DeployableAlgorithm{
+object DeployableEfficientPageRank extends Algorithm{
   
   override def configureGraphBuilder(graphBuilder: GraphBuilder[Any,Any]): GraphBuilder[Any,Any] = {
     graphBuilder.withEagerIdleDetection(false)

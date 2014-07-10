@@ -133,7 +133,7 @@ class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar 
       assert(defaultAlgorithm.parameters === HashMap[String, String]())
     }
 
-  object TestAlgorithm extends DeployableAlgorithm {
+  object TestAlgorithm extends Algorithm {
     override def loadGraph(graph: Graph[Any, Any]): Graph[Any, Any] = {
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))

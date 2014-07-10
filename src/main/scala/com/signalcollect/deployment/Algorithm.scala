@@ -30,11 +30,11 @@ import com.signalcollect.ExecutionInformation
 import com.signalcollect.PrivateGraph
 
 /**
- * implement your algorithm with this trait to deploy it to a cluster
+ * implement your algorithm with this class to deploy it to a cluster
  */
-abstract class DeployableAlgorithm extends App {
+abstract class Algorithm extends App {
   private var logger: SimpleLogger = SimpleConsoleLogger
-  runLocal
+  run
 
   def deploy: Boolean = false
 
@@ -46,7 +46,7 @@ abstract class DeployableAlgorithm extends App {
   /**
    * runs the algorithm locally if it is started as App
    */
-  def runLocal = {
+  def run = {
     if (startedFromApp && !deploy) lifecycle()
     if (startedFromApp && deploy) deployToCluster
 
@@ -77,15 +77,21 @@ abstract class DeployableAlgorithm extends App {
     nodeActors: Option[Array[ActorRef]] = None,
     actorSystem: Option[ActorSystem] = None) {
     logger = changeLogger(actorSystem)
+    beforeStart
     val defaultGraphBuilder = createDefaultGraphBuilder(nodeActors, actorSystem)
     val configuredGraphBuilder = configureGraphBuilder(defaultGraphBuilder)
     val graph = configuredGraphBuilder.build
     val graphSystem = graph.asInstanceOf[PrivateGraph].getCoordinatorActorSystem
     logger = changeLogger(Some(graphSystem))
     graph.awaitIdle
+    afterGraphBuilt
+    
     val loadedGraph = loadGraph(graph)
     loadedGraph.awaitIdle
+    afterGraphLoaded
+    
     val executionResult = execute(loadedGraph)
+    
     reportResults(executionResult._1, executionResult._2)
     tearDown(executionResult._2)
   }
@@ -100,6 +106,11 @@ abstract class DeployableAlgorithm extends App {
       SimpleConsoleLogger
     }
   }
+  
+  /**
+   * is called before the execution begins
+   */
+  def beforeStart{}
 
   /**
    * can be overridden to configure the GraphBuilder to be used.
@@ -108,10 +119,20 @@ abstract class DeployableAlgorithm extends App {
   def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = gb
 
   /**
+   * this method is called when the graph is built
+   */
+  def afterGraphBuilt{}
+  
+  /**
    * must be implemented to load vertices and edges into the graph.
    */
   def loadGraph(g: Graph[Any, Any]): Graph[Any, Any]
 
+  /**
+   * this method is called when the graph is loaded, 
+   */
+  def afterGraphLoaded{}
+  
   /**
    * parameters for the Algorithm as a Map
    * per default this is an empty Map

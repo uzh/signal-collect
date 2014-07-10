@@ -26,7 +26,7 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import akka.event.Logging
 
-object PageRankExample extends DeployableAlgorithm {
+object PageRankExample extends Algorithm {
   
   override def deploy: Boolean = false
   
