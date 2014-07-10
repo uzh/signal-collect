@@ -4,9 +4,12 @@ import com.signalcollect.interfaces.AggregationOperation
 import scala.collection.immutable.SortedMap
 
 /** Container for the deliver and collect duration measurements */
-case class ActivityTime(deliver: Int, collect: Int) extends Ordered[ActivityTime] {
-  override def toString: String = s"${deliver/1000000000.0}/${collect/1000000000.0}"
-  def compare(that: ActivityTime) = ((that.deliver + that.collect) - (this.deliver + this.collect))
+case class ActivityTime(signal: Int, deliver: Int, collect: Int) extends Ordered[ActivityTime] {
+  override def toString: String =
+    f"signal: ${signal}ns, deliver: ${deliver}ns, collect: ${collect}ns"
+  def compare(that: ActivityTime) = {
+    (that.signal + that.deliver + that.collect) - (this.signal + this.deliver + this.collect)
+  }
 }
 
 /** Finds the vertices in the graph which were active for the longest duration
@@ -17,8 +20,10 @@ class TopActivityAggregator[Id](n: Int)
   extends AggregationOperation[SortedMap[ActivityTime,Id]] {
   type ActivityMap = SortedMap[ActivityTime,Id]
   def extract(v: Vertex[_, _]): ActivityMap = v match {
-    case t: Timeable[Id, _] => SortedMap((ActivityTime(t.deliverTime, t.collectTime) -> t.id))
-    case _ => SortedMap[ActivityTime,Id]()
+    case t: Timeable[Id, _] =>
+      SortedMap((ActivityTime(t.signalTime, t.deliverTime, t.collectTime) -> t.id))
+    case _ =>
+      SortedMap[ActivityTime,Id]()
   }
   def reduce(activities: Stream[ActivityMap]): ActivityMap = {
     activities.foldLeft(SortedMap[ActivityTime,Id]()) { (acc, m) => acc ++ m }.take(n)
@@ -27,6 +32,7 @@ class TopActivityAggregator[Id](n: Int)
 
 /** Allows measuring how long a vertex stays in deliverSignal and collect*/
 trait Timeable[Id, State] extends Vertex[Id, State] {
+  var signalTime: Int = 0
   var deliverTime: Int = 0
   var collectTime: Int = 0
   def time[R](block: => R): (R, Int) = {
@@ -35,16 +41,19 @@ trait Timeable[Id, State] extends Vertex[Id, State] {
     val t1 = System.nanoTime()
     (result, (t1 - t0).toInt)
   }
+  abstract override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]): Unit = {
+    val (_, t) = time(super.executeSignalOperation(graphEditor))
+    signalTime += t
+  }
   abstract override def deliverSignal(signal: Any, sourceId: Option[Any],
                         graphEditor: GraphEditor[Any, Any]): Boolean = {
     val (result, t) = time(super.deliverSignal(signal, sourceId, graphEditor))
     deliverTime += t
     result
   }
-  /*abstract override def collect(signal: Signal): State = {
-    val (result, t) = time(super.collect(signal))
+  abstract override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]): Unit = {
+    val (_, t) = time(super.executeCollectOperation(graphEditor))
     collectTime += t
-    result
-  }*/
+  }
 }
 
