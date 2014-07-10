@@ -41,7 +41,10 @@ abstract class Algorithm extends App {
   /**
    * logger which can be dynamically exchanged
    */
-  def log: SimpleLogger = logger
+  def log: SimpleLogger = {
+    if (logger == null) logger = SimpleConsoleLogger //make sure log is not null
+    logger
+  }
 
   /**
    * runs the algorithm locally if it is started as App
@@ -85,13 +88,13 @@ abstract class Algorithm extends App {
     logger = changeLogger(Some(graphSystem))
     graph.awaitIdle
     afterGraphBuilt
-    
+
     val loadedGraph = loadGraph(graph)
     loadedGraph.awaitIdle
     afterGraphLoaded
-    
+
     val executionResult = execute(loadedGraph)
-    
+
     reportResults(executionResult._1, executionResult._2)
     tearDown(executionResult._2)
   }
@@ -100,17 +103,17 @@ abstract class Algorithm extends App {
    * this method makes it possible to change the logger dynamically
    */
   def changeLogger(system: Option[ActorSystem]): SimpleLogger = {
-    if (system.isDefined) {
+    if (system.isDefined && !system.get.isTerminated) {
       new SimpleAkkaLogger(system.get, this.getClass.getName)
     } else {
       SimpleConsoleLogger
     }
   }
-  
+
   /**
    * is called before the execution begins
    */
-  def beforeStart{}
+  def beforeStart {}
 
   /**
    * can be overridden to configure the GraphBuilder to be used.
@@ -121,18 +124,18 @@ abstract class Algorithm extends App {
   /**
    * this method is called when the graph is built
    */
-  def afterGraphBuilt{}
-  
+  def afterGraphBuilt {}
+
   /**
    * must be implemented to load vertices and edges into the graph.
    */
   def loadGraph(g: Graph[Any, Any]): Graph[Any, Any]
 
   /**
-   * this method is called when the graph is loaded, 
+   * this method is called when the graph is loaded,
    */
-  def afterGraphLoaded{}
-  
+  def afterGraphLoaded {}
+
   /**
    * parameters for the Algorithm as a Map
    * per default this is an empty Map

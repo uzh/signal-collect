@@ -18,24 +18,26 @@
 
 package com.signalcollect.deployment
 
-import org.scalatest.prop.Checkers
-import org.scalatest.FlatSpec
-import com.typesafe.config.ConfigFactory
-import com.signalcollect.Graph
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.examples.PageRankVertex
-import org.scalatest.mock.EasyMockSugar
-import com.signalcollect.GraphBuilder
-import akka.actor.ActorSystem
-import com.signalcollect.interfaces.NodeActor
-import akka.actor.ActorRef
-import akka.testkit.TestActorRef
-import com.signalcollect.node.DefaultNodeActor
-import com.signalcollect.ExecutionInformation
-import org.easymock.EasyMock
 import scala.collection.immutable.HashMap
 
-class DeployableAlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
+import org.scalatest.FlatSpec
+import org.scalatest.mock.EasyMockSugar
+import org.scalatest.prop.Checkers
+
+import com.signalcollect.ExecutionInformation
+import com.signalcollect.Graph
+import com.signalcollect.GraphBuilder
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.interfaces.NodeActor
+import com.signalcollect.node.DefaultNodeActor
+
+
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.testkit.TestActorRef
+
+class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
 
   trait DefaultAlgorithm {
     val defaultAlgorithm = TestAlgorithm
