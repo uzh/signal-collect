@@ -43,7 +43,9 @@ object PageRankExample extends Algorithm {
     graph
   }
   override def configureGraphBuilder(gb: GraphBuilder[Any,Any]): GraphBuilder[Any,Any] = {
-    gb.withLoggingLevel(Logging.DebugLevel)
+    gb
+    .withEagerIdleDetection(false)
+    .withLoggingLevel(Logging.DebugLevel)
   }
 //  override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
 //
