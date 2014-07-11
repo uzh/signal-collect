@@ -160,7 +160,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (newIdleState == true && eagerIdleDetection && worker.isIdleDetectionEnabled) {
       messageBus.sendToNodeUncounted(nodeId, worker.getWorkerStatusForNode)
     }
-    if (!worker.pingPongScheduled && worker.isIdleDetectionEnabled && newIdleState == false) { //numberOfNodes > 1 && 
+    if (!worker.pingPongScheduled && worker.isIdleDetectionEnabled && !worker.isPaused && newIdleState == false) { //numberOfNodes > 1 && 
       worker.sendPing(worker.getRandomPingPongPartner)
     }
   }
@@ -239,12 +239,13 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case Pong(fromWorker) =>
       worker.waitingForPong = false
-      val exchangeDuration = System.currentTimeMillis - worker.pingSentTimestamp
+      val exchangeDuration = System.nanoTime - worker.pingSentTimestamp
+      //val durationInMilliseconds = (exchangeDuration / 1e+4.toDouble).round / 1e+2.toDouble
+      //println(s"Exchange between $workerId and $fromWorker took $durationInMilliseconds ms.")
       if (exchangeDuration > worker.maxPongDelay) {
-        println(s"Exchange between $workerId and $fromWorker took too long ($exchangeDuration ms).")
         worker.slowPongDetected = true
         // Immediately play ping-pong with the same slow partner again.
-        worker.pingSentTimestamp = System.currentTimeMillis
+        worker.pingSentTimestamp = System.nanoTime
         messageBus.sendToWorkerUncounted(fromWorker, Ping(workerId))
       } else {
         worker.slowPongDetected = false
@@ -288,10 +289,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           worker.operationsScheduled = false
         } else {
           //def timeSinceLastHeartbeat = System.nanoTime - lastHeartbeatTimestamp
-          def pingDelayed = worker.waitingForPong && (System.currentTimeMillis - worker.pingSentTimestamp) > worker.maxPongDelay
+          def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
           //def heartbeatDelayed = timeSinceLastHeartbeat > heartbeatInterval   heartbeatDelayed ||  || worker.systemOverloaded
           val overloaded = throttlingEnabled && (
-            pingDelayed || worker.slowPongDetected)
+            pongDelayed || worker.slowPongDetected)
           //          log.debug(s"Worker $workerId has work to do")
           if (worker.isPaused) { // && !overloaded
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
@@ -337,7 +338,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
     case Heartbeat(maySignal) =>
       lastHeartbeatTimestamp = System.nanoTime
-      //worker.systemOverloaded = !maySignal
+    //worker.systemOverloaded = !maySignal
 
     case StatsDue =>
       worker.sendStatusToCoordinator
