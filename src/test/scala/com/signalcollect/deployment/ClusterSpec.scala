@@ -47,6 +47,7 @@ class ClusterSpec extends FlatSpec with Checkers with Matchers {
     	     serialize-messages = true
              loggers = [
              ]
+             log-level = "info"
 	       }
          }"""
     val config = ConfigFactory.parseString(configAsString)

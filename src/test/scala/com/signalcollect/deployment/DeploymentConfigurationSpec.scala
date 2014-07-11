@@ -47,6 +47,7 @@ class DeploymentConfigurationSpec extends FlatSpec with Checkers {
              loggers = [
     			"akka.event.Logging$DefaultLogger"
              ]
+             log-level = "info"
 	       }
          }"""
     val config = ConfigFactory.parseString(configAsString)
