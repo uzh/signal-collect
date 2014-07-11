@@ -144,6 +144,15 @@ class WorkerImplementation[Id, Signal](
 
   def initializeIdleDetection {
     isIdleDetectionEnabled = true
+    if (numberOfNodes > 1) {
+      // Sent to a random worker on the next node initially.
+      val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
+      val workerOnNode = Random.nextInt(workersPerNode)
+      val workerId = partnerNodeId * workersPerNode + workerOnNode
+      sendPing(workerId)
+    } else {
+      sendPing(getRandomPingPongPartner)
+    }
   }
 
   def sendStatusToCoordinator {
@@ -192,15 +201,6 @@ class WorkerImplementation[Id, Signal](
   }
 
   def startComputation {
-    if (numberOfNodes > 1) {
-      // Sent to a random worker on the next node initially.
-      val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
-      val workerOnNode = Random.nextInt(workersPerNode)
-      val workerId = partnerNodeId * workersPerNode + workerOnNode
-      sendPing(workerId)
-    } else {
-      sendPing(getRandomPingPongPartner)
-    }
     if (!pendingModifications.isEmpty) {
       log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
     }
