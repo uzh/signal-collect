@@ -25,10 +25,10 @@ jarName in assembly := "signal-collect-2.1-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.3" % "compile",
-  "com.typesafe.akka" %% "akka-remote" % "2.3.3" % "compile",
-  "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.4" % "compile",
+  "com.typesafe.akka" %% "akka-remote" % "2.3.4" % "compile",
   "org.scala-lang" % "scala-library" % "2.11.1" % "compile",
+  "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
   "org.json4s" %% "json4s-native" % "3.2.9",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
   "junit" % "junit" % "4.8.2"  % "test",

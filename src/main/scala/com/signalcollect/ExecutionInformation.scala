@@ -56,7 +56,7 @@ case class ExecutionInformation(
       "- Execution Statistics -\n" +
       "--------------\n" +
       executionStatistics.toString + "\n" +
-      aggregatedWorkerStatistics.toString + "\n"
+      aggregatedWorkerStatistics.toSimpleString + "\n"
   }
 }
 

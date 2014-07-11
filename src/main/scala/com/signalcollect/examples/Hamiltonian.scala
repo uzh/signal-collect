@@ -122,7 +122,7 @@ class HamiltonianEdge(t: Any, w: Int) extends OnlySignalOnChangeEdge(t) {
   def signal = {
     // signals only paths that do not contain the target vertex id
     ((source.state.keySet) filterNot { x => x contains (id.targetId) }).map { k =>
-      Pair(k.::(id.targetId.toString), source.state.get(k).get + weight.toInt)
+      Tuple2(k.::(id.targetId.toString), source.state.get(k).get + weight.toInt)
     }.toMap
   }
 

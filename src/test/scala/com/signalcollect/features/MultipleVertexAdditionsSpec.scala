@@ -35,7 +35,7 @@ class DummyVertex(id: Int) extends PageRankVertex(id) {
 class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
 
   "Adding the same vertex multiple times" should "be ignored" in {
-    val g = GraphBuilder.withLoggingLevel(Logging.DebugLevel).build
+    val g = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)
     try {
       g.addVertex(new DummyVertex(133))
       g.addVertex(new DummyVertex(134))

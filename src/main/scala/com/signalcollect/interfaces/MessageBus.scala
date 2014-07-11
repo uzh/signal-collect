@@ -61,13 +61,19 @@ abstract class MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Fl
 
   def sendToWorker(workerId: Int, message: Any)
 
+  def sendToWorkerUncounted(workerId: Int, message: Any)
+
   def sendToWorkers(message: Any, messageCounting: Boolean)
 
   def sendToNode(nodeId: Int, message: Any)
 
+  def sendToNodeUncounted(nodeId: Int, message: Any)
+
   def sendToNodes(message: Any, messageCounting: Boolean)
 
   def sendToCoordinator(message: Any)
+
+  def sendToCoordinatorUncounted(message: Any)
 
   /**
    * Resets the message but does not touch the counters.

@@ -81,7 +81,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   storageFactory: StorageFactory,
   schedulerFactory: SchedulerFactory,
   heartbeatIntervalInMilliseconds: Int,
-  eagerIdleDetection: Boolean) {
+  eagerIdleDetection: Boolean,
+  throttlingEnabled: Boolean) {
   def create: () => WorkerActor[Id, Signal] = {
     () =>
       workerFactory.createInstance[Id, Signal](
@@ -93,7 +94,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         storageFactory,
         schedulerFactory,
         heartbeatIntervalInMilliseconds,
-        eagerIdleDetection)
+        eagerIdleDetection,
+        throttlingEnabled)
   }
 }
 
@@ -185,7 +187,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.storageFactory,
           config.schedulerFactory,
           config.heartbeatIntervalInMilliseconds,
-          config.eagerIdleDetection)
+          config.eagerIdleDetection,
+          config.throttlingEnabled)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
@@ -702,7 +705,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
 
   def awaitIdle {
-    awaitIdle(Duration.create(100, TimeUnit.DAYS).toNanos)
+    awaitIdle(Duration.create(1, TimeUnit.DAYS).toNanos)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
@@ -753,8 +756,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
       // If the system is preserved, just cleanup the actors.
       workerActors.foreach(_ ! PoisonPill)
       nodeActors.foreach(_ ! PoisonPill)
-      // Give the status messages a few milliseconds, to avoid dead letter msgs.
-      Thread.sleep(50)
       coordinatorActor ! PoisonPill
     }
   }

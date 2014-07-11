@@ -22,6 +22,7 @@
 
 package com.signalcollect.worker
 
+import scala.concurrent.duration._
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
@@ -43,8 +44,18 @@ import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 import akka.serialization.SerializationExtension
+import akka.actor.Cancellable
+import akka.actor.Scheduler
+import scala.util.Random
+import com.signalcollect.coordinator.IsIdle
 
 case object ScheduleOperations
+
+case object StatsDue
+
+case class StartPingPongExchange(pingPongPartner: Int)
+case class Ping(fromWorker: Int)
+case class Pong(fromWorker: Int)
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -69,14 +80,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val storageFactory: StorageFactory,
   val schedulerFactory: SchedulerFactory,
   val heartbeatIntervalInMilliseconds: Int,
-  val eagerIdleDetection: Boolean)
+  val eagerIdleDetection: Boolean,
+  val throttlingEnabled: Boolean)
   extends WorkerActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
 
+  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
+  var lastHeartbeatTimestamp = System.nanoTime
   var schedulingTimestamp = System.nanoTime
 
   override def postStop {
+    statsReportScheduling.cancel
+    scheduledPingPongExchange.foreach(_.cancel)
     log.debug(s"Worker $workerId has stopped.")
   }
 
@@ -86,9 +102,15 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     workerId / workersPerNode
   }
 
+  implicit val executor = context.system.dispatcher
+  val statsReportScheduling = context.system.scheduler.
+    schedule(0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, StatsDue)
+
+  var scheduledPingPongExchange: Option[Cancellable] = None
+
   override def postRestart(reason: Throwable): Unit = {
     super.postRestart(reason)
-    val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
+    val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTrace.mkString("\n")}, not recoverable."
     println(msg)
     log.error(msg)
     context.stop(self)
@@ -106,6 +128,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
     nodeId = nodeId,
+    numberOfWorkers = numberOfWorkers,
+    numberOfNodes = numberOfNodes,
     eagerIdleDetection = eagerIdleDetection,
     messageBus = messageBus,
     log = log,
@@ -131,6 +155,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   def isInitialized = messageBus.isInitialized
 
+  def setIdle(newIdleState: Boolean) {
+    worker.isIdle = newIdleState
+    if (newIdleState == true && eagerIdleDetection && worker.isIdleDetectionEnabled) {
+      messageBus.sendToNodeUncounted(nodeId, worker.getWorkerStatusForNode)
+    }
+    if (numberOfNodes > 1 && !worker.pingPongScheduled && worker.isIdleDetectionEnabled && newIdleState == false) {
+      worker.sendPing(worker.getRandomPingPongPartner)
+    }
+  }
+
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
       try {
@@ -147,7 +181,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
+    setIdle(false)
     self ! ScheduleOperations
     schedulingTimestamp = System.nanoTime
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
@@ -196,6 +230,36 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         scheduleOperations
       }
 
+    case StartPingPongExchange(pingPongPartner) =>
+      worker.sendPing(pingPongPartner)
+
+    case Ping(fromWorker) =>
+      // Answer the ping with a pong.
+      messageBus.sendToWorkerUncounted(fromWorker, Pong(workerId))
+
+    case Pong(fromWorker) =>
+      worker.waitingForPong = false
+      val exchangeDuration = System.nanoTime - worker.pingSentTimestamp
+      //val durationInMilliseconds = (exchangeDuration / 1e+4.toDouble).round / 1e+2.toDouble
+      //println(s"Exchange between $workerId and $fromWorker took $durationInMilliseconds ms.")
+      if (exchangeDuration > worker.maxPongDelay) {
+        worker.slowPongDetected = true
+        // Immediately play ping-pong with the same slow partner again.
+        worker.pingSentTimestamp = System.nanoTime
+        messageBus.sendToWorkerUncounted(fromWorker, Ping(workerId))
+      } else {
+        worker.slowPongDetected = false
+        // Wait a bit and then play ping pong with another random partner.
+        if (!worker.isIdle) {
+          scheduledPingPongExchange = Some(context.system.scheduler.scheduleOnce(
+            worker.pingPongSchedulingIntervalInMilliseconds.milliseconds,
+            self,
+            StartPingPongExchange(worker.getRandomPingPongPartner)))
+        } else {
+          worker.pingPongScheduled = false
+        }
+      }
+
     case AddVertex(vertex) =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
@@ -221,16 +285,21 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
           //          log.debug(s"Worker $workerId turns to idle")
 
           //Worker is now idle.
-          worker.setIdle(true)
+          setIdle(true)
           worker.operationsScheduled = false
         } else {
+          //def timeSinceLastHeartbeat = System.nanoTime - lastHeartbeatTimestamp
+          def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
+          //def heartbeatDelayed = timeSinceLastHeartbeat > heartbeatInterval   heartbeatDelayed ||  || worker.systemOverloaded
+          val overloaded = throttlingEnabled && (
+            pongDelayed || worker.slowPongDetected)
           //          log.debug(s"Worker $workerId has work to do")
-          if (worker.isPaused) {
+          if (worker.isPaused) { // && !overloaded
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations(worker.systemOverloaded)
+            worker.scheduler.executeOperations(overloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
@@ -258,7 +327,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       } catch {
         case t: Throwable =>
-          val msg = s"Problematic request on worker $workerId: ${t.getStackTraceString}"
+          val msg = s"Problematic request on worker $workerId: ${t.getStackTrace.mkString("\n")}"
           println(msg)
           log.debug(msg)
           throw t
@@ -268,9 +337,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       }
 
     case Heartbeat(maySignal) =>
-      worker.counters.heartbeatMessagesReceived += 1
+      lastHeartbeatTimestamp = System.nanoTime
+    //worker.systemOverloaded = !maySignal
+
+    case StatsDue =>
       worker.sendStatusToCoordinator
-      worker.systemOverloaded = !maySignal
 
     case other =>
       worker.counters.otherMessagesReceived += 1
