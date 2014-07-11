@@ -160,7 +160,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
     if (newIdleState == true && eagerIdleDetection && worker.isIdleDetectionEnabled) {
       messageBus.sendToNodeUncounted(nodeId, worker.getWorkerStatusForNode)
     }
-    if (!worker.pingPongScheduled && worker.isIdleDetectionEnabled && !worker.isPaused && newIdleState == false) { //numberOfNodes > 1 && 
+    if (numberOfNodes > 1 && !worker.pingPongScheduled && worker.isIdleDetectionEnabled && newIdleState == false) {
       worker.sendPing(worker.getRandomPingPongPartner)
     }
   }
