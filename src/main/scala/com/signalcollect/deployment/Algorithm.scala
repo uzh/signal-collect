@@ -50,8 +50,14 @@ abstract class Algorithm extends App {
    * runs the algorithm locally if it is started as App
    */
   def run = {
-    if (startedFromApp && !deploy) lifecycle()
-    if (startedFromApp && deploy) deployToCluster
+    if (startedFromApp && !deploy) {
+      println("started from App -not deploy")
+      lifecycle()
+    }
+    if (startedFromApp && deploy) {
+      println("started from App -deploy")
+      deployToCluster
+    }
 
   }
 

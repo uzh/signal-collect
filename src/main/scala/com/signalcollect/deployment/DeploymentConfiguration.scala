@@ -38,6 +38,7 @@ trait DeploymentConfiguration {
   def kryoRegistrations: List[String]
   def serializeMessages: Boolean
   def loggers: List[String]
+  def logLevel: String
 }
 
 /**
@@ -56,7 +57,8 @@ case class BasicDeploymentConfiguration(
   override val kryoInit: String,
   override val kryoRegistrations: List[String] = Nil,
   override val serializeMessages: Boolean = false,
-  override val loggers: List[String] = Nil) extends DeploymentConfiguration
+  override val loggers: List[String] = Nil,
+  override val logLevel: String) extends DeploymentConfiguration
 
 /**
  * Creator of DeploymentConfiguration reads configuration from file 'deployment.conf'
@@ -87,7 +89,8 @@ object DeploymentConfigurationCreator {
       kryoInit = config.getString("deployment.akka.kryo-initializer"),
       kryoRegistrations = config.getStringList("deployment.akka.kryo-registrations").toList,
       serializeMessages = config.getBoolean("deployment.akka.serialize-messages"),
-      loggers = config.getStringList("deployment.akka.loggers").toList)
+      loggers = config.getStringList("deployment.akka.loggers").toList,
+      logLevel = config.getString("deployment.akka.log-level"))
 
   /**
    * useful for testing or injecting another configuration than 'deployment.conf'
