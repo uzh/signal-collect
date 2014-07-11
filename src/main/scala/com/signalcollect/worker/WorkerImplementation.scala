@@ -71,8 +71,8 @@ class WorkerImplementation[Id, Signal](
   extends Worker[Id, Signal] {
 
   val workersPerNode = numberOfWorkers / numberOfNodes
-  val pingPongSchedulingIntervalInMilliseconds = 2 // 2ms
-  val maxPongDelay = 2e+6 // 2ms
+  val pingPongSchedulingIntervalInMilliseconds = 4 // 4ms
+  val maxPongDelay = 4e+6 // 4ms
   val scheduler = schedulerFactory.createInstance(this)
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
