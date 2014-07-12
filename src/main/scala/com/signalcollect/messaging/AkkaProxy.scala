@@ -141,7 +141,7 @@ case class Command[ParameterType](className: String, methodDescription: String, 
         }
         println(s"Exception when trying to execute $methodDescription with argument(s) $argsString")
         println(t.getCause)
-        println(t.getStackTraceString)
+        println(t.getStackTrace.mkString("\n"))
         println("Finished printing stack trace")
         throw t
     }

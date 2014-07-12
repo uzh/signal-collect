@@ -361,9 +361,9 @@ class FileServer() extends HttpHandler {
       case e: Exception => {
         t.getResponseHeaders.set("Content-Type", "text/plain")
         t.sendResponseHeaders(500, 0)
-        os.write(("An exception occurred:\n" + e.getMessage() + "\n" +
-          e.getStackTraceString).getBytes())
-        e.printStackTrace()
+        os.write(("An exception occurred:\n" + e.getMessage + "\n" +
+          e.getStackTrace.mkString("\n")).getBytes)
+        e.printStackTrace
       }
     } finally {
       os.close

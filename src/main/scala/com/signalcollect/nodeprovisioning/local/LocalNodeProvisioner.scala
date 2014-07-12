@@ -24,18 +24,25 @@ import com.signalcollect.nodeprovisioning.NodeProvisioner
 import com.typesafe.config.Config
 import akka.actor.ActorRef
 import com.signalcollect.configuration.ActorSystemRegistry
-import akka.actor.Props
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.interfaces.MessageBusFactory
 import scala.reflect.ClassTag
 import akka.actor.InvalidActorNameException
 import akka.actor.ActorSystem
+import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.typesafe.config.Config
+
+import akka.actor.ActorRef
+import akka.actor.InvalidActorNameException
+import akka.actor.Props
 
 class LocalNodeProvisioner
   extends NodeProvisioner {
   def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     try {
-      val nodeController = localSystem.actorOf(Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None), name = actorNamePrefix + "DefaultNodeActor")
+      val nodeController = localSystem.actorOf(
+        Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None).
+          withDispatcher("akka.io.pinned-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } catch {
       case e: InvalidActorNameException =>

@@ -42,7 +42,8 @@ object DefaultAkkaWorker extends WorkerFactory {
     storageFactory: StorageFactory,
     schedulerFactory: SchedulerFactory,
     heartbeatIntervalInMilliseconds: Int,
-    eagerIdleDetection: Boolean): WorkerActor[Id, Signal] = {
+    eagerIdleDetection: Boolean,
+    throttlingEnabled: Boolean): WorkerActor[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
@@ -52,7 +53,8 @@ object DefaultAkkaWorker extends WorkerFactory {
       storageFactory,
       schedulerFactory,
       heartbeatIntervalInMilliseconds,
-      eagerIdleDetection)
+      eagerIdleDetection,
+      throttlingEnabled)
   }
   override def toString: String = "DefaultAkkaWorker"
 }
