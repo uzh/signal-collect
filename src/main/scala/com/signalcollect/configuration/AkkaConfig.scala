@@ -11,6 +11,7 @@ object AkkaConfig {
     kryoRegistrations: List[String],
     kryoInitializer: String,
     port: Int = 0,
+    numberOfCores: Int = Runtime.getRuntime.availableProcessors,
     loggers: List[String] = List("akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger")) = ConfigFactory.parseString(
     distributedConfig(
       serializeMessages,
@@ -18,6 +19,7 @@ object AkkaConfig {
       kryoRegistrations,
       kryoInitializer,
       port,
+      numberOfCores,
       loggers))
   def distributedConfig(
     serializeMessages: Boolean,
@@ -25,10 +27,12 @@ object AkkaConfig {
     kryoRegistrations: List[String],
     kryoInitializer: String,
     port: Int,
+    numberOfCores: Int,
     loggers: List[String]) = """
 akka {
+      
   extensions = ["com.romix.akka.serialization.kryo.KryoSerializationExtension$"]
-
+      
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
       """ +{
     val loggersAsString = loggers.mkString("\"","\", \"", "\"")
@@ -59,6 +63,8 @@ akka {
     # log-received-messages = on
   # }
 
+  scheduler.tick-duration = 2ms
+    
   actor {
     """ +
     {
@@ -74,7 +80,7 @@ akka {
     serializers {
       kryo = "com.romix.akka.serialization.kryo.KryoSerializer"
     }
-
+    
     serialization-bindings {
       "java.io.Serializable" = none
       "java.lang.Throwable" = java
@@ -156,10 +162,15 @@ akka {
       "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
+      "com.signalcollect.coordinator.HeartbeatDue$" = kryo
+      "com.signalcollect.worker.StatsDue$" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "com.signalcollect.interfaces.AddVertex" = kryo
       "com.signalcollect.examples.PlaceholderEdge" = kryo
       "com.signalcollect.deployment.DeployableEfficientPageRank$$anonfun$execute$1" = kryo
+      "com.signalcollect.worker.Ping" = kryo
+      "com.signalcollect.worker.Pong" = kryo
+      "com.signalcollect.worker.StartPingPongExchange" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java
@@ -216,7 +227,7 @@ akka {
         # Try to define the size to be at least as big as the max possible number
         # of threads that may be used for serialization, i.e. max number
         # of threads allowed for the scheduler
-        serializer-pool-size = 40
+        serializer-pool-size = """ + numberOfCores + """
 
         # Define a default size for byte buffers used during serialization
         buffer-size = 65536
@@ -283,7 +294,9 @@ akka {
   }
 
   remote {
+        
     netty.tcp {
+        
       # The default remote server port clients should connect to.
       # Default is 2552 (AKKA), use 0 if you want a random available port
       # This port needs to be unique for each actor system on the same machine.
@@ -308,10 +321,10 @@ akka {
       # (I) Sets the size of the connection backlog
       backlog = 8192
       
-    # Used to configure the number of I/O worker threads on server sockets
-      #server-socket-worker-pool {
+      # Used to configure the number of I/O worker threads on server sockets
+      server-socket-worker-pool {
         # Min number of threads to cap factor-based number to
-        #pool-size-min = 8
+        pool-size-min = """ + numberOfCores + """
  
         # The pool size factor is used to determine thread pool size
         # using the following formula: ceil(available processors * factor).
@@ -320,13 +333,13 @@ akka {
         #pool-size-factor = 1.0
  
         # Max number of threads to cap factor-based number to
-        #pool-size-max = 8
-      #}
-      
+        pool-size-max = """ + numberOfCores + """
+      }
+ 
       # Used to configure the number of I/O worker threads on client sockets
-      #client-socket-worker-pool {
+      client-socket-worker-pool {
         # Min number of threads to cap factor-based number to
-        #pool-size-min = 8
+        pool-size-min = """ + numberOfCores + """
  
         # The pool size factor is used to determine thread pool size
         # using the following formula: ceil(available processors * factor).
@@ -335,8 +348,8 @@ akka {
         #pool-size-factor = 1.0
  
         # Max number of threads to cap factor-based number to
-        #pool-size-max = 8
-      #}
+        pool-size-max = """ + numberOfCores + """
+      }
     }
       
   }

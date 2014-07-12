@@ -87,7 +87,7 @@ object Sudoku extends App {
 
   //print initial Sudoku
   var seed = new HashMap[Int, Option[Int]]()
-  graph.foreachVertex { v => seed += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => seed += Tuple2(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   SudokuHelper.printSudoku(seed)
 
   val stats = graph.execute
@@ -105,7 +105,7 @@ object Sudoku extends App {
   println()
 
   var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
-  graph.foreachVertex { v => result += Pair(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
+  graph.foreachVertex { v => result += Tuple2(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   graph.shutdown
   SudokuHelper.printSudoku(result)
 

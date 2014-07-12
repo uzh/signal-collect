@@ -53,7 +53,7 @@ class DefaultWorkerApi[Id, Signal](
   override def toString = "DefaultWorkerApi"
 
   protected def futures[G](f: WorkerApi[Id, Signal] => G) = {
-    workers map (worker => future { f(worker) })
+    workers map (worker => Future { f(worker) })
   }
 
   protected def get[G](f: Future[G]): G = Await.result(f, timeout)

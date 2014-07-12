@@ -134,12 +134,14 @@ case class WorkerStatistics(
       messagesSentToCoordinator + other.messagesSentToCoordinator,
       messagesSentToOthers + other.messagesSentToOthers)
   }
-  override def toString: String = {
+
+  def toSimpleString: String = {
     "# collect operations\t" + collectOperationsExecuted + "\n" +
       "# signal operations\t" + signalOperationsExecuted + "\n" +
       "# vertices (add/remove)\t" + numberOfVertices + " (" + verticesAdded + "/" + verticesRemoved + ")\n" +
       "# edges (add/remove)\t" + numberOfOutgoingEdges + " (" + outgoingEdgesAdded + "/" + outgoingEdgesRemoved + ")"
   }
+
 }
 
 case class NodeStatistics(

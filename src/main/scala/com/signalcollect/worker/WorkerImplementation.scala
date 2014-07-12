@@ -48,6 +48,7 @@ import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.serialization.DefaultSerializer
+import scala.util.Random
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -55,6 +56,8 @@ import com.signalcollect.serialization.DefaultSerializer
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
   val nodeId: Int,
+  val numberOfWorkers: Int,
+  val numberOfNodes: Int,
   val eagerIdleDetection: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
@@ -67,6 +70,9 @@ class WorkerImplementation[Id, Signal](
   var edgeAddedToNonExistentVertexHandler: (Edge[Id], Id) => Option[Vertex[Id, _]])
   extends Worker[Id, Signal] {
 
+  val workersPerNode = numberOfWorkers / numberOfNodes
+  val pingPongSchedulingIntervalInMilliseconds = 4 // 4ms
+  val maxPongDelay = 4e+6 // 4ms
   val scheduler = schedulerFactory.createInstance(this)
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
@@ -75,7 +81,8 @@ class WorkerImplementation[Id, Signal](
 
   var messageBusFlushed: Boolean = _
   var isIdleDetectionEnabled: Boolean = _
-  var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
+  var slowPongDetected: Boolean = _ // If the worker had to wait too long for the last pong reply to its ping request.
+  //var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
   var isPaused: Boolean = _
@@ -83,12 +90,16 @@ class WorkerImplementation[Id, Signal](
   var lastStatusUpdate: Long = _
   var vertexStore: Storage[Id] = _
   var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = _
+  var pingSentTimestamp: Long = _
+  var pingPongScheduled: Boolean = _
+  var waitingForPong: Boolean = _
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
   def initialize {
     messageBusFlushed = true
     isIdleDetectionEnabled = false
-    systemOverloaded = false
+    slowPongDetected = false
+    //systemOverloaded = false
     operationsScheduled = false
     isIdle = true
     isPaused = true
@@ -96,6 +107,20 @@ class WorkerImplementation[Id, Signal](
     lastStatusUpdate = System.currentTimeMillis
     vertexStore = storageFactory.createInstance[Id]
     pendingModifications = Iterator.empty
+    pingSentTimestamp = 0
+    pingPongScheduled = false
+    waitingForPong = false
+  }
+
+  def getRandomPingPongPartner = Random.nextInt(numberOfWorkers)
+
+  def sendPing(partner: Int) {
+    if (messageBus.isInitialized) {
+      pingPongScheduled = true
+      waitingForPong = true
+      pingSentTimestamp = System.nanoTime
+      messageBus.sendToWorkerUncounted(partner, Ping(workerId))
+    }
   }
 
   /**
@@ -119,19 +144,21 @@ class WorkerImplementation[Id, Signal](
 
   def initializeIdleDetection {
     isIdleDetectionEnabled = true
-  }
-
-  def setIdle(newIdleState: Boolean) {
-    isIdle = newIdleState
-    if (eagerIdleDetection && isIdleDetectionEnabled) {
-      messageBus.sendToNode(nodeId, getWorkerStatusForNode)
+    if (numberOfNodes > 1) {
+      // Sent to a random worker on the next node initially.
+      val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
+      val workerOnNode = Random.nextInt(workersPerNode)
+      val workerId = partnerNodeId * workersPerNode + workerOnNode
+      sendPing(workerId)
+    } else {
+      sendPing(getRandomPingPongPartner)
     }
   }
 
   def sendStatusToCoordinator {
     if (messageBus.isInitialized) {
       val status = getWorkerStatusForCoordinator
-      messageBus.sendToCoordinator(status)
+      messageBus.sendToCoordinatorUncounted(status)
     }
   }
 
@@ -363,6 +390,12 @@ class WorkerImplementation[Id, Signal](
         snapshotFileOutput.writeInt(bytes.length)
         snapshotFileOutput.write(bytes)
       }
+    } catch {
+      case t: Throwable =>
+        val msg = s"Problem while serializing a vertex, this will prevent 'restore' from working correctly: ${t.getMessage}"
+        println(msg)
+        t.printStackTrace
+        log.error(t, msg)
     } finally {
       snapshotFileOutput.close
     }
@@ -412,7 +445,7 @@ class WorkerImplementation[Id, Signal](
       messagesSent = SentMessagesStats(
         messageBus.messagesSentToWorkers,
         messageBus.messagesSentToNodes,
-        messageBus.messagesSentToCoordinator + 1, // +1 to account for the status message itself.
+        messageBus.messagesSentToCoordinator,
         messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
   }
@@ -429,7 +462,7 @@ class WorkerImplementation[Id, Signal](
         messageBus.messagesSentToCoordinator,
         messageBus.messagesSentToOthers),
       messagesReceived = counters.messagesReceived)
-    ws.messagesSent.nodes(nodeId) = ws.messagesSent.nodes(nodeId) + 1 // +1 to account for the status message itself.
+    ws.messagesSent.nodes(nodeId) = ws.messagesSent.nodes(nodeId)
     ws
   }
 
