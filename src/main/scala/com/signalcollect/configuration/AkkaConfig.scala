@@ -267,6 +267,10 @@ akka {
 
   remote {
         
+    # Log warning if the number of messages in the backoff buffer in the endpoint
+    # writer exceeds this limit. It can be disabled by setting the value to off.
+    log-buffer-size-exceeding = 100000
+    
     netty.tcp {
         
       # The default remote server port clients should connect to.
