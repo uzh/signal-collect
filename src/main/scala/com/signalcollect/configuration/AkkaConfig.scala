@@ -328,6 +328,26 @@ akka {
       }
     }
       
+    default-remote-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+      fork-join-executor {
+        # Min number of threads to cap factor-based parallelism number to
+        parallelism-min = """ + numberOfCores + """
+        parallelism-max = """ + numberOfCores + """
+      }
+    }
+    
+    backoff-remote-dispatcher {
+      type = Dispatcher
+      executor = "fork-join-executor"
+      fork-join-executor {
+        # Min number of threads to cap factor-based parallelism number to
+        parallelism-min = """ + numberOfCores + """
+        parallelism-max = """ + numberOfCores + """
+      }
+    }
+        
   }
 }
 """
