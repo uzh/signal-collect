@@ -244,9 +244,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
       //println(s"Exchange between $workerId and $fromWorker took $durationInMilliseconds ms.")
       if (exchangeDuration > worker.maxPongDelay) {
         worker.slowPongDetected = true
-        // Immediately play ping-pong with the same slow partner again.
-        worker.pingSentTimestamp = System.nanoTime
-        messageBus.sendToWorkerUncounted(fromWorker, Ping(workerId))
+        worker.sendPing(worker.getRandomPingPongPartner)
       } else {
         worker.slowPongDetected = false
         // Wait a bit and then play ping pong with another random partner.
