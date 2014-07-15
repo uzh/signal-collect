@@ -148,14 +148,12 @@ class DefaultLeader(
 
   def addNodeActorAddress(address: String) {
     synchronized {
-      println(s"received in sync: $address")
       nodeActors = system.actorFor(address) :: nodeActors
     }
   }
 
   def addShutdownAddress(address: String) {
     synchronized {
-      println(s"received in sync: $address")
       shutdownAddresses = system.actorFor(address) :: shutdownAddresses
     }
   }

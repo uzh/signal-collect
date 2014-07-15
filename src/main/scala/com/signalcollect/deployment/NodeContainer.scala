@@ -31,6 +31,7 @@ import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.util.AkkaRemoteAddress
+import akka.event.Logging
 
 trait NodeContainer {
   def start
@@ -47,6 +48,7 @@ class DefaultNodeContainer(id: Int,
 
   val leaderAddress = s"akka.tcp://SignalCollect@$leaderIp:$basePort/user/leaderactor"
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
+  val log = Logging.getLogger(system, this)
   val shutdownActor = system.actorOf(Props(classOf[ShutdownActor], this), s"shutdownactor$id")
   val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor],
     id.toString,
@@ -82,7 +84,11 @@ class DefaultNodeContainer(id: Int,
   def waitForTermination {
     val begin = System.currentTimeMillis()
     while (!shutdownNow && timeoutNotReached(begin) && terminated == false) {
-      Thread.sleep(100)
+      val runtime = Runtime.getRuntime
+      val memoryUsage: Double = 1.0 - (runtime.freeMemory().toDouble/runtime.maxMemory.toDouble)
+      if(memoryUsage > 0.95)  log.warning(s"memory used: $memoryUsage")
+
+      Thread.sleep(500)
     }
     terminated = true
   }
