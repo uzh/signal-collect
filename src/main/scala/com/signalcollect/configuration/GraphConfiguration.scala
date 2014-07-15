@@ -37,6 +37,8 @@ import com.signalcollect.storage.VertexMapStorage
 import com.signalcollect.factory.storage.MemoryEfficientStorage
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import com.signalcollect.messaging.BulkMessageBus
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -50,7 +52,7 @@ case class GraphConfiguration(
   consoleHttpPort: Int = -1,
   loggingLevel: LogLevel = Logging.WarningLevel,
   workerFactory: WorkerFactory = DefaultAkkaWorker,
-  messageBusFactory: MessageBusFactory = AkkaMessageBusFactory,
+  messageBusFactory: MessageBusFactory = new BulkAkkaMessageBusFactory(1000, true),
   mapperFactory: MapperFactory = DefaultMapperFactory,
   storageFactory: StorageFactory = MemoryEfficientStorage,
   schedulerFactory: SchedulerFactory = Throughput,
