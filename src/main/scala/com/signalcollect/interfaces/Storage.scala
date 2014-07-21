@@ -23,7 +23,7 @@ import com.signalcollect.Vertex
 /**
  * High level interface to abstract all vertex storage related implementations
  */
-abstract class Storage[Id] {
+trait Storage[@specialized(Long) Id] {
   def vertices: VertexStore[Id]
   def toSignal: VertexStore[Id] //collection of all vertices that need to signal
   def toCollect: VertexStore[Id] //collection of all vertices that need to collect
@@ -32,7 +32,7 @@ abstract class Storage[Id] {
 /**
  * Stores vertices and makes them retrievable through their associated id.
  */
-abstract class VertexStore[Id] {
+trait VertexStore[@specialized(Long) Id] {
   def get(id: Id): Vertex[Id, _]
   def put(vertex: Vertex[Id, _]): Boolean
   def remove(id: Id)

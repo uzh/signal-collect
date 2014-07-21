@@ -50,6 +50,7 @@ import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.serialization.DefaultSerializer
 import scala.util.Random
 import scala.reflect.ClassTag
+import com.signalcollect.interfaces.Scheduler
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -74,9 +75,9 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   val nodeId = getNodeId(workerId)
   val pingPongSchedulingIntervalInMilliseconds = 4 // schedule pingpong exchange every 8ms
   val maxPongDelay = 4e+6 // pong is considered delayed after waiting for 4ms  
-  val scheduler = schedulerFactory.createInstance(this)
-  val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
-  val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
+  var scheduler: Scheduler[Id] = _
+  var graphEditor: GraphEditor[Id, Signal] = _
+  var vertexGraphEditor: GraphEditor[Any, Any] = _
 
   initialize
 
@@ -109,6 +110,9 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     pingSentTimestamp = 0
     pingPongScheduled = false
     waitingForPong = false
+    scheduler = schedulerFactory.createInstance(this)
+    graphEditor = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
+    vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
   }
 
   def getNodeId(workerId: Int): Int = workerId / workersPerNode

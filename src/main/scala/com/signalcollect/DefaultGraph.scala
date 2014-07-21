@@ -80,7 +80,6 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
   throttlingEnabled: Boolean) {
-  println(workerFactory)
   def create: () => AkkaWorker[Id, Signal] = {
     () =>
       workerFactory.createInstance(

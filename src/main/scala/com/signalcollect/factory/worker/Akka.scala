@@ -55,5 +55,5 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
       eagerIdleDetection,
       throttlingEnabled)
   }
-  override def toString: String = "DefaultAkkaWorker"
+  override def toString: String = "AkkaWorkerFactory"
 }

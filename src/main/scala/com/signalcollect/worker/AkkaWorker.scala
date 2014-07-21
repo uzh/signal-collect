@@ -112,14 +112,12 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     context.stop(self)
   }
 
-  val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance(
-      context.system,
-      numberOfWorkers,
-      numberOfNodes,
-      mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
-      IncrementorForWorker.increment(workerId))
-  }
+  val messageBus: MessageBus[Id, Signal] = messageBusFactory.createInstance(
+    context.system,
+    numberOfWorkers,
+    numberOfNodes,
+    mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
+    IncrementorForWorker.increment(workerId))
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
@@ -185,45 +183,61 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
+  def handleSignalMessage(s: SignalMessage[Id, Signal]) {
+    worker.counters.signalMessagesReceived += 1
+    worker.processSignal(s.signal, s.targetId, s.sourceId)
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleBulkSignalWithSourceIds(bulkSignal: BulkSignal[Id, Signal]) {
+    worker.counters.bulkSignalMessagesReceived += 1
+    val size = bulkSignal.signals.length
+    var i = 0
+    while (i < size) {
+      val sourceId = bulkSignal.sourceIds(i)
+      if (sourceId != null) {
+        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
+      } else {
+        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+      }
+      i += 1
+    }
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
+    worker.counters.bulkSignalMessagesReceived += 1
+    val size = bulkSignal.signals.length
+    var i = 0
+    while (i < size) {
+      handleSignal(bulkSignal.signals(i), bulkSignal.targetIds(i))
+      i += 1
+    }
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleSignal(signal: Signal, targetId: Id) {
+    worker.processSignal(signal, targetId, None)
+  }
+
   /**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
     case s: SignalMessage[Id, Signal] =>
-      worker.counters.signalMessagesReceived += 1
-      worker.processSignal(s.signal, s.targetId, s.sourceId)
-      if (!worker.operationsScheduled) {
-        scheduleOperations
-      }
+      handleSignalMessage(s)
 
     case bulkSignal: BulkSignal[Id, Signal] =>
-      worker.counters.bulkSignalMessagesReceived += 1
-      val size = bulkSignal.signals.length
-      var i = 0
-      while (i < size) {
-        val sourceId = bulkSignal.sourceIds(i)
-        if (sourceId != null) {
-          worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
-        } else {
-          worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-        }
-        i += 1
-      }
-      if (!worker.operationsScheduled) {
-        scheduleOperations
-      }
+      handleBulkSignalWithSourceIds(bulkSignal)
 
     case bulkSignal: BulkSignalNoSourceIds[Id, Signal] =>
-      worker.counters.bulkSignalMessagesReceived += 1
-      val size = bulkSignal.signals.length
-      var i = 0
-      while (i < size) {
-        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-        i += 1
-      }
-      if (!worker.operationsScheduled) {
-        scheduleOperations
-      }
+      handleBulkSignalWithoutSourceIds(bulkSignal)
 
     case StartPingPongExchange(pingPongPartner) =>
       worker.sendPing(pingPongPartner)

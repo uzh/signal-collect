@@ -47,7 +47,7 @@ class SignalBulker[@specialized(Long) Id: ClassTag, Signal: ClassTag](size: Int)
   }
 }
 
-class BulkMessageBus[@specialized(Long) Id: ClassTag, Signal: ClassTag](
+class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val system: ActorSystem,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,

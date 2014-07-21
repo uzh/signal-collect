@@ -28,7 +28,7 @@ import akka.event.Logging.LogEvent
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-abstract class MessageBus[Id, Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
+trait MessageBus[@specialized(Long) Id, Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
   def flush
 
   def isInitialized: Boolean
