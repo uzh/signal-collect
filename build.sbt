@@ -11,9 +11,7 @@ organization := "com.signalcollect"
 
 scalaVersion := "2.11.1"
 
-scalacOptions ++= Seq("-Ylog:icode", "-Ydebug", "-optimize", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO")
-
-//"-P:minibox:log"
+scalacOptions ++= Seq("-optimize", "-Ylog:icode", "-Ydebug", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO")
 
 assembleArtifact in packageScala := true
 
@@ -30,7 +28,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.4" % "compile",
   "com.typesafe.akka" %% "akka-remote" % "2.3.4" % "compile",
   "org.scala-lang" % "scala-library" % "2.11.1" % "compile",
-  //"org.scala-miniboxing.plugins" %% "miniboxing-runtime" % "0.4-SNAPSHOT",
   "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
   "org.json4s" %% "json4s-native" % "3.2.9",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
@@ -42,8 +39,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "org.easymock" % "easymock" % "3.2" % "test"
 )
-
-//addCompilerPlugin("org.scala-miniboxing.plugins" %% "miniboxing-plugin" % "0.4-SNAPSHOT")
 
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"
 

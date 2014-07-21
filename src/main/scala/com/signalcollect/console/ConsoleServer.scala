@@ -172,12 +172,12 @@ class BreakCondition(val graphConfiguration: GraphConfiguration[_, _],
  * @constructor create a new ConsoleServer
  * @param graphConfiguration the current graph configuration
  */
-class ConsoleServer[Id](graphConfiguration: GraphConfiguration[_, _]) {
+class ConsoleServer[Id, Signal](graphConfiguration: GraphConfiguration[Id, Signal]) {
 
   // Start the HTTP and WebSocket servers on the configured port or the
   // highest available default port if none was configured by the user.
   val (server: HttpServer,
-    sockets: WebSocketConsoleServer[Id]) = startServers(graphConfiguration.consoleHttpPort)
+    sockets: WebSocketConsoleServer[Id, Signal]) = startServers(graphConfiguration.consoleHttpPort)
 
   // Things from the web-data folder will be served to the client
   server.createContext("/", new FileServer)
@@ -193,7 +193,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration[_, _]) {
   def getServer: HttpServer = server
 
   /** Returns the WebSocketConsoleServer */
-  def getSockets: WebSocketConsoleServer[Id] = sockets
+  def getSockets: WebSocketConsoleServer[Id, Signal] = sockets
 
   /**
    * Starts a new HTTP and WebSocket server, using the specified port for the
@@ -202,7 +202,7 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration[_, _]) {
    *
    *  @param httpPort attempt to start the HTTP server on this port
    */
-  def startServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
+  def startServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id, Signal]) = {
     val minAllowedUserPortNumber = 1025
     if (httpPort < minAllowedUserPortNumber) {
       val defaultPort = 8080
@@ -239,11 +239,11 @@ class ConsoleServer[Id](graphConfiguration: GraphConfiguration[_, _]) {
    *  @param httpPort attempt to start the HTTP server on this port
    *  @return httpPort attempt to start the HTTP server on this port
    */
-  def getNewServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id]) = {
+  def getNewServers(httpPort: Int): (HttpServer, WebSocketConsoleServer[Id, Signal]) = {
     val server: HttpServer =
       HttpServer.create(new InetSocketAddress(httpPort), 0)
-    val sockets: WebSocketConsoleServer[Id] =
-      new WebSocketConsoleServer[Id](new InetSocketAddress(httpPort + 100), graphConfiguration)
+    val sockets: WebSocketConsoleServer[Id, Signal] =
+      new WebSocketConsoleServer[Id, Signal](new InetSocketAddress(httpPort + 100), graphConfiguration)
     (server, sockets)
   }
 
@@ -378,13 +378,13 @@ class FileServer() extends HttpHandler {
  * @param port the port to start the server on
  * @param config the current graph configuration
  */
-class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration[_, _])
+class WebSocketConsoleServer[Id, Signal](port: InetSocketAddress, config: GraphConfiguration[Id, Signal])
   extends WebSocketServer(port) {
 
   // the coordinator, execution and executionConfiguration will be set at a
   // later instance, when they are ready. This is because we start the server
   // as early as possible and these things can be supplied later.
-  var coordinator: Option[Coordinator[Id, _]] = None
+  var coordinator: Option[Coordinator[Id, Signal]] = None
   var execution: Option[Execution] = None
   var executionStatistics: Option[ExecutionStatistics] = None
   var executionConfiguration: Option[ExecutionConfiguration] = None
@@ -394,7 +394,7 @@ class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfigura
 
   def setCoordinator(c: ActorRef) {
     println("ConsoleServer: got coordinator " + c)
-    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, _]](c))
+    coordinator = Some(AkkaProxy.newInstance[Coordinator[Id, Signal]](c))
   }
 
   def setExecution(e: Execution) {

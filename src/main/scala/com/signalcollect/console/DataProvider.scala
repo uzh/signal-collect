@@ -116,7 +116,7 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
  * @constructor create a new StateDataProvider
  * @param socket the WebSocketConsoleServer
  */
-class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
+class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
     extends DataProvider {
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
@@ -154,8 +154,8 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
  * @param socket the WebSocketConsoleServer (who knows the exec conf)
  * @param coordinator the Coordinator (who knows the graph conf)
  */
-class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
-                                    coordinator: Coordinator[Id, _])
+class ConfigurationDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
+                                    coordinator: Coordinator[Id, Signal])
     extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
@@ -164,7 +164,7 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
     }
     ("provider" -> "configuration") ~
       ("executionConfiguration" -> executionConfiguration) ~
-      ("graphConfiguration" -> Toolkit.unpackObjects(Array(socket.graphConfiguration))) ~
+      ("graphConfiguration" -> Toolkit.unpackObjects(Array[AnyRef](socket.graphConfiguration))) ~
       ("systemProperties" -> propertiesAsScalaMap(System.getProperties))
   }
 }
@@ -193,7 +193,7 @@ case class ControlsRequest(
  * @param socket the WebSocketConsoleServer
  * @param msg the request by the client
  */
-class ControlsProvider(socket: WebSocketConsoleServer[_],
+class ControlsProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
                        msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -260,8 +260,8 @@ case class BreakConditionContainer(
  * @param socket the WebSocketConsoleServer
  * @param msg the request by the client
  */
-class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
-                                  socket: WebSocketConsoleServer[Id],
+class BreakConditionsProvider[Id, Signal](coordinator: Coordinator[Id, Signal],
+                                  socket: WebSocketConsoleServer[Id, Signal],
                                   msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -353,7 +353,7 @@ case class GraphDataRequest(
  * @param coordinator the Coordinator
  * @param msg the request by the client
  */
-class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
+class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: JValue)
     extends DataProvider {
 
   implicit val formats = DefaultFormats

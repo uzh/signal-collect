@@ -146,7 +146,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   val console = {
     if (config.consoleEnabled) {
-      new ConsoleServer[Id](config)
+      new ConsoleServer[Id, Signal](config)
     } else {
       null
     }
@@ -272,7 +272,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        new InteractiveExecution[Id](this, console, stats, parameters).run()
+        new InteractiveExecution[Id, Signal](this, console, stats, parameters).run()
         if (console != null) { console.shutdown }
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
@@ -353,9 +353,9 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
    * @param stats the ExecutionStatistics instance
    * @param parameters the ExecutionConfiguration instance
    */
-  class InteractiveExecution[Id](
+  class InteractiveExecution[Id, Signal](
     graph: Graph[Id, Signal],
-    console: ConsoleServer[Id],
+    console: ConsoleServer[Id, Signal],
     stats: ExecutionStatistics,
     parameters: ExecutionConfiguration) extends Execution {
 
