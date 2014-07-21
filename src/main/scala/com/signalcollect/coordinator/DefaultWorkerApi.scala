@@ -107,7 +107,7 @@ class DefaultWorkerApi[Id, Signal](
   }
 
   override def setExistingVertexHandler(
-    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+    h: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit) {
     futures(_.setExistingVertexHandler(h)) foreach get
   }
 

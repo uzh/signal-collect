@@ -21,9 +21,9 @@ package com.signalcollect.interfaces
 
 import com.signalcollect.Vertex
 
-trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-    extends WorkerApi[Id, Signal]
-    with MessageRecipientRegistry {
+trait Worker[Id, Signal]
+  extends WorkerApi[Id, Signal]
+  with MessageRecipientRegistry {
   def vertexStore: Storage[Id]
   def scheduler: Scheduler[Id]
   var messageBusFlushed: Boolean

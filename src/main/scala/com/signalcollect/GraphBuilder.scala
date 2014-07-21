@@ -31,28 +31,56 @@ import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.MapperFactory
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.factory.scheduler.Throughput
+import com.signalcollect.factory.mapper.DefaultMapperFactory
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import com.signalcollect.factory.storage.MemoryEfficientStorage
+import com.signalcollect.factory.worker.AkkaWorkerFactory
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
  *  functions to modify this configuration and a build function to instantiate a graph
  *  with the defined configuration. This object represents a graph builder that is initialized with the default configuration.
  */
-object GraphBuilder extends GraphBuilder[Any, Any](GraphConfiguration())
+object GraphBuilder extends GraphBuilder[Any, Any](None)
 
 /**
  * Configurable builder for a Signal/Collect graph.
  *
  *  @author Philip Stutz
  */
-class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
+class GraphBuilder[Id: ClassTag, Signal: ClassTag](
+  configOption: Option[GraphConfiguration[Id, Signal]] = None) extends Serializable {
+
+  val config = configOption.getOrElse(
+    new GraphConfiguration[Id, Signal](
+      actorSystem = None,
+      actorNamePrefix = "",
+      eagerIdleDetection = true,
+      consoleEnabled = false,
+      throttlingEnabled = false,
+      consoleHttpPort = -1,
+      loggingLevel = Logging.WarningLevel,
+      mapperFactory = new DefaultMapperFactory[Id],
+      storageFactory = new MemoryEfficientStorage[Id],
+      schedulerFactory = new Throughput[Id],
+      preallocatedNodes = None,
+      nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
+      heartbeatIntervalInMilliseconds = 100,
+      kryoRegistrations = List(),
+      kryoInitializer = "com.signalcollect.configuration.KryoInit",
+      serializeMessages = false,
+      workerFactory = new AkkaWorkerFactory[Id, Signal],
+      messageBusFactory = new BulkAkkaMessageBusFactory[Id, Signal](1000, true)))
 
   /**
    *  Creates a graph with the specified configuration.
    */
   def build: Graph[Id, Signal] = new DefaultGraph[Id, Signal](config)
 
-  protected def builder(config: GraphConfiguration) =
-    new GraphBuilder[Id, Signal](config)
+  protected def builder(config: GraphConfiguration[Id, Signal]) =
+    new GraphBuilder[Id, Signal](Some(config))
 
   /**
    *  Configures if workers should eagerly notify the node about their idle state.
@@ -104,7 +132,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newWorkerFactory The worker factory used to instantiate workers.
    */
-  def withWorkerFactory(newWorkerFactory: WorkerFactory) =
+  def withWorkerFactory(newWorkerFactory: WorkerFactory[Id, Signal]) =
     builder(config.copy(workerFactory = newWorkerFactory))
 
   /**
@@ -112,7 +140,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newMessageBusFactory The message bus factory used to instantiate message buses.
    */
-  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) =
+  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory[Id, Signal]) =
     builder(config.copy(messageBusFactory = newMessageBusFactory))
 
   /**
@@ -120,7 +148,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newMapperFactory The mapper factory used to instantiate vertex to worker mappers.
    */
-  def withMapperFactory(newMapperFactory: MapperFactory) =
+  def withMapperFactory(newMapperFactory: MapperFactory[Id]) =
     builder(config.copy(mapperFactory = newMapperFactory))
 
   /**
@@ -128,7 +156,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newStorageFactory The storage factory used to instantiate vertex stores.
    */
-  def withStorageFactory(newStorageFactory: StorageFactory) =
+  def withStorageFactory(newStorageFactory: StorageFactory[Id]) =
     builder(config.copy(storageFactory = newStorageFactory))
 
   /**
@@ -136,7 +164,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newSchedulerFactory The scheduler factory used to instantiate schedulers.
    */
-  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory) =
+  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory[Id]) =
     builder(config.copy(schedulerFactory = newSchedulerFactory))
 
   /**
@@ -178,7 +206,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
    */
-  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) =
+  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner[Id, Signal]) =
     builder(config.copy(nodeProvisioner = newNodeProvisioner))
 
   /**

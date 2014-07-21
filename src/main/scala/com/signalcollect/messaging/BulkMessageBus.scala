@@ -27,7 +27,7 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.BulkSignalNoSourceIds
 import akka.actor.ActorSystem
 
-class SignalBulker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](size: Int) {
+class SignalBulker[Id: ClassTag, Signal: ClassTag](size: Int) {
   private var itemCount = 0
   def numberOfItems = itemCount
   def isFull: Boolean = itemCount == size
@@ -55,7 +55,7 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   flushThreshold: Int,
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-  workerApiFactory: WorkerApiFactory)
+  workerApiFactory: WorkerApiFactory[Id, Signal])
   extends AbstractMessageBus[Id, Signal] {
 
   override def reset {
@@ -71,7 +71,7 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
 
   protected var pendingSignals = 0
 
-  lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
+  lazy val workerApi = workerApiFactory.createInstance(workerProxies, mapper)
 
   val outgoingMessages: Array[SignalBulker[Id, Signal]] = new Array[SignalBulker[Id, Signal]](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {

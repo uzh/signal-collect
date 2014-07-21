@@ -22,14 +22,12 @@ package com.signalcollect
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-
 import scala.Array.canBuildFrom
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-
 import com.signalcollect.configuration.ActorSystemRegistry
 import com.signalcollect.configuration.AkkaConfig
 import com.signalcollect.configuration.ExecutionMode
@@ -51,14 +49,12 @@ import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.NodeActor
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.messaging.AkkaProxy
 import com.signalcollect.messaging.DefaultVertexToWorkerMapper
 import com.signalcollect.util.AkkaUtil.getActorRefFromSelection
 import com.sun.management.OperatingSystemMXBean
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.PoisonPill
@@ -67,25 +63,27 @@ import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
+import com.signalcollect.worker.AkkaWorker
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
 case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   workerId: Int,
-  workerFactory: WorkerFactory,
+  workerFactory: WorkerFactory[Id, Signal],
   numberOfWorkers: Int,
   numberOfNodes: Int,
-  messageBusFactory: MessageBusFactory,
-  mapperFactory: MapperFactory,
-  storageFactory: StorageFactory,
-  schedulerFactory: SchedulerFactory,
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  mapperFactory: MapperFactory[Id],
+  storageFactory: StorageFactory[Id],
+  schedulerFactory: SchedulerFactory[Id],
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
   throttlingEnabled: Boolean) {
-  def create: () => WorkerActor[Id, Signal] = {
+  println(workerFactory)
+  def create: () => AkkaWorker[Id, Signal] = {
     () =>
-      workerFactory.createInstance[Id, Signal](
+      workerFactory.createInstance(
         workerId,
         numberOfWorkers,
         numberOfNodes,
@@ -106,8 +104,8 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   throttlingEnabled: Boolean,
-  messageBusFactory: MessageBusFactory,
-  mapperFactory: MapperFactory,
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  mapperFactory: MapperFactory[Id],
   heartbeatIntervalInMilliseconds: Long)
   extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
@@ -125,7 +123,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
-  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] {
+  val config: GraphConfiguration[Id, Signal]) extends Graph[Id, Signal] {
 
   val akkaConfig = AkkaConfig.get(
     config.serializeMessages,
@@ -162,11 +160,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
-  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
+  val bootstrapNodeProxies = nodeActors.map(AkkaProxy.newInstance[NodeActor[Id, Signal]](_)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
 
-  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
+  val numberOfWorkers = bootstrapNodeProxies.par.map(_.numberOfCores).sum
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
@@ -241,7 +239,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   /** GraphApi */
 
-  def execute: ExecutionInformation = execute(ExecutionConfiguration)
+  def execute: ExecutionInformation[Id, Signal] = execute(ExecutionConfiguration)
 
   /**
    * Returns the time it took to execute `operation`
@@ -255,7 +253,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     new FiniteDuration(stopTime - startTime, TimeUnit.NANOSECONDS)
   }
 
-  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation[Id, Signal] = {
     if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
@@ -453,12 +451,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
 
     /** Pause the computation. */
-    def pause() {
+    def pause {
       stepTokens = 0
     }
 
     /** Reset the graph to its initial state and pause the computation. */
-    def reset() {
+    def reset {
       pause
       lock.synchronized {
         setState("resetting")

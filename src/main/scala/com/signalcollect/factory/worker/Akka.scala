@@ -21,7 +21,6 @@ package com.signalcollect.factory.worker
 
 import scala.reflect.ClassTag
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.interfaces.MessageBusFactory
@@ -32,18 +31,18 @@ import com.signalcollect.interfaces.SchedulerFactory
 /**
  *  The default Akka worker implementation.
  */
-object DefaultAkkaWorker extends WorkerFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
+class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id, Signal] {
+  def createInstance(
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
-    messageBusFactory: MessageBusFactory,
-    mapperFactory: MapperFactory,
-    storageFactory: StorageFactory,
-    schedulerFactory: SchedulerFactory,
+    messageBusFactory: MessageBusFactory[Id, Signal],
+    mapperFactory: MapperFactory[Id],
+    storageFactory: StorageFactory[Id],
+    schedulerFactory: SchedulerFactory[Id],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
-    throttlingEnabled: Boolean): WorkerActor[Id, Signal] = {
+    throttlingEnabled: Boolean): AkkaWorker[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,

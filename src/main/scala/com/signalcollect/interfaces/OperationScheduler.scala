@@ -1,7 +1,7 @@
 /*
  *  @author Philip Stutz
  *
- *  Copyright 2010 University of Zurich
+ *  Copyright 2013 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@
 
 package com.signalcollect.interfaces
 
-import akka.actor.Actor
+import com.signalcollect.Vertex
 
-trait WorkerActor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends Actor
+abstract class Scheduler[Id](val worker: Worker[Id, _]) {
+  def executeOperations(systemOverloaded: Boolean)
+  def handleCollectOnDelivery(v: Vertex[Id, _])
+}

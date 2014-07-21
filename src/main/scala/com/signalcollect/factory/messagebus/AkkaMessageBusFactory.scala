@@ -28,14 +28,15 @@ import com.signalcollect.messaging.DefaultMessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import akka.actor.ActorSystem
 
-object AkkaMessageBusFactory extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
+class AkkaMessageBusFactory[Id: ClassTag, Signal: ClassTag]
+  extends MessageBusFactory[Id, Signal] {
+  def createInstance(
     system: ActorSystem,
     numberOfWorkers: Int,
     numberOfNodes: Int,
     mapper: VertexToWorkerMapper[Id],
     sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
+    workerApiFactory: WorkerApiFactory[Id, Signal]): MessageBus[Id, Signal] = {
     new DefaultMessageBus[Id, Signal](
       system,
       numberOfWorkers,
@@ -51,14 +52,17 @@ object AkkaMessageBusFactory extends MessageBusFactory {
  * Stores outgoing messages until 'flushThreshold' messages are queued for a worker.
  * Combines messages for the same vertex using 'combiner'.
  */
-class BulkAkkaMessageBusFactory(flushThreshold: Int, withSourceIds: Boolean) extends MessageBusFactory {
-  def createInstance[Id: ClassTag, Signal: ClassTag](
+class BulkAkkaMessageBusFactory[Id: ClassTag, Signal: ClassTag](
+  flushThreshold: Int,
+  withSourceIds: Boolean)
+  extends MessageBusFactory[Id, Signal] {
+  def createInstance(
     system: ActorSystem,
     numberOfWorkers: Int,
     numberOfNodes: Int,
     mapper: VertexToWorkerMapper[Id],
     sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory): MessageBus[Id, Signal] = {
+    workerApiFactory: WorkerApiFactory[Id, Signal]): MessageBus[Id, Signal] = {
     new BulkMessageBus[Id, Signal](
       system,
       numberOfWorkers,

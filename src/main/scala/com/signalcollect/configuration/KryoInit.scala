@@ -21,16 +21,6 @@ package com.signalcollect.configuration
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.serializers.DeflateSerializer
-import com.esotericsoftware.kryo.Serializer
-import com.signalcollect.interfaces.Request
-import com.signalcollect.messaging.Command
-import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.messaging.Incrementor
-import com.signalcollect.factory.messagebus._
-import com.signalcollect.factory.mapper.DefaultMapperFactory
-import com.signalcollect.worker.AkkaWorker
-import com.signalcollect.WorkerCreator
-import com.signalcollect.factory.worker.DefaultAkkaWorker
 
 class KryoInit {
 
@@ -74,8 +64,8 @@ class KryoInit {
       register("scala.collection.SortedMap")
       register("com.signalcollect.configuration.GraphConfiguration")
       register("com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner")
-      register("com.signalcollect.factory.scheduler.Throughput$")
-      register("com.signalcollect.factory.scheduler.LowLatency$")
+      register("com.signalcollect.factory.scheduler.Throughput")
+      register("com.signalcollect.factory.scheduler.LowLatency")
       register("java.lang.Class")
       register("java.lang.Object")
       register("akka.actor.RepointableActorRef")
@@ -110,8 +100,8 @@ class KryoInit {
       register("scala.reflect.ManifestFactory$$anon$1")
       register("scala.reflect.ManifestFactory$$anon$9")
       register("scala.reflect.ManifestFactory$$anon$12")
-      register("com.signalcollect.factory.storage.MemoryEfficientStorage$")
-      register("com.signalcollect.factory.worker.DefaultAkkaWorker$")
+      register("com.signalcollect.factory.storage.MemoryEfficientStorage")
+      register("com.signalcollect.factory.worker.AkkaWorkerFactory")
       register("com.signalcollect.coordinator.OnIdle")
       register("com.signalcollect.worker.ScheduleOperations$")
       register("akka.actor.Terminated")
@@ -122,8 +112,8 @@ class KryoInit {
       register("com.signalcollect.messaging.Incrementor$$anonfun$1")
       register("com.signalcollect.coordinator.DefaultCoordinator$$anonfun$1")
       register("com.signalcollect.DefaultGraph$$anonfun$10")
-      register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory$")
-      register("com.signalcollect.factory.mapper.DefaultMapperFactory$")
+      register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory")
+      register("com.signalcollect.factory.mapper.DefaultMapperFactory")
       register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory")
       register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$1")
       register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$3")

@@ -104,7 +104,7 @@ abstract class DataGraphVertex[Id, State](
    * mostRecentSignalMap.
    * @return a map with a single element, the mostRecentSignalMap
    */
-  override def expose(): Map[String, Any] = {
+  override def expose: Map[String, Any] = {
     Map(("mostRecentSignalMap", makeExposable(mostRecentSignalMap.toMap)))
   }
 

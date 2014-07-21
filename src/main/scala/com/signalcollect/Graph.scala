@@ -34,7 +34,7 @@ import com.signalcollect.interfaces.ComplexAggregation
  *
  *  @author Philip Stutz
  */
-abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
+abstract class Graph[Id, Signal] extends GraphEditor[Id, Signal] {
 
   def numberOfNodes: Int
   def numberOfWorkers: Int
@@ -54,7 +54,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute: ExecutionInformation
+  def execute: ExecutionInformation[Id, Signal]
 
   /**
    *  Starts the execution of the computation using the default execution parameters and
@@ -73,7 +73,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute(executionConfiguration: ExecutionConfiguration): ExecutionInformation
+  def execute(executionConfiguration: ExecutionConfiguration): ExecutionInformation[Id, Signal]
 
   /**
    *  Recalculates the signal/collect scores of all vertices.

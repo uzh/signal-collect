@@ -45,9 +45,9 @@ import akka.dispatch.MessageQueue
 import akka.actor.Actor
 import akka.serialization.SerializationExtension
 import akka.actor.Cancellable
-import akka.actor.Scheduler
 import scala.util.Random
 import com.signalcollect.coordinator.IsIdle
+import akka.actor.Scheduler
 
 case object ScheduleOperations
 
@@ -71,18 +71,18 @@ case class IncrementorForWorker(workerId: Int) {
  * Class that interfaces the worker implementation with Akka messaging.
  * Mainly responsible for translating received messages to function calls on a worker implementation.
  */
-class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+class AkkaWorker[Id: ClassTag, Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
-  val messageBusFactory: MessageBusFactory,
-  val mapperFactory: MapperFactory,
-  val storageFactory: StorageFactory,
-  val schedulerFactory: SchedulerFactory,
+  val messageBusFactory: MessageBusFactory[Id, Signal],
+  val mapperFactory: MapperFactory[Id],
+  val storageFactory: StorageFactory[Id],
+  val schedulerFactory: SchedulerFactory[Id],
   val heartbeatIntervalInMilliseconds: Int,
   val eagerIdleDetection: Boolean,
   val throttlingEnabled: Boolean)
-  extends WorkerActor[Id, Signal]
+  extends Actor
   with ActorLogging
   with ActorRestartLogging {
 
@@ -90,14 +90,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   var lastHeartbeatTimestamp = System.nanoTime
   var schedulingTimestamp = System.nanoTime
 
+  val akkaScheduler: Scheduler = context.system.scheduler: akka.actor.Scheduler
+  implicit val executor = context.system.dispatcher
+
   override def postStop {
     statsReportScheduling.cancel
     scheduledPingPongExchange.foreach(_.cancel)
     log.debug(s"Worker $workerId has stopped.")
   }
 
-  implicit val executor = context.system.dispatcher
-  val statsReportScheduling = context.system.scheduler.
+  val statsReportScheduling = akkaScheduler.
     schedule(0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, StatsDue)
 
   var scheduledPingPongExchange: Option[Cancellable] = None
@@ -111,7 +113,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](
+    messageBusFactory.createInstance(
       context.system,
       numberOfWorkers,
       numberOfNodes,
@@ -242,7 +244,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         worker.slowPongDetected = false
         // Wait a bit and then play ping pong with another random partner.
         if (!worker.isIdle) {
-          scheduledPingPongExchange = Some(context.system.scheduler.scheduleOnce(
+          scheduledPingPongExchange = Some(akkaScheduler.scheduleOnce(
             worker.pingPongSchedulingIntervalInMilliseconds.milliseconds,
             self,
             StartPingPongExchange(worker.getRandomPingPongPartner)))

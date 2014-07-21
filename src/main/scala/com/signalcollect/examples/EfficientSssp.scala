@@ -38,7 +38,7 @@ import com.signalcollect.util.IntSet
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientSsspLoader extends App {
-  val g = new GraphBuilder[Int, Int].withMessageBusFactory(new BulkAkkaMessageBusFactory(96, false)).build
+  val g = new GraphBuilder[Int, Int]().withMessageBusFactory(new BulkAkkaMessageBusFactory[Int, Int](96, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)

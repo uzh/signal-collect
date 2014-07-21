@@ -49,6 +49,7 @@ import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.serialization.DefaultSerializer
 import scala.util.Random
+import scala.reflect.ClassTag
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -60,11 +61,11 @@ class WorkerImplementation[Id, Signal](
   val eagerIdleDetection: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
-  val storageFactory: StorageFactory,
-  val schedulerFactory: SchedulerFactory,
+  val storageFactory: StorageFactory[Id],
+  val schedulerFactory: SchedulerFactory[Id],
   var signalThreshold: Double,
   var collectThreshold: Double,
-  var existingVertexHandler: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit,
+  var existingVertexHandler: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit,
   var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit,
   var edgeAddedToNonExistentVertexHandler: (Edge[Id], Id) => Option[Vertex[Id, _]])
   extends Worker[Id, Signal] {
@@ -74,7 +75,7 @@ class WorkerImplementation[Id, Signal](
   val pingPongSchedulingIntervalInMilliseconds = 4 // schedule pingpong exchange every 8ms
   val maxPongDelay = 4e+6 // pong is considered delayed after waiting for 4ms  
   val scheduler = schedulerFactory.createInstance(this)
-  val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
+  val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
 
   initialize
@@ -103,7 +104,7 @@ class WorkerImplementation[Id, Signal](
     isPaused = true
     allWorkDoneWhenContinueSent = false
     lastStatusUpdate = System.currentTimeMillis
-    vertexStore = storageFactory.createInstance[Id]
+    vertexStore = storageFactory.createInstance
     pendingModifications = Iterator.empty
     pingSentTimestamp = 0
     pingPongScheduled = false
@@ -306,7 +307,7 @@ class WorkerImplementation[Id, Signal](
     pendingModifications = pendingModifications ++ graphModifications
   }
 
-  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
+  def setExistingVertexHandler(h: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit) {
     existingVertexHandler = h
   }
 

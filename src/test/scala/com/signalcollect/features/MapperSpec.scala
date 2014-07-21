@@ -39,8 +39,8 @@ class Worker0Mapper[Id] extends VertexToWorkerMapper[Id] {
   def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = 0
 }
 
-object Worker0MapperFactory extends MapperFactory {
-  def createInstance[Id](numberOfNodes: Int, workersPerNode: Int) = new Worker0Mapper
+class Worker0MapperFactory[Id] extends MapperFactory[Id] {
+  def createInstance(numberOfNodes: Int, workersPerNode: Int) = new Worker0Mapper
 }
 
 /**
@@ -72,7 +72,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
         }
         correct
       }
-      val graph = GraphBuilder.withMapperFactory(Worker0MapperFactory).build
+      val graph = GraphBuilder.withMapperFactory(new Worker0MapperFactory[Any]).build
       try {
         for (i <- 0 until 5) {
           val v = new PageRankVertex(i)

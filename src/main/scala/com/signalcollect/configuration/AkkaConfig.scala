@@ -59,15 +59,13 @@ akka {
   scheduler.tick-duration = 2ms
     
   actor {
-    """ +
-    {
+    """ + {
       if (serializeMessages) {
         """
     serialize-messages = on
   """
       } else ""
-    } +
-    """
+    } + """
     provider = "akka.remote.RemoteActorRefProvider"
     
     serializers {

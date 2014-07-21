@@ -39,8 +39,8 @@ import com.signalcollect.interfaces.WorkerStatistics
  *
  *  @author Philip Stutz
  */
-case class ExecutionInformation(
-  config: GraphConfiguration,
+case class ExecutionInformation[Id, Signal](
+  config: GraphConfiguration[Id, Signal],
   numberOfWorkers: Int,
   parameters: ExecutionConfiguration,
   executionStatistics: ExecutionStatistics,

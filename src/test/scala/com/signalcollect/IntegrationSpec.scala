@@ -50,7 +50,7 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
 
   def test(graphProviders: List[() => Graph[Any, Any]] = computeGraphFactories, verify: Vertex[_, _] => Boolean, buildGraph: Graph[Any, Any] => Unit = (graph: Graph[Any, Any]) => (), signalThreshold: Double = 0.01, collectThreshold: Double = 0): Boolean = {
     var correct = true
-    var computationStatistics = Map[String, List[ExecutionInformation]]()
+    var computationStatistics = Map[String, List[ExecutionInformation[Any, Any]]]()
 
     for (executionMode <- executionModes) {
       for (graphProvider <- graphProviders) {

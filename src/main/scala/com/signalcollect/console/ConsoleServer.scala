@@ -99,7 +99,7 @@ import BreakConditionName._
  * @param propsMap a map of properties supplied to this break condition
  * @param workerApi a workerApi
  */
-class BreakCondition(val graphConfiguration: GraphConfiguration,
+class BreakCondition(val graphConfiguration: GraphConfiguration[_, _],
   val executionConfiguration: ExecutionConfiguration,
   val name: BreakConditionName,
   val propsMap: Map[String, String],
@@ -172,7 +172,7 @@ class BreakCondition(val graphConfiguration: GraphConfiguration,
  * @constructor create a new ConsoleServer
  * @param graphConfiguration the current graph configuration
  */
-class ConsoleServer[Id](graphConfiguration: GraphConfiguration) {
+class ConsoleServer[Id](graphConfiguration: GraphConfiguration[_, _]) {
 
   // Start the HTTP and WebSocket servers on the configured port or the
   // highest available default port if none was configured by the user.
@@ -378,7 +378,7 @@ class FileServer() extends HttpHandler {
  * @param port the port to start the server on
  * @param config the current graph configuration
  */
-class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration)
+class WebSocketConsoleServer[Id](port: InetSocketAddress, config: GraphConfiguration[_, _])
   extends WebSocketServer(port) {
 
   // the coordinator, execution and executionConfiguration will be set at a

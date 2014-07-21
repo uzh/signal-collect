@@ -125,7 +125,7 @@ object ResultHandler {
  */
 class QueryNode
 
-class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(vertexId, state) with ResetStateAfterSignaling[Int, List[PathQuery]] {
+class QueryVertex(vertexId: Int, initialState: List[PathQuery]) extends DataFlowVertex(vertexId, initialState) with ResetStateAfterSignaling[Int, List[PathQuery]] {
 
   type Signal = List[PathQuery]
 
