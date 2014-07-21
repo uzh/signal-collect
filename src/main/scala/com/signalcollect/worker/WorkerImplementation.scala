@@ -54,7 +54,7 @@ import scala.reflect.ClassTag
 /**
  * Main implementation of the WorkerApi interface.
  */
-class WorkerImplementation[Id, Signal](
+class WorkerImplementation[@specialized(Long) Id, Signal](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,

@@ -28,7 +28,7 @@ import com.signalcollect.scheduler.LowLatencyScheduler
  *  The low-latency scheduler tries to minimize the latency between
  *  receiving a message, collecting and signaling.
  */
-class LowLatency[Id] extends SchedulerFactory[Id] {
+class LowLatency[@specialized(Long) Id] extends SchedulerFactory[Id] {
   def createInstance(worker: Worker[Id, _]): Scheduler[Id] = {
     new LowLatencyScheduler[Id](worker)
   }

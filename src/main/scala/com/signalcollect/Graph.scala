@@ -34,7 +34,7 @@ import com.signalcollect.interfaces.ComplexAggregation
  *
  *  @author Philip Stutz
  */
-abstract class Graph[Id, Signal] extends GraphEditor[Id, Signal] {
+trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
 
   def numberOfNodes: Int
   def numberOfWorkers: Int

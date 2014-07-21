@@ -27,7 +27,7 @@ import com.signalcollect.storage.VertexMapStorage
  *  Storage backed by a memory efficient VertexMap.
  *  Inserts/removals of vertices are slower than with a Java HashMap.
  */
-class MemoryEfficientStorage[Id] extends StorageFactory[Id] {
+class MemoryEfficientStorage[@specialized(Long) Id] extends StorageFactory[Id] {
   def createInstance: Storage[Id] = new VertexMapStorage[Id]
   override def toString = "MemoryEfficientStorage"
 }

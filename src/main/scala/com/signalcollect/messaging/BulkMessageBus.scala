@@ -27,7 +27,7 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.BulkSignalNoSourceIds
 import akka.actor.ActorSystem
 
-class SignalBulker[Id: ClassTag, Signal: ClassTag](size: Int) {
+class SignalBulker[@specialized(Long) Id: ClassTag, Signal: ClassTag](size: Int) {
   private var itemCount = 0
   def numberOfItems = itemCount
   def isFull: Boolean = itemCount == size
@@ -47,7 +47,7 @@ class SignalBulker[Id: ClassTag, Signal: ClassTag](size: Int) {
   }
 }
 
-class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
+class BulkMessageBus[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   val system: ActorSystem,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,

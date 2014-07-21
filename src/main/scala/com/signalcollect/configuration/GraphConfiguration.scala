@@ -44,7 +44,7 @@ import scala.reflect.ClassTag
 /**
  * All the graph configuration parameters with their defaults.
  */
-case class GraphConfiguration[Id: ClassTag, Signal: ClassTag](
+case class GraphConfiguration[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   actorSystem: Option[ActorSystem],
   actorNamePrefix: String,
   eagerIdleDetection: Boolean,

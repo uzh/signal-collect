@@ -28,7 +28,7 @@ import akka.actor.ActorRef
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
  * by calling them directly on the worker itself.
  */
-class WorkerGraphEditor[Id, Signal](
+class WorkerGraphEditor[@specialized(Long) Id, Signal](
   workerId: Int,
   worker: WorkerApi[Id, Signal],
   messageBus: MessageBus[Id, Signal])

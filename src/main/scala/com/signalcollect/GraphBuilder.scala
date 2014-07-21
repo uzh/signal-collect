@@ -50,7 +50,7 @@ object GraphBuilder extends GraphBuilder[Any, Any](None)
  *
  *  @author Philip Stutz
  */
-class GraphBuilder[Id: ClassTag, Signal: ClassTag](
+class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   configOption: Option[GraphConfiguration[Id, Signal]] = None) extends Serializable {
 
   val config = configOption.getOrElse(

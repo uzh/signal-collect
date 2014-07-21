@@ -28,7 +28,7 @@ import com.signalcollect.scheduler.ThroughputScheduler
  *  The low-latency scheduler tries to maximize the signaling/collecting
  *  throughput and prevent excessive memory usage.
  */
-class Throughput[Id] extends SchedulerFactory[Id] {
+class Throughput[@specialized(Long) Id] extends SchedulerFactory[Id] {
   def createInstance(worker: Worker[Id, _]): Scheduler[Id] = {
     new ThroughputScheduler[Id](worker)
   }

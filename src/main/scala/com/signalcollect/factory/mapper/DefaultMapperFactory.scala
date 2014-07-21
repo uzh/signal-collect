@@ -28,7 +28,7 @@ import com.signalcollect.messaging.DefaultVertexToWorkerMapper
  *  Default random hash partitioning mapper.
  *  Has good load balancing but poor locality.
  */
-class DefaultMapperFactory[Id] extends MapperFactory[Id] {
+class DefaultMapperFactory[@specialized(Long) Id] extends MapperFactory[Id] {
   def createInstance(numberOfNodes: Int, workersPerNode: Int): VertexToWorkerMapper[Id] =
     new DefaultVertexToWorkerMapper[Id](numberOfNodes, workersPerNode)
   override def toString = "DefaultMapperFactory"
