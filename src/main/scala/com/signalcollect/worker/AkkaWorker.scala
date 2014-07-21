@@ -209,7 +209,7 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
+  @inline def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
     worker.counters.bulkSignalMessagesReceived += 1
     val size = bulkSignal.signals.length
     var i = 0
