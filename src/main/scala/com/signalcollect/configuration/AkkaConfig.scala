@@ -294,6 +294,18 @@ akka {
   }
 
   remote {
+    
+      # Number of potentially lost/delayed heartbeats that will be
+      # accepted before considering it to be an anomaly.
+      # This margin is important to be able to survive sudden, occasional,
+      # pauses in heartbeat arrivals, due to for example garbage collect or
+      # network drop.
+      acceptable-heartbeat-pause = 60 s
+ 
+ 
+      # How often to check for nodes marked as unreachable by the failure
+      # detector
+      unreachable-nodes-reaper-interval = 10s
         
     netty.tcp {
         

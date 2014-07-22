@@ -83,11 +83,12 @@ class DefaultNodeContainer(id: Int,
 
   def waitForTermination {
     val begin = System.currentTimeMillis()
+    var cnt = 0
     while (!shutdownNow && timeoutNotReached(begin) && terminated == false) {
       val runtime = Runtime.getRuntime
       val memoryUsage: Double = 1.0 - (runtime.freeMemory().toDouble/runtime.maxMemory.toDouble)
-      if(memoryUsage > 0.95)  log.warning(s"memory used: $memoryUsage")
-
+      if(memoryUsage > 0.95 && cnt%150 == 0)  log.warning(s"memory used: $memoryUsage")
+      cnt += 1
       Thread.sleep(500)
     }
     terminated = true
