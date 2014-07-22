@@ -55,7 +55,6 @@ import scala.util.Random
  */
 class WorkerImplementation[Id, Signal](
   val workerId: Int,
-  val nodeId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   val eagerIdleDetection: Boolean,
@@ -70,9 +69,10 @@ class WorkerImplementation[Id, Signal](
   var edgeAddedToNonExistentVertexHandler: (Edge[Id], Id) => Option[Vertex[Id, _]])
   extends Worker[Id, Signal] {
 
-  val workersPerNode = numberOfWorkers / numberOfNodes
-  val pingPongSchedulingIntervalInMilliseconds = 4 // 4ms
-  val maxPongDelay = 4e+6 // 4ms
+  val workersPerNode = numberOfWorkers / numberOfNodes // Assumes that there is the same number of workers on all nodes.
+  val nodeId = getNodeId(workerId)
+  val pingPongSchedulingIntervalInMilliseconds = 4 // schedule pingpong exchange every 8ms
+  val maxPongDelay = 4e+6 // pong is considered delayed after waiting for 4ms  
   val scheduler = schedulerFactory.createInstance(this)
   val graphEditor: GraphEditor[Id, Signal] = new WorkerGraphEditor(workerId, this, messageBus)
   val vertexGraphEditor: GraphEditor[Any, Any] = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
@@ -82,7 +82,6 @@ class WorkerImplementation[Id, Signal](
   var messageBusFlushed: Boolean = _
   var isIdleDetectionEnabled: Boolean = _
   var slowPongDetected: Boolean = _ // If the worker had to wait too long for the last pong reply to its ping request.
-  //var systemOverloaded: Boolean = _ // If the coordinator allows this worker to signal.
   var operationsScheduled: Boolean = _ // If executing operations has been scheduled.
   var isIdle: Boolean = _ // Idle status that was last reported to the coordinator.
   var isPaused: Boolean = _
@@ -99,7 +98,6 @@ class WorkerImplementation[Id, Signal](
     messageBusFlushed = true
     isIdleDetectionEnabled = false
     slowPongDetected = false
-    //systemOverloaded = false
     operationsScheduled = false
     isIdle = true
     isPaused = true
@@ -112,6 +110,7 @@ class WorkerImplementation[Id, Signal](
     waitingForPong = false
   }
 
+  def getNodeId(workerId: Int): Int = workerId / workersPerNode
   def getRandomPingPongPartner = Random.nextInt(numberOfWorkers)
 
   def sendPing(partner: Int) {

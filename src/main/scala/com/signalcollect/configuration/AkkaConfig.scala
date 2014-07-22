@@ -307,6 +307,10 @@ akka {
       # detector
       unreachable-nodes-reaper-interval = 10s
         
+    # Log warning if the number of messages in the backoff buffer in the endpoint
+    # writer exceeds this limit. It can be disabled by setting the value to off.
+    log-buffer-size-exceeding = 100000
+    
     netty.tcp {
         
       # The default remote server port clients should connect to.
@@ -364,6 +368,46 @@ akka {
       }
     }
       
+    default-remote-dispatcher {
+      # Dispatcher is the name of the event-based dispatcher
+      type = Dispatcher
+      # What kind of ExecutionService to use
+      executor = "fork-join-executor"
+      # Configuration for the fork join pool
+      fork-join-executor {
+        # Min number of threads to cap factor-based parallelism number to
+        parallelism-min = """ + numberOfCores + """
+        # Parallelism (threads) ... ceil(available processors * factor)
+        #parallelism-factor = 1.0
+        # Max number of threads to cap factor-based parallelism number to
+        parallelism-max = """ + numberOfCores + """
+      }
+      # Throughput defines the maximum number of messages to be
+      # processed per actor before the thread jumps to the next actor.
+      # Set to 1 for as fair as possible.
+      throughput = 1000
+    }
+    
+    backoff-remote-dispatcher {
+      # Dispatcher is the name of the event-based dispatcher
+      type = Dispatcher
+      # What kind of ExecutionService to use
+      executor = "fork-join-executor"
+      # Configuration for the fork join pool
+      fork-join-executor {
+        # Min number of threads to cap factor-based parallelism number to
+        parallelism-min = """ + numberOfCores + """
+        # Parallelism (threads) ... ceil(available processors * factor)
+        #parallelism-factor = 1.0
+        # Max number of threads to cap factor-based parallelism number to
+        parallelism-max = """ + numberOfCores + """
+      }
+      # Throughput defines the maximum number of messages to be
+      # processed per actor before the thread jumps to the next actor.
+      # Set to 1 for as fair as possible.
+      throughput = 1000
+    }
+        
   }
 }
 """
