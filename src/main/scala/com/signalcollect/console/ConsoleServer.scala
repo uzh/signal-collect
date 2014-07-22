@@ -539,20 +539,21 @@ object Toolkit {
 
   /** Serialize objects or collections of arbitrary type  */
   def serializeAny(o: Any): JValue = {
-    o match {
-      case x: Array[_] => JArray(x.toList.map(serializeAny(_)))
-      case x: List[_] => JArray(x.map(serializeAny(_)))
-      case x: Long => JInt(x)
-      case x: Int => JInt(x)
-      case x: String => JString(x)
-      case x: Double if x.isNaN => JDouble(0)
-      case x: Double => JDouble(x)
-      case x: Map[_, _] =>
-        try { decompose(x) }
-        catch { case e: MatchError => { JString(x.toString) } }
-      case x: BreakConditionName.Value => JString(x.toString)
-      case other => JString(other.toString)
+    try {
+      o match {
+        case x: Array[_] => JArray(x.toList.map(serializeAny(_)))
+        case x: List[_] => JArray(x.map(serializeAny(_)))
+        case x: Long => JInt(x)
+        case x: Int => JInt(x)
+        case x: String => JString(x)
+        case x: Double if x.isNaN => JDouble(0)
+        case x: Double => JDouble(x)
+        case x: Map[_, _] => decompose(x)
+        case x: BreakConditionName.Value => JString(x.toString)
+        case other => JString(other.toString)
+      }
     }
+    catch { case e: Exception => { JString(o.toString) } }
   }
 }
 
