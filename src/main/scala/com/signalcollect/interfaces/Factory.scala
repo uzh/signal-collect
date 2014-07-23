@@ -26,6 +26,18 @@ import com.signalcollect.worker.AkkaWorker
 
 abstract class Factory extends Serializable
 
+abstract class ExistingVertexHandlerFactory[Id, Signal] extends Factory {
+  def createInstance: ExistingVertexHandler[Id, Signal]
+}
+
+abstract class UndeliverableSignalHandlerFactory[Id, Signal] extends Factory {
+  def createInstance: UndeliverableSignalHandler[Id, Signal]
+}
+
+abstract class EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal] extends Factory {
+  def createInstance: EdgeAddedToNonExistentVertexHandler[Id, Signal]
+}
+
 abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
   def createInstance(
     workerId: Int,
@@ -35,6 +47,9 @@ abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
     mapperFactory: MapperFactory[Id],
     storageFactory: StorageFactory[Id],
     schedulerFactory: SchedulerFactory[Id],
+    existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+    undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+    edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
     throttlingEnabled: Boolean): AkkaWorker[Id, Signal]

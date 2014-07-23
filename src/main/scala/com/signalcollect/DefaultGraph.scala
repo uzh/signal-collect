@@ -64,6 +64,9 @@ import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
 import com.signalcollect.worker.AkkaWorker
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -77,6 +80,9 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   mapperFactory: MapperFactory[Id],
   storageFactory: StorageFactory[Id],
   schedulerFactory: SchedulerFactory[Id],
+  existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
   throttlingEnabled: Boolean) {
@@ -90,6 +96,9 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         mapperFactory,
         storageFactory,
         schedulerFactory,
+        existingVertexHandlerFactory,
+        undeliverableSignalHandlerFactory,
+        edgeAddedToNonExistentVertexHandlerFactory,
         heartbeatIntervalInMilliseconds,
         eagerIdleDetection,
         throttlingEnabled)
@@ -183,6 +192,9 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.mapperFactory,
           config.storageFactory,
           config.schedulerFactory,
+          config.existingVertexHandlerFactory,
+          config.undeliverableSignalHandlerFactory,
+          config.edgeAddedToNonExistentVertexHandlerFactory,
           config.heartbeatIntervalInMilliseconds,
           config.eagerIdleDetection,
           config.throttlingEnabled)
@@ -774,21 +786,6 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   def aggregate[ResultType](
     aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)
-  }
-
-  def setExistingVertexHandler(
-    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
-    workerApi.setExistingVertexHandler(h)
-  }
-
-  def setUndeliverableSignalHandler(
-    h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
-    workerApi.setUndeliverableSignalHandler(h)
-  }
-
-  def setEdgeAddedToNonExistentVertexHandler(
-    h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
-    workerApi.setEdgeAddedToNonExistentVertexHandler(h)
   }
 
   /**

@@ -36,7 +36,7 @@ import java.io.DataOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces._
 import com.signalcollect.interfaces.WorkerStatus
 import akka.actor.ActorRef
 import com.signalcollect.interfaces.MessageRecipientRegistry
@@ -64,11 +64,11 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   val log: LoggingAdapter,
   val storageFactory: StorageFactory[Id],
   val schedulerFactory: SchedulerFactory[Id],
+  val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   var signalThreshold: Double,
-  var collectThreshold: Double,
-  var existingVertexHandler: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit,
-  var undeliverableSignalHandler: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit,
-  var edgeAddedToNonExistentVertexHandler: (Edge[Id], Id) => Option[Vertex[Id, _]])
+  var collectThreshold: Double)
   extends Worker[Id, Signal] {
 
   val workersPerNode = numberOfWorkers / numberOfNodes // Assumes that there is the same number of workers on all nodes.
@@ -94,6 +94,10 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   var pingSentTimestamp: Long = _
   var pingPongScheduled: Boolean = _
   var waitingForPong: Boolean = _
+  var existingVertexHandler: ExistingVertexHandler[Id, Signal] = _
+  var undeliverableSignalHandler: UndeliverableSignalHandler[Id, Signal] = _
+  var edgeAddedToNonExistentVertexHandler: EdgeAddedToNonExistentVertexHandler[Id, Signal] = _
+
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
   def initialize {
@@ -113,6 +117,9 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     scheduler = schedulerFactory.createInstance(this)
     graphEditor = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
     vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
+    existingVertexHandler = existingVertexHandlerFactory.createInstance
+    undeliverableSignalHandler = undeliverableSignalHandlerFactory.createInstance
+    edgeAddedToNonExistentVertexHandler = edgeAddedToNonExistentVertexHandlerFactory.createInstance
   }
 
   def getNodeId(workerId: Int): Int = workerId / workersPerNode
@@ -199,7 +206,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
         }
       }
     } else {
-      undeliverableSignalHandler(signal, targetId, sourceId, graphEditor)
+      undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, sourceId, graphEditor)
     }
     messageBusFlushed = false
   }
@@ -242,7 +249,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
       }
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
-      existingVertexHandler(existing, vertex, graphEditor)
+      existingVertexHandler.mergeVertices(existing, vertex, graphEditor)
     }
   }
 
@@ -257,7 +264,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     }
     val v = vertexStore.vertices.get(sourceId)
     if (v == null) {
-      val vertexOption = edgeAddedToNonExistentVertexHandler(edge, sourceId)
+      val vertexOption = edgeAddedToNonExistentVertexHandler.handleImpossibleEdgeAddition(edge, sourceId)
       if (vertexOption.isDefined) {
         addVertex(vertexOption.get)
         addEdgeToVertex(vertexOption.get)
@@ -309,18 +316,6 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
     pendingModifications = pendingModifications ++ graphModifications
-  }
-
-  def setExistingVertexHandler(h: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit) {
-    existingVertexHandler = h
-  }
-
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
-    undeliverableSignalHandler = h
-  }
-
-  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
-    edgeAddedToNonExistentVertexHandler = h
   }
 
   def setSignalThreshold(st: Double) {

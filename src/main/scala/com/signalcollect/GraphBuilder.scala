@@ -37,6 +37,13 @@ import com.signalcollect.factory.mapper.DefaultMapperFactory
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.factory.storage.MemoryEfficientStorage
 import com.signalcollect.factory.worker.AkkaWorkerFactory
+import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandler
+import com.signalcollect.factory.handler.DefaultExistingVertexHandlerFactory
+import com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory
+import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -72,7 +79,10 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       serializeMessages = false,
       workerFactory = new AkkaWorkerFactory[Id, Signal],
-      messageBusFactory = new BulkAkkaMessageBusFactory[Id, Signal](1000, true)))
+      messageBusFactory = new BulkAkkaMessageBusFactory[Id, Signal](1000, true),
+      existingVertexHandlerFactory = new DefaultExistingVertexHandlerFactory[Id, Signal](),
+      undeliverableSignalHandlerFactory = new DefaultUndeliverableSignalHandlerFactory[Id, Signal],
+      edgeAddedToNonExistentVertexHandlerFactory = new DefaultEdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]))
 
   /**
    *  Creates a graph with the specified configuration.
@@ -82,6 +92,33 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   protected def builder(config: GraphConfiguration[Id, Signal]) =
     new GraphBuilder[Id, Signal](Some(config))
 
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which a new vertex is added when a vertex with the same ID already exists.
+   *  The default handler silently discards the redundant new vertex.
+   */
+  def withExistingVertexHandlerFactory(newExistingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal]) = {
+    builder(config.copy(existingVertexHandlerFactory = newExistingVertexHandlerFactory))
+  }
+    
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which the recipient vertex of a signal does not exist.
+   *  The default handler throws an exception.
+   */
+  def withUndeliverableSignalHandlerFactory(newUndeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal]) = {
+    builder(config.copy(undeliverableSignalHandlerFactory = newUndeliverableSignalHandlerFactory))
+  }
+  
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which the an edge is added to a vertex that does not exist (yet).
+   *  The default handler throws an exception.
+   */
+  def withEdgeAddedToNonExistentVertexHandlerFactory(newEdgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]) = {
+    builder(config.copy(edgeAddedToNonExistentVertexHandlerFactory = newEdgeAddedToNonExistentVertexHandlerFactory))
+  }
+      
   /**
    *  Configures if workers should eagerly notify the node about their idle state.
    *  This speeds up idle detection and with it the latency between computation steps,

@@ -79,6 +79,9 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   val mapperFactory: MapperFactory[Id],
   val storageFactory: StorageFactory[Id],
   val schedulerFactory: SchedulerFactory[Id],
+  val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   val heartbeatIntervalInMilliseconds: Int,
   val eagerIdleDetection: Boolean,
   val throttlingEnabled: Boolean)
@@ -128,18 +131,11 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     log = log,
     storageFactory = storageFactory,
     schedulerFactory = schedulerFactory,
+    existingVertexHandlerFactory = existingVertexHandlerFactory,
+    undeliverableSignalHandlerFactory = undeliverableSignalHandlerFactory,
+    edgeAddedToNonExistentVertexHandlerFactory = edgeAddedToNonExistentVertexHandlerFactory,
     signalThreshold = 0.01,
-    collectThreshold = 0.0,
-    existingVertexHandler = (vOld, vNew, ge) => (),
-    undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
-      throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId.")
-      Unit
-    },
-    edgeAddedToNonExistentVertexHandler = (edge: Edge[Id], vertexId: Id) => {
-      throw new Exception(
-        s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")
-      None
-    })
+    collectThreshold = 0.0)
 
   /**
    * How many graph modifications this worker will execute in one batch.

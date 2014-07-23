@@ -32,10 +32,6 @@ trait WorkerApi[Id, Signal] {
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None)
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id] = None)
 
-  def setExistingVertexHandler(h: (Vertex[Id, _], Vertex[Id, _], GraphEditor[Id, Signal]) => Unit)
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]])
-
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)
 

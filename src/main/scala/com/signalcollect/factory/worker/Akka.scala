@@ -27,6 +27,9 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  *  The default Akka worker implementation.
@@ -40,6 +43,9 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
     mapperFactory: MapperFactory[Id],
     storageFactory: StorageFactory[Id],
     schedulerFactory: SchedulerFactory[Id],
+    existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+    undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+    edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
     throttlingEnabled: Boolean): AkkaWorker[Id, Signal] = {
@@ -51,6 +57,9 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
       mapperFactory,
       storageFactory,
       schedulerFactory,
+      existingVertexHandlerFactory,
+      undeliverableSignalHandlerFactory,
+      edgeAddedToNonExistentVertexHandlerFactory,
       heartbeatIntervalInMilliseconds,
       eagerIdleDetection,
       throttlingEnabled)

@@ -40,6 +40,9 @@ import akka.actor.ActorSystem
 import com.signalcollect.messaging.BulkMessageBus
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import scala.reflect.ClassTag
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  * All the graph configuration parameters with their defaults.
@@ -62,4 +65,8 @@ case class GraphConfiguration[@specialized(Long) Id: ClassTag, Signal: ClassTag]
   kryoInitializer: String,
   serializeMessages: Boolean,
   workerFactory: WorkerFactory[Id, Signal],
-  messageBusFactory: MessageBusFactory[Id, Signal])
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]
+)

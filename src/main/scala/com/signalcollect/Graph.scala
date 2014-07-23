@@ -154,34 +154,6 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType
 
   /**
-   *  Sets the function that can intervene when a vertex with the same ID is added
-   *  repeatedly. The new vertex will be thrown out for sure, but some of its
-   *  information might be added to the existing vertex.
-   *
-   *  @note By default the addition of a vertex is ignored if an existing vertex has the same ID.
-   */
-  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit)
-
-  /**
-   *  Sets the function that handles signals that could not be delivered to a vertex.
-   *
-   *  @note By default an exception is thrown when a signal is not deliverable. The handler function
-   *  		receives the signal and an instance of GraphEditor as parameters in order to take some
-   *  		action that handles this case.
-   */
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-
-  /**
-   *  Sets the handler that gets triggered, when the vertex to which an edge should be added does not exist.
-   *  Optionally returns the vertex that should be created and to whioch the edge can then be added.
-   *
-   *  @note By default an exception is thrown when an edge cannot be added. The handler function
-   *  		receives the edge, the id of the vertex that does not exist and an instance of GraphEditor as parameters in order to
-   *    		potentially create a vertex to which the edge should be added.
-   */
-  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]])
-
-  /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.
    */
