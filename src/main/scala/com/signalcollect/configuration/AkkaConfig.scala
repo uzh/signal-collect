@@ -191,7 +191,7 @@ akka {
         # To guarantee that both sender and receiver use the same numeric ids for the same
         # classes it is advised to pre-register them using at least the "classes" section
 
-        idstrategy = "incremental"
+        idstrategy = "explicit"
 
         # Define a default size for serializer pool
         # Try to define the size to be at least as big as the max possible number
