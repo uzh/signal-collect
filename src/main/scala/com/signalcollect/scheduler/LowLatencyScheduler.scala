@@ -23,7 +23,7 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Scheduler
 import com.signalcollect.interfaces.Worker
 
-class LowLatencyScheduler[Id](w: Worker[Id, _]) extends Scheduler[Id](w) {
+class LowLatencyScheduler[Id, Signal](w: Worker[Id, Signal]) extends Scheduler[Id, Signal](w) {
   override def executeOperations(systemOverloaded: Boolean) {
     if (!worker.vertexStore.toCollect.isEmpty) {
       val collected = worker.vertexStore.toCollect.process(
@@ -42,7 +42,7 @@ class LowLatencyScheduler[Id](w: Worker[Id, _]) extends Scheduler[Id](w) {
   }
 
   // "worker.messageBusFlushed" = false will be called later anyway
-  override def handleCollectOnDelivery(v: Vertex[Id, _]) {
+  override def handleCollectOnDelivery(v: Vertex[Id, _, Id, Signal]) {
     worker.executeSignalOperationOfVertex(v)
   }
 

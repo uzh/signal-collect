@@ -23,10 +23,10 @@ import com.signalcollect.Vertex
 import com.signalcollect.interfaces.Scheduler
 import com.signalcollect.interfaces.Worker
 
-class ThroughputScheduler[Id](
-  w: Worker[Id, _],
+class ThroughputScheduler[Id, Signal](
+  w: Worker[Id, Signal],
   val batchSize: Int = 10000)
-  extends Scheduler[Id](w) {
+  extends Scheduler[Id, Signal](w) {
 
   override def executeOperations(systemOverloaded: Boolean) {
     if (!worker.vertexStore.toCollect.isEmpty) {
@@ -49,7 +49,7 @@ class ThroughputScheduler[Id](
     }
   }
 
-  override def handleCollectOnDelivery(v: Vertex[Id, _]) {
+  override def handleCollectOnDelivery(v: Vertex[Id, _, Id, Signal]) {
     worker.vertexStore.toSignal.put(v)
   }
 

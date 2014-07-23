@@ -37,7 +37,7 @@ class EfficientPageRankVertex(id: Int)
 
   def computeSignal(edgeId: Int) = ???
 
-  override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
     if (edgeCount != 0) {
       val signal = (state - lastSignalState) / edgeCount
       targetIds.foreach(graphEditor.sendSignal(signal, _, None))
@@ -61,7 +61,7 @@ class EfficientPageRankVertex(id: Int)
 
 /** Builds a PageRank compute graph and executes the computation */
 object MemoryEfficientPageRank extends App {
-  val graph = GraphBuilder.
+  val graph = new GraphBuilder[Int, Any].
     //    withConsole(true).
     build
 

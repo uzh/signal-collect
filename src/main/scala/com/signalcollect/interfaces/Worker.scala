@@ -24,10 +24,10 @@ import com.signalcollect.Vertex
 trait Worker[Id, Signal]
   extends WorkerApi[Id, Signal]
   with MessageRecipientRegistry {
-  def vertexStore: Storage[Id]
-  def scheduler: Scheduler[Id]
+  def vertexStore: Storage[Id, Signal]
+  def scheduler: Scheduler[Id, Signal]
   var messageBusFlushed: Boolean
-  def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true)
-  def executeSignalOperationOfVertex(vertex: Vertex[Id, _])
+  def executeCollectOperationOfVertex(vertex: Vertex[Id, _, Id, Signal], addToSignal: Boolean = true)
+  def executeSignalOperationOfVertex(vertex: Vertex[Id, _, Id, Signal])
   def signalThreshold: Double
 }

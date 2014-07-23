@@ -209,7 +209,7 @@ abstract class AbstractMessageBus[Id, Signal]
     }
   }
 
-  override def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.addVertex(vertex)

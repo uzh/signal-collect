@@ -71,7 +71,7 @@ class PageRankVertex[Id](id: Id, dampingFactor: Double = 0.85) extends DataGraph
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = new GraphBuilder[Int, Any]().
+  val graph = new GraphBuilder[Any, Any]().
     //withConsole(true).
     build
 

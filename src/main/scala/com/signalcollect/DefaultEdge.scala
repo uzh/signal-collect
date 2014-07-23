@@ -112,12 +112,12 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
+  def executeSignalOperation(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) {
     graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
   }
 
   /** Called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) = {
+  def onAttach(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) = {
     source = sourceVertex.asInstanceOf[Source]
   }
 

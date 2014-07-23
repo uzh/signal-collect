@@ -77,8 +77,8 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   val numberOfNodes: Int,
   val messageBusFactory: MessageBusFactory[Id, Signal],
   val mapperFactory: MapperFactory[Id],
-  val storageFactory: StorageFactory[Id],
-  val schedulerFactory: SchedulerFactory[Id],
+  val storageFactory: StorageFactory[Id, Signal],
+  val schedulerFactory: SchedulerFactory[Id, Signal],
   val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
   val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
@@ -266,7 +266,7 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     case AddVertex(vertex) =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
-      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
+      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _, Id, Signal]])
       // TODO: Reevaluate, if we really need to schedule operations.
       if (!worker.operationsScheduled) {
         scheduleOperations

@@ -42,8 +42,8 @@ case class EdgeId[@specialized(Long) Id](val sourceId: Id, val targetId: Id) {
   override def toString: String = s"${sourceId} -> ${targetId}"
 }
 
-case class AddVertex[@specialized(Long) Id, State](
-  v: Vertex[Id, State])
+case class AddVertex[Id, State, GraphIdUpperBound, GraphSignalUpperBound](
+  v: Vertex[Id, State, GraphIdUpperBound, GraphSignalUpperBound])
 
 case class AddEdge[@specialized(Long) SourceId, @specialized(Long) TargetId](
   sourceVertexId: SourceId,

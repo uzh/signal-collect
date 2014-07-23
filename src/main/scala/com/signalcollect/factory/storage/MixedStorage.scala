@@ -27,7 +27,7 @@ import com.signalcollect.storage.MixedVertexStorage
  *  Storage backed by a mix between a custom-tailored open hash map implementation for vertices
  *  and the default Java HashMap for toSignal/toCollect.
  */
-class MixedStorage[@specialized(Long) Id] extends StorageFactory[Id] {
-  def createInstance: Storage[Id] = new MixedVertexStorage[Id]
+class MixedStorage[@specialized(Long) Id, Signal] extends StorageFactory[Id, Signal] {
+  def createInstance: Storage[Id, Signal] = new MixedVertexStorage[Id, Signal]
   override def toString = "MixedStorage"
 }

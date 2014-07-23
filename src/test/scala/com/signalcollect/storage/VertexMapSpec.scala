@@ -35,7 +35,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
   "VertexMap" should {
 
     "support puts" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
       vm.put(new PageRankVertex(3))
@@ -45,7 +45,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
 
     // There was a bug, where the map was not optimized after processing.
     "optimize after processing one item" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -59,7 +59,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "optimize after processing several items" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -74,7 +74,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "optimize correctly after processing several items" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -88,7 +88,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "optimize correctly in an edge case" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -102,7 +102,7 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "remove all elements via processing" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(1))
       vm.put(new PageRankVertex(2))
@@ -117,43 +117,43 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "handle special keys" in {
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new PageRankVertex(0))
       vm.put(new PageRankVertex(Int.MinValue))
       vm.put(new PageRankVertex(Int.MaxValue))
       vm.size must_== 3
       vm.get(0).id.asInstanceOf[Int] must_== 0
-      vm.get(Int.MinValue).id.asInstanceOf[Int] must_== Int.MinValue
-      vm.get(Int.MaxValue).id.asInstanceOf[Int] must_== Int.MaxValue
+      vm.get(Int.MinValue).id must_== Int.MinValue
+      vm.get(Int.MaxValue).id must_== Int.MaxValue
     }
 
     "fail to retrieve a vertex with the same hash code and different object" in {
       case class Ab(a: Int, b: Int) {
         override def hashCode = a.hashCode
       }
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       val v1 = new PageRankVertex(Ab(1, 100))
       val v2 = new PageRankVertex(Ab(1, 101))
       vm.put(v1)
-      vm.get(v1.id).asInstanceOf[Vertex[Any, Float]] === v1
-      vm.get(v2.id).asInstanceOf[Vertex[Any, Float]] === null
+      vm.get(v1.id) === v1
+      vm.get(v2.id) === null
     }
 
     "handle hash collisions correctly" in {
       case class Ab(a: Int, b: Int) {
         override def hashCode = a.hashCode
       }
-      val vm = new VertexMap[Any](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       val v1 = new PageRankVertex(Ab(1, 100))
       val v2 = new PageRankVertex(Ab(1, 101))
       vm.put(v1)
       vm.put(v2)
-      vm.get(v1.id).asInstanceOf[Vertex[Any, Float]] === v1
-      vm.get(v2.id).asInstanceOf[Vertex[Any, Float]] === v2
+      vm.get(v1.id) === v1
+      vm.get(v2.id) === v2
     }
 
     "stream vertices" in {
-      val vm = new VertexMap[Int](8, 0.99f)
+      val vm = new VertexMap[Any, Any](8, 0.99f)
       vm.put(new SudokuCell(0)) === true
       vm.put(new SudokuCell(Int.MinValue)) === true
       vm.put(new SudokuCell(Int.MaxValue)) === true

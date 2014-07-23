@@ -36,7 +36,7 @@ case class MultiAggregator[ResultTypeA, ResultTypeB](
   aggrA: ModularAggregationOperation[ResultTypeA],
   aggrB: ModularAggregationOperation[ResultTypeB])
   extends ModularAggregationOperation[(ResultTypeA, ResultTypeB)] {
-  def extract(v: Vertex[_, _]) = {
+  def extract(v: Vertex[_, _, _, _]) = {
     (aggrA.extract(v), aggrB.extract(v))
   }
   def aggregate(a: (ResultTypeA, ResultTypeB), b: (ResultTypeA, ResultTypeB)) = {
@@ -54,7 +54,7 @@ case class MultiAggregator[ResultTypeA, ResultTypeB](
  */
 case class IdStateMapAggregator[IdType, StateType]() extends ModularAggregationOperation[Map[IdType, StateType]] {
   val neutralElement = Map[IdType, StateType]()
-  def extract(v: Vertex[_, _]): Map[IdType, StateType] = {
+  def extract(v: Vertex[_, _, _, _]): Map[IdType, StateType] = {
     Map[IdType, StateType]((v.id.asInstanceOf[IdType], v.state.asInstanceOf[StateType]))
   }
   def aggregate(a: Map[IdType, StateType], b: Map[IdType, StateType]): Map[IdType, StateType] = a ++ b
@@ -100,7 +100,7 @@ case class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[
     combinedList.slice(0, math.min(sampleSize, combinedList.size))
   }
 
-  def extract(v: Vertex[_, _]): List[Any] = {
+  def extract(v: Vertex[_, _, _, _]): List[Any] = {
     List(v.id)
   }
 }
@@ -110,7 +110,7 @@ case class SampleVertexIds(sampleSize: Int) extends ModularAggregationOperation[
  *
  *  @example `val numberOfPageRankVertices = graph.aggregate(new CountVertices[PageRankVertex])`
  */
-case class CountVertices[VertexType <: Vertex[_, _]: ClassTag]() extends ModularAggregationOperation[Long] {
+case class CountVertices[VertexType <: Vertex[_, _, _, _]: ClassTag]() extends ModularAggregationOperation[Long] {
 
   val neutralElement: Long = 0l
 
@@ -122,7 +122,7 @@ case class CountVertices[VertexType <: Vertex[_, _]: ClassTag]() extends Modular
   /**
    *  Returns 1 for vertices that match `VertexType`, 0 for other types
    */
-  def extract(v: Vertex[_, _]): Long = {
+  def extract(v: Vertex[_, _, _, _]): Long = {
     v match {
       case v: VertexType => 1l
       case other => 0l
@@ -139,7 +139,7 @@ abstract class StateExtractor[StateType: Manifest] extends ModularAggregationOpe
   /**
    * Extracts the state from v if it matches `StateType`
    */
-  def extract(v: Vertex[_, _]): Option[StateType] = {
+  def extract(v: Vertex[_, _, _, _]): Option[StateType] = {
     try {
       Some(v.state.asInstanceOf[StateType]) // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
@@ -177,7 +177,7 @@ abstract class StateAggregator[StateType] extends ModularAggregationOperation[St
   /**
    *  Extracts the state from v if it matches `StateType`
    */
-  def extract(v: Vertex[_, _]): StateType = {
+  def extract(v: Vertex[_, _, _, _]): StateType = {
     try {
       v.state.asInstanceOf[StateType] // not nice, but isAssignableFrom is slow and has nasty issues with boxed/unboxed
     } catch {
@@ -195,10 +195,10 @@ case class TopKFinder[State](k: Int)(implicit ord: Ordering[State])
 
   implicit val ordering = Ordering.by((value: (_, State)) => value._2)
 
-  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): Iterable[(_, State)] = {
-    def extract(v: Vertex[_, _]): (_, State) = {
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _, _, _]]): Iterable[(_, State)] = {
+    def extract(v: Vertex[_, _, _, _]): (_, State) = {
       v match {
-        case vertex: Vertex[_, State] => (vertex.id, vertex.state)
+        case vertex: Vertex[_, State, _, _] => (vertex.id, vertex.state)
       }
     }
     val threadName = Thread.currentThread.getName

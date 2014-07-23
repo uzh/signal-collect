@@ -42,7 +42,7 @@ class WorkerGraphEditor[@specialized(Long) Id, Signal](
     graphEditor.sendSignal(signal, targetId, sourceId, blocking)
   }
 
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean) {
     if (blocking && shouldHandleLocally(vertex.id)) {
       worker.addVertex(vertex)
     } else {

@@ -8,15 +8,15 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandler
 
-class TestEdgeAddedToNonExistentVertexHandlerFactory[@specialized(Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal] {
-  def createInstance: EdgeAddedToNonExistentVertexHandler[Id, Signal] =
-    new TestEdgeAddedToNonExistentVertexHandler[Id, Signal]
+class TestEdgeAddedToNonExistentVertexHandlerFactory extends EdgeAddedToNonExistentVertexHandlerFactory[Any, Any] {
+  def createInstance: EdgeAddedToNonExistentVertexHandler[Any, Any] =
+    new TestEdgeAddedToNonExistentVertexHandler
   override def toString = "TestEdgeAddedToNonExistentVertexHandlerFactory"
 }
 
-class TestEdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandler[Id, Signal] {
-  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _]] = {
-    val v = new PageRankVertex(vertexId)
+class TestEdgeAddedToNonExistentVertexHandler extends EdgeAddedToNonExistentVertexHandler[Any, Any] {
+  def handleImpossibleEdgeAddition(edge: Edge[Any], vertexId: Any): Option[Vertex[Any, _, Any, Any]] = {
+    val v = new PageRankVertex[Any](vertexId)
     Some(v)
   }
 }
@@ -24,7 +24,7 @@ class TestEdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] ext
 class NonExistentVertexHandlerSpec extends FlatSpec with Matchers {
 
   "Handler for adding an edge to a nonexistent vertex" should "correctly create vertices if needed" in {
-    val g = GraphBuilder.withEdgeAddedToNonExistentVertexHandlerFactory(new TestEdgeAddedToNonExistentVertexHandlerFactory[Any, Any]).build
+    val g = GraphBuilder.withEdgeAddedToNonExistentVertexHandlerFactory(new TestEdgeAddedToNonExistentVertexHandlerFactory).build
     try {
       g.addEdge(1, new PageRankEdge(2))
       g.addEdge(2, new PageRankEdge(1))

@@ -29,7 +29,7 @@ class DefaultExistingVertexHandlerFactory[Id, Signal] extends ExistingVertexHand
 }
 
 class DefaultExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id, Signal] {
-  def mergeVertices(existing: Vertex[Id, _], failedVertexAddition: Vertex[Id, _], ge: GraphEditor[Id, Signal]) {
+  def mergeVertices(existing: Vertex[Id, _, Id, Signal], failedVertexAddition: Vertex[Id, _, Id, Signal], ge: GraphEditor[Id, Signal]) {
     // Do nothing, the second vertex with the same id is silently discarded.
   }
 }
@@ -53,7 +53,7 @@ class DefaultEdgeAddedToNonExistentVertexHandlerFactory[@specialized(Long) Id, S
 }
 
 class DefaultEdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandler[Id, Signal] {
-  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _]] = {
+  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _, Id, Signal]] = {
     throw new Exception(
       s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")
   }

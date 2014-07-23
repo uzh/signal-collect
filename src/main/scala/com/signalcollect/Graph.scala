@@ -114,11 +114,11 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @param f The function that gets executed on the vertex with id `vertexId`
    *
-   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex[_, _] => v.state })`
+   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex[_, _, _, _] => v.state })`
    *
-   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex[_, _] => String): String
+   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex[_, _, _, _] => String): String
    */
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
 
   /**
    *  Executes the function `f` on all vertices.
@@ -128,7 +128,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  @note This function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: Vertex[Id, _] => Unit)
+  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit)
 
   /**
    *  The worker passes a GraphEditor to function `f`, and then executes the resulting function on all vertices.
@@ -138,7 +138,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  @note The resulting function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit)
 
   /**
    *  Applies an aggregation operation to the graph and returns the result.

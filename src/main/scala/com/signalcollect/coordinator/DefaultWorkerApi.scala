@@ -87,13 +87,13 @@ class DefaultWorkerApi[Id, Signal](
     workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
   }
 
-  override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  override def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  override def foreachVertex(f: (Vertex[Id, _]) => Unit) = futures(_.foreachVertex(f)) foreach get
+  override def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) = futures(_.foreachVertex(f)) foreach get
 
-  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
 
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
     throw new UnsupportedOperationException("DefaultWorkerApi does not support this operation.")
@@ -121,7 +121,7 @@ class DefaultWorkerApi[Id, Signal](
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  override def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
     workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(vertex)
   }
 

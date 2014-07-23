@@ -24,7 +24,7 @@ import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 
 trait WorkerApi[Id, Signal] {
-  def addVertex(vertex: Vertex[Id, _])
+  def addVertex(vertex: Vertex[Id, _, Id, Signal])
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
   def removeEdge(edgeId: EdgeId[Id])
@@ -38,9 +38,9 @@ trait WorkerApi[Id, Signal] {
   def recalculateScores
   def recalculateScoresForVertexWithId(vertexId: Id)
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
-  def foreachVertex(f: Vertex[Id, _] => Unit)
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
+  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit)
 
   def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult
   def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult

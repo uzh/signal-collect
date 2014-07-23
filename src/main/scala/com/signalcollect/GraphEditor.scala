@@ -57,7 +57,7 @@ trait GraphEditor[@specialized(Long) Id, Signal] {
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean)
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean)
 
   /**
    *  Adds `vertex` to the graph.
@@ -65,7 +65,7 @@ trait GraphEditor[@specialized(Long) Id, Signal] {
    *  @note Does not block.
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _]) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
     addVertex(vertex, false)
   }
 

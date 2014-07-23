@@ -36,7 +36,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   "Memory Efficient Vertex Storage" should {
 
-    val storageFactory = new MemoryEfficientStorage[Any]
+    val storageFactory = new MemoryEfficientStorage[Any, Any]
 
     "hold all vertices inserted" in {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
@@ -74,7 +74,7 @@ class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
 
   "Java Map Vertex Storage" should {
 
-    val storageFactory = new JavaMapStorage[Any]
+    val storageFactory = new JavaMapStorage[Any, Any]
 
     "hold all vertices inserted" in {
       val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]

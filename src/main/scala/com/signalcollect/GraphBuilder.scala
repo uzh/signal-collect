@@ -70,8 +70,8 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
       consoleHttpPort = -1,
       loggingLevel = Logging.WarningLevel,
       mapperFactory = new DefaultMapperFactory[Id],
-      storageFactory = new MemoryEfficientStorage[Id],
-      schedulerFactory = new Throughput[Id],
+      storageFactory = new MemoryEfficientStorage[Id, Signal],
+      schedulerFactory = new Throughput[Id, Signal],
       preallocatedNodes = None,
       nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
       heartbeatIntervalInMilliseconds = 100,
@@ -193,7 +193,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
    *
    *  @param newStorageFactory The storage factory used to instantiate vertex stores.
    */
-  def withStorageFactory(newStorageFactory: StorageFactory[Id]) =
+  def withStorageFactory(newStorageFactory: StorageFactory[Id, Signal]) =
     builder(config.copy(storageFactory = newStorageFactory))
 
   /**
@@ -201,7 +201,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
    *
    *  @param newSchedulerFactory The scheduler factory used to instantiate schedulers.
    */
-  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory[Id]) =
+  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory[Id, Signal]) =
     builder(config.copy(schedulerFactory = newSchedulerFactory))
 
   /**

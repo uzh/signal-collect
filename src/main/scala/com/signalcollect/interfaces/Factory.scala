@@ -45,8 +45,8 @@ abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
     numberOfNodes: Int,
     messageBusFactory: MessageBusFactory[Id, Signal],
     mapperFactory: MapperFactory[Id],
-    storageFactory: StorageFactory[Id],
-    schedulerFactory: SchedulerFactory[Id],
+    storageFactory: StorageFactory[Id, Signal],
+    schedulerFactory: SchedulerFactory[Id, Signal],
     existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
     undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
     edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
@@ -69,12 +69,12 @@ abstract class MapperFactory[Id] extends Factory {
   def createInstance(numberOfNodes: Int, workersPerNode: Int): VertexToWorkerMapper[Id]
 }
 
-abstract class StorageFactory[Id] extends Factory {
-  def createInstance: Storage[Id]
+abstract class StorageFactory[Id, Signal] extends Factory {
+  def createInstance: Storage[Id, Signal]
 }
 
-abstract class SchedulerFactory[Id] extends Factory {
-  def createInstance(worker: Worker[Id, _]): Scheduler[Id]
+abstract class SchedulerFactory[Id, Signal] extends Factory {
+  def createInstance(worker: Worker[Id, Signal]): Scheduler[Id, Signal]
 }
 
 abstract class WorkerApiFactory[Id, Signal] extends Factory {

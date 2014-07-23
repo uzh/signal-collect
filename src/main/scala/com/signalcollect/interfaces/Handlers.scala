@@ -32,7 +32,7 @@ trait ExistingVertexHandler[Id, Signal] {
    *
    *  @note By default the addition of a vertex is ignored if an existing vertex has the same ID.
    */
-  def mergeVertices(existing: Vertex[Id, _], failedVertexAddition: Vertex[Id, _], ge: GraphEditor[Id, Signal])
+  def mergeVertices(existing: Vertex[Id, _, Id, Signal], failedVertexAddition: Vertex[Id, _, Id, Signal], ge: GraphEditor[Id, Signal])
 
 }
 
@@ -59,6 +59,6 @@ trait EdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] {
    *  		receives the edge, the id of the vertex that does not exist and an instance of GraphEditor as parameters in order to
    *    		potentially create a vertex to which the edge should be added.
    */
-  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _]]
+  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _, Id, Signal]]
 
 }

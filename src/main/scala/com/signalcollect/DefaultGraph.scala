@@ -78,8 +78,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   messageBusFactory: MessageBusFactory[Id, Signal],
   mapperFactory: MapperFactory[Id],
-  storageFactory: StorageFactory[Id],
-  schedulerFactory: SchedulerFactory[Id],
+  storageFactory: StorageFactory[Id, Signal],
+  schedulerFactory: SchedulerFactory[Id, Signal],
   existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
   edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
@@ -769,17 +769,17 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](
     vertexId: Id, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[Id, _]) => Unit) {
+  def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) {
     workerApi.foreachVertex(f)
   }
 
   def foreachVertexWithGraphEditor(
-    f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
+    f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
     workerApi.foreachVertexWithGraphEditor(f)
   }
 
@@ -812,7 +812,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean = false) {
     graphEditor.addVertex(vertex, blocking)
   }
 

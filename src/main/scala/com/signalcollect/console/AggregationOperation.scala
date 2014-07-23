@@ -70,7 +70,7 @@ class GraphAggregator[Id](
     }
   }
 
-  def extract(v: Vertex[_, _]): ((Double, Double, JObject)) = {
+  def extract(v: Vertex[_, _, _, _]): ((Double, Double, JObject)) = {
     def state: Double = interpretState(v.state)
     try {
       v match {
@@ -145,7 +145,7 @@ class SampleAggregator[Id](sampleSize: Int)
     combinedSet.slice(0, math.min(sampleSize, combinedSet.size)).toSet
   }
 
-  def extract(v: Vertex[_, _]): Set[Id] = v match {
+  def extract(v: Vertex[_, _, _, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
       List(i.id).toSet
     case other =>
@@ -164,7 +164,7 @@ class SampleAggregator[Id](sampleSize: Int)
 class TopDegreeAggregator[Id](n: Int)
   extends AggregationOperation[Map[Id, Int]] {
 
-  def extract(v: Vertex[_, _]): Map[Id, Int] = v match {
+  def extract(v: Vertex[_, _, _, _]): Map[Id, Int] = v match {
     case i: Inspectable[Id, _] =>
       // Create one map from this id to the number of outgoing edges
       Map(i.id -> i.targetIds.size) ++
@@ -192,7 +192,7 @@ class TopDegreeAggregator[Id](n: Int)
 class TopStateAggregator[Id](n: Int, inverted: Boolean)
   extends AggregationOperation[List[(Double, Id)]] {
 
-  def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
+  def extract(v: Vertex[_, _, _, _]): List[(Double, Id)] = v match {
     case i: Inspectable[Id, _] =>
       // Try to interpret different types of numberic states
       val state: Option[Double] = i.state match {
@@ -234,7 +234,7 @@ class TopStateAggregator[Id](n: Int, inverted: Boolean)
 class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
   extends AggregationOperation[List[(Double, Id)]] {
 
-  def extract(v: Vertex[_, _]): List[(Double, Id)] = v match {
+  def extract(v: Vertex[_, _, _, _]): List[(Double, Id)] = v match {
     case i: Inspectable[Id, _] =>
       val score = scoreType match {
         case "signal" => i.scoreSignal
@@ -270,7 +270,7 @@ class AboveThresholdAggregator[Id](n: Int, scoreType: String, threshold: Double)
 class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
   extends AggregationOperation[Set[Id]] {
 
-  def extract(v: Vertex[_, _]): Set[Id] = v match {
+  def extract(v: Vertex[_, _, _, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] =>
       if (!(i.targetIds.toStream.filter(targetId => ids.contains(targetId.asInstanceOf[Id])) isEmpty)) {
         // If this has an outgoing edge to a primary vertex, it's a vicinity vertex.
@@ -300,11 +300,11 @@ class FindVertexVicinitiesByIdsAggregator[Id](ids: Set[Id])
  * @param idsList the list of IDs to compare vertex IDs with
  */
 class FindVerticesByIdsAggregator[Id](idsList: List[String])
-  extends AggregationOperation[List[Vertex[Id, _]]] {
+  extends AggregationOperation[List[Vertex[Id, _, _, _]]] {
 
   def ids: Set[String] = idsList.toSet
 
-  def extract(v: Vertex[_, _]): List[Vertex[Id, _]] = v match {
+  def extract(v: Vertex[_, _, _, _]): List[Vertex[Id, _, _, _]] = v match {
     case i: Inspectable[Id, _] => {
       if (ids.contains(i.id.toString)) { List(i) }
       else { List() }
@@ -312,7 +312,7 @@ class FindVerticesByIdsAggregator[Id](idsList: List[String])
     case other => List()
   }
 
-  def reduce(vertices: Stream[List[Vertex[Id, _]]]): List[Vertex[Id, _]] = {
+  def reduce(vertices: Stream[List[Vertex[Id, _, _, _]]]): List[Vertex[Id, _, _, _]] = {
     vertices.toList.flatten
   }
 
@@ -330,7 +330,7 @@ class FindVertexIdsBySubstringAggregator[Id](s: String, limit: Int)
 
   val neutralElement = Set[Id]()
 
-  def extract(v: Vertex[_, _]): Set[Id] = v match {
+  def extract(v: Vertex[_, _, _, _]): Set[Id] = v match {
     case i: Inspectable[Id, _] => {
       if (i.id.toString.contains(s)) { Set(i.id) }
       else { Set() }
@@ -365,7 +365,7 @@ class BreakConditionsAggregator(conditions: Map[String, BreakCondition], state: 
 
   val relevantVertexIds = conditions.map(_._2.props("vertexId")).toSet
 
-  def extract(v: Vertex[_, _]): Map[String, String] = {
+  def extract(v: Vertex[_, _, _, _]): Map[String, String] = {
     var results = Map[String, String]()
     if (relevantVertexIds.contains(v.id.toString)) {
       conditions.foreach {

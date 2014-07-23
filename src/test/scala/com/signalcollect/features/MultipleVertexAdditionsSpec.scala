@@ -41,7 +41,7 @@ class TestExistingVertexHandlerFactory[Id, Signal] extends ExistingVertexHandler
 }
 
 class TestExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id, Signal] {
-  def mergeVertices(existing: Vertex[Id, _], failedVertexAddition: Vertex[Id, _], ge: GraphEditor[Id, Signal]) {
+  def mergeVertices(existing: Vertex[Id, _, Id, Signal], failedVertexAddition: Vertex[Id, _, Id, Signal], ge: GraphEditor[Id, Signal]) {
     existing.asInstanceOf[DummyVertex].state += 1.0
   }
 }

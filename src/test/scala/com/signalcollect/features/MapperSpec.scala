@@ -64,7 +64,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
 
   "Custom mapper" should {
     "correctly support PageRank computation" in {
-      def verify(v: Vertex[_, _], expectedState: Double): Boolean = {
+      def verify(v: Vertex[_, _, _, _], expectedState: Double): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val correct = (state - expectedState).abs < 0.0001
         if (!correct) {
@@ -86,7 +86,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
         var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
           val neutralElement = true
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
+          def extract(v: Vertex[_, _, _, _]): Boolean = verify(v, 1.0)
         })
         allcorrect
       } finally {

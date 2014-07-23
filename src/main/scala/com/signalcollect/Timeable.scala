@@ -19,8 +19,8 @@ case class ActivityTime(signal: Int, deliver: Int, collect: Int) extends Ordered
 class TopActivityAggregator[Id](n: Int)
   extends AggregationOperation[SortedMap[ActivityTime,Id]] {
   type ActivityMap = SortedMap[ActivityTime,Id]
-  def extract(v: Vertex[_, _]): ActivityMap = v match {
-    case t: Timeable[Id, _] =>
+  def extract(v: Vertex[_, _, _, _]): ActivityMap = v match {
+    case t: Timeable[Id, _, _, _] =>
       SortedMap((ActivityTime(t.signalTime, t.deliverTime, t.collectTime) -> t.id))
     case _ =>
       SortedMap[ActivityTime,Id]()
@@ -31,7 +31,7 @@ class TopActivityAggregator[Id](n: Int)
 }
 
 /** Allows measuring how long a vertex stays in deliverSignal and collect*/
-trait Timeable[Id, State] extends Vertex[Id, State] {
+trait Timeable[Id, State, GraphIdUpperBound, GraphSignalUpperBound] extends Vertex[Id, State, GraphIdUpperBound, GraphSignalUpperBound] {
   var signalTime: Int = 0
   var deliverTime: Int = 0
   var collectTime: Int = 0
@@ -41,17 +41,17 @@ trait Timeable[Id, State] extends Vertex[Id, State] {
     val t1 = System.nanoTime()
     (result, (t1 - t0).toInt)
   }
-  abstract override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]): Unit = {
+  abstract override def executeSignalOperation(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Unit = {
     val (_, t) = time(super.executeSignalOperation(graphEditor))
     signalTime += t
   }
-  abstract override def deliverSignal(signal: Any, sourceId: Option[Any],
-                        graphEditor: GraphEditor[Any, Any]): Boolean = {
+  abstract override def deliverSignal(signal: GraphSignalUpperBound, sourceId: Option[GraphIdUpperBound],
+                        graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean = {
     val (result, t) = time(super.deliverSignal(signal, sourceId, graphEditor))
     deliverTime += t
     result
   }
-  abstract override def executeCollectOperation(graphEditor: GraphEditor[Any, Any]): Unit = {
+  abstract override def executeCollectOperation(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Unit = {
     val (_, t) = time(super.executeCollectOperation(graphEditor))
     collectTime += t
   }

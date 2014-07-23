@@ -62,8 +62,8 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   val eagerIdleDetection: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
-  val storageFactory: StorageFactory[Id],
-  val schedulerFactory: SchedulerFactory[Id],
+  val storageFactory: StorageFactory[Id, Signal],
+  val schedulerFactory: SchedulerFactory[Id, Signal],
   val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
   val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
@@ -75,9 +75,8 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   val nodeId = getNodeId(workerId)
   val pingPongSchedulingIntervalInMilliseconds = 4 // schedule pingpong exchange every 8ms
   val maxPongDelay = 4e+6 // pong is considered delayed after waiting for 4ms  
-  var scheduler: Scheduler[Id] = _
+  var scheduler: Scheduler[Id, Signal] = _
   var graphEditor: GraphEditor[Id, Signal] = _
-  var vertexGraphEditor: GraphEditor[Any, Any] = _
 
   initialize
 
@@ -89,7 +88,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   var isPaused: Boolean = _
   var allWorkDoneWhenContinueSent: Boolean = _
   var lastStatusUpdate: Long = _
-  var vertexStore: Storage[Id] = _
+  var vertexStore: Storage[Id, Signal] = _
   var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = _
   var pingSentTimestamp: Long = _
   var pingPongScheduled: Boolean = _
@@ -116,7 +115,6 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     waitingForPong = false
     scheduler = schedulerFactory.createInstance(this)
     graphEditor = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
-    vertexGraphEditor = graphEditor.asInstanceOf[GraphEditor[Any, Any]]
     existingVertexHandler = existingVertexHandlerFactory.createInstance
     undeliverableSignalHandler = undeliverableSignalHandlerFactory.createInstance
     edgeAddedToNonExistentVertexHandler = edgeAddedToNonExistentVertexHandlerFactory.createInstance
@@ -179,23 +177,23 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
       messageBusFlushed
   }
 
-  def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true) {
+  def executeCollectOperationOfVertex(vertex: Vertex[Id, _, Id, Signal], addToSignal: Boolean = true) {
     counters.collectOperationsExecuted += 1
-    vertex.executeCollectOperation(vertexGraphEditor)
+    vertex.executeCollectOperation(graphEditor)
     if (addToSignal && vertex.scoreSignal > signalThreshold) {
       vertexStore.toSignal.put(vertex)
     }
   }
 
-  def executeSignalOperationOfVertex(vertex: Vertex[Id, _]) {
+  def executeSignalOperationOfVertex(vertex: Vertex[Id, _, Id, Signal]) {
     counters.signalOperationsExecuted += 1
-    vertex.executeSignalOperation(vertexGraphEditor)
+    vertex.executeSignalOperation(graphEditor)
   }
 
   def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
     val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
-      if (vertex.deliverSignal(signal, sourceId, vertexGraphEditor)) {
+      if (vertex.deliverSignal(signal, sourceId, graphEditor)) {
         counters.collectOperationsExecuted += 1
         if (vertex.scoreSignal > signalThreshold) {
           scheduler.handleCollectOnDelivery(vertex)
@@ -238,11 +236,11 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     vertexStore.toSignal.isEmpty
   }
 
-  override def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
-      vertex.afterInitialization(vertexGraphEditor)
+      vertex.afterInitialization(graphEditor)
       messageBusFlushed = false
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
@@ -254,8 +252,8 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   }
 
   override def addEdge(sourceId: Id, edge: Edge[Id]) {
-    def addEdgeToVertex(vertex: Vertex[Id, _]) {
-      if (vertex.addEdge(edge, vertexGraphEditor)) {
+    def addEdgeToVertex(vertex: Vertex[Id, _, Id, Signal]) {
+      if (vertex.addEdge(edge, graphEditor)) {
         counters.outgoingEdgesAdded += 1
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
@@ -277,7 +275,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   override def removeEdge(edgeId: EdgeId[Id]) {
     val vertex = vertexStore.vertices.get(edgeId.sourceId)
     if (vertex != null) {
-      if (vertex.removeEdge(edgeId.targetId, vertexGraphEditor)) {
+      if (vertex.removeEdge(edgeId.targetId, graphEditor)) {
         counters.outgoingEdgesRemoved += 1
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
@@ -299,11 +297,11 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     }
   }
 
-  protected def processRemoveVertex(vertex: Vertex[Id, _]) {
-    val edgesRemoved = vertex.removeAllEdges(vertexGraphEditor)
+  protected def processRemoveVertex(vertex: Vertex[Id, _, Id, Signal]) {
+    val edgesRemoved = vertex.removeAllEdges(graphEditor)
     counters.outgoingEdgesRemoved += edgesRemoved
     counters.verticesRemoved += 1
-    vertex.beforeRemoval(vertexGraphEditor)
+    vertex.beforeRemoval(graphEditor)
     vertexStore.vertices.remove(vertex.id)
     vertexStore.toCollect.remove(vertex.id)
     vertexStore.toSignal.remove(vertex.id)
@@ -337,7 +335,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     }
   }
 
-  protected def recalculateVertexScores(vertex: Vertex[Id, _]) {
+  protected def recalculateVertexScores(vertex: Vertex[Id, _, Id, Signal]) {
     if (vertex.scoreCollect > collectThreshold) {
       vertexStore.toCollect.put(vertex)
     }
@@ -346,7 +344,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     }
   }
 
-  override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  override def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       val result = f(vertex.asInstanceOf[VertexType])
@@ -356,11 +354,11 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     }
   }
 
-  override def foreachVertex(f: Vertex[Id, _] => Unit) {
+  override def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit) {
     vertexStore.vertices.foreach(f)
   }
 
-  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
     val function = f(graphEditor)
     vertexStore.vertices.foreach(function)
     messageBusFlushed = false
@@ -418,7 +416,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
         assert(serializedLength <= maxSerializedSize)
         val bytesRead = snapshotFileInput.read(buffer, 0, serializedLength)
         assert(bytesRead == serializedLength)
-        val vertex = DefaultSerializer.read[Vertex[Id, _]](buffer)
+        val vertex = DefaultSerializer.read[Vertex[Id, _, Id, Signal]](buffer)
         addVertex(vertex)
       }
       snapshotFileInput.close
