@@ -61,8 +61,8 @@ case class Pong(fromWorker: Int)
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
  */
-object IncrementorForWorker {
-  def increment(workerId: Int)(messageBus: MessageBus[_, _]) = {
+class IncrementorForWorker(workerId: Int) {
+  def increment(messageBus: MessageBus[_, _]) = {
     messageBus.incrementMessagesSentToWorker(workerId)
   }
 }
@@ -120,7 +120,7 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     numberOfWorkers,
     numberOfNodes,
     mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
-    IncrementorForWorker.increment(workerId))
+    new IncrementorForWorker(workerId).increment _)
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
@@ -205,7 +205,7 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  @inline def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
+  def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
     worker.counters.bulkSignalMessagesReceived += 1
     val size = bulkSignal.signals.length
     var i = 0
