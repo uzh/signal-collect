@@ -22,31 +22,38 @@
 
 package com.signalcollect.worker
 
-import scala.concurrent.duration._
-import java.io.DataInputStream
-import java.io.DataOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.util.Queue
-import java.lang.management.ManagementFactory
-import scala.Array.canBuildFrom
+import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.language.reflectiveCalls
 import scala.reflect.ClassTag
-import com.signalcollect._
-import com.signalcollect.interfaces._
-import com.sun.management.OperatingSystemMXBean
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.dispatch.MessageQueue
+import com.signalcollect.Edge
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.ActorRestartLogging
+import com.signalcollect.interfaces.AddEdge
+import com.signalcollect.interfaces.AddVertex
+import com.signalcollect.interfaces.BulkSignal
+import com.signalcollect.interfaces.BulkSignalNoSourceIds
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.SignalMessageWithSourceId
+import com.signalcollect.interfaces.SignalMessageWithoutSourceId
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.WorkerApi
 import akka.actor.Actor
-import akka.serialization.SerializationExtension
+import akka.actor.ActorLogging
 import akka.actor.Cancellable
-import scala.util.Random
-import com.signalcollect.coordinator.IsIdle
 import akka.actor.Scheduler
+import akka.actor.actorRef2Scala
+import akka.dispatch.MessageQueue
 
 case object ScheduleOperations
 
@@ -182,9 +189,15 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
-  def handleSignalMessage(s: SignalMessage[Id, Signal]) {
-    worker.counters.signalMessagesReceived += 1
-    worker.processSignal(s.signal, s.targetId, s.sourceId)
+  def handleSignalMessageWithSourceId(s: SignalMessageWithSourceId[Id, Signal]) {
+    worker.processSignal(s.signal, s.targetId, Some(s.sourceId))
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleSignalMessageWithoutSourceId(s: SignalMessageWithoutSourceId[Id, Signal]) {
+    worker.processSignal(s.signal, s.targetId, None)
     if (!worker.operationsScheduled) {
       scheduleOperations
     }
@@ -226,8 +239,13 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
-    case s: SignalMessage[Id, Signal] =>
-      handleSignalMessage(s)
+    case s: SignalMessageWithSourceId[Id, Signal] =>
+      worker.counters.signalMessagesReceived += 1
+      handleSignalMessageWithSourceId(s)
+
+    case s: SignalMessageWithoutSourceId[Id, Signal] =>
+      worker.counters.signalMessagesReceived += 1
+      handleSignalMessageWithoutSourceId(s)
 
     case bulkSignal: BulkSignal[Id, Signal] =>
       handleBulkSignalWithSourceIds(bulkSignal)

@@ -58,11 +58,15 @@ case class BulkSignalNoSourceIds[@specialized(Long) Id, Signal](
   val signals: Array[Signal],
   val targetIds: Array[Id])
 
-case class SignalMessage[@specialized(Long) Id, Signal](
+case class SignalMessageWithSourceId[@specialized(Long) Id, Signal](
   val targetId: Id,
-  val sourceId: Option[Id],
+  val sourceId: Id,
   val signal: Signal)
 
+case class SignalMessageWithoutSourceId[@specialized(Long) Id, Signal](
+  val targetId: Id,
+  val signal: Signal)  
+  
 // Convergence/pause detection
 case class WorkerStatus(
   workerId: Int,

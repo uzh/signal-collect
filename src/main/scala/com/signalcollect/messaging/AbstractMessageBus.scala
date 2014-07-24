@@ -30,7 +30,6 @@ import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import akka.actor.ActorRef
@@ -40,6 +39,8 @@ import com.signalcollect.interfaces.AddEdge
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.ActorSystem
+import com.signalcollect.interfaces.SignalMessageWithSourceId
+import com.signalcollect.interfaces.SignalMessageWithoutSourceId
 
 abstract class AbstractMessageBus[Id, Signal]
   extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
@@ -205,7 +206,11 @@ abstract class AbstractMessageBus[Id, Signal]
       workerApi.processSignal(signal, targetId, sourceId)
     } else {
       // Manually send a fire & forget request.
-      sendToWorkerForVertexId(SignalMessage(targetId, sourceId, signal), targetId)
+      if (sourceId.isDefined) {
+        sendToWorkerForVertexId(SignalMessageWithSourceId(targetId, sourceId.get, signal), targetId)
+      } else {
+        sendToWorkerForVertexId(SignalMessageWithoutSourceId(targetId, signal), targetId)
+      }
     }
   }
 

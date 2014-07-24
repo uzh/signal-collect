@@ -40,7 +40,8 @@ class KryoInit {
       }
       register("scala.Some")
       register("scala.None$")
-      register("com.signalcollect.interfaces.SignalMessage")
+      register("com.signalcollect.interfaces.SignalMessageWithSourceId")
+      register("com.signalcollect.interfaces.SignalMessageWithoutSourceId")
       register("com.signalcollect.interfaces.BulkSignal")
       register("com.signalcollect.interfaces.BulkSignalNoSourceIds")
       register("com.signalcollect.interfaces.AddVertex")

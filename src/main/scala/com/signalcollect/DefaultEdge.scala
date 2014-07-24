@@ -20,11 +20,11 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.SignalMessage
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 import scala.annotation.elidable
 import scala.annotation.elidable._
+import com.signalcollect.interfaces.SignalMessageWithSourceId
 
 /**
  *  Edge that connects a source vertex with a target vertex.
@@ -113,7 +113,7 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
   def executeSignalOperation(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) {
-    graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
+    graphEditor.sendToWorkerForVertexIdHash(SignalMessageWithSourceId(targetId, sourceId, signal), cachedTargetIdHashCode)
   }
 
   /** Called when the edge is attached to a source vertex */

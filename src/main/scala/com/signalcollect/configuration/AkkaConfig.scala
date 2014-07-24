@@ -122,7 +122,8 @@ akka {
       "[[Ljava.lang.String;" = kryo
       "java.util.HashMap" = kryo
       "com.signalcollect.interfaces.EdgeId" = kryo
-      "com.signalcollect.interfaces.SignalMessage" = kryo
+      "com.signalcollect.interfaces.SignalMessageWithSourceId" = kryo
+      "com.signalcollect.interfaces.SignalMessageWithoutSourceId" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.BulkSignalNoSourceIds" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
