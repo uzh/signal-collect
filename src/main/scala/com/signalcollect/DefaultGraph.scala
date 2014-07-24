@@ -85,7 +85,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
-  throttlingEnabled: Boolean) {
+  throttlingEnabled: Boolean,
+  supportBlockingGraphModificationsInVertex: Boolean) {
   def create: () => AkkaWorker[Id, Signal] = {
     () =>
       workerFactory.createInstance(
@@ -101,7 +102,8 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         edgeAddedToNonExistentVertexHandlerFactory,
         heartbeatIntervalInMilliseconds,
         eagerIdleDetection,
-        throttlingEnabled)
+        throttlingEnabled,
+        supportBlockingGraphModificationsInVertex)
   }
 }
 
@@ -197,7 +199,8 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.edgeAddedToNonExistentVertexHandlerFactory,
           config.heartbeatIntervalInMilliseconds,
           config.eagerIdleDetection,
-          config.throttlingEnabled)
+          config.throttlingEnabled,
+          config.supportBlockingGraphModificationsInVertex)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1

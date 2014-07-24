@@ -47,7 +47,7 @@ class SignalBulker[@specialized(Long) Id: ClassTag, Signal: ClassTag](size: Int)
   }
 }
 
-class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
+final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val system: ActorSystem,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
@@ -109,7 +109,11 @@ class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
+  override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+    sendSignal(signal, targetId, sourceId, false)
+  }
+
+  @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.processSignal(signal, targetId, sourceId)

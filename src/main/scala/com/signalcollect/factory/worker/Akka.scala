@@ -48,7 +48,8 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
     edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
-    throttlingEnabled: Boolean): AkkaWorker[Id, Signal] = {
+    throttlingEnabled: Boolean,
+    supportBlockingGraphModificationsInVertex: Boolean): AkkaWorker[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
@@ -62,7 +63,8 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
       edgeAddedToNonExistentVertexHandlerFactory,
       heartbeatIntervalInMilliseconds,
       eagerIdleDetection,
-      throttlingEnabled)
+      throttlingEnabled,
+      supportBlockingGraphModificationsInVertex)
   }
   override def toString: String = "AkkaWorkerFactory"
 }

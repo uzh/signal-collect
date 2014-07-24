@@ -40,7 +40,6 @@ import com.signalcollect.interfaces._
 import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
-import akka.actor.ReceiveTimeout
 import akka.dispatch.MessageQueue
 import akka.actor.Actor
 import akka.serialization.SerializationExtension
@@ -84,10 +83,13 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   val heartbeatIntervalInMilliseconds: Int,
   val eagerIdleDetection: Boolean,
-  val throttlingEnabled: Boolean)
+  val throttlingEnabled: Boolean,
+  val supportBlockingGraphModificationsInVertex: Boolean)
   extends Actor
   with ActorLogging
   with ActorRestartLogging {
+
+  context.setReceiveTimeout(Duration.Undefined)
 
   val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
   var lastHeartbeatTimestamp = System.nanoTime
@@ -127,6 +129,7 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     numberOfWorkers = numberOfWorkers,
     numberOfNodes = numberOfNodes,
     eagerIdleDetection = eagerIdleDetection,
+    supportBlockingGraphModificationsInVertex = supportBlockingGraphModificationsInVertex,
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
@@ -207,19 +210,16 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
 
   def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
     worker.counters.bulkSignalMessagesReceived += 1
-    val size = bulkSignal.signals.length
-    var i = 0
-    while (i < size) {
-      handleSignal(bulkSignal.signals(i), bulkSignal.targetIds(i))
-      i += 1
-    }
+    val signals = bulkSignal.signals
+    val targetIds = bulkSignal.targetIds
+    worker.processBulkSignalWithoutIds(signals, targetIds)
     if (!worker.operationsScheduled) {
       scheduleOperations
     }
   }
 
   def handleSignal(signal: Signal, targetId: Id) {
-    worker.processSignal(signal, targetId, None)
+
   }
 
   /**

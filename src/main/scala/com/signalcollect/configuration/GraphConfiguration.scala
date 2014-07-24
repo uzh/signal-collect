@@ -53,6 +53,7 @@ case class GraphConfiguration[@specialized(Long) Id: ClassTag, Signal: ClassTag]
   eagerIdleDetection: Boolean,
   consoleEnabled: Boolean,
   throttlingEnabled: Boolean,
+  supportBlockingGraphModificationsInVertex: Boolean,
   consoleHttpPort: Int,
   loggingLevel: LogLevel,
   mapperFactory: MapperFactory[Id],

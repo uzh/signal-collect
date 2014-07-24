@@ -52,7 +52,8 @@ abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
     edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
-    throttlingEnabled: Boolean): AkkaWorker[Id, Signal]
+    throttlingEnabled: Boolean,
+    supportBlockingGraphModificationsInVertex: Boolean): AkkaWorker[Id, Signal]
 }
 
 abstract class MessageBusFactory[Id: ClassTag, Signal: ClassTag] extends Factory {

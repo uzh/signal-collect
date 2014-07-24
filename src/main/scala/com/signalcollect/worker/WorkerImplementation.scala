@@ -60,6 +60,7 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
   val eagerIdleDetection: Boolean,
+  val supportBlockingGraphModificationsInVertex: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
   val storageFactory: StorageFactory[Id, Signal],
@@ -114,7 +115,11 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     pingPongScheduled = false
     waitingForPong = false
     scheduler = schedulerFactory.createInstance(this)
-    graphEditor = new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
+    graphEditor = if (supportBlockingGraphModificationsInVertex) {
+      new WorkerGraphEditor[Id, Signal](workerId, this, messageBus)
+    } else {
+      messageBus.getGraphEditor
+    }
     existingVertexHandler = existingVertexHandlerFactory.createInstance
     undeliverableSignalHandler = undeliverableSignalHandlerFactory.createInstance
     edgeAddedToNonExistentVertexHandler = edgeAddedToNonExistentVertexHandlerFactory.createInstance
@@ -188,6 +193,15 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
   def executeSignalOperationOfVertex(vertex: Vertex[Id, _, Id, Signal]) {
     counters.signalOperationsExecuted += 1
     vertex.executeSignalOperation(graphEditor)
+  }
+
+  def processBulkSignalWithoutIds(signals: Array[Signal], targetIds: Array[Id]) {
+    val size = signals.length
+    var i = 0
+    while (i < size) {
+      processSignal(signals(i), targetIds(i), None)
+      i += 1
+    }
   }
 
   def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {

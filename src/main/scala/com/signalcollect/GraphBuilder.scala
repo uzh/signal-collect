@@ -67,6 +67,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
       eagerIdleDetection = true,
       consoleEnabled = false,
       throttlingEnabled = false,
+      supportBlockingGraphModificationsInVertex = true,
       consoleHttpPort = -1,
       loggingLevel = Logging.WarningLevel,
       mapperFactory = new DefaultMapperFactory[Id],
@@ -93,6 +94,13 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     new GraphBuilder[Id, Signal](Some(config))
 
   /**
+   *  When support is enabled, workers use a special message bus that prevents deadlocks.
+   */
+  def withBlockingGraphModificationsSupport(supported: Boolean) = {
+    builder(config.copy(supportBlockingGraphModificationsInVertex = supported))
+  }
+
+  /**
    *  Configures the factory that is used to create the handlers for situations
    *  in which a new vertex is added when a vertex with the same ID already exists.
    *  The default handler silently discards the redundant new vertex.
@@ -100,7 +108,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   def withExistingVertexHandlerFactory(newExistingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal]) = {
     builder(config.copy(existingVertexHandlerFactory = newExistingVertexHandlerFactory))
   }
-    
+
   /**
    *  Configures the factory that is used to create the handlers for situations
    *  in which the recipient vertex of a signal does not exist.
@@ -109,7 +117,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   def withUndeliverableSignalHandlerFactory(newUndeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal]) = {
     builder(config.copy(undeliverableSignalHandlerFactory = newUndeliverableSignalHandlerFactory))
   }
-  
+
   /**
    *  Configures the factory that is used to create the handlers for situations
    *  in which the an edge is added to a vertex that does not exist (yet).
@@ -118,7 +126,7 @@ class GraphBuilder[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   def withEdgeAddedToNonExistentVertexHandlerFactory(newEdgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]) = {
     builder(config.copy(edgeAddedToNonExistentVertexHandlerFactory = newEdgeAddedToNonExistentVertexHandlerFactory))
   }
-      
+
   /**
    *  Configures if workers should eagerly notify the node about their idle state.
    *  This speeds up idle detection and with it the latency between computation steps,
