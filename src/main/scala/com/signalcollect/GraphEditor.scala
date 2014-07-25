@@ -52,6 +52,15 @@ trait GraphEditor[@specialized(Long) Id, Signal] {
   }
 
   /**
+   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
+   *
+   *  @note Does not block and does not attach the source ID.
+   */
+  def sendSignal(signal: Signal, targetId: Id) {
+    sendSignal(signal, targetId, None, false)
+  }
+  
+  /**
    *  Adds `vertex` to the graph.
    *  Blocks until the operation has completed if `blocking` is true.
    *
