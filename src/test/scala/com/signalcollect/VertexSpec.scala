@@ -42,7 +42,7 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
         }
         v.afterInitialization(mockGraphEditor)
         for ((sourceId, signal) <- incomingSignals) {
-          v.deliverSignal(signal, Some(sourceId), mockGraphEditor)
+          v.deliverSignalWithSourceId(signal, sourceId, mockGraphEditor)
         }
         if (!incomingSignals.isEmpty) {
           assert(v.scoreCollect > 0, "vertex received messages, should want to collect")

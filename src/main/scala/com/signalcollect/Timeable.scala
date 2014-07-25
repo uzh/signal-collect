@@ -12,21 +12,22 @@ case class ActivityTime(signal: Int, deliver: Int, collect: Int) extends Ordered
   }
 }
 
-/** Finds the vertices in the graph which were active for the longest duration
-  *
-  * @param n the number of top vertices to find
-  */
+/**
+ * Finds the vertices in the graph which were active for the longest duration
+ *
+ * @param n the number of top vertices to find
+ */
 class TopActivityAggregator[Id](n: Int)
-  extends AggregationOperation[SortedMap[ActivityTime,Id]] {
-  type ActivityMap = SortedMap[ActivityTime,Id]
+  extends AggregationOperation[SortedMap[ActivityTime, Id]] {
+  type ActivityMap = SortedMap[ActivityTime, Id]
   def extract(v: Vertex[_, _, _, _]): ActivityMap = v match {
     case t: Timeable[Id, _, _, _] =>
       SortedMap((ActivityTime(t.signalTime, t.deliverTime, t.collectTime) -> t.id))
     case _ =>
-      SortedMap[ActivityTime,Id]()
+      SortedMap[ActivityTime, Id]()
   }
   def reduce(activities: Stream[ActivityMap]): ActivityMap = {
-    activities.foldLeft(SortedMap[ActivityTime,Id]()) { (acc, m) => acc ++ m }.take(n)
+    activities.foldLeft(SortedMap[ActivityTime, Id]()) { (acc, m) => acc ++ m }.take(n)
   }
 }
 
@@ -45,9 +46,15 @@ trait Timeable[Id, State, GraphIdUpperBound, GraphSignalUpperBound] extends Vert
     val (_, t) = time(super.executeSignalOperation(graphEditor))
     signalTime += t
   }
-  abstract override def deliverSignal(signal: GraphSignalUpperBound, sourceId: Option[GraphIdUpperBound],
-                        graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean = {
-    val (result, t) = time(super.deliverSignal(signal, sourceId, graphEditor))
+  abstract override def deliverSignalWithSourceId(signal: GraphSignalUpperBound, sourceId: GraphIdUpperBound,
+    graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean = {
+    val (result, t) = time(super.deliverSignalWithSourceId(signal, sourceId, graphEditor))
+    deliverTime += t
+    result
+  }
+  abstract override def deliverSignalWithoutSourceId(signal: GraphSignalUpperBound,
+    graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean = {
+    val (result, t) = time(super.deliverSignalWithoutSourceId(signal, graphEditor))
     deliverTime += t
     result
   }

@@ -28,7 +28,8 @@ trait WorkerApi[Id, Signal] {
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
   def removeEdge(edgeId: EdgeId[Id])
-  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
+  def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id)
+  def processSignalWithoutSourceId(signal: Signal, targetId: Id)
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None)
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id] = None)
 

@@ -50,11 +50,15 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
 
   protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
-  def deliverSignal(signal: Any, sourceId: Option[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
+  def deliverSignalWithSourceId(signal: Any, sourceId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = {
+    deliverSignalWithoutSourceId(signal, graphEditor)
+  }
+
+  def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Int, Any]): Boolean = {
     setState(collect(signal.asInstanceOf[IncomingSignalType]))
     true
   }
-
+  
   /**
    * We always collect on delivery.
    */

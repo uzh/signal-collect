@@ -199,15 +199,15 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
     val size = signals.length
     var i = 0
     while (i < size) {
-      processSignal(signals(i), targetIds(i), None)
+      processSignalWithoutSourceId(signals(i), targetIds(i))
       i += 1
     }
   }
 
-  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+  def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
     val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
-      if (vertex.deliverSignal(signal, sourceId, graphEditor)) {
+      if (vertex.deliverSignalWithSourceId(signal, sourceId, graphEditor)) {
         counters.collectOperationsExecuted += 1
         if (vertex.scoreSignal > signalThreshold) {
           scheduler.handleCollectOnDelivery(vertex)
@@ -218,11 +218,30 @@ class WorkerImplementation[@specialized(Long) Id, Signal](
         }
       }
     } else {
-      undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, sourceId, graphEditor)
+      undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, Some(sourceId), graphEditor)
     }
     messageBusFlushed = false
   }
 
+  def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
+    val vertex = vertexStore.vertices.get(targetId)
+    if (vertex != null) {
+      if (vertex.deliverSignalWithoutSourceId(signal, graphEditor)) {
+        counters.collectOperationsExecuted += 1
+        if (vertex.scoreSignal > signalThreshold) {
+          scheduler.handleCollectOnDelivery(vertex)
+        }
+      } else {
+        if (vertex.scoreCollect > collectThreshold) {
+          vertexStore.toCollect.put(vertex)
+        }
+      }
+    } else {
+      undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, None, graphEditor)
+    }
+    messageBusFlushed = false
+  }
+  
   def startComputation {
     if (!pendingModifications.isEmpty) {
       log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")

@@ -101,7 +101,10 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
     outEdges = numberOfEdges
     targetIdArray = compactIntSet
   }
-  def deliverSignal(signal: Int, sourceId: Option[Int], graphEditor: GraphEditor[Int, Int]): Boolean = {
+  def deliverSignalWithSourceId(signal: Int, sourceId: Int, graphEditor: GraphEditor[Int, Int]): Boolean = {
+    deliverSignalWithoutSourceId(signal, graphEditor)
+  }
+  def deliverSignalWithoutSourceId(signal: Int, graphEditor: GraphEditor[Int, Int]): Boolean = {
     val s = signal.asInstanceOf[Int]
     state = math.min(s, state)
     true

@@ -65,9 +65,13 @@ abstract class DataGraphVertex[Id, State](
    */
   protected var mostRecentSignalMap = Map.empty[Any, Signal]
 
-  override def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
-    assert(sourceId.isDefined, "Data graph vertices only make sense if the source id is known.")
-    mostRecentSignalMap += ((sourceId.get, signal.asInstanceOf[Signal]))
+  override def deliverSignalWithSourceId(signal: Any, sourceId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
+    mostRecentSignalMap += ((sourceId, signal.asInstanceOf[Signal]))
+    false
+  }
+
+  override def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
+    throw new Exception("Data graph vertices only make sense if the source id is known.")
     false
   }
 

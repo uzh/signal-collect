@@ -203,7 +203,11 @@ abstract class AbstractMessageBus[Id, Signal]
   override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.processSignal(signal, targetId, sourceId)
+      if (sourceId.isDefined) {
+        workerApi.processSignalWithSourceId(signal, targetId, sourceId.get)
+      } else {
+        workerApi.processSignalWithoutSourceId(signal, targetId)
+      }
     } else {
       // Manually send a fire & forget request.
       if (sourceId.isDefined) {

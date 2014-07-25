@@ -190,14 +190,14 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
   def handleSignalMessageWithSourceId(s: SignalMessageWithSourceId[Id, Signal]) {
-    worker.processSignal(s.signal, s.targetId, Some(s.sourceId))
+    worker.processSignalWithSourceId(s.signal, s.targetId, s.sourceId)
     if (!worker.operationsScheduled) {
       scheduleOperations
     }
   }
 
   def handleSignalMessageWithoutSourceId(s: SignalMessageWithoutSourceId[Id, Signal]) {
-    worker.processSignal(s.signal, s.targetId, None)
+    worker.processSignalWithoutSourceId(s.signal, s.targetId)
     if (!worker.operationsScheduled) {
       scheduleOperations
     }
@@ -210,9 +210,9 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     while (i < size) {
       val sourceId = bulkSignal.sourceIds(i)
       if (sourceId != null) {
-        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
+        worker.processSignalWithSourceId(bulkSignal.signals(i), bulkSignal.targetIds(i), sourceId)
       } else {
-        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
+        worker.processSignalWithoutSourceId(bulkSignal.signals(i), bulkSignal.targetIds(i))
       }
       i += 1
     }
@@ -229,10 +229,6 @@ class AkkaWorker[@specialized(Long) Id: ClassTag, Signal: ClassTag](
     if (!worker.operationsScheduled) {
       scheduleOperations
     }
-  }
-
-  def handleSignal(signal: Signal, targetId: Id) {
-
   }
 
   /**

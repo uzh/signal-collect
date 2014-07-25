@@ -116,7 +116,11 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.processSignal(signal, targetId, sourceId)
+      if (sourceId.isDefined) {
+        workerApi.processSignalWithSourceId(signal, targetId, sourceId.get)
+      } else {
+        workerApi.processSignalWithoutSourceId(signal, targetId)
+      }
     } else {
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)

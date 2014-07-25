@@ -70,7 +70,16 @@ abstract class Vertex[@specialized(Long) +Id, State, GraphIdUpperBound, GraphSig
    *
    *  @return true if the vertex decided to collect immediately.
    */
-  def deliverSignal(signal: GraphSignalUpperBound, sourceId: Option[GraphIdUpperBound], graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
+  def deliverSignalWithSourceId(signal: GraphSignalUpperBound, sourceId: GraphIdUpperBound, graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
+
+  /**
+   *  Delivers signals that are addressed to this specific vertex
+   *
+   *  @param signal the the signal to deliver to this vertex
+   *
+   *  @return true if the vertex decided to collect immediately.
+   */
+  def deliverSignalWithoutSourceId(signal: GraphSignalUpperBound, graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
 
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing

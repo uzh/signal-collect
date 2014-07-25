@@ -105,7 +105,7 @@ class DefaultWorkerApi[Id, Signal](
     val workerAggregates = workers.par map (_.aggregateOnWorker(aggregationOperation))
     aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
   }
-  
+
   override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
 
   override def setCollectThreshold(t: Double) = futures(_.setCollectThreshold(t)) foreach get
@@ -140,8 +140,17 @@ class DefaultWorkerApi[Id, Signal](
    *  `vertex.id==edgeId.targetId`.
    *  Blocks until the operation has completed.
    */
-  override def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
-    workers(mapper.getWorkerIdForVertexId(targetId)).processSignal(signal, targetId, sourceId)
+  override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
+    workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithSourceId(signal, targetId, sourceId)
+  }
+
+  /**
+   *  Processes `signal` on the worker that has the vertex with
+   *  `vertex.id==edgeId.targetId`.
+   *  Blocks until the operation has completed.
+   */
+  override def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
+    workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithoutSourceId(signal, targetId)
   }
 
   /**
