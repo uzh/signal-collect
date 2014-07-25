@@ -77,7 +77,7 @@ class IncrementorForWorker(workerId: Int) {
  * Class that interfaces the worker implementation with Akka messaging.
  * Mainly responsible for translating received messages to function calls on a worker implementation.
  */
-class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Float, Double) Signal: ClassTag](
+class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
