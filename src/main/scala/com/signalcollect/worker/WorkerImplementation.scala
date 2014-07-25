@@ -55,7 +55,7 @@ import com.signalcollect.interfaces.Scheduler
 /**
  * Main implementation of the WorkerApi interface.
  */
-class WorkerImplementation[@specialized(Long) Id, Signal](
+class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,

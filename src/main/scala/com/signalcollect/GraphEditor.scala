@@ -34,7 +34,7 @@ import akka.event.LoggingAdapter
  *
  *  @author Philip Stutz
  */
-trait GraphEditor[@specialized(Long) Id, Signal] {
+trait GraphEditor[@specialized(Int, Long) Id, Signal] {
 
   /**
    *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.

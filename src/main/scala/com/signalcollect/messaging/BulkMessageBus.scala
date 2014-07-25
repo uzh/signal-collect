@@ -27,7 +27,7 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.BulkSignalNoSourceIds
 import akka.actor.ActorSystem
 
-class SignalBulker[@specialized(Long) Id: ClassTag, Signal: ClassTag](size: Int) {
+class SignalBulker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](size: Int) {
   private var itemCount = 0
   def numberOfItems = itemCount
   def isFull: Boolean = itemCount == size

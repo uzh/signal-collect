@@ -47,7 +47,7 @@ import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 /**
  * All the graph configuration parameters with their defaults.
  */
-case class GraphConfiguration[@specialized(Long) Id: ClassTag, Signal: ClassTag](
+case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   actorSystem: Option[ActorSystem],
   actorNamePrefix: String,
   eagerIdleDetection: Boolean,

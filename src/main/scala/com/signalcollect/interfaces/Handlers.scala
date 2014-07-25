@@ -36,7 +36,7 @@ trait ExistingVertexHandler[Id, Signal] {
 
 }
 
-trait UndeliverableSignalHandler[@specialized(Long) Id, Signal] {
+trait UndeliverableSignalHandler[@specialized(Int, Long) Id, Signal] {
 
   /**
    *  Sets the function that handles signals that could not be delivered to a vertex.
@@ -49,7 +49,7 @@ trait UndeliverableSignalHandler[@specialized(Long) Id, Signal] {
 
 }
 
-trait EdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] {
+trait EdgeAddedToNonExistentVertexHandler[@specialized(Int, Long) Id, Signal] {
 
   /**
    *  Sets the handler that gets triggered, when the vertex to which an edge should be added does not exist.

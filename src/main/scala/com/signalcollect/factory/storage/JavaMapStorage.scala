@@ -26,7 +26,7 @@ import com.signalcollect.storage.JavaMapVertexStorage
 /**
  *  Storage backed by Java HashMaps.
  */
-class JavaMapStorage[@specialized(Long) Id, Signal] extends StorageFactory[Id, Signal] {
+class JavaMapStorage[@specialized(Int, Long) Id, Signal] extends StorageFactory[Id, Signal] {
   def createInstance: Storage[Id, Signal] = new JavaMapVertexStorage[Id, Signal]
   override def toString = "JavaMapStorage"
 }

@@ -31,7 +31,7 @@ import com.signalcollect.interfaces.VertexStore
 // the key in this map. In order to handle (rare) collisions,
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
-class VertexMap[@specialized(Long) Id, Signal](
+class VertexMap[@specialized(Int, Long) Id, Signal](
   initialSize: Int = 32768,
   rehashFraction: Float = 0.75f) extends VertexStore[Id, Signal] {
   assert(initialSize > 0)

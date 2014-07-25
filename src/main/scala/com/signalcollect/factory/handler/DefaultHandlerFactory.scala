@@ -34,25 +34,25 @@ class DefaultExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id,
   }
 }
 
-class DefaultUndeliverableSignalHandlerFactory[@specialized(Long) Id, Signal] extends UndeliverableSignalHandlerFactory[Id, Signal] {
+class DefaultUndeliverableSignalHandlerFactory[@specialized(Int, Long) Id, Signal] extends UndeliverableSignalHandlerFactory[Id, Signal] {
   def createInstance: UndeliverableSignalHandler[Id, Signal] =
     new DefaultUndeliverableSignalHandler[Id, Signal]
   override def toString = "DefaultUndeliverableSignalHandlerFactory"
 }
 
-class DefaultUndeliverableSignalHandler[@specialized(Long) Id, Signal] extends UndeliverableSignalHandler[Id, Signal] {
+class DefaultUndeliverableSignalHandler[@specialized(Int, Long) Id, Signal] extends UndeliverableSignalHandler[Id, Signal] {
   def vertexForSignalNotFound(s: Signal, inexistentTargetId: Id, senderId: Option[Id], ge: GraphEditor[Id, Signal]) {
     throw new Exception(s"Undeliverable signal: $s from $senderId could not be delivered to $inexistentTargetId, because no vertex with that id exists..")
   }
 }
 
-class DefaultEdgeAddedToNonExistentVertexHandlerFactory[@specialized(Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal] {
+class DefaultEdgeAddedToNonExistentVertexHandlerFactory[@specialized(Int, Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal] {
   def createInstance: EdgeAddedToNonExistentVertexHandler[Id, Signal] =
     new DefaultEdgeAddedToNonExistentVertexHandler[Id, Signal]
   override def toString = "DefaultEdgeAddedToNonExistentVertexHandlerFactory"
 }
 
-class DefaultEdgeAddedToNonExistentVertexHandler[@specialized(Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandler[Id, Signal] {
+class DefaultEdgeAddedToNonExistentVertexHandler[@specialized(Int, Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandler[Id, Signal] {
   def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _, Id, Signal]] = {
     throw new Exception(
       s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")

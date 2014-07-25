@@ -36,7 +36,7 @@ case class Request[ProxiedClass](
 case class Heartbeat(maySignal: Boolean)
 
 // Some edge ids that get sent around will be incomplete, by having one or both ids set to 'null'.
-case class EdgeId[@specialized(Long) Id](val sourceId: Id, val targetId: Id) {
+case class EdgeId[@specialized(Int, Long) Id](val sourceId: Id, val targetId: Id) {
   def withTargetId(t: Id): EdgeId[Id] = EdgeId(sourceId, t)
   def withSourceId(s: Id): EdgeId[Id] = EdgeId(s, targetId)
   override def toString: String = s"${sourceId} -> ${targetId}"
@@ -45,25 +45,25 @@ case class EdgeId[@specialized(Long) Id](val sourceId: Id, val targetId: Id) {
 case class AddVertex[Id, State, GraphIdUpperBound, GraphSignalUpperBound](
   v: Vertex[Id, State, GraphIdUpperBound, GraphSignalUpperBound])
 
-case class AddEdge[@specialized(Long) SourceId, @specialized(Long) TargetId](
+case class AddEdge[@specialized(Int, Long) SourceId, @specialized(Int, Long) TargetId](
   sourceVertexId: SourceId,
   e: Edge[TargetId])
 
-case class BulkSignal[@specialized(Long) Id, Signal](
+case class BulkSignal[@specialized(Int, Long) Id, Signal](
   val signals: Array[Signal],
   val targetIds: Array[Id],
   val sourceIds: Array[Id])
 
-case class BulkSignalNoSourceIds[@specialized(Long) Id, Signal](
+case class BulkSignalNoSourceIds[@specialized(Int, Long) Id, Signal](
   val signals: Array[Signal],
   val targetIds: Array[Id])
 
-case class SignalMessageWithSourceId[@specialized(Long) Id, Signal](
+case class SignalMessageWithSourceId[@specialized(Int, Long) Id, Signal](
   val targetId: Id,
   val sourceId: Id,
   val signal: Signal)
 
-case class SignalMessageWithoutSourceId[@specialized(Long) Id, Signal](
+case class SignalMessageWithoutSourceId[@specialized(Int, Long) Id, Signal](
   val targetId: Id,
   val signal: Signal)  
   
