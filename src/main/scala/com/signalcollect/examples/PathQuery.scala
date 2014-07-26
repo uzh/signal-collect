@@ -20,8 +20,6 @@
 package com.signalcollect.examples
 
 import scala.collection.immutable.Queue
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.ListBuffer
 
 import com.signalcollect._
 
@@ -68,7 +66,7 @@ class FixedQueryNode(id: Any) extends PathQueryNode {
  * of the matched nodes in the graph.
  */
 class PathQuery() extends Serializable {
-  var unmatchedQuery = LinkedList[PathQueryNode]() //Part of the query that is not matched yet.
+  var unmatchedQuery = List[PathQueryNode]() //Part of the query that is not matched yet.
   var matchedPath = Queue[Any]() // Trail of already matched nodes
 
   /**
@@ -107,7 +105,7 @@ class PathQuery() extends Serializable {
    * Adds a PathQueryNode to the beginning of the unmatched query
    */
   def prependQueryNode(node: PathQueryNode) {
-    unmatchedQuery = node +: unmatchedQuery
+    unmatchedQuery = node :: unmatchedQuery
   }
 }
 
@@ -115,8 +113,8 @@ class PathQuery() extends Serializable {
  * Collects all matched paths as results of the query.
  */
 object ResultHandler {
-  val results = ListBuffer[List[Any]]()
-  def addPath(path: List[Any]) = results += path
+  var results = List[List[Any]]()
+  def addPath(path: List[Any]) = results = path :: results 
   def getResults = results.toList
 }
 
