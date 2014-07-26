@@ -38,7 +38,6 @@ class IntHashMap[Value: ClassTag](
   final var values = new Array[Value](maxSize)
   private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
-  private[this] final var nextPositionToProcess = 0
 
   final def size: Int = numberOfElements
   final def isEmpty: Boolean = numberOfElements == 0
@@ -47,7 +46,6 @@ class IntHashMap[Value: ClassTag](
   final def clear {
     keys = new Array[Int](maxSize)
     numberOfElements = 0
-    nextPositionToProcess = 0
   }
 
   def toScalaMap: Map[Int, Value] = {
@@ -80,7 +78,7 @@ class IntHashMap[Value: ClassTag](
     }
   }
 
-  final def foreach(f: (Int, Value) => Unit) {
+  @inline final def foreach(f: (Int, Value) => Unit) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -92,6 +90,25 @@ class IntHashMap[Value: ClassTag](
       }
       i += 1
     }
+  }
+
+  /**
+   * Like foreach, but removes the entry after applying the function.
+   */
+  @inline final def process(f: (Int, Value) => Unit) {
+    var i = 0
+    var elementsProcessed = 0
+    while (elementsProcessed < numberOfElements) {
+      val key = keys(i)
+      if (key != 0) {
+        val value = values(i)
+        f(key, value)
+        elementsProcessed += 1
+        keys(i) = 0
+      }
+      i += 1
+    }
+    numberOfElements = 0
   }
 
   final def remove(key: Int) {
