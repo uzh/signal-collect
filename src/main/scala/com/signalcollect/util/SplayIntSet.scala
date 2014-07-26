@@ -139,7 +139,7 @@ abstract class SplayIntSet {
   /**
    * Asserts that the root has been set.
    */
-  @inline def foreach(f: Int => Unit) {
+  @inline final def foreach(f: Int => Unit) {
     if (size > 0) {
       root.foreach(f)
     }
