@@ -192,6 +192,7 @@ class IntIntHashMap(
     val overridden = keyAtPosition == key
     if (!overridden) {
       keys(position) = key
+      values(position) = value
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
         tryDouble
@@ -199,7 +200,6 @@ class IntIntHashMap(
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
       }
-      put(key, value)
     } else {
       values(position) = value
     }

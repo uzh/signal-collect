@@ -173,9 +173,10 @@ class IntLongHashMap(
       position = (position + 1) & mask
       keyAtPosition = keys(position)
     }
-    val overridden = keyAtPosition == key
-    if (!overridden) {
+    val hadExistingEntryForKey = keyAtPosition == key
+    if (!hadExistingEntryForKey) {
       keys(position) = key
+      values(position) = value
       numberOfElements += 1
       if (numberOfElements >= maxElements) {
         tryDouble
@@ -183,11 +184,10 @@ class IntLongHashMap(
           throw new OutOfMemoryError("The hash map is full and cannot be expanded any further.")
         }
       }
-      put(key, value)
     } else {
       values(position) = value
     }
-    overridden
+    hadExistingEntryForKey
   }
 
   private[this] final def keyToPosition(key: Int) = {
