@@ -24,17 +24,14 @@ import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 
 trait WorkerApi[Id, Signal] {
-  def addVertex(vertex: Vertex[Id, _])
+  def addVertex(vertex: Vertex[Id, _, Id, Signal])
   def addEdge(sourceId: Id, edge: Edge[Id])
   def removeVertex(vertexId: Id)
   def removeEdge(edgeId: EdgeId[Id])
-  def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id])
+  def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id)
+  def processSignalWithoutSourceId(signal: Signal, targetId: Id)
   def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None)
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id] = None)
-
-  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit)
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]])
 
   def setSignalThreshold(signalThreshold: Double)
   def setCollectThreshold(collectThreshold: Double)
@@ -42,9 +39,9 @@ trait WorkerApi[Id, Signal] {
   def recalculateScores
   def recalculateScoresForVertexWithId(vertexId: Id)
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
-  def foreachVertex(f: Vertex[Id, _] => Unit)
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
+  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit)
 
   def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult
   def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult

@@ -30,7 +30,6 @@ import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import akka.actor.ActorRef
@@ -39,12 +38,17 @@ import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
+import akka.actor.ActorSystem
+import com.signalcollect.interfaces.SignalMessageWithSourceId
+import com.signalcollect.interfaces.SignalMessageWithoutSourceId
 
 abstract class AbstractMessageBus[Id, Signal]
-    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
-  val log = Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this)
-  
+  protected def system: ActorSystem
+
+  val log = Logging.getLogger(system, this)
+
   def reset {}
 
   protected val registrations = new AtomicInteger()
@@ -147,6 +151,10 @@ abstract class AbstractMessageBus[Id, Signal]
     workers(workerId) ! message
   }
 
+  override def sendToWorkerUncounted(workerId: Int, message: Any) {
+    workers(workerId) ! message
+  }
+
   override def sendToWorkers(message: Any, messageCounting: Boolean) {
     for (workerId <- 0 until numberOfWorkers) {
       if (messageCounting) {
@@ -158,6 +166,10 @@ abstract class AbstractMessageBus[Id, Signal]
 
   override def sendToNode(nodeId: Int, message: Any) {
     incrementMessagesSentToNode(nodeId)
+    nodes(nodeId) ! message
+  }
+
+  override def sendToNodeUncounted(nodeId: Int, message: Any) {
     nodes(nodeId) ! message
   }
 
@@ -175,6 +187,10 @@ abstract class AbstractMessageBus[Id, Signal]
     coordinator ! message
   }
 
+  override def sendToCoordinatorUncounted(message: Any) {
+    coordinator ! message
+  }
+
   override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
 
   override def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = mapper.getWorkerIdForVertexIdHash(vertexIdHash)
@@ -187,14 +203,22 @@ abstract class AbstractMessageBus[Id, Signal]
   override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.processSignal(signal, targetId, sourceId)
+      if (sourceId.isDefined) {
+        workerApi.processSignalWithSourceId(signal, targetId, sourceId.get)
+      } else {
+        workerApi.processSignalWithoutSourceId(signal, targetId)
+      }
     } else {
       // Manually send a fire & forget request.
-      sendToWorkerForVertexId(SignalMessage(targetId, sourceId, signal), targetId)
+      if (sourceId.isDefined) {
+        sendToWorkerForVertexId(SignalMessageWithSourceId(targetId, sourceId.get, signal), targetId)
+      } else {
+        sendToWorkerForVertexId(SignalMessageWithoutSourceId(targetId, signal), targetId)
+      }
     }
   }
 
-  override def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.addVertex(vertex)

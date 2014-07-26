@@ -20,7 +20,7 @@
 package com.signalcollect.interfaces
 
 import akka.actor.{ Actor, ActorLogging }
-import net.liftweb.json.JValue
+import org.json4s.JValue
 
 trait Logger {
   def getLogMessages: List[JValue]

@@ -29,14 +29,14 @@ abstract class AggregationOperation[ValueType] extends ComplexAggregation[ValueT
   /**
    *  Extracts values of type `ValueType` from vertices.
    */
-  def extract(v: Vertex[_, _]): ValueType
+  def extract(v: Vertex[_, _, _, _]): ValueType
 
   /**
    * Reduces an arbitrary number of elements to one element.
    */
   def reduce(elements: Stream[ValueType]): ValueType
 
-  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): ValueType = {
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _, _, _]]): ValueType = {
     reduce(vertices map extract)
   }
 
@@ -52,7 +52,7 @@ abstract class AggregationOperation[ValueType] extends ComplexAggregation[ValueT
  */
 abstract class ComplexAggregation[WorkerResult, EndResult] extends Serializable {
 
-  def aggregationOnWorker(vertices: Stream[Vertex[_, _]]): WorkerResult
+  def aggregationOnWorker(vertices: Stream[Vertex[_, _, _, _]]): WorkerResult
 
   def aggregationOnCoordinator(workerResults: Iterable[WorkerResult]): EndResult
 

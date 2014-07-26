@@ -44,7 +44,11 @@ abstract class DataFlowVertex[Id, State](
     state = s
   }
 
-  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  def deliverSignalWithSourceId(signal: Any, sourceId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
+    deliverSignalWithoutSourceId(signal, graphEditor)
+  }
+
+  def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
     setState(collect(signal.asInstanceOf[Signal]))
     true
   }
@@ -52,7 +56,7 @@ abstract class DataFlowVertex[Id, State](
   /**
    *  The abstract `collect` function is algorithm specific and calculates the new vertex state.
    *
-   *  @param signal a signal that was received by this vertex and has not yet been collected. 
+   *  @param signal a signal that was received by this vertex and has not yet been collected.
    *
    *  @return The new vertex state.
    *

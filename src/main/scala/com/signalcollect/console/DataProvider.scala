@@ -28,9 +28,10 @@ import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json.Extraction._
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.Extraction._
+import org.json4s.native.JsonMethods._
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.ExecutionStatistics
@@ -38,6 +39,7 @@ import akka.event.Logging
 import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 import akka.actor.ActorLogging
+import com.signalcollect.interfaces.Logger
 
 /** Abstract class defining the interface every DataProvider has to implement. */
 abstract class DataProvider {
@@ -114,7 +116,7 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
  * @constructor create a new StateDataProvider
  * @param socket the WebSocketConsoleServer
  */
-class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
+class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
     extends DataProvider {
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
@@ -152,8 +154,8 @@ class StateDataProvider[Id](socket: WebSocketConsoleServer[Id])
  * @param socket the WebSocketConsoleServer (who knows the exec conf)
  * @param coordinator the Coordinator (who knows the graph conf)
  */
-class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
-                                    coordinator: Coordinator[Id, _])
+class ConfigurationDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
+                                    coordinator: Coordinator[Id, Signal])
     extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
@@ -162,7 +164,7 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
     }
     ("provider" -> "configuration") ~
       ("executionConfiguration" -> executionConfiguration) ~
-      ("graphConfiguration" -> Toolkit.unpackObjects(Array(socket.graphConfiguration))) ~
+      ("graphConfiguration" -> Toolkit.unpackObjects(Array[AnyRef](socket.graphConfiguration))) ~
       ("systemProperties" -> propertiesAsScalaMap(System.getProperties))
   }
 }
@@ -173,10 +175,10 @@ class ConfigurationDataProvider[Id](socket: WebSocketConsoleServer[Id],
  * @constructor create a new LogDataProvider
  * @param coordinator the Coordinator
  */
-class LogDataProvider[Id](coordinator: Coordinator[Id, _]) extends DataProvider {
+class LogDataProvider[Id](logger: Logger) extends DataProvider {
   def fetch(): JObject = {
     ("provider" -> "log") ~
-      ("messages" -> coordinator.getLogMessages)
+      ("messages" -> logger.getLogMessages)
   }
 }
 
@@ -191,7 +193,7 @@ case class ControlsRequest(
  * @param socket the WebSocketConsoleServer
  * @param msg the request by the client
  */
-class ControlsProvider(socket: WebSocketConsoleServer[_],
+class ControlsProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
                        msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -258,8 +260,8 @@ case class BreakConditionContainer(
  * @param socket the WebSocketConsoleServer
  * @param msg the request by the client
  */
-class BreakConditionsProvider[Id](coordinator: Coordinator[Id, _],
-                                  socket: WebSocketConsoleServer[Id],
+class BreakConditionsProvider[Id, Signal](coordinator: Coordinator[Id, Signal],
+                                  socket: WebSocketConsoleServer[Id, Signal],
                                   msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
@@ -351,7 +353,7 @@ case class GraphDataRequest(
  * @param coordinator the Coordinator
  * @param msg the request by the client
  */
-class GraphDataProvider[Id](coordinator: Coordinator[Id, _], msg: JValue)
+class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: JValue)
     extends DataProvider {
 
   implicit val formats = DefaultFormats

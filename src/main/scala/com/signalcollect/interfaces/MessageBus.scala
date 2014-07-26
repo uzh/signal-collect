@@ -28,7 +28,7 @@ import akka.event.Logging.LogEvent
  *  A message bus is responsible for sending messages.
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
-abstract class MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
+trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
   def flush
 
   def isInitialized: Boolean
@@ -61,13 +61,19 @@ abstract class MessageBus[@specialized(Int, Long) Id, @specialized(Int, Long, Fl
 
   def sendToWorker(workerId: Int, message: Any)
 
+  def sendToWorkerUncounted(workerId: Int, message: Any)
+
   def sendToWorkers(message: Any, messageCounting: Boolean)
 
   def sendToNode(nodeId: Int, message: Any)
 
+  def sendToNodeUncounted(nodeId: Int, message: Any)
+
   def sendToNodes(message: Any, messageCounting: Boolean)
 
   def sendToCoordinator(message: Any)
+
+  def sendToCoordinatorUncounted(message: Any)
 
   /**
    * Resets the message but does not touch the counters.

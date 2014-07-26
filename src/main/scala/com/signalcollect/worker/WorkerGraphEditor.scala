@@ -28,7 +28,7 @@ import akka.actor.ActorRef
  * Wraps a general graph editor and optimizes operations that happen locally to a worker
  * by calling them directly on the worker itself.
  */
-class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal](
+class WorkerGraphEditor[@specialized(Int, Long) Id, Signal](
   workerId: Int,
   worker: WorkerApi[Id, Signal],
   messageBus: MessageBus[Id, Signal])
@@ -42,7 +42,7 @@ class WorkerGraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Floa
     graphEditor.sendSignal(signal, targetId, sourceId, blocking)
   }
 
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean) {
     if (blocking && shouldHandleLocally(vertex.id)) {
       worker.addVertex(vertex)
     } else {

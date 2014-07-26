@@ -34,7 +34,7 @@ import akka.event.LoggingAdapter
  *
  *  @author Philip Stutz
  */
-trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] {
+trait GraphEditor[@specialized(Int, Long) Id, Signal] {
 
   /**
    *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
@@ -52,12 +52,21 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
   }
 
   /**
+   *  Sends `signal` to the vertex with `vertex.id==edgeId.targetId`.
+   *
+   *  @note Does not block and does not attach the source ID.
+   */
+  def sendSignal(signal: Signal, targetId: Id) {
+    sendSignal(signal, targetId, None, false)
+  }
+  
+  /**
    *  Adds `vertex` to the graph.
    *  Blocks until the operation has completed if `blocking` is true.
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean)
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean)
 
   /**
    *  Adds `vertex` to the graph.
@@ -65,7 +74,7 @@ trait GraphEditor[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Dou
    *  @note Does not block.
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _]) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
     addVertex(vertex, false)
   }
 

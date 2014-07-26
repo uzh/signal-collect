@@ -22,7 +22,8 @@ package com.signalcollect.nodeprovisioning
 
 import com.typesafe.config.Config
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
 
-trait NodeProvisioner extends Serializable {
-  def getNodes(akkaConfig: Config): Array[ActorRef]
+trait NodeProvisioner[Id, Signal] extends Serializable {
+  def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef]
 }

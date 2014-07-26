@@ -21,7 +21,7 @@ package com.signalcollect.storage
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.VertexStore
 
-// A special adaptation of IntHashMap[Vertex[_, _]].
+// A special adaptation of IntHashMap[Vertex[_, _, _, _]].
 // We allow arbitrary types for the vertex id to make
 // the usage of the framework simple.
 // This unfortunately means that we cannot use the id
@@ -31,15 +31,15 @@ import com.signalcollect.interfaces.VertexStore
 // the key in this map. In order to handle (rare) collisions,
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
-class VertexMap[Id](
+class VertexMap[@specialized(Int, Long) Id, Signal](
   initialSize: Int = 32768,
-  rehashFraction: Float = 0.75f) extends VertexStore[Id] {
+  rehashFraction: Float = 0.75f) extends VertexStore[Id, Signal] {
   assert(initialSize > 0)
   final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
-  private[this] final var values = new Array[Vertex[Id, _]](maxSize)
+  private[this] final var values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
   private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
   private[this] final var nextPositionToProcess = 0
@@ -48,8 +48,8 @@ class VertexMap[Id](
   final def isEmpty: Boolean = numberOfElements == 0
   private[this] final var numberOfElements = 0
 
-  def stream: Stream[Vertex[Id, _]] = {
-    def remainder(i: Int, elementsProcessed: Int): Stream[Vertex[Id, _]] = {
+  def stream: Stream[Vertex[Id, _, Id, Signal]] = {
+    def remainder(i: Int, elementsProcessed: Int): Stream[Vertex[Id, _, Id, Signal]] = {
       if (elementsProcessed == numberOfElements) {
         Stream.empty
       } else {
@@ -67,13 +67,13 @@ class VertexMap[Id](
   }
 
   final def clear {
-    values = new Array[Vertex[Id, _]](maxSize)
+    values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
     keys = new Array[Int](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  final def foreach(f: Vertex[Id, _] => Unit) {
+  final def foreach(f: Vertex[Id, _, Id, Signal] => Unit) {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -87,7 +87,7 @@ class VertexMap[Id](
   }
 
   // Removes the vertices after they have been processed.
-  final def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int = {
+  final def process(p: Vertex[Id, _, Id, Signal] => Unit, numberOfVertices: Option[Int] = None): Int = {
     val limit = math.min(numberOfElements, numberOfVertices.getOrElse(numberOfElements))
     var elementsProcessed = 0
     while (elementsProcessed < limit) {
@@ -108,7 +108,7 @@ class VertexMap[Id](
   }
 
   // Removes the vertices after they have been processed.
-  final def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
+  final def processWithCondition(p: Vertex[Id, _, Id, Signal] => Unit, breakCondition: () => Boolean): Int = {
     val limit = numberOfElements
     var elementsProcessed = 0
     while (elementsProcessed < limit && !breakCondition()) {
@@ -137,7 +137,7 @@ class VertexMap[Id](
       val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
-      values = new Array[Vertex[Id, _]](maxSize)
+      values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
       keys = new Array[Int](maxSize)
       mask = maxSize - 1
       numberOfElements = 0
@@ -205,7 +205,7 @@ class VertexMap[Id](
     }
   }
 
-  final def get(vertexId: Id): Vertex[Id, _] = {
+  final def get(vertexId: Id): Vertex[Id, _, Id, Signal] = {
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
@@ -221,13 +221,13 @@ class VertexMap[Id](
   }
 
   // Only put if no vertex with the same id is present. If a vertex was put, return true.
-  final def put(vertex: Vertex[Id, _]): Boolean = {
+  final def put(vertex: Vertex[Id, _, Id, Signal]): Boolean = {
     val key = idToKey(vertex.id)
     val success = putWithKey(key, vertex)
     success
   }
 
-  private[this] final def putWithKey(key: Int, vertex: Vertex[Id, _]): Boolean = {
+  private[this] final def putWithKey(key: Int, vertex: Vertex[Id, _, Id, Signal]): Boolean = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != 0 && (key != keyAtPosition || vertex.id != values(position).id)) {

@@ -22,35 +22,52 @@
 
 package com.signalcollect.worker
 
-import java.io.DataInputStream
-import java.io.DataOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.util.Queue
-import java.lang.management.ManagementFactory
-import scala.Array.canBuildFrom
+import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.language.reflectiveCalls
 import scala.reflect.ClassTag
-import com.signalcollect._
-import com.signalcollect.interfaces._
-import com.sun.management.OperatingSystemMXBean
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.ReceiveTimeout
-import akka.dispatch.MessageQueue
+import com.signalcollect.Edge
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.ActorRestartLogging
+import com.signalcollect.interfaces.AddEdge
+import com.signalcollect.interfaces.AddVertex
+import com.signalcollect.interfaces.BulkSignal
+import com.signalcollect.interfaces.BulkSignalNoSourceIds
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.Heartbeat
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.Request
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.SignalMessageWithSourceId
+import com.signalcollect.interfaces.SignalMessageWithoutSourceId
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.WorkerApi
 import akka.actor.Actor
-import akka.serialization.SerializationExtension
+import akka.actor.ActorLogging
+import akka.actor.Cancellable
+import akka.actor.Scheduler
+import akka.actor.actorRef2Scala
+import akka.dispatch.MessageQueue
 
 case object ScheduleOperations
+
+case object StatsDue
+
+case class StartPingPongExchange(pingPongPartner: Int)
+case class Ping(fromWorker: Int)
+case class Pong(fromWorker: Int)
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
  */
-case class IncrementorForWorker(workerId: Int) {
+class IncrementorForWorker(workerId: Int) {
   def increment(messageBus: MessageBus[_, _]) = {
     messageBus.incrementMessagesSentToWorker(workerId)
   }
@@ -60,68 +77,75 @@ case class IncrementorForWorker(workerId: Int) {
  * Class that interfaces the worker implementation with Akka messaging.
  * Mainly responsible for translating received messages to function calls on a worker implementation.
  */
-class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, Float, Double) Signal: ClassTag](
+class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
-  val messageBusFactory: MessageBusFactory,
-  val mapperFactory: MapperFactory,
-  val storageFactory: StorageFactory,
-  val schedulerFactory: SchedulerFactory,
+  val messageBusFactory: MessageBusFactory[Id, Signal],
+  val mapperFactory: MapperFactory[Id],
+  val storageFactory: StorageFactory[Id, Signal],
+  val schedulerFactory: SchedulerFactory[Id, Signal],
+  val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   val heartbeatIntervalInMilliseconds: Int,
-  val eagerIdleDetection: Boolean)
-  extends WorkerActor[Id, Signal]
+  val eagerIdleDetection: Boolean,
+  val throttlingEnabled: Boolean,
+  val supportBlockingGraphModificationsInVertex: Boolean)
+  extends Actor
   with ActorLogging
   with ActorRestartLogging {
 
+  context.setReceiveTimeout(Duration.Undefined)
+
+  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
+  var lastHeartbeatTimestamp = System.nanoTime
   var schedulingTimestamp = System.nanoTime
 
+  val akkaScheduler: Scheduler = context.system.scheduler: akka.actor.Scheduler
+  implicit val executor = context.system.dispatcher
+
   override def postStop {
+    statsReportScheduling.cancel
+    scheduledPingPongExchange.foreach(_.cancel)
     log.debug(s"Worker $workerId has stopped.")
   }
 
-  // Assumes that there is the same number of workers on all nodes.
-  def nodeId: Int = {
-    val workersPerNode = numberOfWorkers / numberOfNodes
-    workerId / workersPerNode
-  }
+  val statsReportScheduling = akkaScheduler.
+    schedule(0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, StatsDue)
+
+  var scheduledPingPongExchange: Option[Cancellable] = None
 
   override def postRestart(reason: Throwable): Unit = {
     super.postRestart(reason)
-    val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTraceString}, not recoverable."
+    val msg = s"Worker $workerId crashed with ${reason.toString} because of ${reason.getCause} or reason ${reason.getMessage} at position ${reason.getStackTrace.mkString("\n")}, not recoverable."
     println(msg)
     log.error(msg)
     context.stop(self)
   }
 
-  val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](
-      numberOfWorkers,
-      numberOfNodes,
-      mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
-      IncrementorForWorker(workerId).increment _)
-  }
+  val messageBus: MessageBus[Id, Signal] = messageBusFactory.createInstance(
+    context.system,
+    numberOfWorkers,
+    numberOfNodes,
+    mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes),
+    new IncrementorForWorker(workerId).increment _)
 
   val worker = new WorkerImplementation[Id, Signal](
     workerId = workerId,
-    nodeId = nodeId,
+    numberOfWorkers = numberOfWorkers,
+    numberOfNodes = numberOfNodes,
     eagerIdleDetection = eagerIdleDetection,
+    supportBlockingGraphModificationsInVertex = supportBlockingGraphModificationsInVertex,
     messageBus = messageBus,
     log = log,
     storageFactory = storageFactory,
     schedulerFactory = schedulerFactory,
+    existingVertexHandlerFactory = existingVertexHandlerFactory,
+    undeliverableSignalHandlerFactory = undeliverableSignalHandlerFactory,
+    edgeAddedToNonExistentVertexHandlerFactory = edgeAddedToNonExistentVertexHandlerFactory,
     signalThreshold = 0.01,
-    collectThreshold = 0.0,
-    existingVertexHandler = (vOld, vNew, ge) => (),
-    undeliverableSignalHandler = (s: Signal, tId: Id, sId: Option[Id], ge: GraphEditor[Id, Signal]) => {
-      throw new Exception(s"Undeliverable signal: $s from $sId could not be delivered to $tId.")
-      Unit
-    },
-    edgeAddedToNonExistentVertexHandler = (edge: Edge[Id], vertexId: Id) => {
-      throw new Exception(
-        s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")
-      None
-    })
+    collectThreshold = 0.0)
 
   /**
    * How many graph modifications this worker will execute in one batch.
@@ -129,6 +153,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   val graphModificationBatchProcessingSize = 100
 
   def isInitialized = messageBus.isInitialized
+
+  def setIdle(newIdleState: Boolean) {
+    worker.isIdle = newIdleState
+    if (newIdleState == true && eagerIdleDetection && worker.isIdleDetectionEnabled) {
+      messageBus.sendToNodeUncounted(worker.nodeId, worker.getWorkerStatusForNode)
+    }
+    if (numberOfNodes > 1 && !worker.pingPongScheduled && worker.isIdleDetectionEnabled && newIdleState == false) {
+      worker.sendPing(worker.getRandomPingPongPartner)
+    }
+  }
 
   def applyPendingGraphModifications {
     if (!worker.pendingModifications.isEmpty) {
@@ -146,7 +180,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
   }
 
   def scheduleOperations {
-    worker.setIdle(false)
+    setIdle(false)
     self ! ScheduleOperations
     schedulingTimestamp = System.nanoTime
     worker.allWorkDoneWhenContinueSent = worker.isAllWorkDone
@@ -155,50 +189,98 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
 
   val messageQueue: Queue[_] = context.asInstanceOf[{ def mailbox: { def messageQueue: MessageQueue } }].mailbox.messageQueue.asInstanceOf[{ def queue: Queue[_] }].queue
 
+  def handleSignalMessageWithSourceId(s: SignalMessageWithSourceId[Id, Signal]) {
+    worker.processSignalWithSourceId(s.signal, s.targetId, s.sourceId)
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleSignalMessageWithoutSourceId(s: SignalMessageWithoutSourceId[Id, Signal]) {
+    worker.processSignalWithoutSourceId(s.signal, s.targetId)
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleBulkSignalWithSourceIds(bulkSignal: BulkSignal[Id, Signal]) {
+    worker.counters.bulkSignalMessagesReceived += 1
+    val size = bulkSignal.signals.length
+    var i = 0
+    while (i < size) {
+      val sourceId = bulkSignal.sourceIds(i)
+      if (sourceId != null) {
+        worker.processSignalWithSourceId(bulkSignal.signals(i), bulkSignal.targetIds(i), sourceId)
+      } else {
+        worker.processSignalWithoutSourceId(bulkSignal.signals(i), bulkSignal.targetIds(i))
+      }
+      i += 1
+    }
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
+  def handleBulkSignalWithoutSourceIds(bulkSignal: BulkSignalNoSourceIds[Id, Signal]) {
+    worker.counters.bulkSignalMessagesReceived += 1
+    val signals = bulkSignal.signals
+    val targetIds = bulkSignal.targetIds
+    worker.processBulkSignalWithoutIds(signals, targetIds)
+    if (!worker.operationsScheduled) {
+      scheduleOperations
+    }
+  }
+
   /**
    * This method gets executed when the Akka actor receives a message.
    */
   def receive = {
-    case s: SignalMessage[Id, Signal] =>
+    case s: SignalMessageWithSourceId[Id, Signal] =>
       worker.counters.signalMessagesReceived += 1
-      worker.processSignal(s.signal, s.targetId, s.sourceId)
-      if (!worker.operationsScheduled) {
-        scheduleOperations
-      }
+      handleSignalMessageWithSourceId(s)
+
+    case s: SignalMessageWithoutSourceId[Id, Signal] =>
+      worker.counters.signalMessagesReceived += 1
+      handleSignalMessageWithoutSourceId(s)
 
     case bulkSignal: BulkSignal[Id, Signal] =>
-      worker.counters.bulkSignalMessagesReceived += 1
-      val size = bulkSignal.signals.length
-      var i = 0
-      while (i < size) {
-        val sourceId = bulkSignal.sourceIds(i)
-        if (sourceId != null) {
-          worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), Some(sourceId))
-        } else {
-          worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-        }
-        i += 1
-      }
-      if (!worker.operationsScheduled) {
-        scheduleOperations
-      }
+      handleBulkSignalWithSourceIds(bulkSignal)
 
     case bulkSignal: BulkSignalNoSourceIds[Id, Signal] =>
-      worker.counters.bulkSignalMessagesReceived += 1
-      val size = bulkSignal.signals.length
-      var i = 0
-      while (i < size) {
-        worker.processSignal(bulkSignal.signals(i), bulkSignal.targetIds(i), None)
-        i += 1
-      }
-      if (!worker.operationsScheduled) {
-        scheduleOperations
+      handleBulkSignalWithoutSourceIds(bulkSignal)
+
+    case StartPingPongExchange(pingPongPartner) =>
+      worker.sendPing(pingPongPartner)
+
+    case Ping(fromWorker) =>
+      // Answer the ping with a pong.
+      messageBus.sendToWorkerUncounted(fromWorker, Pong(workerId))
+
+    case Pong(fromWorker) =>
+      worker.waitingForPong = false
+      val exchangeDuration = System.nanoTime - worker.pingSentTimestamp
+      //val durationInMilliseconds = (exchangeDuration / 1e+4.toDouble).round / 1e+2.toDouble
+      //println(s"Exchange between $workerId and $fromWorker took $durationInMilliseconds ms.")
+      if (exchangeDuration > worker.maxPongDelay) {
+        worker.slowPongDetected = true
+        worker.sendPing(worker.getRandomPingPongPartner)
+      } else {
+        worker.slowPongDetected = false
+        // Wait a bit and then play ping pong with another random partner.
+        if (!worker.isIdle) {
+          scheduledPingPongExchange = Some(akkaScheduler.scheduleOnce(
+            worker.pingPongSchedulingIntervalInMilliseconds.milliseconds,
+            self,
+            StartPingPongExchange(worker.getRandomPingPongPartner)))
+        } else {
+          worker.pingPongScheduled = false
+        }
       }
 
     case AddVertex(vertex) =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
-      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _]])
+      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _, Id, Signal]])
       // TODO: Reevaluate, if we really need to schedule operations.
       if (!worker.operationsScheduled) {
         scheduleOperations
@@ -218,18 +300,20 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
           //          log.debug(s"Worker $workerId turns to idle")
-
           //Worker is now idle.
-          worker.setIdle(true)
+          setIdle(true)
           worker.operationsScheduled = false
         } else {
+          def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
+          val overloaded = throttlingEnabled && (
+            pongDelayed || worker.slowPongDetected)
           //          log.debug(s"Worker $workerId has work to do")
-          if (worker.isPaused) {
+          if (worker.isPaused) { // && !overloaded
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
             //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations(worker.systemOverloaded)
+            worker.scheduler.executeOperations(overloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
@@ -257,7 +341,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         }
       } catch {
         case t: Throwable =>
-          val msg = s"Problematic request on worker $workerId: ${t.getStackTraceString}"
+          val msg = s"Problematic request on worker $workerId: ${t.getStackTrace.mkString("\n")}"
           println(msg)
           log.debug(msg)
           throw t
@@ -266,10 +350,11 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, @specialized(Int, Long, F
         scheduleOperations
       }
 
-    case Heartbeat(maySignal) =>
-      worker.counters.heartbeatMessagesReceived += 1
+    case Heartbeat(unusedFlag) =>
+      lastHeartbeatTimestamp = System.nanoTime
+
+    case StatsDue =>
       worker.sendStatusToCoordinator
-      worker.systemOverloaded = !maySignal
 
     case other =>
       worker.counters.otherMessagesReceived += 1

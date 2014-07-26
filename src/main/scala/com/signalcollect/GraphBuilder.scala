@@ -20,7 +20,6 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.AkkaDispatcher
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
@@ -31,28 +30,102 @@ import akka.event.Logging
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.MapperFactory
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import com.signalcollect.factory.scheduler.Throughput
+import com.signalcollect.factory.mapper.DefaultMapperFactory
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import com.signalcollect.factory.storage.MemoryEfficientStorage
+import com.signalcollect.factory.worker.AkkaWorkerFactory
+import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandler
+import com.signalcollect.factory.handler.DefaultExistingVertexHandlerFactory
+import com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory
+import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
  *  functions to modify this configuration and a build function to instantiate a graph
  *  with the defined configuration. This object represents a graph builder that is initialized with the default configuration.
  */
-object GraphBuilder extends GraphBuilder[Any, Any](GraphConfiguration())
+object GraphBuilder extends GraphBuilder[Any, Any](None)
 
 /**
  * Configurable builder for a Signal/Collect graph.
  *
  *  @author Philip Stutz
  */
-class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphConfiguration = GraphConfiguration()) extends Serializable {
+class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
+  configOption: Option[GraphConfiguration[Id, Signal]] = None) extends Serializable {
+
+  val config = configOption.getOrElse(
+    new GraphConfiguration[Id, Signal](
+      actorSystem = None,
+      actorNamePrefix = "",
+      eagerIdleDetection = true,
+      consoleEnabled = false,
+      throttlingEnabled = false,
+      supportBlockingGraphModificationsInVertex = true,
+      consoleHttpPort = -1,
+      loggingLevel = Logging.WarningLevel,
+      mapperFactory = new DefaultMapperFactory[Id],
+      storageFactory = new MemoryEfficientStorage[Id, Signal],
+      schedulerFactory = new Throughput[Id, Signal],
+      preallocatedNodes = None,
+      nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
+      heartbeatIntervalInMilliseconds = 100,
+      kryoRegistrations = List(),
+      kryoInitializer = "com.signalcollect.configuration.KryoInit",
+      serializeMessages = false,
+      workerFactory = new AkkaWorkerFactory[Id, Signal],
+      messageBusFactory = new BulkAkkaMessageBusFactory[Id, Signal](1000, true),
+      existingVertexHandlerFactory = new DefaultExistingVertexHandlerFactory[Id, Signal](),
+      undeliverableSignalHandlerFactory = new DefaultUndeliverableSignalHandlerFactory[Id, Signal],
+      edgeAddedToNonExistentVertexHandlerFactory = new DefaultEdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]))
 
   /**
    *  Creates a graph with the specified configuration.
    */
   def build: Graph[Id, Signal] = new DefaultGraph[Id, Signal](config)
 
-  protected def builder(config: GraphConfiguration) =
-    new GraphBuilder[Id, Signal](config)
+  protected def builder(config: GraphConfiguration[Id, Signal]) =
+    new GraphBuilder[Id, Signal](Some(config))
+
+  /**
+   *  When support is enabled, workers use a special message bus that prevents deadlocks.
+   */
+  def withBlockingGraphModificationsSupport(supported: Boolean) = {
+    builder(config.copy(supportBlockingGraphModificationsInVertex = supported))
+  }
+
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which a new vertex is added when a vertex with the same ID already exists.
+   *  The default handler silently discards the redundant new vertex.
+   */
+  def withExistingVertexHandlerFactory(newExistingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal]) = {
+    builder(config.copy(existingVertexHandlerFactory = newExistingVertexHandlerFactory))
+  }
+
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which the recipient vertex of a signal does not exist.
+   *  The default handler throws an exception.
+   */
+  def withUndeliverableSignalHandlerFactory(newUndeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal]) = {
+    builder(config.copy(undeliverableSignalHandlerFactory = newUndeliverableSignalHandlerFactory))
+  }
+
+  /**
+   *  Configures the factory that is used to create the handlers for situations
+   *  in which the an edge is added to a vertex that does not exist (yet).
+   *  The default handler throws an exception.
+   */
+  def withEdgeAddedToNonExistentVertexHandlerFactory(newEdgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]) = {
+    builder(config.copy(edgeAddedToNonExistentVertexHandlerFactory = newEdgeAddedToNonExistentVertexHandlerFactory))
+  }
 
   /**
    *  Configures if workers should eagerly notify the node about their idle state.
@@ -85,12 +158,6 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     builder(config.copy(consoleEnabled = newConsoleEnabled, consoleHttpPort = newConsoleHttpPort))
 
   /**
-   *  Configures if Akka message compression is enabled.
-   */
-  def withAkkaMessageCompression(newAkkaMessageCompression: Boolean) =
-    builder(config.copy(akkaMessageCompression = newAkkaMessageCompression))
-
-  /**
    *  Configures the logging level.
    *
    *  @note Logging levels available:
@@ -110,7 +177,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newWorkerFactory The worker factory used to instantiate workers.
    */
-  def withWorkerFactory(newWorkerFactory: WorkerFactory) =
+  def withWorkerFactory(newWorkerFactory: WorkerFactory[Id, Signal]) =
     builder(config.copy(workerFactory = newWorkerFactory))
 
   /**
@@ -118,7 +185,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newMessageBusFactory The message bus factory used to instantiate message buses.
    */
-  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory) =
+  def withMessageBusFactory(newMessageBusFactory: MessageBusFactory[Id, Signal]) =
     builder(config.copy(messageBusFactory = newMessageBusFactory))
 
   /**
@@ -126,7 +193,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newMapperFactory The mapper factory used to instantiate vertex to worker mappers.
    */
-  def withMapperFactory(newMapperFactory: MapperFactory) =
+  def withMapperFactory(newMapperFactory: MapperFactory[Id]) =
     builder(config.copy(mapperFactory = newMapperFactory))
 
   /**
@@ -134,7 +201,7 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newStorageFactory The storage factory used to instantiate vertex stores.
    */
-  def withStorageFactory(newStorageFactory: StorageFactory) =
+  def withStorageFactory(newStorageFactory: StorageFactory[Id, Signal]) =
     builder(config.copy(storageFactory = newStorageFactory))
 
   /**
@@ -142,14 +209,8 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
    *
    *  @param newSchedulerFactory The scheduler factory used to instantiate schedulers.
    */
-  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory) =
+  def withSchedulerFactory(newSchedulerFactory: SchedulerFactory[Id, Signal]) =
     builder(config.copy(schedulerFactory = newSchedulerFactory))
-
-  /**
-   *  Configures the Akka dispatcher for the worker actors.
-   */
-  def withAkkaDispatcher(newAkkaDispatcher: AkkaDispatcher) =
-    builder(config.copy(akkaDispatcher = newAkkaDispatcher))
 
   /**
    *  Initializes S/C with preallocated node actors.
@@ -161,11 +222,36 @@ class GraphBuilder[Id: ClassTag, Signal: ClassTag](protected val config: GraphCo
     builder(config.copy(preallocatedNodes = Some(nodes)))
 
   /**
+   *  Initializes S/C with an already existing actor system.
+   *
+   *  Using this option will mean that the user is responsible for
+   *  configuring options related to serialization, networking,
+   *  port, etc in a way that agrees with S/C.
+   *
+   *  @note: The logging inside the default vertices and edges only works when the
+   *  actor system is called "SignalCollect".
+   *
+   *  @param system: The actor system on which S/C will be deployed.
+   */
+  def withActorSystem(system: ActorSystem) =
+    builder(config.copy(actorSystem = Some(system)))
+
+  /**
+   * Instructs S/C to use a prefix for all actor names.
+   * This allows multiple instances of S/C to run on the
+   * same actor system, as long as they use different prefixes.
+   *
+   * @param prefix: The prefix that S/C uses for actor names.
+   */
+  def withActorNamePrefix(prefix: String) =
+    builder(config.copy(actorNamePrefix = prefix))
+
+  /**
    *  Configures the node provider.
    *
    *  @param newNodeProvider The node provider will acquire the resources for running a graph algorithm.
    */
-  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner) =
+  def withNodeProvisioner(newNodeProvisioner: NodeProvisioner[Id, Signal]) =
     builder(config.copy(nodeProvisioner = newNodeProvisioner))
 
   /**

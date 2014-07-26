@@ -26,7 +26,7 @@ trait SumOfOutWeights[Id, State] extends AbstractVertex[Id, State] {
    */
   var sumOfOutWeights: Double = 0
 
-  abstract override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  abstract override def addEdge(e: Edge[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     val added = super.addEdge(e, graphEditor)
     if (added) {
       sumOfOutWeights += e.weight

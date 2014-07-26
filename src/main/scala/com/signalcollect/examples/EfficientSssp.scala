@@ -38,7 +38,7 @@ import com.signalcollect.util.IntSet
  * with a 2.3GHz Core i7 (1 processor, 4 cores, 8 splits for 8 hyper-threads).
  */
 object EfficientSsspLoader extends App {
-  val g = new GraphBuilder[Int, Int].withMessageBusFactory(new BulkAkkaMessageBusFactory(96, false)).build
+  val g = new GraphBuilder[Int, Int]().withMessageBusFactory(new BulkAkkaMessageBusFactory[Int, Int](96, false)).build
   val numberOfSplits = Runtime.getRuntime.availableProcessors
   val splits = {
     val s = new Array[DataInputStream](numberOfSplits)
@@ -90,7 +90,7 @@ object EfficientSsspLoader extends App {
  * A version of Sssp that performs faster and uses less memory than the standard version.
  * This version collects upon signal delivery.
  */
-class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Vertex[Int, Int] {
+class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Vertex[Int, Int, Int, Int] {
   var lastSignalState = Int.MaxValue
   var outEdges = 0
   def setState(s: Int) {
@@ -101,12 +101,15 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
     outEdges = numberOfEdges
     targetIdArray = compactIntSet
   }
-  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  def deliverSignalWithSourceId(signal: Int, sourceId: Int, graphEditor: GraphEditor[Int, Int]): Boolean = {
+    deliverSignalWithoutSourceId(signal, graphEditor)
+  }
+  def deliverSignalWithoutSourceId(signal: Int, graphEditor: GraphEditor[Int, Int]): Boolean = {
     val s = signal.asInstanceOf[Int]
     state = math.min(s, state)
     true
   }
-  override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, Int]) {
     if (outEdges != 0) {
       new IntSet(targetIdArray).foreach((targetId: Int) =>
         graphEditor.sendSignal(state + 1, targetId, None))
@@ -117,10 +120,10 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   def scoreCollect = 0 // Because signals are collected upon delivery.
   def edgeCount = outEdges
   override def toString = s"${this.getClass.getName}(state=$state)"
-  def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {}
-  def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
-  def beforeRemoval(graphEditor: GraphEditor[Any, Any]) = {}
-  override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException("Use setTargetIds(...)")
-  override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
-  override def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int = throw new UnsupportedOperationException
+  def executeCollectOperation(graphEditor: GraphEditor[Int, Int]) {}
+  def afterInitialization(graphEditor: GraphEditor[Int, Int]) = {}
+  def beforeRemoval(graphEditor: GraphEditor[Int, Int]) = {}
+  override def addEdge(e: Edge[Int], graphEditor: GraphEditor[Int, Int]): Boolean = throw new UnsupportedOperationException("Use setTargetIds(...)")
+  override def removeEdge(targetId: Int, graphEditor: GraphEditor[Int, Int]): Boolean = throw new UnsupportedOperationException
+  override def removeAllEdges(graphEditor: GraphEditor[Int, Int]): Int = throw new UnsupportedOperationException
 }

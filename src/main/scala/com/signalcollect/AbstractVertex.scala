@@ -26,7 +26,7 @@ import com.signalcollect.configuration.ActorSystemRegistry
 import scala.annotation.elidable
 import scala.annotation.elidable._
 
-abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
+abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] with Inspectable[Id, State] {
 
   /**
    * hashCode is cached for better performance
@@ -36,13 +36,17 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
 
   /**
-   * Calls to debug level logging are by default disregarded by the compiler and do not get executed. 
+   * Calls to debug level logging are by default disregarded by the compiler and do not get executed.
    * To enable them decrease the default S/C "-Xelide-below" compiler parameter from "INFO" to "ALL".
    *
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(FINEST) def debug(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).debug(message)
+      case None =>
+    }
   }
 
   /**
@@ -52,7 +56,11 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(INFO) def info(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).info(message)
+      case None =>
+    }
   }
 
   /**
@@ -62,7 +70,11 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(WARNING) def warning(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).warning(message)
+      case None =>
+    }
   }
 
   /**
@@ -72,10 +84,10 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */
-  var outgoingEdges = Map.empty[Any, Edge[_]]
+  var outgoingEdges = Map.empty[Any, Edge[Any]]
 
   /** The edges that this vertex is connected to. */
-  def edges: Traversable[Edge[_]] = outgoingEdges.values
+  def edges: Traversable[Edge[Any]] = outgoingEdges.values
 
   /** The state of this vertex when it last signaled. */
   var lastSignalState: Option[State] = None
@@ -91,7 +103,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    *
    * @param e the edge to be added.
    */
-  def addEdge(edge: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  def addEdge(edge: Edge[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     outgoingEdges.get(edge.targetId) match {
       case None =>
         edgesModifiedSinceSignalOperation = true

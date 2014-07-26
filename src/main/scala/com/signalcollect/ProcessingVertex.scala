@@ -36,7 +36,7 @@ import scala.collection.mutable.ArrayBuffer
 abstract class ProcessingVertex[Id, SignalType](
   val id: Id,
   var state: List[SignalType] = List[SignalType]())
-  extends Vertex[Id, List[SignalType]] {
+  extends Vertex[Id, List[SignalType], Any, Any] {
 
   def process(signal: SignalType, graphEditor: GraphEditor[Any, Any])
 
@@ -68,7 +68,7 @@ abstract class ProcessingVertex[Id, SignalType](
   def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {}
   def beforeRemoval(graphEditor: GraphEditor[Any, Any]) = {}
   override def afterInitialization(graphEditor: GraphEditor[Any, Any]) {}
-  override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
+  override def addEdge(e: Edge[Any], graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
   override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
   override def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int = 0
 }

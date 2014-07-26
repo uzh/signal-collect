@@ -22,12 +22,14 @@ package com.signalcollect.messaging
 import com.signalcollect.interfaces.WorkerApiFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.VertexToWorkerMapper
+import akka.actor.ActorSystem
 
 class DefaultMessageBus[Id, Signal](
+    val system: ActorSystem,
     val numberOfWorkers: Int,
     val numberOfNodes: Int,
     val mapper: VertexToWorkerMapper[Id],
     val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory) extends AbstractMessageBus[Id, Signal] {
-  lazy val workerApi = workerApiFactory.createInstance[Id, Signal](workerProxies, mapper)
+    workerApiFactory: WorkerApiFactory[Id, Signal]) extends AbstractMessageBus[Id, Signal] {
+  lazy val workerApi = workerApiFactory.createInstance(workerProxies, mapper)
 }

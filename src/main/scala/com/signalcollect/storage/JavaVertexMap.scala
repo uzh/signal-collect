@@ -29,8 +29,8 @@ import com.signalcollect.interfaces.VertexStore
 /**
  * Stores all vertices in a in-memory HashMap data structure.
  */
-class JavaVertexMap[Id] extends VertexStore[Id] {
-  protected var vertexMap = new HashMap[Id, Vertex[Id, _]]()
+class JavaVertexMap[Id, Signal] extends VertexStore[Id, Signal] {
+  protected var vertexMap = new HashMap[Id, Vertex[Id, _, Id, Signal]]()
 
   /**
    * Returns a vertex from the store that has the specified id.
@@ -38,7 +38,7 @@ class JavaVertexMap[Id] extends VertexStore[Id] {
    * @param id the ID of the vertex to retrieve
    * @return the vertex object or null if the vertex is not contained in the store
    */
-  def get(id: Id): Vertex[Id, _] = {
+  def get(id: Id): Vertex[Id, _, Id, Signal] = {
     vertexMap.get(id)
   }
 
@@ -48,7 +48,7 @@ class JavaVertexMap[Id] extends VertexStore[Id] {
    * @param the vertex to insert
    * @return true if the insertion was successful, false if the storage already contained a vertex with the same id.
    */
-  def put(vertex: Vertex[Id, _]): Boolean = {
+  def put(vertex: Vertex[Id, _, Id, Signal]): Boolean = {
     if (!vertexMap.containsKey(vertex.id)) {
       vertexMap.put(vertex.id, vertex)
       true
@@ -69,14 +69,14 @@ class JavaVertexMap[Id] extends VertexStore[Id] {
 
   def size = vertexMap.size
 
-  def stream: Stream[Vertex[Id, _]] = vertexMap.values.iterator.toStream
+  def stream: Stream[Vertex[Id, _, Id, Signal]] = vertexMap.values.iterator.toStream
 
   /**
    * Applies the supplied function to each stored vertex
    *
    * @param f Function to apply to each stored vertex
    */
-  def foreach(f: Vertex[Id, _] => Unit) = {
+  def foreach(f: Vertex[Id, _, Id, Signal] => Unit) = {
     val it = vertexMap.values.iterator
     while (it.hasNext) {
       val vertex = it.next
@@ -84,7 +84,7 @@ class JavaVertexMap[Id] extends VertexStore[Id] {
     }
   }
 
-  def process(p: Vertex[Id, _] => Unit, numberOfVertices: Option[Int] = None): Int = {
+  def process(p: Vertex[Id, _, Id, Signal] => Unit, numberOfVertices: Option[Int] = None): Int = {
     val it = vertexMap.values.iterator
     val limit: Int = math.min(vertexMap.size, numberOfVertices.getOrElse(vertexMap.size))
     var removed = 0
@@ -97,7 +97,7 @@ class JavaVertexMap[Id] extends VertexStore[Id] {
     removed
   }
 
-  def processWithCondition(p: Vertex[Id, _] => Unit, breakCondition: () => Boolean): Int = {
+  def processWithCondition(p: Vertex[Id, _, Id, Signal] => Unit, breakCondition: () => Boolean): Int = {
     val it = vertexMap.values.iterator
     var removed = 0
     while (it.hasNext && !breakCondition()) {

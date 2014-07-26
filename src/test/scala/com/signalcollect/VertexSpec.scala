@@ -11,7 +11,7 @@ import org.scalatest.prop.Checkers
 import org.scalatest.mock.EasyMockSugar
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.SignalMessageWithSourceId
 
 class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
 
@@ -42,7 +42,7 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
         }
         v.afterInitialization(mockGraphEditor)
         for ((sourceId, signal) <- incomingSignals) {
-          v.deliverSignal(signal, Some(sourceId), mockGraphEditor)
+          v.deliverSignalWithSourceId(signal, sourceId, mockGraphEditor)
         }
         if (!incomingSignals.isEmpty) {
           assert(v.scoreCollect > 0, "vertex received messages, should want to collect")
@@ -53,7 +53,7 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
             expecting {
               for (targetId <- outgoingEdges) {
                 call(mockGraphEditor.sendToWorkerForVertexIdHash(
-                  SignalMessage(targetId, Some(id), v.state / outgoingEdges.size), targetId.hashCode))
+                  SignalMessageWithSourceId(targetId, id, v.state / outgoingEdges.size), targetId.hashCode))
               }
             }
             whenExecuting(mockGraphEditor) {

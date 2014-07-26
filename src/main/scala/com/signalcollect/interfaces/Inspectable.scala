@@ -26,7 +26,7 @@ import com.signalcollect.{ Vertex, Edge }
  *  Trait that can be mixed into a vertex implementation in
  *  order to make a vertex accessible to graph inspector visualization plug-in.
  */
-trait Inspectable[Id, State] extends Vertex[Id, State] {
+trait Inspectable[Id, State] extends Vertex[Id, State, Any, Any] {
 
   /**
    * Returns the ids of the target vertices of outgoing edges of the vertex.

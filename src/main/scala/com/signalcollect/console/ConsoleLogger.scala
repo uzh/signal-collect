@@ -37,8 +37,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import akka.actor.ActorLogging
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
 import java.io.BufferedReader
 import java.io.FileReader
 
@@ -195,12 +196,10 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     case l @ Debug(logSource, logClass, message) =>
       writeLog(createJsonString("Debug", logSource, logClass, message))
     case Request(command, reply, incrementor) =>
-      try {
-        val result = command.asInstanceOf[Logger => Any](this)
-        if (reply) {
-          if (result != null) {
-            sender ! result
-          }
+      val result = command.asInstanceOf[Logger => Any](this)
+      if (reply) {
+        if (result != null) {
+          sender ! result
         }
       }
   }

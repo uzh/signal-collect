@@ -28,7 +28,7 @@ import akka.event.Logging.LogEvent
 /**
  * Required because a Java Dynamic Proxy can only work with interfaces.
  */
-trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry with Logger {
+trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
 
   override def toString: String = this.getClass.getSimpleName
 

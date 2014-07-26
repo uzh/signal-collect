@@ -34,7 +34,7 @@ import com.signalcollect.util.MemoryEfficientSplayIntSet
  */
 abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTag](
   val id: Int,
-  var state: State) extends Vertex[Int, State] {
+  var state: State) extends Vertex[Int, State, Int, Any] {
 
   type OutgoingSignalType
 
@@ -52,13 +52,13 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
 
   val mostRecentSignalMap = new IntHashMap[IncomingSignalType](1, 0.85f)
 
-  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  def deliverSignal(signal: Any, sourceId: Option[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
     val s = signal.asInstanceOf[IncomingSignalType]
     mostRecentSignalMap.put(sourceId.get.asInstanceOf[Int], s)
     false
   }
 
-  override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
     targetIds.foreach { targetId =>
       graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
@@ -69,19 +69,19 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
 
   override def toString = s"${this.getClass.getName}(state=$state)"
 
-  def executeCollectOperation(graphEditor: GraphEditor[Any, Any]) {
+  def executeCollectOperation(graphEditor: GraphEditor[Int, Any]) {
     setState(collect)
   }
 
-  override def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  override def addEdge(e: Edge[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
     targetIds.insert(e.targetId.asInstanceOf[Int])
   }
 
-  override def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = throw new UnsupportedOperationException
+  override def removeEdge(targetId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = throw new UnsupportedOperationException
 
-  override def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int = throw new UnsupportedOperationException
+  override def removeAllEdges(graphEditor: GraphEditor[Int, Any]): Int = throw new UnsupportedOperationException
 
-  def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
+  def afterInitialization(graphEditor: GraphEditor[Int, Any]) = {}
 
-  def beforeRemoval(graphEditor: GraphEditor[Any, Any]) = {}
+  def beforeRemoval(graphEditor: GraphEditor[Int, Any]) = {}
 }

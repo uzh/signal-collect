@@ -19,7 +19,7 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.SignalMessage
+import com.signalcollect.interfaces.SignalMessageWithSourceId
 
 /**
  *  OnlySignalOnChangeEdge is an edge implementation that only signals
@@ -46,10 +46,10 @@ abstract class OnlySignalOnChangeEdge[SourceIdType, TargetIdType](targetId: Targ
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  override def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
+  override def executeSignalOperation(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) {
     val newSignal = signal
     if (!lastSignalSent.isDefined || !lastSignalSent.get.equals(newSignal)) {
-      graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), newSignal), cachedTargetIdHashCode)
+      graphEditor.sendToWorkerForVertexIdHash(SignalMessageWithSourceId(targetId, sourceId, newSignal), cachedTargetIdHashCode)
       lastSignalSent = Some(newSignal)
     }
   }

@@ -20,11 +20,11 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.interfaces.SignalMessage
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 import scala.annotation.elidable
 import scala.annotation.elidable._
+import com.signalcollect.interfaces.SignalMessageWithSourceId
 
 /**
  *  Edge that connects a source vertex with a target vertex.
@@ -45,7 +45,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(FINEST) def debug(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).debug(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).debug(message)
+      case None =>
+    }
   }
 
   /**
@@ -55,7 +59,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(INFO) def info(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).info(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).info(message)
+      case None =>
+    }
   }
 
   /**
@@ -65,7 +73,11 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    * Note: this logging has no memory overhead for a reference.
    */
   @elidable(WARNING) def warning(message: String) {
-    Logging.getLogger(ActorSystemRegistry.retrieve("SignalCollect").get, this).warning(message)
+    val system = ActorSystemRegistry.retrieve("SignalCollect")
+    system match {
+      case Some(s) => Logging.getLogger(s, this).warning(message)
+      case None =>
+    }
   }
 
   var source: Source = _
@@ -100,12 +112,12 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
    *
    *  @param messageBus an instance of MessageBus which can be used by this edge to interact with the graph.
    */
-  def executeSignalOperation(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) {
-    graphEditor.sendToWorkerForVertexIdHash(SignalMessage(targetId, Some(sourceId), signal), cachedTargetIdHashCode)
+  def executeSignalOperation(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) {
+    graphEditor.sendToWorkerForVertexIdHash(SignalMessageWithSourceId(targetId, sourceId, signal), cachedTargetIdHashCode)
   }
 
   /** Called when the edge is attached to a source vertex */
-  def onAttach(sourceVertex: Vertex[_, _], graphEditor: GraphEditor[Any, Any]) = {
+  def onAttach(sourceVertex: Vertex[_, _, _, _], graphEditor: GraphEditor[Any, Any]) = {
     source = sourceVertex.asInstanceOf[Source]
   }
 

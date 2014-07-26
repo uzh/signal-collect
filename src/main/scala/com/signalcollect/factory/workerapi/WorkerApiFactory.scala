@@ -24,8 +24,8 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import com.signalcollect.interfaces.WorkerApiFactory
 
-object DefaultWorkerApiFactory extends WorkerApiFactory {
-  override def createInstance[Id, Signal](
+class DefaultWorkerApiFactory[Id, Signal] extends WorkerApiFactory[Id, Signal] {
+  override def createInstance(
     workerProxies: Array[WorkerApi[Id, Signal]],
     mapper: VertexToWorkerMapper[Id]): WorkerApi[Id, Signal] = {
     new DefaultWorkerApi(workerProxies, mapper)
