@@ -117,6 +117,14 @@ abstract class SplayIntSet {
   var size: Int = 0
   var root: SplayNode = _
 
+  // Avoid constructor to ensure that nothing unnecessary is stored.
+  // The passed root cannot have any child nodes.
+  def initializeWithRoot(r: SplayNode) {
+    assert(r.left == null && r.right == null)
+    root = r
+    size = root.size
+  }
+
   def toBuffer: Buffer[Int] = {
     val buffer = new ArrayBuffer[Int]
     if (size > 0) {
