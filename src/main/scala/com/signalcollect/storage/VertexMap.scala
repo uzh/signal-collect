@@ -20,6 +20,7 @@ package com.signalcollect.storage
 
 import com.signalcollect.Vertex
 import com.signalcollect.interfaces.VertexStore
+import StorageDefaultValues._
 
 // A special adaptation of IntHashMap[Vertex[_, _, _, _]].
 // We allow arbitrary types for the vertex id to make
@@ -32,8 +33,8 @@ import com.signalcollect.interfaces.VertexStore
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
 class VertexMap[@specialized(Int, Long) Id, Signal](
-  initialSize: Int = 32768,
-  rehashFraction: Float = 0.75f) extends VertexStore[Id, Signal] {
+  initialSize: Int = defaultInitialSize,
+  rehashFraction: Float = defaultRehashFraction) extends VertexStore[Id, Signal] {
   assert(initialSize > 0)
   final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
@@ -97,11 +98,11 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
         elementsProcessed += 1
         keys(nextPositionToProcess) = 0
         values(nextPositionToProcess) = null
-        numberOfElements -= 1
       }
       nextPositionToProcess = (nextPositionToProcess + 1) & mask
     }
     if (elementsProcessed > 0) {
+      numberOfElements -= elementsProcessed
       optimizeFromPosition(nextPositionToProcess)
     }
     limit
@@ -118,11 +119,11 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
         elementsProcessed += 1
         keys(nextPositionToProcess) = 0
         values(nextPositionToProcess) = null
-        numberOfElements -= 1
       }
       nextPositionToProcess = (nextPositionToProcess + 1) & mask
     }
     if (elementsProcessed > 0) {
+      numberOfElements -= elementsProcessed
       optimizeFromPosition(nextPositionToProcess)
     }
     elementsProcessed

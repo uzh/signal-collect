@@ -277,19 +277,19 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         }
       }
 
-    case AddVertex(vertex) =>
+    case addVertex: AddVertex[Id, _, Id, Signal] =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
-      worker.addVertex(vertex.asInstanceOf[Vertex[Id, _, Id, Signal]])
+      worker.addVertex(addVertex.v)
       // TODO: Reevaluate, if we really need to schedule operations.
       if (!worker.operationsScheduled) {
         scheduleOperations
       }
 
-    case AddEdge(sourceVertexId, edge) =>
+    case AddEdge(sourceVertexId: Id, edge: Edge[Id]) =>
       // TODO: More precise accounting for this kind of message.
       worker.counters.requestMessagesReceived += 1
-      worker.addEdge(sourceVertexId.asInstanceOf[Id], edge.asInstanceOf[Edge[Id]])
+      worker.addEdge(sourceVertexId, edge)
       // TODO: Reevaluate, if we really need to schedule operations.
       if (!worker.operationsScheduled) {
         scheduleOperations
@@ -327,12 +327,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         scheduleOperations
       }
 
-    case Request(command, reply, incrementor) =>
+    case request: Request[WorkerApi[Id, Signal]] =>
       worker.counters.requestMessagesReceived += 1
       try {
-        val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
-        if (reply) {
-          incrementor(messageBus)
+        val result = request.command(worker)
+        if (request.returnResult) {
+          request.incrementorForReply(messageBus)
           if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException
             messageBus.sendToActor(sender, None)
           } else {

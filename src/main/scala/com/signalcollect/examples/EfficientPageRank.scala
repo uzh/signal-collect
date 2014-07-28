@@ -26,7 +26,7 @@ import com.signalcollect.configuration.ExecutionMode
  * Placeholder edge that gets discarded by memory efficient vertices that
  * have their own internal edge representations.
  */
-class PlaceholderEdge[Id](targetId: Id) extends DefaultEdge(targetId) {
+class PlaceholderEdge[Int](targetId: Int) extends DefaultEdge(targetId) {
   def signal = ???
 }
 
@@ -37,7 +37,7 @@ class EfficientPageRankVertex(id: Int)
 
   def computeSignal(edgeId: Int) = ???
 
-  override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, Double]) {
     if (edgeCount != 0) {
       val signal = (state - lastSignalState) / edgeCount
       targetIds.foreach(graphEditor.sendSignal(signal, _, None))
@@ -52,7 +52,7 @@ class EfficientPageRankVertex(id: Int)
   def scoreSignal = {
     state - lastSignalState
   }
-  
+
   def addTargetId(targetId: Int) {
     targetIds.insert(targetId)
   }
@@ -61,7 +61,7 @@ class EfficientPageRankVertex(id: Int)
 
 /** Builds a PageRank compute graph and executes the computation */
 object MemoryEfficientPageRank extends App {
-  val graph = new GraphBuilder[Int, Any].
+  val graph = new GraphBuilder[Int, Double]().
     //    withConsole(true).
     build
 

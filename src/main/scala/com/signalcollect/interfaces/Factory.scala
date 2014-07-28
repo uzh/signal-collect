@@ -24,7 +24,9 @@ import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 import akka.actor.ActorSystem
 import com.signalcollect.worker.AkkaWorker
 
-abstract class Factory extends Serializable
+abstract class Factory extends Serializable {
+  override def toString = this.getClass.getSimpleName
+}
 
 abstract class ExistingVertexHandlerFactory[Id, Signal] extends Factory {
   def createInstance: ExistingVertexHandler[Id, Signal]

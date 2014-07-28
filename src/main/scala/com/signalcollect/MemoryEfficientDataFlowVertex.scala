@@ -32,15 +32,15 @@ import com.signalcollect.util.SplayIntSet
  * The signal function is the same for all edges and defined in
  * the 'computeSignal' function.
  */
-abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag](
+abstract class MemoryEfficientDataFlowVertex[State, GraphSignalType: ClassTag](
   val id: Int,
-  var state: State) extends Vertex[Int, State, Int, Any] {
+  var state: State) extends Vertex[Int, State, Int, GraphSignalType] {
 
   type OutgoingSignalType
 
-  def collect(signal: IncomingSignalType): State
+  def collect(signal: GraphSignalType): State
 
-  def computeSignal(targetId: Int): OutgoingSignalType
+  def computeSignal(targetId: Int): GraphSignalType
 
   var lastSignalState: State = null.asInstanceOf[State]
 
@@ -50,21 +50,21 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
 
   protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
-  def deliverSignalWithSourceId(signal: Any, sourceId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = {
+  def deliverSignalWithSourceId(signal: GraphSignalType, sourceId: Int, graphEditor: GraphEditor[Int, GraphSignalType]): Boolean = {
     deliverSignalWithoutSourceId(signal, graphEditor)
   }
 
-  def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Int, Any]): Boolean = {
-    setState(collect(signal.asInstanceOf[IncomingSignalType]))
+  def deliverSignalWithoutSourceId(signal: GraphSignalType, graphEditor: GraphEditor[Int, GraphSignalType]): Boolean = {
+    setState(collect(signal))
     true
   }
-  
+
   /**
    * We always collect on delivery.
    */
   def scoreCollect = 0
 
-  override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, GraphSignalType]) {
     targetIds.foreach { targetId =>
       graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
@@ -73,20 +73,20 @@ abstract class MemoryEfficientDataFlowVertex[State, IncomingSignalType: ClassTag
 
   def edgeCount = targetIds.size
 
-  override def toString = s"${this.getClass.getName}(state=$state)"
+  override def toString = s"${this.getClass.getSimpleName}(state=$state)"
 
-  def executeCollectOperation(graphEditor: GraphEditor[Int, Any]) {
+  def executeCollectOperation(graphEditor: GraphEditor[Int, GraphSignalType]) {
   }
 
-  override def addEdge(e: Edge[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
+  override def addEdge(e: Edge[Int], graphEditor: GraphEditor[Int, GraphSignalType]): Boolean = {
     targetIds.insert(e.targetId.asInstanceOf[Int])
   }
 
-  override def removeEdge(targetId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = throw new UnsupportedOperationException
+  override def removeEdge(targetId: Int, graphEditor: GraphEditor[Int, GraphSignalType]): Boolean = throw new UnsupportedOperationException
 
-  override def removeAllEdges(graphEditor: GraphEditor[Int, Any]): Int = throw new UnsupportedOperationException
+  override def removeAllEdges(graphEditor: GraphEditor[Int, GraphSignalType]): Int = throw new UnsupportedOperationException
 
-  def afterInitialization(graphEditor: GraphEditor[Int, Any]) = {}
+  def afterInitialization(graphEditor: GraphEditor[Int, GraphSignalType]) = {}
 
-  def beforeRemoval(graphEditor: GraphEditor[Int, Any]) = {}
+  def beforeRemoval(graphEditor: GraphEditor[Int, GraphSignalType]) = {}
 }
