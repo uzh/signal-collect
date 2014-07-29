@@ -308,7 +308,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
           val overloaded = throttlingEnabled && (
             pongDelayed || worker.slowPongDetected)
           //          log.debug(s"Worker $workerId has work to do")
-          if (worker.isPaused) { // && !overloaded
+          if (worker.isPaused && !overloaded) { // && !overloaded
             //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
             applyPendingGraphModifications
           } else {
