@@ -24,7 +24,7 @@ package com.signalcollect
  *
  *  @author Philip Stutz
  */
-abstract class Vertex[@specialized(Int, Long) +Id, State, GraphIdUpperBound, GraphSignalUpperBound] extends Serializable {
+abstract class Vertex[+Id, State, GraphIdUpperBound, GraphSignalUpperBound] extends Serializable {
 
   override def hashCode = id.hashCode
 
