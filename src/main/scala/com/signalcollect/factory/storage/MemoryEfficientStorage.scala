@@ -30,51 +30,51 @@ import scala.reflect.ClassTag
  */
 class MemoryEfficientStorage[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag] extends StorageFactory[Id, Signal] {
   def createInstance: Storage[Id, Signal] = {
-    val idClass = implicitly[ClassTag[Id]].runtimeClass.asInstanceOf[Class[Id]]
-    val signalClass = implicitly[ClassTag[Signal]].runtimeClass.asInstanceOf[Class[Signal]]
-    val int = classOf[Int]
-    val long = classOf[Long]
-    val float = classOf[Float]
-    val double = classOf[Double]
-    val any = classOf[Any]
-//    def specializationNotification {
-//      println(s"Automatically selected specialized storage for ids of type ${idClass.getSimpleName} and signals of type ${signalClass.getSimpleName}.")
-//    }
-//    println(s"Selecting best storage for id: ${idClass.getSimpleName} and signal: ${signalClass.getSimpleName}")
-    val storage: Storage[Id, Signal] = {
-      if (idClass == int && signalClass == int) {
-        new IntIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == int && signalClass == long) {
-        new IntLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == int && signalClass == float) {
-        new IntFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == int && signalClass == double) {
-        new IntDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == int && signalClass == any) {
-        new IntAnyVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == long && signalClass == int) {
-        new LongIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == long && signalClass == long) {
-        new LongLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == long && signalClass == float) {
-        new LongFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == long && signalClass == double) {
-        new LongDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == long && signalClass == any) {
-        new LongAnyVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == any && signalClass == int) {
-        new AnyIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == any && signalClass == long) {
-        new AnyLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == any && signalClass == float) {
-        new AnyFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else if (idClass == any && signalClass == double) {
-        new AnyDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
-      } else {
+//    val idClass = implicitly[ClassTag[Id]].runtimeClass.asInstanceOf[Class[Id]]
+//    val signalClass = implicitly[ClassTag[Signal]].runtimeClass.asInstanceOf[Class[Signal]]
+//    val int = classOf[Int]
+//    val long = classOf[Long]
+//    val float = classOf[Float]
+//    val double = classOf[Double]
+//    val any = classOf[Any]
+////    def specializationNotification {
+////      println(s"Automatically selected specialized storage for ids of type ${idClass.getSimpleName} and signals of type ${signalClass.getSimpleName}.")
+////    }
+////    println(s"Selecting best storage for id: ${idClass.getSimpleName} and signal: ${signalClass.getSimpleName}")
+//    val storage: Storage[Id, Signal] = {
+//      if (idClass == int && signalClass == int) {
+//        new IntIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == int && signalClass == long) {
+//        new IntLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == int && signalClass == float) {
+//        new IntFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == int && signalClass == double) {
+//        new IntDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == int && signalClass == any) {
+//        new IntAnyVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == long && signalClass == int) {
+//        new LongIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == long && signalClass == long) {
+//        new LongLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == long && signalClass == float) {
+//        new LongFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == long && signalClass == double) {
+//        new LongDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == long && signalClass == any) {
+//        new LongAnyVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == any && signalClass == int) {
+//        new AnyIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == any && signalClass == long) {
+//        new AnyLongVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == any && signalClass == float) {
+//        new AnyFloatVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else if (idClass == any && signalClass == double) {
+//        new AnyDoubleVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
+//      } else {
         new VertexMapStorage[Id, Signal]() // Rely on specialization ... good luck with that. :)
-      }
-    }
-    storage
+//      }
+//    }
+//    storage
   }
   override def toString = "MemoryEfficientStorage"
 }
