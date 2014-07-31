@@ -33,6 +33,9 @@ import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.util.AkkaRemoteAddress
 import akka.event.Logging
 
+/**
+ * Interface for the NodeContainer
+ */
 trait NodeContainer {
   def start
   def shutdown
@@ -40,6 +43,9 @@ trait NodeContainer {
   def isSuccessful: Boolean
 }
 
+/**
+ * Implementation of the NodeContainer
+ */
 class DefaultNodeContainer(id: Int,
   leaderIp: String,
   basePort: Int,
@@ -75,12 +81,18 @@ class DefaultNodeContainer(id: Int,
   def getLeaderActor(): ActorRef = {
     system.actorFor(leaderAddress)
   }
-
+  
+  /**
+   * Registers the nodeActor and the shutdownActor at the leader
+   */
   def start {
     getLeaderActor ! AkkaRemoteAddress.get(nodeActor, system)
     getLeaderActor ! AkkaRemoteAddress.get(shutdownActor, system)
   }
 
+  /**
+   * Blocks until the leader sents the shutdown signal
+   */
   def waitForTermination {
     val begin = System.currentTimeMillis()
     var cnt = 0
@@ -94,11 +106,17 @@ class DefaultNodeContainer(id: Int,
     terminated = true
   }
 
+  /**
+   * check if timeout is not reached
+   */
   def timeoutNotReached(begin: Long): Boolean = {
     val timeout = deploymentConfig.timeout
     (System.currentTimeMillis() - begin) / 1000 < timeout
   }
 
+  /**
+   * shutdown the actors
+   */
   def shutdown {
     terminated = true
     shutdownNow = true
@@ -106,6 +124,9 @@ class DefaultNodeContainer(id: Int,
     nodeActor ! PoisonPill
   }
 
+  /**
+   * starts an ActorSystem
+   */
   def startActorSystem: ActorSystem = {
     try {
       val system = ActorSystem("SignalCollect", akkaConfig)
@@ -120,6 +141,10 @@ class DefaultNodeContainer(id: Int,
   }
 }
 
+
+/**
+ * This Actor waits for the shutdown signal and then tells the NodeContainer to shutdown.
+ */
 class ShutdownActor(container: DefaultNodeContainer) extends Actor {
   override def receive = {
     case "shutdown" => {

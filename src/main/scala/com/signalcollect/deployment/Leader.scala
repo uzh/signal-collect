@@ -18,6 +18,10 @@
  */
 package com.signalcollect.deployment
 
+
+/**
+ * Interface for the Leader.
+ */
 trait Leader {
   def start
   def isExecutionStarted: Boolean

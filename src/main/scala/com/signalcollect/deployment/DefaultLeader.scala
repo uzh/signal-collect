@@ -83,6 +83,10 @@ class DefaultLeader(
     } 
   }
 
+  /**
+   * dynamically instantiate a Scala object. 
+   * it is only tested with scala object. A Scala class probably wont work.
+   */
   private def instantiatAlgorithm(algorithmName: String): Option[Algorithm] = {
     try {
       val clazz = Class.forName(algorithmName)

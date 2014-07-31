@@ -40,6 +40,9 @@ class LeaderCluster extends Cluster {
     true
   }
 
+  /**
+   * Starts so many Containers as described in the DeploymentConfiguration
+   */
   private def startContainers(deploymentConfiguration: DeploymentConfiguration) {
     val ip = InetAddress.getLocalHost().getHostAddress()
     val numberOfNodes = deploymentConfiguration.numberOfNodes 

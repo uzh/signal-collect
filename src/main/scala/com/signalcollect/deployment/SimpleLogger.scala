@@ -27,6 +27,7 @@ object SimpleConsoleLogger extends SimpleLogger {
     println(message)
   }
 }
+
 /**
  * Wraps a newly created AkkaLogger with the name passed in
  */

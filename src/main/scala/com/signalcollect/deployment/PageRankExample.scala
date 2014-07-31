@@ -26,6 +26,9 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import akka.event.Logging
 
+/**
+ * Simple Example of an Algorithm
+ */
 object PageRankExample extends Algorithm {
   
   override def deploy: Boolean = false
@@ -47,38 +50,5 @@ object PageRankExample extends Algorithm {
     .withEagerIdleDetection(false)
     .withLoggingLevel(Logging.DebugLevel)
   }
-//  override def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
-//
-//    val graph =  graphBuilder.build
-//    println("add vertices")
-//    graph.addVertex(new PageRankVertex(1))
-//    graph.addVertex(new PageRankVertex(2))
-//    graph.addVertex(new PageRankVertex(3))
-//    println("add edges")
-//    graph.addEdge(1, new PageRankEdge(2))
-//    graph.addEdge(2, new PageRankEdge(1))
-//    graph.addEdge(2, new PageRankEdge(3))
-//    graph.addEdge(3, new PageRankEdge(2))
-//    println("Graph has been built, awaiting idle ...")
-//    graph.awaitIdle
-//    println("Executing computation ...")
-//    val stats = graph.execute
-//    println(stats)
-//    graph.shutdown
-//  }
-}
 
-//object ReflectTest extends App{
-//
-//  val clazz = Class.forName("com.signalcollect.deployment.MyObject$")
-//  val myObj = clazz.getField("MODULE$").get(classOf[MyTrait]).asInstanceOf[MyTrait]
-//  println(myObj.method1(2))
-//}
-//
-//trait MyTrait {
-//  def method1(a: Int):Int
-//}
-//
-//object MyObject extends MyTrait {
-//  def method1(a: Int) = a + 1
-//}
+}

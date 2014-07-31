@@ -295,22 +295,89 @@ akka {
 
   remote {
     
-      # Number of potentially lost/delayed heartbeats that will be
-      # accepted before considering it to be an anomaly.
-      # This margin is important to be able to survive sudden, occasional,
-      # pauses in heartbeat arrivals, due to for example garbage collect or
-      # network drop.
-      acceptable-heartbeat-pause = 60 s
+    
+    # Controls the backoff interval after a refused write is reattempted.
+    # (Transports may refuse writes if their internal buffer is full)
+    backoff-interval =1 s
  
- 
-      # How often to check for nodes marked as unreachable by the failure
-      # detector
-      unreachable-nodes-reaper-interval = 10s
+    # Acknowledgment timeout of management commands sent to the transport stack.
+    command-ack-timeout = 1500 s
         
     # Log warning if the number of messages in the backoff buffer in the endpoint
     # writer exceeds this limit. It can be disabled by setting the value to off.
     log-buffer-size-exceeding = 100000
     
+    # Settings for the failure detector to monitor connections.
+    # For TCP it is not important to have fast failure detection, since
+    # most connection failures are captured by TCP itself. 
+    transport-failure-detector {
+ 
+      # FQCN of the failure detector implementation.
+      # It must implement akka.remote.FailureDetector and have
+      # a public constructor with a com.typesafe.config.Config and
+      # akka.actor.EventStream parameter.
+      implementation-class = "akka.remote.DeadlineFailureDetector"
+ 
+      # How often keep-alive heartbeat messages should be sent to each connection.
+      heartbeat-interval = 60 s
+ 
+      # Number of potentially lost/delayed heartbeats that will be
+      # accepted before considering it to be an anomaly.
+      # A margin to the `heartbeat-interval` is important to be able to survive sudden,
+      # occasional, pauses in heartbeat arrivals, due to for example garbage collect or
+      # network drop.
+      acceptable-heartbeat-pause = 6000 s
+    }
+ 
+    # Settings for the Phi accrual failure detector (http://ddg.jaist.ac.jp/pub/HDY+04.pdf
+    # [Hayashibara et al]) used for remote death watch.
+    watch-failure-detector {
+ 
+      # FQCN of the failure detector implementation.
+      # It must implement akka.remote.FailureDetector and have
+      # a public constructor with a com.typesafe.config.Config and
+      # akka.actor.EventStream parameter.
+      implementation-class = "akka.remote.PhiAccrualFailureDetector"
+ 
+      # How often keep-alive heartbeat messages should be sent to each connection.
+      heartbeat-interval = 300 s
+ 
+      # Defines the failure detector threshold.
+      # A low threshold is prone to generate many wrong suspicions but ensures
+      # a quick detection in the event of a real crash. Conversely, a high
+      # threshold generates fewer mistakes but needs more time to detect
+      # actual crashes.
+      threshold = 20.0
+ 
+      # Number of the samples of inter-heartbeat arrival times to adaptively
+      # calculate the failure timeout for connections.
+      max-sample-size = 20000
+ 
+      # Minimum standard deviation to use for the normal distribution in
+      # AccrualFailureDetector. Too low standard deviation might result in
+      # too much sensitivity for sudden, but normal, deviations in heartbeat
+      # inter arrival times.
+      min-std-deviation = 10000 ms
+ 
+      # Number of potentially lost/delayed heartbeats that will be
+      # accepted before considering it to be an anomaly.
+      # This margin is important to be able to survive sudden, occasional,
+      # pauses in heartbeat arrivals, due to for example garbage collect or
+      # network drop.
+      acceptable-heartbeat-pause = 6000 s
+ 
+ 
+      # How often to check for nodes marked as unreachable by the failure
+      # detector
+      unreachable-nodes-reaper-interval = 10s
+ 
+      # After the heartbeat request has been sent the first failure detection
+      # will start after this period, even though no heartbeat mesage has
+      # been received.
+      expected-response-after = 10000 s
+ 
+    }
+
     netty.tcp {
         
       # The default remote server port clients should connect to.
