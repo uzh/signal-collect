@@ -327,12 +327,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         scheduleOperations
       }
 
-    case request: Request[WorkerApi[Id, Signal]] =>
+    case Request(command, returnResult, incrementorForReply) =>
       worker.counters.requestMessagesReceived += 1
       try {
-        val result = request.command(worker)
-        if (request.returnResult) {
-          request.incrementorForReply(messageBus)
+        val result = command.asInstanceOf[WorkerApi[Id, Signal] => Any](worker)
+        if (returnResult) {
+          incrementorForReply(messageBus)
           if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException
             messageBus.sendToActor(sender, None)
           } else {

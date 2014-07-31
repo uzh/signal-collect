@@ -122,15 +122,15 @@ class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
     val reply: JObject = socket.execution match {
       case Some(e) =>
         ("state", e.state) ~
-          ("steps", e.stepTokens) ~
-          ("iteration", e.iteration)
+          (("steps", e.stepTokens)) ~
+          (("iteration", e.iteration))
       case None => socket.executionConfiguration match {
         case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {
           case Some(es: ExecutionStatistics) =>
             ("mode", ec.executionMode.toString) ~
-              ("state", es.terminationReason.toString) ~
-              ("totalExecutionTime", es.totalExecutionTime.toString) ~
-              ("computationTime", es.computationTime.toString)
+              (("state", es.terminationReason.toString)) ~
+              (("totalExecutionTime", es.totalExecutionTime.toString)) ~
+              (("computationTime", es.computationTime.toString))
           case None =>
             ("mode", ec.executionMode.toString())
         }
