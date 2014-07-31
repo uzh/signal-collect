@@ -11,7 +11,7 @@ organization := "com.signalcollect"
 
 scalaVersion := "2.11.2"
 
-scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO")
+scalacOptions ++= Seq("-optimize", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO")
 
 //, "-Ylog:icode"
 //, "-Ydebug"
