@@ -37,10 +37,6 @@ class MemoryEfficientStorage[@specialized(Int, Long) Id: ClassTag, Signal: Class
     val float = classOf[Float]
     val double = classOf[Double]
     val any = classOf[Any]
-//    def specializationNotification {
-//      println(s"Automatically selected specialized storage for ids of type ${idClass.getSimpleName} and signals of type ${signalClass.getSimpleName}.")
-//    }
-//    println(s"Selecting best storage for id: ${idClass.getSimpleName} and signal: ${signalClass.getSimpleName}")
     val storage: Storage[Id, Signal] = {
       if (idClass == int && signalClass == int) {
         new IntIntVertexMapStorage().asInstanceOf[Storage[Id, Signal]]
