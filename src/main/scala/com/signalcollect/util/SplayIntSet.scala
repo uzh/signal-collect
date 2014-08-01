@@ -39,11 +39,15 @@ final class SplayNode(
     s"SplayNode([$intervalFrom to $intervalTo], smallest element = $minElement, #entries = $size)"
   }
 
-  def insert(i: Int, overheadFraction: Float): Boolean = {
+  @inline def insert(i: Int, overheadFraction: Float): Boolean = {
     val sizeBefore = new FastInsertIntSet(intSet).size
     intSet = new FastInsertIntSet(intSet).insert(i, overheadFraction)
     val sizeAfter = new FastInsertIntSet(intSet).size
     sizeAfter > sizeBefore
+  }
+
+  @inline def contains(i: Int): Boolean = {
+    new FastInsertIntSet(intSet).contains(i)
   }
 
   /**
@@ -146,6 +150,20 @@ abstract class SplayIntSet {
   }
 
   /**
+   * Returns true iff i is contained in the set.
+   */
+  def contains(i: Int): Boolean = {
+    if (?(root)) {
+      //root = splay(root, i)
+      //root.contains(i)
+      val node = find(root, i)
+      node.contains(i)
+    } else {
+      false
+    }
+  }
+
+  /**
    * Inserts i into the set, returns false if i was already contained.
    */
   def insert(i: Int): Boolean = {
@@ -202,6 +220,20 @@ abstract class SplayIntSet {
       throw new Exception(
         s"The new node interval from ${newNode.intervalFrom} to ${newNode.intervalTo} " +
           s"intersects with the interval ${root.intervalFrom} to ${root.intervalTo} of an existing node.")
+    }
+  }
+
+  /**
+   * Finds and returns the node that is responsible for the interval into
+   * which i falls.
+   */
+  @tailrec private def find(node: SplayNode, i: Int): SplayNode = {
+    if (node.intervalFrom > i) {
+      find(node.left, i)
+    } else if (node.intervalTo < i) {
+      find(node.right, i)
+    } else {
+      node
     }
   }
 
