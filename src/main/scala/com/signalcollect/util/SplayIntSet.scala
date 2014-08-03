@@ -21,6 +21,7 @@ package com.signalcollect.util
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
+import scala.util.Random
 
 object SplayIntSet {
   @inline def nullNode = null.asInstanceOf[SplayNode]
@@ -114,6 +115,14 @@ final class SplayNode(
  */
 abstract class SplayIntSet {
   import SplayIntSet._
+
+  def printDiagnosticInfo {
+    val id = Random.nextInt(10)
+    println(s"$id: SplayIntSet diagnostic info:")
+    if (root != null) {
+      root.foreachNode(node => println(s"$id\t" + node.toString))
+    }
+  }
 
   def overheadFraction: Float
   def maxNodeIntSetSize: Int
