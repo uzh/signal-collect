@@ -38,24 +38,22 @@ object Ints {
     distinct
   }
 
+  /**
+   * Modifies the input array.
+   */
   def createCompactSet(ints: Array[Int]): Array[Byte] = {
-    val sorted = ints.sorted
+    java.util.Arrays.sort(ints)
     var i = 0
     var previous = -1
-    while (i < sorted.length) {
-      val tmp = sorted(i)
-      // TODO: Investigate encoding of 0, improve if possible.
-      sorted(i) = sorted(i) - previous - 1
+    val baos = new ByteArrayOutputStream
+    val dos = new DataOutputStream(baos)
+    while (i < ints.length) {
+      val tmp = ints(i)
+      writeUnsignedVarInt(tmp - previous - 1, dos)
       previous = tmp
       i += 1
     }
-    val baos = new ByteArrayOutputStream
-    val dos = new DataOutputStream(baos)
     i = 0
-    while (i < sorted.length) {
-      writeUnsignedVarInt(sorted(i), dos)
-      i += 1
-    }
     dos.flush
     baos.flush
     baos.toByteArray
