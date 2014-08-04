@@ -37,7 +37,14 @@ final class SplayNode(
   var right: SplayNode = _
 
   override def toString = {
-    s"SplayNode([$intervalFrom to $intervalTo], smallest element = $minElement, #entries = $size)"
+    val min = minElement
+    val max = maxElement
+    val range = max - min + 1
+    val density = ((size / range.toDouble) * 1000).round / 10.0
+    val bytes = intSet.length
+    val bytesForBitSet = (range / 8).ceil.toInt
+    val benefit = bytes - bytesForBitSet
+    s"SplayNode([$intervalFrom to $intervalTo], min = $min, max = $max, range = $range, #entries = $size, density = $density%, bytes = $bytes, bitSetBytes = $bytesForBitSet, possibleBenefit = $benefit)"
   }
 
   @inline def insert(i: Int, overheadFraction: Float): Boolean = {
@@ -103,6 +110,8 @@ final class SplayNode(
   def size: Int = new FastInsertIntSet(intSet).size
 
   def minElement: Int = new FastInsertIntSet(intSet).min
+
+  def maxElement: Int = new FastInsertIntSet(intSet).max
 
 }
 
