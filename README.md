@@ -7,7 +7,7 @@ This repository contains pre-release snapshots of the distributed 2.1 version.
 
 How to Compile the Project
 --------------------------
-Ensure Java 7/8 is available on the system, verify with "java -version" on the command line.
+Ensure Java 8 is available on the system, verify with "java -version" on the command line.
 
 Install SBT: http://www.scala-sbt.org/release/docs/Getting-Started/Setup.html
 
