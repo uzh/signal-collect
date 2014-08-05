@@ -23,6 +23,30 @@ import scala.collection.mutable.ArrayBuffer
 import java.util.BitSet
 import scala.annotation.tailrec
 
+class LongBitSet(val bits: Long) extends AnyVal {
+  def foreach(f: Int => Unit) {
+    var next = 0
+    var b = bits
+    do {
+      val trailing = java.lang.Long.numberOfTrailingZeros(bits)
+      if (trailing != 64) {
+        next += trailing
+        f(next)
+        b = b >>> trailing + 1
+      }
+    } while (b != 0)
+  }
+
+  def toBuffer: Buffer[Int] = {
+    val buffer = new ArrayBuffer[Int]
+    foreach(buffer.append(_))
+    buffer
+  }
+
+  def toList: List[Int] = toBuffer.toList
+  def toSet: Set[Int] = toBuffer.toSet
+}
+
 object BitIntSet {
   def create(smallestValue: Int): Array[Long] = {
     // Size 1
