@@ -32,8 +32,13 @@ class LongBitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   "LongBitSet" should "correctly retrieve all entries when all bits are set" in {
     val longBitSet = new LongBitSet(-1l) // -1 has all bits set (2's complement)
-    longBitSet.foreach(println(_))
     longBitSet.toSet == (0 to 63).toSet
   }
 
+  it should "support base values" in {
+    val longBitSet = new LongBitSet(-1l) // -1 has all bits set (2's complement)
+    longBitSet.foreachWithBaseValue(println(_), 10)
+    longBitSet.toSetWithBaseValue(10) == (10 to 73).toSet
+  }
+  
 }

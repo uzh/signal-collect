@@ -24,6 +24,7 @@ import java.util.BitSet
 import scala.annotation.tailrec
 
 class LongBitSet(val bits: Long) extends AnyVal {
+
   def foreach(f: Int => Unit) {
     var next = 0
     var b = bits
@@ -32,7 +33,24 @@ class LongBitSet(val bits: Long) extends AnyVal {
       if (trailing != 64) {
         next += trailing
         f(next)
-        b = b >>> trailing + 1
+        val delta = trailing + 1
+        next += delta
+        b = b >>> delta
+      }
+    } while (b != 0)
+  }
+
+  def foreachWithBaseValue(f: Int => Unit, baseValue: Int) {
+    var next = baseValue
+    var b = bits
+    do {
+      val trailing = java.lang.Long.numberOfTrailingZeros(bits)
+      if (trailing != 64) {
+        next += trailing
+        f(next)
+        val delta = trailing + 1
+        next += delta
+        b = b >>> delta
       }
     } while (b != 0)
   }
@@ -45,6 +63,14 @@ class LongBitSet(val bits: Long) extends AnyVal {
 
   def toList: List[Int] = toBuffer.toList
   def toSet: Set[Int] = toBuffer.toSet
+
+  def toBufferWithBaseValue(baseValue: Int): Buffer[Int] = {
+    val buffer = new ArrayBuffer[Int]
+    foreachWithBaseValue(buffer.append(_), baseValue)
+    buffer
+  }
+  def toListWithBaseValue(baseValue: Int): List[Int] = toBufferWithBaseValue(baseValue).toList
+  def toSetWithBaseValue(baseValue: Int): Set[Int] = toBufferWithBaseValue(baseValue).toSet
 }
 
 object BitIntSet {
