@@ -227,12 +227,13 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   "BitIntSet" should "store all ints up to 63" in {
     val bitIntSet = new BitIntSet(BitIntSet.create(0, 64))
-    for (i <- 1 to 64) {
+    for (i <- 0 to 63) {
       val inserted = bitIntSet.insert(i)
       println(bitIntSet.bits.map(_.toBinaryString).mkString)
       assert(inserted)
     }
     bitIntSet.foreach(println(_))
+    true === true
   }
 
   it should "store some Ints" in {
@@ -249,7 +250,7 @@ class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
     assert(inserted == true)
     inserted = bitIntSet.insert(132)
     assert(inserted == true)
-    assert(bitIntSet.toSet == Set(5, 6, 10, 13, 68, 132))
+    assert(bitIntSet.toSet == Set(6, 10, 13, 68, 132))
   }
 
   it should "store sets of Ints" in {
