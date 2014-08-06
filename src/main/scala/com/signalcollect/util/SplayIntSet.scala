@@ -41,28 +41,58 @@ final class SplayNode(
     val max = maxElement
     val range = max - min + 1
     val density = ((size / range.toDouble) * 1000).round / 10.0
-    val bytes = intSet.length
+    val bytes = if (intSet != null) intSet.length else 0
     val bytesForBitSet = (range / 8).ceil.toInt
     val benefit = bytes - bytesForBitSet
     s"SplayNode([$intervalFrom to $intervalTo], min = $min, max = $max, range = $range, #entries = $size, density = $density%, bytes = $bytes, bitSetBytes = $bytesForBitSet, possibleBenefit = $benefit)"
   }
 
+  @inline def isEntireRangeContained: Boolean = {
+    size == (intervalTo - intervalFrom) + 1
+  }
+
   @inline def insert(i: Int, overheadFraction: Float): Boolean = {
-    val sizeBefore = new FastInsertIntSet(intSet).size
-    intSet = new FastInsertIntSet(intSet).insert(i, overheadFraction)
-    val sizeAfter = new FastInsertIntSet(intSet).size
-    sizeAfter > sizeBefore
+    if (intSet != null) {
+      val sizeBefore = new FastInsertIntSet(intSet).size
+      intSet = new FastInsertIntSet(intSet).insert(i, overheadFraction)
+      val sizeAfter = new FastInsertIntSet(intSet).size
+      if (isEntireRangeContained) {
+        // Int set being null means that all elements in the interval are contained.
+        intSet = null
+      }
+      sizeAfter > sizeBefore
+    } else {
+      // Whole interval is contained already.
+      false
+    }
+  }
+
+  @inline def isInRange(i: Int): Boolean = {
+    i >= intervalFrom && i <= intervalTo
   }
 
   @inline def contains(i: Int): Boolean = {
-    new FastInsertIntSet(intSet).contains(i)
+    if (intSet != null) {
+      new FastInsertIntSet(intSet).contains(i)
+    } else {
+      isInRange(i)
+    }
   }
 
   /**
    * Assumes that the int set is not null.
    */
   @tailrec final def foreach(f: Int => Unit, pending: List[SplayNode] = Nil) {
-    new FastInsertIntSet(intSet).foreach(f)
+    if (intSet != null) {
+      new FastInsertIntSet(intSet).foreach(f)
+    } else {
+      // Int set being null means that all numbers in the interval are contained.
+      var i = intervalFrom
+      while (i <= intervalTo) {
+        f(i)
+        i += 1
+      }
+    }
     if (?(left) && ?(right)) {
       left.foreach(f, right :: pending)
     } else if (?(left)) {
@@ -107,11 +137,29 @@ final class SplayNode(
     }
   }
 
-  def size: Int = new FastInsertIntSet(intSet).size
+  def size: Int = {
+    if (intSet != null) {
+      new FastInsertIntSet(intSet).size
+    } else {
+      intervalTo - intervalFrom + 1
+    }
+  }
 
-  def minElement: Int = new FastInsertIntSet(intSet).min
+  def minElement: Int = {
+    if (intSet != null) {
+      new FastInsertIntSet(intSet).min
+    } else {
+      intervalFrom
+    }
+  }
 
-  def maxElement: Int = new FastInsertIntSet(intSet).max
+  def maxElement: Int = {
+    if (intSet != null) {
+      new FastInsertIntSet(intSet).max
+    } else {
+      intervalTo
+    }
+  }
 
 }
 
@@ -190,11 +238,11 @@ abstract class SplayIntSet {
       val inserted = root.insert(i, overheadFraction)
       //println(s"Inserted $i into ${new FastInsertIntSet(root.intSet).toList}")
       if (inserted) size += 1
-      val nodeIntSet = new FastInsertIntSet(root.intSet)
-      val nodeIntSetSize = nodeIntSet.size
-      if (nodeIntSetSize > maxNodeIntSetSize) {
+      val nodeIntSet = root.intSet
+      // Null would mean that the set is efficiently represented already.
+      if ( nodeIntSet != null &&  new FastInsertIntSet(nodeIntSet).size > maxNodeIntSetSize) {
         //println(s"Has now more than $maxNodeIntSetSize entires, splitting")
-        val (set1, set2) = new FastInsertIntSet(root.intSet).split(overheadFraction)
+        val (set1, set2) = new FastInsertIntSet(nodeIntSet).split(overheadFraction)
         val set2Min = new FastInsertIntSet(set2).min
         val newNode = new SplayNode(set1, root.intervalFrom, set2Min - 1)
         root.intSet = set2
