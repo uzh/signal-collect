@@ -269,6 +269,149 @@ akka {
 
   remote {
         
+    ### Failure detection and recovery
+ 
+    # Settings for the Phi accrual failure detector (http://ddg.jaist.ac.jp/pub/HDY+04.pdf
+    # [Hayashibara et al]) used by the remoting subsystem to detect failed
+    # connections.
+    transport-failure-detector {
+ 
+      # FQCN of the failure detector implementation.
+      # It must implement akka.remote.FailureDetector and have
+      # a public constructor with a com.typesafe.config.Config and
+      # akka.actor.EventStream parameter.
+      implementation-class = "akka.remote.PhiAccrualFailureDetector"
+ 
+      # How often keep-alive heartbeat messages should be sent to each connection.
+      heartbeat-interval = 30 s
+ 
+      # Defines the failure detector threshold.
+      # A low threshold is prone to generate many wrong suspicions but ensures
+      # a quick detection in the event of a real crash. Conversely, a high
+      # threshold generates fewer mistakes but needs more time to detect
+      # actual crashes.
+      threshold = 14.0
+ 
+      # Number of the samples of inter-heartbeat arrival times to adaptively
+      # calculate the failure timeout for connections.
+      max-sample-size = 100
+ 
+      # Minimum standard deviation to use for the normal distribution in
+      # AccrualFailureDetector. Too low standard deviation might result in
+      # too much sensitivity for sudden, but normal, deviations in heartbeat
+      # inter arrival times.
+      min-std-deviation = 100 ms
+ 
+      # Number of potentially lost/delayed heartbeats that will be
+      # accepted before considering it to be an anomaly.
+      # This margin is important to be able to survive sudden, occasional,
+      # pauses in heartbeat arrivals, due to for example garbage collect or
+      # network drop.
+      acceptable-heartbeat-pause = 30 s
+    }
+ 
+    # Settings for the Phi accrual failure detector (http://ddg.jaist.ac.jp/pub/HDY+04.pdf
+    # [Hayashibara et al]) used for remote death watch.
+    watch-failure-detector {
+ 
+      # FQCN of the failure detector implementation.
+      # It must implement akka.remote.FailureDetector and have
+      # a public constructor with a com.typesafe.config.Config and
+      # akka.actor.EventStream parameter.
+      implementation-class = "akka.remote.PhiAccrualFailureDetector"
+ 
+      # How often keep-alive heartbeat messages should be sent to each connection.
+      heartbeat-interval = 1 s
+ 
+      # Defines the failure detector threshold.
+      # A low threshold is prone to generate many wrong suspicions but ensures
+      # a quick detection in the event of a real crash. Conversely, a high
+      # threshold generates fewer mistakes but needs more time to detect
+      # actual crashes.
+      threshold = 14.0
+ 
+      # Number of the samples of inter-heartbeat arrival times to adaptively
+      # calculate the failure timeout for connections.
+      max-sample-size = 200
+ 
+      # Minimum standard deviation to use for the normal distribution in
+      # AccrualFailureDetector. Too low standard deviation might result in
+      # too much sensitivity for sudden, but normal, deviations in heartbeat
+      # inter arrival times.
+      min-std-deviation = 100 ms
+ 
+      # Number of potentially lost/delayed heartbeats that will be
+      # accepted before considering it to be an anomaly.
+      # This margin is important to be able to survive sudden, occasional,
+      # pauses in heartbeat arrivals, due to for example garbage collect or
+      # network drop.
+      acceptable-heartbeat-pause = 30 s
+ 
+ 
+      # How often to check for nodes marked as unreachable by the failure
+      # detector
+      unreachable-nodes-reaper-interval = 1s
+ 
+      # After the heartbeat request has been sent the first failure detection
+      # will start after this period, even though no heartbeat mesage has
+      # been received.
+      expected-response-after = 3 s
+ 
+    }
+ 
+    # After failed to establish an outbound connection, the remoting will mark the
+    # address as failed. This configuration option controls how much time should
+    # be elapsed before reattempting a new connection. While the address is
+    # gated, all messages sent to the address are delivered to dead-letters.
+    # If this setting is 0, the remoting will always immediately reattempt
+    # to establish a failed outbound connection and will buffer writes until
+    # it succeeds.
+    retry-gate-closed-for = 0 s
+ 
+    # If the retry gate function is disabled (see retry-gate-closed-for) the
+    # remoting subsystem will always attempt to reestablish failed outbound
+    # connections. The settings below together control the maximum number of
+    # reattempts in a given time window. The number of reattempts during
+    # a window of "retry-window" will be maximum "maximum-retries-in-window".
+    retry-window = 60 s
+    maximum-retries-in-window = 3
+ 
+    # The length of time to gate an address whose name lookup has failed
+    # or has explicitly signalled that it will not accept connections
+    # (remote system is shutting down or the requesting system is quarantined).
+    # No connection attempts will be made to an address while it remains
+    # gated. Any messages sent to a gated address will be directed to dead
+    # letters instead. Name lookups are costly, and the time to recovery
+    # is typically large, therefore this setting should be a value in the
+    # order of seconds or minutes.
+    gate-invalid-addresses-for = 60 s
+ 
+    # This settings controls how long a system will be quarantined after
+    # catastrophic communication failures that result in the loss of system
+    # messages. Quarantining prevents communication with the remote system
+    # of a given UID. This function can be disabled by setting the value
+    # to "off".
+    quarantine-systems-for = 60s
+ 
+    # This setting defines the maximum number of unacknowledged system messages
+    # allowed for a remote system. If this limit is reached the remote system is
+    # declared to be dead and its UID marked as tainted.
+    system-message-buffer-size = 1000
+ 
+    # This setting defines the maximum idle time after an individual
+    # acknowledgement for system messages is sent. System message delivery
+    # is guaranteed by explicit acknowledgement messages. These acks are
+    # piggybacked on ordinary traffic messages. If no traffic is detected
+    # during the time period configured here, the remoting will send out
+    # an individual ack.
+    system-message-ack-piggyback-timeout = 1 s
+ 
+    # This setting defines the time after messages that have not been
+    # explicitly acknowledged or negatively acknowledged are resent.
+    # Messages that were negatively acknowledged are always immediately
+    # resent.
+    resend-interval = 1 s
+
     # Log warning if the number of messages in the backoff buffer in the endpoint
     # writer exceeds this limit. It can be disabled by setting the value to off.
     log-buffer-size-exceeding = 100000
