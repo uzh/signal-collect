@@ -10,6 +10,7 @@ object AkkaConfig {
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
     kryoInitializer: String,
+    hostname: String = "127.0.0.1",
     port: Int = 0,
     numberOfCores: Int = Runtime.getRuntime.availableProcessors) = ConfigFactory.parseString(
     distributedConfig(
@@ -17,6 +18,7 @@ object AkkaConfig {
       loggingLevel,
       kryoRegistrations,
       kryoInitializer,
+      hostname,
       port,
       numberOfCores))
   def distributedConfig(
@@ -24,6 +26,7 @@ object AkkaConfig {
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
     kryoInitializer: String,
+    hostname: String,
     port: Int,
     numberOfCores: Int) = """
 akka {
@@ -272,6 +275,8 @@ akka {
     
     netty.tcp {
         
+      hostname = """" + hostname + """"
+
       # The default remote server port clients should connect to.
       # Default is 2552 (AKKA), use 0 if you want a random available port
       # This port needs to be unique for each actor system on the same machine.
