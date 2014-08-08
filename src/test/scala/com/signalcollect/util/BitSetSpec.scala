@@ -33,14 +33,32 @@ class BitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 
   "BitSet" should "store all ints up to 63" in {
-    val bitIntSet = new BitSet(BitSet.create(0, 64))
+    val bitSet = new BitSet(BitSet.create(0, 64))
     for (i <- 0 to 63) {
-      val inserted = bitIntSet.insert(i)
+      val inserted = bitSet.insert(i)
       assert(inserted)
     }
-    val toSet = bitIntSet.toSet
+    val toSet = bitSet.toSet
     assert(toSet === (0 to 63).toSet)
     assert(toSet.size === 64)
+  }
+
+  it should "should be empty before inserts" in {
+    val bitSet = new BitSet(BitSet.create(0, 64))
+    val toSet = bitSet.toSet
+    assert(toSet == Set.empty[Int])
+    assert(bitSet.size == 0)
+  }
+
+  it should "support an insertion of 192 into an empty set" in {
+    val insertItem = 192
+    val bitSet = new BitSet(BitSet.create(0, 200))
+    bitSet.insert(insertItem)
+    val asSet = bitSet.toSet
+    assert(asSet === Set(insertItem))
+    assert(bitSet.min === insertItem)
+    assert(bitSet.max === insertItem)
+    assert(bitSet.size === 1)
   }
 
   it should "support an insert into an empty set" in {
@@ -49,13 +67,11 @@ class BitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
         val insertItem = (item & Int.MaxValue) % 200
         val bitSet = new BitSet(BitSet.create(0, 200))
         bitSet.insert(insertItem)
-        println(s"Inserted $insertItem")
-        bitSet.foreach(println(_))
         val asSet = bitSet.toSet
-        println(s"insertItem = $insertItem, asSet = $asSet")
         assert(asSet === Set(insertItem))
         assert(bitSet.min === insertItem)
         assert(bitSet.max === insertItem)
+        assert(bitSet.size === 1)
         bitSet.size === 1
       },
       minSuccessful(100))
@@ -81,31 +97,43 @@ class BitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
   it should "store sets of Ints" in {
     check(
       (ints: Array[Int]) => {
-        val maxSize = 10000000
-        val mappedInts = ints.map(i => ((i & Int.MaxValue) % maxSize) + 10)
-        val intSet = mappedInts.toSet
-        val smallest = mappedInts.min
-        val bitIntSet = new BitSet(BitSet.create(smallest, maxSize + smallest))
-        for (i <- mappedInts) {
-          val inserted = bitIntSet.insert(i)
-          assert(inserted == true)
+        if (ints.nonEmpty) {
+          val maxSize = 200
+          val mappedInts = ints.map(i => ((i & Int.MaxValue) % maxSize) + 10)
+          val intSet = mappedInts.toSet
+          val smallest = mappedInts.min
+          val bitIntSet = new BitSet(BitSet.create(10, maxSize))
+          for (i <- intSet) {
+            val inserted = bitIntSet.insert(i)
+            assert(inserted == true)
+          }
+          intSet === bitIntSet.toSet
+        } else {
+          true
         }
-        if (intSet != bitIntSet.toSet) {
-          println(s"Is: ${bitIntSet.toSet} should: ${intSet}")
-        }
-        intSet === bitIntSet.toSet
       },
       minSuccessful(1000))
   }
 
-  //  it should "support the 'contains' operation" in {
-  //    check(
-  //      (ints: Array[Int], item: Int) => {
-  //        val intSet = ints.toSet
-  //        val compact = Ints.createCompactSet(ints)
-  //        new IntSet(compact).contains(item) == intSet.contains(item)
-  //      },
-  //      minSuccessful(1000))
-  //  }
+  it should "support the 'contains' operation for a set that only contains 0" in {
+    val bitSet = BitSet(Array(0))
+    val didContain = new BitSet(bitSet).contains(0)
+    assert(didContain == true)
+  }
+
+  it should "support the 'contains' operation" in {
+    check(
+      (ints: Array[Int], item: Int) => {
+        if (ints.nonEmpty) {
+          val mapped = ints.map(_ % 10000000)
+          val intSet = mapped.toSet
+          val bitSet = BitSet(mapped)
+          new BitSet(bitSet).contains(item) == intSet.contains(item)
+        } else {
+          true
+        }
+      },
+      minSuccessful(1000))
+  }
 
 }

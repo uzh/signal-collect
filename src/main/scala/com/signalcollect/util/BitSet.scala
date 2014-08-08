@@ -67,42 +67,32 @@ class BasicBitSet(val bits: Long) extends AnyVal {
 
   @inline final def foreachWithBaseValue(f: Int => Unit, baseValue: Int) {
     if (bits != 0) {
-      val max = baseValue + 64
+      val max = 64
       var next = 0
       var b = bits
       do {
         val trailing = java.lang.Long.numberOfTrailingZeros(b)
-        f(next + trailing)
+        f(next + trailing + baseValue)
         val shift = trailing + 1
         b >>>= shift
         next += shift
-      } while (next < max)
+      } while (b != 0 && next < max)
     }
   }
 
-  def min = {
-    val m = java.lang.Long.numberOfTrailingZeros(bits)
-    if (m < 64) {
-      m
-    } else {
-      throw new Exception("This set has no minimum.")
-    }
+  @inline final def min = {
+    java.lang.Long.numberOfTrailingZeros(bits)
   }
 
-  def minWithBaseValue(baseValue: Int): Int = {
+  @inline final def minWithBaseValue(baseValue: Int): Int = {
     min + baseValue
   }
 
   @inline final def max = {
-    val m = 64 - java.lang.Long.numberOfLeadingZeros(bits)
-    if (m < 64) {
-      m
-    } else {
-      throw new Exception("This set has no maximum.")
-    }
+    63 - java.lang.Long.numberOfLeadingZeros(bits)
   }
 
-  def maxWithBaseValue(baseValue: Int): Int = {
+  @inline final def maxWithBaseValue(baseValue: Int): Int = {
     max + baseValue
   }
 
@@ -125,13 +115,31 @@ class BasicBitSet(val bits: Long) extends AnyVal {
 }
 
 object BitSet {
+
+  def apply(a: Array[Int]): Array[Long] = {
+    assert(a.nonEmpty)
+    val min = a.min
+    val max = a.max
+    val range = math.abs(max - min) + 1
+    assert(range > 0)
+    val r = create(min, range)
+    for (i <- a) {
+      new BitSet(r).insert(i)
+    }
+    r
+  }
+
+  def apply(): Array[Long] = {
+    create(0)
+  }
+
   def create(baseId: Int): Array[Long] = {
     // Size 0
     Array(((baseId | 0l) << 32) | 0l)
   }
 
   def create(baseId: Int, range: Int): Array[Long] = {
-    val arrayLength = (range / 64.0).floor.toInt + 1
+    val arrayLength = (range / 64.0).ceil.toInt + 1
     val a = new Array[Long](arrayLength)
     new BitSet(a).writeSizeAndDisplacement(0, baseId)
     a
@@ -162,6 +170,10 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     bits(0) = ((newSize | 0l) << 32) | (newDisplacement & 0x00000000FFFFFFFFL)
   }
 
+  override def toString: String = {
+    s"(size = $size, baseId = $baseId: ${bits.tail.map(_.toBinaryString).mkString(",")})"
+  }
+
   def toBuffer: Buffer[Int] = {
     val buffer = new ArrayBuffer[Int]
     foreach(buffer.append(_))
@@ -179,7 +191,7 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     while (i < bits.length) {
       val l = bits(i)
       if (l != 0) {
-        new BasicBitSet(l).minWithBaseValue(baseId + (i - 1) * 64)
+        return new BasicBitSet(l).minWithBaseValue(baseId + (i - 1) * 64)
       } else {
         i += 1
       }
@@ -195,7 +207,7 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     while (i > 0) {
       val l = bits(i)
       if (l != 0) {
-        new BasicBitSet(l).maxWithBaseValue(baseId + (i - 1) * 64)
+        return new BasicBitSet(l).maxWithBaseValue(baseId + (i - 1) * 64)
       } else {
         i -= 1
       }
@@ -210,36 +222,31 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     val adjustedPosition = item - baseId
     if (adjustedPosition >= 0) {
       val bitArrayIndex = positionToBitsIndex(adjustedPosition)
-      val l = bits(bitArrayIndex)
-      val insideLongIndex = positionToInsideLongIndex(adjustedPosition)
-      isBitAtLongIndexSet(insideLongIndex, l)
+      if (bitArrayIndex >= 1 && bitArrayIndex < bits.length) {
+        val l = bits(bitArrayIndex)
+        val insideLongIndex = positionToInsideLongIndex(adjustedPosition)
+        isBitAtLongIndexSet(insideLongIndex, l)
+      } else {
+        false
+      }
     } else {
       false
     }
   }
 
   @inline final def insert(item: Int): Boolean = {
-    println(s"Hey, this is an int bit set: size = $size, baseId = $baseId, now we're inserting $item")
     val adjustedPosition = item - baseId
     assert(adjustedPosition >= 0)
     val bitArrayIndex = positionToBitsIndex(adjustedPosition)
-    println(s"bit array index for $item = $bitArrayIndex")
     val longBitSet = new BasicBitSet(bits(bitArrayIndex))
     val insideLongIndex = positionToInsideLongIndex(adjustedPosition)
-    println(s"inside long index for $item = $insideLongIndex")
     val updated = longBitSet.set(insideLongIndex)
-    println(s"writing to position $insideLongIndex")
     val alreadySet = longBitSet.bits == updated
     if (!alreadySet) {
-      println("wasn't set yet, doing just that")
       writeSize(size + 1)
       bits(bitArrayIndex) = updated
-      println(s"that long has now ${java.lang.Long.bitCount(updated)} bits set")
-      //println(s"After insert of $item: ${toSet}")
-      //foreach(println(_))
       true
     } else {
-      println("that item was already contained")
       false
     }
   }
@@ -263,8 +270,7 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     (mask & l) != 0l
   }
 
-  //@inline 
-  final def foreach(f: Int => Unit) {
+  @inline final def foreach(f: Int => Unit) {
     var currentBaseId = baseId
     var i = 1
     while (i < bits.length) {

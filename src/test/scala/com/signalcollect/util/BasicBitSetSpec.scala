@@ -37,12 +37,18 @@ class BasicBitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
     assert(longBitSet.size == 64)
   }
 
+  it should "should be empty before inserts" in {
+    val longBitSet = new BasicBitSet(0l)
+    val toSet = longBitSet.toSet
+    assert(toSet == Set.empty[Int])
+    assert(longBitSet.size == 0)
+  }
+
   it should "support an insert into an empty set" in {
     check(
       (item: Int) => {
         val insertItem = (item & Int.MaxValue) % 64
         val longBitSet = new BasicBitSet(new BasicBitSet(0l).set(insertItem))
-        println(insertItem)
         assert(longBitSet.toSet === Set(insertItem))
         assert(longBitSet.min === insertItem)
         assert(longBitSet.max === insertItem)
@@ -62,16 +68,23 @@ class BasicBitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
           standardSet += i
         }
         assert(longBitSet.toSet === standardSet)
-        assert(longBitSet.min === standardSet.min)
-        assert(longBitSet.max === standardSet.max)
+        if (is.nonEmpty) {
+          assert(longBitSet.min === standardSet.min)
+          assert(longBitSet.max === standardSet.max)
+        }
         longBitSet.size === standardSet.size
       },
       minSuccessful(100))
   }
 
-  it should "support base values" in {
+  it should "support base values A" in {
     val longBitSet = new BasicBitSet(-1l)
     assert(longBitSet.toSetWithBaseValue(10) === (10 to 73).toSet)
+  }
+
+  it should "support base values B" in {
+    val longBitSet = new BasicBitSet(1l)
+    assert(longBitSet.toSetWithBaseValue(0) === Set(0))
   }
 
 }
