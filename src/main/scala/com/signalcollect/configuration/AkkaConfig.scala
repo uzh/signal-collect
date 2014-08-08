@@ -3,6 +3,7 @@ package com.signalcollect.configuration
 import com.typesafe.config.ConfigFactory
 import akka.event.Logging.LogLevel
 import akka.event.Logging
+import java.net.InetAddress
 
 object AkkaConfig {
   def get(
@@ -10,7 +11,7 @@ object AkkaConfig {
     loggingLevel: LogLevel,
     kryoRegistrations: List[String],
     kryoInitializer: String,
-    hostname: String = "127.0.0.1",
+    hostname: String = InetAddress.getLocalHost.getHostAddress,
     port: Int = 0,
     numberOfCores: Int = Runtime.getRuntime.availableProcessors) = ConfigFactory.parseString(
     distributedConfig(
