@@ -29,7 +29,7 @@ object SplayIntSet {
 }
 
 final class SplayNode(
-  var intSet: Array[Byte],
+  var intSet: Any,
   var intervalFrom: Int = Int.MinValue,
   var intervalTo: Int = Int.MaxValue) {
   import SplayIntSet._
@@ -47,20 +47,38 @@ final class SplayNode(
     s"SplayNode([$intervalFrom to $intervalTo], min = $min, max = $max, range = $range, #entries = $size, density = $density%, bytes = $bytes, bitSetBytes = $bytesForBitSet, possibleBenefit = $benefit)"
   }
 
+  @inline def range: Int = {
+    (intervalTo - intervalFrom) + 1
+  }
+
+  @inline def density: Float = {
+    range / size.toFloat
+  }
+
   @inline def isEntireRangeContained: Boolean = {
-    size == (intervalTo - intervalFrom) + 1
+    size == range
   }
 
   @inline def insert(i: Int, overheadFraction: Float): Boolean = {
     if (intSet != null) {
-      val sizeBefore = new FastInsertIntSet(intSet).size
-      intSet = new FastInsertIntSet(intSet).insert(i, overheadFraction)
-      val sizeAfter = new FastInsertIntSet(intSet).size
+      val wasInserted = intSet match {
+        // It's a FastInsertIntSet
+        case bs: Array[Byte] =>
+          val sizeBefore = new FastInsertIntSet(bs).size
+          intSet = new FastInsertIntSet(bs).insert(i, overheadFraction)
+          val sizeAfter = new FastInsertIntSet(bs).size
+          sizeAfter > sizeBefore
+        case ls: Array[Long] =>
+          val bitSet = new BitSet(ls)
+          bitSet.insert(i)
+      }
       if (isEntireRangeContained) {
         // Int set being null means that all elements in the interval are contained.
         intSet = null
+      } else if (density > 0.12f) {
+
       }
-      sizeAfter > sizeBefore
+      wasInserted
     } else {
       // Whole interval is contained already.
       false
@@ -240,7 +258,7 @@ abstract class SplayIntSet {
       if (inserted) size += 1
       val nodeIntSet = root.intSet
       // Null would mean that the set is efficiently represented already.
-      if ( nodeIntSet != null &&  new FastInsertIntSet(nodeIntSet).size > maxNodeIntSetSize) {
+      if (nodeIntSet != null && new FastInsertIntSet(nodeIntSet).size > maxNodeIntSetSize) {
         //println(s"Has now more than $maxNodeIntSetSize entires, splitting")
         val (set1, set2) = new FastInsertIntSet(nodeIntSet).split(overheadFraction)
         val set2Min = new FastInsertIntSet(set2).min

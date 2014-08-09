@@ -129,15 +129,6 @@ object BitSet {
     r
   }
 
-  def apply(): Array[Long] = {
-    create(0)
-  }
-
-  def create(baseId: Int): Array[Long] = {
-    // Size 0
-    Array(((baseId | 0l) << 32) | 0l)
-  }
-
   def create(baseId: Int, range: Int): Array[Long] = {
     val arrayLength = (range / 64.0).ceil.toInt + 1
     val a = new Array[Long](arrayLength)
