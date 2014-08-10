@@ -128,7 +128,7 @@ object BitSet {
     }
     r
   }
-
+  
   def create(baseId: Int, range: Int): Array[Long] = {
     val arrayLength = (range / 64.0).ceil.toInt + 1
     val a = new Array[Long](arrayLength)

@@ -43,6 +43,7 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
       val insert = List(4, 2, 1, 4, 3, 1, 3)
       for (i <- insert) {
         splaySet.insert(i)
+        assert(splaySet.contains(i))
       }
       assert(splaySet.size == 4)
     } catch {
@@ -50,7 +51,7 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
     }
   }
 
-  "SplayIntSet" should "support 100000 inserts" in {
+  it should "support 100000 inserts" in {
     try {
       val start = System.currentTimeMillis
       val factor = 1.0f
@@ -94,7 +95,7 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
     }
   }
 
-  it should "store sets of Ints" in {
+  it should "store sets of Ints with various overheads and split factors" in {
     check(
       (ints: Array[Int], splitSize: Int, overhead: Float) => {
         var wasEqual = true
@@ -119,7 +120,64 @@ class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
         }
         wasEqual
       },
-      minSuccessful(100000))
+      minSuccessful(10000))
+  }
+
+  it should "support 1 million inserts with split size 100 and 1% overhead" in {
+    try {
+      val start = System.currentTimeMillis
+      var splaySet = new SimpleSplayIntSet(0.01f, 100)
+      var standardSet = Set.empty[Int]
+      var i = 0
+      while (i < 1000000) {
+        val insertValue = Random.nextInt.abs % 2000000
+        val splaySizeBefore = splaySet.size
+        splaySet.insert(insertValue)
+        standardSet += insertValue
+        if (splaySet.size != standardSet.size) {
+          println(s"Problematic insert: $insertValue")
+          println(s"Splay size ${splaySet.size}")
+          println(s"Splay size before $splaySizeBefore")
+          println(s"Standard size ${standardSet.size}")
+          assert(splaySet.size == standardSet.size)
+          assert(splaySet.contains(i) == standardSet.contains(i))
+        }
+        i += 1
+      }
+      assert(splaySet.size == standardSet.size)
+    } catch {
+      case t: Throwable => t.printStackTrace
+    }
+  }
+
+  it should "store sets of Ints" in {
+    check(
+      (ints: Array[Int]) => {
+        var wasEqual = true
+        var splaySet = new SimpleSplayIntSet(0.01f, 3)
+        val mappedInts = ints.map(x => (x & Int.MaxValue) % 50)
+        try {
+          var intSet = Set.empty[Int]
+          for (i <- mappedInts) {
+            splaySet.insert(i)
+            intSet += i
+            if (splaySet.contains(i) != intSet.contains(i)) {
+              println(s"problems with $i on ${intSet}: was not inserted into splay tree")
+            }
+          }
+          wasEqual = splaySet.toSet == intSet
+          if (!wasEqual) {
+            println("Problematic set: " + splaySet.toList.toString +
+              "\nShould have been: " + intSet.toString)
+            println("Done")
+          }
+        } catch {
+          case t: Throwable =>
+            t.printStackTrace
+        }
+        wasEqual
+      },
+      minSuccessful(10000))
   }
 
 }
