@@ -41,14 +41,7 @@ class BasicBitSet(val bits: Long) extends AnyVal {
   }
 
   @inline final def size: Int = {
-    // Inlined java.lang.Long.bitCount(bits)
-    var i = bits - ((bits >>> 1) & 0x5555555555555555L)
-    i = (i & 0x3333333333333333L) + ((i >>> 2) & 0x3333333333333333L)
-    i = (i + (i >>> 4)) & 0x0f0f0f0f0f0f0f0fL
-    i = i + (i >>> 8)
-    i = i + (i >>> 16)
-    i = i + (i >>> 32)
-    (i & 0x7f).toInt
+    java.lang.Long.bitCount(bits)
   }
 
   @inline final def foreach(f: Int => Unit) {
@@ -128,7 +121,7 @@ object BitSet {
     }
     r
   }
-  
+
   def create(baseId: Int, range: Int): Array[Long] = {
     val arrayLength = (range / 64.0).ceil.toInt + 1
     val a = new Array[Long](arrayLength)
