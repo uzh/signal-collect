@@ -267,6 +267,10 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     new FiniteDuration(stopTime - startTime, TimeUnit.NANOSECONDS)
   }
 
+  private[signalcollect] def getWorkerStatistics: List[WorkerStatistics] = {
+    workerApi.getIndividualWorkerStatistics
+  }
+
   def execute(parameters: ExecutionConfiguration): ExecutionInformation[Id, Signal] = {
     if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime

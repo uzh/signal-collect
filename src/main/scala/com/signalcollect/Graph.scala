@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.WorkerStatistics
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -160,6 +161,13 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
   def reset
 
   /**
+   *  Gathers worker statistics.
+   *
+   *  @return Various individual statistics from all workers.
+   */
+  private[signalcollect] def getWorkerStatistics: List[WorkerStatistics]
+
+  /**
    * Creates a snapshot of all the vertices in all workers.
    * Does not store the toSignal/toCollect collections or pending messages.
    * Should only be used when the workers are idle.
@@ -180,11 +188,3 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
   private[signalcollect] def deleteSnapshot
 
 }
-
-
-
-
-
-
-
-
