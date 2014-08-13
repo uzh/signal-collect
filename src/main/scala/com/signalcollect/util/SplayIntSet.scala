@@ -36,11 +36,8 @@ final class SplayNode(
   var left: SplayNode = _
   var right: SplayNode = _
 
-  override def toString = {
-    val min = minElement
-    val max = maxElement
-    val density = ((size / range.toDouble) * 1000).round / 10.0
-    val bytes = if (intSet != null) {
+  def bytes: Int = {
+    if (intSet != null) {
       intSet match {
         case bs: Array[Byte] =>
           bs.length
@@ -48,6 +45,12 @@ final class SplayNode(
           ls.length * 8
       }
     } else 0
+  }
+
+  override def toString = {
+    val min = minElement
+    val max = maxElement
+    val density = ((size / range.toDouble) * 1000).round / 10.0
     s"SplayNode([$intervalFrom to $intervalTo], min = $min, max = $max, range = $range, #entries = $size, density = $density%, bytes = $bytes)"
   }
 
@@ -233,6 +236,17 @@ abstract class SplayIntSet {
     println(s"$id: SplayIntSet diagnostic info:")
     if (root != null) {
       root.foreachNode(node => println(s"$id\t" + node.toString))
+    }
+  }
+
+  // Approximate size in bytes of the internal representations. Does not consider object overhead.
+  def bytes: Int = {
+    if (root != null) {
+      var bytes = 0
+      root.foreachNode(node => bytes += node.bytes)
+      bytes
+    } else {
+      0
     }
   }
 
