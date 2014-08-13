@@ -150,7 +150,7 @@ final class BitSet(val bits: Array[Long]) extends AnyVal {
     writeSizeAndDisplacement(size, newDisplacement)
   }
 
-  @inline final def writeSizeAndDisplacement(newSize: Int, newDisplacement: Int) {
+  final def writeSizeAndDisplacement(newSize: Int, newDisplacement: Int) {
     bits(0) = ((newSize | 0l) << 32) | (newDisplacement & 0x00000000FFFFFFFFL)
   }
 
