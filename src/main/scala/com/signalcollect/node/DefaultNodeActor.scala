@@ -62,6 +62,7 @@ class DefaultNodeActor[Id, Signal](
   val actorNamePrefix: String,
   val nodeId: Int,
   val numberOfNodes: Int,
+  val fixedNumberOfCores: Option[Int],
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor[Id, Signal]
   with ActorLogging
@@ -194,7 +195,7 @@ class DefaultNodeActor[Id, Signal](
 
   def numberOfCores = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    Runtime.getRuntime.availableProcessors
+    fixedNumberOfCores.getOrElse(Runtime.getRuntime.availableProcessors)
   }
 
   override def preStart = {
