@@ -54,6 +54,9 @@ class GraphLoadingSpec extends SpecificationWithJUnit {
         }
         graph.awaitIdle
         val stats = graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
+        if (stats.aggregatedWorkerStatistics.numberOfVertices != 100000) {
+          println(s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 100000.")
+        }
         stats.aggregatedWorkerStatistics.numberOfVertices == 100000
       } finally {
         graph.shutdown
