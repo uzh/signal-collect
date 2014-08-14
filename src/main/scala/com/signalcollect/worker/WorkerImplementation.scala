@@ -346,7 +346,8 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    pendingModifications = pendingModifications ++ graphModifications
+    val (a, b) = pendingModifications.duplicate // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
+    pendingModifications = a ++ graphModifications
   }
 
   def setSignalThreshold(st: Double) {
