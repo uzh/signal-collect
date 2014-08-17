@@ -25,7 +25,6 @@ import scala.collection.JavaConversions.propertiesAsScalaMap
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.Inspectable
 import com.signalcollect.TopKFinder
 import com.signalcollect.SampleVertexIds
 import org.json4s._
@@ -40,6 +39,7 @@ import akka.event.Logging.LogLevel
 import akka.event.Logging.LogEvent
 import akka.actor.ActorLogging
 import com.signalcollect.interfaces.Logger
+import com.signalcollect.Vertex
 
 /** Abstract class defining the interface every DataProvider has to implement. */
 abstract class DataProvider {
@@ -394,7 +394,7 @@ class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: J
         sourceIds ++ findVicinity(vicinityIds, radius - 1, true)
       } else {
         sourceIds ++ findVicinity(sourceIds.map { id =>
-          workerApi.forVertexWithId(id, { vertex: Inspectable[Id, _] =>
+          workerApi.forVertexWithId(id, { vertex: Vertex[Id, _, _, _] =>
             vertex.targetIds.asInstanceOf[Traversable[Id]].toSet
           })
         }.flatten, radius - 1, false)

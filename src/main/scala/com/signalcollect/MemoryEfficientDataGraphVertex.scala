@@ -48,7 +48,15 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
     state = s
   }
 
-  protected var targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
+  def targetIds: Traversable[Int] = {
+    new Traversable[Int] {
+      def foreach[U](f: Int => U) {
+        _targetIds.foreach(f.andThen(x => Unit))
+      }
+    }
+  }
+  
+  protected var _targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
   val mostRecentSignalMap = new IntHashMap[IncomingSignalType](1, 0.85f)
 
@@ -59,13 +67,13 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
   }
 
   override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
-    targetIds.foreach { targetId =>
+    _targetIds.foreach { targetId =>
       graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
     }
     lastSignalState = state
   }
 
-  def edgeCount = targetIds.size
+  def edgeCount = _targetIds.size
 
   override def toString = s"${this.getClass.getName}(state=$state)"
 
@@ -74,7 +82,7 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
   }
 
   override def addEdge(e: Edge[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
-    targetIds.insert(e.targetId.asInstanceOf[Int])
+    _targetIds.insert(e.targetId.asInstanceOf[Int])
   }
 
   override def removeEdge(targetId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = throw new UnsupportedOperationException
