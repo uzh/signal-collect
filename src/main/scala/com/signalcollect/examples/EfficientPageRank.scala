@@ -54,7 +54,7 @@ class EfficientPageRankVertex(id: Int)
   }
 
   def addTargetId(targetId: Int) {
-    targetIds.insert(targetId)
+    _targetIds.insert(targetId)
   }
 
 }

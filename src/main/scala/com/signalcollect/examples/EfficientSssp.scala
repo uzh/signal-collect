@@ -96,6 +96,13 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   def setState(s: Int) {
     state = s
   }
+  def targetIds: Traversable[Int] = {
+    new Traversable[Int] {
+      def foreach[U](f: Int => U) {
+        new IntSet(targetIdArray).foreach(f.andThen(x => Unit))
+      }
+    }
+  }
   protected var targetIdArray: Array[Byte] = null
   def setTargetIds(numberOfEdges: Int, compactIntSet: Array[Byte]) = {
     outEdges = numberOfEdges
