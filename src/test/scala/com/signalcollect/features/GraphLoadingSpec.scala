@@ -45,7 +45,7 @@ class GraphLoadingSpec extends SpecificationWithJUnit {
     "support the loadGraph command" in {
       val graph = GraphBuilder.build
       try {
-        val graphLoaders = (1 to 1000).map(x => (100 * x until ((100 * x) + 100)).toIterator.map(y => new PageRankVertex(y)).map(z => {
+        val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
           ge: GraphEditor[Any, Any] =>
             ge.addVertex(z)
         }))
@@ -54,10 +54,10 @@ class GraphLoadingSpec extends SpecificationWithJUnit {
         }
         graph.awaitIdle
         val stats = graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
-        if (stats.aggregatedWorkerStatistics.numberOfVertices != 100000) {
-          println(s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 100000.")
+        if (stats.aggregatedWorkerStatistics.numberOfVertices != 1000) {
+          println(s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
         }
-        stats.aggregatedWorkerStatistics.numberOfVertices == 100000
+        stats.aggregatedWorkerStatistics.numberOfVertices == 1000
       } finally {
         graph.shutdown
       }
