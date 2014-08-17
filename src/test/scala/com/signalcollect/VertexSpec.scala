@@ -13,7 +13,7 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.interfaces.SignalMessageWithSourceId
 
-class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
+class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar with TestAnnouncements {
 
   lazy val smallInt = Gen.chooseNum(0, 100)
   lazy val smallDouble = Gen.chooseNum(0.0, 10.0)

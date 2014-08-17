@@ -10,7 +10,7 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.EfficientPageRankVertex
 import com.signalcollect.examples.PlaceholderEdge
 
-class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
+class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar with TestAnnouncements {
 
   "Kryo serialization" should "support running PageRank with message serialization" in {
     val graph = new GraphBuilder[Int, Double]().

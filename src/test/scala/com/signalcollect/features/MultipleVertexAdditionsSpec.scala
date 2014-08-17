@@ -46,7 +46,7 @@ class TestExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id, Si
   }
 }
 
-class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
+class MultipleVertexAdditionsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Adding the same vertex multiple times" should "be ignored" in {
     val g = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)

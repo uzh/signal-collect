@@ -28,12 +28,13 @@ import java.io.DataOutputStream
 import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
 import scala.util.Random
+import com.signalcollect.TestAnnouncements
 
 case class SimpleSplayIntSet(
   val overheadFraction: Float,
   val maxNodeIntSetSize: Int) extends SplayIntSet
 
-class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
+class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 
