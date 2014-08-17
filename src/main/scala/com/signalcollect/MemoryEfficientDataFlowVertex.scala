@@ -51,7 +51,7 @@ abstract class MemoryEfficientDataFlowVertex[State, GraphSignalType: ClassTag](
   def targetIds: Traversable[Int] = {
     new Traversable[Int] {
       def foreach[U](f: Int => U) {
-        _targetIds.foreach(f.andThen(x => Unit))
+        _targetIds.foreach(f(_))
       }
     }
   }

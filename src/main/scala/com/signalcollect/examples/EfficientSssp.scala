@@ -99,7 +99,7 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   def targetIds: Traversable[Int] = {
     new Traversable[Int] {
       def foreach[U](f: Int => U) {
-        new IntSet(targetIdArray).foreach(f.andThen(x => Unit))
+        new IntSet(targetIdArray).foreach(f(_))
       }
     }
   }
