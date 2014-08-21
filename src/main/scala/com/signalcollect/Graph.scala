@@ -21,6 +21,7 @@ package com.signalcollect
 
 import com.signalcollect.interfaces.ComplexAggregation
 import com.signalcollect.interfaces.WorkerStatistics
+import akka.actor.ActorSystem
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -161,6 +162,13 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
   def reset
 
   /**
+   *  Returns the local internally used actor system of this this Signal/Collect graph.
+   *
+   *  @return the internal ActorSystem.
+   */
+  private[signalcollect] def system: ActorSystem
+
+  /**
    *  Gathers worker statistics.
    *
    *  @return Various individual statistics from all workers.
@@ -187,4 +195,46 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    */
   private[signalcollect] def deleteSnapshot
 
+}
+
+/**
+ * In order to unlock advanced methods on Graph, add this import to your program:
+ * 		import com.signalcollect.ExtendedGraph._
+ */
+object ExtendedGraph {
+  implicit class InternalGraph(g: Graph[_, _]) {
+    /**
+     *  Returns the local internally used actor system of this this Signal/Collect graph.
+     *
+     *  @return the internal ActorSystem.
+     */
+    def system: ActorSystem = g.system
+
+    /**
+     *  Gathers worker statistics.
+     *
+     *  @return Various individual statistics from all workers.
+     */
+    def getWorkerStatistics = g.getWorkerStatistics
+
+    /**
+     * Creates a snapshot of all the vertices in all workers.
+     * Does not store the toSignal/toCollect collections or pending messages.
+     * Should only be used when the workers are idle.
+     * Overwrites any previous snapshot that might exist.
+     */
+    def snapshot = g.snapshot
+
+    /**
+     * Restores the last snapshot of all the vertices in all workers.
+     * Does not store the toSignal/toCollect collections or pending messages.
+     * Should only be used when the workers are idle.
+     */
+    def restore = g.restore
+
+    /**
+     * Deletes the worker snapshots if they exist.
+     */
+    def deleteSnapshot = g.deleteSnapshot
+  }
 }
