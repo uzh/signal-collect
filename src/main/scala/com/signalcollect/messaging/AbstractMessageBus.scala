@@ -133,7 +133,7 @@ abstract class AbstractMessageBus[Id, Signal]
   //--------------------MessageBus--------------------
 
   override def sendToActor(actor: ActorRef, message: Any) {
-    actor ! message
+    actor.tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
@@ -148,11 +148,11 @@ abstract class AbstractMessageBus[Id, Signal]
 
   override def sendToWorker(workerId: Int, message: Any) {
     incrementMessagesSentToWorker(workerId)
-    workers(workerId) ! message
+    workers(workerId).tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkerUncounted(workerId: Int, message: Any) {
-    workers(workerId) ! message
+    workers(workerId).tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkers(message: Any, messageCounting: Boolean) {
@@ -160,17 +160,17 @@ abstract class AbstractMessageBus[Id, Signal]
       if (messageCounting) {
         incrementMessagesSentToWorker(workerId)
       }
-      workers(workerId) ! message
+      workers(workerId).tell(message, ActorRef.noSender)
     }
   }
 
   override def sendToNode(nodeId: Int, message: Any) {
     incrementMessagesSentToNode(nodeId)
-    nodes(nodeId) ! message
+    nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
   override def sendToNodeUncounted(nodeId: Int, message: Any) {
-    nodes(nodeId) ! message
+    nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
   override def sendToNodes(message: Any, messageCounting: Boolean) {
@@ -178,17 +178,17 @@ abstract class AbstractMessageBus[Id, Signal]
       if (messageCounting) {
         incrementMessagesSentToNode(nodeId)
       }
-      nodes(nodeId) ! message
+      nodes(nodeId).tell(message, ActorRef.noSender)
     }
   }
 
   override def sendToCoordinator(message: Any) {
     incrementMessagesSentToCoordinator
-    coordinator ! message
+    coordinator.tell(message, ActorRef.noSender)
   }
 
   override def sendToCoordinatorUncounted(message: Any) {
-    coordinator ! message
+    coordinator.tell(message, ActorRef.noSender)
   }
 
   override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
