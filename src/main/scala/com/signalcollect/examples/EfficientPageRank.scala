@@ -21,6 +21,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.messaging.IntIdDoubleSignalMessageBusFactory
 
 /**
  * Placeholder edge that gets discarded by memory efficient vertices that
@@ -62,9 +63,9 @@ class EfficientPageRankVertex(id: Int)
 /** Builds a PageRank compute graph and executes the computation */
 object MemoryEfficientPageRank extends App {
   val graph = new GraphBuilder[Int, Double]().
+    withMessageBusFactory(new IntIdDoubleSignalMessageBusFactory(10000)).
     //    withConsole(true).
     build
-
   graph.addVertex(new EfficientPageRankVertex(1))
   graph.addVertex(new EfficientPageRankVertex(2))
   graph.addVertex(new EfficientPageRankVertex(3))
@@ -72,7 +73,6 @@ object MemoryEfficientPageRank extends App {
   graph.addEdge(2, new PlaceholderEdge(1))
   graph.addEdge(2, new PlaceholderEdge(3))
   graph.addEdge(3, new PlaceholderEdge(2))
-
   graph.awaitIdle
   val stats = graph.execute //(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   println(stats)
