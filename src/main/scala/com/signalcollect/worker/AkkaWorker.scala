@@ -298,33 +298,25 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
 
     case ScheduleOperations =>
       if (messageQueue.isEmpty && System.nanoTime - schedulingTimestamp < 1000000) { // 1 millisecond
-        //        log.debug(s"Message queue on worker $workerId is empty")
         if (worker.allWorkDoneWhenContinueSent && worker.isAllWorkDone) {
-          //          log.debug(s"Worker $workerId turns to idle")
           //Worker is now idle.
           setIdle(true)
           worker.operationsScheduled = false
         } else {
-          def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
-          val overloaded = throttlingEnabled && (
-            pongDelayed || worker.slowPongDetected)
-          //          log.debug(s"Worker $workerId has work to do")
-          if (worker.isPaused && !(throttlingDuringLoadingEnabled && overloaded)) {
-            //            log.debug(s"Worker $workerId is paused. Pending worker operations: ${!worker.pendingModifications.isEmpty}")
+          @inline def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
+          val overloaded = worker.slowPongDetected || pongDelayed
+          if (worker.isPaused && !(throttlingDuringLoadingEnabled && !overloaded)) {
             applyPendingGraphModifications
           } else {
-            //            log.debug(s"Worker $workerId is not paused. Will execute operations.")
-            worker.scheduler.executeOperations(overloaded)
+            worker.scheduler.executeOperations(throttlingEnabled & overloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
             worker.messageBusFlushed = true
           }
-          //          log.debug(s"Worker $workerId will schedule operations.")
           scheduleOperations
         }
       } else {
-        //        log.debug(s"Message queue on worker $workerId is NOT empty, will schedule operations")
         scheduleOperations
       }
 

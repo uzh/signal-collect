@@ -20,30 +20,31 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
+
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.WorkerFactory
-import com.signalcollect.nodeprovisioning.NodeProvisioner
-import akka.event.Logging.LogLevel
-import akka.event.Logging
-import com.signalcollect.interfaces.SchedulerFactory
-import com.signalcollect.interfaces.MapperFactory
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
-import com.signalcollect.factory.scheduler.Throughput
-import com.signalcollect.factory.mapper.DefaultMapperFactory
-import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
-import com.signalcollect.factory.storage.MemoryEfficientStorage
-import com.signalcollect.factory.worker.AkkaWorkerFactory
-import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandler
+import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
 import com.signalcollect.factory.handler.DefaultExistingVertexHandlerFactory
 import com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory
-import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
-import com.signalcollect.interfaces.ExistingVertexHandlerFactory
-import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.factory.mapper.DefaultMapperFactory
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import com.signalcollect.factory.scheduler.Throughput
+import com.signalcollect.factory.storage.MemoryEfficientStorage
+import com.signalcollect.factory.worker.AkkaWorkerFactory
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.MapperFactory
+import com.signalcollect.interfaces.MessageBusFactory
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.WorkerFactory
+import com.signalcollect.nodeprovisioning.NodeProvisioner
+import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.event.Logging
+import akka.event.Logging.LogLevel
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -67,7 +68,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
       eagerIdleDetection = true,
       consoleEnabled = false,
       throttlingEnabled = false,
-      throttlingDuringLoadingEnabled = true, // That means it is disabled by default, but is enabled by default, when throttling is enabled.
+      throttlingDuringLoadingEnabled = false,
       supportBlockingGraphModificationsInVertex = true,
       consoleHttpPort = -1,
       loggingLevel = Logging.WarningLevel,
@@ -138,18 +139,17 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   }
 
   /**
-   *  When throttling is enabled, the coordinator monitors the
-   *  messaging load of the system and stops signaling in case
+   *  When throttling is enabled, the workers monitor the
+   *  messaging load of the system and stop signaling in case
    *  the system should get overloaded.
+   *  @note: Throttling during graph loading is enabled with a separate flag.
    */
   def withThrottlingEnabled(newThrottlingEnabled: Boolean) = {
     builder(config.copy(throttlingEnabled = newThrottlingEnabled))
   }
 
   /**
-   *  This setting is only active if throttling is already enabled.
-   *  If both throttling and this flag are set, then throttling will
-   *  also be active during graph loading (Graph.modifyGraph).
+   *  Sets if throttling should be active during graph loading with Graph.modifyGraph.
    */
   def withThrottlingDuringLoadingEnabled(newThrottlingDuringLoadingEnabled: Boolean) = {
     builder(config.copy(throttlingDuringLoadingEnabled = newThrottlingDuringLoadingEnabled))
