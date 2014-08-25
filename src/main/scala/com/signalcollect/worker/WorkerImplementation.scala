@@ -52,6 +52,57 @@ import scala.util.Random
 import scala.reflect.ClassTag
 import com.signalcollect.interfaces.Scheduler
 
+class IteratorConcatenator[U](private var a: Iterator[U], private var b: Iterator[U]) extends Iterator[U] { // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
+
+  a = simplify(a)
+  b = simplify(b)
+
+  def simplify(i: Iterator[U]): Iterator[U] = if (i.isInstanceOf[IteratorConcatenator[U]]) {
+    val iCast = i.asInstanceOf[IteratorConcatenator[U]]
+    if (iCast.a == null) {
+      if (iCast.b == null) {
+        null.asInstanceOf[Iterator[U]]
+      } else {
+        iCast.b
+      }
+    } else if (iCast.b == null) {
+      iCast.a
+    } else {
+      iCast
+    }
+  } else {
+    i
+  }
+
+  def next: U = if (a != null) {
+    a.next
+  } else {
+    b.next
+  }
+
+  def hasNext: Boolean = {
+    if (a != null) {
+      val aGotMore = a.hasNext
+      if (!aGotMore) {
+        a = null
+        hasNext
+      } else {
+        true
+      }
+    } else if (b != null) {
+      val bGotMore = b.hasNext
+      if (!bGotMore) {
+        b = null
+        false
+      } else {
+        true
+      }
+    } else {
+      false
+    }
+  }
+}
+
 /**
  * Main implementation of the WorkerApi interface.
  */
@@ -241,7 +292,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
     messageBusFlushed = false
   }
-  
+
   def startComputation {
     if (!pendingModifications.isEmpty) {
       log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
@@ -346,8 +397,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    val (a, b) = pendingModifications.duplicate // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
-    pendingModifications = a ++ graphModifications
+    pendingModifications = new IteratorConcatenator(pendingModifications, graphModifications) // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
   }
 
   def setSignalThreshold(st: Double) {
