@@ -305,10 +305,10 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         } else {
           @inline def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
           val overloaded = worker.slowPongDetected || pongDelayed
-          if (worker.isPaused && !(throttlingDuringLoadingEnabled && !overloaded)) {
+          if (worker.isPaused && !(throttlingDuringLoadingEnabled && overloaded)) {
             applyPendingGraphModifications
           } else {
-            worker.scheduler.executeOperations(throttlingEnabled & overloaded)
+            worker.scheduler.executeOperations(throttlingEnabled && overloaded)
           }
           if (!worker.messageBusFlushed) {
             messageBus.flush
