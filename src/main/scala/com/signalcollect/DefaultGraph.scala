@@ -86,6 +86,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
   throttlingEnabled: Boolean,
+  throttlingDuringLoadingEnabled: Boolean,
   supportBlockingGraphModificationsInVertex: Boolean) {
   def create: () => AkkaWorker[Id, Signal] = {
     () =>
@@ -103,6 +104,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         heartbeatIntervalInMilliseconds,
         eagerIdleDetection,
         throttlingEnabled,
+        throttlingDuringLoadingEnabled,
         supportBlockingGraphModificationsInVertex)
   }
 }
@@ -200,6 +202,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.heartbeatIntervalInMilliseconds,
           config.eagerIdleDetection,
           config.throttlingEnabled,
+          config.throttlingDuringLoadingEnabled,
           config.supportBlockingGraphModificationsInVertex)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))

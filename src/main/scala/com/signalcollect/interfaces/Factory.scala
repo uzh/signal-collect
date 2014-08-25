@@ -55,6 +55,7 @@ abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
     throttlingEnabled: Boolean,
+    throttlingDuringLoadingEnabled: Boolean,
     supportBlockingGraphModificationsInVertex: Boolean): AkkaWorker[Id, Signal]
 }
 

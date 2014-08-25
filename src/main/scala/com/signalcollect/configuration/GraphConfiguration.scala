@@ -53,6 +53,7 @@ case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: Clas
   eagerIdleDetection: Boolean,
   consoleEnabled: Boolean,
   throttlingEnabled: Boolean,
+  throttlingDuringLoadingEnabled: Boolean,
   supportBlockingGraphModificationsInVertex: Boolean,
   consoleHttpPort: Int,
   loggingLevel: LogLevel,
@@ -69,5 +70,4 @@ case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: Clas
   messageBusFactory: MessageBusFactory[Id, Signal],
   existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
-  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal]
-)
+  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal])

@@ -49,6 +49,7 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
     throttlingEnabled: Boolean,
+    throttlingDuringLoadingEnabled: Boolean,
     supportBlockingGraphModificationsInVertex: Boolean): AkkaWorker[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
@@ -64,6 +65,7 @@ class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id
       heartbeatIntervalInMilliseconds,
       eagerIdleDetection,
       throttlingEnabled,
+      throttlingDuringLoadingEnabled,
       supportBlockingGraphModificationsInVertex)
   }
   override def toString: String = "AkkaWorkerFactory"

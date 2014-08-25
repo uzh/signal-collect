@@ -67,6 +67,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
       eagerIdleDetection = true,
       consoleEnabled = false,
       throttlingEnabled = false,
+      throttlingDuringLoadingEnabled = true, // That means it is disabled by default, but is enabled by default, when throttling is enabled.
       supportBlockingGraphModificationsInVertex = true,
       consoleHttpPort = -1,
       loggingLevel = Logging.WarningLevel,
@@ -143,6 +144,15 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
    */
   def withThrottlingEnabled(newThrottlingEnabled: Boolean) = {
     builder(config.copy(throttlingEnabled = newThrottlingEnabled))
+  }
+
+  /**
+   *  This setting is only active if throttling is already enabled.
+   *  If both throttling and this flag are set, then throttling will
+   *  also be active during graph loading (Graph.modifyGraph).
+   */
+  def withThrottlingDuringLoadingEnabled(newThrottlingDuringLoadingEnabled: Boolean) = {
+    builder(config.copy(throttlingDuringLoadingEnabled = newThrottlingDuringLoadingEnabled))
   }
 
   /**
