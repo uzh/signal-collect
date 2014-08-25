@@ -23,8 +23,7 @@ import scala.reflect.ClassTag
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.WorkerApiFactory
-import com.signalcollect.messaging.BulkMessageBus
-import com.signalcollect.messaging.DefaultMessageBus
+import com.signalcollect.messaging._
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import akka.actor.ActorSystem
 
@@ -75,3 +74,25 @@ class BulkAkkaMessageBusFactory[@specialized(Int, Long) Id: ClassTag, Signal: Cl
   }
   override def toString = "BulkAkkaMessageBusFactory"
 }
+
+class IntIdDoubleSignalMessageBusFactory(flushThreshold: Int)
+  extends MessageBusFactory[Int, Double] {
+  def createInstance(
+    system: ActorSystem,
+    numberOfWorkers: Int,
+    numberOfNodes: Int,
+    mapper: VertexToWorkerMapper[Int],
+    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+    workerApiFactory: WorkerApiFactory[Int, Double]): MessageBus[Int, Double] = {
+    new IntIdDoubleSignalMessageBus(
+      system,
+      numberOfWorkers,
+      numberOfNodes,
+      mapper,
+      flushThreshold,
+      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
+      workerApiFactory)
+  }
+  override def toString = "CombiningMessageBusFactory"
+}
+

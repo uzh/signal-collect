@@ -52,27 +52,6 @@ class CombingingDoubleBulkerNoIds {
   }
 }
 
-class IntIdDoubleSignalMessageBusFactory(flushThreshold: Int)
-  extends MessageBusFactory[Int, Double] {
-  def createInstance(
-    system: ActorSystem,
-    numberOfWorkers: Int,
-    numberOfNodes: Int,
-    mapper: VertexToWorkerMapper[Int],
-    sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-    workerApiFactory: WorkerApiFactory[Int, Double]): MessageBus[Int, Double] = {
-    new IntIdDoubleSignalMessageBus(
-      system,
-      numberOfWorkers,
-      numberOfNodes,
-      mapper,
-      flushThreshold,
-      sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
-      workerApiFactory)
-  }
-  override def toString = "CombiningMessageBusFactory"
-}
-
 /**
  * Example message bus with a combiner for Int IDs that sums Double signals.
  * Vertex ID 0 is not supported when using this message bus.

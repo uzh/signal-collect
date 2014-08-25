@@ -21,7 +21,7 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.messaging.IntIdDoubleSignalMessageBusFactory
+import com.signalcollect.factory.messagebus.IntIdDoubleSignalMessageBusFactory
 
 /**
  * Placeholder edge that gets discarded by memory efficient vertices that
