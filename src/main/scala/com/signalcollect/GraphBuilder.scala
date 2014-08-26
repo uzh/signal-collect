@@ -149,7 +149,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   }
 
   /**
-   *  Sets if throttling should be active during graph loading with Graph.modifyGraph.
+   *  Sets if throttling should be active during graph loading with Graph.loadGraph.
    */
   def withThrottlingDuringLoadingEnabled(newThrottlingDuringLoadingEnabled: Boolean) = {
     builder(config.copy(throttlingDuringLoadingEnabled = newThrottlingDuringLoadingEnabled))
