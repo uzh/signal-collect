@@ -25,7 +25,7 @@ object StorageDefaultValues {
   final val defaultInitialSize = 32768
   final val defaultRehashFraction = 0.5f
   final val defaultShrinkFraction = 0.05f
-  final val defaultVertexMapRehashFraction = 0.5f
+  final val defaultVertexMapRehashFraction = 0.8f
   final val minShrinkSize = 16384 // Will not shrink if the map capacity is at or below this.
   final val defaultTemporaryMapRehashFraction = 0.5f
   final val defaultToSignalInitialSize = 1024
