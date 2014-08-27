@@ -34,12 +34,14 @@ import StorageDefaultValues._
 // matches indeed (and not just the hash of the vertex id).
 class VertexMap[@specialized(Int, Long) Id, Signal](
   initialSize: Int = defaultInitialSize,
-  rehashFraction: Float = defaultRehashFraction) extends VertexStore[Id, Signal] {
+  rehashFraction: Float = defaultRehashFraction,
+  shrinkFraction: Float = defaultShrinkFraction) extends VertexStore[Id, Signal] {
   assert(initialSize > 0)
   final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
   assert(maxSize > 0 && maxSize >= initialSize, "Initial size is too large.")
   private[this] final var maxElements: Int = (rehashFraction * maxSize).floor.toInt
+  private[this] final var minElements: Int = (shrinkFraction * maxSize).floor.toInt
   private[this] final var values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
   private[this] final var keys = new Array[Int](maxSize) // 0 means empty
   private[this] final var mask = maxSize - 1
@@ -103,7 +105,12 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     }
     if (elementsProcessed > 0) {
       numberOfElements -= elementsProcessed
-      optimizeFromPosition(nextPositionToProcess)
+      // We only want to shrink if the map wasn't emptied entirely.
+      if (numberOfElements > 0 && maxSize > minShrinkSize && numberOfElements < minElements) {
+        shrink
+      } else {
+        optimizeFromPosition(nextPositionToProcess)
+      }
     }
     limit
   }
@@ -124,9 +131,37 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     }
     if (elementsProcessed > 0) {
       numberOfElements -= elementsProcessed
-      optimizeFromPosition(nextPositionToProcess)
+      // We only want to shrink if the map wasn't emptied entirely.
+      if (numberOfElements > 0 && maxSize > minShrinkSize && numberOfElements < minElements) {
+        shrink
+      } else {
+        optimizeFromPosition(nextPositionToProcess)
+      }
     }
     elementsProcessed
+  }
+
+  private[this] final def shrink {
+    val oldSize = maxSize
+    val oldValues = values
+    val oldKeys = keys
+    val oldNumberOfElements = numberOfElements
+    maxSize >>>= 1
+    maxElements = (rehashFraction * maxSize).floor.toInt
+    values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
+    keys = new Array[Int](maxSize)
+    mask = maxSize - 1
+    numberOfElements = 0
+    nextPositionToProcess &= mask
+    var i = 0
+    var elementsMoved = 0
+    while (elementsMoved < oldNumberOfElements) {
+      if (oldKeys(i) != 0) {
+        put(oldValues(i))
+        elementsMoved += 1
+      }
+      i += 1
+    }
   }
 
   private[this] final def tryDouble {
@@ -138,6 +173,7 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
       val oldNumberOfElements = numberOfElements
       maxSize *= 2
       maxElements = (rehashFraction * maxSize).floor.toInt
+      minElements = (shrinkFraction * maxSize).floor.toInt
       values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
       keys = new Array[Int](maxSize)
       mask = maxSize - 1
