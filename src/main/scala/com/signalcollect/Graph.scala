@@ -165,13 +165,12 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @example Computes sum of ranks: graph.mapReduce[PageRankVertex, Double](v => v.state, _ + _, 0)
    */
-  def mapReduce[VertexType <: Vertex[_, _, _, _], ResultType: Numeric: Manifest](
+  def mapReduce[VertexType <: Vertex[_, _, _, _], ResultType](
     map: VertexType => ResultType,
     reduce: (ResultType, ResultType) => ResultType,
     neutralElement: ResultType): ResultType = {
     val r = reduce // Rename to avoid collision with the name of the inner function.
     val aggregation = new AggregationOperation[ResultType] {
-      val numeric = implicitly[Numeric[ResultType]]
       def extract(v: Vertex[_, _, _, _]): ResultType = {
         try {
           map(v.asInstanceOf[VertexType])
