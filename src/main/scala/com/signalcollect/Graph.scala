@@ -22,6 +22,7 @@ package com.signalcollect
 import com.signalcollect.interfaces.ComplexAggregation
 import com.signalcollect.interfaces.WorkerStatistics
 import akka.actor.ActorSystem
+import com.signalcollect.interfaces.AggregationOperation
 
 /**
  *  Graph represents the entire Signal/Collect graph with its vertices and edges.
@@ -154,6 +155,38 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  @example See concrete implementations of other aggregation operations, i.e. `SumOfStates`.
    */
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType
+
+  /**
+   * Simplified alternative API for aggregation operations.
+   * 
+   * @param map Function that extracts the relevant value from a vertex.
+   * @param reduce Aggregation operation that is executed on the extracted values.
+   * @param neutralElement Neutral element of the aggregation operation 'reduce'.
+   *
+   *  @example Computes sum of ranks: graph.mapReduce[PageRankVertex, Double](v => v.state, _ + _, 0)
+   */
+  def mapReduce[VertexType <: Vertex[_, _, _, _], ResultType: Numeric: Manifest](
+    map: VertexType => ResultType,
+    reduce: (ResultType, ResultType) => ResultType,
+    neutralElement: ResultType): ResultType = {
+    val r = reduce // Rename to avoid collision with the name of the inner function.
+    val aggregation = new AggregationOperation[ResultType] {
+      val numeric = implicitly[Numeric[ResultType]]
+      def extract(v: Vertex[_, _, _, _]): ResultType = {
+        try {
+          map(v.asInstanceOf[VertexType])
+        } catch {
+          case _: Throwable =>
+            neutralElement
+        }
+      }
+      def reduce(elements: Stream[ResultType]): ResultType = {
+        elements.foldLeft(neutralElement)(r)
+      }
+    }
+    val result = aggregate(aggregation)
+    result
+  }
 
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.
