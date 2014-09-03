@@ -28,20 +28,24 @@ import java.io.File
 class FileReaderSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
   val sep = File.separator
-  val testFilePath = s".${sep}test-data${sep}ascii-ints.txt"
+  val testFilePath1 = s".${sep}test-data${sep}ascii-ints.txt"
+  val testFilePath2 = s".${sep}test-data${sep}ints-no-newline-at-end.txt"
 
   "FileReader" should "correctly parse a file with an iterator" in {
-    val buffer = new ArrayBuffer[Int]
-    FileReader.intIterator(testFilePath).foreach(buffer.append(_))
-    val asList = buffer.toList
-    assert(asList == List(1234, 3525, 123, 436, 43663, 33))
+    val asList = FileReader.intIterator(testFilePath1).toList
+    assert(asList == List(1234, 3525, 123, 436, 43663, 33, 44, 0))
   }
 
   it should "correctly parse a file with the processing function" in {
     val buffer = new ArrayBuffer[Int]
-    FileReader.processInts(testFilePath, buffer.append(_))
+    FileReader.processInts(testFilePath1, buffer.append(_))
     val asList = buffer.toList
-    assert(asList == List(1234, 3525, 123, 436, 43663, 33))
+    assert(asList == List(1234, 3525, 123, 436, 43663, 33, 44, 0))
+  }
+
+  it should "correctly iterate over ints when there is no newline at the end" in {
+    val asList = FileReader.intIterator(testFilePath2).toList
+    assert(asList == List(1, 2, 3, 0))
   }
 
 }
