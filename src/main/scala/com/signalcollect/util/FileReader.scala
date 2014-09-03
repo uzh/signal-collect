@@ -20,6 +20,7 @@ package com.signalcollect.util
 
 import java.io.FileInputStream
 import java.io.BufferedInputStream
+import scala.annotation.switch
 
 object FileReader {
 
@@ -27,9 +28,12 @@ object FileReader {
    * Returns an iterator for all Ints in the file at the file path.
    * @Note The numbers need to be positive, fit into a Java Integer,
    * be encoded in ASCII/UTF8 format and can only be separated by
-   * single spaces and single newlines.
+   * single spaces, single newlines, and tabs.
+   * Whole lines can be commented out by starting them with '#'.
+   *
+   * @note Negative numbers are unsupported.
    */
-  def intIterator(filePath: String): Iterator[Int] = {
+  @inline def intIterator(filePath: String): Iterator[Int] = {
     new AsciiIntIterator(filePath)
   }
 
@@ -38,25 +42,46 @@ object FileReader {
    * are read from file 'filePath'.
    * @Note The numbers need to be positive, fit into a Java Integer,
    * be encoded in ASCII/UTF8 format and can only be separated by
-   * single spaces and single newlines.
+   * single spaces, single newlines, and tabs.
+   * Whole lines can be commented out by starting them with '#'.
+   *
+   * @note Negative numbers are unsupported.
    */
-  def processInts(filePath: String, p: Int => Unit) {
+  @inline def processInts(filePath: String, p: Int => Unit) {
     val BLOCK_SIZE = 8 * 32768
     val in = new BufferedInputStream(new FileInputStream(filePath))
     var currentNumber = 0
     var inputIndex = 0
     val buf = new Array[Byte](BLOCK_SIZE)
     var read = in.read(buf)
+    var commentedOut = false
+    var numberStarted = false
     while (read != -1) {
       while (inputIndex < read) {
         val b = buf(inputIndex)
-        if (b != ' ' && b != '\n') {
-          currentNumber = 10 * currentNumber + b - '0'
-        } else {
-          p(currentNumber)
-          currentNumber = 0
-        }
         inputIndex += 1
+        if (!commentedOut) {
+          (b: @switch) match {
+            case '#' =>
+              commentedOut = true
+              if (numberStarted) {
+                p(currentNumber)
+                numberStarted = false
+                currentNumber = 0
+              }
+            case ' ' | '\n' | '\t' =>
+              if (numberStarted) {
+                p(currentNumber)
+                numberStarted = false
+                currentNumber = 0
+              }
+            case other =>
+              numberStarted = true
+              currentNumber = 10 * currentNumber + b - '0'
+          }
+        } else if (b == '\n') {
+          commentedOut = false
+        }
       }
       inputIndex -= read
       read = in.read(buf)
@@ -66,23 +91,32 @@ object FileReader {
 
 }
 
-final private class AsciiIntIterator(filePath: String) extends Iterator[Int] {
+private final class AsciiIntIterator(filePath: String) extends Iterator[Int] {
   var initialized = false
   final val BLOCK_SIZE = 8 * 32768
   var in: BufferedInputStream = _
-  var currentNumber = 0
+  var commentedOut = false
+  var numberStarted = false
+  var currentNumber = -1
   var inputIndex = 0
   var read: Int = _
   var buf: Array[Byte] = _
 
   @inline def next: Int = {
-    currentNumber
+    assert(currentNumber != -1)
+    val c = currentNumber
+    currentNumber = -1
+    c
   }
 
   @inline def hasNext: Boolean = {
-    if (!initialized) initialize
-    currentNumber = readNext
-    currentNumber != -1
+    if (currentNumber != -1) {
+      true
+    } else {
+      if (!initialized) initialize
+      currentNumber = readNext
+      currentNumber != -1
+    }
   }
 
   @inline def readNext: Int = {
@@ -90,24 +124,47 @@ final private class AsciiIntIterator(filePath: String) extends Iterator[Int] {
     while (read != -1) {
       while (inputIndex < read) {
         val b = buf(inputIndex)
-        if (b != ' ' && b != '\n') {
-          currentNumber = 10 * currentNumber + b - '0'
-        } else {
-          inputIndex += 1
-          return currentNumber
-        }
         inputIndex += 1
+        if (!commentedOut) {
+          (b: @switch) match {
+            case '#' =>
+              commentedOut = true
+              if (numberStarted) {
+                numberStarted = false
+                return currentNumber
+              }
+            case ' ' | '\n' | '\t' =>
+              if (numberStarted) {
+                numberStarted = false
+                return currentNumber
+              }
+            case other =>
+              numberStarted = true
+              val number = b - '0'
+              assert(number >= 0 && number <= 9, s"Encountered unsupported character $b.")
+              currentNumber = 10 * currentNumber + number
+          }
+        } else if (b == '\n') {
+          commentedOut = false
+          currentNumber = 0
+        }
       }
       inputIndex -= read
       read = in.read(buf)
     }
     in.close
-    return -1
+    if (numberStarted) {
+      numberStarted = false
+      currentNumber
+    } else {
+      -1
+    }
   }
 
-  def initialize {
+  @inline def initialize {
     in = new BufferedInputStream(new FileInputStream(filePath))
     buf = new Array[Byte](BLOCK_SIZE)
     read = in.read(buf)
+    initialized = true
   }
 }

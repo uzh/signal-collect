@@ -1,0 +1,8 @@
+# Directed graph: notredame2 
+# Kronecker Graph: seed matrix [0.999 0.414; 0.453 0.229]
+# Nodes: 4 Edges: 4
+# FromNodeId	ToNodeId
+0	0
+0	1
+1	0
+3	2
