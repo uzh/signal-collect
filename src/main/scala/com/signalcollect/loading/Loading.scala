@@ -56,7 +56,7 @@ object Loading {
  * This iterator takes an edge ID iterator that is ordered by source ID and
  * it allows to iterate over the source (vertex ID, edge list) tuples.
  */
-private final class VertexTupleIterator[Id](val ids: Iterator[Id]) extends Iterator[(Id, List[Id])] {
+final class VertexTupleIterator[Id](val ids: Iterator[Id]) extends Iterator[(Id, List[Id])] {
   private var nextSourceId: Option[Id] = None
 
   @inline def hasNext: Boolean = {
