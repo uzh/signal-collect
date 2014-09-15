@@ -30,20 +30,18 @@ import com.signalcollect.util.Ints
 import java.io.DataInputStream
 
 /** Builds a PageRank compute graph and executes the computation */
-object DeployableEfficientPageRank extends Algorithm{
+object DeployableEfficientPageRank extends Algorithm[Int, Double] {
   
-  override def configureGraphBuilder(graphBuilder: GraphBuilder[Any,Any]): GraphBuilder[Any,Any] = {
+  override def configureGraphBuilder(graphBuilder: GraphBuilder[Int, Double]): GraphBuilder[Int, Double] = {
     graphBuilder.withEagerIdleDetection(false)
-    //    .withConsole(true)
   }
   
-  override def reportResults(stats: ExecutionInformation, graph: Graph[Any,Any]){
+  override def reportResults(stats: ExecutionInformation[Int, Double], graph: Graph[Int, Double]){
     println(stats)
-
     graph.foreachVertex(println(_))
   }
   
-  override def loadGraph(graph: Graph[Any,Any]): Graph[Any, Any] = {
+  override def loadGraph(graph: Graph[Int, Double]): Graph[Int, Double] = {
     graph.addVertex(new EfficientPageRankVertex(1))
     graph.addVertex(new EfficientPageRankVertex(2))
     graph.addVertex(new EfficientPageRankVertex(3))
@@ -54,7 +52,7 @@ object DeployableEfficientPageRank extends Algorithm{
     graph
   }
   
-  def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Any, Any]) {
+  def execute(parameters: Map[String, String], graphBuilder: GraphBuilder[Int, Double]) {
     val graph = graphBuilder.
       withEagerIdleDetection(false).
       //    withConsole(true).

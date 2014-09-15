@@ -25,14 +25,14 @@ import com.signalcollect.interfaces.VertexStore
 /**
  *  Storage backed by a custom-tailored open hash map implementation for vertices.
  */
-class MixedVertexStorage[Id] extends Storage[Id] {
+class MixedVertexStorage[Id, Signal] extends Storage[Id, Signal] {
 
   val vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+  protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](initialSize = 32768, rehashFraction = .8f)
 
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new JavaVertexMap[Id]
+  protected def vertexSignalFactory = new JavaVertexMap[Id, Signal]
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new JavaVertexMap[Id]
+  protected def vertexSetFactory = new JavaVertexMap[Id, Signal]
 
 }

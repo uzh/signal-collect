@@ -67,8 +67,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   throttlingEnabled: Boolean,
-  messageBusFactory: MessageBusFactory,
-  mapperFactory: MapperFactory,
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  mapperFactory: MapperFactory[Id],
   heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
   with Actor
   with ActorLogging
@@ -92,7 +92,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   val messageBus: MessageBus[Id, Signal] = {
-    messageBusFactory.createInstance[Id, Signal](
+    messageBusFactory.createInstance(
       context.system,
       numberOfWorkers,
       numberOfNodes,

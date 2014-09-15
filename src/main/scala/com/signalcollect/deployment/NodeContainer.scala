@@ -32,6 +32,7 @@ import akka.actor.actorRef2Scala
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.util.AkkaRemoteAddress
 import akka.event.Logging
+import com.signalcollect.util.AkkaUtil
 
 /**
  * Interface for the NodeContainer
@@ -46,7 +47,7 @@ trait NodeContainer {
 /**
  * Implementation of the NodeContainer
  */
-class DefaultNodeContainer(id: Int,
+class DefaultNodeContainer[Id, Signal](id: Int,
   leaderIp: String,
   basePort: Int,
   akkaConfig: Config,
@@ -56,7 +57,7 @@ class DefaultNodeContainer(id: Int,
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
   val log = Logging.getLogger(system, this)
   val shutdownActor = system.actorOf(Props(classOf[ShutdownActor], this), s"shutdownactor$id")
-  val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor],
+  val nodeActor = system.actorOf(Props(classOf[DefaultNodeActor[Id, Signal]],
     id.toString,
     id,
     deploymentConfig.numberOfNodes,
@@ -79,9 +80,9 @@ class DefaultNodeContainer(id: Int,
   }
 
   def getLeaderActor(): ActorRef = {
-    system.actorFor(leaderAddress)
+    AkkaUtil.getActorRefFromSelection(system.actorSelection(leaderAddress))
   }
-  
+
   /**
    * Registers the nodeActor and the shutdownActor at the leader
    */
@@ -98,8 +99,8 @@ class DefaultNodeContainer(id: Int,
     var cnt = 0
     while (!shutdownNow && timeoutNotReached(begin) && terminated == false) {
       val runtime = Runtime.getRuntime
-      val memoryUsage: Double = 1.0 - (runtime.freeMemory().toDouble/runtime.maxMemory.toDouble)
-      if(memoryUsage > 0.95 && cnt%150 == 0)  log.warning(s"memory used: $memoryUsage")
+      val memoryUsage: Double = 1.0 - (runtime.freeMemory().toDouble / runtime.maxMemory.toDouble)
+      if (memoryUsage > 0.95 && cnt % 150 == 0) log.warning(s"memory used: $memoryUsage")
       cnt += 1
       Thread.sleep(500)
     }
@@ -141,11 +142,10 @@ class DefaultNodeContainer(id: Int,
   }
 }
 
-
 /**
  * This Actor waits for the shutdown signal and then tells the NodeContainer to shutdown.
  */
-class ShutdownActor(container: DefaultNodeContainer) extends Actor {
+class ShutdownActor(container: DefaultNodeContainer[_, _]) extends Actor {
   override def receive = {
     case "shutdown" => {
       container.shutdown

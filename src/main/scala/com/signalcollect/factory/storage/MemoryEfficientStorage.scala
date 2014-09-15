@@ -21,13 +21,16 @@ package com.signalcollect.factory.storage
 
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.storage.VertexMapStorage
+import com.signalcollect.storage._
+import scala.reflect.ClassTag
 
 /**
  *  Storage backed by a memory efficient VertexMap.
  *  Inserts/removals of vertices are slower than with a Java HashMap.
  */
-object MemoryEfficientStorage extends StorageFactory {
-  def createInstance[Id]: Storage[Id] = new VertexMapStorage[Id]
+class MemoryEfficientStorage[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag] extends StorageFactory[Id, Signal] {
+  def createInstance: Storage[Id, Signal] = {
+    new VertexMapStorage[Id, Signal]()
+  }
   override def toString = "MemoryEfficientStorage"
 }

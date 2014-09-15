@@ -77,6 +77,16 @@ final class FastInsertIntSet(val encoded: Array[Byte]) extends AnyVal {
   }
 
   /**
+   * Returns the largest item contained in the set.
+   * If the set is empty returns -1.
+   */
+  def max: Int = {
+    var max = -1
+    foreach(max = _)
+    max
+  }
+
+  /**
    * Number of items.
    */
   def size: Int = readUnsignedVarInt(encoded, 0)

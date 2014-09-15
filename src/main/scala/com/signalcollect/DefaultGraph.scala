@@ -49,7 +49,6 @@ import com.signalcollect.interfaces.MessageRecipientRegistry
 import com.signalcollect.interfaces.NodeActor
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.interfaces.StorageFactory
-import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.messaging.AkkaProxy
@@ -64,25 +63,34 @@ import akka.actor.actorRef2Scala
 import akka.japi.Creator
 import akka.pattern.ask
 import akka.util.Timeout
+import com.signalcollect.worker.AkkaWorker
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
  */
 case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   workerId: Int,
-  workerFactory: WorkerFactory,
+  workerFactory: WorkerFactory[Id, Signal],
   numberOfWorkers: Int,
   numberOfNodes: Int,
-  messageBusFactory: MessageBusFactory,
-  mapperFactory: MapperFactory,
-  storageFactory: StorageFactory,
-  schedulerFactory: SchedulerFactory,
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  mapperFactory: MapperFactory[Id],
+  storageFactory: StorageFactory[Id, Signal],
+  schedulerFactory: SchedulerFactory[Id, Signal],
+  existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   heartbeatIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
-  throttlingEnabled: Boolean) {
-  def create: () => WorkerActor[Id, Signal] = {
+  throttlingEnabled: Boolean,
+  throttlingDuringLoadingEnabled: Boolean,
+  supportBlockingGraphModificationsInVertex: Boolean) {
+  def create: () => AkkaWorker[Id, Signal] = {
     () =>
-      workerFactory.createInstance[Id, Signal](
+      workerFactory.createInstance(
         workerId,
         numberOfWorkers,
         numberOfNodes,
@@ -90,9 +98,14 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         mapperFactory,
         storageFactory,
         schedulerFactory,
+        existingVertexHandlerFactory,
+        undeliverableSignalHandlerFactory,
+        edgeAddedToNonExistentVertexHandlerFactory,
         heartbeatIntervalInMilliseconds,
         eagerIdleDetection,
-        throttlingEnabled)
+        throttlingEnabled,
+        throttlingDuringLoadingEnabled,
+        supportBlockingGraphModificationsInVertex)
   }
 }
 
@@ -103,8 +116,8 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   throttlingEnabled: Boolean,
-  messageBusFactory: MessageBusFactory,
-  mapperFactory: MapperFactory,
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  mapperFactory: MapperFactory[Id],
   heartbeatIntervalInMilliseconds: Long)
   extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
@@ -122,7 +135,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
  * Provisions the resources and initializes the workers and the coordinator.
  */
 class DefaultGraph[Id: ClassTag, Signal: ClassTag](
-  val config: GraphConfiguration = GraphConfiguration()) extends Graph[Id, Signal] with PrivateGraph{
+  val config: GraphConfiguration[Id, Signal]) extends Graph[Id, Signal] with PrivateGraph {
 
   val akkaConfig = AkkaConfig.get(
     config.serializeMessages,
@@ -145,7 +158,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   val console = {
     if (config.consoleEnabled) {
-      new ConsoleServer[Id](config)
+      new ConsoleServer[Id, Signal](config)
     } else {
       null
     }
@@ -159,11 +172,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
   }
   log.debug(s"Received ${nodeActors.length} nodes.")
   // Bootstrap => sent and received messages are not counted for termination detection.
-  val bootstrapNodeProxies = nodeActors map (AkkaProxy.newInstance[NodeActor](_)) // MessageBus not initialized at this point.
+  val bootstrapNodeProxies = nodeActors.map(AkkaProxy.newInstance[NodeActor[Id, Signal]](_)) // MessageBus not initialized at this point.
   val parallelBootstrapNodeProxies = bootstrapNodeProxies.par
   val numberOfNodes = bootstrapNodeProxies.length
 
-  val numberOfWorkers = bootstrapNodeProxies.par map (_.numberOfCores) sum
+  val numberOfWorkers = bootstrapNodeProxies.par.map(_.numberOfCores).sum
 
   parallelBootstrapNodeProxies foreach (_.initializeMessageBus(numberOfWorkers, numberOfNodes, config.messageBusFactory, config.mapperFactory))
 
@@ -183,9 +196,14 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
           config.mapperFactory,
           config.storageFactory,
           config.schedulerFactory,
+          config.existingVertexHandlerFactory,
+          config.undeliverableSignalHandlerFactory,
+          config.edgeAddedToNonExistentVertexHandlerFactory,
           config.heartbeatIntervalInMilliseconds,
           config.eagerIdleDetection,
-          config.throttlingEnabled)
+          config.throttlingEnabled,
+          config.throttlingDuringLoadingEnabled,
+          config.supportBlockingGraphModificationsInVertex)
         val workerName = node.createWorker(workerId, workerCreator.create)
         actors(workerId) = getActorRefFromSelection(system.actorSelection(workerName))
         workerId += 1
@@ -220,10 +238,10 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   /** Returns the ConsoleServer */
   def getConsole = console
-  
+
   /** returns actorSystem   */
   def getCoordinatorActorSystem: ActorSystem = system
-  
+
   def initializeMessageBuses {
     log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
@@ -241,7 +259,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
 
   /** GraphApi */
 
-  def execute: ExecutionInformation = execute(ExecutionConfiguration)
+  def execute: ExecutionInformation[Id, Signal] = execute(ExecutionConfiguration)
 
   /**
    * Returns the time it took to execute `operation`
@@ -255,7 +273,11 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     new FiniteDuration(stopTime - startTime, TimeUnit.NANOSECONDS)
   }
 
-  def execute(parameters: ExecutionConfiguration): ExecutionInformation = {
+  private[signalcollect] def getWorkerStatistics: List[WorkerStatistics] = {
+    workerApi.getIndividualWorkerStatistics
+  }
+
+  def execute(parameters: ExecutionConfiguration): ExecutionInformation[Id, Signal] = {
     if (console != null) { console.setExecutionConfiguration(parameters) }
     val executionStartTime = System.nanoTime
     val stats = ExecutionStatistics()
@@ -274,7 +296,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        new InteractiveExecution[Id](this, console, stats, parameters).run()
+        new InteractiveExecution[Id, Signal](this, console, stats, parameters).run()
         if (console != null) { console.shutdown }
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
@@ -355,9 +377,9 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
    * @param stats the ExecutionStatistics instance
    * @param parameters the ExecutionConfiguration instance
    */
-  class InteractiveExecution[Id](
+  class InteractiveExecution[Id, Signal](
     graph: Graph[Id, Signal],
-    console: ConsoleServer[Id],
+    console: ConsoleServer[Id, Signal],
     stats: ExecutionStatistics,
     parameters: ExecutionConfiguration) extends Execution {
 
@@ -453,12 +475,12 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
 
     /** Pause the computation. */
-    def pause() {
+    def pause {
       stepTokens = 0
     }
 
     /** Reset the graph to its initial state and pause the computation. */
-    def reset() {
+    def reset {
       pause
       lock.synchronized {
         setState("resetting")
@@ -760,38 +782,23 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](
     vertexId: Id, f: VertexType => ResultType): ResultType = {
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[Id, _]) => Unit) {
+  def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) {
     workerApi.foreachVertex(f)
   }
 
   def foreachVertexWithGraphEditor(
-    f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) {
+    f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
     workerApi.foreachVertexWithGraphEditor(f)
   }
 
   def aggregate[ResultType](
     aggregationOperation: ComplexAggregation[_, ResultType]): ResultType = {
     workerApi.aggregateAll(aggregationOperation)
-  }
-
-  def setExistingVertexHandler(
-    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
-    workerApi.setExistingVertexHandler(h)
-  }
-
-  def setUndeliverableSignalHandler(
-    h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) {
-    workerApi.setUndeliverableSignalHandler(h)
-  }
-
-  def setEdgeAddedToNonExistentVertexHandler(
-    h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
-    workerApi.setEdgeAddedToNonExistentVertexHandler(h)
   }
 
   /**
@@ -818,7 +825,7 @@ class DefaultGraph[Id: ClassTag, Signal: ClassTag](
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean = false) {
     graphEditor.addVertex(vertex, blocking)
   }
 

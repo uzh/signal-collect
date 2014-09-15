@@ -29,8 +29,9 @@ import akka.actor.Props
 import akka.actor.actorRef2Scala
 import com.signalcollect.util.AkkaRemoteAddress
 import akka.event.Logging
+import com.signalcollect.util.AkkaUtil._
 
-class DefaultLeader(
+class DefaultLeader[Id, Signal](
   akkaConfig: Config,
   deploymentConfig: DeploymentConfiguration) extends Leader {
   val system = ActorSystemRegistry.retrieve("SignalCollect").getOrElse(startActorSystem)
@@ -87,10 +88,10 @@ class DefaultLeader(
    * dynamically instantiate a Scala object. 
    * it is only tested with scala object. A Scala class probably wont work.
    */
-  private def instantiatAlgorithm(algorithmName: String): Option[Algorithm] = {
+  private def instantiatAlgorithm(algorithmName: String): Option[Algorithm[Id, Signal]] = {
     try {
       val clazz = Class.forName(algorithmName)
-      val algorithm = clazz.getField("MODULE$").get(classOf[Algorithm]).asInstanceOf[Algorithm]
+      val algorithm = clazz.getField("MODULE$").get(classOf[Algorithm[Id, Signal]]).asInstanceOf[Algorithm[Id, Signal]]
       Some(algorithm)
     } catch {
       case classNotFound: ClassNotFoundException => {
@@ -152,13 +153,13 @@ class DefaultLeader(
 
   def addNodeActorAddress(address: String) {
     synchronized {
-      nodeActors = system.actorFor(address) :: nodeActors
+      nodeActors = getActorRefFromSelection(system.actorSelection(address)) :: nodeActors
     }
   }
 
   def addShutdownAddress(address: String) {
     synchronized {
-      shutdownAddresses = system.actorFor(address) :: shutdownAddresses
+      shutdownAddresses = getActorRefFromSelection(system.actorSelection(address)) :: shutdownAddresses
     }
   }
 
@@ -175,7 +176,7 @@ class DefaultLeader(
 
 }
 
-class LeaderActor(leader: DefaultLeader) extends Actor {
+class LeaderActor(leader: DefaultLeader[_, _]) extends Actor {
   override def receive = {
     case address: String => filterAddress(address)
     case _ => println("received unexpected message")

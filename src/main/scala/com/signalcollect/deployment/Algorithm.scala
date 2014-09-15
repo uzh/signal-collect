@@ -28,11 +28,12 @@ import scala.collection.immutable.HashMap
 import com.signalcollect.ExecutionInformation
 import com.signalcollect.ExecutionInformation
 import com.signalcollect.PrivateGraph
+import scala.reflect.ClassTag
 
 /**
  * implement your algorithm with this class to deploy it to a cluster
  */
-abstract class Algorithm extends App {
+abstract class Algorithm[Id: ClassTag, Signal: ClassTag] extends App {
   private var logger: SimpleLogger = SimpleConsoleLogger
   run
 
@@ -125,7 +126,7 @@ abstract class Algorithm extends App {
    * can be overridden to configure the GraphBuilder to be used.
    * Per default it gives back the untouched GraphBuilder, which is passed in.
    */
-  def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = gb
+  def configureGraphBuilder(gb: GraphBuilder[Id, Signal]): GraphBuilder[Id, Signal] = gb
 
   /**
    * this method is called when the graph is built
@@ -135,7 +136,7 @@ abstract class Algorithm extends App {
   /**
    * must be implemented to load vertices and edges into the graph.
    */
-  def loadGraph(g: Graph[Any, Any]): Graph[Any, Any]
+  def loadGraph(g: Graph[Id, Signal]): Graph[Id, Signal]
 
   /**
    * this method is called when the graph is loaded,
@@ -151,7 +152,7 @@ abstract class Algorithm extends App {
   /**
    * default implementation for the execution
    */
-  def execute(g: Graph[Any, Any]): (ExecutionInformation, Graph[Any, Any]) = {
+  def execute(g: Graph[Id, Signal]): (ExecutionInformation[Id, Signal], Graph[Id, Signal]) = {
     val stats = g.execute
     (stats, g)
   }
@@ -159,13 +160,13 @@ abstract class Algorithm extends App {
   /**
    * default implementation of the reporting, prints out stats to console
    */
-  def reportResults(stats: ExecutionInformation, graph: Graph[Any, Any]) = log.info(stats)
+  def reportResults(stats: ExecutionInformation[Id, Signal], graph: Graph[Id, Signal]) = log.info(stats)
 
   /**
    * default implementation of the teardown,
    * shutsdown the graph
    */
-  def tearDown(g: Graph[Any, Any]) = g.shutdown
+  def tearDown(g: Graph[Id, Signal]) = g.shutdown
 
   /**
    *
@@ -176,7 +177,7 @@ abstract class Algorithm extends App {
    */
   def createDefaultGraphBuilder(nodeActors: Option[Array[ActorRef]],
     actorSystem: Option[ActorSystem] = None,
-    graphBuilder: GraphBuilder[Any, Any] = GraphBuilder): GraphBuilder[Any, Any] = {
+    graphBuilder: GraphBuilder[Id, Signal] = new GraphBuilder[Id, Signal]()): GraphBuilder[Id, Signal] = {
     val g1 = if (actorSystem.isDefined)
       graphBuilder.withActorSystem(actorSystem.get)
     else graphBuilder

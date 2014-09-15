@@ -23,8 +23,9 @@ import org.scalacheck.Arbitrary.arbContainer
 import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
+import com.signalcollect.TestAnnouncements
 
-class HasSetSpec extends FlatSpec with Checkers {
+class HasSetSpec extends FlatSpec with Checkers with TestAnnouncements {
 
   "HasSet" should "support inserts" in {
     check(

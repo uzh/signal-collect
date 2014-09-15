@@ -19,7 +19,10 @@
 
 package com.signalcollect
 
+import com.signalcollect.interfaces.AggregationOperation
 import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.WorkerStatistics
+
 import akka.actor.ActorSystem
 
 /**
@@ -35,7 +38,7 @@ import akka.actor.ActorSystem
  *
  *  @author Philip Stutz
  */
-abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal] extends GraphEditor[Id, Signal] {
+trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
 
   def numberOfNodes: Int
   def numberOfWorkers: Int
@@ -55,7 +58,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute: ExecutionInformation
+  def execute: ExecutionInformation[Id, Signal]
 
   /**
    *  Starts the execution of the computation using the default execution parameters and
@@ -74,7 +77,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute(executionConfiguration: ExecutionConfiguration): ExecutionInformation
+  def execute(executionConfiguration: ExecutionConfiguration): ExecutionInformation[Id, Signal]
 
   /**
    *  Recalculates the signal/collect scores of all vertices.
@@ -115,11 +118,11 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *
    *  @param f The function that gets executed on the vertex with id `vertexId`
    *
-   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex[_, _] => v.state })`
+   *  @example `forVertexWithId(vertexId = 1, f = { v: Vertex[_, _, _, _] => v.state })`
    *
-   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex[_, _] => String): String
+   *  @usecase def forVertexWithId(vertexId: Any, f: Vertex[_, _, _, _] => String): String
    */
-  def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
+  def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType
 
   /**
    *  Executes the function `f` on all vertices.
@@ -129,7 +132,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *  @note This function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: Vertex[Id, _] => Unit)
+  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit)
 
   /**
    *  The worker passes a GraphEditor to function `f`, and then executes the resulting function on all vertices.
@@ -139,7 +142,7 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
    *  @note The resulting function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit)
 
   /**
    *  Applies an aggregation operation to the graph and returns the result.
@@ -155,38 +158,55 @@ abstract class Graph[@specialized(Int, Long) Id, @specialized(Int, Long, Float, 
   def aggregate[ResultType](aggregationOperation: ComplexAggregation[_, ResultType]): ResultType
 
   /**
-   *  Sets the function that can intervene when a vertex with the same ID is added
-   *  repeatedly. The new vertex will be thrown out for sure, but some of its
-   *  information might be added to the existing vertex.
+   * Simplified alternative API for aggregation operations.
+   * 
+   * @param map Function that extracts the relevant value from a vertex.
+   * @param reduce Aggregation operation that is executed on the extracted values.
+   * @param neutralElement Neutral element of the aggregation operation 'reduce'.
    *
-   *  @note By default the addition of a vertex is ignored if an existing vertex has the same ID.
+   *  @example Computes sum of ranks: graph.mapReduce[PageRankVertex, Double](v => v.state, _ + _, 0)
    */
-  def setExistingVertexHandler(h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit)
-
-  /**
-   *  Sets the function that handles signals that could not be delivered to a vertex.
-   *
-   *  @note By default an exception is thrown when a signal is not deliverable. The handler function
-   *  		receives the signal and an instance of GraphEditor as parameters in order to take some
-   *  		action that handles this case.
-   */
-  def setUndeliverableSignalHandler(h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit)
-
-  /**
-   *  Sets the handler that gets triggered, when the vertex to which an edge should be added does not exist.
-   *  Optionally returns the vertex that should be created and to whioch the edge can then be added.
-   *
-   *  @note By default an exception is thrown when an edge cannot be added. The handler function
-   *  		receives the edge, the id of the vertex that does not exist and an instance of GraphEditor as parameters in order to
-   *    		potentially create a vertex to which the edge should be added.
-   */
-  def setEdgeAddedToNonExistentVertexHandler(h: (Edge[Id], Id) => Option[Vertex[Id, _]])
+  def mapReduce[VertexType <: Vertex[_, _, _, _], ResultType](
+    map: VertexType => ResultType,
+    reduce: (ResultType, ResultType) => ResultType,
+    neutralElement: ResultType): ResultType = {
+    val r = reduce // Rename to avoid collision with the name of the inner function.
+    val aggregation = new AggregationOperation[ResultType] {
+      def extract(v: Vertex[_, _, _, _]): ResultType = {
+        try {
+          map(v.asInstanceOf[VertexType])
+        } catch {
+          case _: Throwable =>
+            neutralElement
+        }
+      }
+      def reduce(elements: Stream[ResultType]): ResultType = {
+        elements.foldLeft(neutralElement)(r)
+      }
+    }
+    val result = aggregate(aggregation)
+    result
+  }
 
   /**
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.
    */
   def reset
+
+  /**
+   *  Returns the local internally used actor system of this this Signal/Collect graph.
+   *
+   *  @return the internal ActorSystem.
+   */
+  private[signalcollect] def system: ActorSystem
+
+  /**
+   *  Gathers worker statistics.
+   *
+   *  @return Various individual statistics from all workers.
+   */
+  private[signalcollect] def getWorkerStatistics: List[WorkerStatistics]
 
   /**
    * Creates a snapshot of all the vertices in all workers.
@@ -214,10 +234,44 @@ trait PrivateGraph {
   def getCoordinatorActorSystem: ActorSystem
 }
 
+/**
+ * In order to unlock advanced methods on Graph, add this import to your program:
+ * 		import com.signalcollect.ExtendedGraph._
+ */
+object ExtendedGraph {
+  implicit class InternalGraph(g: Graph[_, _]) {
+    /**
+     *  Returns the local internally used actor system of this this Signal/Collect graph.
+     *
+     *  @return the internal ActorSystem.
+     */
+    def system: ActorSystem = g.system
 
+    /**
+     *  Gathers worker statistics.
+     *
+     *  @return Various individual statistics from all workers.
+     */
+    def getWorkerStatistics = g.getWorkerStatistics
 
+    /**
+     * Creates a snapshot of all the vertices in all workers.
+     * Does not store the toSignal/toCollect collections or pending messages.
+     * Should only be used when the workers are idle.
+     * Overwrites any previous snapshot that might exist.
+     */
+    def snapshot = g.snapshot
 
+    /**
+     * Restores the last snapshot of all the vertices in all workers.
+     * Does not store the toSignal/toCollect collections or pending messages.
+     * Should only be used when the workers are idle.
+     */
+    def restore = g.restore
 
-
-
-
+    /**
+     * Deletes the worker snapshots if they exist.
+     */
+    def deleteSnapshot = g.deleteSnapshot
+  }
+}

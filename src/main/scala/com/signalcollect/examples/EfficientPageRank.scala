@@ -21,12 +21,13 @@ package com.signalcollect.examples
 
 import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
+import com.signalcollect.factory.messagebus.IntIdDoubleSignalMessageBusFactory
 
 /**
  * Placeholder edge that gets discarded by memory efficient vertices that
  * have their own internal edge representations.
  */
-class PlaceholderEdge[Id](targetId: Any) extends DefaultEdge(targetId) {
+class PlaceholderEdge[Id](targetId: Id) extends DefaultEdge(targetId) {
   def signal = ???
 }
 
@@ -37,10 +38,10 @@ class EfficientPageRankVertex(id: Int)
 
   def computeSignal(edgeId: Int) = ???
 
-  override def executeSignalOperation(graphEditor: GraphEditor[Any, Any]) {
+  override def executeSignalOperation(graphEditor: GraphEditor[Int, Double]) {
     if (edgeCount != 0) {
       val signal = (state - lastSignalState) / edgeCount
-      targetIds.foreach(graphEditor.sendSignal(signal, _, None))
+      targetIds.foreach(graphEditor.sendSignal(signal, _))
     }
     lastSignalState = state
   }
@@ -53,15 +54,18 @@ class EfficientPageRankVertex(id: Int)
     state - lastSignalState
   }
 
+  def addTargetId(targetId: Int) {
+    _targetIds.insert(targetId)
+  }
+
 }
 
 /** Builds a PageRank compute graph and executes the computation */
 object MemoryEfficientPageRank extends App {
-  val graph = GraphBuilder.
+  val graph = new GraphBuilder[Int, Double]().
+    withMessageBusFactory(new IntIdDoubleSignalMessageBusFactory(10000)).
     //    withConsole(true).
     build
-
-  graph.awaitIdle
   graph.addVertex(new EfficientPageRankVertex(1))
   graph.addVertex(new EfficientPageRankVertex(2))
   graph.addVertex(new EfficientPageRankVertex(3))
@@ -69,7 +73,6 @@ object MemoryEfficientPageRank extends App {
   graph.addEdge(2, new PlaceholderEdge(1))
   graph.addEdge(2, new PlaceholderEdge(3))
   graph.addEdge(3, new PlaceholderEdge(2))
-
   graph.awaitIdle
   val stats = graph.execute //(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   println(stats)

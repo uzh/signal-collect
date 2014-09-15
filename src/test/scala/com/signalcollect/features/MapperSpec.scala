@@ -39,8 +39,8 @@ class Worker0Mapper[Id] extends VertexToWorkerMapper[Id] {
   def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = 0
 }
 
-object Worker0MapperFactory extends MapperFactory {
-  def createInstance[Id](numberOfNodes: Int, workersPerNode: Int) = new Worker0Mapper
+class Worker0MapperFactory[Id] extends MapperFactory[Id] {
+  def createInstance(numberOfNodes: Int, workersPerNode: Int) = new Worker0Mapper
 }
 
 /**
@@ -64,7 +64,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
 
   "Custom mapper" should {
     "correctly support PageRank computation" in {
-      def verify(v: Vertex[_, _], expectedState: Double): Boolean = {
+      def verify(v: Vertex[_, _, _, _], expectedState: Double): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val correct = (state - expectedState).abs < 0.0001
         if (!correct) {
@@ -72,7 +72,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
         }
         correct
       }
-      val graph = GraphBuilder.withMapperFactory(Worker0MapperFactory).build
+      val graph = GraphBuilder.withMapperFactory(new Worker0MapperFactory[Any]).build
       try {
         for (i <- 0 until 5) {
           val v = new PageRankVertex(i)
@@ -86,7 +86,7 @@ class MapperSpec extends SpecificationWithJUnit with Serializable {
         var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
           val neutralElement = true
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _]): Boolean = verify(v, 1.0)
+          def extract(v: Vertex[_, _, _, _]): Boolean = verify(v, 1.0)
         })
         allcorrect
       } finally {

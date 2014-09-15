@@ -52,7 +52,7 @@ class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
   }
 
   trait StatsMock {
-    val statsMock = mock[ExecutionInformation]
+    val statsMock = mock[ExecutionInformation[Any, Any]]
   }
 
   trait ASystem {
@@ -60,10 +60,11 @@ class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
   }
 
   trait NodeActorArray extends ASystem {
-    val nodeActors = Array(TestActorRef(new DefaultNodeActor(
+    val nodeActors = Array(TestActorRef(new DefaultNodeActor[Any, Any](
       actorNamePrefix = "prefix",
       nodeId = 0,
       numberOfNodes = 0,
+      fixedNumberOfCores = None,
       nodeProvisionerAddress = None)).asInstanceOf[ActorRef])
   }
 
@@ -135,7 +136,7 @@ class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
       assert(defaultAlgorithm.parameters === HashMap[String, String]())
     }
 
-  object TestAlgorithm extends Algorithm {
+  object TestAlgorithm extends Algorithm[Any, Any] {
     override def loadGraph(graph: Graph[Any, Any]): Graph[Any, Any] = {
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))

@@ -22,6 +22,6 @@ package com.signalcollect.interfaces
 import akka.actor.Actor
 
 // Has to be a trait to be proxied.
-trait NodeActor extends Node
+trait NodeActor[Id, Signal] extends Node[Id, Signal]
   with Actor
   with MessageRecipientRegistry

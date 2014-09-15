@@ -9,7 +9,7 @@ import org.scalatest.prop.Checkers
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 
-class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
+class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar with TestAnnouncements {
 
   "Kryo serialization" should "support running PageRank with message serialization" in {
     val graph = GraphBuilder.

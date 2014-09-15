@@ -27,8 +27,8 @@ import akka.util.Timeout
 
 object AkkaUtil {
   def getActorRefFromSelection(actorSel: ActorSelection) = {
-    implicit val timeout = Timeout(30 seconds)
-    val actorRef = Await.result(actorSel.resolveOne, 30 seconds)
+    implicit val timeout = Timeout(60 seconds)
+    val actorRef = Await.result(actorSel.resolveOne, 60 seconds)
     actorRef
   }
 }

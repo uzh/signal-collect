@@ -21,17 +21,31 @@ package com.signalcollect.storage
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexStore
 
+object StorageDefaultValues {
+  final val defaultInitialSize = 32768
+  final val defaultRehashFraction = 0.5f
+  final val defaultShrinkFraction = 0.05f
+  final val defaultVertexMapRehashFraction = 0.8f
+  final val minShrinkSize = 16384 // Will not shrink if the map capacity is at or below this.
+  final val defaultTemporaryMapRehashFraction = 0.5f
+  final val defaultToSignalInitialSize = 1024
+}
+
 /**
  *  Storage backed by a custom-tailored open hash map implementation for vertices.
  */
-class VertexMapStorage[Id] extends Storage[Id] {
+class VertexMapStorage[Id, Signal] extends Storage[Id, Signal] {
+  import StorageDefaultValues._
 
   val vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore[Id] = new VertexMap[Id](initialSize = 32768, rehashFraction = .8f)
+  protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](
+    initialSize = defaultInitialSize, rehashFraction = defaultVertexMapRehashFraction)
 
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new VertexMap[Id](initialSize = 32768, rehashFraction = .9f)
+  protected def vertexSignalFactory = new VertexMap[Id, Signal](
+    initialSize = defaultInitialSize, rehashFraction = defaultTemporaryMapRehashFraction)
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new VertexMap[Id](initialSize = 1024, rehashFraction = .9f)
+  protected def vertexSetFactory = new VertexMap[Id, Signal](
+    initialSize = defaultToSignalInitialSize, rehashFraction = defaultTemporaryMapRehashFraction)
 
 }

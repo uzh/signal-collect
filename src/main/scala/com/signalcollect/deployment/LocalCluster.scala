@@ -24,13 +24,13 @@ package com.signalcollect.deployment
  * It ignores most of the parameters in the DeploymentConfiguration.
  * It only takes the algorithm and the algorithmParameters for the execution 
  */
-class LocalCluster extends Cluster {
+class LocalCluster[Id, Signal] extends Cluster {
 
   override def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean = {
    val algorithm = deploymentConfiguration.algorithm
     val parameters = deploymentConfiguration.algorithmParameters
     val clazz = Class.forName(algorithm)
-    val algorithmObject = clazz.getField("MODULE$").get(classOf[Algorithm]).asInstanceOf[Algorithm]
+    val algorithmObject = clazz.getField("MODULE$").get(classOf[Algorithm[Id, Signal]]).asInstanceOf[Algorithm[Id, Signal]]
     println(s"start algorithm: $algorithm")
     algorithmObject.lifecycle(parameters, None, None)
     true

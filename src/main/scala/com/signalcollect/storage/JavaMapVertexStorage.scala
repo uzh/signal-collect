@@ -21,13 +21,13 @@ package com.signalcollect.storage
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexStore
 
-class JavaMapVertexStorage[Id] extends Storage[Id] {
+class JavaMapVertexStorage[Id, Signal] extends Storage[Id, Signal] {
   val vertices = vertexStoreFactory
-  protected def vertexStoreFactory: VertexStore[Id] = new JavaVertexMap[Id]
+  protected def vertexStoreFactory: VertexStore[Id, Signal] = new JavaVertexMap[Id, Signal]
 
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
-  protected def vertexSignalFactory = new JavaVertexMap[Id]
+  protected def vertexSignalFactory = new JavaVertexMap[Id, Signal]
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal
-  protected def vertexSetFactory = new JavaVertexMap[Id]
+  protected def vertexSetFactory = new JavaVertexMap[Id, Signal]
 
 }

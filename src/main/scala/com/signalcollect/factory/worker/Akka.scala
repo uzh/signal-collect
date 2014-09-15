@@ -21,29 +21,36 @@ package com.signalcollect.factory.worker
 
 import scala.reflect.ClassTag
 import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.interfaces.WorkerActor
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.worker.AkkaWorker
 import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  *  The default Akka worker implementation.
  */
-object DefaultAkkaWorker extends WorkerFactory {
-  override def createInstance[Id: ClassTag, Signal: ClassTag](
+class AkkaWorkerFactory[Id: ClassTag, Signal: ClassTag] extends WorkerFactory[Id, Signal] {
+  def createInstance(
     workerId: Int,
     numberOfWorkers: Int,
     numberOfNodes: Int,
-    messageBusFactory: MessageBusFactory,
-    mapperFactory: MapperFactory,
-    storageFactory: StorageFactory,
-    schedulerFactory: SchedulerFactory,
+    messageBusFactory: MessageBusFactory[Id, Signal],
+    mapperFactory: MapperFactory[Id],
+    storageFactory: StorageFactory[Id, Signal],
+    schedulerFactory: SchedulerFactory[Id, Signal],
+    existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+    undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+    edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
     heartbeatIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
-    throttlingEnabled: Boolean): WorkerActor[Id, Signal] = {
+    throttlingEnabled: Boolean,
+    throttlingDuringLoadingEnabled: Boolean,
+    supportBlockingGraphModificationsInVertex: Boolean): AkkaWorker[Id, Signal] = {
     new AkkaWorker[Id, Signal](
       workerId,
       numberOfWorkers,
@@ -52,9 +59,14 @@ object DefaultAkkaWorker extends WorkerFactory {
       mapperFactory,
       storageFactory,
       schedulerFactory,
+      existingVertexHandlerFactory,
+      undeliverableSignalHandlerFactory,
+      edgeAddedToNonExistentVertexHandlerFactory,
       heartbeatIntervalInMilliseconds,
       eagerIdleDetection,
-      throttlingEnabled)
+      throttlingEnabled,
+      throttlingDuringLoadingEnabled,
+      supportBlockingGraphModificationsInVertex)
   }
-  override def toString: String = "DefaultAkkaWorker"
+  override def toString: String = "AkkaWorkerFactory"
 }

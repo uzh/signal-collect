@@ -28,7 +28,7 @@ import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
 import akka.event.Logging.LogLevel
 import akka.event.Logging
-import com.signalcollect.factory.worker.DefaultAkkaWorker
+import com.signalcollect.factory.worker.AkkaWorkerFactory
 import com.signalcollect.interfaces.SchedulerFactory
 import com.signalcollect.factory.scheduler.Throughput
 import com.signalcollect.interfaces.MapperFactory
@@ -39,26 +39,35 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.signalcollect.messaging.BulkMessageBus
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import scala.reflect.ClassTag
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 
 /**
  * All the graph configuration parameters with their defaults.
  */
-case class GraphConfiguration(
-  actorSystem: Option[ActorSystem] = None,
-  actorNamePrefix: String = "",
-  eagerIdleDetection: Boolean = true,
-  consoleEnabled: Boolean = false,
-  throttlingEnabled: Boolean = false,
-  consoleHttpPort: Int = -1,
-  loggingLevel: LogLevel = Logging.WarningLevel,
-  workerFactory: WorkerFactory = DefaultAkkaWorker,
-  messageBusFactory: MessageBusFactory = new BulkAkkaMessageBusFactory(1000, true),
-  mapperFactory: MapperFactory = DefaultMapperFactory,
-  storageFactory: StorageFactory = MemoryEfficientStorage,
-  schedulerFactory: SchedulerFactory = Throughput,
-  preallocatedNodes: Option[Array[ActorRef]] = None,
-  nodeProvisioner: NodeProvisioner = new LocalNodeProvisioner(),
-  heartbeatIntervalInMilliseconds: Int = 100,
-  kryoRegistrations: List[String] = List(),
-  kryoInitializer: String = "com.signalcollect.configuration.KryoInit",
-  serializeMessages: Boolean = false)
+case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
+  actorSystem: Option[ActorSystem],
+  actorNamePrefix: String,
+  eagerIdleDetection: Boolean,
+  consoleEnabled: Boolean,
+  throttlingEnabled: Boolean,
+  throttlingDuringLoadingEnabled: Boolean,
+  supportBlockingGraphModificationsInVertex: Boolean,
+  consoleHttpPort: Int,
+  loggingLevel: LogLevel,
+  mapperFactory: MapperFactory[Id],
+  storageFactory: StorageFactory[Id, Signal],
+  schedulerFactory: SchedulerFactory[Id, Signal],
+  preallocatedNodes: Option[Array[ActorRef]],
+  nodeProvisioner: NodeProvisioner[Id, Signal],
+  heartbeatIntervalInMilliseconds: Int,
+  kryoRegistrations: List[String],
+  kryoInitializer: String,
+  serializeMessages: Boolean,
+  workerFactory: WorkerFactory[Id, Signal],
+  messageBusFactory: MessageBusFactory[Id, Signal],
+  existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
+  undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
+  edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal])

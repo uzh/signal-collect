@@ -19,14 +19,13 @@
 
 package com.signalcollect
 
-import com.signalcollect.interfaces.Inspectable
 import akka.event.LoggingAdapter
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 import scala.annotation.elidable
 import scala.annotation.elidable._
 
-abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspectable[Id, State] {
+abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
 
   /**
    * hashCode is cached for better performance
@@ -84,10 +83,10 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    *  Currently a Java HashMap is used as the implementation, but we will replace it with a more specialized
    *  implementation in a future release.
    */
-  var outgoingEdges = Map.empty[Any, Edge[_]]
+  var outgoingEdges = Map.empty[Any, Edge[Any]]
 
   /** The edges that this vertex is connected to. */
-  def edges: Traversable[Edge[_]] = outgoingEdges.values
+  def edges: Traversable[Edge[Any]] = outgoingEdges.values
 
   /** The state of this vertex when it last signaled. */
   var lastSignalState: Option[State] = None
@@ -103,7 +102,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State] with Inspecta
    *
    * @param e the edge to be added.
    */
-  def addEdge(edge: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean = {
+  def addEdge(edge: Edge[Any], graphEditor: GraphEditor[Any, Any]): Boolean = {
     outgoingEdges.get(edge.targetId) match {
       case None =>
         edgesModifiedSinceSignalOperation = true

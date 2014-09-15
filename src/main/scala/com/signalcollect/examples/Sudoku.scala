@@ -21,9 +21,9 @@ package com.signalcollect.examples
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListMap
-import scala.collection.mutable.SynchronizedMap
-
 import com.signalcollect._
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection.JavaConversions._
 
 /**
  * Represents all associated Sudoku cells that have to be taken into account to determine
@@ -104,7 +104,7 @@ object Sudoku extends App {
   }
   println()
 
-  var result = new HashMap[Int, Option[Int]]() with SynchronizedMap[Int, Option[Int]]
+  var result = new ConcurrentHashMap[Int, Option[Int]]
   graph.foreachVertex { v => result += Tuple2(v.id.asInstanceOf[Int], v.state.asInstanceOf[Option[Int]]) }
   graph.shutdown
   SudokuHelper.printSudoku(result)
@@ -121,7 +121,7 @@ object Sudoku extends App {
   /**
    * Recursive depth first search for possible values
    */
-  def tryPossibilities(graph: Graph[_, _]): Graph[_, _] = {
+  def tryPossibilities(graph: Graph[Any, Any]): Graph[Any, Any] = {
 
     val possibleValues = new ListMap[Int, Set[Int]]()
     graph.foreachVertex(v => possibleValues.put(v.id.asInstanceOf[Int], v.asInstanceOf[SudokuCell].possibleValues))
@@ -163,7 +163,7 @@ object Sudoku extends App {
     null
   }
 
-  def computeGraphFactory(seed: Map[Int, Int]): Graph[_, _] = {
+  def computeGraphFactory(seed: Map[Int, Int]): Graph[Any, Any] = {
     val graph = GraphBuilder.build
 
     //Add all Cells for Sudoku
@@ -241,7 +241,7 @@ object SudokuHelper {
   /**
    * Formats the data in a classical sudoku layout
    */
-  def printSudoku(data: HashMap[Int, Option[Int]]) = {
+  def printSudoku(data: collection.mutable.Map[Int, Option[Int]]) = {
 
     println()
     println("Sudoku")

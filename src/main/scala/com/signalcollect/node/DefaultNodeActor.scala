@@ -21,15 +21,9 @@
 
 package com.signalcollect.node
 
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.actor.actorRef2Scala
-import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.WorkerActor
-import com.signalcollect.interfaces.NodeActor
-import com.signalcollect.interfaces.MessageBusFactory
-import com.signalcollect.interfaces.MessageBus
+import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.MapperFactory
@@ -41,18 +35,16 @@ import com.signalcollect.interfaces.NodeReady
 import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.util.AkkaRemoteAddress
+import com.signalcollect.worker.AkkaWorker
+
 import akka.actor.ActorLogging
-import com.signalcollect.interfaces.ActorRestartLogging
-import com.signalcollect.interfaces.MapperFactory
-import com.signalcollect.interfaces.NodeReady
-import akka.util.Timeout
-import scala.concurrent.Await
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
-import com.signalcollect.interfaces.WorkerStatus
-import com.signalcollect.util.AkkaRemoteAddress
+import akka.util.Timeout
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -67,12 +59,13 @@ case class IncrementorForNode(nodeId: Int) {
 /**
  * Class that controls a node on which Signal/Collect workers run.
  */
-class DefaultNodeActor(
+class DefaultNodeActor[Id, Signal](
   val actorNamePrefix: String,
   val nodeId: Int,
   val numberOfNodes: Int,
+  val fixedNumberOfCores: Option[Int],
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
-  ) extends NodeActor
+  ) extends NodeActor[Id, Signal]
   with ActorLogging
   with ActorRestartLogging {
 
@@ -137,7 +130,7 @@ class DefaultNodeActor(
       }
     case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
-      val result = command.asInstanceOf[Node => Any](this)
+      val result = command.asInstanceOf[Node[Id, Signal] => Any](this)
       if (reply) {
         if (result == null) { // Netty does not like null messages: org.jboss.netty.channel.socket.nio.NioWorker - WARNING: Unexpected exception in the selector loop. - java.lang.NullPointerException
           if (isInitialized) {
@@ -165,7 +158,11 @@ class DefaultNodeActor(
 
   var nodeProvisioner: ActorRef = _
 
-  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory) {
+  def initializeMessageBus(
+      numberOfWorkers: Int, 
+      numberOfNodes: Int, 
+      messageBusFactory: MessageBusFactory[Id, Signal],
+      mapperFactory: MapperFactory[Id]) {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     messageBus = messageBusFactory.createInstance(
       context.system, numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes), IncrementorForNode(nodeId).increment _)
@@ -193,7 +190,7 @@ class DefaultNodeActor(
 
   def isInitialized = messageBus != null && messageBus.isInitialized
 
-  def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String = {
+  def createWorker(workerId: Int, creator: () => AkkaWorker[Id, Signal]): String = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     numberOfWorkersOnNode += 1
     val workerName = "Worker" + workerId
@@ -206,7 +203,7 @@ class DefaultNodeActor(
 
   def numberOfCores = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    Runtime.getRuntime.availableProcessors
+    fixedNumberOfCores.getOrElse(Runtime.getRuntime.availableProcessors)
   }
 
   override def preStart() = {

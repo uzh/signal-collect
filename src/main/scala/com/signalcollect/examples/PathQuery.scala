@@ -20,8 +20,6 @@
 package com.signalcollect.examples
 
 import scala.collection.immutable.Queue
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.ListBuffer
 
 import com.signalcollect._
 
@@ -30,21 +28,21 @@ import com.signalcollect._
  * PathQueryNodes represent nodes in a query path that can match for a node in the graph.
  */
 abstract class PathQueryNode extends Serializable {
-  def matches(vertex: Vertex[_, _]): Boolean
+  def matches(vertex: Vertex[_, _, _, _]): Boolean
   def expand: List[PathQueryNode] = List()
 }
 
 /**
  * PathQueryNode for which the provided condition specifies whether a node matches this query node or not.
  */
-class WildcardQueryNode(condition: Vertex[_, _] => Boolean = vertex => true) extends PathQueryNode {
-  def matches(vertex: Vertex[_, _]) = condition(vertex)
+class WildcardQueryNode(condition: Vertex[_, _, _, _] => Boolean = vertex => true) extends PathQueryNode {
+  def matches(vertex: Vertex[_, _, _, _]) = condition(vertex)
 }
 
 /**
  * More generalized version of WildcardQueryNode that can match 0 to (including) maxExpansion times in a row.
  */
-class StarQueryNode(condition: Vertex[_, _] => Boolean = vertex => true, maxExpansion: Int = 1) extends WildcardQueryNode(condition) {
+class StarQueryNode(condition: Vertex[_, _, _, _] => Boolean = vertex => true, maxExpansion: Int = 1) extends WildcardQueryNode(condition) {
   override def expand: List[PathQueryNode] = {
     if (maxExpansion > 0) {
       List(new StarQueryNode(condition, maxExpansion - 1))
@@ -58,7 +56,7 @@ class StarQueryNode(condition: Vertex[_, _] => Boolean = vertex => true, maxExpa
  * Query node that only matches a vertex if it has the specified id.
  */
 class FixedQueryNode(id: Any) extends PathQueryNode {
-  def matches(vertex: Vertex[_, _]) = (vertex.id.hashCode() == id.hashCode())
+  def matches(vertex: Vertex[_, _, _, _]) = (vertex.id.hashCode() == id.hashCode())
 }
 
 /**
@@ -68,7 +66,7 @@ class FixedQueryNode(id: Any) extends PathQueryNode {
  * of the matched nodes in the graph.
  */
 class PathQuery() extends Serializable {
-  var unmatchedQuery = LinkedList[PathQueryNode]() //Part of the query that is not matched yet.
+  var unmatchedQuery = List[PathQueryNode]() //Part of the query that is not matched yet.
   var matchedPath = Queue[Any]() // Trail of already matched nodes
 
   /**
@@ -77,7 +75,7 @@ class PathQuery() extends Serializable {
    * @param vertex that should be matched to the head of the remaining path query.
    * @return a list of remaining queries after matching a vertex to the head of the unmatched path query or None if the head did not match the vertex.
    */
-  def getRemainingQuery(vertex: Vertex[_, _]): Option[List[PathQuery]] = {
+  def getRemainingQuery(vertex: Vertex[_, _, _, _]): Option[List[PathQuery]] = {
     if (unmatchedQuery.size > 0 && unmatchedQuery.head.matches(vertex)) {
       val remainingQuery = new PathQuery
       remainingQuery.matchedPath = matchedPath.enqueue(vertex.id)
@@ -107,7 +105,7 @@ class PathQuery() extends Serializable {
    * Adds a PathQueryNode to the beginning of the unmatched query
    */
   def prependQueryNode(node: PathQueryNode) {
-    unmatchedQuery = node +: unmatchedQuery
+    unmatchedQuery = node :: unmatchedQuery
   }
 }
 
@@ -115,8 +113,8 @@ class PathQuery() extends Serializable {
  * Collects all matched paths as results of the query.
  */
 object ResultHandler {
-  val results = ListBuffer[List[Any]]()
-  def addPath(path: List[Any]) = results += path
+  var results = List[List[Any]]()
+  def addPath(path: List[Any]) = results = path :: results 
   def getResults = results.toList
 }
 
@@ -125,7 +123,7 @@ object ResultHandler {
  */
 class QueryNode
 
-class QueryVertex(vertexId: Int, state: List[PathQuery]) extends DataFlowVertex(vertexId, state) with ResetStateAfterSignaling[Int, List[PathQuery]] {
+class QueryVertex(vertexId: Int, initialState: List[PathQuery]) extends DataFlowVertex(vertexId, initialState) with ResetStateAfterSignaling[Int, List[PathQuery]] {
 
   type Signal = List[PathQuery]
 

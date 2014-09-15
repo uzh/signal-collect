@@ -27,12 +27,26 @@ import com.signalcollect._
 import com.signalcollect.examples.PageRankVertex
 import org.scalatest.Matchers
 import akka.event.Logging
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.ExistingVertexHandler
 
 class DummyVertex(id: Int) extends PageRankVertex(id) {
   state = 1
 }
 
-class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
+class TestExistingVertexHandlerFactory[Id, Signal] extends ExistingVertexHandlerFactory[Id, Signal] {
+  def createInstance: ExistingVertexHandler[Id, Signal] =
+    new TestExistingVertexHandler[Id, Signal]
+  override def toString = "TestExistingVertexHandlerFactory"
+}
+
+class TestExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id, Signal] {
+  def mergeVertices(existing: Vertex[Id, _, Id, Signal], failedVertexAddition: Vertex[Id, _, Id, Signal], ge: GraphEditor[Id, Signal]) {
+    existing.asInstanceOf[DummyVertex].state += 1.0
+  }
+}
+
+class MultipleVertexAdditionsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Adding the same vertex multiple times" should "be ignored" in {
     val g = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)
@@ -48,11 +62,8 @@ class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
   }
 
   it should "support merges via handler" in {
-    val g = GraphBuilder.build
+    val g = GraphBuilder.withExistingVertexHandlerFactory(new TestExistingVertexHandlerFactory[Any, Any]).build
     try {
-      g.setExistingVertexHandler((oldVertex, newVertex, ge) => {
-        oldVertex.asInstanceOf[DummyVertex].state += 1.0
-      })
       g.addVertex(new DummyVertex(133))
       g.addVertex(new DummyVertex(134))
       g.addVertex(new DummyVertex(133))

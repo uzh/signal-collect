@@ -9,9 +9,12 @@ version := "2.1.0-SNAPSHOT"
 
 organization := "com.signalcollect"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
-scalacOptions ++= Seq("-optimize", "-Yinline-warnings", "-feature", "-deprecation", "-Xelide-below", "INFO" )
+scalacOptions ++= Seq("-optimize", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-Ywarn-adapted-args", "-Ywarn-inaccessible", "-feature", "-deprecation", "-Xelide-below", "INFO")
+
+//, "-Ylog:icode"
+//, "-Ydebug"
 
 assembleArtifact in packageScala := true
 
@@ -30,9 +33,9 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 /** Dependencies */
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.4" % "compile",
-  "com.typesafe.akka" %% "akka-remote" % "2.3.4" % "compile",
-  "org.scala-lang" % "scala-library" % "2.11.1" % "compile",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.5" % "compile",
+  "com.typesafe.akka" %% "akka-remote" % "2.3.5" % "compile",
+  "org.scala-lang" % "scala-library" % "2.11.2" % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
   "org.json4s" %% "json4s-native" % "3.2.9",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",

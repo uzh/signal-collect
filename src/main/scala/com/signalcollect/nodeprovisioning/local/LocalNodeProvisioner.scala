@@ -36,12 +36,12 @@ import akka.actor.ActorRef
 import akka.actor.InvalidActorNameException
 import akka.actor.Props
 
-class LocalNodeProvisioner
-  extends NodeProvisioner {
+class LocalNodeProvisioner[Id, Signal](fixedNumberOfWorkers: Option[Int] = None)
+  extends NodeProvisioner[Id, Signal] {
   def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     try {
       val nodeController = localSystem.actorOf(
-        Props(classOf[DefaultNodeActor], actorNamePrefix, 0, 1, None).
+        Props(classOf[DefaultNodeActor[Id, Signal]], actorNamePrefix, 0, 1, fixedNumberOfWorkers, None).
           withDispatcher("akka.io.pinned-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } catch {

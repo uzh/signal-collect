@@ -189,7 +189,7 @@ trait LeaderScope extends StopActorSystemAfter {
   val ip = InetAddress.getLocalHost.getHostAddress
   val id = 0
   val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
-  val leader = LeaderCreator.getLeader(config).asInstanceOf[DefaultLeader]
+  val leader = LeaderCreator.getLeader(config).asInstanceOf[DefaultLeader[Int, Double]]
   val leaderActor: ActorRef = leader.leaderactor 
 
   abstract override def after {

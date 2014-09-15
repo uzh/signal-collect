@@ -42,7 +42,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
 
   "Bulk signaling" should {
     "deliver correct results on a 5-cycle graph" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
+      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.0001
@@ -67,7 +67,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
           val neutralElement = true
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
+          def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
         })
         allcorrect
       } finally {
@@ -76,7 +76,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
     }
 
     "handle a bulk size of 1 correctly" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _]): Boolean = {
+      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
         val state = v.state.asInstanceOf[Double]
         val expectedState = 1.0
         val correct = (state - expectedState).abs < 0.0001
@@ -98,7 +98,7 @@ class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
         var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
           val neutralElement = true
           def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _]): Boolean = pageRankFiveCycleVerifier(v)
+          def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
         })
         allcorrect
       } finally {

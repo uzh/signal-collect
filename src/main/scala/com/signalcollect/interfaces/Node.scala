@@ -20,10 +20,12 @@
 
 package com.signalcollect.interfaces
 
+import com.signalcollect.worker.AkkaWorker
+
 // Has to be a trait to be proxied.
-trait Node {
-  def createWorker(workerId: Int, creator: () => WorkerActor[_, _]): String // string = remote actor address
-  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory, mapperFactory: MapperFactory)
+trait Node[Id, Signal] {
+  def createWorker(workerId: Int, creator: () => AkkaWorker[Id, Signal]): String // string = remote actor address
+  def initializeMessageBus(numberOfWorkers: Int, numberOfNodes: Int, messageBusFactory: MessageBusFactory[Id, Signal], mapperFactory: MapperFactory[Id])
   def initializeIdleDetection
   def numberOfCores: Int
   def shutdown

@@ -25,12 +25,12 @@ class DefaultVertexToWorkerMapper[Id](numberOfNodes: Int, workersPerNode: Int) e
 
   val numberOfWorkers = numberOfNodes * workersPerNode
 
-  @inline def getWorkerIdForVertexId(vertexId: Id): Int = {
+  @inline final def getWorkerIdForVertexId(vertexId: Id): Int = {
     (vertexId.hashCode & Int.MaxValue) % numberOfWorkers
   }
 
   //  def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = (vertexIdHash % numberOfWorkers).abs (BAD PERFORMANCE!)
-  @inline def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = {
+  @inline final def getWorkerIdForVertexIdHash(vertexIdHash: Int): Int = {
     (vertexIdHash & Int.MaxValue) % numberOfWorkers
   }
 }

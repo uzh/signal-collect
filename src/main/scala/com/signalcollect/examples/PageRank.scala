@@ -71,8 +71,8 @@ class PageRankVertex[Id](id: Id, dampingFactor: Double = 0.85) extends DataGraph
 
 /** Builds a PageRank compute graph and executes the computation */
 object PageRank extends App {
-  val graph = GraphBuilder.
-    withConsole(true).
+  val graph = new GraphBuilder[Any, Any]().
+    //withConsole(true).
     build
 
   graph.awaitIdle
@@ -85,7 +85,7 @@ object PageRank extends App {
   graph.addEdge(3, new PageRankEdge(2))
 
   graph.awaitIdle
-  val stats = graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
+  val stats = graph.execute//(ExecutionConfiguration.withExecutionMode(ExecutionMode.Interactive))
   println(stats)
 
   graph.foreachVertex(println(_))

@@ -21,13 +21,13 @@ package com.signalcollect.interfaces
 
 import com.signalcollect.Vertex
 
-trait Worker[@specialized(Int, Long) Id, @specialized(Int, Long, Float, Double) Signal]
-    extends WorkerApi[Id, Signal]
-    with MessageRecipientRegistry {
-  def vertexStore: Storage[Id]
-  def scheduler: Scheduler[Id]
+trait Worker[Id, Signal]
+  extends WorkerApi[Id, Signal]
+  with MessageRecipientRegistry {
+  def vertexStore: Storage[Id, Signal]
+  def scheduler: Scheduler[Id, Signal]
   var messageBusFlushed: Boolean
-  def executeCollectOperationOfVertex(vertex: Vertex[Id, _], addToSignal: Boolean = true)
-  def executeSignalOperationOfVertex(vertex: Vertex[Id, _])
+  def executeCollectOperationOfVertex(vertex: Vertex[Id, _, Id, Signal], addToSignal: Boolean = true)
+  def executeSignalOperationOfVertex(vertex: Vertex[Id, _, Id, Signal])
   def signalThreshold: Double
 }

@@ -87,13 +87,13 @@ class DefaultWorkerApi[Id, Signal](
     workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
   }
 
-  override def forVertexWithId[VertexType <: Vertex[Id, _], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+  override def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  override def foreachVertex(f: (Vertex[Id, _]) => Unit) = futures(_.foreachVertex(f)) foreach get
+  override def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) = futures(_.foreachVertex(f)) foreach get
 
-  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
 
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
     throw new UnsupportedOperationException("DefaultWorkerApi does not support this operation.")
@@ -104,21 +104,6 @@ class DefaultWorkerApi[Id, Signal](
     //val aggregateArray = futures(_.aggregateOnWorker(aggregationOperation)) map get
     val workerAggregates = workers.par map (_.aggregateOnWorker(aggregationOperation))
     aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
-  }
-
-  override def setExistingVertexHandler(
-    h: (Vertex[_, _], Vertex[_, _], GraphEditor[Id, Signal]) => Unit) {
-    futures(_.setExistingVertexHandler(h)) foreach get
-  }
-
-  override def setUndeliverableSignalHandler(
-    h: (Signal, Id, Option[Id], GraphEditor[Id, Signal]) => Unit) = {
-    futures(_.setUndeliverableSignalHandler(h)) foreach get
-  }
-
-  def setEdgeAddedToNonExistentVertexHandler(
-    h: (Edge[Id], Id) => Option[Vertex[Id, _]]) {
-    futures(_.setEdgeAddedToNonExistentVertexHandler(h)) foreach get
   }
 
   override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
@@ -136,7 +121,7 @@ class DefaultWorkerApi[Id, Signal](
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  override def addVertex(vertex: Vertex[Id, _]) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
     workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(vertex)
   }
 
@@ -155,8 +140,17 @@ class DefaultWorkerApi[Id, Signal](
    *  `vertex.id==edgeId.targetId`.
    *  Blocks until the operation has completed.
    */
-  override def processSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
-    workers(mapper.getWorkerIdForVertexId(targetId)).processSignal(signal, targetId, sourceId)
+  override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
+    workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithSourceId(signal, targetId, sourceId)
+  }
+
+  /**
+   *  Processes `signal` on the worker that has the vertex with
+   *  `vertex.id==edgeId.targetId`.
+   *  Blocks until the operation has completed.
+   */
+  override def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
+    workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithoutSourceId(signal, targetId)
   }
 
   /**

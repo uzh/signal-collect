@@ -24,7 +24,7 @@ package com.signalcollect
  *
  *  @author Philip Stutz
  */
-abstract class Vertex[+Id, State] extends Serializable {
+abstract class Vertex[@specialized(Int, Long) +Id, State, GraphIdUpperBound, GraphSignalUpperBound] extends Serializable {
 
   override def hashCode = id.hashCode
 
@@ -33,7 +33,7 @@ abstract class Vertex[+Id, State] extends Serializable {
    */
   override def equals(other: Any): Boolean =
     other match {
-      case v: Vertex[_, _] => v.id == id
+      case v: Vertex[_, _, _, _] => v.id == id
       case _ => false
     }
 
@@ -48,19 +48,19 @@ abstract class Vertex[+Id, State] extends Serializable {
    *  Adds a new outgoing `Edge` to this `Vertex`.
    *  @param e the edge to be added.
    */
-  def addEdge(e: Edge[_], graphEditor: GraphEditor[Any, Any]): Boolean
+  def addEdge(e: Edge[GraphIdUpperBound], graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
 
   /**
    *  Removes an outgoing `Edge` from this `Vertex`.
    *  @param edgeId the edge id to be removed
    *  @return returns if an edge was removed
    */
-  def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean
+  def removeEdge(targetId: GraphIdUpperBound, graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
 
   /**
    *  Removes all outgoing `Edge`s from this `Vertex`, returns the number of edges that were removed.
    */
-  def removeAllEdges(graphEditor: GraphEditor[Any, Any]): Int
+  def removeAllEdges(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Int
 
   /**
    *  Delivers signals that are addressed to this specific vertex
@@ -70,19 +70,28 @@ abstract class Vertex[+Id, State] extends Serializable {
    *
    *  @return true if the vertex decided to collect immediately.
    */
-  def deliverSignal(signal: Any, sourceId: Option[Any], graphEditor: GraphEditor[Any, Any]): Boolean
+  def deliverSignalWithSourceId(signal: GraphSignalUpperBound, sourceId: GraphIdUpperBound, graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
+
+  /**
+   *  Delivers signals that are addressed to this specific vertex
+   *
+   *  @param signal the the signal to deliver to this vertex
+   *
+   *  @return true if the vertex decided to collect immediately.
+   */
+  def deliverSignalWithoutSourceId(signal: GraphSignalUpperBound, graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound]): Boolean
 
   /**
    *  This method tells this `Vertex` to execute the signal operation on all its outgoing
    *  Edges. This method is going to be called by the framework during its execution (i.e. the
    *  `Worker` implementations).
    */
-  def executeSignalOperation(graphEditor: GraphEditor[Any, Any])
+  def executeSignalOperation(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound])
 
   /**
    *  Tells this vertex to execute the `collect` method.
    */
-  def executeCollectOperation(graphEditor: GraphEditor[Any, Any])
+  def executeCollectOperation(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound])
 
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
@@ -107,11 +116,26 @@ abstract class Vertex[+Id, State] extends Serializable {
   /**
    *  This method gets called by the framework after the vertex has been fully initialized.
    */
-  def afterInitialization(graphEditor: GraphEditor[Any, Any])
+  def afterInitialization(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound])
 
   /**
    *  This method gets called by the framework before the vertex gets removed.
    */
-  def beforeRemoval(graphEditor: GraphEditor[Any, Any])
+  def beforeRemoval(graphEditor: GraphEditor[GraphIdUpperBound, GraphSignalUpperBound])
+
+  /**
+   * Returns the ids of the target vertices of outgoing edges of the vertex.
+   */
+  def targetIds: Traversable[GraphIdUpperBound]
+
+  /**
+   * The expose function can provide additional information about the vertex.
+   * By default, it returns an empty map, but it can be overridden to return
+   * any kind of Map[String,Any]. The Map will be serialized to json
+   * recursively and can be viewed in the console when enabling the "expose
+   * vertex details on click" option.
+   * @return a string-keyed map of details about the node.
+   */
+  def expose: Map[String, Any] = Map[String, Any]()
 
 }

@@ -21,16 +21,6 @@ package com.signalcollect.configuration
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.serializers.DeflateSerializer
-import com.esotericsoftware.kryo.Serializer
-import com.signalcollect.interfaces.Request
-import com.signalcollect.messaging.Command
-import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.messaging.Incrementor
-import com.signalcollect.factory.messagebus._
-import com.signalcollect.factory.mapper.DefaultMapperFactory
-import com.signalcollect.worker.AkkaWorker
-import com.signalcollect.WorkerCreator
-import com.signalcollect.factory.worker.DefaultAkkaWorker
 
 class KryoInit {
 
@@ -50,9 +40,11 @@ class KryoInit {
       }
       register("scala.Some")
       register("scala.None$")
-      register("com.signalcollect.interfaces.SignalMessage")
+      register("com.signalcollect.interfaces.SignalMessageWithSourceId")
+      register("com.signalcollect.interfaces.SignalMessageWithoutSourceId")
       register("com.signalcollect.interfaces.BulkSignal")
       register("com.signalcollect.interfaces.BulkSignalNoSourceIds")
+      register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcI$sp")
       register("com.signalcollect.interfaces.AddVertex")
       register("com.signalcollect.interfaces.AddEdge")
       register("com.signalcollect.WorkerCreator")
@@ -74,8 +66,8 @@ class KryoInit {
       register("scala.collection.SortedMap")
       register("com.signalcollect.configuration.GraphConfiguration")
       register("com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner")
-      register("com.signalcollect.factory.scheduler.Throughput$")
-      register("com.signalcollect.factory.scheduler.LowLatency$")
+      register("com.signalcollect.factory.scheduler.Throughput")
+      register("com.signalcollect.factory.scheduler.LowLatency")
       register("java.lang.Class")
       register("java.lang.Object")
       register("akka.actor.RepointableActorRef")
@@ -107,7 +99,6 @@ class KryoInit {
       register("scala.collection.immutable.$colon$colon")
       register("scala.collection.immutable.Vector")
       register("scala.collection.mutable.WrappedArray$ofRef")
-      /*register("akka.dispatch.NullMessage$")*/ // Removed this class in akka 2.3.2
       register("akka.actor.SystemGuardian$RegisterTerminationHook$")
       register("akka.actor.ReceiveTimeout$")
       register("akka.remote.EndpointWriter$AckIdleCheckTimer$")
@@ -131,8 +122,8 @@ class KryoInit {
       register("scala.reflect.ManifestFactory$$anon$1")
       register("scala.reflect.ManifestFactory$$anon$9")
       register("scala.reflect.ManifestFactory$$anon$12")
-      register("com.signalcollect.factory.storage.MemoryEfficientStorage$")
-      register("com.signalcollect.factory.worker.DefaultAkkaWorker$")
+      register("com.signalcollect.factory.storage.MemoryEfficientStorage")
+      register("com.signalcollect.factory.worker.AkkaWorkerFactory")
       register("com.signalcollect.coordinator.OnIdle")
       register("com.signalcollect.worker.ScheduleOperations$")
       register("akka.actor.Terminated")
@@ -143,8 +134,9 @@ class KryoInit {
       register("com.signalcollect.messaging.Incrementor$$anonfun$1")
       register("com.signalcollect.coordinator.DefaultCoordinator$$anonfun$1")
       register("com.signalcollect.DefaultGraph$$anonfun$10")
-      register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory$")
-      register("com.signalcollect.factory.mapper.DefaultMapperFactory$")
+      register("com.signalcollect.factory.messagebus.AkkaMessageBusFactory")
+      register("com.signalcollect.factory.messagebus.IntIdDoubleSignalMessageBusFactory")
+      register("com.signalcollect.factory.mapper.DefaultMapperFactory")
       register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory")
       register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$1")
       register("com.signalcollect.messaging.AbstractMessageBus$$anonfun$3")
@@ -176,6 +168,16 @@ class KryoInit {
       register("com.signalcollect.worker.Ping")
       register("com.signalcollect.worker.Pong")
       register("com.signalcollect.worker.StartPingPongExchange")
+      register("com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory")
+      register("com.signalcollect.factory.handler.DefaultExistingVertexHandlerFactory")
+      register("com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory")
+      register("com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory$mcI$sp")
+      register("com.signalcollect.factory.mapper.DefaultMapperFactory$mcI$sp")
+      register("com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory$mcI$sp")
+      register("com.signalcollect.factory.scheduler.Throughput$mcI$sp")
+      register("com.signalcollect.factory.storage.MemoryEfficientStorage$mcI$sp")
+      register("com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory$mcI$sp")
+      register("scala.reflect.ManifestFactory$$anon$11")
       registerClass(classOf[Array[Byte]])
       registerClass(classOf[Array[Int]])
       registerClass(classOf[Array[Long]])

@@ -29,11 +29,11 @@ import akka.event.Logging
 /**
  * Simple Example of an Algorithm
  */
-object PageRankExample extends Algorithm {
+object PageRankExample extends Algorithm[Any, Any] {
   
   override def deploy: Boolean = false
   
-  override def loadGraph(graph: Graph[Any,Any]): Graph[Any,Any] = {
+  override def loadGraph(graph: Graph[Any, Any]): Graph[Any, Any] = {
      log.info("add vertices")
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
@@ -45,7 +45,8 @@ object PageRankExample extends Algorithm {
     graph.addEdge(3, new PageRankEdge(2))
     graph
   }
-  override def configureGraphBuilder(gb: GraphBuilder[Any,Any]): GraphBuilder[Any,Any] = {
+  
+  override def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = {
     gb
     .withEagerIdleDetection(false)
     .withLoggingLevel(Logging.DebugLevel)

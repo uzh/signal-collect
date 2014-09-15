@@ -30,7 +30,6 @@ import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.EdgeId
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.Request
-import com.signalcollect.interfaces.SignalMessage
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import akka.actor.ActorRef
@@ -40,6 +39,8 @@ import com.signalcollect.interfaces.AddEdge
 import akka.event.Logging
 import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.ActorSystem
+import com.signalcollect.interfaces.SignalMessageWithSourceId
+import com.signalcollect.interfaces.SignalMessageWithoutSourceId
 
 abstract class AbstractMessageBus[Id, Signal]
   extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
@@ -132,7 +133,7 @@ abstract class AbstractMessageBus[Id, Signal]
   //--------------------MessageBus--------------------
 
   override def sendToActor(actor: ActorRef, message: Any) {
-    actor ! message
+    actor.tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
@@ -147,11 +148,11 @@ abstract class AbstractMessageBus[Id, Signal]
 
   override def sendToWorker(workerId: Int, message: Any) {
     incrementMessagesSentToWorker(workerId)
-    workers(workerId) ! message
+    workers(workerId).tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkerUncounted(workerId: Int, message: Any) {
-    workers(workerId) ! message
+    workers(workerId).tell(message, ActorRef.noSender)
   }
 
   override def sendToWorkers(message: Any, messageCounting: Boolean) {
@@ -159,17 +160,17 @@ abstract class AbstractMessageBus[Id, Signal]
       if (messageCounting) {
         incrementMessagesSentToWorker(workerId)
       }
-      workers(workerId) ! message
+      workers(workerId).tell(message, ActorRef.noSender)
     }
   }
 
   override def sendToNode(nodeId: Int, message: Any) {
     incrementMessagesSentToNode(nodeId)
-    nodes(nodeId) ! message
+    nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
   override def sendToNodeUncounted(nodeId: Int, message: Any) {
-    nodes(nodeId) ! message
+    nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
   override def sendToNodes(message: Any, messageCounting: Boolean) {
@@ -177,17 +178,17 @@ abstract class AbstractMessageBus[Id, Signal]
       if (messageCounting) {
         incrementMessagesSentToNode(nodeId)
       }
-      nodes(nodeId) ! message
+      nodes(nodeId).tell(message, ActorRef.noSender)
     }
   }
 
   override def sendToCoordinator(message: Any) {
     incrementMessagesSentToCoordinator
-    coordinator ! message
+    coordinator.tell(message, ActorRef.noSender)
   }
 
   override def sendToCoordinatorUncounted(message: Any) {
-    coordinator ! message
+    coordinator.tell(message, ActorRef.noSender)
   }
 
   override def getWorkerIdForVertexId(vertexId: Id): Int = mapper.getWorkerIdForVertexId(vertexId)
@@ -202,14 +203,22 @@ abstract class AbstractMessageBus[Id, Signal]
   override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
-      workerApi.processSignal(signal, targetId, sourceId)
+      if (sourceId.isDefined) {
+        workerApi.processSignalWithSourceId(signal, targetId, sourceId.get)
+      } else {
+        workerApi.processSignalWithoutSourceId(signal, targetId)
+      }
     } else {
       // Manually send a fire & forget request.
-      sendToWorkerForVertexId(SignalMessage(targetId, sourceId, signal), targetId)
+      if (sourceId.isDefined) {
+        sendToWorkerForVertexId(SignalMessageWithSourceId(targetId, sourceId.get, signal), targetId)
+      } else {
+        sendToWorkerForVertexId(SignalMessageWithoutSourceId(targetId, signal), targetId)
+      }
     }
   }
 
-  override def addVertex(vertex: Vertex[Id, _], blocking: Boolean = false) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal], blocking: Boolean = false) {
     if (blocking) {
       // Use proxy.
       workerApi.addVertex(vertex)
