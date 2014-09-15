@@ -55,15 +55,19 @@ abstract class MemoryEfficientDataGraphVertex[State, IncomingSignalType: ClassTa
       }
     }
   }
-  
+
   protected var _targetIds: SplayIntSet = new MemoryEfficientSplayIntSet
 
   val mostRecentSignalMap = new IntHashMap[IncomingSignalType](1, 0.85f)
 
-  def deliverSignal(signal: Any, sourceId: Option[Int], graphEditor: GraphEditor[Int, Any]): Boolean = {
+  override def deliverSignalWithSourceId(signal: Any, sourceId: Int, graphEditor: GraphEditor[Int, Any]): Boolean = {
     val s = signal.asInstanceOf[IncomingSignalType]
-    mostRecentSignalMap.put(sourceId.get.asInstanceOf[Int], s)
+    mostRecentSignalMap.put(sourceId, s)
     false
+  }
+
+  override def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Int, Any]): Boolean = {
+    throw new Exception(s"A data graph vertex requires the sender ID for signals. Vertex ${this.toString} just received signal ${signal} without a sender ID.")
   }
 
   override def executeSignalOperation(graphEditor: GraphEditor[Int, Any]) {
