@@ -28,9 +28,6 @@ import com.signalcollect.util.FileReader
 
 class LoadingSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
-  val sep = File.separator
-  val testFilePath = s".${sep}test-data${sep}ascii-ints.txt"
-
   "Loader" should "correctly parse vertex data from an ordered integer edge list" in {
     val sep = File.separator
     val testFilePath = s".${sep}test-data${sep}notredame2"

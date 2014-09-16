@@ -103,10 +103,20 @@ private final class AsciiIntIterator(filePath: String) extends Iterator[Int] {
   var buf: Array[Byte] = _
 
   @inline def next: Int = {
-    assert(currentNumber != -1)
-    val c = currentNumber
-    currentNumber = -1
-    c
+    if (currentNumber == -1) {
+      val legalCall = hasNext
+      if (legalCall) {
+        val c = currentNumber
+        currentNumber = -1
+        c
+      } else {
+        throw new Exception("Next was called when there was no next element.")
+      }
+    } else {
+      val c = currentNumber
+      currentNumber = -1
+      c
+    }
   }
 
   @inline def hasNext: Boolean = {
