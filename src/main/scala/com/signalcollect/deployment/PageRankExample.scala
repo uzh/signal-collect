@@ -25,6 +25,7 @@ import com.signalcollect.GraphBuilder
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import akka.event.Logging
+import com.signalcollect.ExecutionInformation
 
 /**
  * Simple Example of an Algorithm
@@ -49,7 +50,11 @@ object PageRankExample extends Algorithm[Any, Any] {
   override def configureGraphBuilder(gb: GraphBuilder[Any, Any]): GraphBuilder[Any, Any] = {
     gb
       .withEagerIdleDetection(false)
-      .withLoggingLevel(Logging.DebugLevel)
+      //.withLoggingLevel(Logging.DebugLevel)
+  }
+  
+  override def reportResults(stats: ExecutionInformation[Any, Any], graph: Graph[Any, Any]) = {
+    println(stats)
   }
 
 }
