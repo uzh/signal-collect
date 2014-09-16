@@ -1,4 +1,4 @@
-/**
+/*
  *  @author Tobias Bachmann
  *
  *  Copyright 2014 University of Zurich
@@ -16,11 +16,11 @@
  *  limitations under the License.
  *
  */
+
 package com.signalcollect.deployment
 
+import java.io.File
 import java.net.InetAddress
-import scala.async.Async.async
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 import org.junit.runner.RunWith
 import org.specs2.mutable.After
@@ -33,7 +33,7 @@ import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class LeaderAndContainerSpec extends SpecificationWithJUnit {
-  
+
   /**
    * Helper function for waiting on a condition for a given time
    */
@@ -46,34 +46,39 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
   }
 
   sequential
+
   "Leader" should {
     sequential //this is preventing the tests from being executed parallel
 
     "be started" in new StopActorSystemAfter {
+      println("---be started")
       val akkaPort = 2552
       val leader: Leader = LeaderCreator.getLeader(DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf"))
       ActorSystemRegistry.retrieve("SignalCollect").isDefined === true
     }
 
     "create LeaderActor" in new LeaderScope {
+      println("---create LeaderActor")
       leaderActor.path.toString.contains("leaderactor")
     }
 
-    "detect if all nodes are ready " in new LeaderScope {
+    "detect if all nodes are ready" in new LeaderScope {
+      println("---detect if all nodes are ready")
       leader.clear
       leader.isExecutionStarted === false
       leader.allNodeContainersRunning === false
-      val address = s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
+      val address = s"akka.tcp://SignalCollect@$ip:2552/user/DefaultNodeActor$id"
       leaderActor ! address
       leader.waitForAllNodeContainers
       leader.allNodeContainersRunning === true
 
       val nodeActors = leader.getNodeActors
       nodeActors must not be empty
-      nodeActors.head.path.toString === s"akka.tcp://SignalCollect@$ip:2553/user/DefaultNodeActor$id"
+      nodeActors.head.path.toString === s"akka.tcp://SignalCollect@$ip:2552/user/DefaultNodeActor$id"
     }
 
     "filter address on DefaultNodeActor" in new LeaderScope {
+      println("---filter address on DefaultNodeActor")
       leader.clear
       val invalidAddress = "akka.tcp://SignalCollect@invalid"
       leaderActor ! invalidAddress
@@ -82,7 +87,7 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
 
     "save shutdown address" in new LeaderScope {
       leader.clear
-      val shutdownAddress = s"akka.tcp://SignalCollect@$ip:2553/user/shutdownactor$id"
+      val shutdownAddress = s"akka.tcp://SignalCollect@$ip:2552/user/shutdownactor$id"
       leaderActor ! shutdownAddress
       waitOrTimeout(() => leader.getShutdownActors.isEmpty, 500)
       leader.getShutdownActors.isEmpty === false
@@ -118,8 +123,8 @@ class LeaderAndContainerSpec extends SpecificationWithJUnit {
     }
 
     "get LeaderActor" in new LeaderContainerScope {
-    	val leaderActor = container.getLeaderActor
-    			leaderActor.path.toString === "akka://SignalCollect/user/leaderactor"
+      val leaderActor = container.getLeaderActor
+      leaderActor.path.toString === "akka://SignalCollect/user/leaderactor"
     }
   }
 
@@ -188,9 +193,10 @@ trait LeaderScope extends StopActorSystemAfter {
   val akkaPort = 2552
   val ip = InetAddress.getLocalHost.getHostAddress
   val id = 0
-  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
-  val leader = LeaderCreator.getLeader(config).asInstanceOf[DefaultLeader[Int, Double]]
-  val leaderActor: ActorRef = leader.leaderactor 
+  val sep = File.separator
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration(s".${sep}test-data${sep}testdeployment.conf")
+  val leader = LeaderCreator.getLeader(config).asInstanceOf[DefaultLeader[Any, Any]]
+  val leaderActor: ActorRef = leader.leaderactor
 
   abstract override def after {
     super.after
@@ -207,7 +213,8 @@ trait Execution extends LeaderContainerScope {
 }
 
 trait ContainerScope extends StopActorSystemAfter {
-  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
+  val sep = File.separator
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration(s".${sep}test-data${sep}testdeployment.conf")
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
   val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
   val container = new DefaultNodeContainer(id = 0,
@@ -219,7 +226,8 @@ trait ContainerScope extends StopActorSystemAfter {
 }
 
 trait LeaderContainerScope extends StopActorSystemAfter {
-  val config = DeploymentConfigurationCreator.getDeploymentConfiguration("testdeployment.conf")
+  val sep = File.separator
+  val config = DeploymentConfigurationCreator.getDeploymentConfiguration(s".${sep}test-data${sep}testdeployment.conf")
   val leaderIp = InetAddress.getLocalHost().getHostAddress()
   val akkaConfig = AkkaConfigCreator.getConfig(2552, config)
   val leader = new DefaultLeader(akkaConfig = akkaConfig, deploymentConfig = config)

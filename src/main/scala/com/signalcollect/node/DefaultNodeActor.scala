@@ -69,6 +69,9 @@ class DefaultNodeActor[Id, Signal](
   with ActorLogging
   with ActorRestartLogging {
 
+  val nodeAddress = AkkaRemoteAddress.get(self, context.system)
+  println(s"Node actor started with address $nodeAddress")
+  
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 

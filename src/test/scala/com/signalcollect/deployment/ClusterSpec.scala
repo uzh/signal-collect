@@ -1,7 +1,7 @@
 /*
  *  @author Tobias Bachmann
  *
- *  Copyright 2013 University of Zurich
+ *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ import org.scalatest.prop.Checkers
 import org.scalatest.FlatSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
+import com.signalcollect.TestAnnouncements
 
-class ClusterSpec extends FlatSpec with Checkers with Matchers {
+class ClusterSpec extends FlatSpec with Checkers with Matchers with TestAnnouncements {
 
   def createDeploymentConfiguration(cluster: String): DeploymentConfiguration = {
     val configAsString =

@@ -1,7 +1,7 @@
 /*
- *  @author Philip Stutz
+ *  @author Tobias Bachmann
  *
- *  Copyright 2012 University of Zurich
+ *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ trait Cluster {
    */
   def deploy(deploymentConfiguration: DeploymentConfiguration): Boolean
 }
+
 /**
- * creates a cluster from the class name given in DeploymentConfiguration.cluster
+ * Creates a cluster from the class name given in DeploymentConfiguration.cluster
  */
 object ClusterCreator {
   def getCluster(deploymentConfiguration: DeploymentConfiguration): Cluster = {
@@ -44,4 +45,3 @@ object ClusterCreator {
     }
   }
 }
-

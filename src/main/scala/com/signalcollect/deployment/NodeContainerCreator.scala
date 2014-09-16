@@ -1,4 +1,4 @@
-/**
+/*
  *  @author Tobias Bachmann
  *
  *  Copyright 2014 University of Zurich
@@ -16,6 +16,7 @@
  *  limitations under the License.
  *
  */
+
 package com.signalcollect.deployment
 
 /**

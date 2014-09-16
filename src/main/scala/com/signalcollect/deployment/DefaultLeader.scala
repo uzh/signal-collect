@@ -1,4 +1,4 @@
-/**
+/*
  *  @author Tobias Bachmann
  *
  *  Copyright 2014 University of Zurich
@@ -16,20 +16,23 @@
  *  limitations under the License.
  *
  */
+
 package com.signalcollect.deployment
 
 import scala.async.Async.async
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.signalcollect.configuration.ActorSystemRegistry
+import com.signalcollect.util.AkkaRemoteAddress
+import com.signalcollect.util.AkkaUtil.getActorRefFromSelection
 import com.typesafe.config.Config
+
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
-import com.signalcollect.util.AkkaRemoteAddress
 import akka.event.Logging
-import com.signalcollect.util.AkkaUtil._
 
 class DefaultLeader[Id, Signal](
   akkaConfig: Config,
@@ -49,7 +52,7 @@ class DefaultLeader[Id, Signal](
   def isExecutionSuccessful = executionSuccessful
 
   /**
-   * starts the lifecycle of the leader and an execution. This method is Non-Blocking
+   * Starts the lifecycle of the leader and an execution. This method is non-blocking.
    */
   def start {
     async {
@@ -61,7 +64,7 @@ class DefaultLeader[Id, Signal](
   }
 
   /**
-   * waits till enough NodeContainers are registered
+   * Waits until all NodeContainers are registered.
    */
   def waitForAllNodeContainers {
     while (!allNodeContainersRunning) {
@@ -70,7 +73,7 @@ class DefaultLeader[Id, Signal](
   }
 
   /**
-   * starts the algorithm given in the DeploymentConfiguration on the registered NodeActors
+   * Starts the algorithm given in the DeploymentConfiguration on the registered NodeActors.
    */
   def startExecution {
     executionStarted = true
@@ -81,12 +84,11 @@ class DefaultLeader[Id, Signal](
       println(s"start algorithm: $algorithm")
       algorithm.get.lifecycle(parameters, Some(nodeActors), Some(system))
       executionSuccessful = true
-    } 
+    }
   }
 
   /**
-   * dynamically instantiate a Scala object. 
-   * it is only tested with scala object. A Scala class probably wont work.
+   * Dynamically instantiates a Scala object that implements the Algorithm class.
    */
   private def instantiatAlgorithm(algorithmName: String): Option[Algorithm[Id, Signal]] = {
     try {
@@ -95,21 +97,21 @@ class DefaultLeader[Id, Signal](
       Some(algorithm)
     } catch {
       case classNotFound: ClassNotFoundException => {
-        println("""class defined in deployment.conf does not exist.
-        A common mistake is to forget a '$' for a scala object""")
+        throw new Exception("""Algorithm class defined in deployment.conf does not exist.
+        Possible reason: The class names of Scala objects have a '$' at the end of their names, in addition to the object name.""")
         None
       }
       case noSuchField: NoSuchFieldException => {
-        println("""class defined in deployment.conf does not exist.
-        A common mistake is to forget a '$' for a scala object""")
+        throw new Exception("""Algorithm class defined in deployment.conf does not exist.
+        Possible reason: The class names of Scala objects have a '$' at the end of their names, in addition to the object name.""")
         None
       }
-      case e: Throwable => throw e
+      case t: Throwable => throw t
     }
   }
 
   /**
-   * tells all NodeContainers to shutdown and then terminates the ActorSystem
+   * Tells all NodeContainers to shutdown and then terminates the ActorSystem
    */
   def shutdown {
     try {
@@ -125,7 +127,7 @@ class DefaultLeader[Id, Signal](
   }
 
   /**
-   * starts an ActorSystem with the name SignalCollect and registers it, in the ActorSystemRegistry
+   * Starts an ActorSystem with the name SignalCollect and registers it in the ActorSystemRegistry.
    */
   def startActorSystem: ActorSystem = {
     val system = ActorSystem("SignalCollect", akkaConfig)
@@ -134,7 +136,7 @@ class DefaultLeader[Id, Signal](
   }
 
   /**
-   * checks if enough nodes are registered to fulfill the needs in the deploymentConfiguration
+   * Checks if all nodes are registered.
    */
   def allNodeContainersRunning: Boolean = {
     val allRunning = getNumberOfRegisteredNodes == deploymentConfig.numberOfNodes
@@ -179,14 +181,14 @@ class DefaultLeader[Id, Signal](
 class LeaderActor(leader: DefaultLeader[_, _]) extends Actor {
   override def receive = {
     case address: String => filterAddress(address)
-    case _ => println("received unexpected message")
+    case other => throw new Exception(s"Leader received unexpected message $other.")
   }
 
   def filterAddress(address: String) {
     address match {
       case nodeactor if nodeactor.contains("NodeActor") => leader.addNodeActorAddress(address)
       case shutdown if shutdown.contains("shutdown") => leader.addShutdownAddress(address)
-      case _ =>
+      case other => throw new Exception(s"Leader received unexpected message $other.")
     }
   }
 }

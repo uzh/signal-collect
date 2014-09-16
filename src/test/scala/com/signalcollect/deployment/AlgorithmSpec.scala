@@ -1,7 +1,7 @@
 /*
  *  @author Tobias Bachmann
  *
- *  Copyright 2013 University of Zurich
+ *  Copyright 2014 University of Zurich
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@
 package com.signalcollect.deployment
 
 import scala.collection.immutable.HashMap
-
 import org.scalatest.FlatSpec
 import org.scalatest.mock.EasyMockSugar
 import org.scalatest.prop.Checkers
-
 import com.signalcollect.ExecutionInformation
 import com.signalcollect.Graph
 import com.signalcollect.GraphBuilder
@@ -31,13 +29,12 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.interfaces.NodeActor
 import com.signalcollect.node.DefaultNodeActor
-
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
+import com.signalcollect.TestAnnouncements
 
-class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar {
+class AlgorithmSpec extends FlatSpec with Checkers with EasyMockSugar with TestAnnouncements {
 
   trait DefaultAlgorithm {
     val defaultAlgorithm = TestAlgorithm
