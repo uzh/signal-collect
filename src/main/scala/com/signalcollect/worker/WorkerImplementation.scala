@@ -581,7 +581,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   def getNodeStatistics: NodeStatistics = {
     val runtime: Runtime = Runtime.getRuntime
     try {
-      val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean]);
+      val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean])
       NodeStatistics(
         nodeId = Some(workerId),
         os = System.getProperty("os.name"),
