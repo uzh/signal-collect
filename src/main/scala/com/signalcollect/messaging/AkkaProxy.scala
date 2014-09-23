@@ -148,7 +148,7 @@ case class Command[ParameterType](className: String, methodDescription: String, 
   }
 
   override def toString: String = {
-    className + "." + methodDescription + { if (arguments != null) { "(" + arguments.toList.mkString("(", ", ", ")") } else { "" } }
+    methodDescription + { if (arguments != null) "Arguments: " + arguments.mkString("(", ", ", ")") else "" }
   }
 
 }

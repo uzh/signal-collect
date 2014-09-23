@@ -55,11 +55,15 @@ class Verifier[I](referenceImplementation: I, alternativeImplementation: I) exte
   def invoke(proxy: Object, method: Method, arguments: Array[Object]) = {
     val command = new Command[I](method.getDeclaringClass.getName, method.toString, arguments)
     commandHistory = command :: commandHistory
+    val referenceStateBefore = referenceImplementation.toString
+    val alternativeStateBefore = alternativeImplementation.toString
     val referenceResult = command(referenceImplementation)
     val alternativeResult = command(alternativeImplementation)
     if (referenceResult != alternativeResult) {
       throw new Exception(s"Verifier error: Alternative implementation returned $alternativeResult, should have returned $referenceResult.\n" +
-        s"Command history: $commandHistory")
+        s"Reference impl. before call: ${referenceStateBefore}\n" +
+        s"Alternative impl. before call: ${alternativeStateBefore}\n" +
+        s"Command history: ${commandHistory.mkString("\n")}")
     }
     referenceResult
   }
