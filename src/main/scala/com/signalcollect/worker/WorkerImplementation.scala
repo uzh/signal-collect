@@ -148,12 +148,12 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   var existingVertexHandler: ExistingVertexHandler[Id, Signal] = _
   var undeliverableSignalHandler: UndeliverableSignalHandler[Id, Signal] = _
   var edgeAddedToNonExistentVertexHandler: EdgeAddedToNonExistentVertexHandler[Id, Signal] = _
+  isIdleDetectionEnabled = false // This one should not be reset.
 
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
   def initialize {
     messageBusFlushed = true
-    isIdleDetectionEnabled = false
     slowPongDetected = false
     operationsScheduled = false
     isIdle = true
