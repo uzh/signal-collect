@@ -30,7 +30,7 @@ class LatencySpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.withHeartbeatInterval(10000).build
     try {
-      (1 to 100).foreach { i =>
+      (1 to 50).foreach { i =>
         g.awaitIdle
         val v1 = new Location(1, Some(0))
         val v2 = new Location(2, None)
@@ -39,7 +39,7 @@ class LatencySpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
         g.addEdge(1, new Path(2))
         g.awaitIdle
         //println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous)))
-        println(g.execute)
+        g.execute
         assert(v2.state == Some(1))
         g.reset
       }
