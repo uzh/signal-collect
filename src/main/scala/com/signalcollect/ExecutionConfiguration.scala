@@ -28,7 +28,7 @@ import com.signalcollect.interfaces.ComplexAggregation
  *  An execution configuration specifies execution parameters for a computation. This object
  *  represents an ExecutionConfiguration that is initialized with the default parameters.
  */
-object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.PureAsynchronous, 0.01, 0.0, None, None, None)
+object ExecutionConfiguration extends ExecutionConfiguration[Any, Any](ExecutionMode.PureAsynchronous, 0.01, 0.0, None, None, None)
 
 /**
  *  This configuration specifies execution parameters for a computation.
@@ -43,13 +43,13 @@ object ExecutionConfiguration extends ExecutionConfiguration(ExecutionMode.PureA
  *
  *  @author Philip Stutz
  */
-case class ExecutionConfiguration(
+case class ExecutionConfiguration[Id, Signal](
   executionMode: ExecutionMode.Value = ExecutionMode.PureAsynchronous,
   signalThreshold: Double = 0.01,
   collectThreshold: Double = 0.0,
   timeLimit: Option[Long] = None,
   stepsLimit: Option[Long] = None,
-  globalTerminationCondition: Option[GlobalTerminationCondition] = None) {
+  globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]] = None) {
 
   /**
    *  Configures the execution mode used in a computation.
@@ -103,7 +103,17 @@ case class ExecutionConfiguration(
    *
    *  @param stepsLimit The maximum number of computation steps executed in a computation.
    */
-  def withGlobalTerminationCondition(globalTerminationCondition: GlobalTerminationCondition) = newExecutionConfiguration(globalTerminationCondition = Some(globalTerminationCondition))
+  @deprecated("Please refactor to use withGlobalTerminationDetection instead", "2.2.0-SNAPSHOT")
+  def withGlobalTerminationCondition(globalTerminationCondition: GlobalTerminationDetection[Id, Signal]) = withGlobalTerminationDetection(globalTerminationCondition)
+
+  /**
+   *  Configures the maximum number of computation steps executed in a computation.
+   *
+   *  @note Only relevant for synchronous computations.
+   *
+   *  @param stepsLimit The maximum number of computation steps executed in a computation.
+   */
+  def withGlobalTerminationDetection(globalTerminationCondition: GlobalTerminationDetection[Id, Signal]) = newExecutionConfiguration(globalTerminationDetection = Some(globalTerminationCondition))
 
   /**
    *  Internal function to create a new configuration instance that defaults
@@ -115,14 +125,14 @@ case class ExecutionConfiguration(
     collectThreshold: Double = collectThreshold,
     timeLimit: Option[Long] = timeLimit,
     stepsLimit: Option[Long] = stepsLimit,
-    globalTerminationCondition: Option[GlobalTerminationCondition] = globalTerminationCondition): ExecutionConfiguration = {
+    globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]] = globalTerminationDetection): ExecutionConfiguration[Id, Signal] = {
     ExecutionConfiguration(
       executionMode = executionMode,
       signalThreshold = signalThreshold,
       collectThreshold = collectThreshold,
       timeLimit = timeLimit,
       stepsLimit = stepsLimit,
-      globalTerminationCondition = globalTerminationCondition)
+      globalTerminationDetection = globalTerminationDetection)
   }
 
   override def toString: String = {
@@ -135,6 +145,20 @@ case class ExecutionConfiguration(
 }
 
 /**
+ *  GlobalTerminationDetection defines a shouldTerminate function that determines if a computation should terminate.
+ *  Usually this will be determined by running an aggregation operation on the graph.
+ *
+ *  @param aggregationInterval In a synchronous computation: aggregation interval in computation steps.
+ *  						   In an asynchronous computation: aggregation interval in milliseconds
+ *  @param shouldTerminate Function that takes the graph as a parameter and returns true iff the computation should
+ *               be terminated.
+ */
+trait GlobalTerminationDetection[Id, Signal] {
+  def aggregationInterval: Long = 1000
+  def shouldTerminate(g: Graph[Id, Signal]): Boolean
+}
+
+/**
  *  GlobalTerminationCondition defines a termination condition that depends on the global state of the graph.
  *  This class is abstract because the should terminate predicate on the aggregated value is not implemented.
  *
@@ -144,9 +168,13 @@ case class ExecutionConfiguration(
  *  @param shouldTerminate Function that takes a global aggregate and returns true iff the computation should
  *                         be terminated.
  */
-trait GlobalTerminationCondition {
+@deprecated("Please refactor to use GlobalTerminationDetection instead", "2.2.0-SNAPSHOT")
+trait GlobalTerminationCondition extends GlobalTerminationDetection[Any, Any] {
   type ResultType
   def aggregationOperation: ComplexAggregation[_, ResultType]
-  def aggregationInterval: Long = 1000
   def shouldTerminate(r: ResultType): Boolean
+  def shouldTerminate(g: Graph[Any, Any]): Boolean = {
+    val aggregationResult = g.aggregate(aggregationOperation)
+    shouldTerminate(aggregationResult)
+  }
 }

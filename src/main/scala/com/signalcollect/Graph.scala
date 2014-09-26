@@ -76,7 +76,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute(executionConfiguration: ExecutionConfiguration): ExecutionInformation[Id, Signal]
+  def execute(executionConfiguration: ExecutionConfiguration[Id, Signal]): ExecutionInformation[Id, Signal]
 
   /**
    *  Recalculates the signal/collect scores of all vertices.

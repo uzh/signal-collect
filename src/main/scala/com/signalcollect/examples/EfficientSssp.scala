@@ -54,7 +54,7 @@ object EfficientSsspLoader extends App {
   g.awaitIdle
   println("done.")
   print("Running computation ...")
-  val stats = g.execute(ExecutionConfiguration.withExecutionMode(PureAsynchronous))
+  val stats = g.execute(ExecutionConfiguration().withExecutionMode(PureAsynchronous))
   println("done.")
   println(stats)
   implicit val ord = Ordering[Int].reverse

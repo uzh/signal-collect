@@ -42,7 +42,7 @@ import com.signalcollect.interfaces.WorkerStatistics
 case class ExecutionInformation[Id, Signal](
   config: GraphConfiguration[Id, Signal],
   numberOfWorkers: Int,
-  parameters: ExecutionConfiguration,
+  parameters: ExecutionConfiguration[Id, Signal],
   executionStatistics: ExecutionStatistics,
   aggregatedWorkerStatistics: WorkerStatistics,
   individualWorkerStatistics: List[WorkerStatistics]) {

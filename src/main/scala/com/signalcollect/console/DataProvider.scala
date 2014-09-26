@@ -19,33 +19,45 @@
 
 package com.signalcollect.console
 
-import java.io.StringWriter
 import java.io.PrintWriter
+import java.io.StringWriter
+
 import scala.collection.JavaConversions.propertiesAsScalaMap
-import com.signalcollect.interfaces.Coordinator
+import scala.reflect.runtime.universe._
+
+import org.json4s.DefaultFormats
+import org.json4s.Extraction.decompose
+import org.json4s.JObject
+import org.json4s.JString
+import org.json4s.JValue
+import org.json4s.JsonDSL.double2jvalue
+import org.json4s.JsonDSL.int2jvalue
+import org.json4s.JsonDSL.jobject2assoc
+import org.json4s.JsonDSL.long2jvalue
+import org.json4s.JsonDSL.pair2Assoc
+import org.json4s.JsonDSL.pair2jvalue
+import org.json4s.JsonDSL.seq2jvalue
+import org.json4s.JsonDSL.string2jvalue
+import org.json4s.jvalue2extractable
+import org.json4s.jvalue2monadic
+import org.json4s.native.JsonMethods.compact
+import org.json4s.native.JsonMethods.parse
+import org.json4s.native.JsonMethods.render
+import org.json4s.string2JsonInput
+
 import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.configuration.GraphConfiguration
-import com.signalcollect.TopKFinder
-import com.signalcollect.SampleVertexIds
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.Extraction._
-import org.json4s.native.JsonMethods._
-import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.ExecutionStatistics
-import akka.event.Logging
-import akka.event.Logging.LogLevel
-import akka.event.Logging.LogEvent
-import akka.actor.ActorLogging
-import com.signalcollect.interfaces.Logger
 import com.signalcollect.Vertex
+import com.signalcollect.interfaces.Coordinator
+import com.signalcollect.interfaces.Logger
+import com.signalcollect.interfaces.NodeStatistics
+import com.signalcollect.interfaces.WorkerStatistics
 
 /** Abstract class defining the interface every DataProvider has to implement. */
 abstract class DataProvider {
   def fetch(): JObject
   def fetchInvalid(msg: JValue = JString(""),
-                   comment: String): JObject = {
+    comment: String): JObject = {
     new InvalidDataProvider(msg, comment).fetch
   }
 }
@@ -117,7 +129,7 @@ class NotReadyDataProvider(msg: String) extends DataProvider {
  * @param socket the WebSocketConsoleServer
  */
 class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
-    extends DataProvider {
+  extends DataProvider {
   def fetch(): JObject = {
     val reply: JObject = socket.execution match {
       case Some(e) =>
@@ -125,16 +137,16 @@ class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
           (("steps", e.stepTokens)) ~
           (("iteration", e.iteration))
       case None => socket.executionConfiguration match {
-        case Some(ec: ExecutionConfiguration) => socket.executionStatistics match {
+        case Some(ec: ExecutionConfiguration[Id, Signal]) => socket.executionStatistics match {
           case Some(es: ExecutionStatistics) =>
             ("mode", ec.executionMode.toString) ~
               (("state", es.terminationReason.toString)) ~
               (("totalExecutionTime", es.totalExecutionTime.toString)) ~
               (("computationTime", es.computationTime.toString))
-          case None =>
+          case other =>
             ("mode", ec.executionMode.toString())
         }
-        case None =>
+        case other =>
           ("state", "undetermined")
       }
     }
@@ -154,13 +166,13 @@ class StateDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal])
  * @param socket the WebSocketConsoleServer (who knows the exec conf)
  * @param coordinator the Coordinator (who knows the graph conf)
  */
-class ConfigurationDataProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
-                                    coordinator: Coordinator[Id, Signal])
-    extends DataProvider {
+class ConfigurationDataProvider[Id: TypeTag, Signal: TypeTag](socket: WebSocketConsoleServer[Id, Signal],
+  coordinator: Coordinator[Id, Signal])
+  extends DataProvider {
   def fetch(): JObject = {
     val executionConfiguration = socket.executionConfiguration match {
-      case Some(e: ExecutionConfiguration) => Toolkit.unpackObject(e)
-      case otherwise                       => JString("unknown")
+      case Some(e: ExecutionConfiguration[Id, Signal]) => Toolkit.unpackObject(e)
+      case otherwise => JString("unknown")
     }
     ("provider" -> "configuration") ~
       ("executionConfiguration" -> executionConfiguration) ~
@@ -194,18 +206,18 @@ case class ControlsRequest(
  * @param msg the request by the client
  */
 class ControlsProvider[Id, Signal](socket: WebSocketConsoleServer[Id, Signal],
-                       msg: JValue) extends DataProvider {
+  msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
 
   def command(e: Execution, command: String): JObject = {
     command match {
-      case "step"      => e.step
-      case "collect"   => e.collect
-      case "pause"     => e.pause
-      case "continue"  => e.continue
-      case "reset"     => e.reset
+      case "step" => e.step
+      case "collect" => e.collect
+      case "pause" => e.pause
+      case "continue" => e.continue
+      case "reset" => e.reset
       case "terminate" => e.terminate
     }
     ("msg" -> "command accepted")
@@ -261,8 +273,8 @@ case class BreakConditionContainer(
  * @param msg the request by the client
  */
 class BreakConditionsProvider[Id, Signal](coordinator: Coordinator[Id, Signal],
-                                  socket: WebSocketConsoleServer[Id, Signal],
-                                  msg: JValue) extends DataProvider {
+  socket: WebSocketConsoleServer[Id, Signal],
+  msg: JValue) extends DataProvider {
 
   implicit val formats = DefaultFormats
   var execution: Option[Execution] = socket.execution
@@ -354,7 +366,7 @@ case class GraphDataRequest(
  * @param msg the request by the client
  */
 class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: JValue)
-    extends DataProvider {
+  extends DataProvider {
 
   implicit val formats = DefaultFormats
 
@@ -385,7 +397,7 @@ class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: J
    * @return the original set plus the set of vertex IDs in the vicinity
    */
   def findVicinity(sourceIds: Set[Id], radius: Int = 3,
-                   incoming: Boolean = false): Set[Id] = {
+    incoming: Boolean = false): Set[Id] = {
     if (radius == 0) { sourceIds }
     else {
       if (incoming) {
@@ -477,34 +489,34 @@ class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: J
       case otherwise =>
     }
     request.targetCount match {
-      case Some(t)   => targetCount = List(t, 1000).min
+      case Some(t) => targetCount = List(t, 1000).min
       case otherwise =>
     }
     request.vicinityRadius match {
-      case Some(r)   => vicinityRadius = List(r, 4).min
+      case Some(r) => vicinityRadius = List(r, 4).min
       case otherwise =>
     }
     request.vicinityIncoming match {
-      case Some(b)   => vicinityIncoming = b
+      case Some(b) => vicinityIncoming = b
       case otherwise =>
     }
     request.exposeVertices match {
-      case Some(b)   => exposeVertices = b
+      case Some(b) => exposeVertices = b
       case otherwise =>
     }
     request.signalThreshold match {
-      case Some(t)   => signalThreshold = t
+      case Some(t) => signalThreshold = t
       case otherwise =>
     }
     request.collectThreshold match {
-      case Some(t)   => collectThreshold = t
+      case Some(t) => collectThreshold = t
       case otherwise =>
     }
 
     // route request and fetch graph data
     val graphData = request.query match {
       case Some("substring") => request.substring match {
-        case Some(s)   => fetchBySubstring(s)
+        case Some(s) => fetchBySubstring(s)
         case otherwise => fetchInvalid(msg, "missing substring")
       }
       case Some("vertexIds") => request.vertexIds match {
@@ -512,13 +524,13 @@ class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: J
         case otherwise => fetchInvalid(msg, "missing vertexIds")
       }
       case Some("top") => request.topCriterium match {
-        case Some("Highest state")         => fetchByTopState()
-        case Some("Lowest state")          => fetchByTopState(true)
-        case Some("Highest degree")        => fetchByTopDegree
-        case Some("Above signal thresh.")  => fetchByAboveThreshold("signal")
+        case Some("Highest state") => fetchByTopState()
+        case Some("Lowest state") => fetchByTopState(true)
+        case Some("Highest degree") => fetchByTopDegree
+        case Some("Above signal thresh.") => fetchByAboveThreshold("signal")
         case Some("Above collect thresh.") => fetchByAboveThreshold("collect")
-        case Some("Sample")                => fetchSample
-        case otherwise                     => new InvalidDataProvider(msg, "invalid top criterium").fetch
+        case Some("Sample") => fetchSample
+        case otherwise => new InvalidDataProvider(msg, "invalid top criterium").fetch
       }
       case otherwise => fetchInvalid(msg, "missing query")
     }
@@ -536,7 +548,7 @@ class GraphDataProvider[Id, Signal](coordinator: Coordinator[Id, Signal], msg: J
  * @param msg the request by the client
  */
 class ResourcesDataProvider(coordinator: Coordinator[_, _], msg: JValue)
-    extends DataProvider {
+  extends DataProvider {
 
   def fetch(): JObject = {
     val inboxSize: Long = coordinator.getGlobalInboxSize

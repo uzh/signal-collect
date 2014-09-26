@@ -20,6 +20,7 @@
 package com.signalcollect
 
 import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
@@ -58,7 +59,7 @@ object GraphBuilder extends GraphBuilder[Any, Any](None)
  *
  *  @author Philip Stutz
  */
-class GraphBuilder[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
+class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   configOption: Option[GraphConfiguration[Id, Signal]] = None) extends Serializable {
 
   val config = configOption.getOrElse(
