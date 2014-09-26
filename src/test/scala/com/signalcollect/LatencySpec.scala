@@ -48,7 +48,7 @@ class LatencySpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
     }
     val stopTime = System.currentTimeMillis
     val t = stopTime - startTime
-    assert(t < 1000, s"Execution took $t milliseconds, should not be less than 1000.")
+    assert(t < 2000, s"Execution took $t milliseconds, should be less than 2 seconds.")
   }
 
 }
