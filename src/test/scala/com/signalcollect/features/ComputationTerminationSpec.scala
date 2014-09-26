@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GlobalTerminationCondition
+import com.signalcollect.GlobalTerminationDetection
 import com.signalcollect.Graph
 import com.signalcollect.GraphBuilder
 import com.signalcollect.SumOfStates
@@ -32,15 +32,7 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.interfaces.Node
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import org.specs2.runner.JUnitRunner
-import com.typesafe.config.Config
-import akka.actor.ActorRef
-import com.signalcollect.configuration.ActorSystemRegistry
-import akka.actor.Props
-import akka.actor.ActorSystem
-import com.signalcollect.node.DefaultNodeActor
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
@@ -105,15 +97,16 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     "work for synchronous computations" in {
       val graph = createCircleGraph(30)
       try {
-        case object GlobalTermination extends GlobalTerminationCondition {
-          type ResultType = Option[Double]
+        case object GlobalTermination extends GlobalTerminationDetection[Any, Any] {
           override val aggregationInterval: Long = 1
-          val aggregationOperation = new SumOfStates[Double]
-          def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0 && sum.get < 29.0
+          def shouldTerminate(g: Graph[Any, Any]) = {
+            val sum = g.aggregate(new SumOfStates[Double])
+            sum.isDefined && sum.get > 20.0 && sum.get < 29.0
+          }
         }
         val execConfig = ExecutionConfiguration
           .withSignalThreshold(0)
-          .withGlobalTerminationCondition(GlobalTermination)
+          .withGlobalTerminationDetection(GlobalTermination)
           .withExecutionMode(ExecutionMode.Synchronous)
         val info = graph.execute(execConfig)
         val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
@@ -127,15 +120,16 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     "work for asynchronous computations" in {
       val graph = createCircleGraph(100)
       try {
-        case object GlobalTermination extends GlobalTerminationCondition {
-          type ResultType = Option[Double]
+        case object GlobalTermination extends GlobalTerminationDetection[Any, Any] {
           override val aggregationInterval: Long = 1
-          val aggregationOperation = new SumOfStates[Double]
-          def shouldTerminate(sum: Option[Double]) = sum.isDefined && sum.get > 20.0
+          def shouldTerminate(g: Graph[Any, Any]) = {
+            val sum = g.aggregate(new SumOfStates[Double])
+            sum.isDefined && sum.get > 20.0
+          }
         }
         val execConfig = ExecutionConfiguration
           .withSignalThreshold(0)
-          .withGlobalTerminationCondition(GlobalTermination)
+          .withGlobalTerminationDetection(GlobalTermination)
         val info = graph.execute(execConfig)
         val state = graph.forVertexWithId(1, (v: PageRankVertex[Any]) => v.state)
         val aggregate = graph.aggregate(new SumOfStates[Double]).get
