@@ -153,6 +153,20 @@ class IntDoubleHashMap(
     }
   }
 
+  @inline final def contains(key: Int): Boolean = {
+    var position = keyToPosition(key)
+    var keyAtPosition = keys(position)
+    while (keyAtPosition != 0 && key != keyAtPosition) {
+      position = (position + 1) & mask
+      keyAtPosition = keys(position)
+    }
+    if (keyAtPosition != 0) {
+      true
+    } else {
+      false
+    }
+  }
+  
   final def apply(key: Int) = get(key)
 
   @inline final def get(key: Int): Double = {
