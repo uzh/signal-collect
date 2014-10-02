@@ -62,7 +62,7 @@ case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: Clas
   schedulerFactory: SchedulerFactory[Id, Signal],
   preallocatedNodes: Option[Array[ActorRef]],
   nodeProvisioner: NodeProvisioner[Id, Signal],
-  heartbeatIntervalInMilliseconds: Int,
+  statsReportingIntervalInMilliseconds: Int,
   kryoRegistrations: List[String],
   kryoInitializer: String,
   serializeMessages: Boolean,

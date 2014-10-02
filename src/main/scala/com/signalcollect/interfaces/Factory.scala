@@ -52,7 +52,7 @@ abstract class WorkerFactory[Id: ClassTag, Signal: ClassTag] extends Factory {
     existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
     undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
     edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
-    heartbeatIntervalInMilliseconds: Int,
+    statsReportingIntervalInMilliseconds: Int,
     eagerIdleDetection: Boolean,
     throttlingEnabled: Boolean,
     throttlingDuringLoadingEnabled: Boolean,

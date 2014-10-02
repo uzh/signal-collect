@@ -31,7 +31,6 @@ class WorkerOperationCounters(
     var outgoingEdgesRemoved: Long = 0l,
     var signalSteps: Long = 0l,
     var collectSteps: Long = 0l,
-    var heartbeatMessagesReceived: Long = 0l,
     var signalMessagesReceived: Long = 0l,
     var bulkSignalMessagesReceived: Long = 0l,
     var continueMessagesReceived: Long = 0l,

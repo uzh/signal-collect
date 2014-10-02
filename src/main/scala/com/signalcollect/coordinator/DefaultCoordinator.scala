@@ -21,12 +21,11 @@
 package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
-import scala.concurrent.duration._
+
 import scala.reflect.ClassTag
+
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Coordinator
-import com.signalcollect.interfaces.Heartbeat
-import com.signalcollect.interfaces.Logger
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
@@ -35,15 +34,12 @@ import com.signalcollect.interfaces.NodeStatus
 import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
-import com.signalcollect.messaging.AkkaProxy
-import com.signalcollect.util.AkkaUtil._
 import com.sun.management.OperatingSystemMXBean
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
-import akka.actor.ReceiveTimeout
 import akka.actor.actorRef2Scala
-import org.json4s.JsonAST.JValue
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -61,25 +57,18 @@ case object IncrementorForCoordinator {
   }
 }
 
-case object HeartbeatDue
-
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
   throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory[Id, Signal],
-  mapperFactory: MapperFactory[Id],
-  heartbeatIntervalInMilliseconds: Long) extends Coordinator[Id, Signal]
+  mapperFactory: MapperFactory[Id]) extends Coordinator[Id, Signal]
   with Actor
   with ActorLogging
   with ActorRestartLogging
   with MessageRecipientRegistry {
 
-  val heartbeatScheduling = context.system.scheduler.schedule(
-    0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, HeartbeatDue)(context.system.dispatcher)
-
   override def postStop {
-    heartbeatScheduling.cancel
     log.debug(s"Coordinator has stopped.")
   }
 
@@ -100,18 +89,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       IncrementorForCoordinator.increment _)
   }
 
-  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
-
-  var lastHeartbeatTimestamp = System.nanoTime
-
   var allWorkersInitialized = false
-
-  def shouldSendHeartbeat: Boolean = {
-    allWorkersInitialized && messageBus.isInitialized
-  }
-
-  var globalQueueSizeLimitPreviousHeartbeat = 0l
-  var globalReceivedMessagesPreviousHeartbeat = 0l
 
   //  def logMessages {
   //    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
@@ -136,51 +114,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   //    //    verboseIsIdle
   //  }
 
-  def sendHeartbeat {
-    val currentTime = System.nanoTime
-    val timeSinceLast = currentTime - lastHeartbeatTimestamp
-    val currentGlobalQueueSize = getGlobalInboxSize
-    val deltaPreviousToCurrent = currentGlobalQueueSize - globalQueueSizeLimitPreviousHeartbeat
-    val currentMessagesReceived = totalMessagesReceived
-    // Linear interpolation to predict future queue size.
-    val maySignal = {
-//      if (throttlingEnabled) {
-//        val oldestTimestamp = workerStatusTimestamps.min
-//        if (System.nanoTime - oldestTimestamp > heartbeatInterval) {
-//          false
-//        } else {
-//          val predictedGlobalQueueSize = currentGlobalQueueSize + deltaPreviousToCurrent
-//          val currentThroughput = currentMessagesReceived - globalReceivedMessagesPreviousHeartbeat
-//          val globalQueueSizeLimit = (((currentThroughput + numberOfWorkers) * 1.2) + globalQueueSizeLimitPreviousHeartbeat) / 2
-//          predictedGlobalQueueSize <= globalQueueSizeLimit
-//        }
-//      } else {
-        true
-//      }
-    }
-    lastHeartbeatTimestamp = System.nanoTime
-    messageBus.sendToWorkers(Heartbeat(maySignal), false)
-    messageBus.sendToNodes(Heartbeat(maySignal), false)
-//    println("===================================================")
-//    def nanoseondsToSeconds(n: Long) = (n / 10000000.0).round / 100.0
-//    println(s"Time since last: ${nanoseondsToSeconds(timeSinceLast)} seconds")
-//    println(s"globalInboxSize=$currentGlobalQueueSize maySignal=$maySignal")
-//    println("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-//    val workerInboxSizes = messagesSentToWorkers.zip(messagesReceivedByWorkers).map(t => t._1 - t._2)
-//    println(s"Worker inbox sizes : ${workerInboxSizes.toList}")
-//    val current = System.nanoTime
-//    println(s"Coordinator sent to: ${messagesSentToCoordinator}")
-//    println(s"Coord. received by : ${messagesReceivedByCoordinator}")
-//    println(s"Coord. inbox       : ${messagesSentToCoordinator - messagesReceivedByCoordinator}")
-//    println(s"Total sent         : ${totalMessagesSent}")
-//    println(s"Total received     : ${totalMessagesReceived}")
-//    def bytesToGigabytes(bytes: Long): Double = ((bytes / 1073741824.0) * 10.0).round / 10.0
-//    println(s"totalMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory).toString}")
-//    println(s"freeMemory=${bytesToGigabytes(Runtime.getRuntime.freeMemory).toString}")
-//    println(s"usedMemory=${bytesToGigabytes(Runtime.getRuntime.totalMemory - Runtime.getRuntime.freeMemory).toString}")
-//    globalReceivedMessagesPreviousHeartbeat = currentMessagesReceived
-//    globalQueueSizeLimitPreviousHeartbeat = currentGlobalQueueSize
-  }
+
 
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var workerStatusTimestamps: Array[Long] = new Array[Long](numberOfWorkers)
@@ -205,10 +139,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       updateNodeStatusMap(ns)
       if (isIdle) {
         onIdle
-      }
-    case HeartbeatDue =>
-      if (shouldSendHeartbeat) {
-        sendHeartbeat
       }
     case OnIdle(action) =>
       onIdleList = (sender, action) :: onIdleList

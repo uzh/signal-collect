@@ -132,7 +132,6 @@ akka {
       "com.signalcollect.interfaces.BulkSignalNoSourceIds" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
       "com.signalcollect.interfaces.NodeStatus" = kryo
-      "com.signalcollect.interfaces.Heartbeat" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
       "com.signalcollect.interfaces.NodeStatistics" = kryo
       "com.signalcollect.interfaces.SentMessagesStats" = kryo
@@ -140,7 +139,6 @@ akka {
       "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
-      "com.signalcollect.coordinator.HeartbeatDue$" = kryo
       "com.signalcollect.worker.StatsDue$" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "com.signalcollect.worker.Ping" = kryo

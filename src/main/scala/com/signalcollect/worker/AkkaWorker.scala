@@ -37,7 +37,6 @@ import com.signalcollect.interfaces.BulkSignal
 import com.signalcollect.interfaces.BulkSignalNoSourceIds
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 import com.signalcollect.interfaces.ExistingVertexHandlerFactory
-import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
@@ -88,7 +87,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   val undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
   val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
-  val heartbeatIntervalInMilliseconds: Int,
+  val statsReportingIntervalInMilliseconds: Int,
   val eagerIdleDetection: Boolean,
   val throttlingEnabled: Boolean,
   val throttlingDuringLoadingEnabled: Boolean,
@@ -99,8 +98,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
 
   context.setReceiveTimeout(Duration.Undefined)
 
-  val heartbeatInterval = heartbeatIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
-  var lastHeartbeatTimestamp = System.nanoTime
+  val statsReportingInterval = statsReportingIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
   var schedulingTimestamp = System.nanoTime
 
   val akkaScheduler: Scheduler = context.system.scheduler: akka.actor.Scheduler
@@ -113,7 +111,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   }
 
   val statsReportScheduling = akkaScheduler.
-    schedule(0.milliseconds, heartbeatIntervalInMilliseconds.milliseconds, self, StatsDue)
+    schedule(0.milliseconds, statsReportingIntervalInMilliseconds.milliseconds, self, StatsDue)
 
   var scheduledPingPongExchange: Option[Cancellable] = None
 
@@ -342,9 +340,6 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
       if (!worker.operationsScheduled) {
         scheduleOperations
       }
-
-    case Heartbeat(unusedFlag) =>
-      lastHeartbeatTimestamp = System.nanoTime
 
     case StatsDue =>
       worker.sendStatusToCoordinator

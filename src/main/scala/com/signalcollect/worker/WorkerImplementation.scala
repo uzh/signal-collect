@@ -562,7 +562,6 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       numberOfOutgoingEdges = counters.outgoingEdgesAdded - counters.outgoingEdgesRemoved, //only valid if no edges are removed during execution
       outgoingEdgesAdded = counters.outgoingEdgesAdded,
       outgoingEdgesRemoved = counters.outgoingEdgesRemoved,
-      heartbeatMessagesReceived = counters.heartbeatMessagesReceived,
       signalMessagesReceived = counters.signalMessagesReceived,
       bulkSignalMessagesReceived = counters.bulkSignalMessagesReceived,
       continueMessagesReceived = counters.continueMessagesReceived,

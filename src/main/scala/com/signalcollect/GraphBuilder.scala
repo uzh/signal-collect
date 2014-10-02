@@ -78,7 +78,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
       schedulerFactory = new Throughput[Id, Signal],
       preallocatedNodes = None,
       nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
-      heartbeatIntervalInMilliseconds = 100,
+      statsReportingIntervalInMilliseconds = 100,
       kryoRegistrations = List(),
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       serializeMessages = false,
@@ -266,12 +266,21 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
     builder(config.copy(nodeProvisioner = newNodeProvisioner))
 
   /**
+   *  Configures the interval with which the convergence related statistics are reported to the coordinator.
+   *  A smaller interval increases the overhead, but can speed up convergence detection.
+   *
+   *  @param newStatsReportingIntervalInMilliseconds The interval with which the workers send stats to the coordinator.
+   */
+  def withStatsReportingInterval(newStatsReportingIntervalInMilliseconds: Int) =
+    builder(config.copy(statsReportingIntervalInMilliseconds = newStatsReportingIntervalInMilliseconds))
+
+  /**
    *  Configures the interval with which the coordinator sends a heartbeat to the workers.
    *
    *  @param newHeartbeatIntervalInMilliseconds The interval with which the coordinator sends a heartbeat to the workers.
    */
-  def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) =
-    builder(config.copy(heartbeatIntervalInMilliseconds = newHeartbeatIntervalInMilliseconds))
+  @deprecated("Now determines the interval with which workers report stats and has been renamed to 'withStatsReportingInterval'", "2.2.0-SNAPSHOT")
+  def withHeartbeatInterval(newHeartbeatIntervalInMilliseconds: Int) = withStatsReportingInterval(newHeartbeatIntervalInMilliseconds)
 
   /**
    *  Specifies additional Kryo serialization registrations.

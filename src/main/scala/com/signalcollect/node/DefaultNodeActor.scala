@@ -25,7 +25,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
 import com.signalcollect.interfaces.ActorRestartLogging
-import com.signalcollect.interfaces.Heartbeat
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.MessageBusFactory
@@ -68,6 +67,8 @@ class DefaultNodeActor[Id, Signal](
   with ActorLogging
   with ActorRestartLogging {
 
+  //TODO: Set up stats reporting if we should ever add additional features to the Node interface. 
+  
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
@@ -90,8 +91,6 @@ class DefaultNodeActor[Id, Signal](
   }
   
   def receive = {
-    case Heartbeat(maySignal) =>
-      sendStatusToCoordinator
     case w: WorkerStatus =>
       val arrayIndex = w.workerId % numberOfWorkersOnNode
       if (isWorkerIdle(arrayIndex)) {

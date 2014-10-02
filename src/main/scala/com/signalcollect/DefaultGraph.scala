@@ -84,7 +84,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
   existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
   undeliverableSignalHandlerFactory: UndeliverableSignalHandlerFactory[Id, Signal],
   edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
-  heartbeatIntervalInMilliseconds: Int,
+  statsReportingIntervalInMilliseconds: Int,
   eagerIdleDetection: Boolean,
   throttlingEnabled: Boolean,
   throttlingDuringLoadingEnabled: Boolean,
@@ -102,7 +102,7 @@ case class WorkerCreator[Id: ClassTag, Signal: ClassTag](
         existingVertexHandlerFactory,
         undeliverableSignalHandlerFactory,
         edgeAddedToNonExistentVertexHandlerFactory,
-        heartbeatIntervalInMilliseconds,
+        statsReportingIntervalInMilliseconds,
         eagerIdleDetection,
         throttlingEnabled,
         throttlingDuringLoadingEnabled,
@@ -118,16 +118,14 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
   numberOfNodes: Int,
   throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory[Id, Signal],
-  mapperFactory: MapperFactory[Id],
-  heartbeatIntervalInMilliseconds: Long)
+  mapperFactory: MapperFactory[Id])
   extends Creator[DefaultCoordinator[Id, Signal]] {
   def create: DefaultCoordinator[Id, Signal] = new DefaultCoordinator[Id, Signal](
     numberOfWorkers,
     numberOfNodes,
     throttlingEnabled,
     messageBusFactory,
-    mapperFactory,
-    heartbeatIntervalInMilliseconds)
+    mapperFactory)
 }
 
 /**
@@ -200,7 +198,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
           config.existingVertexHandlerFactory,
           config.undeliverableSignalHandlerFactory,
           config.edgeAddedToNonExistentVertexHandlerFactory,
-          config.heartbeatIntervalInMilliseconds,
+          config.statsReportingIntervalInMilliseconds,
           config.eagerIdleDetection,
           config.throttlingEnabled,
           config.throttlingDuringLoadingEnabled,
@@ -219,8 +217,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
       numberOfNodes,
       config.throttlingEnabled: Boolean,
       config.messageBusFactory,
-      config.mapperFactory,
-      config.heartbeatIntervalInMilliseconds)
+      config.mapperFactory)
     system.actorOf(Props(coordinatorCreator.create).withDispatcher("akka.io.pinned-dispatcher"), name = config.actorNamePrefix + "Coordinator")
   }
 
