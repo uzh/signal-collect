@@ -151,6 +151,7 @@ akka {
       "com.signalcollect.worker.StartPingPongExchange" = kryo
       "akka.actor.Terminated" = kryo
       "akka.actor.SystemGuardian$TerminationHookDone$" = kryo
+      "akka.actor.StopChild" = kryo
       "akka.remote.RemoteWatcher$HeartbeatTick$" = java
       "akka.remote.RemoteWatcher$ReapUnreachableTick$" = java
       "akka.dispatch.sysmsg.Terminate" = java

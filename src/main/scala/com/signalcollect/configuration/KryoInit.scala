@@ -107,6 +107,7 @@ class KryoInit {
       register("akka.actor.Terminated")
       register("akka.actor.LocalActorRef")
       register("akka.actor.SystemGuardian$TerminationHookDone$")
+      register("akka.actor.StopChild")
       register("com.signalcollect.interfaces.Request")
       register("com.signalcollect.messaging.Command")
       register("com.signalcollect.messaging.Incrementor$$anonfun$1")
