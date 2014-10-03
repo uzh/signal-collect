@@ -760,11 +760,23 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     if (console != null) { console.shutdown }
     // Only shut down the actor system if we created it.
     if (config.actorSystem.isEmpty) {
-      // The node proxies also shutdown their respective actor systems.
-      parallelBootstrapNodeProxies.foreach(_.shutdown)
-      system.shutdown
-      system.awaitTermination
-      ActorSystemRegistry.remove(system)
+      try {
+        // The node proxies also shutdown their respective actor systems.
+        parallelBootstrapNodeProxies.foreach(_.shutdown)
+      } catch {
+        case t: Throwable =>
+      }
+      try {
+        Thread.sleep(20)
+        if (!system.isTerminated) {
+          system.shutdown
+          system.awaitTermination
+        }
+      } catch {
+        case t: Throwable =>
+      } finally {
+        ActorSystemRegistry.remove(system)
+      }
     } else {
       // If the system is preserved, just cleanup the actors.
       workerActors.foreach(_ ! PoisonPill)

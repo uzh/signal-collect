@@ -37,6 +37,11 @@ akka {
   # Event handlers to register at boot time (Logging$DefaultLogger logs to STDOUT)
   loggers = ["akka.event.Logging$DefaultLogger", "com.signalcollect.console.ConsoleLogger"]
 
+  # Possibility to turn off logging of dead letters while the actor system
+  # is shutting down. Logging is only done when enabled by 'log-dead-letters'
+  # setting.
+  log-dead-letters-during-shutdown = off
+
     """ +
     {
       val level = loggingLevel match {
