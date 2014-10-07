@@ -273,7 +273,9 @@ akka {
   }
 
   remote {
-        
+    
+    log-remote-lifecycle-events = """ + { if (loggingLevel.asInt > 2) "on" else "off" } + """
+
     ### Failure detection and recovery
  
     # Settings for the Phi accrual failure detector (http://ddg.jaist.ac.jp/pub/HDY+04.pdf
@@ -419,7 +421,7 @@ akka {
 
     # Log warning if the number of messages in the backoff buffer in the endpoint
     # writer exceeds this limit. It can be disabled by setting the value to off.
-    log-buffer-size-exceeding = 100000
+    log-buffer-size-exceeding = """ + { if (loggingLevel.asInt > 2) "100000" else "2000000" } + """
     
     netty.tcp {
         
