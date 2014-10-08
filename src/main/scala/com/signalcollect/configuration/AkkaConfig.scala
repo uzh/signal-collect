@@ -446,7 +446,7 @@ akka {
       # so this setting has to be chosen carefully when using UDP.
       # Both send-buffer-size and receive-buffer-size settings has to
       # be adjusted to be able to buffer messages of maximum size.
-      maximum-frame-size = 524288b
+      maximum-frame-size = 2097152b
 
       # (I) Sets the size of the connection backlog
       backlog = 8192
