@@ -28,7 +28,7 @@ class LatencySpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
 
   "Signal/Collect" should "terminate with a very low latency when an execution does nothing" in {
     val startTime = System.currentTimeMillis
-    val g = GraphBuilder.withHeartbeatInterval(10000).build
+    val g = GraphBuilder.withStatsReportingInterval(10000).build
     try {
       (1 to 50).foreach { i =>
         g.awaitIdle
