@@ -47,8 +47,8 @@ trait GraphEditor[@specialized(Int, Long) Id, Signal] {
    *
    *  @note Does not block.
    */
-  def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
-    sendSignal(signal, targetId, sourceId, false)
+  def sendSignal(signal: Signal, targetId: Id, sourceId: Id) {
+    sendSignal(signal, targetId, Some(sourceId), false)
   }
 
   /**

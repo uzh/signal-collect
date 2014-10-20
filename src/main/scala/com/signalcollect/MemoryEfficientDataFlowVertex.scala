@@ -74,7 +74,7 @@ abstract class MemoryEfficientDataFlowVertex[State, GraphSignalType: ClassTag](
 
   override def executeSignalOperation(graphEditor: GraphEditor[Int, GraphSignalType]) {
     _targetIds.foreach { targetId =>
-      graphEditor.sendSignal(computeSignal(targetId), targetId, Some(id))
+      graphEditor.sendSignal(computeSignal(targetId), targetId, id)
     }
     lastSignalState = state
   }

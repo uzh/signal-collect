@@ -119,7 +119,7 @@ class EfficientSsspVertex(val id: Int, var state: Int = Int.MaxValue) extends Ve
   override def executeSignalOperation(graphEditor: GraphEditor[Int, Int]) {
     if (outEdges != 0) {
       new IntSet(targetIdArray).foreach((targetId: Int) =>
-        graphEditor.sendSignal(state + 1, targetId, None))
+        graphEditor.sendSignal(state + 1, targetId))
     }
     lastSignalState = state
   }

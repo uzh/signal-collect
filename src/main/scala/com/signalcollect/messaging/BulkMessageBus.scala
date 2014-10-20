@@ -34,12 +34,15 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](size:
   final val sourceIds = new Array[Id](size)
   final val targetIds = new Array[Id](size)
   final val signals = new Array[Signal](size)
-  def addSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+  def addSignal(signal: Signal, targetId: Id, sourceId: Id) {
     signals(itemCount) = signal
     targetIds(itemCount) = targetId
-    if (sourceId.isDefined) {
-      sourceIds(itemCount) = sourceId.get
-    }
+    sourceIds(itemCount) = sourceId
+    itemCount += 1
+  }
+  def addSignal(signal: Signal, targetId: Id) {
+    signals(itemCount) = signal
+    targetIds(itemCount) = targetId
     itemCount += 1
   }
   def clear {
@@ -109,8 +112,36 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
-    sendSignal(signal, targetId, sourceId, false)
+  @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Id) {
+    val workerId = mapper.getWorkerIdForVertexId(targetId)
+    val bulker = outgoingMessages(workerId)
+    bulker.addSignal(signal, targetId, sourceId)
+    pendingSignals += 1
+    if (bulker.isFull) {
+      pendingSignals -= bulker.numberOfItems
+      if (withSourceIds) {
+        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, bulker.sourceIds.clone))
+      } else {
+        super.sendToWorker(workerId, BulkSignalNoSourceIds[Id, Signal](bulker.signals.clone, bulker.targetIds.clone))
+      }
+      bulker.clear
+    }
+  }
+
+  @inline override def sendSignal(signal: Signal, targetId: Id) {
+    val workerId = mapper.getWorkerIdForVertexId(targetId)
+    val bulker = outgoingMessages(workerId)
+    bulker.addSignal(signal, targetId)
+    pendingSignals += 1
+    if (bulker.isFull) {
+      pendingSignals -= bulker.numberOfItems
+      if (withSourceIds) {
+        super.sendToWorker(workerId, BulkSignal[Id, Signal](bulker.signals.clone, bulker.targetIds.clone, bulker.sourceIds.clone))
+      } else {
+        super.sendToWorker(workerId, BulkSignalNoSourceIds[Id, Signal](bulker.signals.clone, bulker.targetIds.clone))
+      }
+      bulker.clear
+    }
   }
 
   @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id], blocking: Boolean = false) {
@@ -124,10 +155,10 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
     } else {
       val workerId = mapper.getWorkerIdForVertexId(targetId)
       val bulker = outgoingMessages(workerId)
-      if (withSourceIds) {
-        bulker.addSignal(signal, targetId, sourceId)
+      if (sourceId.isDefined) {
+        bulker.addSignal(signal, targetId, sourceId.get)
       } else {
-        bulker.addSignal(signal, targetId, None)
+        bulker.addSignal(signal, targetId)
       }
       pendingSignals += 1
       if (bulker.isFull) {

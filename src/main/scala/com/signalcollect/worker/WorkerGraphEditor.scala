@@ -38,7 +38,7 @@ final class WorkerGraphEditor[@specialized(Int, Long) Id, Signal](
 
   val log = graphEditor.log
 
-  @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Option[Id]) {
+  @inline override def sendSignal(signal: Signal, targetId: Id, sourceId: Id) {
     graphEditor.sendSignal(signal, targetId, sourceId)
   }
 
