@@ -29,8 +29,12 @@ class LowLatencyScheduler[Id, Signal](w: Worker[Id, Signal]) extends Scheduler[I
       val collected = worker.vertexStore.toCollect.process(
         vertex => {
           worker.executeCollectOperationOfVertex(vertex, addToSignal = false)
-          if (!systemOverloaded && vertex.scoreSignal > worker.signalThreshold) {
-            worker.executeSignalOperationOfVertex(vertex)
+          if (vertex.scoreSignal > worker.signalThreshold) {
+            if (systemOverloaded) {
+              worker.vertexStore.toSignal.put(vertex)
+            } else {
+              worker.executeSignalOperationOfVertex(vertex)
+            }
           }
         })
       worker.messageBusFlushed = false
