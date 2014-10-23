@@ -63,8 +63,8 @@ case class SignalMessageWithSourceId[@specialized(Int, Long) Id, Signal](
 
 case class SignalMessageWithoutSourceId[@specialized(Int, Long) Id, Signal](
   val targetId: Id,
-  val signal: Signal)  
-  
+  val signal: Signal)
+
 // Convergence/pause detection
 case class WorkerStatus(
   workerId: Int,
@@ -79,6 +79,10 @@ case class NodeStatus(
   nodeId: Int,
   messagesSent: SentMessagesStats,
   messagesReceived: Long)
+
+case class BulkStatus(senderNodeId: Int, subtreeIsIdle: Boolean, fromWorkers: Array[WorkerStatus], fromNodes: Array[NodeStatus]) {
+  override def toString = s"BulkStatus($senderNodeId, $subtreeIsIdle, [${fromWorkers.mkString(", ")}[, [${fromNodes.mkString(", ")}[])"
+}
 
 case class SentMessagesStats(
   workers: Array[Int],

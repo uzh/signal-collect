@@ -154,9 +154,12 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   def isInitialized = messageBus.isInitialized
 
   def setIdle(newIdleState: Boolean) {
+    val oldIdleState = worker.isIdle
     worker.isIdle = newIdleState
-    if (newIdleState == true && eagerIdleDetection && worker.isIdleDetectionEnabled) {
-      messageBus.sendToNodeUncounted(worker.nodeId, worker.getWorkerStatusForNode)
+    if (eagerIdleDetection && worker.isIdleDetectionEnabled) {
+      if (newIdleState == true || (oldIdleState == true && newIdleState == false)) {
+        messageBus.sendToNodeUncounted(worker.nodeId, worker.getWorkerStatusForNode)
+      }
     }
     if (numberOfNodes > 1 && !worker.pingPongScheduled && worker.isIdleDetectionEnabled && newIdleState == false) {
       worker.sendPing(worker.getRandomPingPongPartner)

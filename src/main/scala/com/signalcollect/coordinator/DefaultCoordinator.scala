@@ -21,9 +21,7 @@
 package com.signalcollect.coordinator
 
 import java.lang.management.ManagementFactory
-
 import scala.reflect.ClassTag
-
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.Coordinator
 import com.signalcollect.interfaces.MapperFactory
@@ -35,11 +33,11 @@ import com.signalcollect.interfaces.Request
 import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
 import com.sun.management.OperatingSystemMXBean
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
+import com.signalcollect.interfaces.BulkStatus
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -114,21 +112,43 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   //    //    verboseIsIdle
   //  }
 
-
-
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var workerStatusTimestamps: Array[Long] = new Array[Long](numberOfWorkers)
   protected var nodeStatus: Array[NodeStatus] = new Array[NodeStatus](numberOfNodes)
 
+  // Returns true iff the status update was newer than the most recent stored one.
+  def handleWorkerStatus(ws: WorkerStatus): Boolean = {
+    // A status might be sent indirectly via the node actor, which means that there is no FIFO
+    // guarantee. To get FIFO back, we check the time stamp of the status.
+    val oldWs = workerStatus(ws.workerId)
+    if (oldWs == null || ws.timeStamp > oldWs.timeStamp) {
+      updateWorkerStatusMap(ws)
+      true
+    } else {
+      false
+    }
+  }
+
   def receive = {
+    case BulkStatus(senderNodeId, isSubtreeIdle, fromWorkers, fromNodes) =>
+      var i = 0
+      while (i < fromWorkers.length) {
+        handleWorkerStatus(fromWorkers(i))
+        i += 1
+      }
+      i = 0
+      while (i < fromNodes.length) {
+        updateNodeStatusMap(fromNodes(i))
+        i += 1
+      }
+      if (isSubtreeIdle && isIdle) {
+        onIdle
+      }
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
       //messageBus.getReceivedMessagesCounter.incrementAndGet
-      // A status might be sent indirectly via the node actor, which means that there is no FIFO
-      // guarantee. To get FIFO back, we check the time stamp of the status.
-      val oldWs = workerStatus(ws.workerId)
-      if (oldWs == null || ws.timeStamp > oldWs.timeStamp) {
-        updateWorkerStatusMap(ws)
+      val wasUpdatePerformed = handleWorkerStatus(ws)
+      if (wasUpdatePerformed) {
         if (isIdle) {
           onIdle
         }

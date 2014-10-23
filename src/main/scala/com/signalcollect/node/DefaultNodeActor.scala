@@ -23,7 +23,6 @@ package com.signalcollect.node
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-
 import com.signalcollect.interfaces.ActorRestartLogging
 import com.signalcollect.interfaces.MapperFactory
 import com.signalcollect.interfaces.MessageBus
@@ -37,12 +36,15 @@ import com.signalcollect.interfaces.SentMessagesStats
 import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.util.AkkaRemoteAddress
 import com.signalcollect.worker.AkkaWorker
-
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.util.Timeout
+import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.interfaces.BulkStatus
+import com.signalcollect.interfaces.BulkStatus
+import com.signalcollect.interfaces.BulkStatus
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -68,29 +70,76 @@ class DefaultNodeActor[Id, Signal](
   with ActorRestartLogging {
 
   //TODO: Set up stats reporting if we should ever add additional features to the Node interface. 
-  
+
+  val subtrees = {
+    if (1 + nodeId * 2 < numberOfNodes) {
+      Set(1 + nodeId * 2, nodeId * 2)
+    } else if (nodeId * 2 < numberOfNodes) {
+      Set(nodeId * 2)
+    } else {
+      Set.empty[Int]
+    }
+  }
+
+  var idleSubtrees = Set.empty[Int]
+
+  var unreportedWorkerStats: Map[Int, WorkerStatus] = Map.empty
+  var unreportedNodeStats: Map[Int, NodeStatus] = Map.empty
+
+  def resetAggregatedStats {
+    unreportedWorkerStats = Map.empty
+    unreportedNodeStats = Map.empty
+  }
+
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
   var receivedMessagesCounter = 0
+  var parentNodeThinksAllSubtreesAreIdle = false
+  var coordinatorThinkThisSubtreeIsIdle = false
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
   var workerStatus: Array[WorkerStatus] = _
-  var workerStatusAlreadyForwardedToCoordinator: Array[Boolean] = _
+  var workerStatusAlreadyForwarded: Array[Boolean] = _
 
   var numberOfIdleWorkers = 0
   var isWorkerIdle: Array[Boolean] = _
   var numberOfWorkersOnNode = 0
+  var numberOfStatsThatNeedForwarding = 0
 
   def initializeIdleDetection {
     receivedMessagesCounter -= 1
     workerStatus = new Array[WorkerStatus](numberOfWorkersOnNode)
     isWorkerIdle = new Array[Boolean](numberOfWorkersOnNode)
-    workerStatusAlreadyForwardedToCoordinator = new Array[Boolean](numberOfWorkersOnNode)
+    workerStatusAlreadyForwarded = new Array[Boolean](numberOfWorkersOnNode)
   }
-  
+
   def receive = {
+
+    case BulkStatus(senderNodeId, isIdle, workerStatusMessages, nodeStatusMessages) =>
+      // TODO: Only send the newest status from each worker/node
+      if (isIdle) {
+        idleSubtrees += senderNodeId
+      } else {
+        idleSubtrees -= senderNodeId
+      }
+      workerStatusMessages.foreach(s => unreportedWorkerStats += ((s.workerId, s)))
+      nodeStatusMessages.foreach(s => unreportedNodeStats += ((s.nodeId, s)))
+      val allSubtreesAreIdle = (idleSubtrees == subtrees)
+      if (allSubtreesAreIdle || parentNodeThinksAllSubtreesAreIdle) {
+        // Both subtrees sent us a bulk status message. We need to forward whatever we have.
+        unreportedNodeStats += ((nodeId, getNodeStatus))
+        val bulkStatus = BulkStatus(nodeId, allSubtreesAreIdle, unreportedWorkerStats.values.toArray, unreportedNodeStats.values.toArray)
+        if (nodeId == 0) {
+          messageBus.sendToCoordinatorUncounted(bulkStatus)
+        } else {
+          messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
+        }
+        parentNodeThinksAllSubtreesAreIdle = allSubtreesAreIdle
+        resetAggregatedStats
+      }
+
     case w: WorkerStatus =>
       val arrayIndex = w.workerId % numberOfWorkersOnNode
       if (isWorkerIdle(arrayIndex)) {
@@ -102,22 +151,33 @@ class DefaultNodeActor[Id, Signal](
           numberOfIdleWorkers += 1
         }
       }
+      if (workerStatusAlreadyForwarded(arrayIndex) || workerStatus(arrayIndex) == null) {
+        // Only increase if there was no message there or if the message that will be replaced had already been forwarded.
+        numberOfStatsThatNeedForwarding += 1
+      }
       workerStatus(arrayIndex) = w
       isWorkerIdle(arrayIndex) = w.isIdle
-      workerStatusAlreadyForwardedToCoordinator(arrayIndex) = false
-      if (numberOfIdleWorkers == numberOfWorkersOnNode) {
+      workerStatusAlreadyForwarded(arrayIndex) = false
+
+      val subtreeIsIdle = numberOfIdleWorkers == numberOfWorkersOnNode
+      if (subtreeIsIdle || parentNodeThinksAllSubtreesAreIdle) {
+        val workerStats = new Array[WorkerStatus](numberOfStatsThatNeedForwarding)
         var i = 0
+        var workerStatsIndex = 0
         while (i < numberOfWorkersOnNode) {
-          if (!workerStatusAlreadyForwardedToCoordinator(i)) {
+          if (!workerStatusAlreadyForwarded(i)) {
             val status = workerStatus(i)
-            if (status != null) {
-              messageBus.sendToCoordinatorUncounted(status)
-              workerStatusAlreadyForwardedToCoordinator(i) = true
-            }
+            workerStats(workerStatsIndex) = status
+            workerStatsIndex += 1
           }
+          workerStatusAlreadyForwarded(i) = true
           i += 1
         }
-        sendStatusToCoordinator // After the worker messages, so the counts for sending them is included.
+        val nodeStatus = getNodeStatus
+        val bulkStatus = BulkStatus(nodeId, subtreeIsIdle, workerStats, Array(nodeStatus))
+        messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
+        numberOfStatsThatNeedForwarding = 0
+        parentNodeThinksAllSubtreesAreIdle = subtreeIsIdle
       }
     case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
@@ -150,10 +210,10 @@ class DefaultNodeActor[Id, Signal](
   var nodeProvisioner: ActorRef = _
 
   def initializeMessageBus(
-      numberOfWorkers: Int, 
-      numberOfNodes: Int, 
-      messageBusFactory: MessageBusFactory[Id, Signal],
-      mapperFactory: MapperFactory[Id]) {
+    numberOfWorkers: Int,
+    numberOfNodes: Int,
+    messageBusFactory: MessageBusFactory[Id, Signal],
+    mapperFactory: MapperFactory[Id]) {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     messageBus = messageBusFactory.createInstance(
       context.system, numberOfWorkers, numberOfNodes, mapperFactory.createInstance(numberOfNodes, numberOfWorkers / numberOfNodes), IncrementorForNode(nodeId).increment _)

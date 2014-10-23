@@ -78,7 +78,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
       schedulerFactory = new Throughput[Id, Signal],
       preallocatedNodes = None,
       nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
-      statsReportingIntervalInMilliseconds = 100,
+      statsReportingIntervalInMilliseconds = 1000,
       kryoRegistrations = List(),
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       serializeMessages = false,
