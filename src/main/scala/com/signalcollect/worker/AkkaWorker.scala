@@ -152,7 +152,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     undeliverableSignalHandlerFactory = undeliverableSignalHandlerFactory,
     edgeAddedToNonExistentVertexHandlerFactory = edgeAddedToNonExistentVertexHandlerFactory,
     signalThreshold = 0.01,
-    collectThreshold = 0.0) //with WorkerInterceptor[Id, Signal]
+    collectThreshold = 0.0) with WorkerInterceptor[Id, Signal]
 
   /**
    * How many graph modifications this worker will execute in one batch.

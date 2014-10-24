@@ -129,6 +129,7 @@ class DefaultNodeActor[Id, Signal](
         if (allSubtreesAreIdle || nodeId != 0) {
           // Do nothing if we're not idle and if we would report to the coordinator. No need to burden it.
           if (nodeId == 0) {
+            println(s"rootnode reported everyone as idle=$allSubtreesAreIdle")
             messageBus.sendToCoordinatorUncounted(bulkStatus)
           } else {
             messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
@@ -174,6 +175,9 @@ class DefaultNodeActor[Id, Signal](
           i += 1
         }
         val nodeStatus = getNodeStatus
+        if (subtreeIsIdle) {
+          println(s"node $nodeId reported as idle")
+        }
         val bulkStatus = BulkStatus(nodeId, subtreeIsIdle, workerStats)
         messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
         numberOfStatsThatNeedForwarding = 0

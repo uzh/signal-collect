@@ -39,7 +39,7 @@ import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.SumOfStates
 import com.signalcollect.SumOfStates
 
-object DistributedHelper {
+object DistributedSimulator {
   def getNodeActors(numberOfSimulatedNodes: Int, workersPerSimulatedNode: Int): Array[ActorRef] = {
     val totalNumberOfWorkers = numberOfSimulatedNodes * workersPerSimulatedNode
     val akkaConfig = AkkaConfig.get(serializeMessages = false,
@@ -66,9 +66,9 @@ object DistributedHelper {
 class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
 
   "Signal/Collect" should "terminate with a low latency when run in a simulated distributed synchronous mode" in {
-    val numberOfSimulatedNodes = 2
+    val numberOfSimulatedNodes = 10
     val workersPerSimulatedNode = 10
-    val nodeActors = DistributedHelper.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
+    val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.
       withPreallocatedNodes(nodeActors).
@@ -76,7 +76,7 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
       build
     println("Graph done")
     try {
-      (1 to 50).foreach { i =>
+      (1 to 1).foreach { i =>
         g.awaitIdle
         val v1 = new PageRankVertex(1)
         val v2 = new PageRankVertex(2)
@@ -107,7 +107,7 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
         //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))
         val stateSum = g.aggregate(SumOfStates[Double])
         stateSum === 8.0 +- 0.00001
-        g.reset
+        //g.reset
       }
     } finally {
       g.shutdown
