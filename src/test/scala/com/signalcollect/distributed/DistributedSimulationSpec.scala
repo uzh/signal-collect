@@ -67,9 +67,9 @@ object DistributedSimulator {
 class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
 
   "Signal/Collect" should "terminate with a low latency when run in a simulated distributed synchronous mode" in {
-    val numberOfSimulatedNodes = 17
+    val numberOfSimulatedNodes = 5
     val workersPerSimulatedNode = 2
-    val circleLength = 10000
+    val circleLength = 10
     val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.
@@ -78,7 +78,7 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
       withStatsReportingInterval(0).
       build
     try {
-      (1 to 1).foreach { i =>
+      (1 to 10).foreach { i =>
         g.awaitIdle
         for (i <- 0 until circleLength) {
           g.addVertex(new PageRankVertex(i))
@@ -88,15 +88,15 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
         println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0)))
         //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))
         val stateSum = g.aggregate(SumOfStates[Double])
-        stateSum === 8.0 +- 0.00001
-        //g.reset
+        stateSum === circleLength.toDouble +- 0.00001
+        g.reset
       }
     } finally {
       g.shutdown
     }
     val stopTime = System.currentTimeMillis
     val t = stopTime - startTime
-    assert(t < 2000, s"Execution took $t milliseconds, should be less than 2 seconds.")
+    assert(t < 30000, s"Execution took $t milliseconds, should be less than 30 seconds.")
   }
 
 }

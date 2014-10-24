@@ -152,6 +152,7 @@ class KryoInit {
       register("com.signalcollect.factory.scheduler.Throughput$mcI$sp")
       register("com.signalcollect.factory.storage.MemoryEfficientStorage$mcI$sp")
       register("com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory$mcI$sp")
+      register("com.signalcollect.node.IdleReportRequested")
       register("scala.reflect.ManifestFactory$$anon$11")
       register("com.signalcollect.examples.Location")
       register("com.signalcollect.examples.Path")
