@@ -129,12 +129,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  var bulkStatusReceived = 0
-  
+  //var bulkStatusReceived = 0
+
   def receive = {
     case BulkStatus(senderNodeId, fromWorkers) =>
-      bulkStatusReceived += 1
-      //println(s"bulkStatusReceived=$bulkStatusReceived (${fromWorkers.length})")
+//      bulkStatusReceived += 1
+//      println(s"bulkStatusReceived=$bulkStatusReceived (${fromWorkers.length})")
       var i = 0
       while (i < fromWorkers.length) {
         handleWorkerStatus(fromWorkers(i))

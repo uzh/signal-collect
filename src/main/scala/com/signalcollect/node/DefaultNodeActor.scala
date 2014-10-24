@@ -90,6 +90,9 @@ class DefaultNodeActor[Id, Signal](
 
   def receive = {
 
+    case IdleReportRequested(allIdle) =>
+      binaryTreeIdleDetector.reportToParent(allIdle)
+
     case b: BulkStatus =>
       binaryTreeIdleDetector.receivedBulkStatus(b)
 

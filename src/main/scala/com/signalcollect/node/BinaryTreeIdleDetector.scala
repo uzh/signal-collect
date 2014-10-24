@@ -25,6 +25,8 @@ import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.WorkerStatus
 
+case class IdleReportRequested(allIdle: Boolean)
+
 /**
  * A virtual binary tree is formed over all nodes.
  * Worker status messages for idle detection are propagated from the leaf nodes
@@ -41,6 +43,8 @@ class BinaryTreeIdleDetector(
   val workersPerNode: Int,
   val messageBus: MessageBus[_, _]) {
 
+  var statusReceivedSinceIdleReportRequested = false
+  var reportRequestedPending = false
   var allIdleReported = false
   var allMostRecentWorkerStats = Map.empty[Int, WorkerStatus]
   var unreportedWorkerStats = Map.empty[Int, WorkerStatus]
@@ -65,44 +69,77 @@ class BinaryTreeIdleDetector(
   val numberOfWorkersUnderIdleDetection = computeNumberOfSubnodes(nodeId) * workersPerNode
 
   def receivedBulkStatus(b: BulkStatus) {
+    assert(b.fromWorkers.length > 0)
     b.fromWorkers.foreach { s =>
       unreportedWorkerStats += ((s.workerId, s))
       allMostRecentWorkerStats += ((s.workerId, s))
     }
+    if (reportRequestedPending) {
+      statusReceivedSinceIdleReportRequested = true
+    } else {
+      computeAllIdleAndRequestReportIfNecessary
+    }
+  }
 
-    val allNewReportsIdle = b.fromWorkers.forall(_.isIdle)
-    if (allIdleReported && allNewReportsIdle) {
-      reportToParent(allIdle = true)
-    } else if (allIdleReported && !allNewReportsIdle) {
-      reportToParent(allIdle = false)
-    } else if (!allIdleReported && !allNewReportsIdle) {
-      // Do nothing.
-    } else { // !allIdleReported && allNewReportsIdle
-      // We have to check if all workers are idle now.
-      if (allMostRecentWorkerStats.size == numberOfWorkersUnderIdleDetection) {
-        // There's enough reports, potentially they're all idle. We need to verify.
-        val allIdle = allMostRecentWorkerStats.values.forall(_.isIdle)
-        if (allIdle) {
-          reportToParent(allIdle = true)
+  def computeAllIdleAndRequestReportIfNecessary {
+    if (!reportRequestedPending) {
+      val allNewReportsIdle = unreportedWorkerStats.values.forall(_.isIdle)
+      if (allIdleReported && allNewReportsIdle) {
+        assert(unreportedWorkerStats.size > 0)
+        reportRequestedPending = true
+        messageBus.sendToNodeUncounted(nodeId, IdleReportRequested(true))
+      } else if (allIdleReported && !allNewReportsIdle) {
+        assert(unreportedWorkerStats.size > 0)
+        reportRequestedPending = true
+        messageBus.sendToNodeUncounted(nodeId, IdleReportRequested(false))
+      } else if (!allIdleReported && !allNewReportsIdle) {
+        // Do nothing.
+      } else { // !allIdleReported && allNewReportsIdle
+        // We have to check if all workers are idle now.
+        if (allMostRecentWorkerStats.size == numberOfWorkersUnderIdleDetection) {
+          // There's enough reports, potentially they're all idle. We need to verify.
+          val allIdle = allMostRecentWorkerStats.values.forall(_.isIdle)
+          if (allIdle) {
+            assert(unreportedWorkerStats.size > 0)
+            reportRequestedPending = true
+            messageBus.sendToNodeUncounted(nodeId, IdleReportRequested(allIdle))
+          }
+        } else {
+          // Not enough reports for all to be idle. Do nothing.
         }
-      } else {
-        // Not enough reports for all to be idle. Do nothing.
       }
     }
   }
 
   def reportToParent(allIdle: Boolean) {
-    val bulkStatus = BulkStatus(nodeId, unreportedWorkerStats.values.toArray)
-    if (nodeId == 0) {
-      if (allIdle) { // We only tell the coordinator if all of them are idle.
-        messageBus.sendToCoordinatorUncounted(bulkStatus)
-        unreportedWorkerStats = Map.empty
-        allIdleReported = allIdle
-      }
+    assert(reportRequestedPending == true)
+    assert(unreportedWorkerStats.size > 0)
+    if (statusReceivedSinceIdleReportRequested) {
+      reportRequestedPending = false
+      statusReceivedSinceIdleReportRequested = false
+      computeAllIdleAndRequestReportIfNecessary
     } else {
-      messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
-      unreportedWorkerStats = Map.empty
-      allIdleReported = allIdle
+      reportRequestedPending = false
+      statusReceivedSinceIdleReportRequested = false
+      if (nodeId == 0) {
+        if (allIdle) { // We only tell the coordinator if all of them are idle.
+          //println(s"Node 0 sending ${unreportedWorkerStats.size} stats to coordinator")
+          val bulkStatus = BulkStatus(nodeId, unreportedWorkerStats.values.toArray)
+          messageBus.sendToCoordinatorUncounted(bulkStatus)
+          unreportedWorkerStats = Map.empty
+          allIdleReported = allIdle
+        }
+      } else {
+        if (nodeId / 2 == 0 && !allIdle) {
+          // Do nothing, we only tell node 0 if all workers are idle.
+        } else {
+          //println(s"Node $nodeId sending ${unreportedWorkerStats.size} stats to node ${nodeId / 2}")
+          val bulkStatus = BulkStatus(nodeId, unreportedWorkerStats.values.toArray)
+          messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
+          unreportedWorkerStats = Map.empty
+          allIdleReported = allIdle
+        }
+      }
     }
   }
 

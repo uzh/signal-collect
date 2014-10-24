@@ -67,8 +67,8 @@ object DistributedSimulator {
 class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
 
   "Signal/Collect" should "terminate with a low latency when run in a simulated distributed synchronous mode" in {
-    val numberOfSimulatedNodes = 32
-    val workersPerSimulatedNode = 4
+    val numberOfSimulatedNodes = 17
+    val workersPerSimulatedNode = 2
     val circleLength = 10000
     val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
     val startTime = System.currentTimeMillis
