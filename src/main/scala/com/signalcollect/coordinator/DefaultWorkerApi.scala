@@ -73,7 +73,7 @@ class DefaultWorkerApi[Id, Signal](
     getIndividualNodeStatistics.fold(NodeStatistics())(_ + _)
   }
 
-  override def signalStep: Boolean = futures(_.signalStep) forall get
+  override def signalStep = futures(_.signalStep) foreach get
 
   override def collectStep: Boolean = futures(_.collectStep) forall get
 

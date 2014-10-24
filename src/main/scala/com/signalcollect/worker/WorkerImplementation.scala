@@ -66,7 +66,8 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
-  val scheduling: WorkerScheduling,
+  val isEagerIdleDetectionEnabled: Boolean,
+  val isThrottlingEnabled: Boolean,
   val supportBlockingGraphModificationsInVertex: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
@@ -165,15 +166,27 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
 
   override def initializeIdleDetection {
     isIdleDetectionEnabled = true
-    if (numberOfNodes > 1) {
-      // Sent to a random worker on the next node initially.
-      val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
-      val workerOnNode = Random.nextInt(workersPerNode)
-      val workerId = partnerNodeId * workersPerNode + workerOnNode
-      sendPing(workerId)
+
+    // Ensure that the current status is immediately reported.
+    if (isEagerIdleDetectionEnabled) {
+      messageBus.sendToNodeUncounted(nodeId, getWorkerStatusForNode)
     } else {
-      sendPing(getRandomPingPongPartner)
+      sendStatusToCoordinator
     }
+
+    // Initiate PingPong throttling.
+    if (isThrottlingEnabled) {
+      if (numberOfNodes > 1) {
+        // Sent to a random worker on the next node initially.
+        val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
+        val workerOnNode = Random.nextInt(workersPerNode)
+        val workerId = partnerNodeId * workersPerNode + workerOnNode
+        sendPing(workerId)
+      } else {
+        sendPing(getRandomPingPongPartner)
+      }
+    }
+
   }
 
   def sendStatusToCoordinator {
@@ -260,12 +273,11 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     isPaused = true
   }
 
-  override def signalStep: Boolean = {
+  override def signalStep {
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
     messageBusFlushed = true
-    vertexStore.toCollect.isEmpty
   }
 
   override def collectStep: Boolean = {
@@ -666,7 +678,7 @@ trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
     println("startComputation")
     super.startComputation
   }
-  abstract override def signalStep: Boolean = {
+  abstract override def signalStep {
     println("signalStep")
     super.signalStep
   }

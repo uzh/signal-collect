@@ -38,12 +38,13 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.SumOfStates
 import com.signalcollect.SumOfStates
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 
 object DistributedSimulator {
   def getNodeActors(numberOfSimulatedNodes: Int, workersPerSimulatedNode: Int): Array[ActorRef] = {
     val totalNumberOfWorkers = numberOfSimulatedNodes * workersPerSimulatedNode
     val akkaConfig = AkkaConfig.get(serializeMessages = false,
-      loggingLevel = Logging.DebugLevel,
+      loggingLevel = Logging.WarningLevel,
       kryoRegistrations = List("com.signalcollect.Graph$$anon$1"),
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       hostname = InetAddress.getLocalHost.getHostAddress,
@@ -66,42 +67,23 @@ object DistributedSimulator {
 class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
 
   "Signal/Collect" should "terminate with a low latency when run in a simulated distributed synchronous mode" in {
-    val numberOfSimulatedNodes = 10
-    val workersPerSimulatedNode = 10
+    val numberOfSimulatedNodes = 32
+    val workersPerSimulatedNode = 4
+    val circleLength = 10000
     val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.
+      withMessageBusFactory(new BulkAkkaMessageBusFactory[Any, Any](10000, true)).
       withPreallocatedNodes(nodeActors).
       withStatsReportingInterval(0).
       build
-    println("Graph done")
     try {
       (1 to 1).foreach { i =>
         g.awaitIdle
-        val v1 = new PageRankVertex(1)
-        val v2 = new PageRankVertex(2)
-        val v3 = new PageRankVertex(3)
-        val v4 = new PageRankVertex(4)
-        val v5 = new PageRankVertex(5)
-        val v6 = new PageRankVertex(6)
-        val v7 = new PageRankVertex(7)
-        val v8 = new PageRankVertex(8)
-        g.addVertex(v1)
-        g.addVertex(v2)
-        g.addVertex(v3)
-        g.addVertex(v4)
-        g.addVertex(v5)
-        g.addVertex(v6)
-        g.addVertex(v7)
-        g.addVertex(v8)
-        g.addEdge(1, new PageRankEdge(2))
-        g.addEdge(2, new PageRankEdge(3))
-        g.addEdge(3, new PageRankEdge(4))
-        g.addEdge(4, new PageRankEdge(5))
-        g.addEdge(5, new PageRankEdge(6))
-        g.addEdge(6, new PageRankEdge(7))
-        g.addEdge(7, new PageRankEdge(8))
-        g.addEdge(8, new PageRankEdge(1))
+        for (i <- 0 until circleLength) {
+          g.addVertex(new PageRankVertex(i))
+          g.addEdge(i, new PageRankEdge((i + 1) % circleLength))
+        }
         g.awaitIdle
         println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0)))
         //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))

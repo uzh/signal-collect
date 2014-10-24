@@ -89,28 +89,28 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
 
   var allWorkersInitialized = false
 
-//  def logMessages {
-//    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
-//    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
-//    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
-//    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
-//    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
-//    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
-//    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
-//    log.debug(s"Total sent         : ${totalMessagesSent}")
-//    log.debug(s"Total received     : ${totalMessagesReceived}")
-//    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
-//    log.debug(workerApi.getWorkerStatistics.toString)
-//    //    println("Worker RPC ...")
-//    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
-//    //    println("Worker RPC ...")
-//    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
-//    //    println("Worker RPC ...")
-//    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
-//    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
-//    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
-//    //    verboseIsIdle
-//  }
+  //  def logMessages {
+  //    log.debug("Idle: " + workerStatus.filter(workerStatus => workerStatus != null && workerStatus.isIdle).size + "/" + numberOfWorkers)
+  //    log.debug(s"Workers sent to    : ${messagesSentToWorkers.toList}")
+  //    log.debug(s"Workers received by: ${messagesReceivedByWorkers.toList}")
+  //    log.debug(s"Nodes sent to      : ${messagesSentToNodes.toList}")
+  //    log.debug(s"Nodes received by  : ${messagesReceivedByNodes.toList}")
+  //    log.debug(s"Coordinator sent to: ${messagesSentToCoordinator}")
+  //    log.debug(s"Coord. received by : ${messagesReceivedByCoordinator}")
+  //    log.debug(s"Total sent         : ${totalMessagesSent}")
+  //    log.debug(s"Total received     : ${totalMessagesReceived}")
+  //    log.debug(s"Global inbox size  : ${getGlobalInboxSize}")
+  //    log.debug(workerApi.getWorkerStatistics.toString)
+  //    //    println("Worker RPC ...")
+  //    //    println(s"Number of vertices loaded total: ${workerApi.getWorkerStatistics.numberOfVertices}")
+  //    //    println("Worker RPC ...")
+  //    //    println(s"Number of vertices loaded per worker: ${workerApi.getIndividualWorkerStatistics map (_.numberOfVertices) mkString (", ")}")
+  //    //    println("Worker RPC ...")
+  //    //    val individualSystemMemFree = workerApi.getIndividualSystemInformation map (_.jmx_mem_free)
+  //    //    println(s"Worker with least amount of free memory: ${((individualSystemMemFree min) / 100000000.0).round / 10.0}GB")
+  //    //    println(s"Free memory per worker: ${individualSystemMemFree map { x => ((x / 100000000.0).round / 10.0) + "GB" } mkString(", ")}")
+  //    //    verboseIsIdle
+  //  }
 
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var workerStatusTimestamps: Array[Long] = new Array[Long](numberOfWorkers)
@@ -129,20 +129,20 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
 
+  var bulkStatusReceived = 0
+  
   def receive = {
-    case BulkStatus(senderNodeId, isSubtreeIdle, fromWorkers) =>
+    case BulkStatus(senderNodeId, fromWorkers) =>
+      bulkStatusReceived += 1
+      //println(s"bulkStatusReceived=$bulkStatusReceived (${fromWorkers.length})")
       var i = 0
       while (i < fromWorkers.length) {
         handleWorkerStatus(fromWorkers(i))
         i += 1
       }
       i = 0
-      if (isSubtreeIdle && isIdle) {
-        println("!!!!! IDLE !!!!!!!")
+      if (isIdle) {
         onIdle
-      } else {
-        println("Nope, still not idle.")
-        //logMessages
       }
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
@@ -267,18 +267,18 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     resetMessagingStats
     computeMessagingStats
     if (messagesSentToCoordinator != messagesReceivedByCoordinator) {
-      println(s"Coordinator: $messagesReceivedByCoordinator/$messagesSentToCoordinator, globalInbox=${getGlobalInboxSize}")
+      //println(s"Coordinator: $messagesReceivedByCoordinator/$messagesSentToCoordinator, globalInbox=${getGlobalInboxSize}")
       return false
     }
     for (nodeId <- 0 until numberOfNodes) {
       if (messagesSentToNodes(nodeId) != messagesReceivedByNodes(nodeId)) {
-        println(s"Node $nodeId: ${messagesReceivedByNodes(nodeId)}/${messagesSentToNodes(nodeId)}, globalInbox=${getGlobalInboxSize}")
+        //println(s"Node $nodeId: ${messagesReceivedByNodes(nodeId)}/${messagesSentToNodes(nodeId)}, globalInbox=${getGlobalInboxSize}")
         return false
       }
     }
     for (workerId <- 0 until numberOfWorkers) {
       if (messagesSentToWorkers(workerId) != messagesReceivedByWorkers(workerId)) {
-        println(s"Worker $workerId: ${messagesReceivedByWorkers(workerId)}/${messagesSentToWorkers(workerId)}, globalInbox=${getGlobalInboxSize}")
+        //println(s"Worker $workerId: ${messagesReceivedByWorkers(workerId)}/${messagesSentToWorkers(workerId)}, globalInbox=${getGlobalInboxSize}")
         return false
       }
     }

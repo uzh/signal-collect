@@ -62,10 +62,6 @@ case class StartPingPongExchange(pingPongPartner: Int)
 case class Ping(fromWorker: Int)
 case class Pong(fromWorker: Int)
 
-trait WorkerScheduling {
-  def scheduleOperations
-}
-
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
@@ -98,8 +94,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val supportBlockingGraphModificationsInVertex: Boolean)
   extends Actor
   with ActorLogging
-  with ActorRestartLogging
-  with WorkerScheduling {
+  with ActorRestartLogging {
 
   context.setReceiveTimeout(Duration.Undefined)
 
@@ -142,7 +137,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     workerId = workerId,
     numberOfWorkers = numberOfWorkers,
     numberOfNodes = numberOfNodes,
-    scheduling = this,
+    isEagerIdleDetectionEnabled = eagerIdleDetection,
+    isThrottlingEnabled = throttlingEnabled || throttlingDuringLoadingEnabled,
     supportBlockingGraphModificationsInVertex = supportBlockingGraphModificationsInVertex,
     messageBus = messageBus,
     log = log,
@@ -152,7 +148,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     undeliverableSignalHandlerFactory = undeliverableSignalHandlerFactory,
     edgeAddedToNonExistentVertexHandlerFactory = edgeAddedToNonExistentVertexHandlerFactory,
     signalThreshold = 0.01,
-    collectThreshold = 0.0) with WorkerInterceptor[Id, Signal]
+    collectThreshold = 0.0) //with WorkerInterceptor[Id, Signal]
 
   /**
    * How many graph modifications this worker will execute in one batch.

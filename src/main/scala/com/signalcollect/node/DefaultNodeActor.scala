@@ -69,120 +69,33 @@ class DefaultNodeActor[Id, Signal](
   with ActorLogging
   with ActorRestartLogging {
 
-  //TODO: Set up stats reporting if we should ever add additional features to the Node interface. 
-
-  val subtrees = {
-    if (1 + nodeId * 2 < numberOfNodes) {
-      Set(1 + nodeId * 2, nodeId * 2)
-    } else if (nodeId * 2 < numberOfNodes) {
-      Set(nodeId * 2)
-    } else {
-      Set.empty[Int]
-    }
-  }
-
-  var idleSubtrees = Set.empty[Int]
-
-  var unreportedWorkerStats: Map[Int, WorkerStatus] = Map.empty
-
-  def resetAggregatedStats {
-    unreportedWorkerStats = Map.empty
-  }
-
   // To keep track of sent messages before the message bus is initialized.
   var bootstrapMessagesSentToCoordinator = 0
 
   var receivedMessagesCounter = 0
   var parentNodeThinksAllSubtreesAreIdle = false
-  var coordinatorThinkThisSubtreeIsIdle = false
 
   // To keep track of the workers this node is responsible for.
   var workers: List[ActorRef] = List[ActorRef]()
-  var workerStatus: Array[WorkerStatus] = _
-  var workerStatusAlreadyForwarded: Array[Boolean] = _
-
-  var numberOfIdleWorkers = 0
-  var isWorkerIdle: Array[Boolean] = _
   var numberOfWorkersOnNode = 0
-  var numberOfStatsThatNeedForwarding = 0
+
+  var binaryTreeIdleDetector: BinaryTreeIdleDetector = _
+  var workersOnNodeIdleDetector: WorkersOnNodeIdleDetector = _
 
   def initializeIdleDetection {
     receivedMessagesCounter -= 1
-    workerStatus = new Array[WorkerStatus](numberOfWorkersOnNode)
-    isWorkerIdle = new Array[Boolean](numberOfWorkersOnNode)
-    workerStatusAlreadyForwarded = new Array[Boolean](numberOfWorkersOnNode)
+    binaryTreeIdleDetector = new BinaryTreeIdleDetector(nodeId, numberOfNodes, numberOfWorkersOnNode, messageBus)
+    workersOnNodeIdleDetector = new WorkersOnNodeIdleDetector(nodeId, numberOfWorkersOnNode, messageBus)
   }
 
   def receive = {
 
-    case BulkStatus(senderNodeId, isIdle, workerStatusMessages) =>
-      if (isIdle) {
-        idleSubtrees += senderNodeId
-      } else {
-        idleSubtrees -= senderNodeId
-      }
-      workerStatusMessages.foreach(s => unreportedWorkerStats += ((s.workerId, s)))
-      val allSubtreesAreIdle = (idleSubtrees == subtrees)
-      if (allSubtreesAreIdle || parentNodeThinksAllSubtreesAreIdle) {
-        // Both subtrees sent us a bulk status message. We need to forward whatever we have.
-        val bulkStatus = BulkStatus(nodeId, allSubtreesAreIdle, unreportedWorkerStats.values.toArray)
-        if (allSubtreesAreIdle || nodeId != 0) {
-          // Do nothing if we're not idle and if we would report to the coordinator. No need to burden it.
-          if (nodeId == 0) {
-            println(s"rootnode reported everyone as idle=$allSubtreesAreIdle")
-            messageBus.sendToCoordinatorUncounted(bulkStatus)
-          } else {
-            messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
-          }
-          parentNodeThinksAllSubtreesAreIdle = allSubtreesAreIdle
-          resetAggregatedStats
-        }
-      }
+    case b: BulkStatus =>
+      binaryTreeIdleDetector.receivedBulkStatus(b)
 
     case w: WorkerStatus =>
-      val arrayIndex = w.workerId % numberOfWorkersOnNode
-      if (isWorkerIdle(arrayIndex)) {
-        if (!w.isIdle) {
-          numberOfIdleWorkers -= 1
-        }
-      } else {
-        if (w.isIdle) {
-          numberOfIdleWorkers += 1
-        }
-      }
-      if (workerStatusAlreadyForwarded(arrayIndex) || workerStatus(arrayIndex) == null) {
-        // Only increase if there was no message there or if the message that will be replaced had already been forwarded.
-        numberOfStatsThatNeedForwarding += 1
-      }
-      workerStatus(arrayIndex) = w
-      isWorkerIdle(arrayIndex) = w.isIdle
-      workerStatusAlreadyForwarded(arrayIndex) = false
+      workersOnNodeIdleDetector.receivedWorkerStatus(w)
 
-      val subtreeIsIdle = numberOfIdleWorkers == numberOfWorkersOnNode
-      if (subtreeIsIdle || parentNodeThinksAllSubtreesAreIdle) {
-        val workerStats = new Array[WorkerStatus](numberOfStatsThatNeedForwarding)
-        var i = 0
-        var workerStatsIndex = 0
-        while (i < numberOfWorkersOnNode) {
-          if (!workerStatusAlreadyForwarded(i)) {
-            val status = workerStatus(i)
-            if (status != null) {
-              workerStats(workerStatsIndex) = status
-              workerStatsIndex += 1
-            }
-          }
-          workerStatusAlreadyForwarded(i) = true
-          i += 1
-        }
-        val nodeStatus = getNodeStatus
-        if (subtreeIsIdle) {
-          println(s"node $nodeId reported as idle")
-        }
-        val bulkStatus = BulkStatus(nodeId, subtreeIsIdle, workerStats)
-        messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
-        numberOfStatsThatNeedForwarding = 0
-        parentNodeThinksAllSubtreesAreIdle = subtreeIsIdle
-      }
     case Request(command, reply, incrementor) =>
       receivedMessagesCounter += 1
       val result = command.asInstanceOf[Node[Id, Signal] => Any](this)

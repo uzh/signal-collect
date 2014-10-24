@@ -80,8 +80,8 @@ case class NodeStatus(
   messagesSent: SentMessagesStats,
   messagesReceived: Long)
 
-case class BulkStatus(senderNodeId: Int, subtreeIsIdle: Boolean, fromWorkers: Array[WorkerStatus]) {
-  override def toString = s"BulkStatus($senderNodeId, $subtreeIsIdle, [${fromWorkers.mkString(", ")}])"
+case class BulkStatus(senderNodeId: Int, fromWorkers: Array[WorkerStatus]) {
+  override def toString = s"BulkStatus($senderNodeId, [${fromWorkers.mkString(", ")}])"
 }
 
 case class SentMessagesStats(
