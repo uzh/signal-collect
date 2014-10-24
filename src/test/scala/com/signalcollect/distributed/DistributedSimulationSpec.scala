@@ -85,7 +85,7 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
           g.addEdge(i, new PageRankEdge((i + 1) % circleLength))
         }
         g.awaitIdle
-        println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0)))
+        g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0))
         //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))
         val stateSum = g.aggregate(SumOfStates[Double])
         stateSum === circleLength.toDouble +- 0.00001
