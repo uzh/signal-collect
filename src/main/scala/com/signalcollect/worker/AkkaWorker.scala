@@ -62,6 +62,10 @@ case class StartPingPongExchange(pingPongPartner: Int)
 case class Ping(fromWorker: Int)
 case class Pong(fromWorker: Int)
 
+trait WorkerScheduling {
+  def scheduleOperations
+}
+
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
  * closure capture when serialized.
@@ -94,24 +98,28 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val supportBlockingGraphModificationsInVertex: Boolean)
   extends Actor
   with ActorLogging
-  with ActorRestartLogging {
+  with ActorRestartLogging
+  with WorkerScheduling {
 
   context.setReceiveTimeout(Duration.Undefined)
 
-  val statsReportingInterval = statsReportingIntervalInMilliseconds * 1000000 // milliseconds to nanoseconds
   var schedulingTimestamp = System.nanoTime
 
   val akkaScheduler: Scheduler = context.system.scheduler: akka.actor.Scheduler
   implicit val executor = context.system.dispatcher
 
   override def postStop {
-    statsReportScheduling.cancel
+    statsReportScheduling.foreach(_.cancel)
     scheduledPingPongExchange.foreach(_.cancel)
     log.debug(s"Worker $workerId has stopped.")
   }
 
-  val statsReportScheduling = akkaScheduler.
-    schedule(0.milliseconds, statsReportingIntervalInMilliseconds.milliseconds, self, StatsDue)
+  val statsReportScheduling: Option[Cancellable] = if (statsReportingIntervalInMilliseconds > 0) {
+    Some(akkaScheduler.
+      schedule(0.milliseconds, statsReportingIntervalInMilliseconds.milliseconds, self, StatsDue))
+  } else {
+    None
+  }
 
   var scheduledPingPongExchange: Option[Cancellable] = None
 
@@ -134,7 +142,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     workerId = workerId,
     numberOfWorkers = numberOfWorkers,
     numberOfNodes = numberOfNodes,
-    eagerIdleDetection = eagerIdleDetection,
+    scheduling = this,
     supportBlockingGraphModificationsInVertex = supportBlockingGraphModificationsInVertex,
     messageBus = messageBus,
     log = log,
@@ -144,7 +152,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     undeliverableSignalHandlerFactory = undeliverableSignalHandlerFactory,
     edgeAddedToNonExistentVertexHandlerFactory = edgeAddedToNonExistentVertexHandlerFactory,
     signalThreshold = 0.01,
-    collectThreshold = 0.0)
+    collectThreshold = 0.0) //with WorkerInterceptor[Id, Signal]
 
   /**
    * How many graph modifications this worker will execute in one batch.

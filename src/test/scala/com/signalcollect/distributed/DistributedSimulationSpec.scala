@@ -31,51 +31,82 @@ import akka.actor.Props
 import com.signalcollect.node.DefaultNodeActor
 import com.signalcollect.TestAnnouncements
 import com.signalcollect.GraphBuilder
+import com.signalcollect.configuration.ActorSystemRegistry
+import akka.actor.ActorRef
+import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.ExecutionConfiguration
+import com.signalcollect.SumOfStates
+import com.signalcollect.SumOfStates
 
-class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
-
-  "Signal/Collect" should "terminate with a very low latency when run in a simulated distributed synchronous mode" in {
-    val numberOfSimulatedNodes = 10
-    val workersPerSimulatedNode = 2
+object DistributedHelper {
+  def getNodeActors(numberOfSimulatedNodes: Int, workersPerSimulatedNode: Int): Array[ActorRef] = {
     val totalNumberOfWorkers = numberOfSimulatedNodes * workersPerSimulatedNode
-    def createAkkaConfig(port: Int) = AkkaConfig.get(serializeMessages = false,
-      loggingLevel = Logging.WarningLevel,
-      kryoRegistrations = List(),
+    val akkaConfig = AkkaConfig.get(serializeMessages = false,
+      loggingLevel = Logging.DebugLevel,
+      kryoRegistrations = List("com.signalcollect.Graph$$anon$1"),
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       hostname = InetAddress.getLocalHost.getHostAddress,
-      port = port,
-      numberOfCores = 2)
-    val akkaConfigs = (0 to numberOfSimulatedNodes).map { id =>
-      val port = 3000 + id
-      createAkkaConfig(port)
-    }
-    val actorSystems = akkaConfigs.zipWithIndex.map {
-      case (config, index) => (index, ActorSystem(s"SignalCollect$index", config))
+      port = 0,
+      numberOfCores = workersPerSimulatedNode)
+    val actorSystems = (0 until numberOfSimulatedNodes).map {
+      systemId => (systemId, ActorSystem(if (systemId == 0) "SignalCollect" else s"SignalCollect$systemId", akkaConfig))
     }
     val nodeActors = actorSystems.map {
       case (systemId, system) =>
         system.actorOf(
-          Props(classOf[DefaultNodeActor[Any, Any]], "", systemId, totalNumberOfWorkers, Some(workersPerSimulatedNode), None),
+          Props(classOf[DefaultNodeActor[Any, Any]], "", systemId, numberOfSimulatedNodes, Some(workersPerSimulatedNode), None),
           name = s"DefaultNodeActor$systemId")
     }
+    ActorSystemRegistry.register(actorSystems(0)._2)
+    nodeActors.toArray
+  }
+}
 
+class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAnnouncements {
+
+  "Signal/Collect" should "terminate with a low latency when run in a simulated distributed synchronous mode" in {
+    val numberOfSimulatedNodes = 2
+    val workersPerSimulatedNode = 10
+    val nodeActors = DistributedHelper.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.
-      withPreallocatedNodes(nodeActors.toArray).
-      withStatsReportingInterval(10000).
+      withPreallocatedNodes(nodeActors).
+      withStatsReportingInterval(0).
       build
+    println("Graph done")
     try {
       (1 to 50).foreach { i =>
         g.awaitIdle
-        val v1 = new Location(1, Some(0))
-        val v2 = new Location(2, None)
+        val v1 = new PageRankVertex(1)
+        val v2 = new PageRankVertex(2)
+        val v3 = new PageRankVertex(3)
+        val v4 = new PageRankVertex(4)
+        val v5 = new PageRankVertex(5)
+        val v6 = new PageRankVertex(6)
+        val v7 = new PageRankVertex(7)
+        val v8 = new PageRankVertex(8)
         g.addVertex(v1)
         g.addVertex(v2)
-        g.addEdge(1, new Path(2))
+        g.addVertex(v3)
+        g.addVertex(v4)
+        g.addVertex(v5)
+        g.addVertex(v6)
+        g.addVertex(v7)
+        g.addVertex(v8)
+        g.addEdge(1, new PageRankEdge(2))
+        g.addEdge(2, new PageRankEdge(3))
+        g.addEdge(3, new PageRankEdge(4))
+        g.addEdge(4, new PageRankEdge(5))
+        g.addEdge(5, new PageRankEdge(6))
+        g.addEdge(6, new PageRankEdge(7))
+        g.addEdge(7, new PageRankEdge(8))
+        g.addEdge(8, new PageRankEdge(1))
         g.awaitIdle
-        //println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous)))
-        g.execute
-        assert(v2.state == Some(1))
+        println(g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0)))
+        //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))
+        val stateSum = g.aggregate(SumOfStates[Double])
+        stateSum === 8.0 +- 0.00001
         g.reset
       }
     } finally {

@@ -153,6 +153,8 @@ class KryoInit {
       register("com.signalcollect.factory.storage.MemoryEfficientStorage$mcI$sp")
       register("com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory$mcI$sp")
       register("scala.reflect.ManifestFactory$$anon$11")
+      register("com.signalcollect.examples.Location")
+      register("com.signalcollect.examples.Path")
       registerClass(classOf[Array[com.signalcollect.interfaces.WorkerStatus]])
       registerClass(classOf[Array[com.signalcollect.interfaces.NodeStatus]])
       registerClass(classOf[Array[Byte]])

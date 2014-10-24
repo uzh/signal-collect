@@ -84,11 +84,9 @@ class DefaultNodeActor[Id, Signal](
   var idleSubtrees = Set.empty[Int]
 
   var unreportedWorkerStats: Map[Int, WorkerStatus] = Map.empty
-  var unreportedNodeStats: Map[Int, NodeStatus] = Map.empty
 
   def resetAggregatedStats {
     unreportedWorkerStats = Map.empty
-    unreportedNodeStats = Map.empty
   }
 
   // To keep track of sent messages before the message bus is initialized.
@@ -117,27 +115,27 @@ class DefaultNodeActor[Id, Signal](
 
   def receive = {
 
-    case BulkStatus(senderNodeId, isIdle, workerStatusMessages, nodeStatusMessages) =>
-      // TODO: Only send the newest status from each worker/node
+    case BulkStatus(senderNodeId, isIdle, workerStatusMessages) =>
       if (isIdle) {
         idleSubtrees += senderNodeId
       } else {
         idleSubtrees -= senderNodeId
       }
       workerStatusMessages.foreach(s => unreportedWorkerStats += ((s.workerId, s)))
-      nodeStatusMessages.foreach(s => unreportedNodeStats += ((s.nodeId, s)))
       val allSubtreesAreIdle = (idleSubtrees == subtrees)
       if (allSubtreesAreIdle || parentNodeThinksAllSubtreesAreIdle) {
         // Both subtrees sent us a bulk status message. We need to forward whatever we have.
-        unreportedNodeStats += ((nodeId, getNodeStatus))
-        val bulkStatus = BulkStatus(nodeId, allSubtreesAreIdle, unreportedWorkerStats.values.toArray, unreportedNodeStats.values.toArray)
-        if (nodeId == 0) {
-          messageBus.sendToCoordinatorUncounted(bulkStatus)
-        } else {
-          messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
+        val bulkStatus = BulkStatus(nodeId, allSubtreesAreIdle, unreportedWorkerStats.values.toArray)
+        if (allSubtreesAreIdle || nodeId != 0) {
+          // Do nothing if we're not idle and if we would report to the coordinator. No need to burden it.
+          if (nodeId == 0) {
+            messageBus.sendToCoordinatorUncounted(bulkStatus)
+          } else {
+            messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
+          }
+          parentNodeThinksAllSubtreesAreIdle = allSubtreesAreIdle
+          resetAggregatedStats
         }
-        parentNodeThinksAllSubtreesAreIdle = allSubtreesAreIdle
-        resetAggregatedStats
       }
 
     case w: WorkerStatus =>
@@ -167,14 +165,16 @@ class DefaultNodeActor[Id, Signal](
         while (i < numberOfWorkersOnNode) {
           if (!workerStatusAlreadyForwarded(i)) {
             val status = workerStatus(i)
-            workerStats(workerStatsIndex) = status
-            workerStatsIndex += 1
+            if (status != null) {
+              workerStats(workerStatsIndex) = status
+              workerStatsIndex += 1
+            }
           }
           workerStatusAlreadyForwarded(i) = true
           i += 1
         }
         val nodeStatus = getNodeStatus
-        val bulkStatus = BulkStatus(nodeId, subtreeIsIdle, workerStats, Array(nodeStatus))
+        val bulkStatus = BulkStatus(nodeId, subtreeIsIdle, workerStats)
         messageBus.sendToNodeUncounted(nodeId / 2, bulkStatus)
         numberOfStatsThatNeedForwarding = 0
         parentNodeThinksAllSubtreesAreIdle = subtreeIsIdle

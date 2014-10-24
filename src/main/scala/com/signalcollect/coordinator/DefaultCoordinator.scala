@@ -115,7 +115,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   protected var workerStatus: Array[WorkerStatus] = new Array[WorkerStatus](numberOfWorkers)
   protected var workerStatusTimestamps: Array[Long] = new Array[Long](numberOfWorkers)
   protected var nodeStatus: Array[NodeStatus] = new Array[NodeStatus](numberOfNodes)
-
+  
   // Returns true iff the status update was newer than the most recent stored one.
   def handleWorkerStatus(ws: WorkerStatus): Boolean = {
     // A status might be sent indirectly via the node actor, which means that there is no FIFO
@@ -130,17 +130,13 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def receive = {
-    case BulkStatus(senderNodeId, isSubtreeIdle, fromWorkers, fromNodes) =>
+    case BulkStatus(senderNodeId, isSubtreeIdle, fromWorkers) =>
       var i = 0
       while (i < fromWorkers.length) {
         handleWorkerStatus(fromWorkers(i))
         i += 1
       }
       i = 0
-      while (i < fromNodes.length) {
-        updateNodeStatusMap(fromNodes(i))
-        i += 1
-      }
       if (isSubtreeIdle && isIdle) {
         onIdle
       }
