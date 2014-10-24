@@ -145,6 +145,7 @@ akka {
       "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
+      "com.signalcollect.node.IdleReportRequested" = kryo
       "com.signalcollect.worker.StatsDue$" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "com.signalcollect.worker.Ping" = kryo
