@@ -85,10 +85,10 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
           g.addEdge(i, new PageRankEdge((i + 1) % circleLength))
         }
         g.awaitIdle
-        g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0))
+        g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withSignalThreshold(0.001))
         //println(g.execute(ExecutionConfiguration.withSignalThreshold(0)))
         val stateSum = g.aggregate(SumOfStates[Double])
-        stateSum === circleLength.toDouble +- 0.00001
+        stateSum === circleLength.toDouble +- 0.1
         g.reset
       }
     } finally {
@@ -96,7 +96,7 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
     }
     val stopTime = System.currentTimeMillis
     val t = stopTime - startTime
-    assert(t < 30000, s"Execution took $t milliseconds, should be less than 30 seconds.")
+    assert(t < 60000, s"Execution took $t milliseconds, should be less than 60 seconds.")
   }
 
 }
