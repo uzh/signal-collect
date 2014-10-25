@@ -135,6 +135,7 @@ akka {
       "com.signalcollect.interfaces.SignalMessageWithoutSourceId" = kryo
       "com.signalcollect.interfaces.BulkSignal" = kryo
       "com.signalcollect.interfaces.BulkSignalNoSourceIds" = kryo
+      "com.signalcollect.interfaces.BulkStatus" = kryo
       "com.signalcollect.interfaces.WorkerStatus" = kryo
       "com.signalcollect.interfaces.NodeStatus" = kryo
       "com.signalcollect.interfaces.WorkerStatistics" = kryo
@@ -144,6 +145,7 @@ akka {
       "com.signalcollect.interfaces.AddEdge" = kryo
       "com.signalcollect.interfaces.Request" = kryo
       "com.signalcollect.coordinator.OnIdle" = kryo
+      "com.signalcollect.node.IdleReportRequested" = kryo
       "com.signalcollect.worker.StatsDue$" = kryo
       "com.signalcollect.worker.ScheduleOperations$" = kryo
       "com.signalcollect.worker.Ping" = kryo

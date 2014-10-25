@@ -20,88 +20,44 @@
 
 package com.signalcollect.worker
 
-import com.signalcollect.interfaces.Storage
-import com.signalcollect.interfaces.ComplexAggregation
-import com.signalcollect.GraphEditor
-import com.signalcollect.interfaces.EdgeId
-import com.signalcollect.Vertex
-import com.signalcollect.Edge
-import com.signalcollect.interfaces.MessageBus
-import com.signalcollect.interfaces.WorkerApi
-import akka.event.LoggingAdapter
-import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.NodeStatistics
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import com.signalcollect.interfaces._
-import com.signalcollect.interfaces.WorkerStatus
-import akka.actor.ActorRef
-import com.signalcollect.interfaces.MessageRecipientRegistry
-import com.signalcollect.interfaces.Worker
-import com.signalcollect.interfaces.SentMessagesStats
-import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory
-import com.signalcollect.interfaces.WorkerStatistics
-import com.signalcollect.interfaces.NodeStatistics
-import com.signalcollect.interfaces.SchedulerFactory
-import com.signalcollect.serialization.DefaultSerializer
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
 import scala.util.Random
-import scala.reflect.ClassTag
+
+import com.signalcollect.Edge
+import com.signalcollect.GraphEditor
+import com.signalcollect.Vertex
+import com.signalcollect.interfaces.ComplexAggregation
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandler
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.EdgeId
+import com.signalcollect.interfaces.ExistingVertexHandler
+import com.signalcollect.interfaces.ExistingVertexHandlerFactory
+import com.signalcollect.interfaces.MessageBus
+import com.signalcollect.interfaces.NodeStatistics
 import com.signalcollect.interfaces.Scheduler
+import com.signalcollect.interfaces.SchedulerFactory
+import com.signalcollect.interfaces.SentMessagesStats
+import com.signalcollect.interfaces.Storage
+import com.signalcollect.interfaces.StorageFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandler
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+import com.signalcollect.interfaces.Worker
+import com.signalcollect.interfaces.WorkerApi
+import com.signalcollect.interfaces.WorkerStatistics
+import com.signalcollect.interfaces.WorkerStatus
+import com.signalcollect.serialization.DefaultSerializer
+import com.sun.management.OperatingSystemMXBean
 
-class IteratorConcatenator[U](private var a: Iterator[U], private var b: Iterator[U]) extends Iterator[U] { // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
-
-  a = simplify(a)
-  b = simplify(b)
-
-  def simplify(i: Iterator[U]): Iterator[U] = if (i.isInstanceOf[IteratorConcatenator[U]]) {
-    val iCast = i.asInstanceOf[IteratorConcatenator[U]]
-    if (iCast.a == null) {
-      if (iCast.b == null) {
-        null.asInstanceOf[Iterator[U]]
-      } else {
-        iCast.b
-      }
-    } else if (iCast.b == null) {
-      iCast.a
-    } else {
-      iCast
-    }
-  } else {
-    i
-  }
-
-  def next: U = if (a != null) {
-    a.next
-  } else {
-    b.next
-  }
-
-  def hasNext: Boolean = {
-    if (a != null) {
-      val aGotMore = a.hasNext
-      if (!aGotMore) {
-        a = null
-        hasNext
-      } else {
-        true
-      }
-    } else if (b != null) {
-      val bGotMore = b.hasNext
-      if (!bGotMore) {
-        b = null
-        false
-      } else {
-        true
-      }
-    } else {
-      false
-    }
-  }
-}
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -110,7 +66,8 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   val workerId: Int,
   val numberOfWorkers: Int,
   val numberOfNodes: Int,
-  val eagerIdleDetection: Boolean,
+  val isEagerIdleDetectionEnabled: Boolean,
+  val isThrottlingEnabled: Boolean,
   val supportBlockingGraphModificationsInVertex: Boolean,
   val messageBus: MessageBus[Id, Signal],
   val log: LoggingAdapter,
@@ -149,13 +106,13 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   var undeliverableSignalHandler: UndeliverableSignalHandler[Id, Signal] = _
   var edgeAddedToNonExistentVertexHandler: EdgeAddedToNonExistentVertexHandler[Id, Signal] = _
   isIdleDetectionEnabled = false // This one should not be reset.
+  operationsScheduled = false // This one should not be reset.
 
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
   def initialize {
     messageBusFlushed = true
     slowPongDetected = false
-    operationsScheduled = false
     isIdle = true
     isPaused = true
     allWorkDoneWhenContinueSent = false
@@ -193,7 +150,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
    * Also does not reset the part of the counters which is part of
    * termination detection.
    */
-  def reset {
+  override def reset {
     initialize
     counters.resetOperationCounters
     messageBus.reset
@@ -207,17 +164,29 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  def initializeIdleDetection {
+  override def initializeIdleDetection {
     isIdleDetectionEnabled = true
-    if (numberOfNodes > 1) {
-      // Sent to a random worker on the next node initially.
-      val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
-      val workerOnNode = Random.nextInt(workersPerNode)
-      val workerId = partnerNodeId * workersPerNode + workerOnNode
-      sendPing(workerId)
+
+    // Ensure that the current status is immediately reported.
+    if (isEagerIdleDetectionEnabled) {
+      messageBus.sendToNodeUncounted(nodeId, getWorkerStatusForNode)
     } else {
-      sendPing(getRandomPingPongPartner)
+      sendStatusToCoordinator
     }
+
+    // Initiate PingPong throttling.
+    if (isThrottlingEnabled) {
+      if (numberOfNodes > 1) {
+        // Sent to a random worker on the next node initially.
+        val partnerNodeId = (nodeId + 1) % (numberOfNodes - 1)
+        val workerOnNode = Random.nextInt(workersPerNode)
+        val workerId = partnerNodeId * workersPerNode + workerOnNode
+        sendPing(workerId)
+      } else {
+        sendPing(getRandomPingPongPartner)
+      }
+    }
+
   }
 
   def sendStatusToCoordinator {
@@ -255,7 +224,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
+  override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
     val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
       if (vertex.deliverSignalWithSourceId(signal, sourceId, graphEditor)) {
@@ -274,7 +243,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     messageBusFlushed = false
   }
 
-  def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
+  override def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
     val vertex = vertexStore.vertices.get(targetId)
     if (vertex != null) {
       if (vertex.deliverSignalWithoutSourceId(signal, graphEditor)) {
@@ -293,28 +262,25 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     messageBusFlushed = false
   }
 
-  def startComputation {
+  override def startComputation {
     if (!pendingModifications.isEmpty) {
       log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
     }
     isPaused = false
-    sendStatusToCoordinator
   }
 
-  def pauseComputation {
+  override def pauseComputation {
     isPaused = true
-    sendStatusToCoordinator
   }
 
-  def signalStep: Boolean = {
+  override def signalStep {
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
     messageBusFlushed = true
-    vertexStore.toCollect.isEmpty
   }
 
-  def collectStep: Boolean = {
+  override def collectStep: Boolean = {
     counters.collectSteps += 1
     vertexStore.toCollect.process(executeCollectOperationOfVertex(_))
     vertexStore.toSignal.isEmpty
@@ -391,28 +357,28 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     vertexStore.toSignal.remove(vertex.id)
   }
 
-  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
+  override def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id]) {
     graphModification(graphEditor)
     messageBusFlushed = false
   }
 
-  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+  override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
     pendingModifications = new IteratorConcatenator(pendingModifications, graphModifications) // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
   }
 
-  def setSignalThreshold(st: Double) {
+  override def setSignalThreshold(st: Double) {
     signalThreshold = st
   }
 
-  def setCollectThreshold(ct: Double) {
+  override def setCollectThreshold(ct: Double) {
     collectThreshold = ct
   }
 
-  def recalculateScores {
+  override def recalculateScores {
     vertexStore.vertices.foreach(recalculateVertexScores(_))
   }
 
-  def recalculateScoresForVertexWithId(vertexId: Id) {
+  override def recalculateScoresForVertexWithId(vertexId: Id) {
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       recalculateVertexScores(vertex)
@@ -510,7 +476,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   /**
    * Deletes the worker snapshots if they exist.
    */
-  def deleteSnapshot {
+  override def deleteSnapshot {
     val snapshotFile = new File(s"$workerId.snapshot")
     if (snapshotFile.exists) {
       snapshotFile.delete
@@ -547,9 +513,9 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     ws
   }
 
-  def getIndividualWorkerStatistics: List[WorkerStatistics] = List(getWorkerStatistics)
+  override def getIndividualWorkerStatistics: List[WorkerStatistics] = List(getWorkerStatistics)
 
-  def getWorkerStatistics: WorkerStatistics = {
+  override def getWorkerStatistics: WorkerStatistics = {
     WorkerStatistics(
       workerId = Some(workerId),
       toSignalSize = vertexStore.toSignal.size,
@@ -574,10 +540,10 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   // TODO: Move this method to Node and use proper node id.
-  def getIndividualNodeStatistics: List[NodeStatistics] = List(getNodeStatistics)
+  override def getIndividualNodeStatistics: List[NodeStatistics] = List(getNodeStatistics)
 
   // TODO: Move this method to Node and use proper node id.
-  def getNodeStatistics: NodeStatistics = {
+  override def getNodeStatistics: NodeStatistics = {
     val runtime: Runtime = Runtime.getRuntime
     try {
       val osBean: OperatingSystemMXBean = ManagementFactory.getPlatformMXBean(classOf[OperatingSystemMXBean])
@@ -612,7 +578,6 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     if (messageBus.isInitialized) {
       val msg = s"Worker $workerId has a fully initialized message bus."
       log.debug(msg)
-      sendStatusToCoordinator
     }
   }
 
@@ -636,4 +601,176 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
 
 }
 
+trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
+  abstract override def addVertex(vertex: Vertex[Id, _, Id, Signal]) = {
+    println("addVertex")
+    super.addVertex(vertex)
+  }
+  abstract override def addEdge(sourceId: Id, edge: Edge[Id]) = {
+    println("addEdge")
+    super.addEdge(sourceId, edge)
+  }
+  abstract override def removeVertex(vertexId: Id) = {
+    println("removeVertex")
+    super.removeVertex(vertexId)
+  }
+  abstract override def removeEdge(edgeId: EdgeId[Id]) = {
+    println("removeEdge")
+    super.removeEdge(edgeId)
+  }
+  abstract override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) = {
+    println("processSignalWithSourceId")
+    super.processSignalWithSourceId(signal, targetId, sourceId)
+  }
+  abstract override def processSignalWithoutSourceId(signal: Signal, targetId: Id) = {
+    println("processSignalWithoutSourceId")
+    super.processSignalWithoutSourceId(signal, targetId)
+  }
+  abstract override def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) = {
+    println("modifyGraph")
+    super.modifyGraph(graphModification, vertexIdHint)
+  }
+  abstract override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id] = None) = {
+    println("loadGraph")
+    super.loadGraph(graphModifications, vertexIdHint)
+  }
+  abstract override def setSignalThreshold(signalThreshold: Double) = {
+    println("setSignalThreshold")
+    super.setSignalThreshold(signalThreshold)
+  }
+  abstract override def setCollectThreshold(collectThreshold: Double) = {
+    println("setCollectThreshold")
+    super.setCollectThreshold(collectThreshold)
+  }
+  abstract override def recalculateScores = {
+    println("recalculateScores")
+    super.recalculateScores
+  }
+  abstract override def recalculateScoresForVertexWithId(vertexId: Id) = {
+    println("recalculateScoresForVertexWithId")
+    super.recalculateScoresForVertexWithId(vertexId)
+  }
+  abstract override def forVertexWithId[VertexType <: Vertex[Id, _, Id, Signal], ResultType](vertexId: Id, f: VertexType => ResultType): ResultType = {
+    println("forVertexWithId")
+    super.forVertexWithId(vertexId, f)
+  }
+  abstract override def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit) = {
+    println("foreachVertex")
+    super.foreachVertex(f)
+  }
+  abstract override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
+    println("foreachVertexWithGraphEditor")
+    super.foreachVertexWithGraphEditor(f)
+  }
+  abstract override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
+    println("aggregateOnWorker")
+    super.aggregateOnWorker(aggregationOperation)
+  }
+  abstract override def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult = {
+    println("aggregateAll")
+    super.aggregateAll(aggregationOperation)
+  }
+  abstract override def pauseComputation = {
+    println("pauseComputation")
+    super.pauseComputation
+  }
+  abstract override def startComputation = {
+    println("startComputation")
+    super.startComputation
+  }
+  abstract override def signalStep {
+    println("signalStep")
+    super.signalStep
+  }
+  abstract override def collectStep: Boolean = {
+    println("collectStep")
+    super.collectStep
+  }
+  abstract override def getWorkerStatistics: WorkerStatistics = {
+    println("getWorkerStatistics")
+    super.getWorkerStatistics
+  }
+  abstract override def getIndividualWorkerStatistics: List[WorkerStatistics] = {
+    println("getIndividualWorkerStatistics")
+    super.getIndividualWorkerStatistics
+  }
+  abstract override def reset = {
+    println("reset")
+    super.reset
+  }
+  abstract override def initializeIdleDetection = {
+    println("initializeIdleDetection")
+    super.initializeIdleDetection
+  }
+  abstract override def getNodeStatistics: NodeStatistics = {
+    println("getNodeStatistics")
+    super.getNodeStatistics
+  }
+  abstract override def getIndividualNodeStatistics: List[NodeStatistics] = {
+    println("getIndividualNodeStatistics")
+    super.getIndividualNodeStatistics
+  }
+  abstract override def snapshot = {
+    println("snapshot")
+    super.snapshot
+  }
+  abstract override def restore = {
+    println("restore")
+    super.restore
+  }
+  abstract override def deleteSnapshot = {
+    println("deleteSnapshot")
+    super.deleteSnapshot
+  }
+}
 
+class IteratorConcatenator[U](private var a: Iterator[U], private var b: Iterator[U]) extends Iterator[U] { // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
+
+  a = simplify(a)
+  b = simplify(b)
+
+  def simplify(i: Iterator[U]): Iterator[U] = if (i.isInstanceOf[IteratorConcatenator[U]]) {
+    val iCast = i.asInstanceOf[IteratorConcatenator[U]]
+    if (iCast.a == null) {
+      if (iCast.b == null) {
+        null.asInstanceOf[Iterator[U]]
+      } else {
+        iCast.b
+      }
+    } else if (iCast.b == null) {
+      iCast.a
+    } else {
+      iCast
+    }
+  } else {
+    i
+  }
+
+  def next: U = if (a != null) {
+    a.next
+  } else {
+    b.next
+  }
+
+  def hasNext: Boolean = {
+    if (a != null) {
+      val aGotMore = a.hasNext
+      if (!aGotMore) {
+        a = null
+        hasNext
+      } else {
+        true
+      }
+    } else if (b != null) {
+      val bGotMore = b.hasNext
+      if (!bGotMore) {
+        b = null
+        false
+      } else {
+        true
+      }
+    } else {
+      false
+    }
+  }
+}
