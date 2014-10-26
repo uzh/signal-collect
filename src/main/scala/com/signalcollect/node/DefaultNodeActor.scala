@@ -45,6 +45,7 @@ import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.BulkStatus
+import akka.actor.Scheduler
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -64,6 +65,7 @@ class DefaultNodeActor[Id, Signal](
   val nodeId: Int,
   val numberOfNodes: Int,
   val fixedNumberOfCores: Option[Int],
+  val idleDetectionPropagationDelayInMilliseconds: Int,
   val nodeProvisionerAddress: Option[String] // Specify if the worker should report when it is ready.
   ) extends NodeActor[Id, Signal]
   with ActorLogging
@@ -84,7 +86,14 @@ class DefaultNodeActor[Id, Signal](
 
   def initializeIdleDetection {
     receivedMessagesCounter -= 1
-    binaryTreeIdleDetector = new BinaryTreeIdleDetector(nodeId, numberOfNodes, numberOfWorkersOnNode, messageBus)
+    binaryTreeIdleDetector = new BinaryTreeIdleDetector(
+      nodeId,
+      numberOfNodes,
+      numberOfWorkersOnNode,
+      idleDetectionPropagationDelayInMilliseconds,
+      context.system,
+      self,
+      messageBus)
     workersOnNodeIdleDetector = new WorkersOnNodeIdleDetector(nodeId, numberOfWorkersOnNode, messageBus)
   }
 

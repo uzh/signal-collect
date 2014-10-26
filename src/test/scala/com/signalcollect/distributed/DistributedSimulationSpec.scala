@@ -41,7 +41,10 @@ import com.signalcollect.SumOfStates
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 
 object DistributedSimulator {
-  def getNodeActors(numberOfSimulatedNodes: Int, workersPerSimulatedNode: Int): Array[ActorRef] = {
+  def getNodeActors(
+    numberOfSimulatedNodes: Int,
+    workersPerSimulatedNode: Int,
+    idleDetectionPropagationDelayInMilliseconds: Int): Array[ActorRef] = {
     val totalNumberOfWorkers = numberOfSimulatedNodes * workersPerSimulatedNode
     val akkaConfig = AkkaConfig.get(serializeMessages = false,
       loggingLevel = Logging.WarningLevel,
@@ -56,7 +59,12 @@ object DistributedSimulator {
     val nodeActors = actorSystems.map {
       case (systemId, system) =>
         system.actorOf(
-          Props(classOf[DefaultNodeActor[Any, Any]], "", systemId, numberOfSimulatedNodes, Some(workersPerSimulatedNode), None),
+          Props(classOf[DefaultNodeActor[Any, Any]], "",
+            systemId,
+            numberOfSimulatedNodes,
+            Some(workersPerSimulatedNode),
+            idleDetectionPropagationDelayInMilliseconds,
+            None),
           name = s"DefaultNodeActor$systemId")
     }
     ActorSystemRegistry.register(actorSystems(0)._2)
@@ -70,7 +78,8 @@ class DistributedSimulationSpec extends FlatSpec with ShouldMatchers with TestAn
     val numberOfSimulatedNodes = 5
     val workersPerSimulatedNode = 2
     val circleLength = 10
-    val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode)
+    val idleDetectionPropagationDelay = 1
+    val nodeActors = DistributedSimulator.getNodeActors(numberOfSimulatedNodes, workersPerSimulatedNode, idleDetectionPropagationDelay)
     val startTime = System.currentTimeMillis
     val g = GraphBuilder.
       withMessageBusFactory(new BulkAkkaMessageBusFactory[Any, Any](10000, true)).

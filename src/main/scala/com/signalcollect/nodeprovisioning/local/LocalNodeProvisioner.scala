@@ -38,7 +38,7 @@ class LocalNodeProvisioner[Id, Signal](fixedNumberOfWorkers: Option[Int] = None)
   def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     try {
       val nodeController = localSystem.actorOf(
-        Props(classOf[DefaultNodeActor[Id, Signal]], actorNamePrefix, 0, 1, fixedNumberOfWorkers, None).
+        Props(classOf[DefaultNodeActor[Id, Signal]], actorNamePrefix, 0, 1, fixedNumberOfWorkers, 0, None).
           withDispatcher("akka.io.pinned-dispatcher"), name = actorNamePrefix + "DefaultNodeActor")
       Array[ActorRef](nodeController)
     } catch {

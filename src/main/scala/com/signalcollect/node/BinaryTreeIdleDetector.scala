@@ -19,11 +19,14 @@
 
 package com.signalcollect.node
 
-import scala.annotation.migration
+import scala.concurrent.duration.DurationInt
 
 import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.MessageBus
 import com.signalcollect.interfaces.WorkerStatus
+
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 
 case class IdleReportRequested(allIdle: Boolean)
 
@@ -41,6 +44,9 @@ class BinaryTreeIdleDetector(
   val nodeId: Int,
   val numberOfNodes: Int,
   val workersPerNode: Int,
+  val idleDetectionPropagationDelayInMilliseconds: Int,
+  val localActorSystem: ActorSystem,
+  val nodeActor: ActorRef,
   val messageBus: MessageBus[_, _]) {
 
   var statusReceivedSinceIdleReportRequested = false
@@ -102,7 +108,15 @@ class BinaryTreeIdleDetector(
           if (allIdle) {
             assert(unreportedWorkerStats.size > 0)
             reportRequestedPending = true
-            messageBus.sendToNodeUncounted(nodeId, IdleReportRequested(allIdle))
+            if (idleDetectionPropagationDelayInMilliseconds > 0) {
+              implicit val executor = localActorSystem.dispatcher
+              localActorSystem.scheduler.scheduleOnce(
+                idleDetectionPropagationDelayInMilliseconds.milliseconds,
+                nodeActor,
+                IdleReportRequested(allIdle))
+            } else {
+              messageBus.sendToNodeUncounted(nodeId, IdleReportRequested(allIdle))
+            }
           }
         } else {
           // Not enough reports for all to be idle. Do nothing.

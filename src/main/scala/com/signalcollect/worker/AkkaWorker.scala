@@ -100,7 +100,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
 
   var schedulingTimestamp = System.nanoTime
 
-  val akkaScheduler: Scheduler = context.system.scheduler: akka.actor.Scheduler
+  val akkaScheduler: Scheduler = context.system.scheduler
   implicit val executor = context.system.dispatcher
 
   override def postStop {
