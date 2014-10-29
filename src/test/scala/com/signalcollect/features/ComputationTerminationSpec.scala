@@ -33,11 +33,26 @@ import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import org.specs2.runner.JUnitRunner
+import com.signalcollect.DataGraphVertex
+import com.signalcollect.StateForwarderEdge
+import com.signalcollect.DataFlowVertex
+import com.signalcollect.GraphEditor
+import akka.event.Logging
+
+class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
+  type Signal = Int
+  def collect = (state._1, state._2 + 1)
+
+  override def deliverSignalWithSourceId(signal: Any, sourceId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
+    state = (state._1 + 1, state._2)
+    super.deliverSignalWithSourceId(signal, sourceId, graphEditor)
+  }
+}
 
 @RunWith(classOf[JUnitRunner])
 class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
 
-  def createCircleGraph(vertices: Int): Graph[Any, Any] = {
+  def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
     val graph = GraphBuilder.build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
@@ -49,14 +64,40 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     graph
   }
 
+  def createCountingCircleGraph(vertices: Int): Graph[Any, Any] = {
+    val graph = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)
+    val idSet = (1 to vertices).toSet
+    for (id <- idSet) {
+      graph.addVertex(new CountingVertex(id))
+    }
+    for (id <- idSet) {
+      graph.addEdge(id, new StateForwarderEdge((id % vertices) + 1))
+    }
+    graph
+  }
+
   sequential
+
+  "Eager convergence detection" should {
+    "not suffer from spurious idle detections" in {
+      val g = createCountingCircleGraph(10)
+      try {
+        val steps = 2000
+        g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withStepsLimit(steps))
+        g.foreachVertex(_.state === (steps, steps))
+      } finally {
+        g.shutdown
+      }
+      true
+    }
+  }
 
   "Steps limit" should {
 
     "work for synchronous computations" in {
       var allResultsCorrect = true
       for (i <- 1 to 10) {
-        val graph = createCircleGraph(1000)
+        val graph = createPageRankCircleGraph(1000)
         try {
           val execConfig = ExecutionConfiguration
             .withSignalThreshold(0)
@@ -95,7 +136,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
   "Global convergence" should {
 
     "work for synchronous computations" in {
-      val graph = createCircleGraph(30)
+      val graph = createPageRankCircleGraph(30)
       try {
         case object GlobalTermination extends GlobalTerminationDetection[Any, Any] {
           override val aggregationInterval: Long = 1
@@ -118,7 +159,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "work for asynchronous computations" in {
-      val graph = createCircleGraph(100)
+      val graph = createPageRankCircleGraph(100)
       try {
         case object GlobalTermination extends GlobalTerminationDetection[Any, Any] {
           override val aggregationInterval: Long = 1

@@ -52,36 +52,57 @@ class DefaultWorkerApi[Id, Signal](
 
   override def toString = "DefaultWorkerApi"
 
-  protected def futures[G](f: WorkerApi[Id, Signal] => G) = {
+  protected def futures[G](f: WorkerApi[Id, Signal] => G): Array[Future[G]] = {
     workers map (worker => Future { f(worker) })
   }
 
   protected def get[G](f: Future[G]): G = Await.result(f, timeout)
 
+  protected def get[G](fs: Array[Future[G]]): List[G] = {
+    val futureOfCollection = Future.sequence(fs.toList)
+    get(futureOfCollection)
+  }
+
   protected val timeout = 2 hours
 
-  def getIndividualWorkerStatistics: List[WorkerStatistics] = futures(_.getWorkerStatistics) map get toList
+  def getIndividualWorkerStatistics: List[WorkerStatistics] = {
+    get(futures(_.getWorkerStatistics))
+  }
 
   override def getWorkerStatistics: WorkerStatistics = {
     getIndividualWorkerStatistics.fold(WorkerStatistics())(_ + _)
   }
 
   // TODO: Move to node.
-  def getIndividualNodeStatistics: List[NodeStatistics] = futures(_.getNodeStatistics) map get toList
+  def getIndividualNodeStatistics: List[NodeStatistics] = {
+    get(futures(_.getNodeStatistics))
+  }
 
   override def getNodeStatistics: NodeStatistics = {
     getIndividualNodeStatistics.fold(NodeStatistics())(_ + _)
   }
 
-  override def signalStep = futures(_.signalStep) foreach get
+  override def signalStep = {
+    val stepResults = get(futures(_.signalStep))
+    stepResults.forall(_ == true)
+  }
 
-  override def collectStep: Boolean = futures(_.collectStep) forall get
+  override def collectStep: Boolean = {
+    val stepResults = get(futures(_.collectStep))
+    stepResults.forall(_ == true)
+  }
 
-  override def startComputation = futures(_.startComputation) foreach get
+  override def startComputation {
+    get(futures(_.startComputation))
+  }
 
-  override def pauseComputation = futures(_.pauseComputation) foreach get
+  override def pauseComputation = {
+    get(futures(_.pauseComputation))
+  }
 
-  override def recalculateScores = futures(_.recalculateScores) foreach get
+  override def recalculateScores = {
+    get(futures(_.recalculateScores))
+  }
 
   override def recalculateScoresForVertexWithId(vertexId: Id) = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
@@ -91,9 +112,13 @@ class DefaultWorkerApi[Id, Signal](
     workers(mapper.getWorkerIdForVertexId(vertexId)).forVertexWithId(vertexId, f)
   }
 
-  override def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) = futures(_.foreachVertex(f)) foreach get
+  override def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) {
+    get(futures(_.foreachVertex(f)))
+  }
 
-  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) = futures(_.foreachVertexWithGraphEditor(f)) foreach get
+  override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
+    get(futures(_.foreachVertexWithGraphEditor(f)))
+  }
 
   override def aggregateOnWorker[WorkerResult](aggregationOperation: ComplexAggregation[WorkerResult, _]): WorkerResult = {
     throw new UnsupportedOperationException("DefaultWorkerApi does not support this operation.")
@@ -102,17 +127,25 @@ class DefaultWorkerApi[Id, Signal](
   override def aggregateAll[WorkerResult, EndResult](aggregationOperation: ComplexAggregation[WorkerResult, EndResult]): EndResult = {
     // TODO: Identify and fix bug that appears on large graphs with the TopK aggregator when using futures.
     //val aggregateArray = futures(_.aggregateOnWorker(aggregationOperation)) map get
-    val workerAggregates = workers.par map (_.aggregateOnWorker(aggregationOperation))
-    aggregationOperation.aggregationOnCoordinator(workerAggregates.toList)
+    val workerAggregates = get(futures(_.aggregateOnWorker(aggregationOperation)))
+    aggregationOperation.aggregationOnCoordinator(workerAggregates)
   }
 
-  override def setSignalThreshold(t: Double) = futures(_.setSignalThreshold(t)) foreach get
+  override def setSignalThreshold(t: Double) {
+    get(futures(_.setSignalThreshold(t)))
+  }
 
-  override def setCollectThreshold(t: Double) = futures(_.setCollectThreshold(t)) foreach get
+  override def setCollectThreshold(t: Double) = {
+    get(futures(_.setCollectThreshold(t)))
+  }
 
-  override def reset = futures(_.reset) foreach get
+  override def reset {
+    get(futures(_.reset))
+  }
 
-  override def initializeIdleDetection = futures(_.initializeIdleDetection) foreach get
+  override def initializeIdleDetection {
+    get(futures(_.initializeIdleDetection))
+  }
 
   //----------------GraphEditor, BLOCKING variant-------------------------
 
@@ -191,9 +224,17 @@ class DefaultWorkerApi[Id, Signal](
     workers(workerIdForHint(vertexIdHint)).loadGraph(graphModifications)
   }
 
-  def snapshot = futures(_.snapshot) foreach get
-  def restore = futures(_.restore) foreach get
-  def deleteSnapshot = futures(_.deleteSnapshot) foreach get
+  def snapshot {
+    get(futures(_.snapshot))
+  }
+  
+  def restore {
+    get(futures(_.restore))
+  }
+  
+  def deleteSnapshot = {
+    get(futures(_.deleteSnapshot))
+  }
 
   protected def workerIdForHint(vertexIdHint: Option[Id]): Int = {
     if (vertexIdHint.isDefined) {

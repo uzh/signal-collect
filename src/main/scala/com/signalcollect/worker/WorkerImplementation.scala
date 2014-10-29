@@ -273,11 +273,12 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     isPaused = true
   }
 
-  override def signalStep {
+  override def signalStep: Boolean = {
     counters.signalSteps += 1
     vertexStore.toSignal.process(executeSignalOperationOfVertex(_))
     messageBus.flush
     messageBusFlushed = true
+    true // always returns true, just to make it blocking.
   }
 
   override def collectStep: Boolean = {
@@ -678,7 +679,7 @@ trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
     println("startComputation")
     super.startComputation
   }
-  abstract override def signalStep {
+  abstract override def signalStep: Boolean = {
     println("signalStep")
     super.signalStep
   }

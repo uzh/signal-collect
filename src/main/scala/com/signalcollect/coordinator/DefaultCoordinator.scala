@@ -56,13 +56,6 @@ case object IncrementorForCoordinator {
   }
 }
 
-case class WorkerIdleVerification(messagesReceivedByWorkers: Long, verifiedWorkers: Array[Boolean]) {
-  def updateWith(ws: WorkerStatus) {
-    verifiedWorkers(ws.workerId) = true
-  }
-  def isVerified = verifiedWorkers.forall(_ == true)
-}
-
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   numberOfWorkers: Int,
   numberOfNodes: Int,
@@ -144,37 +137,22 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
         handleWorkerStatus(fromWorkers(i))
         i += 1
       }
-      if (onIdleList != Nil && couldBeIdle) {
-        val messagesReceived = messagesReceivedByWorkers.sum
-        if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
-          currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
-          messageBus.sendToWorkers(StatsDue, false)
-        }
+      if (onIdleList != Nil && isIdle) {
+        onIdle
       }
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
       //messageBus.getReceivedMessagesCounter.incrementAndGet
       val wasUpdatePerformed = handleWorkerStatus(ws)
       if (wasUpdatePerformed) {
-        currentIdleVerification.updateWith(ws)
-        if (onIdleList != Nil && couldBeIdle) {
-          val messagesReceived = messagesReceivedByWorkers.sum
-          if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
-            currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
-            messageBus.sendToWorkers(StatsDue, false)
-          } else if (currentIdleVerification.isVerified) {
-            onIdle
-          }
+        if (onIdleList != Nil && isIdle) {
+          onIdle
         }
       }
     case OnIdle(action) =>
       onIdleList = (sender, action) :: onIdleList
-      resetMessagingStats
-      computeMessagingStats
-      val messagesReceived = messagesReceivedByWorkers.sum
-      if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
-        currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
-        messageBus.sendToWorkers(StatsDue, false)
+      if (isIdle) {
+        onIdle
       }
     case Request(command, reply, incrementor) =>
       //log.debug(s"Coordinator received a request.")
@@ -235,13 +213,6 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var messagesSentToNodes: Array[Long] = new Array(numberOfNodes)
   var messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
   var messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
-
-  var currentIdleVerification = {
-    resetMessagingStats
-    computeMessagingStats
-    val messagesReceived = messagesReceivedByWorkers.sum
-    WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
-  }
 
   def resetMessagingStats {
     messagesSentToCoordinator = 0
@@ -330,7 +301,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     return true
   }
 
-  def couldBeIdle = workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived
+  def isIdle = workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived
 
   def getJVMCpuTime = {
     val bean = ManagementFactory.getOperatingSystemMXBean

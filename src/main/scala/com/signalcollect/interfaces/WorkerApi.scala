@@ -49,7 +49,7 @@ trait WorkerApi[Id, Signal] {
   def pauseComputation
   def startComputation
 
-  def signalStep
+  def signalStep: Boolean // always returns true, just to make it blocking.
   def collectStep: Boolean
 
   def getWorkerStatistics: WorkerStatistics
