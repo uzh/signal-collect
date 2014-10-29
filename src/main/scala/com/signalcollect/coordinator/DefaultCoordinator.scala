@@ -38,6 +38,7 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.BulkStatus
+import com.signalcollect.worker.StatsDue
 
 // special command for coordinator
 case class OnIdle(action: (DefaultCoordinator[_, _], ActorRef) => Unit)
@@ -53,6 +54,13 @@ case object IncrementorForCoordinator {
   def increment(messageBus: MessageBus[_, _]) = {
     messageBus.incrementMessagesSentToCoordinator
   }
+}
+
+case class WorkerIdleVerification(messagesReceivedByWorkers: Long, verifiedWorkers: Array[Boolean]) {
+  def updateWith(ws: WorkerStatus) {
+    verifiedWorkers(ws.workerId) = true
+  }
+  def isVerified = verifiedWorkers.forall(_ == true)
 }
 
 class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
@@ -129,41 +137,44 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  //var bulkStatusReceived = 0
-
   def receive = {
     case BulkStatus(senderNodeId, fromWorkers) =>
-//      bulkStatusReceived += 1
-//      println(s"bulkStatusReceived=$bulkStatusReceived (${fromWorkers.length})")
       var i = 0
       while (i < fromWorkers.length) {
         handleWorkerStatus(fromWorkers(i))
         i += 1
       }
-      i = 0
-      if (isIdle) {
-        onIdle
+      if (onIdleList != Nil && couldBeIdle) {
+        val messagesReceived = messagesReceivedByWorkers.sum
+        if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
+          currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
+          messageBus.sendToWorkers(StatsDue, false)
+        }
       }
     case ws: WorkerStatus =>
       //log.debug(s"Coordinator received a worker status from worker ${ws.workerId}, the workers idle status is now: ${ws.isIdle}")
       //messageBus.getReceivedMessagesCounter.incrementAndGet
       val wasUpdatePerformed = handleWorkerStatus(ws)
       if (wasUpdatePerformed) {
-        if (isIdle) {
-          onIdle
+        currentIdleVerification.updateWith(ws)
+        if (onIdleList != Nil && couldBeIdle) {
+          val messagesReceived = messagesReceivedByWorkers.sum
+          if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
+            currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
+            messageBus.sendToWorkers(StatsDue, false)
+          } else if (currentIdleVerification.isVerified) {
+            onIdle
+          }
         }
-      }
-    case ns: NodeStatus =>
-      //log.debug(s"Coordinator received a node status from node ${ns.nodeId}")
-      //messageBus.getReceivedMessagesCounter.incrementAndGet
-      updateNodeStatusMap(ns)
-      if (isIdle) {
-        onIdle
       }
     case OnIdle(action) =>
       onIdleList = (sender, action) :: onIdleList
-      if (isIdle) {
-        onIdle
+      resetMessagingStats
+      computeMessagingStats
+      val messagesReceived = messagesReceivedByWorkers.sum
+      if (messagesReceived > currentIdleVerification.messagesReceivedByWorkers) {
+        currentIdleVerification = WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
+        messageBus.sendToWorkers(StatsDue, false)
       }
     case Request(command, reply, incrementor) =>
       //log.debug(s"Coordinator received a request.")
@@ -224,6 +235,13 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var messagesSentToNodes: Array[Long] = new Array(numberOfNodes)
   var messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
   var messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
+
+  var currentIdleVerification = {
+    resetMessagingStats
+    computeMessagingStats
+    val messagesReceived = messagesReceivedByWorkers.sum
+    WorkerIdleVerification(messagesReceived, new Array[Boolean](numberOfWorkers))
+  }
 
   def resetMessagingStats {
     messagesSentToCoordinator = 0
@@ -312,7 +330,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     return true
   }
 
-  def isIdle = workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived
+  def couldBeIdle = workerStatus.forall(workerStatus => workerStatus != null && workerStatus.isIdle) && allSentMessagesReceived
 
   def getJVMCpuTime = {
     val bean = ManagementFactory.getOperatingSystemMXBean

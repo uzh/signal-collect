@@ -32,8 +32,6 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
 
   override def toString: String = this.getClass.getSimpleName
 
-  def isIdle: Boolean
-
   def getWorkerApi: WorkerApi[Id, Signal]
 
   def getGraphEditor: GraphEditor[Id, Signal]

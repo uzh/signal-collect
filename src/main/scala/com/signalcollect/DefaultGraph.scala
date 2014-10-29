@@ -754,8 +754,6 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     workerApi.recalculateScoresForVertexWithId(vertexId)
   }
 
-  def isIdle = coordinatorProxy.isIdle
-
   def shutdown {
     if (console != null) { console.shutdown }
     // Only shut down the actor system if we created it.
