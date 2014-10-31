@@ -208,7 +208,7 @@ akka {
         # Try to define the size to be at least as big as the max possible number
         # of threads that may be used for serialization, i.e. max number
         # of threads allowed for the scheduler
-        serializer-pool-size = """ + numberOfCores + """
+        serializer-pool-size = """ + {2 * numberOfCores} + """
 
         # Define a default size for byte buffers used during serialization
         buffer-size = 65536
