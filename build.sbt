@@ -9,7 +9,7 @@ version := "2.2.0-SNAPSHOT"
 
 organization := "com.signalcollect"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
 /** 
  * See https://github.com/sbt/sbt-assembly/issues/123
@@ -40,7 +40,7 @@ jarName in assembly := "signal-collect-2.2-SNAPSHOT.jar"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.5" % "compile",
   "com.typesafe.akka" %% "akka-remote" % "2.3.5" % "compile",
-  "org.scala-lang" % "scala-library" % "2.11.2" % "compile",
+  "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
   "org.json4s" %% "json4s-native" % "3.2.9",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
