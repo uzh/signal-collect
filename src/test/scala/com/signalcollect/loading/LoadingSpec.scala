@@ -18,13 +18,13 @@
 
 package com.signalcollect.loading
 
-import com.signalcollect.TestAnnouncements
 import scala.collection.mutable.ArrayBuffer
 import org.scalatest.prop.Checkers
 import org.scalatest.ShouldMatchers
 import org.scalatest.FlatSpec
 import java.io.File
 import com.signalcollect.util.FileReader
+import com.signalcollect.util.TestAnnouncements
 
 class LoadingSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 

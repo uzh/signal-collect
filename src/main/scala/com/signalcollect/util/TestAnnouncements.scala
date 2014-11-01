@@ -17,7 +17,7 @@
  *  
  */
 
-package com.signalcollect
+package com.signalcollect.util
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite

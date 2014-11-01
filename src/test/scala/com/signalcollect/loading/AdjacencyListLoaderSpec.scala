@@ -18,7 +18,6 @@
 
 package com.signalcollect.loading
 
-import com.signalcollect.TestAnnouncements
 import scala.collection.mutable.ArrayBuffer
 import org.scalatest.prop.Checkers
 import org.scalatest.ShouldMatchers
@@ -29,6 +28,7 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.EfficientPageRankVertex
 import com.signalcollect.util.AsciiIntIterator
 import com.signalcollect.util.AsciiIntIterator
+import com.signalcollect.util.TestAnnouncements
 
 class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 

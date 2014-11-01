@@ -18,27 +18,24 @@
 
 package com.signalcollect.distributed
 
+import java.net.InetAddress
+
 import org.scalatest.FlatSpec
 import org.scalatest.ShouldMatchers
-import com.signalcollect.examples.Location
+
+import com.signalcollect._
+import com.signalcollect.configuration._
+import com.signalcollect.examples.PageRankEdge
+import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.Path
-import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.configuration.AkkaConfig
-import akka.event.Logging
-import java.net.InetAddress
+import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import com.signalcollect.node.DefaultNodeActor
+import com.signalcollect.util.TestAnnouncements
+
+import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import com.signalcollect.node.DefaultNodeActor
-import com.signalcollect.TestAnnouncements
-import com.signalcollect.GraphBuilder
-import com.signalcollect.configuration.ActorSystemRegistry
-import akka.actor.ActorRef
-import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.SumOfStates
-import com.signalcollect.SumOfStates
-import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
+import akka.event.Logging
 
 object DistributedSimulator {
   def getNodeActors(

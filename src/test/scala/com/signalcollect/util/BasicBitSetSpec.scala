@@ -27,7 +27,6 @@ import org.scalatest.prop.Checkers
 import java.io.DataOutputStream
 import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
-import com.signalcollect.TestAnnouncements
 
 class BasicBitSetSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 

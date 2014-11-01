@@ -3,6 +3,7 @@ package com.signalcollect
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import com.signalcollect._
+import com.signalcollect.util.TestAnnouncements
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory

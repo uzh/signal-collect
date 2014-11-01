@@ -18,7 +18,6 @@
 
 package com.signalcollect.util
 
-import com.signalcollect.TestAnnouncements
 import scala.collection.mutable.ArrayBuffer
 import org.scalatest.prop.Checkers
 import org.scalatest.ShouldMatchers

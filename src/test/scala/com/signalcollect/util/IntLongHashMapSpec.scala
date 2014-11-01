@@ -23,7 +23,6 @@ import org.scalacheck.Arbitrary.arbContainer
 import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
-import com.signalcollect.TestAnnouncements
 
 class IntLongHashMapSpec extends FlatSpec with Checkers with TestAnnouncements {
 
