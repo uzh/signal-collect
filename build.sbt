@@ -42,14 +42,14 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-remote" % "2.3.5" % "compile",
   "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
-  "org.json4s" %% "json4s-native" % "3.2.9",
+  "org.json4s" %% "json4s-native" % "3.2.9" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
+  "org.scalatest" %% "scalatest" % "2.1.3" % "compile",
   "junit" % "junit" % "4.8.2"  % "test",
   "org.specs2" % "classycle" % "1.4.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0"  % "test",
   "org.specs2" %% "specs2" % "2.3.11"  % "test",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "org.easymock" % "easymock" % "3.2" % "test"
 )
 
