@@ -178,7 +178,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         }
       } catch {
         case t: Throwable =>
-          println(s"Worker $workerId had a problem during graph loading: $t}")
+          println(s"Worker $workerId had a problem during graph loading: $t")
           t.printStackTrace
       }
       worker.messageBusFlushed = false
