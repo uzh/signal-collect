@@ -732,13 +732,13 @@ class IteratorConcatenator[U](private var a: Iterator[U], private var b: Iterato
 
   def simplify(i: Iterator[U]): Iterator[U] = if (i.isInstanceOf[IteratorConcatenator[U]]) {
     val iCast = i.asInstanceOf[IteratorConcatenator[U]]
-    if (iCast.a == null) {
-      if (iCast.b == null) {
+    if (iCast.a == null || !iCast.a.hasNext) {
+      if (iCast.b == null || !iCast.b.hasNext) {
         null.asInstanceOf[Iterator[U]]
       } else {
         iCast.b
       }
-    } else if (iCast.b == null) {
+    } else if (iCast.b == null || !iCast.b.hasNext) {
       iCast.a
     } else {
       iCast
