@@ -26,11 +26,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.lang.management.ManagementFactory
-
 import scala.annotation.elidable
 import scala.annotation.elidable.ASSERTION
+import scala.annotation.tailrec
 import scala.util.Random
-
+import scala.collection.mutable.Queue
 import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
@@ -55,9 +55,9 @@ import com.signalcollect.interfaces.WorkerStatistics
 import com.signalcollect.interfaces.WorkerStatus
 import com.signalcollect.serialization.DefaultSerializer
 import com.sun.management.OperatingSystemMXBean
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
+import com.signalcollect.util.IteratorConcatenator
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -80,6 +80,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   var collectThreshold: Double)
   extends Worker[Id, Signal] {
 
+  val pendingModifications = new IteratorConcatenator[GraphEditor[Id, Signal] => Unit]()
   val workersPerNode = numberOfWorkers / numberOfNodes // Assumes that there is the same number of workers on all nodes.
   val nodeId = getNodeId(workerId)
   val pingPongSchedulingIntervalInMilliseconds = 4 // schedule pingpong exchange every 8ms
@@ -98,7 +99,6 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   var allWorkDoneWhenContinueSent: Boolean = _
   var lastStatusUpdate: Long = _
   var vertexStore: Storage[Id, Signal] = _
-  var pendingModifications: Iterator[GraphEditor[Id, Signal] => Unit] = _
   var pingSentTimestamp: Long = _
   var pingPongScheduled: Boolean = _
   var waitingForPong: Boolean = _
@@ -118,7 +118,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     allWorkDoneWhenContinueSent = false
     lastStatusUpdate = System.currentTimeMillis
     vertexStore = storageFactory.createInstance
-    pendingModifications = Iterator.empty
+    pendingModifications.clear
     pingSentTimestamp = 0
     pingPongScheduled = false
     waitingForPong = false
@@ -364,7 +364,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   override def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
-    pendingModifications = new IteratorConcatenator(pendingModifications, graphModifications) // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
+    pendingModifications.appendIterator(graphModifications) // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
   }
 
   override def setSignalThreshold(st: Double) {
@@ -722,56 +722,5 @@ trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
   abstract override def deleteSnapshot = {
     println("deleteSnapshot")
     super.deleteSnapshot
-  }
-}
-
-class IteratorConcatenator[U](private var a: Iterator[U], private var b: Iterator[U]) extends Iterator[U] { // To avoid https://issues.scala-lang.org/browse/SI-8428, which is not really fixed.
-
-  a = simplify(a)
-  b = simplify(b)
-
-  def simplify(i: Iterator[U]): Iterator[U] = if (i.isInstanceOf[IteratorConcatenator[U]]) {
-    val iCast = i.asInstanceOf[IteratorConcatenator[U]]
-    if (iCast.a == null || !iCast.a.hasNext) {
-      if (iCast.b == null || !iCast.b.hasNext) {
-        null.asInstanceOf[Iterator[U]]
-      } else {
-        iCast.b
-      }
-    } else if (iCast.b == null || !iCast.b.hasNext) {
-      iCast.a
-    } else {
-      iCast
-    }
-  } else {
-    i
-  }
-
-  def next: U = if (a != null) {
-    a.next
-  } else {
-    b.next
-  }
-
-  def hasNext: Boolean = {
-    if (a != null) {
-      val aGotMore = a.hasNext
-      if (!aGotMore) {
-        a = null
-        hasNext
-      } else {
-        true
-      }
-    } else if (b != null) {
-      val bGotMore = b.hasNext
-      if (!bGotMore) {
-        b = null
-        false
-      } else {
-        true
-      }
-    } else {
-      false
-    }
   }
 }
