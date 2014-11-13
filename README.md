@@ -38,3 +38,4 @@ Thanks a lot to
 * YourKit allows us to use their great [Java/Scala profiler](http://www.yourkit.com/java/profiler/index.jsp).
 * GitHub helps us by hosting our [code repositories](https://github.com/uzh/signal-collect).
 * Travis.CI offers us very convenient [continuous integration](https://travis-ci.org/uzh/signal-collect).
+* Codacy gives us automated [code reviews](https://www.codacy.com/public/uzh/signalcollect).
