@@ -143,7 +143,7 @@ a, a:visited {
   cursor: pointer;
 }
 
-#modes span.leftmost {
+#modes .leftmost {
   border-left: 0;
   width: 140px;
 }
@@ -268,7 +268,7 @@ a, a:visited {
   cursor: pointer;
 }
 
-.panel span.panel_span {
+.panel .panel_span {
   height: 18px;
   padding: 2px 0 6px 5px;
   display: inline-block;
@@ -334,7 +334,7 @@ a, a:visited {
 .panel button.half {
   width: 47%;
 } 
-.panel button.quarter {
+.panel .quarter {
   width: 23%;
 } 
 .panel button.left.half {
@@ -382,7 +382,7 @@ a, a:visited {
   border: none;
 }
 
-.panel select#gc_condition {
+.panel #gc_condition {
   margin-left:10px;
 }
 
