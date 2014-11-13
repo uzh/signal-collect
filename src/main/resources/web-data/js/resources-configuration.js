@@ -59,7 +59,7 @@ scc.modules.Configuration = function() {
    * @param {object} msg - The message object received from the server.
    */
   this.onmessage = function(msg) {
-    if (msg.executionConfiguration != "unknown") {
+    if (msg.executionConfiguration !== "unknown") {
       $.each(msg.executionConfiguration, function(k,v) {
         $("#resStat" + k).html(v);
       });

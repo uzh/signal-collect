@@ -206,7 +206,7 @@ $(document).ready(function() {
         var request = j["request"];
         scc.order(request, 500);
         var requestor = j["requestor"];
-        if (scc.consumers[requestor].notready != null) {
+        if (scc.consumers[requestor].notready !== null) {
           scc.consumers[requestor].notready(j);
         }
       }
@@ -249,7 +249,7 @@ $(document).ready(function() {
       scc.orders = {};
       scc.layout.showMsg("#error", "Connection Lost. Reconnecting to WebSocket...");
       for (var m in scc.consumers) {
-        if (scc.consumers[m].onclose != null) {
+        if (scc.consumers[m].onclose !== null) {
           scc.consumers[m].onclose(e);
         }
       }
@@ -262,7 +262,7 @@ $(document).ready(function() {
      */
     scc.webSocket.onerror = function(e) {
       for (var m in scc.consumers) {
-        if (scc.consumers[m].onerror != null) {
+        if (scc.consumers[m].onerror !== null) {
           scc.consumers[m].onerror(e);
         }
       }

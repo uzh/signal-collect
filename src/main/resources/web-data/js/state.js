@@ -113,7 +113,7 @@ scc.modules.State = function() {
     }
     // Update the state information in the GUI
     var stateStrings = scc.STR.State[j.state];
-    if (j.mode != undefined) {
+    if (j.mode !== undefined) {
       stateStrings = [j.mode + ": " + j.state, ""];
     }
     else if (stateStrings === undefined) {
@@ -130,7 +130,7 @@ scc.modules.State = function() {
       retryMillis *= retryMillisMultiplier;
     }
     // If the state is determined, reset retryMillis
-    if (j.state != "undetermined") {
+    if (j.state !== "undetermined") {
       retryMillis = 200;
     }
     // Adjust UI if not in interactive execution mode
@@ -143,8 +143,8 @@ scc.modules.State = function() {
     // used. We simply enable/disable auto-refreshing as long as the computation
     // is running.
     if (!scc.STR.State.hasOwnProperty(j.state)) {
-      if (j.state != undefined && 
-          j.state.toLowerCase().indexOf("converged") != -1) {
+      if (j.state !== undefined && 
+          j.state.toLowerCase().indexOf("converged") !== -1) {
         if (scc.consumers.Graph.autoRefresh === false) {
           scc.consumers.Graph.update();
         }
@@ -174,7 +174,7 @@ scc.modules.State = function() {
       case "pausedBeforeCollect":
       case "pausedBeforeGlobalChecks":
         enabledButtons(["reset", "step", "collect", "continue", "terminate"])
-        if (scc.consumers.Graph != undefined) {
+        if (scc.consumers.Graph !== undefined) {
           scc.consumers.Graph.autoRefresh = false;
           scc.consumers.BreakConditions.order();
         }
@@ -183,7 +183,7 @@ scc.modules.State = function() {
     // If the computation is continuing, it's only possible to pause or
     // terminate. If only a few steps remain, don't do anything.
     if ((j.steps > 5 || j.steps === -1) && ["converged", "globalConditionReached"].indexOf(j.state) === -1) {
-      if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh === false) {
+      if (scc.consumers.Graph !== undefined && scc.consumers.Graph.autoRefresh === false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
         scc.consumers.BreakConditions.order();
@@ -191,8 +191,8 @@ scc.modules.State = function() {
       enabledButtons(["pause", "terminate"])
     }
     // Else there are more choices:
-    else if (j.steps === 0 || ["converged", "globalConditionReached"].indexOf(j.state) != -1) {
-      if (scc.consumers.Graph != undefined) {
+    else if (j.steps === 0 || ["converged", "globalConditionReached"].indexOf(j.state) !== -1) {
+      if (scc.consumers.Graph !== undefined) {
         scc.consumers.Graph.autoRefresh = false;
         scc.consumers.Graph.update();
       }

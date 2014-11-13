@@ -256,7 +256,7 @@ scc.modules.Resources = function() {
     $.each(scc.lib.resources.lineCharts, function(k,v) { v.update(msg); });
     
 
-    if (computationState != "converged") {
+    if (computationState !== "converged") {
     
       // update statistics
       if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {

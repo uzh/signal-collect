@@ -105,7 +105,7 @@ scc.modules.BreakConditions = function () {
       }
       // Build the DIV element to be added...
       var item = '<div class="condition';
-      if (j.reached[c.id] != undefined) { item += ' reached' }
+      if (j.reached[c.id] !== undefined) { item += ' reached' }
       item += ('">Vertex with id: <span class="vertex_link" title="' + 
                c.props.vertexId + '">...' + s + '</span><br/>when ' + c.name)
       switch(c.name) {
@@ -121,7 +121,7 @@ scc.modules.BreakConditions = function () {
         case BSTR.collectScoreBelowThreshold:
           item += " " + c.props.collectThreshold; break;
       }
-      if (j.reached[c.id] != undefined) { 
+      if (j.reached[c.id] !== undefined) { 
         var goal = j.reached[c.id];
         if (goal.length > 15) {
           goal = goal.substring(0, 12) + "...";
@@ -140,11 +140,11 @@ scc.modules.BreakConditions = function () {
     }
 
     // Display error if any
-    if (j["error"] != undefined) {
-      if (j["error"].indexOf("Missing or invalid vertexId") != -1) {
+    if (j["error"] !== undefined) {
+      if (j["error"].indexOf("Missing or invalid vertexId") !== -1) {
         $("#gc_conditionList").append('<div class="condition none fade">' + BSTR.invalidId + '</div>');
       }
-      else if (j["error"].indexOf("Invalid state") != -1) {
+      else if (j["error"].indexOf("Invalid state") !== -1) {
         $("#gc_conditionList").append('<div class="condition none fade">' + BSTR.invalidState + '</div>');
       }
       else {
@@ -238,7 +238,7 @@ scc.modules.BreakConditions = function () {
     }
     // If we don't need a state for this condition, return true
     else if (!([BSTR.stateAbove, BSTR.stateBelow].indexOf(
-              $("#gc_condition").val().replace(/\:/g, "")) != -1)) {
+              $("#gc_condition").val().replace(/\:/g, "")) !== -1)) {
       return true;
     }
     // Otherwise, if no state has been entered, return false

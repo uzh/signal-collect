@@ -42,7 +42,7 @@ scc.lib.resources.lineCharts = {};
 $(window).on('hashchange', function() {
   scc.settings.reload();
   var settings = scc.settings.get();
-  if (settings.resources.section != null) {
+  if (settings.resources.section !== null) {
     scc.lib.resources.show_section(settings.resources.section);
   }
 });

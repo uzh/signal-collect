@@ -23,12 +23,14 @@
  * @return {Array.<number>} - An array with summed up individual array elements.
  */
 Array.sumElements = function(sum, array) {
-  array.forEach(function(num, index) {
-    if (sum[index] === undefined) {
-      sum[index] = 0;
-    }
-    sum[index] = sum[index] + num;
-  });
+  if (array !== undefined && sum !== undefined) {
+    array.forEach(function(num, index) {
+      if (sum[index] === undefined) {
+        sum[index] = 0;
+      }
+      sum[index] = sum[index] + num;
+    });
+  }
   return sum;
 };
 

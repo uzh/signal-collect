@@ -275,7 +275,7 @@ scc.lib.resources.LineChart = function() {
     
     // set default prettyName to jsonName if needed
     if (this.config.prettyName === "") {
-      if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
+      if (scc.lib.resources.chartInfo[this.config.jsonName] !== null && scc.lib.resources.chartInfo[this.config.jsonName].name !== null) {
         this.config.prettyName = scc.lib.resources.chartInfo[this.config.jsonName].name;
       } else {
         this.config.prettyName = this.config.jsonName;
@@ -283,7 +283,7 @@ scc.lib.resources.LineChart = function() {
     }
 
     // set further description to the chart if available
-    if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].info != null) {
+    if (scc.lib.resources.chartInfo[this.config.jsonName] !== null && scc.lib.resources.chartInfo[this.config.jsonName].info !== null) {
       this.config.info = scc.lib.resources.chartInfo[this.config.jsonName].info;
     }
     
@@ -411,10 +411,12 @@ scc.lib.resources.LineChart = function() {
   Array.getMinMax = function(array) {
     var min = Infinity, max = 0;
     var minId = 0, maxId = 0;
-    array.forEach(function(v, k) {
-      if (v < min) { min = v; minId = k; }
-      if (v > max) { max = v; maxId = k; }
-    });
+    if (array !== undefined) {
+      array.forEach(function(v, k) {
+        if (v < min) { min = v; minId = k; }
+        if (v > max) { max = v; maxId = k; }
+      });
+    }
     return { "min": { "v":min, "id":minId }, "max": { "v":max, "id":maxId } };
   }
   
@@ -426,7 +428,10 @@ scc.lib.resources.LineChart = function() {
    *     array.
    */
   Array.avg = function(array) {
-    var len = array.length;
+    var len = 0;
+    if (array !== undefined) {
+      len = array.length;
+    }
     if (len === 0) { return 0; }
     return Array.sum(array) / len;
   };
@@ -523,8 +528,8 @@ scc.lib.resources.LineChart = function() {
     if (itemName === "Node" && coreCharts.indexOf(this.config.jsonName) >= 0) {
       itemName = "Core";
     }
-    var minText = "Min = " + itemName + (itemName != "Core" ? " ID: " + itemIds[newMinMax.min.id] : "");
-    var maxText = "Max = " + itemName + (itemName != "Core" ? " ID: " + itemIds[newMinMax.max.id] : "");
+    var minText = "Min = " + itemName + (itemName !== "Core" ? " ID: " + itemIds[newMinMax.min.id] : "");
+    var maxText = "Max = " + itemName + (itemName !== "Core" ? " ID: " + itemIds[newMinMax.max.id] : "");
     data[0].push({ date:currentDate, value:Array.avg(newData), id:"Average", type:"avg" });
     data[1].push({ date:currentDate, value:newMinMax.min.v, id:minText, type:"min" });
     data[2].push({ date:currentDate, value:newMinMax.max.v, id:maxText, type:"max" });

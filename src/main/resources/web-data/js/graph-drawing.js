@@ -72,7 +72,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     this.push = function (vertexIds) {
       var stored = this.get()
       $.each(stored, function (key, value) {
-        if (vertexIds.indexOf(value) != -1) { vertexIds.splice(key, 1); }
+        if (vertexIds.indexOf(value) !== -1) { vertexIds.splice(key, 1); }
       });
       stored.push.apply(stored, vertexIds)
       localStorage["vertexIds"] = JSON.stringify(stored);
@@ -447,7 +447,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
    */
   this.onmessage = function(j) {
     if (j.provider === "configuration") {
-      if (j.executionConfiguration != "unknown") {
+      if (j.executionConfiguration !== "unknown") {
         signalThreshold = j.executionConfiguration.signalThreshold
         collectThreshold = j.executionConfiguration.collectThreshold
       }
@@ -562,8 +562,8 @@ scc.lib.graph.GraphD3 = function (graphModule) {
           var edgeId = source + "-" + targets[t];
           if (edgeRefs[edgeId] === undefined) {
             // The edge hasn't existed yet. Update d3's edge array
-            if (vertexRefs[source] != undefined && 
-                vertexRefs[targets[t]] != undefined) {
+            if (vertexRefs[source] !== undefined && 
+                vertexRefs[targets[t]] !== undefined) {
               edges.push({"id": edgeId,
                           "source": vertices[vertexRefs[source]], 
                           "target": vertices[vertexRefs[targets[t]]]});
@@ -578,7 +578,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       });
     }
     
-    if (verticesToRemove.length != 0) {
+    if (verticesToRemove.length !== 0) {
       graphD3.removeVerticesFromCanvas(verticesToRemove);
     }
     else {
@@ -599,7 +599,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       var exposedVertex = svgVertices.filter(function (d, i) {
         return d.id === graphD3.exposedVertexId;
       })[0][0];
-      if (exposedVertex != undefined) {
+      if (exposedVertex !== undefined) {
         var data = exposedVertex.__data__;
         $("#exposition_background").text("");
         graphModule.expose(data);
@@ -608,7 +608,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
 
     // Order new graph if autorefresh is enabled
     if (scc.consumers.Graph.autoRefresh) {
-      if ($("#gp_refreshRate").val() != "Never") {
+      if ($("#gp_refreshRate").val() !== "Never") {
         scc.consumers.Graph.update(parseInt($("#gp_refreshRate").val())*1000);
       }
     }
@@ -692,7 +692,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
    */
   this.findExistingVertices = function (ids) {
     var existingVertices = svgVertices.filter(function (d, i) {
-      return ids.indexOf(d.id) != -1
+      return ids.indexOf(d.id) !== -1
     });
     return existingVertices;
   };
@@ -770,7 +770,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     // remove the vertices
     for (var i = 0; i < vertices.length; i++) {
       var n = vertices[i];
-      if (vertexIds.indexOf(n.id) != -1) {
+      if (vertexIds.indexOf(n.id) !== -1) {
         vertices.splice(i, 1);
         vertexRefs[n.id] = undefined;
         i--
@@ -783,8 +783,8 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     for (var i = 0; i < edges.length; i++) {
       var l = edges[i];
       var edgeId = l.source.id + "-" + l.target.id;
-      if (vertexIds.indexOf(l.source.id) != -1 ||
-          vertexIds.indexOf(l.target.id) != -1) {
+      if (vertexIds.indexOf(l.source.id) !== -1 ||
+          vertexIds.indexOf(l.target.id) !== -1) {
         edges.splice(i, 1);
         edgeRefs[l.id] = undefined;
         i--

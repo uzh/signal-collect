@@ -91,7 +91,7 @@ scc.modules.Graph = function() {
                       vertexCountIntervals[i] + '</option>');
     }
     // re-select the value selected before emptying or the maximum value
-    if (currentChoice != null) {
+    if (currentChoice !== null) {
       currentChoice = parseInt(currentChoice)
       if (currentChoice > maximum) { selector.val(maximum); }
       else if (currentChoice <= maximum) { selector.val(currentChoice); }
@@ -186,7 +186,7 @@ scc.modules.Graph = function() {
         if (d.depth === 0) {
           return "hidden";
         }
-        if (d.children != undefined) {
+        if (d.children !== undefined) {
           return "tobject_key";
         }
         return "tvalue_container";

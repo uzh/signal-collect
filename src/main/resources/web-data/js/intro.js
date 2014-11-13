@@ -24,7 +24,7 @@ $(document).ready(function() {
   try {
     var jsonHash = JSON.parse(top.location.hash.slice(1));
   } catch (e) {}
-  var forceIntro = (jsonHash != null && jsonHash.intro != null);
+  var forceIntro = (jsonHash !== null && jsonHash !== undefined && jsonHash.intro !== null);
   if (cookieFound && !forceIntro) {
     // we do not have to show the introduction
     return false;

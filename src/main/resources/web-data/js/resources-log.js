@@ -164,7 +164,7 @@ scc.modules.Log = function() {
     msg["messages"].forEach(function(json) {
       json.occurrences = 1;
       json.cls = "";
-      if (latest != null &&
+      if (latest !== null &&
           latest.level === json.level && 
           latest.cause === json.cause &&
           latest.logSource === json.logSource &&
@@ -196,7 +196,7 @@ scc.modules.Log = function() {
     var fragmentsHtml = "";
     fragments.forEach(function(json) {
       fragmentsHtml += "<li class=\"" + json.cls + "\">" + json.date + " " + json.level + ": " + json.message;
-      if (json.cause != null && json.cause.length > 0) {
+      if (json.cause !== null && json.cause.length > 0) {
         fragmentsHtml += " (" + json.cause + ")";
       }
       fragmentsHtml += " &lt;" + json.logSource + ", " + json.logClass + "&gt;";
