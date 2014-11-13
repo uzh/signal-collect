@@ -127,10 +127,12 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
       vm.get(Int.MaxValue).id must_== Int.MaxValue
     }
 
+    case class Ab(a: Int, b: Int) {
+      override def hashCode = a.hashCode
+      override def equals(other: Any) = a.equals(other)
+    }
+
     "fail to retrieve a vertex with the same hash code and different object" in {
-      case class Ab(a: Int, b: Int) {
-        override def hashCode = a.hashCode
-      }
       val vm = new VertexMap[Any, Any](8, 0.99f)
       val v1 = new PageRankVertex(Ab(1, 100))
       val v2 = new PageRankVertex(Ab(1, 101))
@@ -140,9 +142,6 @@ class VertexMapSpec extends SpecificationWithJUnit with Mockito {
     }
 
     "handle hash collisions correctly" in {
-      case class Ab(a: Int, b: Int) {
-        override def hashCode = a.hashCode
-      }
       val vm = new VertexMap[Any, Any](8, 0.99f)
       val v1 = new PageRankVertex(Ab(1, 100))
       val v2 = new PageRankVertex(Ab(1, 101))

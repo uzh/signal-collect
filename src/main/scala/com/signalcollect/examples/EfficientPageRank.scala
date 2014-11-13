@@ -28,7 +28,7 @@ import com.signalcollect.factory.messagebus.IntIdDoubleSignalMessageBusFactory
  * have their own internal edge representations.
  */
 class PlaceholderEdge[Id](targetId: Id) extends DefaultEdge(targetId) {
-  def signal = ???
+  def signal = throw new Exception("This is a placeholder edge, its signal function should never be called.")
 }
 
 class EfficientPageRankVertex(id: Int)
@@ -36,7 +36,9 @@ class EfficientPageRankVertex(id: Int)
 
   type OutgoingSignalType = Double
 
-  def computeSignal(edgeId: Int) = ???
+  def computeSignal(edgeId: Int) =
+    throw new Exception("This vertex type computes signals inside of 'executeSignalOperation', " +
+      "'computeSignal' should never be called.")
 
   override def executeSignalOperation(graphEditor: GraphEditor[Int, Double]) {
     if (edgeCount != 0) {
