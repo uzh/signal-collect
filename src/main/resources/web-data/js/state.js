@@ -59,7 +59,7 @@ scc.modules.State = function() {
    * Order state data.
    */
   var order = function(o, delay) {
-    if (o == undefined) { o = {}; }
+    if (o === undefined) { o = {}; }
     o["requestor"] = "State";
     o["provider"] = "state";
     scc.order(o, delay);
@@ -96,14 +96,14 @@ scc.modules.State = function() {
    */
   this.onmessage = function(j) {
     // If this is the first time a state message is received, update the graph.
-    if (firstTry == true) {
+    if (firstTry === true) {
       try {
         scc.consumers.Graph.update();
         firstTry = false;
       } catch (e) {}
     }
     // Receiving a message from controls means that the command was received.
-    if (j.provider == "controls") { 
+    if (j.provider === "controls") { 
       pendingCommand = false;
       return;
     }
@@ -116,14 +116,14 @@ scc.modules.State = function() {
     if (j.mode != undefined) {
       stateStrings = [j.mode + ": " + j.state, ""];
     }
-    else if (stateStrings == undefined) {
+    else if (stateStrings === undefined) {
       stateStrings = ["Mode: " + j.mode + ", state: " + j.state];
     }
     $('#resStatStatus').text(stateStrings[0]);
     $('#state').text(stateStrings[0])
     $('#state').attr("title", stateStrings[1])
     // Retry at increasing intervals if the mode is undetermined
-    if (j.state == "undetermined") {
+    if (j.state === "undetermined") {
       setTimeout(function () {
         order(); 
       }, retryMillis);
@@ -134,7 +134,7 @@ scc.modules.State = function() {
       retryMillis = 200;
     }
     // Adjust UI if not in interactive execution mode
-    if (j.state == "undetermined" || !scc.STR.State.hasOwnProperty(j.state)) {
+    if (j.state === "undetermined" || !scc.STR.State.hasOwnProperty(j.state)) {
       $("#cGraphControlEnabled").addClass("hidden");
       $("#iteration_container").addClass("hidden");
       $("#cGraphControlDisabled").removeClass("hidden");
@@ -145,23 +145,23 @@ scc.modules.State = function() {
     if (!scc.STR.State.hasOwnProperty(j.state)) {
       if (j.state != undefined && 
           j.state.toLowerCase().indexOf("converged") != -1) {
-        if (scc.consumers.Graph.autoRefresh == false) {
+        if (scc.consumers.Graph.autoRefresh === false) {
           scc.consumers.Graph.update();
         }
         scc.consumers.Graph.autoRefresh = false;
       }
-      else if (scc.consumers.Graph.autoRefresh == false) {
+      else if (scc.consumers.Graph.autoRefresh === false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
       }
-      if (scc.consumers.Graph.autoRefresh == true) {
+      if (scc.consumers.Graph.autoRefresh === true) {
         setTimeout(function () {
           order(); 
         }, 1000);
       }
       return
     }
-    if (j.state == "initExecution") { return; }
+    if (j.state === "initExecution") { return; }
     // What follows is only available in interactive mode
     $("#cGraphControlEnabled").removeClass("hidden");
     $("#iteration_container").removeClass("hidden");
@@ -182,8 +182,8 @@ scc.modules.State = function() {
     }
     // If the computation is continuing, it's only possible to pause or
     // terminate. If only a few steps remain, don't do anything.
-    if ((j.steps > 5 || j.steps == -1) && ["converged", "globalConditionReached"].indexOf(j.state) == -1) {
-      if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh == false) {
+    if ((j.steps > 5 || j.steps === -1) && ["converged", "globalConditionReached"].indexOf(j.state) === -1) {
+      if (scc.consumers.Graph != undefined && scc.consumers.Graph.autoRefresh === false) {
         scc.consumers.Graph.autoRefresh = true;
         scc.consumers.Graph.update();
         scc.consumers.BreakConditions.order();
@@ -191,7 +191,7 @@ scc.modules.State = function() {
       enabledButtons(["pause", "terminate"])
     }
     // Else there are more choices:
-    else if (j.steps == 0 || ["converged", "globalConditionReached"].indexOf(j.state) != -1) {
+    else if (j.steps === 0 || ["converged", "globalConditionReached"].indexOf(j.state) != -1) {
       if (scc.consumers.Graph != undefined) {
         scc.consumers.Graph.autoRefresh = false;
         scc.consumers.Graph.update();

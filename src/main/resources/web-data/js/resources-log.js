@@ -165,11 +165,11 @@ scc.modules.Log = function() {
       json.occurrences = 1;
       json.cls = "";
       if (latest != null &&
-          latest.level == json.level && 
-          latest.cause == json.cause &&
-          latest.logSource == json.logSource &&
-          latest.logClass == json.logClass &&
-          latest.message == json.message
+          latest.level === json.level && 
+          latest.cause === json.cause &&
+          latest.logSource === json.logSource &&
+          latest.logClass === json.logClass &&
+          latest.message === json.message
          ) {
         fragments[fragments.length-1].occurrences += 1;
       } else {

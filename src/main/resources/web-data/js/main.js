@@ -64,7 +64,7 @@ scc.Settings = function() {
    *     settings object that will be merged with the existing settings object.
    */
   this.set = function(modification) {
-    if (typeof(modification) == "function") {
+    if (typeof(modification) === "function") {
       modification(this.settings);
     }
     else {
@@ -119,17 +119,17 @@ scc.Settings = function() {
    *     properties
    */
   function hideDefaults(defaults, added) {
-    if (typeof(added) == "object" ) {
+    if (typeof(added) === "object" ) {
       $.each(added, function(k, v) {
         added[k] = hideDefaults(defaults[k], v);
-        if (added[k] == null || 
-           (typeof(added[k]) == "object" &&  Object.keys(added[k]).length == 0)) {
+        if (added[k] === null || 
+           (typeof(added[k]) === "object" &&  Object.keys(added[k]).length === 0)) {
           delete added[k];
         }
       });
     }
     else {
-      if (defaults == added) { return null; }
+      if (defaults === added) { return null; }
     }
     return added;
   }
@@ -202,7 +202,7 @@ $(document).ready(function() {
       var provider = j["provider"];
       // When a 'notready' message is received, the request that caused this
       // message is re-sent after waiting 500ms.
-      if (provider == "notready") {
+      if (provider === "notready") {
         var request = j["request"];
         scc.order(request, 500);
         var requestor = j["requestor"];
@@ -214,13 +214,13 @@ $(document).ready(function() {
       // trace that caused the error. These errors are generally considered to
       // be fatal and the computation and console may not function properly
       // after such an occurrence.
-      else if (provider == "error") {
+      else if (provider === "error") {
         console.log(j["stacktrace"]);
         scc.layout.showMsg("#small_error", j["msg"] + ": " + j["stacktrace"]);
       }
       // If the server receives a request that it considers invalid, it sends
       // back this message. The error will be printed to the error pop-up
-      else if (provider == "invalid") {
+      else if (provider === "invalid") {
         scc.layout.showMsg("#small_error", j["msg"] + ", Comment: " + j["comment"]);
       }
       // Callees ordering information using scc.order can specify a callback
@@ -289,7 +289,7 @@ $(document).ready(function() {
    *     reply from the server
    */
   scc.order = function(msg, delay, cb) {
-    if (typeof(msg) == "string") {
+    if (typeof(msg) === "string") {
       msg = JSON.parse(msg);
     }
     var id = msg.provider;
@@ -297,7 +297,7 @@ $(document).ready(function() {
     if (scc.orders[id]) { scc.resetOrders(id); }
     scc.callbacks[id] = cb;
     scc.orders[id] = setTimeout(function() {
-      if (msg["provider"] == "graph") {
+      if (msg["provider"] === "graph") {
         $("#graph_background").text("Loading...").fadeIn(50);
       }
       var j = JSON.stringify(msg);
@@ -338,10 +338,10 @@ $(document).ready(function() {
       var view = window.location.pathname.slice(1);
       scc.settings.set({"main": {"view": view}});
       enableModules(["State"]);
-      if (view == "resources") {
+      if (view === "resources") {
         enableModules(["Resources", "Configuration", "Log"]);
       }
-      if (view == "graph") {
+      if (view === "graph") {
         enableModules(["Graph", "BreakConditions"]);
       }
       scc.layout.layout([view]);

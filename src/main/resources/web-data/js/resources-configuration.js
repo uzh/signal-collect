@@ -67,14 +67,14 @@ scc.modules.Configuration = function() {
     var ul = $("#infrastructureStatBox ul").html('');
     $.each(msg.systemProperties, function(index) {
       $.each(msg.systemProperties[index], function(k, v) {
-        if (scc.conf.resources.hideInfrastructureItems.indexOf(k) == -1) {
+        if (scc.conf.resources.hideInfrastructureItems.indexOf(k) === -1) {
           ul.append('<li>' + k + ': ' + v + '</li>');
         }
       });
     });
     ul = $("#graphStatBox ul").html('');
     $.each(msg.graphConfiguration, function(k, v) {
-      if (k == "consoleHttpPort" && v[0] == -1) {
+      if (k === "consoleHttpPort" && v[0] === -1) {
         v[0] = location.port;
       }
       ul.append('<li>' + k + ': ' + v[0] + '</li>');

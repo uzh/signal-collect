@@ -102,10 +102,10 @@ scc.modules.Graph = function() {
    * Wrapper function to do things that always come with a graph order.
    */
   this.order = function (o, delay) {
-    if (o == undefined) { o = {}; }
+    if (o === undefined) { o = {}; }
     o["requestor"] = "Graph";
     o["provider"] = "graph";
-    o["exposeVertices"] = (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes")
+    o["exposeVertices"] = (scc.settings.get().graph.options["gp_exposeVertices"] === "Yes")
     scc.order(o, delay)
   };
 
@@ -131,7 +131,7 @@ scc.modules.Graph = function() {
    * @return {object} tree for d3's tree layout
    */
   var jsonIntoTree = function (json) {
-    if(typeof json == "object") {
+    if(typeof json === "object") {
       var arr = []
       $.each(json, function(k,v) {
         var child = jsonIntoTree(v)
@@ -183,7 +183,7 @@ scc.modules.Graph = function() {
     
     t.enter().append("div")
       .attr("class", function (d) {
-        if (d.depth == 0) {
+        if (d.depth === 0) {
           return "hidden";
         }
         if (d.children != undefined) {
@@ -198,7 +198,7 @@ scc.modules.Graph = function() {
     t.html(function (d) {
       var s = d.name;
       s = '<span class="tvalue_key">' + s + '</span>';
-      if (d.val == undefined) { 
+      if (d.val === undefined) { 
         s = s + ": ";
       }
       else { 
@@ -264,12 +264,12 @@ scc.modules.Graph = function() {
     }
     populateTargetCountSelector(vertexCountIntervals[vertexCountIntervals.length-1]);
     $('#gs_addBySubstring').click(function(e) { 
-      if ($(this).val() == GSTR["addBySubstring"]) {
+      if ($(this).val() === GSTR["addBySubstring"]) {
         $(this).select();
       }
     });
     $('#gs_addBySubstring').keypress(function(e) {
-      if ( e.which == 13 ) { 
+      if ( e.which === 13 ) { 
         e.preventDefault();
         $("#gs_addBySubstringAdd").addClass("active")
         setTimeout(function () { $("#gs_addBySubstringAdd").removeClass("active"); }, 100);
@@ -277,13 +277,13 @@ scc.modules.Graph = function() {
       }
     });
     $.each(scc.settings.get().graph.layout, function (key, value) {
-      if (value == "show") { $("#" + key).show(); }
+      if (value === "show") { $("#" + key).show(); }
     });
     $.each(scc.settings.get().graph.options, function (key, value) {
       $("#" + key).val(value);
     });
     $("#gs_addBySubstring").val(GSTR.addBySubstring);
-    if (scc.settings.get().graph.options["gp_exposeVertices"] == "Yes") {
+    if (scc.settings.get().graph.options["gp_exposeVertices"] === "Yes") {
       $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
       graphD3.exposedVertexId = localStorage["exposedVertexId"];
       $("#exposition").fadeIn(100, function () {
@@ -296,7 +296,7 @@ scc.modules.Graph = function() {
     $.each(GSTR.menuhelp, function (k, v) {
       var subject = $('label[for="' + k + '"],' +
                       '.panel_span[data-title="' + k + '"]')
-      if (subject.length == 0) {
+      if (subject.length === 0) {
         subject = $('#' + k)
       }
       subject.attr("title", v);
@@ -437,7 +437,7 @@ scc.modules.Graph = function() {
     primaryButton.removeClass("active");
     pickAction = action;
     // modify panel buttons
-    if (primaryButton.text() == "Cancel") {
+    if (primaryButton.text() === "Cancel") {
       primaryButton.text("Selected vertices");
       primaryButton.removeClass("snd");
       confirmButton.addClass("hidden");
@@ -494,7 +494,7 @@ scc.modules.Graph = function() {
       graphModule.order({
              "query": "vertexIds",
              "vertexIds": selectedVertexIds,
-             "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+             "vicinityIncoming": ($("#gp_vicinityIncoming").val() === "Yes"),
              "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
       });
     });
@@ -534,13 +534,13 @@ scc.modules.Graph = function() {
     // If the user has selected vertices to be removed, DEL will do the same as
     // clicking on "Remove". ESC will cancel the selection.
     if ($("#gd_removeBySelect").hasClass("snd")) {
-      if ( e.which == 46 ) { 
+      if ( e.which === 46 ) { 
         e.preventDefault();
         $("#gd_removeBySelectRemove").trigger('click');
       }
     }
-    if ($("#gd_removeBySelect").text() == "Cancel") {
-      if ( e.which == 27 ) { 
+    if ($("#gd_removeBySelect").text() === "Cancel") {
+      if ( e.which === 27 ) { 
         e.preventDefault();
         $("#gd_removeBySelect").trigger('click');
       }
@@ -548,13 +548,13 @@ scc.modules.Graph = function() {
     // If the user has selected vertices to load their vicinities, ENTER will do
     // the same as clicking on "Add". ESC will cancel the selection.
     if ($("#gs_addVicinitiesBySelect").hasClass("snd")) {
-      if ( e.which == 13 ) { 
+      if ( e.which === 13 ) { 
         e.preventDefault();
         $("#gs_addVicinitiesBySelectAdd").trigger('click');
       }
     }
-    if ($("#gs_addVicinitiesBySelect").text() == "Cancel") {
-      if ( e.which == 27 ) { 
+    if ($("#gs_addVicinitiesBySelect").text() === "Cancel") {
+      if ( e.which === 27 ) { 
         e.preventDefault();
         $("#gs_addVicinitiesBySelect").trigger('click');
       }
@@ -604,7 +604,7 @@ scc.modules.Graph = function() {
    */
   $("#gp_exposeVertices").change(function (e) { 
     var val = $(this).val();
-    if (val == "Yes") {
+    if (val === "Yes") {
       scc.consumers.Graph.update();
       $('#exposition').css("width", scc.settings.get().graph.layout.expositionWidth);
       graphD3.exposedVertexId = localStorage["exposedVertexId"];
@@ -635,7 +635,7 @@ scc.modules.Graph = function() {
    * value to default if it's left empty.
    */
   $("#gs_addBySubstring").change(function () {
-    if ($("#gs_addBySubstring").val().length == 0) {
+    if ($("#gs_addBySubstring").val().length === 0) {
       $("#gs_addBySubstring").val(GSTR.addBySubstring); 
     }
   });

@@ -170,14 +170,14 @@ scc.modules.Resources = function() {
   var ChartsContains = function(key) {
     var found = false;
     scc.conf.resources.chartConfigWorkers.forEach(function(c) {
-      if (c.jsonName == key) {
+      if (c.jsonName === key) {
         found = true;
         return found;
       }
     });
     if (!found) {
       scc.conf.resources.chartConfigNodes.forEach(function(c) {
-        if (c.jsonName == key) {
+        if (c.jsonName === key) {
           found = true;
           return found;
         }
@@ -221,7 +221,7 @@ scc.modules.Resources = function() {
   this.onmessage = function(msg) {
     
     // check whether it is a state change message
-    if (msg.provider == "state") {
+    if (msg.provider === "state") {
       this.handleStateChange(msg);
       return;
     }
@@ -260,7 +260,7 @@ scc.modules.Resources = function() {
     
       // update statistics
       if (statisticsLastUpdated.addMilliseconds(scc.conf.resources.intervalStatistics) <= msg.timestamp) {
-        if (resStatStartTime.html() == "?") {
+        if (resStatStartTime.html() === "?") {
           resStatStartTime.html(new Date(msg.timestamp).dateTime());
         }
         resStatRunTime.html(new Date(msg.timestamp-(new Date(resStatStartTime.html()))).durationPretty());
@@ -298,19 +298,19 @@ scc.modules.Resources = function() {
    */
   this.handleStateChange = function(msg) {
     
-    if (computationState == "" || msg.state == "resetting") {
+    if (computationState === "" || msg.state === "resetting") {
       $.each(scc.lib.resources.lineCharts, function(key, chart) {
         chart.addComputationState("reset");
       });
     }
     
-    if (msg.state == "resetting") {
+    if (msg.state === "resetting") {
       // re-initialize statistics
       resStatStartTime.html(new Date().dateTime());
       resStatRunTime.html("0"); 
     }
     
-    if (msg.state == "converged") {
+    if (msg.state === "converged") {
       $.each(scc.lib.resources.lineCharts, function(key, chart) {
         chart.addComputationState("converge");
       });

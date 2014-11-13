@@ -61,7 +61,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
    */
   var VertexStorageAgent = function () {
     // Initialize the localStorage if necessary
-    if (localStorage["vertexIds"] == undefined || localStorage["vertexIds"] == "") { 
+    if (localStorage["vertexIds"] === undefined || localStorage["vertexIds"] === "") { 
       localStorage["vertexIds"] = "[]";
     }
 
@@ -258,7 +258,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         .attr("width", "100%")
         .attr("height", "100%")
         .call(d3.behavior.zoom().on("zoom", function () {
-          if (zoomLevel == d3.event.scale) {
+          if (zoomLevel === d3.event.scale) {
             svg.attr("transform",
                      "translate(" + d3.event.translate + ")" + 
                      " scale(" + zoomLevel + ")")
@@ -276,13 +276,13 @@ scc.lib.graph.GraphD3 = function (graphModule) {
 
     // When double clicking a vertex, load the vicinity of the vertex
     d3.select("#graph").on("dblclick", function (e) {
-      if (d3.event.target.tagName == "circle") {
+      if (d3.event.target.tagName === "circle") {
         var target = d3.event.target;
         var data = target.__data__;
         graphModule.order({"provider": "graph",
                "query": "vertexIds",
                "vertexIds": [data.id],
-               "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+               "vicinityIncoming": ($("#gp_vicinityIncoming").val() === "Yes"),
                "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
         });
       }
@@ -309,7 +309,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       if ($("#exposition").is(":visible")) {
         var target = d3.event.target;
         var data = target.__data__;
-        if (target.tagName == "circle") {
+        if (target.tagName === "circle") {
           var exposedVertexId = data.id;
           localStorage["exposedVertexId"] = exposedVertexId;
           $("#exposition_background").text("");
@@ -333,7 +333,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
 
       // When over a vertex, show the tooltip, highlight its edges and hide all
       // other edges in the graph
-      if (target.tagName == "circle") {
+      if (target.tagName === "circle") {
         $("#graph_tooltip").css({"left": coords[0]+5 + "px", "top": coords[1]+5 + "px"});
         hoveringOverVertex = data.id; 
         fillTooltip(data);
@@ -344,7 +344,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
           if (o.target.id === data.id) { return "edge"; }
           return "edge hiddenOpacity";
         });
-        if (scc.settings.get().graph.options["gs_autoAddVicinities"] == "Yes") {
+        if (scc.settings.get().graph.options["gs_autoAddVicinities"] === "Yes") {
           clearTimeout(vicinityAutoLoadDelay);
           var target = d3.event.target;
           var data = target.__data__;
@@ -352,7 +352,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
             graphModule.order({"provider": "graph",
                    "query": "vertexIds",
                    "vertexIds": [data.id],
-                   "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+                   "vicinityIncoming": ($("#gp_vicinityIncoming").val() === "Yes"),
                    "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
             });
           }, 150);
@@ -368,7 +368,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         fadeTooltipTimeout = setTimeout(function() {
           tooltip.fadeOut(200);
         }, 500);
-        if (drawEdges == "Only on hover") {
+        if (drawEdges === "Only on hover") {
           svgEdges.attr("class", "edge hiddenOpacity");
         }
         else {
@@ -430,8 +430,8 @@ scc.lib.graph.GraphD3 = function (graphModule) {
         }
         // Else draw vertices depending on the drawEdges setting
         else {
-          if (drawEdges == "Always" || 
-             (drawEdges == "When graph is still" && 
+          if (drawEdges === "Always" || 
+             (drawEdges === "When graph is still" && 
              force.alpha() < 0.05)) { return "edge"; }
           else { return "edge hiddenOpacity"; }
         }
@@ -446,7 +446,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
    * @param {object} j - The message object received from the server
    */
   this.onmessage = function(j) {
-    if (j.provider == "configuration") {
+    if (j.provider === "configuration") {
       if (j.executionConfiguration != "unknown") {
         signalThreshold = j.executionConfiguration.signalThreshold
         collectThreshold = j.executionConfiguration.collectThreshold
@@ -457,10 +457,10 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     var newVertices = false;
 
     // If the server sent an empty graph, do nothing
-    if (j.vertices == undefined) { 
+    if (j.vertices === undefined) { 
       $("#graph_background").text("There are no vertices matching your request");
       hideBackgroundTimeout = setTimeout(function () {
-        if (vertices.length == 0) {
+        if (vertices.length === 0) {
           $("#graph_background").text(GSTR["canvasEmpty"]);
         }
       }, 2000);
@@ -522,9 +522,9 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       }
       vertexSequence += 1;
       var radius = data.s.replace(/[^0-9.,]/g, '')
-      if (radius == "NaN" || radius == "") { radius = 1; }
+      if (radius === "NaN" || radius === "") { radius = 1; }
       if (isNaN(radius)) { radius = 1; }
-      if (vertexRefs[id] == undefined) {
+      if (vertexRefs[id] === undefined) {
         // The vertex hasn't existed yet. Update d3's vertex array
         vertices.push({"id": id, "state": data.s, "seq": vertexSequence, 
                        "es": data.es, "ss": data.ss, "cs": data.cs,
@@ -560,7 +560,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       $.each(j.edges, function (source, targets) {
         for (var t = 0; t < targets.length; t++) {
           var edgeId = source + "-" + targets[t];
-          if (edgeRefs[edgeId] == undefined) {
+          if (edgeRefs[edgeId] === undefined) {
             // The edge hasn't existed yet. Update d3's edge array
             if (vertexRefs[source] != undefined && 
                 vertexRefs[targets[t]] != undefined) {
@@ -595,9 +595,9 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     }
 
     // Update exposed vertex
-    if (typeof graphD3.exposedVertexId == "string") {
+    if (typeof graphD3.exposedVertexId === "string") {
       var exposedVertex = svgVertices.filter(function (d, i) {
-        return d.id == graphD3.exposedVertexId;
+        return d.id === graphD3.exposedVertexId;
       })[0][0];
       if (exposedVertex != undefined) {
         var data = exposedVertex.__data__;
@@ -727,7 +727,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
       .duration(100)
       .attr("r", vertexSize);
 
-    if (vertices.length == 0) {
+    if (vertices.length === 0) {
       graphD3.resetDefaultStatus()
     }
     else {
@@ -795,7 +795,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     }
     // persist the new vertex selection and re-activate the graph layout
     graphD3.vertexStorage.save();
-    if (vertices.length == 0) {
+    if (vertices.length === 0) {
       this.resetDefaultStatus()
     }
 
@@ -855,7 +855,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     });
     var vertexIds = Object.keys(verticesWithEdges);
     var verticesWithoutEdges = svgVertices.filter(function (d, i) {
-      return vertexIds.indexOf(d.id) == -1;
+      return vertexIds.indexOf(d.id) === -1;
     });
     graphD3.removeVerticesFromCanvas(verticesWithoutEdges[0]);
   };
@@ -897,7 +897,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     graphModule.order({"provider": "graph",
            "query":  "vertexIds",
            "vertexIds":  graphD3.vertexStorage.get(),
-           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+           "vicinityIncoming": ($("#gp_vicinityIncoming").val() === "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
   };
@@ -913,7 +913,7 @@ scc.lib.graph.GraphD3 = function (graphModule) {
     graphModule.order({"provider": "graph",
            "query":  "vertexIds",
            "vertexIds":  vertexIds,
-           "vicinityIncoming": ($("#gp_vicinityIncoming").val() == "Yes"),
+           "vicinityIncoming": ($("#gp_vicinityIncoming").val() === "Yes"),
            "vicinityRadius": parseInt($("#gp_vicinityRadius").val()) 
     });
   };

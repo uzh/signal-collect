@@ -24,7 +24,7 @@
  */
 Array.sumElements = function(sum, array) {
   array.forEach(function(num, index) {
-    if (sum[index] == undefined) {
+    if (sum[index] === undefined) {
       sum[index] = 0;
     }
     sum[index] = sum[index] + num;

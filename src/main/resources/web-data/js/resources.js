@@ -52,7 +52,7 @@ $(window).on('hashchange', function() {
  * @param {string} s - The name of the section to show.
  */
 scc.lib.resources.show_section = function(s) {
-  if (s == "") { return; }
+  if (s === "") { return; }
   // hide all sections
   $("#resources .structured > div[id^=\"crs\"]").hide();
   // show the appropriate section
@@ -76,7 +76,7 @@ scc.lib.resources.show_boxes = function(s) {
   var boxes = "#resourceBoxes";
   // first, hide all of them
   $(boxes + " > div").attr("class", "hidden");
-  if (scc.conf.resources.resourceBoxes[s] == null) { return; }
+  if (scc.conf.resources.resourceBoxes[s] === null) { return; }
   // then only show the ones that are needed
   scc.conf.resources.resourceBoxes[s].forEach(function(v) {
     var resourceBox = boxes + " > #" + v;

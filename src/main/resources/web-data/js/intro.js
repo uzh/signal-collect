@@ -123,10 +123,10 @@ $(document).ready(function() {
     } else {
       view = "";
     }
-    if (targetElement.id == "cResourceComputation") {
+    if (targetElement.id === "cResourceComputation") {
       $("#mode_resources").click();
     }
-    if (targetElement.id == "stateContainer") {
+    if (targetElement.id === "stateContainer") {
       $("#mode_graph").click();
     }
     top.location.hash = '{"intro":' + $(targetElement).attr('data-step') + view + "}";

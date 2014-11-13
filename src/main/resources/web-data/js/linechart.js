@@ -221,7 +221,7 @@ scc.lib.resources.LineChart = function() {
     var differenceMS = highestXDomain - lowestXDomain;
     var newLowestXDomain, newHighestXDomain;
     
-    if (scale == 0) {
+    if (scale === 0) {
       newHighestXDomain = new Date(currentHighestDate.addMilliseconds(2*scc.conf.resources.intervalCharts));
       newLowestXDomain  = new Date(newHighestXDomain.addMilliseconds(-differenceMS));
     } else {      
@@ -253,7 +253,7 @@ scc.lib.resources.LineChart = function() {
 
     // add the correct chart type
     var chartFilter = (scc.conf.resources.chartConfigNodes.filter(function(v){
-        return v.jsonName == this.jsonName; 
+        return v.jsonName === this.jsonName; 
       }, this.config)
     );
     if (chartFilter.length > 0) {
@@ -261,7 +261,7 @@ scc.lib.resources.LineChart = function() {
     }
     
     // set default data callback if needed
-    if (this.config.dataCallback == null) {
+    if (this.config.dataCallback === null) {
       this.config.dataCallback = function(newData) {
         var that = this; // access this
         return newData[that.type + "Statistics"][that.jsonName];
@@ -269,12 +269,12 @@ scc.lib.resources.LineChart = function() {
     }
     
     // set default number format for the tooltip if needed
-    if (this.config.formatTT == null) {
+    if (this.config.formatTT === null) {
       this.config.formatTT = this.config.format;
     }
     
     // set default prettyName to jsonName if needed
-    if (this.config.prettyName == "") {
+    if (this.config.prettyName === "") {
       if (scc.lib.resources.chartInfo[this.config.jsonName] != null && scc.lib.resources.chartInfo[this.config.jsonName].name != null) {
         this.config.prettyName = scc.lib.resources.chartInfo[this.config.jsonName].name;
       } else {
@@ -353,7 +353,7 @@ scc.lib.resources.LineChart = function() {
         case 2: return "red";
       }
     }).style("stroke-width", function(d, i) {
-      if (i == 0) {
+      if (i === 0) {
         return "3px";
       }
       return "1.5px";
@@ -427,7 +427,7 @@ scc.lib.resources.LineChart = function() {
    */
   Array.avg = function(array) {
     var len = array.length;
-    if (len == 0) { return 0; }
+    if (len === 0) { return 0; }
     return Array.sum(array) / len;
   };
   
@@ -520,7 +520,7 @@ scc.lib.resources.LineChart = function() {
     var itemName = (this.config.type=="worker" ? "Worker" : "Node");
     // add core for these charts
     var coreCharts = [ "jmx_system_load", "jmx_process_time", "jmx_process_load" ];
-    if (itemName == "Node" && coreCharts.indexOf(this.config.jsonName) >= 0) {
+    if (itemName === "Node" && coreCharts.indexOf(this.config.jsonName) >= 0) {
       itemName = "Core";
     }
     var minText = "Min = " + itemName + (itemName != "Core" ? " ID: " + itemIds[newMinMax.min.id] : "");
@@ -563,7 +563,7 @@ scc.lib.resources.LineChart = function() {
    * @param {boolean} shiftRight - Whether or not the graph needs to shift right.
    */
   this.updateChart = function() {
-    if (data[0].length == 0) {
+    if (data[0].length === 0) {
       return;
     }
     
@@ -618,7 +618,7 @@ scc.lib.resources.LineChart = function() {
     aLineContainer
         .append("line")
         .attr("class", "line computationState")
-        .style("stroke", (type == "converge" ? "green" : "gray"))
+        .style("stroke", (type === "converge" ? "green" : "gray"))
         .style("stroke-width", "3px")
         .style("stroke-opacity", "0.25")
         .attr("date", +(now))
@@ -628,7 +628,7 @@ scc.lib.resources.LineChart = function() {
         })
         // and add a tooltip
         .append("svg:title")
-        .text("The computation " + (type == "converge" ? "converged" : "has been reset") + " at " + now.dateTime());
+        .text("The computation " + (type === "converge" ? "converged" : "has been reset") + " at " + now.dateTime());
   };
   
 };

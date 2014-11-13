@@ -72,7 +72,7 @@ scc.modules.BreakConditions = function () {
    * Order break condition data in order to update the condition list
    */
   var order = function(o, delay) {
-    if (o == undefined) { o = {}; }
+    if (o === undefined) { o = {}; }
     o["requestor"] = "BreakConditions";
     o["provider"] = "breakconditions";
     scc.order(o, delay);
@@ -92,7 +92,7 @@ scc.modules.BreakConditions = function () {
     // In this case, another order is issued after a certain delay.
     
     // If there are no conditions specified, display a placeholder
-    if (j.active.length == 0) {
+    if (j.active.length === 0) {
       $("#gc_conditionList").append('<div class="condition none">' + BSTR.noConditions + '</div>');
     }
 
@@ -133,7 +133,7 @@ scc.modules.BreakConditions = function () {
       $("#gc_conditionList").append(item);
     });
 
-    if (j["status"] == "noExecution" ) {
+    if (j["status"] === "noExecution" ) {
       $("#gc_conditionList").append('<div class="condition none">' + BSTR.noExecution + '</div>');
       order({}, 1000);
       return;
@@ -212,7 +212,7 @@ scc.modules.BreakConditions = function () {
     var target = d3.event.target;
     var data = target.__data__;
     var vertex = $(target);
-    if (data == undefined) {
+    if (data === undefined) {
       $("#gc_vertexId").val(BSTR.pickVertex);
       $("#gc_addCondition").attr("disabled", true);
     }
@@ -232,8 +232,8 @@ scc.modules.BreakConditions = function () {
    */
   var formCompleted = function () {
     // If no vertex has been selected, return false
-    if ($("#gc_vertexId").val() == BSTR.pickVertex ||
-        $("#gc_vertexId").val().length == 0) {
+    if ($("#gc_vertexId").val() === BSTR.pickVertex ||
+        $("#gc_vertexId").val().length === 0) {
       return false;
     }
     // If we don't need a state for this condition, return true
@@ -242,8 +242,8 @@ scc.modules.BreakConditions = function () {
       return true;
     }
     // Otherwise, if no state has been entered, return false
-    else if ($("#gc_state").val() == BSTR.enterState ||
-             $("#gc_state").val().length == 0) {
+    else if ($("#gc_state").val() === BSTR.enterState ||
+             $("#gc_state").val().length === 0) {
       return false;
     }
     // All checks passed
@@ -270,10 +270,10 @@ scc.modules.BreakConditions = function () {
    * change, not on keyup.
    */
   var checkEmptyField = function(e) {
-    if ($("#gc_vertexId").val().length == 0) {
+    if ($("#gc_vertexId").val().length === 0) {
       $("#gc_vertexId").val(BSTR.pickVertex); 
     }
-    if ($("#gc_state").val().length == 0) {
+    if ($("#gc_state").val().length === 0) {
       $("#gc_state").val(BSTR.enterState); 
     }
     $("#gc_vertexId").trigger("keyup");
@@ -347,8 +347,8 @@ scc.modules.BreakConditions = function () {
    * if it's the default string.
    */
   var autoselect = function(e) { 
-    if ($(this).val() == BSTR.pickVertex ||
-        $(this).val() == BSTR.enterState) {
+    if ($(this).val() === BSTR.pickVertex ||
+        $(this).val() === BSTR.enterState) {
       $(this).select();
     }
   };

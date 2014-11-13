@@ -132,7 +132,7 @@ scc.lib.Layout = function() {
     $.each(scc.settings.get(), function (key, value) {
       if (["graph", "resources"].indexOf(key) >= 0) { 
         $.each(value.layout, function (k, v) {
-          if (v == "hide") {
+          if (v === "hide") {
             $("#" + k + " .title").removeClass("expanded");
             $("#" + k + " .contents").hide();
           }
