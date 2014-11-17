@@ -48,6 +48,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "d3js" % "3.4.13",
   "org.webjars" % "jquery" % "2.1.1",
   "org.webjars" % "reconnecting-websocket" % "23d2fbc",
+  "org.webjars" % "intro.js" % "1.0.0",
   "junit" % "junit" % "4.8.2"  % "test",
   "org.specs2" % "classycle" % "1.4.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0"  % "test",
