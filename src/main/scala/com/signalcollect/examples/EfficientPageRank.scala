@@ -31,7 +31,7 @@ class PlaceholderEdge[Id](targetId: Id) extends DefaultEdge(targetId) {
   def signal = throw new Exception("This is a placeholder edge, its signal function should never be called.")
 }
 
-class EfficientPageRankVertex(id: Int)
+final class EfficientPageRankVertex(id: Int)
   extends MemoryEfficientDataFlowVertex[Double, Double](id = id, state = 0.15) {
 
   type OutgoingSignalType = Double
