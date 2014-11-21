@@ -143,7 +143,7 @@ private final class AsciiIntIterator(filePath: String) extends Iterator[Int] {
                 numberStarted = false
                 return currentNumber
               }
-            case ' ' | '\n' | '\t' =>
+            case ' ' | '\n' | '\t' | '\r' =>
               if (numberStarted) {
                 numberStarted = false
                 return currentNumber

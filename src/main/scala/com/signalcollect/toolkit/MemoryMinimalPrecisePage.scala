@@ -26,6 +26,25 @@ import java.io.DataOutputStream
 import com.signalcollect.Edge
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandler
+import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
+import com.signalcollect.interfaces.UndeliverableSignalHandler
+import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
+
+object PrecisePageRankUndeliverableSignalHandlerFactory extends UndeliverableSignalHandlerFactory[Int, Double] {
+  def createInstance: UndeliverableSignalHandler[Int, Double] = {
+    PrecisePageRankUndeliverableSignalHandler
+  }
+}
+
+object PrecisePageRankUndeliverableSignalHandler extends UndeliverableSignalHandler[Int, Double] {
+  def vertexForSignalNotFound(signal: Double, inexistentTargetId: Int, senderId: Option[Int], graphEditor: GraphEditor[Int, Double]) {
+    val v = new MemoryMinimalPrecisePage(inexistentTargetId)
+    v.setTargetIdArray(Array[Int]())
+    graphEditor.addVertex(v)
+    graphEditor.sendSignal(signal, inexistentTargetId)
+  }
+}
 
 // Only supports unsigned integers.
 object CompactIntSet {
