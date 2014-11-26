@@ -23,6 +23,8 @@ import scala.reflect.ClassTag
 import com.signalcollect.factory.workerapi.DefaultWorkerApiFactory
 import akka.actor.ActorSystem
 import com.signalcollect.worker.AkkaWorker
+import akka.actor.ActorRef
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Factory extends Serializable {
   override def toString = this.getClass.getSimpleName
@@ -83,6 +85,9 @@ abstract class SchedulerFactory[Id, Signal] extends Factory {
 
 abstract class WorkerApiFactory[Id, Signal] extends Factory {
   def createInstance(
-    workerProxies: Array[WorkerApi[Id, Signal]],
+    incrementor: MessageBus[_, _] => Unit,
+    sentWorkerMessageCounters: Array[AtomicInteger],
+    receivedMessagesCounter: AtomicInteger,
+    workers: Array[ActorRef],
     mapper: VertexToWorkerMapper[Id]): WorkerApi[Id, Signal]
 }

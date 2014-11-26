@@ -66,7 +66,7 @@ final class IntIdDoubleSignalMessageBus(
   val workerApiFactory: WorkerApiFactory[Int, Double])
   extends AbstractMessageBus[Int, Double] {
 
-  lazy val workerApi = workerApiFactory.createInstance(workerProxies, mapper)
+  lazy val workerApi = workerApiFactory.createInstance(sendCountIncrementorForRequests, sentWorkerMessageCounters, receivedMessagesCounter, workers, mapper)
   val outgoingMessages: Array[CombingingDoubleBulkerNoIds] = new Array[CombingingDoubleBulkerNoIds](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {
     outgoingMessages(i) = new CombingingDoubleBulkerNoIds

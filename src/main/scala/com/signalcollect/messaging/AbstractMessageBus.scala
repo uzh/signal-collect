@@ -97,18 +97,6 @@ abstract class AbstractMessageBus[Id, Signal]
   protected val receivedMessagesCounter = new AtomicInteger(0)
   def getReceivedMessagesCounter: AtomicInteger = receivedMessagesCounter
 
-  lazy val workerProxies: Array[WorkerApi[Id, Signal]] = {
-    val result = new Array[WorkerApi[Id, Signal]](numberOfWorkers)
-    for (workerId <- workerIds) {
-      result(workerId) = AkkaProxy.newInstanceWithIncrementor[WorkerApi[Id, Signal]](
-        workers(workerId),
-        sendCountIncrementorForRequests,
-        sentWorkerMessageCounters(workerId),
-        receivedMessagesCounter)
-    }
-    result
-  }
-
   def workerApi: WorkerApi[Id, Signal]
 
   def messagesReceived = receivedMessagesCounter.get
@@ -327,5 +315,5 @@ abstract class AbstractMessageBus[Id, Signal]
 
   def getWorkerApi: WorkerApi[Id, Signal] = workerApi
 
-  def getWorkerProxies: Array[WorkerApi[Id, Signal]] = workerProxies
+//  def getWorkerProxies: Array[WorkerApi[Id, Signal]] = workerProxies
 }

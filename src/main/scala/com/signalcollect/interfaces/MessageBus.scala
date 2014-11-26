@@ -83,9 +83,6 @@ trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientReg
   // Returns an api that treats all workers as if there were only one.
   def getWorkerApi: WorkerApi[Id, Signal]
 
-  // Returns an array of worker proxies for all workers, indexed by workerId.
-  def getWorkerProxies: Array[WorkerApi[Id, Signal]]
-
   // Returns a graph editor that allows to manipulate the graph.
   def getGraphEditor: GraphEditor[Id, Signal]
 }

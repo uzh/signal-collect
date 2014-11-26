@@ -31,5 +31,5 @@ class DefaultMessageBus[Id, Signal](
     val mapper: VertexToWorkerMapper[Id],
     val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
     workerApiFactory: WorkerApiFactory[Id, Signal]) extends AbstractMessageBus[Id, Signal] {
-  lazy val workerApi = workerApiFactory.createInstance(workerProxies, mapper)
+  lazy val workerApi = workerApiFactory.createInstance(sendCountIncrementorForRequests, sentWorkerMessageCounters, receivedMessagesCounter, workers, mapper)
 }

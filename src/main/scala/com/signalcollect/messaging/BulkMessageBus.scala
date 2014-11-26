@@ -73,8 +73,8 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   }
 
   protected var pendingSignals = 0
-
-  lazy val workerApi = workerApiFactory.createInstance(workerProxies, mapper)
+  
+  lazy val workerApi = workerApiFactory.createInstance(sendCountIncrementorForRequests, sentWorkerMessageCounters, receivedMessagesCounter, workers, mapper)
 
   val outgoingMessages: Array[SignalBulker[Id, Signal]] = new Array[SignalBulker[Id, Signal]](numberOfWorkers)
   for (i <- 0 until numberOfWorkers) {

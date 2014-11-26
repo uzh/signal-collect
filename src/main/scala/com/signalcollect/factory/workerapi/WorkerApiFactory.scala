@@ -23,12 +23,18 @@ import com.signalcollect.coordinator.DefaultWorkerApi
 import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.WorkerApi
 import com.signalcollect.interfaces.WorkerApiFactory
+import akka.actor.ActorRef
+import com.signalcollect.interfaces.MessageBus
+import java.util.concurrent.atomic.AtomicInteger
 
 class DefaultWorkerApiFactory[Id, Signal] extends WorkerApiFactory[Id, Signal] {
   override def createInstance(
-    workerProxies: Array[WorkerApi[Id, Signal]],
+    incrementor: MessageBus[_, _] => Unit,
+    sentWorkerMessageCounters: Array[AtomicInteger],
+    receivedMessagesCounter: AtomicInteger,
+    workers: Array[ActorRef],
     mapper: VertexToWorkerMapper[Id]): WorkerApi[Id, Signal] = {
-    new DefaultWorkerApi(workerProxies, mapper)
+    new DefaultWorkerApi(incrementor, sentWorkerMessageCounters, receivedMessagesCounter, workers, mapper)
   }
   override def toString = "DefaultWorkerApiFactory"
 }

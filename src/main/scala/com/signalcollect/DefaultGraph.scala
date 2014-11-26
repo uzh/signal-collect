@@ -229,7 +229,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
 
   initializeMessageBuses
 
-  parallelBootstrapNodeProxies.foreach(_.initializeIdleDetection)
+  parallelBootstrapNodeProxies.par.foreach(_.initializeIdleDetection)
   lazy val graphEditor = coordinatorProxy.getGraphEditor
   lazy val workerApi = coordinatorProxy.getWorkerApi
   workerApi.initializeIdleDetection
@@ -761,6 +761,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
       try {
         // The node proxies also shutdown their respective actor systems.
         parallelBootstrapNodeProxies.foreach(_.shutdown)
+        awaitIdle
       } catch {
         case t: Throwable =>
       }

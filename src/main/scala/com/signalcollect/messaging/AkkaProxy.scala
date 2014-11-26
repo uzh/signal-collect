@@ -123,11 +123,24 @@ class AkkaProxy[ProxiedClass](
 }
 
 case class Command[ParameterType](className: String, methodDescription: String, arguments: Array[Object]) extends Function1[ParameterType, AnyRef] {
+
+  protected def getMatchingMethod(methodDecription: String, methods: Array[Method]): Method = {
+    var i = 0
+    while (i < methods.length) {
+      val m = methods(i)
+      if (m.toString == methodDescription) {
+        return m
+      }
+      i += 1
+    }
+    throw new Exception(s"No matching method for method description $methodDescription found on class $className.")
+  }
+
   def apply(proxiedClass: ParameterType) = {
     try {
       val clazz = Class.forName(className)
-      val methods = clazz.getMethods map (method => (method.toString, method)) toMap
-      val method = methods(methodDescription)
+      val methods = clazz.getMethods
+      val method = getMatchingMethod(methodDescription, methods)
       val result = method.invoke(proxiedClass, arguments: _*)
       result
     } catch {
