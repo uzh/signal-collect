@@ -41,11 +41,12 @@ object DistributedSimulator {
   def getNodeActors(
     numberOfSimulatedNodes: Int,
     workersPerSimulatedNode: Int,
-    idleDetectionPropagationDelayInMilliseconds: Int): Array[ActorRef] = {
+    idleDetectionPropagationDelayInMilliseconds: Int,
+    kryoRegistrations: List[String] = List()): Array[ActorRef] = {
     val totalNumberOfWorkers = numberOfSimulatedNodes * workersPerSimulatedNode
     val akkaConfig = AkkaConfig.get(serializeMessages = false,
       loggingLevel = Logging.WarningLevel,
-      kryoRegistrations = List("com.signalcollect.Graph$$anon$1"),
+      kryoRegistrations = kryoRegistrations,
       kryoInitializer = "com.signalcollect.configuration.KryoInit",
       hostname = InetAddress.getLocalHost.getHostAddress,
       port = 0,
