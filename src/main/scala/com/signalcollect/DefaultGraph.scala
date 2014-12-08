@@ -659,7 +659,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
         var lastAggregationOperationTime = System.nanoTime - interval
         var converged = false
         var globalTermination = false
-        while (!converged && !isGlobalTerminationDetectionMet(globalDetection)) {
+        while (!converged && !globalTermination) {
           if (intervalHasPassed) {
             lastAggregationOperationTime = System.nanoTime
             globalTermination = isGlobalTerminationDetectionMet(globalDetection)
