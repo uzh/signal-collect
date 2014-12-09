@@ -318,7 +318,6 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     while (!converged && !isTimeLimitReached && !isStepsLimitReached && !globalTermination) {
       log.debug(s"Starting signal step #${stats.signalSteps + 1}.")
       workerApi.signalStep
-      awaitIdle
       stats.signalSteps += 1
       log.debug(s"Signal step #${stats.signalSteps} completed.")
       log.debug(s"Starting collect step #${stats.collectSteps + 1}.")
@@ -573,7 +572,6 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
           waitAs("pausedBeforeSignal")
           performStep("signalling", () => {
             workerApi.signalStep
-            awaitIdle
             stats.signalSteps += 1
           })
 
@@ -717,8 +715,10 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     workerApi.pauseComputation
   }
 
+  val oneDayAsNanoseconds = Duration.create(1, TimeUnit.DAYS).toNanos
+  
   def awaitIdle {
-    awaitIdle(Duration.create(1, TimeUnit.DAYS).toNanos)
+    awaitIdle(oneDayAsNanoseconds)
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
