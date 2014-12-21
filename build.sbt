@@ -38,23 +38,23 @@ jarName in assembly := "signal-collect-2.2-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.7" % "compile",
-  "com.typesafe.akka" %% "akka-remote" % "2.3.7" % "compile",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.8" % "compile",
+  "com.typesafe.akka" %% "akka-remote" % "2.3.8" % "compile",
   "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization-custom" % "0.3.5" % "compile",
-  "org.json4s" %% "json4s-native" % "3.2.9" % "compile",
+  "org.json4s" %% "json4s-native" % "3.2.11" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "compile",
-  "org.webjars" % "d3js" % "3.4.13",
-  "org.webjars" % "jquery" % "2.1.1",
+  "org.webjars" % "d3js" % "3.5.2",
+  "org.webjars" % "jquery" % "2.1.3",
   "org.webjars" % "reconnecting-websocket" % "23d2fbc",
   "org.webjars" % "intro.js" % "1.0.0",
-  "junit" % "junit" % "4.8.2"  % "test",
-  "org.specs2" % "classycle" % "1.4.1" % "test",
-  "org.mockito" % "mockito-all" % "1.9.0"  % "test",
-  "org.specs2" %% "specs2" % "2.3.11"  % "test",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.easymock" % "easymock" % "3.2" % "test"
+  "junit" % "junit" % "4.12"  % "test",
+  "org.scalatest" %% "scalatest" % "2.2.3" % "compile", // 'compile' in order to share TestAnnouncement with other projects.
+  "org.specs2" % "classycle" % "1.4.3" % "test",
+  "org.mockito" % "mockito-all" % "1.10.17"  % "test",
+  "org.specs2" %% "specs2" % "2.3.13"  % "test",
+  "org.scalacheck" %% "scalacheck" % "1.12.1" % "test",
+  "org.easymock" % "easymock" % "3.3" % "test"
 )
 
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"

@@ -24,7 +24,7 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
     v <- smallDouble
   } yield (k, v)
 
-  lazy val signalMap = containerOf[Map, Int, Double](signalMapEntry)
+  lazy val signalMap = containerOf[List, (Int, Double)](signalMapEntry).map(_.toMap)
 
   lazy val outEdgeIds = containerOf[Set, Int](smallInt)
 
