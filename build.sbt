@@ -64,3 +64,77 @@ resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/conten
 resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/public/"
 
 transitiveClassifiers := Seq("sources")
+
+publishMavenStyle := true
+
+pomIncludeRepository := { _ => false }
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+pomExtra := (
+  <url>https://github.com/uzh/signal-collect</url>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:uzh/signal-collect.git</url>
+    <connection>scm:git:git@github.com:uzh/signal-collect.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>pstutz</id>
+      <name>Philip Stutz</name>
+      <url>https://github.com/pstutz</url>
+    </developer>
+    <developer>
+      <id>cshapeshifter</id>
+      <name>Carol Alexandru</name>
+      <url>https://github.com/cshapeshifter</url>
+    </developer>
+    <developer>
+      <id>troxler</id>
+      <name>Silvan Troxler</name>
+      <url>https://github.com/troxler</url>
+    </developer>
+    <developer>
+      <id>danistrebel</id>
+      <name>Daniel Strebel</name>
+      <url>https://github.com/danistrebel</url>
+    </developer>
+    <developer>
+      <id>elaverman</id>
+      <name>Mihaela Verman</name>
+      <url>https://github.com/elaverman</url>
+    </developer>
+    <developer>
+      <id>lorenzfischer</id>
+      <name>Lorenz Fischer</name>
+      <url>https://github.com/lorenzfischer</url>
+    </developer>
+    <developer>
+      <id>tmsklr</id>
+      <name>Thomas Keller</name>
+      <url>https://github.com/tmsklr</url>
+    </developer>
+    <developer>
+      <id>bibekp</id>
+      <name>Bibek Paudel</name>
+      <url>https://github.com/bibekp</url>
+    </developer>
+    <developer>
+      <id>rampalli-github</id>
+      <name>S. Rampalli</name>
+      <url>https://github.com/rampalli-github</url>
+    </developer>
+  </developers>)
+
