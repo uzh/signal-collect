@@ -84,7 +84,7 @@ class ComputationTerminationSpec extends SpecificationWithJUnit with Mockito {
       try {
         val steps = 2000
         g.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.Synchronous).withStepsLimit(steps))
-        g.foreachVertex(_.state === (steps, steps))
+        g.foreachVertex(_.state === ((steps, steps)))
       } finally {
         g.shutdown
       }
