@@ -116,7 +116,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
   }
 
   /**
-   * Removes an outgoing {@link Edge} from this {@link FrameworkVertex}.
+   * Removes an outgoing {@link Edge} from this {@link Vertex}.
    * @param e the edge to be added.
    */
   def removeEdge(targetId: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
@@ -175,7 +175,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
-   * @return the score value. The meaning of this value depends on the thresholds set in {@link ComputeGraph#execute}.
+   * @return the score value. The meaning of this value depends on the thresholds set in {@link Graph#execute}.
    */
   def scoreSignal: Double = {
     if (edgesModifiedSinceSignalOperation) {
