@@ -5,7 +5,7 @@ assemblySettings
 /** Project */
 name := "signal-collect"
 
-version := "3.0.0"
+version := "3.0.1-SNAPSHOT"
 
 organization := "com.signalcollect"
 
@@ -36,7 +36,7 @@ EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
 
 EclipseKeys.withSource := true
 
-jarName in assembly := "signal-collect-3.0.0.jar"
+jarName in assembly := "signal-collect-3.0.1-SNAPSHOT.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
