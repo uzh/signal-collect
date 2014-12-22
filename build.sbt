@@ -36,7 +36,7 @@ EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
 
 EclipseKeys.withSource := true
 
-jarName in assembly := "signal-collect-3.0.1-SNAPSHOT.jar"
+jarName in assembly := "signal-collect.jar"
 
 /** Dependencies */
 libraryDependencies ++= Seq(
