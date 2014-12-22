@@ -68,3 +68,58 @@ resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/pub
 transitiveClassifiers := Seq("sources")
 
 seq(bintraySettings:_*)
+
+pomExtra := (
+ <url>https://github.com/uzh/signal-collect</url>
+ <scm>
+   <url>git@github.com:uzh/signal-collect.git</url>
+   <connection>scm:git:git@github.com:uzh/signal-collect.git</connection>
+ </scm>
+ <developers>
+   <developer>
+     <id>pstutz</id>
+     <name>Philip Stutz</name>
+     <url>https://github.com/pstutz</url>
+   </developer>
+   <developer>
+     <id>cshapeshifter</id>
+     <name>Carol Alexandru</name>
+     <url>https://github.com/cshapeshifter</url>
+   </developer>
+   <developer>
+     <id>troxler</id>
+     <name>Silvan Troxler</name>
+     <url>https://github.com/troxler</url>
+   </developer>
+   <developer>
+     <id>danistrebel</id>
+     <name>Daniel Strebel</name>
+     <url>https://github.com/danistrebel</url>
+   </developer>
+   <developer>
+     <id>elaverman</id>
+     <name>Mihaela Verman</name>
+     <url>https://github.com/elaverman</url>
+   </developer>
+   <developer>
+     <id>lorenzfischer</id>
+     <name>Lorenz Fischer</name>
+     <url>https://github.com/lorenzfischer</url>
+   </developer>
+   <developer>
+     <id>tmsklr</id>
+     <name>Thomas Keller</name>
+     <url>https://github.com/tmsklr</url>
+   </developer>
+   <developer>
+     <id>bibekp</id>
+     <name>Bibek Paudel</name>
+     <url>https://github.com/bibekp</url>
+   </developer>
+   <developer>
+     <id>rampalli-github</id>
+     <name>S. Rampalli</name>
+     <url>https://github.com/rampalli-github</url>
+   </developer>
+ </developers>)
+ 
