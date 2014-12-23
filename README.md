@@ -3,8 +3,6 @@ Signal/Collect [![Build Status](https://travis-ci.org/uzh/signal-collect.svg?bra
 
 Signal/Collect is a framework for computations on large graphs. The model allows to concisely express many iterated and data-flow algorithms, while the framework parallelizes and distributes the computation.
 
-This repository contains pre-release snapshots of the distributed 2.1 version.
-
 How to Compile the Project
 --------------------------
 Ensure Java 8 is available on the system, verify with "java -version" on the command line.
