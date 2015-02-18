@@ -693,6 +693,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
             globalTermination = isGlobalTerminationDetectionMet(globalDetection)
           }
           // waits for whichever remaining time interval/limit is shorter
+          println("Remaining interval time "+remainingIntervalTime)
           converged = awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
         }
         if (converged) {
@@ -722,7 +723,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   }
 
   def awaitIdle(timeoutNanoseconds: Long): Boolean = {
-    if (timeoutNanoseconds > 1000000000) {
+    if (timeoutNanoseconds > 1000000) { // Give the coordinator at least 1ms to reply, or do not even try.
       implicit val timeout = Timeout(new FiniteDuration(timeoutNanoseconds, TimeUnit.NANOSECONDS))
       // Add a new "on idle" action to the coordinator actors. The action is to send a message back to ourselves.
       val resultFuture = coordinatorActor ? OnIdle((c: DefaultCoordinator[_, _], s: ActorRef) => s ! IsIdle(true))
