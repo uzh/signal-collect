@@ -18,30 +18,24 @@
 
 package com.signalcollect.features
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
-import org.specs2.runner.JUnitRunner
-
 import com.signalcollect._
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
+import org.scalatest.Matchers
+import com.signalcollect.util.TestAnnouncements
+import org.scalatest.FlatSpec
 
-@RunWith(classOf[JUnitRunner])
-class NodeProvisionerSpec extends SpecificationWithJUnit {
+class NodeProvisionerSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
-
-  "Signal/Collect" should {
-
-    "support setting the number of workers created" in {
-      val numberOfWorkers = 100
-      val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner(Some(numberOfWorkers))).build
-      try {
-        val stats = graph.execute
-        stats.individualWorkerStatistics.length == numberOfWorkers
-      } finally {
-        graph.shutdown
-      }
+  "Signal/Collect" should "support setting the number of workers created" in {
+    val numberOfWorkers = 100
+    val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner(Some(numberOfWorkers))).build
+    try {
+      val stats = graph.execute
+      stats.individualWorkerStatistics.length == numberOfWorkers
+    } finally {
+      graph.shutdown
     }
   }
+
 }

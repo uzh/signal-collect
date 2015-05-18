@@ -19,92 +19,79 @@
 
 package com.signalcollect.features
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GraphBuilder
-import com.signalcollect.Vertex
+import org.scalatest.{ Finders, FlatSpec, Matchers }
+import com.signalcollect.{ ExecutionConfiguration, GraphBuilder, Vertex }
 import com.signalcollect.configuration.ExecutionMode
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.examples.PageRankVertex
+import com.signalcollect.examples.{ PageRankEdge, PageRankVertex }
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
-import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
+import com.signalcollect.util.TestAnnouncements
 
-/**
- * Hint: For information on how to run specs see the specs v.1 website
- * http://code.google.com/p/specs/wiki/RunningSpecs
- */
-@RunWith(classOf[JUnitRunner])
-class BulkSignalingSpec extends SpecificationWithJUnit with Serializable {
+class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
-
-  "Bulk signaling" should {
-    "deliver correct results on a 5-cycle graph" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.0001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
-        }
-        correct
+  "Bulk signaling" should "deliver correct results on a 5-cycle graph" in {
+    def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = 1.0
+      val correct = (state - expectedState).abs < 0.0001
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
       }
-
-      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
-      try {
-        for (i <- 0 until 5) {
-          val v = new PageRankVertex(i)
-          graph.addVertex(v)
-          graph.addEdge(i, new PageRankEdge((i + 1) % 5))
-        }
-
-        graph.execute(ExecutionConfiguration.
-          withExecutionMode(ExecutionMode.PureAsynchronous).
-          withCollectThreshold(0).
-          withSignalThreshold(0.00001))
-        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
-          val neutralElement = true
-          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
-        })
-        allcorrect
-      } finally {
-        graph.shutdown
-      }
+      correct
     }
 
-    "handle a bulk size of 1 correctly" in {
-      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.0001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
-        }
-        correct
+    val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
+    try {
+      for (i <- 0 until 5) {
+        val v = new PageRankVertex(i)
+        graph.addVertex(v)
+        graph.addEdge(i, new PageRankEdge((i + 1) % 5))
       }
 
-      val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
-      try {
-        for (i <- 0 until 5) {
-          val v = new PageRankVertex(i)
-          graph.addVertex(v)
-          graph.addEdge(i, new PageRankEdge((i + 1) % 5))
-        }
-
-        graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous).withCollectThreshold(0).withSignalThreshold(0.00001))
-        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
-          val neutralElement = true
-          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
-        })
-        allcorrect
-      } finally {
-        graph.shutdown
-      }
+      graph.execute(ExecutionConfiguration.
+        withExecutionMode(ExecutionMode.PureAsynchronous).
+        withCollectThreshold(0).
+        withSignalThreshold(0.00001))
+      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+        val neutralElement = true
+        def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+        def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
+      })
+      allcorrect
+    } finally {
+      graph.shutdown
     }
-
   }
+
+  it should "handle a bulk size of 1 correctly" in {
+    def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = 1.0
+      val correct = (state - expectedState).abs < 0.0001
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
+      }
+      correct
+    }
+
+    val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
+    try {
+      for (i <- 0 until 5) {
+        val v = new PageRankVertex(i)
+        graph.addVertex(v)
+        graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+      }
+
+      graph.execute(ExecutionConfiguration.withExecutionMode(ExecutionMode.PureAsynchronous).withCollectThreshold(0).withSignalThreshold(0.00001))
+      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+        val neutralElement = true
+        def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+        def extract(v: Vertex[_, _, _, _]): Boolean = pageRankFiveCycleVerifier(v)
+      })
+      allcorrect
+    } finally {
+      graph.shutdown
+    }
+  }
+
 }

@@ -19,59 +19,52 @@
 
 package com.signalcollect
 
-import interfaces.{WorkerApi, Request}
+import interfaces.{ WorkerApi, Request }
 import messaging.AkkaProxy
-import org.specs2.runner.JUnitRunner
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
-import akka.actor.{Props, ActorSystem, Actor}
+import akka.actor.{ Props, ActorSystem, Actor }
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import com.signalcollect.util.TestAnnouncements
 
-@RunWith(classOf[JUnitRunner])
-class AkkaProxySpec extends SpecificationWithJUnit {
+class AkkaProxySpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
+  "AkkaProxy" should "invoke blocking methods" in {
 
-  "AkkaProxy" should {
-
-    "invoke methods blocking" in {
-
-      trait Sleeper extends Actor {
-        def sleep(milliSeconds: Int) = {
-          Thread.sleep(milliSeconds)
-        }
-
-        def receive = {
-          case Request(command, reply, incrementor) =>
-            try {
-              val result = command.asInstanceOf[Sleeper => Any](this)
-              if (reply) {
-                if (result == null) {
-                  sender ! None
-                } else {
-                  sender ! result
-                }
-              }
-            } catch {
-              case e: Exception =>
-                throw e
-            }
-        }
+    trait Sleeper extends Actor {
+      def sleep(milliSeconds: Int) = {
+        Thread.sleep(milliSeconds)
       }
 
-      val system = ActorSystem("AkkaProxySpec")
-      val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
-      val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
-
-      val expectedSleepTime = 300
-
-      val sleepStart = System.currentTimeMillis()
-      sleeperProxy.sleep(expectedSleepTime)
-      val sleepStop = System.currentTimeMillis()
-      val measuredSleepTime: Double = sleepStop - sleepStart
-
-      measuredSleepTime must beBetween(expectedSleepTime * 0.9, expectedSleepTime * 1.1)
+      def receive = {
+        case Request(command, reply, incrementor) =>
+          try {
+            val result = command.asInstanceOf[Sleeper => Any](this)
+            if (reply) {
+              if (result == null) {
+                sender ! None
+              } else {
+                sender ! result
+              }
+            }
+          } catch {
+            case e: Exception =>
+              throw e
+          }
+      }
     }
 
+    val system = ActorSystem("AkkaProxySpec")
+    val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
+    val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
+
+    val expectedSleepTime = 300
+
+    val sleepStart = System.currentTimeMillis()
+    sleeperProxy.sleep(expectedSleepTime)
+    val sleepStop = System.currentTimeMillis()
+    val measuredSleepTime: Double = sleepStop - sleepStart
+
+    measuredSleepTime should (be > expectedSleepTime * 0.9 and be < expectedSleepTime * 1.1)
   }
 
 }

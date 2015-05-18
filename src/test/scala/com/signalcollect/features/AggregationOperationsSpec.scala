@@ -19,9 +19,6 @@
 
 package com.signalcollect.features
 
-import org.junit.runner.RunWith
-import org.specs2.mock.Mockito
-import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.CountVertices
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.GraphBuilder
@@ -32,14 +29,13 @@ import com.signalcollect.TopKFinder
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
-import org.specs2.runner.JUnitRunner
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import com.signalcollect.util.TestAnnouncements
 
-@RunWith(classOf[JUnitRunner])
-class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
+class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
-
-  "SumOfStates" should {
+  "SumOfStates" should "sum all states correctly" in {
     def createGraph = {
       val graph = GraphBuilder.build
       graph.addVertex(new PageRankVertex(1))
@@ -49,21 +45,17 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       graph.addEdge(2, new PageRankEdge(1))
       graph
     }
-
-    "sum all states correctly" in {
-      val graph = createGraph
-      try {
-        graph.execute(ExecutionConfiguration.withSignalThreshold(0))
-        val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
-        math.abs(sumOfStates - 2.0) <= 0.0001
-      } finally {
-        graph.shutdown
-      }
+    val graph = createGraph
+    try {
+      graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+      val sumOfStates = graph.aggregate(new SumOfStates[Double]).getOrElse(0.0)
+      math.abs(sumOfStates - 2.0) <= 0.0001
+    } finally {
+      graph.shutdown
     }
-
   }
 
-  "ProductOfStates" should {
+  "ProductOfStates" should "multiply all states correctly" in {
     def createGraph = {
       val graph = GraphBuilder.build
       graph.addVertex(new PageRankVertex(1))
@@ -73,96 +65,89 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       graph.addEdge(2, new PageRankEdge(1))
       graph
     }
-
-    "multiply all states correctly" in {
-      val graph = createGraph
-      try {
-        graph.execute(ExecutionConfiguration.withSignalThreshold(0))
-        val productOfStates = graph.aggregate(new ProductOfStates[Double]).getOrElse(0.0)
-        math.abs(productOfStates - 1.0) <= 0.0001
-      } finally {
-        graph.shutdown
-      }
+    val graph = createGraph
+    try {
+      graph.execute(ExecutionConfiguration.withSignalThreshold(0))
+      val productOfStates = graph.aggregate(new ProductOfStates[Double]).getOrElse(0.0)
+      math.abs(productOfStates - 1.0) <= 0.0001
+    } finally {
+      graph.shutdown
     }
   }
 
-  "CountVertices" should {
-    def createGraph = {
-      val graph = GraphBuilder.build
-      graph.addVertex(new PageRankVertex(1))
-      graph.addVertex(new PageRankVertex(2))
-      graph.addVertex(new PageRankVertex(3))
-      graph.removeVertex(1)
-      graph.addVertex(new SudokuCell(1, None))
-      graph.addVertex(new SudokuCell(2, None))
-      graph
-    }
+  def createSudokuGraph = {
+    val graph = GraphBuilder.build
+    graph.addVertex(new PageRankVertex(1))
+    graph.addVertex(new PageRankVertex(2))
+    graph.addVertex(new PageRankVertex(3))
+    graph.removeVertex(1)
+    graph.addVertex(new SudokuCell(1, None))
+    graph.addVertex(new SudokuCell(2, None))
+    graph
+  }
 
-    "count the number of PageRank vertices correctly" in {
-      val graph = createGraph
-      try {
-        val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex[Any]])
-        numberOfPRVertices === 2
-      } finally {
-        graph.shutdown
-      }
-    }
-
-    "count the number of SudokuCell vertices correctly" in {
-      val graph = createGraph
-      try {
-        val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
-        numberOfSCVertices === 1
-      } finally {
-        graph.shutdown
-      }
+  "CountVertices" should "count the number of PageRank vertices correctly" in {
+    val graph = createSudokuGraph
+    try {
+      val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex[Any]])
+      numberOfPRVertices === 2
+    } finally {
+      graph.shutdown
     }
   }
 
-  "SampleVertexIds" should {
-    val idSet = (1 to 1000).toSet
-    def createGraph = {
-      val graph = GraphBuilder.build
-      for (id <- idSet) {
-        graph.addVertex(new PageRankVertex(id))
-      }
-      graph
-    }
-
-    "sample 0 vertex ids correctly" in {
-      val graph = createGraph
-      try {
-        val vertexSample = graph.aggregate(new SampleVertexIds(0))
-        vertexSample.size === 0
-      } finally {
-        graph.shutdown
-      }
-    }
-
-    "sample 50 vertex ids correctly" in {
-      val graph = createGraph
-      try {
-        val vertexSample = graph.aggregate(new SampleVertexIds(50))
-        vertexSample.size === 50
-        vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
-      } finally {
-        graph.shutdown
-      }
-    }
-
-    "sample 50 vertex ids correctly" in {
-      val graph = createGraph
-      try {
-        val vertexSample = graph.aggregate(new SampleVertexIds(1000))
-        vertexSample.size === 1000
-        vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
-      } finally {
-        graph.shutdown
-      }
+  it should "count the number of SudokuCell vertices correctly" in {
+    val graph = createSudokuGraph
+    try {
+      val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
+      numberOfSCVertices === 1
+    } finally {
+      graph.shutdown
     }
   }
 
-  "TopKFinder" should {
+  val idSet = (1 to 1000).toSet
+  def createPageRankGraph = {
+    val graph = GraphBuilder.build
+    for (id <- idSet) {
+      graph.addVertex(new PageRankVertex(id))
+    }
+    graph
+  }
+
+  "SampleVertexIds" should "sample 0 vertex ids correctly" in {
+    val graph = createPageRankGraph
+    try {
+      val vertexSample = graph.aggregate(new SampleVertexIds(0))
+      vertexSample.size === 0
+    } finally {
+      graph.shutdown
+    }
+  }
+
+  it should "sample 50 vertex ids correctly" in {
+    val graph = createPageRankGraph
+    try {
+      val vertexSample = graph.aggregate(new SampleVertexIds(50))
+      vertexSample.size === 50
+      vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+    } finally {
+      graph.shutdown
+    }
+  }
+
+  it should "sample 1000 vertex ids correctly" in {
+    val graph = createPageRankGraph
+    try {
+      val vertexSample = graph.aggregate(new SampleVertexIds(1000))
+      vertexSample.size === 1000
+      vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
+    } finally {
+      graph.shutdown
+    }
+  }
+
+  "TopKFinder" should "find the largest vertices in the right order" in {
     def createGraph = {
       val graph = GraphBuilder.build
       graph.addVertex(new PageRankVertex(1, 0.3))
@@ -171,17 +156,13 @@ class AggregationOperationsSpec extends SpecificationWithJUnit with Mockito {
       graph.addVertex(new PageRankVertex(4, 0.4))
       graph
     }
-
-    "find the largest vertices in the right order" in {
-      val graph = createGraph
-      try {
-        val largestVertices = graph.aggregate(new TopKFinder[Double](2))
-        largestVertices.toSeq == Array[(Int, Double)]((2, 0.9), (3, 0.8)).toSeq
-      } finally {
-        graph.shutdown
-      }
+    val graph = createGraph
+    try {
+      val largestVertices = graph.aggregate(new TopKFinder[Double](2))
+      largestVertices.toSeq == Array[(Int, Double)]((2, 0.9), (3, 0.8)).toSeq
+    } finally {
+      graph.shutdown
     }
-
   }
 
 }

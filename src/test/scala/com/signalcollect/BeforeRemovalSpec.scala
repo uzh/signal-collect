@@ -19,30 +19,22 @@
 
 package com.signalcollect
 
-import org.junit.runner.RunWith
-import org.specs2.mock.Mockito
-import org.specs2.mutable.SpecificationWithJUnit
-import org.specs2.runner.JUnitRunner
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import com.signalcollect.util.TestAnnouncements
 
-@RunWith(classOf[JUnitRunner])
-class BeforeRemovalSpec extends SpecificationWithJUnit with Mockito {
+class BeforeRemovalSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
-
-  "Framework" should {
-
-    "call the beforeRemoval function of a vertex before removing it" in {
-      val graph = GraphBuilder.build
-      try {
-        graph.addVertex(new BeforeRemovalVertex)
-        graph.removeVertex(1)
-        graph.execute
-        RemovalDetector.beforeRemovalWorked must_== true
-      } finally {
-        graph.shutdown
-      }
+  "Framework" should "call the beforeRemoval function of a vertex before removing it" in {
+    val graph = GraphBuilder.build
+    try {
+      graph.addVertex(new BeforeRemovalVertex)
+      graph.removeVertex(1)
+      graph.execute
+      RemovalDetector.beforeRemovalWorked should be(true)
+    } finally {
+      graph.shutdown
     }
-
   }
 
 }

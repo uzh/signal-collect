@@ -18,108 +18,102 @@
 
 package com.signalcollect
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import org.specs2.runner.JUnitRunner
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import com.signalcollect.util.TestAnnouncements
 
-@RunWith(classOf[JUnitRunner])
-class GraphResetSpec extends SpecificationWithJUnit {
+class GraphResetSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
+  "Graph.reset" should "reset the graph into a state similar to the one it had after Graph.build" in {
 
-  "Graph.reset" should {
+    val editGraph = (graph: Graph[Any, Any]) => {
+      graph.addVertex(new PageRankVertex(1))
+      graph.addVertex(new PageRankVertex(2))
+      graph.addVertex(new PageRankVertex(3))
+      graph.addEdge(1, new PageRankEdge(2))
+      graph.addEdge(2, new PageRankEdge(1))
+      graph.addEdge(2, new PageRankEdge(3))
+      graph.addEdge(3, new PageRankEdge(2))
+    }
 
-    "reset the graph into a state similar to the one it had after Graph.build" in {
+    val graph = GraphBuilder.build
+    try {
+      graph.awaitIdle
+      editGraph(graph)
+      graph.awaitIdle
+      val firstEI = graph.execute // First execution (should in many aspects be similar to the third execution)
+      graph.awaitIdle
+      graph.reset // Reset
+      graph.awaitIdle
+      val secondEI = graph.execute // Second execution in reseted state (should be different from the other two executions)
+      graph.awaitIdle
+      graph.reset // Reset
+      graph.awaitIdle
+      editGraph(graph)
+      graph.awaitIdle
+      val thirdEI = graph.execute // Third execution (should in many aspects be similar to the first execution)
+      graph.awaitIdle
 
-      val editGraph = (graph: Graph[Any, Any]) => {
-        graph.addVertex(new PageRankVertex(1))
-        graph.addVertex(new PageRankVertex(2))
-        graph.addVertex(new PageRankVertex(3))
-        graph.addEdge(1, new PageRankEdge(2))
-        graph.addEdge(2, new PageRankEdge(1))
-        graph.addEdge(2, new PageRankEdge(3))
-        graph.addEdge(3, new PageRankEdge(2))
-      }
+      // Comparisons
 
-      val graph = GraphBuilder.build
-      try {
-        graph.awaitIdle
-        editGraph(graph)
-        graph.awaitIdle
-        val firstEI = graph.execute // First execution (should in many aspects be similar to the third execution)
-        graph.awaitIdle
-        graph.reset // Reset
-        graph.awaitIdle
-        val secondEI = graph.execute // Second execution in reseted state (should be different from the other two executions)
-        graph.awaitIdle
-        graph.reset // Reset
-        graph.awaitIdle
-        editGraph(graph)
-        graph.awaitIdle
-        val thirdEI = graph.execute // Third execution (should in many aspects be similar to the first execution)
-        graph.awaitIdle
+      // Execution Information
+      // Do not compare EI.config
+      // Do not compare EI.numberOfWorkers
+      // Do not compare EI.nodesDescriptions
+      // Do not compare EI.parameters
 
-        // Comparisons
+      // Execution Statistics
+      val firstES = firstEI.executionStatistics
+      val secondES = secondEI.executionStatistics
+      val thirdES = thirdEI.executionStatistics
+      firstES.signalSteps === secondES.signalSteps
+      secondES.signalSteps === thirdES.signalSteps
+      firstES.collectSteps === secondES.collectSteps
+      secondES.collectSteps === thirdES.collectSteps
+      // Do not compare ES.computationTime
+      // Do not compare ES.totalExecutionTime
+      // Do not compare ES.jvmCpuTime
+      // Do not compare ES.graphIdleWaitingTime
+      // Do not compare ES.terminationReason
 
-        // Execution Information
-        // Do not compare EI.config
-        // Do not compare EI.numberOfWorkers
-        // Do not compare EI.nodesDescriptions
-        // Do not compare EI.parameters
+      // Aggregated Worker Statistics
+      val firstAWS = firstEI.aggregatedWorkerStatistics
+      val secondAWS = secondEI.aggregatedWorkerStatistics
+      val thirdAWS = thirdEI.aggregatedWorkerStatistics
+      // Do not compare AWS.messagesSent
+      // Do not compare AWS.workerId
+      // Do not compare AWS.messagesReceived
+      // Do not compare AWS.toSignalSize
+      // Do not compare AWS.toCollectSize
+      // Do not compare collectOperationsExecuted between firstAWS and thirdAWS, but:
+      secondAWS.collectOperationsExecuted === 0
+      // Do not compare signalOperationsExecuted between firstAWS and thirdAWS, but:
+      secondAWS.signalOperationsExecuted === 0
+      firstAWS.numberOfVertices === thirdAWS.numberOfVertices
+      secondAWS.numberOfVertices === 0
+      firstAWS.verticesAdded === thirdAWS.verticesAdded
+      secondAWS.verticesAdded === 0
+      firstAWS.verticesRemoved === thirdAWS.verticesRemoved
+      secondAWS.verticesRemoved === 0
+      firstAWS.numberOfOutgoingEdges === thirdAWS.numberOfOutgoingEdges
+      secondAWS.numberOfOutgoingEdges === 0
+      firstAWS.outgoingEdgesAdded === thirdAWS.outgoingEdgesAdded
+      secondAWS.outgoingEdgesAdded === 0
+      firstAWS.outgoingEdgesRemoved === thirdAWS.outgoingEdgesRemoved
+      secondAWS.outgoingEdgesRemoved === 0
+      // Do not compare AWS.receiveTimeoutMessagesReceived
+      // Do not compare AWS.heartbeatMessagesReceived
+      // Do not compare AWS.signalMessagesReceived
+      // Do not compare AWS.bulkSignalMessagesReceived
+      // Do not compare AWS.continueMessagesReceived
+      // Do not compare AWS.requestMessagesReceived
+      // Do not compare AWS.otherMessagesReceived
 
-        // Execution Statistics
-        val firstES = firstEI.executionStatistics
-        val secondES = secondEI.executionStatistics
-        val thirdES = thirdEI.executionStatistics
-        firstES.signalSteps === secondES.signalSteps
-        secondES.signalSteps === thirdES.signalSteps
-        firstES.collectSteps === secondES.collectSteps
-        secondES.collectSteps === thirdES.collectSteps
-        // Do not compare ES.computationTime
-        // Do not compare ES.totalExecutionTime
-        // Do not compare ES.jvmCpuTime
-        // Do not compare ES.graphIdleWaitingTime
-        // Do not compare ES.terminationReason
-
-        // Aggregated Worker Statistics
-        val firstAWS = firstEI.aggregatedWorkerStatistics
-        val secondAWS = secondEI.aggregatedWorkerStatistics
-        val thirdAWS = thirdEI.aggregatedWorkerStatistics
-        // Do not compare AWS.messagesSent
-        // Do not compare AWS.workerId
-        // Do not compare AWS.messagesReceived
-        // Do not compare AWS.toSignalSize
-        // Do not compare AWS.toCollectSize
-        // Do not compare collectOperationsExecuted between firstAWS and thirdAWS, but:
-        secondAWS.collectOperationsExecuted === 0
-        // Do not compare signalOperationsExecuted between firstAWS and thirdAWS, but:
-        secondAWS.signalOperationsExecuted === 0
-        firstAWS.numberOfVertices === thirdAWS.numberOfVertices
-        secondAWS.numberOfVertices === 0
-        firstAWS.verticesAdded === thirdAWS.verticesAdded
-        secondAWS.verticesAdded === 0
-        firstAWS.verticesRemoved === thirdAWS.verticesRemoved
-        secondAWS.verticesRemoved === 0
-        firstAWS.numberOfOutgoingEdges === thirdAWS.numberOfOutgoingEdges
-        secondAWS.numberOfOutgoingEdges === 0
-        firstAWS.outgoingEdgesAdded === thirdAWS.outgoingEdgesAdded
-        secondAWS.outgoingEdgesAdded === 0
-        firstAWS.outgoingEdgesRemoved === thirdAWS.outgoingEdgesRemoved
-        secondAWS.outgoingEdgesRemoved === 0
-        // Do not compare AWS.receiveTimeoutMessagesReceived
-        // Do not compare AWS.heartbeatMessagesReceived
-        // Do not compare AWS.signalMessagesReceived
-        // Do not compare AWS.bulkSignalMessagesReceived
-        // Do not compare AWS.continueMessagesReceived
-        // Do not compare AWS.requestMessagesReceived
-        // Do not compare AWS.otherMessagesReceived
-
-        // Do not compare the individual worker statistics
-      } finally {
-        graph.shutdown
-      }
+      // Do not compare the individual worker statistics
+    } finally {
+      graph.shutdown
     }
   }
 }

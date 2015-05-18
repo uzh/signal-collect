@@ -20,26 +20,19 @@
 
 package com.signalcollect
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.ColoredVertex
 import com.signalcollect.examples.Location
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.Path
-import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
 import akka.event.Logging
+import org.scalatest.Matchers
+import org.scalatest.FlatSpec
+import com.signalcollect.util.TestAnnouncements
 
-/**
- * Hint: For information on how to run specs see the specs v.1 website
- * http://code.google.com/p/specs/wiki/RunningSpecs
- */
-@RunWith(classOf[JUnitRunner])
-class IntegrationSpec extends SpecificationWithJUnit with Serializable {
-
-  sequential
+class IntegrationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.
     //      withMessageSerialization(true).
@@ -112,62 +105,60 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     graph
   }
 
-  "PageRank algorithm" should {
-    "deliver correct results on a 5-cycle graph" in {
-      val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
-      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.01
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
+  "PageRank algorithm" should "deliver correct results on a 5-cycle graph" in {
+    val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
+    def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = 1.0
+      val correct = (state - expectedState).abs < 0.01
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
       }
-      test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.001) must_== true
+      correct
     }
+    test(verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges), signalThreshold = 0.001) shouldBe true
+  }
 
-    "deliver correct results on a 5-star graph" in {
-      val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
-      def pageRankFiveStarVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = if (v.id == 4.0) 0.66 else 0.15
-        val correct = (state - expectedState).abs < 0.00001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
+  it should "deliver correct results on a 5-star graph" in {
+    val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
+    def pageRankFiveStarVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = if (v.id == 4.0) 0.66 else 0.15
+      val correct = (state - expectedState).abs < 0.00001
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
       }
-      test(verify = pageRankFiveStarVerifier, buildGraph = buildPageRankGraph(_, fiveStarEdges)) must_== true
+      correct
     }
+    test(verify = pageRankFiveStarVerifier, buildGraph = buildPageRankGraph(_, fiveStarEdges)) shouldBe true
+  }
 
-    "deliver correct results on a 2*2 symmetric grid" in {
-      val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
-      def pageRankTwoOnTwoGridVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.01
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
+  it should "deliver correct results on a 2*2 symmetric grid" in {
+    val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
+    def pageRankTwoOnTwoGridVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = 1.0
+      val correct = (state - expectedState).abs < 0.01
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
       }
-      test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges), signalThreshold = 0.001) must_== true
+      correct
     }
+    test(verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges), signalThreshold = 0.001) shouldBe true
+  }
 
-    "deliver correct results on a 5*5 torus" in {
-      val symmetricTorusEdges = new Torus(5, 5)
-      def pageRankTorusVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.01
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
+  it should "deliver correct results on a 5*5 torus" in {
+    val symmetricTorusEdges = new Torus(5, 5)
+    def pageRankTorusVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val expectedState = 1.0
+      val correct = (state - expectedState).abs < 0.01
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
       }
-      test(verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) must_== true
+      correct
     }
+    test(verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
   }
 
   def vertexColoringVerifier(v: Vertex[_, _, _, _]): Boolean = {
@@ -185,52 +176,49 @@ class IntegrationSpec extends SpecificationWithJUnit with Serializable {
     }
   }
 
-  "VertexColoring algorithm" should {
-    "deliver correct results on a symmetric 4-cycle" in {
-      val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
-      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) must_== true
-    }
-
-    "deliver correct results on a symmetric 5-star" in {
-      val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) must_== true
-    }
-    "deliver correct results on a 2*2 symmetric grid" in {
-      val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
-      test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) must_== true
-    }
+  "VertexColoring algorithm" should "deliver correct results on a symmetric 4-cycle" in {
+    val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
+    test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFourCycleEdges)) shouldBe true
   }
 
-  "SSSP algorithm" should {
-    "deliver correct results on a symmetric 4-cycle" in {
-      val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
-      def ssspSymmetricsFourCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Option[Int]].get
-        val expectedState = v.id
-        val correct = state == expectedState
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
-      }
-      test(verify = ssspSymmetricsFourCycleVerifier, buildGraph = buildSsspGraph(0, _, symmetricFourCycleEdges)) must_== true
-    }
-
-    "deliver correct results on a symmetric 5-star" in {
-      val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
-      def ssspSymmetricFiveStarVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Option[Int]].get
-        val expectedState = if (v.id == 4) 0 else 1
-        val correct = state == expectedState
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
-      }
-      test(verify = ssspSymmetricFiveStarVerifier, buildGraph = buildSsspGraph(4, _, symmetricFiveStarEdges)) must_== true
-    }
-
+  it should "deliver correct results on a symmetric 5-star" in {
+    val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
+    test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricFiveStarEdges)) shouldBe true
   }
+
+  it should "deliver correct results on a 2*2 symmetric grid" in {
+    val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
+    test(verify = vertexColoringVerifier, buildGraph = buildVertexColoringGraph(2, _, symmetricTwoOnTwoGridEdges)) shouldBe true
+  }
+
+  "SSSP algorithm" should "deliver correct results on a symmetric 4-cycle" in {
+    val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
+    def ssspSymmetricsFourCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Option[Int]].get
+      val expectedState = v.id
+      val correct = state == expectedState
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+      }
+      correct
+    }
+    test(verify = ssspSymmetricsFourCycleVerifier, buildGraph = buildSsspGraph(0, _, symmetricFourCycleEdges)) shouldBe true
+  }
+
+  it should "deliver correct results on a symmetric 5-star" in {
+    val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
+    def ssspSymmetricFiveStarVerifier(v: Vertex[_, _, _, _]): Boolean = {
+      val state = v.state.asInstanceOf[Option[Int]].get
+      val expectedState = if (v.id == 4) 0 else 1
+      val correct = state == expectedState
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+      }
+      correct
+    }
+    test(verify = ssspSymmetricFiveStarVerifier, buildGraph = buildSsspGraph(4, _, symmetricFiveStarEdges)) shouldBe true
+  }
+
 }
 
 class VerifiedColoredVertex(id: Int, numColors: Int) extends ColoredVertex(id, numColors, 0, false) {

@@ -20,94 +20,74 @@
 
 package com.signalcollect.storage
 
-import org.junit.runner.RunWith
-import org.specs2.mock.Mockito
-import org.specs2.mutable.SpecificationWithJUnit
+import org.scalatest.{Finders, FlatSpec, Matchers}
+
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.messaging.DefaultMessageBus
-import org.specs2.runner.JUnitRunner
-import com.signalcollect.factory.storage.MemoryEfficientStorage
-import com.signalcollect.factory.storage.JavaMapStorage
+import com.signalcollect.factory.storage.{JavaMapStorage, MemoryEfficientStorage}
+import com.signalcollect.util.TestAnnouncements
 
-@RunWith(classOf[JUnitRunner])
-class VertexStorageSpec extends SpecificationWithJUnit with Mockito {
+class VertexStorageSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
+  val memoryEfficientStorage = new MemoryEfficientStorage[Any, Any]
 
-  "Memory Efficient Vertex Storage" should {
-
-    val storageFactory = new MemoryEfficientStorage[Any, Any]
-
-    "hold all vertices inserted" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.vertices.size must_== vertexList.size
-    }
-
-    "not add vertices automatically to the toSignal list" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.toSignal.size must_== 0
-    }
-
-    "not add vertices automatically to the toCollect list" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.toCollect.size must_== 0
-    }
-
-    "remove vertices from the store" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.vertices.remove(0)
-      storage.vertices.size must_== vertexList.size - 1
-    }
+  "Memory Efficient Vertex Storage" should "hold all vertices inserted" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = memoryEfficientStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.vertices.size shouldBe vertexList.size
   }
 
-  "Java Map Vertex Storage" should {
+  it should "not add vertices automatically to the toSignal list" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = memoryEfficientStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.toSignal.size shouldBe 0
+  }
 
-    val storageFactory = new JavaMapStorage[Any, Any]
+  it should "not add vertices automatically to the toCollect list" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = memoryEfficientStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.toCollect.size shouldBe 0
+  }
 
-    "hold all vertices inserted" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.vertices.size must_== vertexList.size
-    }
+  it should "remove vertices from the store" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = memoryEfficientStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.vertices.remove(0)
+    storage.vertices.size shouldBe vertexList.size - 1
+  }
 
-    "not add vertices automatically to the toSignal list" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.toSignal.size must_== 0
-    }
+  val javaStorage = new JavaMapStorage[Any, Any]
 
-    "not add vertices automatically to the toCollect list" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.toCollect.size must_== 0
-    }
+  "Java Map Vertex Storage" should "hold all vertices inserted" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = javaStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.vertices.size shouldBe vertexList.size
+  }
 
-    "remove vertices from the store" in {
-      val defaultMessageBus = mock[DefaultMessageBus[Any, Any]]
-      val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
-      val storage = storageFactory.createInstance
-      vertexList.foreach(storage.vertices.put(_))
-      storage.vertices.remove(0)
-      storage.vertices.size must_== vertexList.size - 1
-    }
+  it should "not add vertices automatically to the toSignal list" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = javaStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.toSignal.size shouldBe 0
+  }
+
+  it should "not add vertices automatically to the toCollect list" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = javaStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.toCollect.size shouldBe 0
+  }
+
+  it should "remove vertices from the store" in {
+    val vertexList = List(new PageRankVertex(0, 1), new PageRankVertex(1, 1), new PageRankVertex(2, 1))
+    val storage = javaStorage.createInstance
+    vertexList.foreach(storage.vertices.put(_))
+    storage.vertices.remove(0)
+    storage.vertices.size shouldBe vertexList.size - 1
   }
 
 }

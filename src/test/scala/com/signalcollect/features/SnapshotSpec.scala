@@ -19,62 +19,53 @@
 
 package com.signalcollect.features
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.SpecificationWithJUnit
 import com.signalcollect.ExecutionConfiguration
 import com.signalcollect.GraphBuilder
 import com.signalcollect.Vertex
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import org.specs2.runner.JUnitRunner
 import com.signalcollect.interfaces.ModularAggregationOperation
+import org.scalatest.Matchers
+import com.signalcollect.util.TestAnnouncements
+import org.scalatest.FlatSpec
 
-/**
- * Hint: For information on how to run specs see the specs v.1 website
- * http://code.google.com/p/specs/wiki/RunningSpecs
- */
-@RunWith(classOf[JUnitRunner])
-class SnapshotSpec extends SpecificationWithJUnit with Serializable {
+class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  sequential
-
-  "Snapshots" should {
-    "correctly store and load a small graph" in {
-      def verify(v: Vertex[_, _, _, _], expectedState: Double): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val correct = (state - expectedState).abs < 0.0001
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
-        }
-        correct
+  "Snapshots" should "correctly store and load a small graph" in {
+    def verify(v: Vertex[_, _, _, _], expectedState: Double): Boolean = {
+      val state = v.state.asInstanceOf[Double]
+      val correct = (state - expectedState).abs < 0.0001
+      if (!correct) {
+        System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + " actual state=" + state)
       }
-      val graph = GraphBuilder.build
-      try {
-        graph.deleteSnapshot
-        graph.restore
-        for (i <- 0 until 5) {
-          val v = new PageRankVertex(i)
-          graph.addVertex(v)
-          graph.addEdge(i, new PageRankEdge((i + 1) % 5))
-        }
-        graph.snapshot
-        graph.execute(ExecutionConfiguration.
-          withExecutionMode(ExecutionMode.PureAsynchronous).
-          withCollectThreshold(0).
-          withSignalThreshold(0.00001))
-        graph.restore
-        var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
-          val neutralElement = true
-          def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-          def extract(v: Vertex[_, _, _, _]): Boolean = verify(v, 0.15)
-        })
-        graph.deleteSnapshot
-        allcorrect
-      } finally {
-        graph.shutdown
-      }
+      correct
     }
-
+    val graph = GraphBuilder.build
+    try {
+      graph.deleteSnapshot
+      graph.restore
+      for (i <- 0 until 5) {
+        val v = new PageRankVertex(i)
+        graph.addVertex(v)
+        graph.addEdge(i, new PageRankEdge((i + 1) % 5))
+      }
+      graph.snapshot
+      graph.execute(ExecutionConfiguration.
+        withExecutionMode(ExecutionMode.PureAsynchronous).
+        withCollectThreshold(0).
+        withSignalThreshold(0.00001))
+      graph.restore
+      var allcorrect = graph.aggregate(new ModularAggregationOperation[Boolean] {
+        val neutralElement = true
+        def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+        def extract(v: Vertex[_, _, _, _]): Boolean = verify(v, 0.15)
+      })
+      graph.deleteSnapshot
+      allcorrect
+    } finally {
+      graph.shutdown
+    }
   }
+
 }
