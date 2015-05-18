@@ -64,8 +64,6 @@ resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/pub
 
 transitiveClassifiers := Seq("sources")
 
-seq(bintraySettings:_*)
-
 pomExtra := (
  <url>https://github.com/uzh/signal-collect</url>
  <scm>
