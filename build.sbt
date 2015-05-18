@@ -23,10 +23,11 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   }
 }
 
-scalacOptions ++= Seq("-optimize", "-Ylog-classpath", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-Ywarn-adapted-args", "-Ywarn-inaccessible", "-feature", "-deprecation", "-Xelide-below", "INFO")
+scalacOptions ++= Seq("-optimize", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-Ywarn-adapted-args", "-Ywarn-inaccessible", "-feature", "-deprecation", "-Xelide-below", "INFO")
 
 //, "-Ylog:icode"
 //, "-Ydebug"
+//, "-Ylog-classpath"
 
 assembleArtifact in packageScala := true
 
