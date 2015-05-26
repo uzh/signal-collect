@@ -448,11 +448,11 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     def collect {
       lock.synchronized {
         stepTokens = state match {
-          case "pausedBeforeSignal" => 4
-          case "pausedBeforeChecksAfterSignal" => 3
-          case "pausedBeforeCollect" => 2
+          case "pausedBeforeSignal"             => 4
+          case "pausedBeforeChecksAfterSignal"  => 3
+          case "pausedBeforeCollect"            => 2
           case "pausedBeforeChecksAfterCollect" => 1
-          case "pausedBeforeGlobalChecks" => 0
+          case "pausedBeforeGlobalChecks"       => 0
         }
         if (shouldCheckGlobalCondition) { stepTokens += 1 }
         lock.notifyAll
@@ -693,7 +693,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
             globalTermination = isGlobalTerminationDetectionMet(globalDetection)
           }
           // waits for whichever remaining time interval/limit is shorter
-          println("Remaining interval time "+remainingIntervalTime)
+          println("Remaining interval time " + remainingIntervalTime)
           converged = awaitIdle(math.min(remainingIntervalTime, remainingTimeLimit))
         }
         if (converged) {
@@ -757,8 +757,8 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
 
   def shutdown {
     if (console != null) { console.shutdown }
-    // Only shut down the actor system if we created it.
-    if (config.actorSystem.isEmpty) {
+    // Only shut down the actor system if it was not passed to us and if it's still running.
+    if (config.actorSystem.isEmpty && !system.isTerminated) {
       try {
         // The node proxies also shutdown their respective actor systems.
         parallelBootstrapNodeProxies.foreach(_.shutdown)
@@ -778,9 +778,11 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
       }
     } else {
       // If the system is preserved, just cleanup the actors.
-      workerActors.foreach(_ ! PoisonPill)
-      nodeActors.foreach(_ ! PoisonPill)
-      coordinatorActor ! PoisonPill
+      if (!system.isTerminated) {
+        workerActors.foreach(_ ! PoisonPill)
+        nodeActors.foreach(_ ! PoisonPill)
+        coordinatorActor ! PoisonPill
+      }
     }
   }
 
