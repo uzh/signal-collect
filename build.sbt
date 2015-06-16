@@ -49,10 +49,10 @@ libraryDependencies ++= Seq(
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
   "org.webjars" % "d3js" % "3.5.5",
   "org.webjars" % "jquery" % "2.1.4",
-  "org.webjars" % "reconnecting-websocket" % "23d2fbc",
+  "org.webjars" % "reconnecting-websocket" % "1.0.0",
   "org.webjars" % "intro.js" % "1.0.0",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "compile", // 'compile' in order to share TestAnnouncement with other projects.
-  "org.scalacheck" %% "scalacheck" % "1.12.2" % "test",
+  "org.scalatest" %% "scalatest" % "2.2.5" % "compile", // 'compile' in order to share TestAnnouncement with other projects.
+  "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
   "org.easymock" % "easymock" % "3.3.1" % "test"
 )
 
