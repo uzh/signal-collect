@@ -160,9 +160,8 @@ trait GraphEditor[@specialized(Int, Long) Id, Signal] {
 
   /**
    *  Loads a graph using the provided iterator of `graphModification` functions.
-   *
-   *  @note IMPORTANT: Only works while the computation is not yet executing.
-   *  @note IMPORTANT: Need to call `awaitIdle` after all load commands are submitted and before executing.
+   *  @note IMPORTANT: If this is called during an execution, then there are no guarantees about which operations see or don't see modifications.
+   *  @note IMPORTANT: Need to call `awaitIdle` after all load commands are submitted to ensure loading has finished.
    *  @note Does not block.
    *  @note The vertexIdHint can be used to supply a characteristic vertex ID to give a hint to the system on which worker
    *        the loading function will be able to exploit locality.

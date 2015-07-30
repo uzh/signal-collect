@@ -36,7 +36,7 @@ import com.signalcollect.util.TestAnnouncements
 
 class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  "Graph" should "support the loadGraph command" in {
+  "Graph" should "support the `loadGraph` command" in {
     val graph = GraphBuilder.build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
@@ -48,10 +48,29 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
       graph.awaitIdle
       val stats = graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
-      if (stats.aggregatedWorkerStatistics.numberOfVertices != 1000) {
-        println(s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
+      assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
+    } finally {
+      graph.shutdown
+    }
+  }
+
+  it should "support using the `loadGraph` command after the loading phase" in {
+    val graph = GraphBuilder.build
+    try {
+      val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
+        ge: GraphEditor[Any, Any] =>
+          ge.addVertex(z)
+      }))
+      for (loader <- graphLoaders.take(50)) {
+        graph.loadGraph(loader, Some(0))
       }
-      stats.aggregatedWorkerStatistics.numberOfVertices == 1000
+      graph.awaitIdle
+      graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
+      for (loader <- graphLoaders) {
+        graph.loadGraph(loader, Some(0))
+      }
+      val stats = graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
+      assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
       graph.shutdown
     }

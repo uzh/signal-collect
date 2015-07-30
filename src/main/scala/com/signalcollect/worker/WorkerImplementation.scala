@@ -78,7 +78,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   val edgeAddedToNonExistentVertexHandlerFactory: EdgeAddedToNonExistentVertexHandlerFactory[Id, Signal],
   var signalThreshold: Double,
   var collectThreshold: Double)
-  extends Worker[Id, Signal] {
+    extends Worker[Id, Signal] {
 
   val pendingModifications = new IteratorConcatenator[GraphEditor[Id, Signal] => Unit]()
   val workersPerNode = numberOfWorkers / numberOfNodes // Assumes that there is the same number of workers on all nodes.
@@ -199,7 +199,8 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   def isConverged: Boolean = {
     vertexStore.toCollect.isEmpty &&
       vertexStore.toSignal.isEmpty &&
-      messageBusFlushed
+      messageBusFlushed &&
+      !pendingModifications.hasNext
   }
 
   def executeCollectOperationOfVertex(vertex: Vertex[Id, _, Id, Signal], addToSignal: Boolean = true) {
@@ -263,8 +264,8 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   override def startComputation {
-    if (!pendingModifications.isEmpty) {
-      log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations are ignored.")
+    if (pendingModifications.hasNext) {
+      log.warning("Need to call `awaitIdle` after executiong `loadGraph` or pending operations will interfere with the computation.")
     }
     isPaused = false
   }

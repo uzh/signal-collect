@@ -92,9 +92,9 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   val throttlingEnabled: Boolean,
   val throttlingDuringLoadingEnabled: Boolean,
   val supportBlockingGraphModificationsInVertex: Boolean)
-  extends Actor
-  with ActorLogging
-  with ActorRestartLogging {
+    extends Actor
+    with ActorLogging
+    with ActorRestartLogging {
 
   context.setReceiveTimeout(Duration.Undefined)
 
@@ -171,18 +171,16 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
   }
 
   def applyPendingGraphModifications {
-    if (!worker.pendingModifications.isEmpty) {
-      try {
-        for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
-          modification(worker.graphEditor)
-        }
-      } catch {
-        case t: Throwable =>
-          println(s"Worker $workerId had a problem during graph loading: $t")
-          t.printStackTrace
+    try {
+      for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
+        modification(worker.graphEditor)
       }
-      worker.messageBusFlushed = false
+    } catch {
+      case t: Throwable =>
+        println(s"Worker $workerId had a problem during graph loading: $t")
+        t.printStackTrace
     }
+    worker.messageBusFlushed = false
   }
 
   def scheduleOperations {
@@ -310,7 +308,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
         } else {
           @inline def pongDelayed = worker.waitingForPong && (System.nanoTime - worker.pingSentTimestamp) > worker.maxPongDelay
           val overloaded = worker.slowPongDetected || pongDelayed
-          if (worker.isPaused && !(throttlingDuringLoadingEnabled && overloaded)) {
+          if (worker.pendingModifications.hasNext && !(throttlingDuringLoadingEnabled && overloaded)) {
             applyPendingGraphModifications
           } else {
             worker.scheduler.executeOperations(throttlingEnabled && overloaded)
