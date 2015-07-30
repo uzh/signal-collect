@@ -59,6 +59,6 @@ trait EdgeAddedToNonExistentVertexHandler[@specialized(Int, Long) Id, Signal] {
    *  		receives the edge, the id of the vertex that does not exist and an instance of GraphEditor as parameters in order to
    *    		potentially create a vertex to which the edge should be added.
    */
-  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _, Id, Signal]]
+  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id, graphEditor: GraphEditor[Id, Signal]): Option[Vertex[Id, _, Id, Signal]]
 
 }

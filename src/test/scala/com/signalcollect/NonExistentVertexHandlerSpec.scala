@@ -1,13 +1,10 @@
 package com.signalcollect
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import com.signalcollect._
+import org.scalatest.{ Finders, FlatSpec, Matchers }
+
+import com.signalcollect.examples.{ PageRankEdge, PageRankVertex }
+import com.signalcollect.interfaces.{ EdgeAddedToNonExistentVertexHandler, EdgeAddedToNonExistentVertexHandlerFactory }
 import com.signalcollect.util.TestAnnouncements
-import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.examples.PageRankEdge
-import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
-import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandler
 
 class TestEdgeAddedToNonExistentVertexHandlerFactory extends EdgeAddedToNonExistentVertexHandlerFactory[Any, Any] {
   def createInstance: EdgeAddedToNonExistentVertexHandler[Any, Any] =
@@ -16,7 +13,7 @@ class TestEdgeAddedToNonExistentVertexHandlerFactory extends EdgeAddedToNonExist
 }
 
 class TestEdgeAddedToNonExistentVertexHandler extends EdgeAddedToNonExistentVertexHandler[Any, Any] {
-  def handleImpossibleEdgeAddition(edge: Edge[Any], vertexId: Any): Option[Vertex[Any, _, Any, Any]] = {
+  def handleImpossibleEdgeAddition(edge: Edge[Any], vertexId: Any, graphEditor: GraphEditor[Any, Any]): Option[Vertex[Any, _, Any, Any]] = {
     val v = new PageRankVertex[Any](vertexId)
     Some(v)
   }

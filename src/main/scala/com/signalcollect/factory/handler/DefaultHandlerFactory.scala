@@ -53,7 +53,7 @@ class DefaultEdgeAddedToNonExistentVertexHandlerFactory[@specialized(Int, Long) 
 }
 
 class DefaultEdgeAddedToNonExistentVertexHandler[@specialized(Int, Long) Id, Signal] extends EdgeAddedToNonExistentVertexHandler[Id, Signal] {
-  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id): Option[Vertex[Id, _, Id, Signal]] = {
+  def handleImpossibleEdgeAddition(edge: Edge[Id], vertexId: Id, graphEditor: GraphEditor[Id, Signal]): Option[Vertex[Id, _, Id, Signal]] = {
     throw new Exception(
       s"Could not add edge: ${edge.getClass.getSimpleName}(id = $vertexId -> ${edge.targetId}), because vertex with id $vertexId does not exist.")
   }
