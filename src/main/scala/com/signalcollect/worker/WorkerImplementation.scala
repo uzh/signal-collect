@@ -158,7 +158,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
 
   def isAllWorkDone: Boolean = {
     if (isPaused) {
-      pendingModifications.isEmpty && messageBusFlushed
+      pendingModifications.isEmpty
     } else {
       isConverged
     }
