@@ -9,7 +9,7 @@ version := "4.0.0-SNAPSHOT"
 
 organization := "com.signalcollect"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
