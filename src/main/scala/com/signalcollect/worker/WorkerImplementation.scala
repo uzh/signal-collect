@@ -315,9 +315,9 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     val v = vertexStore.vertices.get(sourceId)
     if (v == null) {
       val vertexOption = edgeAddedToNonExistentVertexHandler.handleImpossibleEdgeAddition(edge, sourceId, graphEditor)
-      if (vertexOption.isDefined) {
-        addVertex(vertexOption.get)
-        addEdgeToVertex(vertexOption.get)
+      vertexOption.foreach { vertex =>
+        addVertex(vertex)
+        addEdgeToVertex(vertex)
       }
     } else {
       addEdgeToVertex(v)
