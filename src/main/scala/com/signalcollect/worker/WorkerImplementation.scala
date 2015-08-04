@@ -158,7 +158,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
 
   def isAllWorkDone: Boolean = {
     if (isPaused) {
-      pendingModifications.isEmpty
+      pendingModifications.isEmpty && messageBusFlushed
     } else {
       isConverged
     }
@@ -293,7 +293,6 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
       vertex.afterInitialization(graphEditor)
-      messageBusFlushed = false
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
@@ -301,6 +300,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       val existing = vertexStore.vertices.get(vertex.id)
       existingVertexHandler.mergeVertices(existing, vertex, graphEditor)
     }
+    messageBusFlushed = false
   }
 
   override def addEdge(sourceId: Id, edge: Edge[Id]) {
@@ -321,6 +321,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       }
     } else {
       addEdgeToVertex(v)
+      messageBusFlushed = false
     }
   }
 
