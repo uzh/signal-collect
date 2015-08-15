@@ -72,7 +72,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
       throttlingDuringLoadingEnabled = false,
       supportBlockingGraphModificationsInVertex = true,
       consoleHttpPort = -1,
-      loggingLevel = Logging.WarningLevel,
+      loggingLevel = None,
       mapperFactory = new DefaultMapperFactory[Id],
       storageFactory = new MemoryEfficientStorage[Id, Signal],
       schedulerFactory = new Throughput[Id, Signal],
@@ -80,8 +80,8 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
       nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
       statsReportingIntervalInMilliseconds = 0,
       kryoRegistrations = List(),
-      kryoInitializer = "com.signalcollect.configuration.KryoInit",
-      serializeMessages = false,
+      kryoInitializer = None,
+      serializeMessages = None,
       workerFactory = new AkkaWorkerFactory[Id, Signal],
       messageBusFactory = new BulkAkkaMessageBusFactory[Id, Signal](1000, true),
       existingVertexHandlerFactory = new DefaultExistingVertexHandlerFactory[Id, Signal](),
@@ -181,7 +181,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
    *  @param newLoggingLevel The logging level used by the graph.
    */
   def withLoggingLevel(newLoggingLevel: LogLevel) =
-    builder(config.copy(loggingLevel = newLoggingLevel))
+    builder(config.copy(loggingLevel = Some(newLoggingLevel)))
 
   /**
    *  Configures the worker factory used by the graph to instantiate workers.
@@ -292,7 +292,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
    *  If true forces Akka message serialization even in local settings.
    */
   def withMessageSerialization(newSerializeMessages: Boolean) =
-    builder(config.copy(serializeMessages = newSerializeMessages))
+    builder(config.copy(serializeMessages = Some(newSerializeMessages)))
 
   /**
    *  Sets the fully qualified class name of the Kryo initializer. This class can be used to
@@ -301,6 +301,6 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
    *  in the section "How to create a custom initializer for Kryo".
    */
   def withKryoInitializer(newKryoInitializer: String) =
-    builder(config.copy(kryoInitializer = newKryoInitializer))
+    builder(config.copy(kryoInitializer = Some(newKryoInitializer)))
 
 }

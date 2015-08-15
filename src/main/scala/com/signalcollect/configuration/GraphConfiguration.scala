@@ -56,7 +56,7 @@ case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: Clas
   throttlingDuringLoadingEnabled: Boolean,
   supportBlockingGraphModificationsInVertex: Boolean,
   consoleHttpPort: Int,
-  loggingLevel: LogLevel,
+  loggingLevel: Option[LogLevel], // Uses Akka config if undefined
   mapperFactory: MapperFactory[Id],
   storageFactory: StorageFactory[Id, Signal],
   schedulerFactory: SchedulerFactory[Id, Signal],
@@ -64,8 +64,8 @@ case class GraphConfiguration[@specialized(Int, Long) Id: ClassTag, Signal: Clas
   nodeProvisioner: NodeProvisioner[Id, Signal],
   statsReportingIntervalInMilliseconds: Int,
   kryoRegistrations: List[String],
-  kryoInitializer: String,
-  serializeMessages: Boolean,
+  kryoInitializer: Option[String], // Uses Akka config if undefined
+  serializeMessages: Option[Boolean], // Uses Akka config if undefined
   workerFactory: WorkerFactory[Id, Signal],
   messageBusFactory: MessageBusFactory[Id, Signal],
   existingVertexHandlerFactory: ExistingVertexHandlerFactory[Id, Signal],
