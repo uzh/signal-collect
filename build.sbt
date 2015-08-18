@@ -45,6 +45,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.11" % "compile",
   "com.typesafe.akka" %% "akka-remote" % "2.3.11" % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization" % "0.3.3" % "compile",
+  "net.ceedubs" %% "ficus" % "1.1.2",
   "org.json4s" %% "json4s-native" % "3.2.11" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
   "org.webjars" % "d3js" % "3.5.5",

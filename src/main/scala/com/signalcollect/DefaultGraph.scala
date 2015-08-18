@@ -29,7 +29,6 @@ import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
 import com.signalcollect.configuration.ActorSystemRegistry
-import com.signalcollect.configuration.AkkaConfig
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.TerminationReason
@@ -68,6 +67,7 @@ import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
 import com.signalcollect.interfaces.EdgeAddedToNonExistentVertexHandlerFactory
 import com.signalcollect.interfaces.ExistingVertexHandlerFactory
 import scala.reflect.runtime.universe._
+import com.signalcollect.configuration.Akka
 
 /**
  * Creator in separate class to prevent excessive closure-capture of the DefaultGraph class (Error[java.io.NotSerializableException DefaultGraph])
@@ -136,7 +136,7 @@ case class CoordinatorCreator[Id: ClassTag, Signal: ClassTag](
 class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   val config: GraphConfiguration[Id, Signal]) extends Graph[Id, Signal] {
 
-  val akkaConfig = AkkaConfig.get(
+  val akkaConfig = Akka.config(
     config.serializeMessages,
     config.loggingLevel,
     config.kryoRegistrations,
