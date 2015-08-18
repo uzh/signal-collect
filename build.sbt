@@ -42,13 +42,13 @@ jarName in assembly := "signal-collect.jar"
 /** Dependencies */
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
-  "com.typesafe.akka" %% "akka-actor" % "2.3.11" % "compile",
-  "com.typesafe.akka" %% "akka-remote" % "2.3.11" % "compile",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.12" % "compile",
+  "com.typesafe.akka" %% "akka-remote" % "2.3.12" % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization" % "0.3.3" % "compile",
   "net.ceedubs" %% "ficus" % "1.1.2",
   "org.json4s" %% "json4s-native" % "3.2.11" % "compile",
   "org.java-websocket" % "Java-WebSocket" % "1.3.0" % "compile",
-  "org.webjars" % "d3js" % "3.5.5",
+  "org.webjars" % "d3js" % "3.5.6",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "reconnecting-websocket" % "1.0.0",
   "org.webjars" % "intro.js" % "1.0.0",
