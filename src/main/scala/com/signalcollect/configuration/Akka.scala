@@ -14,16 +14,11 @@ import com.typesafe.config.ConfigObject
 
 object Akka {
 
-  private[this] def value(v: Any) = {
+  private[this] def value(v: Any): ConfigValue = {
     v match {
+      case s: ConfigValue => s
       case m: Map[String @unchecked, _] => ConfigValueFactory.fromMap(m)
       case l: List[_]                   => ConfigValueFactory.fromIterable(l)
-      case c: Config =>
-        val entryMap = c.entrySet.map { entry =>
-          (entry.getKey, entry.getValue)
-        }.toMap
-        println(s"map = $entryMap")
-        ConfigValueFactory.fromMap(entryMap)
       case _ => ConfigValueFactory.fromAnyRef(v)
     }
   }
@@ -76,7 +71,7 @@ object Akka {
 
   val clientSocketWorkerPoolPath = "akka.actor.remote.netty.tcp.client-socket-worker-pool"
 
-  def dispatcherConfig(numberOfCores: Int): Config = {
+  def dispatcherConfig(numberOfCores: Int): ConfigObject = {
     ConfigFactory.parseString(s"""
 # Dispatcher is the name of the event-based dispatcher
 type = Dispatcher
@@ -98,17 +93,17 @@ fork-join-executor {
 # processed per actor before the thread jumps to the next actor.
 # Set to 1 for as fair as possible.
 throughput = 1000
-""")
+""").root
   }
 
-  def workerPoolConfig(numberOfCores: Int): Config = {
+  def workerPoolConfig(numberOfCores: Int): ConfigObject = {
     ConfigFactory.parseString(s"""
 # Min number of threads to cap factor-based number to
 pool-size-min = $numberOfCores
 
 # Max number of threads to cap factor-based number to
 pool-size-max = $numberOfCores
-""")
+""").root
   }
 
   def config(
@@ -140,6 +135,7 @@ pool-size-max = $numberOfCores
    * Maps the config if `optionalValue` is defined, returns the original config otherwise.
    */
   private[this] implicit class ExtendedConfig(config: Config) {
+
     def optionalMap[V](
       path: String,
       optionalValue: Option[V],
@@ -150,6 +146,7 @@ pool-size-max = $numberOfCores
         updatedConfig
       }.getOrElse(config)
     }
+
   }
 
 }
