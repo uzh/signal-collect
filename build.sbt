@@ -44,6 +44,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
   "com.typesafe.akka" %% "akka-actor" % "2.3.12" % "compile",
   "com.typesafe.akka" %% "akka-remote" % "2.3.12" % "compile",
+  "com.typesafe.akka" %% "akka-cluster" % "2.3.12" % "compile",
   "com.github.romix.akka" %% "akka-kryo-serialization" % "0.3.3" % "compile",
   "net.ceedubs" %% "ficus" % "1.1.2",
   "org.json4s" %% "json4s-native" % "3.2.11" % "compile",
@@ -114,8 +115,13 @@ pomExtra := (
    </developer>
    <developer>
      <id>rampalli-github</id>
-     <name>S. Rampalli</name>
+     <name>Srinivas Rampalli</name>
      <url>https://github.com/rampalli-github</url>
+   </developer>
+   <developer>
+     <id>sunnylbk</id>
+     <name>Bharath Kumar</name>
+     <url>https://github.com/sunnylbk</url>
    </developer>
  </developers>)
  
