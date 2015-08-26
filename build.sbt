@@ -59,7 +59,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "intro.js" % "1.0.0",
   "org.scalatest" %% "scalatest" % "2.2.5" % "compile", // 'compile' in order to share TestAnnouncement with other projects.
   "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
-  "org.easymock" % "easymock" % "3.3.1" % "test"
+  "org.easymock" % "easymock" % "3.3.1" % "test",
+  "com.typesafe.akka" %% "akka-remote-tests" % "2.3.12"
 )
 
 resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/"
