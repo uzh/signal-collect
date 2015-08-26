@@ -1,6 +1,10 @@
-import AssemblyKeys._ 
+import AssemblyKeys._
+import com.typesafe.sbt.SbtMultiJvm
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
 assemblySettings
+
+multiJvmSettings
 
 /** Project */
 name := "signal-collect"
@@ -13,7 +17,7 @@ scalaVersion := "2.11.7"
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 
-/** 
+/**
  * See https://github.com/sbt/sbt-assembly/issues/123
  */
 mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
@@ -65,6 +69,23 @@ resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/conten
 resolvers += "Ifi Public" at "https://maven.ifi.uzh.ch/maven2/content/groups/public/"
 
 transitiveClassifiers := Seq("sources")
+
+// make sure that MultiJvm test are compiled by the default test compilation
+compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test)
+
+// make sure that MultiJvm tests are executed by the default test target,
+// and combine the results from ordinary test and multi-jvm tests
+executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
+  case (testResults, multiNodeResults)  =>
+    val overall =
+      if (testResults.overall.id < multiNodeResults.overall.id)
+        multiNodeResults.overall
+      else
+        testResults.overall
+    Tests.Output(overall,
+      testResults.events ++ multiNodeResults.events,
+      testResults.summaries ++ multiNodeResults.summaries)
+}
 
 pomExtra := (
  <url>https://github.com/uzh/signal-collect</url>
@@ -124,4 +145,4 @@ pomExtra := (
      <url>https://github.com/sunnylbk</url>
    </developer>
  </developers>)
- 
+
