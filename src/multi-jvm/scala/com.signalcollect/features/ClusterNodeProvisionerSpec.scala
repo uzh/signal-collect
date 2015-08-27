@@ -43,7 +43,7 @@ with ImplicitSender with TestAnnouncements {
 
   override def initialParticipants = roles.size
 
-  "Distributed Signal/Collect" should {
+  "Clustered Signal/Collect" should {
 
     "wait for all nodes to enter a barrier" in {
       testConductor.enter("startup")
@@ -52,11 +52,11 @@ with ImplicitSender with TestAnnouncements {
     "support setting the number of workers created on each node" in {
       runOn(node1) {
         testConductor.enter("all deployed")
-        val numberOfWorkers = 100
-        val graph = GraphBuilder.withNodeProvisioner(new ClusterNodeProvisioner(numberOfNodes = 100)).build
+        val workers = 2
+        val graph = GraphBuilder.withNodeProvisioner(new ClusterNodeProvisioner(numberOfNodes = workers)).build
         try {
           val stats = graph.execute
-          stats.individualWorkerStatistics.length == numberOfWorkers
+          stats.individualWorkerStatistics.length == workers
         } finally {
           graph.shutdown
         }
