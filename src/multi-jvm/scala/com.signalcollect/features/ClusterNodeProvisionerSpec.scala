@@ -52,15 +52,19 @@ object MultiNodeTestConfig extends MultiNodeConfig {
   val worker1 = role("worker1")
   val worker2 = role("worker2")
 
-  override val config = ConfigFactory.load()
-  val seedPort = config.getInt("akka.clustering.seed-port")
+  val nodeConfig = ConfigFactory.load()
+  val seedIp = nodeConfig.getString("akka.clustering.seed-ip")
+  val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
+  val clusterName = "ClusterNodeProvisionerSpec"
+
+  nodeConfig(master) {
+    ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
+  }
+
   // this configuration will be used for all nodes
   // note that no fixed host names and ports are used
-  commonConfig(config)
-
-  nodeConfig(master)(
-    ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
-  )
+  commonConfig(ConfigFactory.parseString(s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""")
+    .withFallback(ConfigFactory.load()))
 }
 
 class ClusterNodeProvisionerSpec extends MultiNodeSpec(MultiNodeTestConfig) with STMultiNodeSpec
@@ -76,7 +80,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   val masterAddress = node(master).address
   val worker1Address = node(worker1).address
   val worker2Address = node(worker2).address
-  val workers = 2
+  val workers = 3
   val idleDetectionPropagationDelayInMilliseconds = 500
 
   muteDeadLetters(classOf[Any])(system)
@@ -87,17 +91,17 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
       }
-      testConductor.enter("master started")
+      enterBarrier("all nodes are up")
 
       runOn(worker1) {
         Cluster(system).join(worker1Address)
       }
-      testConductor.enter("worker1 started")
+      enterBarrier("worker1 started")
 
       runOn(worker2) {
         Cluster(system).join(worker2Address)
       }
-      testConductor.enter("worker2 started")
+      enterBarrier("worker2 started")
 
       runOn(master) {
         implicit val timeout = Timeout(300.seconds)
@@ -107,7 +111,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
           assert(nodeActors.size == workers)
         }
       }
-      testConductor.enter("all done!")
+      enterBarrier("all done!")
     }
   }
 
