@@ -18,15 +18,18 @@
 
 package com.signalcollect.features
 
+import akka.actor.{ActorRef, Props}
 import akka.cluster.Cluster
-import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
+import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec, MultiNodeSpecCallbacks}
 import akka.testkit.ImplicitSender
-import com.signalcollect.GraphBuilder
-import com.signalcollect.nodeprovisioning.cluster.ClusterNodeProvisioner
+import akka.util.Timeout
+import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.signalcollect.util.TestAnnouncements
 import com.typesafe.config.ConfigFactory
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -49,48 +52,62 @@ object MultiNodeTestConfig extends MultiNodeConfig {
   val worker1 = role("worker1")
   val worker2 = role("worker2")
 
+  override val config = ConfigFactory.load()
+  val seedPort = config.getInt("akka.clustering.seed-port")
   // this configuration will be used for all nodes
   // note that no fixed host names and ports are used
-  commonConfig(ConfigFactory.load())
+  commonConfig(config)
+
+  nodeConfig(master)(
+    ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
+  )
 }
 
 class ClusterNodeProvisionerSpec extends MultiNodeSpec(MultiNodeTestConfig) with STMultiNodeSpec
-with ImplicitSender with TestAnnouncements {
+with ImplicitSender with TestAnnouncements with ScalaFutures {
 
   import MultiNodeTestConfig._
 
   override def initialParticipants = roles.size
 
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
+
   val masterAddress = node(master).address
   val worker1Address = node(worker1).address
   val worker2Address = node(worker2).address
   val workers = 2
+  val idleDetectionPropagationDelayInMilliseconds = 500
 
   muteDeadLetters(classOf[Any])(system)
 
   "SignalCollect" should {
-
-    "form the cluster" in within(300 seconds) {
-      Cluster(system).subscribe(testActor, classOf[MemberUp])
-      expectMsgClass(classOf[CurrentClusterState])
-
-      Cluster(system).join(masterAddress)
-      receiveN(3).map { case MemberUp(m) => m.address }.toSet should be(Set(masterAddress, worker1Address, worker2Address))
-      Cluster(system).unsubscribe(testActor)
-      testConductor.enter("cluster-up")
-    }
-
     "support setting the number of workers created on each node" in {
       runOn(master) {
-        val graph = GraphBuilder.withNodeProvisioner(new ClusterNodeProvisioner(numberOfNodes = workers)).build
-        try {
-          val stats = graph.execute
-          stats.individualWorkerStatistics.length == workers
-        } finally {
-          graph.shutdown
+        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+      }
+      testConductor.enter("master started")
+
+      runOn(worker1) {
+        Cluster(system).join(worker1Address)
+      }
+      testConductor.enter("worker1 started")
+
+      runOn(worker2) {
+        Cluster(system).join(worker2Address)
+      }
+      testConductor.enter("worker2 started")
+
+      runOn(master) {
+        implicit val timeout = Timeout(300.seconds)
+        val masterActor = system.actorSelection(node(master) / "user" / "ClusterMasterBootstrap")
+        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+        whenReady(nodeActorsFuture) { nodeActors =>
+          assert(nodeActors.size == workers)
         }
       }
-      testConductor.enter("finished")
+      testConductor.enter("all done!")
     }
   }
 
