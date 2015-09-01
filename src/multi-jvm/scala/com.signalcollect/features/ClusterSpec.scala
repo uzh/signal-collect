@@ -21,25 +21,18 @@ package com.signalcollect.features
 import akka.actor.{ActorRef, Props}
 import akka.cluster.Cluster
 import akka.pattern.ask
-import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec, MultiNodeSpecCallbacks}
+import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
+import com.signalcollect.STMultiNodeSpec
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.signalcollect.util.TestAnnouncements
 import com.typesafe.config.ConfigFactory
-import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
-
-trait STMultiNodeSpec extends MultiNodeSpecCallbacks with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
-
-  override def beforeAll() = multiNodeSpecBeforeAll()
-
-  override def afterAll() = multiNodeSpecAfterAll()
-}
 
 class ClusterSpecMultiJvmNode1 extends ClusterSpec
 
@@ -47,7 +40,7 @@ class ClusterSpecMultiJvmNode2 extends ClusterSpec
 
 class ClusterSpecMultiJvmNode3 extends ClusterSpec
 
-object MultiNodeTestConfig extends MultiNodeConfig {
+object ClusterSpecConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
   val worker1 = role("worker1")
   val worker2 = role("worker2")
@@ -62,22 +55,21 @@ object MultiNodeTestConfig extends MultiNodeConfig {
   }
 
   // this configuration will be used for all nodes
-  // note that no fixed host names and ports are used
-  commonConfig(ConfigFactory.parseString(s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""")
+  commonConfig(ConfigFactory.parseString( s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""")
     .withFallback(ConfigFactory.load()))
 }
 
-class ClusterSpec extends MultiNodeSpec(MultiNodeTestConfig) with STMultiNodeSpec
+class ClusterSpec extends MultiNodeSpec(ClusterSpecConfig) with STMultiNodeSpec
 with ImplicitSender with TestAnnouncements with ScalaFutures {
 
-  import MultiNodeTestConfig._
+  import ClusterSpecConfig._
 
   override def initialParticipants = roles.size
 
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
-  val masterAddress = node(provisioner).address
+  val provisionerAddress = node(provisioner).address
   val worker1Address = node(worker1).address
   val worker2Address = node(worker2).address
   val workers = 3
@@ -114,8 +106,4 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
       enterBarrier("all done!")
     }
   }
-
-  override def beforeAll: Unit = multiNodeSpecBeforeAll()
-
-  override def afterAll: Unit = multiNodeSpecAfterAll()
 }
