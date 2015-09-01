@@ -41,11 +41,11 @@ trait STMultiNodeSpec extends MultiNodeSpecCallbacks with WordSpecLike with Shou
   override def afterAll() = multiNodeSpecAfterAll()
 }
 
-class ClusterNodeProvisionerSpecMultiJvmNode1 extends ClusterNodeProvisionerSpec
+class ClusterSpecMultiJvmNode1 extends ClusterSpec
 
-class ClusterNodeProvisionerSpecMultiJvmNode2 extends ClusterNodeProvisionerSpec
+class ClusterSpecMultiJvmNode2 extends ClusterSpec
 
-class ClusterNodeProvisionerSpecMultiJvmNode3 extends ClusterNodeProvisionerSpec
+class ClusterSpecMultiJvmNode3 extends ClusterSpec
 
 object MultiNodeTestConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
@@ -55,7 +55,7 @@ object MultiNodeTestConfig extends MultiNodeConfig {
   val nodeConfig = ConfigFactory.load()
   val seedIp = nodeConfig.getString("akka.clustering.seed-ip")
   val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
-  val clusterName = "ClusterNodeProvisionerSpec"
+  val clusterName = "ClusterSpec"
 
   nodeConfig(provisioner) {
     ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
@@ -67,7 +67,7 @@ object MultiNodeTestConfig extends MultiNodeConfig {
     .withFallback(ConfigFactory.load()))
 }
 
-class ClusterNodeProvisionerSpec extends MultiNodeSpec(MultiNodeTestConfig) with STMultiNodeSpec
+class ClusterSpec extends MultiNodeSpec(MultiNodeTestConfig) with STMultiNodeSpec
 with ImplicitSender with TestAnnouncements with ScalaFutures {
 
   import MultiNodeTestConfig._
@@ -86,7 +86,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   muteDeadLetters(classOf[Any])(system)
 
   "SignalCollect" should {
-    "support setting the number of workers created on each node" in {
+    "get the cluster up" in {
       runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
