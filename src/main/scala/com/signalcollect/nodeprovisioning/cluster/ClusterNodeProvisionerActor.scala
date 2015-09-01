@@ -3,7 +3,7 @@
  *  @author Bharath Kumar
  *
  *  Copyright 2015 iHealth Technologies
- * 
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -56,7 +56,7 @@ class ClusterNodeProvisionerActor(
       nodeActorArrayRequestor = Some(sender)
       reportNodeActors
     case MemberUp(m) =>
-      log.info(s"Cluster master received member up message for {}.", m)
+      log.info(s"Cluster provisioner received member up message for {}.", m)
       if (m.address != cluster.selfAddress) {
         val nodeActor = startNodeActor(m.address, nextNodeActorId)
         nodeActors += nextNodeActorId -> nodeActor

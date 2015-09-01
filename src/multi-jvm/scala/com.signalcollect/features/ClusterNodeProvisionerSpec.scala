@@ -48,7 +48,7 @@ class ClusterNodeProvisionerSpecMultiJvmNode2 extends ClusterNodeProvisionerSpec
 class ClusterNodeProvisionerSpecMultiJvmNode3 extends ClusterNodeProvisionerSpec
 
 object MultiNodeTestConfig extends MultiNodeConfig {
-  val master = role("master")
+  val provisioner = role("provisioner")
   val worker1 = role("worker1")
   val worker2 = role("worker2")
 
@@ -57,7 +57,7 @@ object MultiNodeTestConfig extends MultiNodeConfig {
   val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
   val clusterName = "ClusterNodeProvisionerSpec"
 
-  nodeConfig(master) {
+  nodeConfig(provisioner) {
     ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
   }
 
@@ -77,7 +77,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
-  val masterAddress = node(master).address
+  val masterAddress = node(provisioner).address
   val worker1Address = node(worker1).address
   val worker2Address = node(worker2).address
   val workers = 3
@@ -87,7 +87,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
 
   "SignalCollect" should {
     "support setting the number of workers created on each node" in {
-      runOn(master) {
+      runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
       }
@@ -103,9 +103,9 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
       }
       enterBarrier("worker2 started")
 
-      runOn(master) {
+      runOn(provisioner) {
         implicit val timeout = Timeout(300.seconds)
-        val masterActor = system.actorSelection(node(master) / "user" / "ClusterMasterBootstrap")
+        val masterActor = system.actorSelection(node(provisioner) / "user" / "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.size == workers)

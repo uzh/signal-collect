@@ -44,9 +44,9 @@ class ClusterNodeProvisioner[Id, Signal](
     implicit val timeout = Timeout(300.seconds)
     //TODO: Is this coming from some config?
     val idleDetectionPropagationDelayInMilliseconds = 500
-    val master = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+    val provisioner = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
       actorNamePrefix + "ClusterMasterBootstrap", numberOfNodes), actorNamePrefix + "ClusterMasterBootstrap")
-    val nodeActorsFuture = master ? RetrieveNodeActors
+    val nodeActorsFuture = provisioner ? RetrieveNodeActors
     val nodeActors = Await.result(nodeActorsFuture, timeout.duration)
     nodeActors match {
       case n: Array[ActorRef] => n
