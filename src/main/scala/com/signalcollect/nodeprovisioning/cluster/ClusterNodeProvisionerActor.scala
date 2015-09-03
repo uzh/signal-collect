@@ -57,6 +57,7 @@ class ClusterNodeProvisionerActor(
       reportNodeActors
     case MemberUp(m) =>
       log.info(s"Cluster provisioner received member up message for {}.", m)
+      println(s"Got MemberUp for $m with roles: ${m.roles}")
       if (m.address != cluster.selfAddress) {
         val nodeActor = startNodeActor(m.address, nextNodeActorId)
         nodeActors += nextNodeActorId -> nodeActor
