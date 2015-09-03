@@ -64,7 +64,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
       "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$apply$mcV$sp$1",
       "com.signalcollect.ClusterIntegrationSpec$$anonfun$1",
       "com.signalcollect.ClusterIntegrationSpecMultiJvmNode1",
-      "org.scalatest.concurrent.AbstractPatienceConfiguration$PatienceConfig$"),
+    "org.scalatest.concurrent.AbstractPatienceConfiguration$PatienceConfig$"),
     kryoInitializer = Some("com.signalcollect.configuration.KryoInit"))
 
   nodeConfig(provisioner) {
@@ -72,13 +72,13 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
       s"""akka.remote.netty.tcp.port=$seedPort
           |akka.clustering.name=$clusterName
           |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]
-       """.stripMargin).withFallback(akkaConfig).withFallback(ConfigFactory.load())
+       """.stripMargin).withFallback(akkaConfig)
   }
 
   nodeConfig(node1, node2) {
     ConfigFactory.parseString(
       s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
-      .withFallback(akkaConfig.withFallback(ConfigFactory.load()))
+      .withFallback(akkaConfig)
   }
 }
 
