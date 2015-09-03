@@ -26,12 +26,12 @@ import com.signalcollect.configuration.Akka
 
 object ClusterNodeEntryPointTemplate {
 
-  //  start()
+    start()
 
   def config: Config = Akka.config(
     serializeMessages = None,
     loggingLevel = None,
-    kryoRegistrations = List(""),
+    kryoRegistrations = List.empty,
     kryoInitializer = None)
 
   def systemName: String = "SignalCollect"
@@ -40,10 +40,4 @@ object ClusterNodeEntryPointTemplate {
     val system = ActorSystem(systemName, config)
     system.awaitTermination()
   }
-
-  def startWithActorSystemName(systemName: String, nodeConfig: Config) = {
-    val system = ActorSystem(systemName, config)
-    system.awaitTermination()
-  }
-
 }
