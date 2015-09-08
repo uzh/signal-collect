@@ -25,7 +25,7 @@ import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import com.signalcollect.configuration.{Akka, ExecutionMode}
+import com.signalcollect.configuration.{Akka, ExecutionMode, TestKryo}
 import com.signalcollect.examples.{PageRankEdge, PageRankVertex}
 import com.signalcollect.interfaces.ModularAggregationOperation
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
@@ -41,6 +41,7 @@ class ClusterIntegrationSpecMultiJvmNode2 extends ClusterIntegrationSpec
 
 class ClusterIntegrationSpecMultiJvmNode3 extends ClusterIntegrationSpec
 
+
 object ClusterIntegrationConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
   val node1 = role("node1")
@@ -54,32 +55,19 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
 
   val akkaConfig = Akka.config(serializeMessages = Some(false),
     loggingLevel = Some(Logging.WarningLevel),
-    kryoRegistrations = List(
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$com$signalcollect$ClusterIntegrationSpec$$anonfun$$test$1$1$$anonfun$apply$1$$anon$1",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$com$signalcollect$ClusterIntegrationSpec$$anonfun$$test$1$1$$anonfun$apply$1",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$com$signalcollect$ClusterIntegrationSpec$$anonfun$$test$1$1",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$apply$mcV$sp$1$$anonfun$apply$mcV$sp$5$$anonfun$apply$mcV$sp$6$$anonfun$4",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$apply$mcV$sp$1$$anonfun$apply$mcV$sp$5$$anonfun$apply$mcV$sp$6",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$apply$mcV$sp$1$$anonfun$apply$mcV$sp$5",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1$$anonfun$apply$mcV$sp$1",
-      "com.signalcollect.ClusterIntegrationSpec$$anonfun$1",
-      "com.signalcollect.ClusterIntegrationSpecMultiJvmNode1",
-    "org.scalatest.concurrent.AbstractPatienceConfiguration$PatienceConfig$"),
-    kryoInitializer = Some("com.signalcollect.configuration.KryoInit"))
+    kryoRegistrations = TestKryo.registrations,
+    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
 
   nodeConfig(provisioner) {
     ConfigFactory.parseString(
-      s"""akka.remote.netty.tcp.port=$seedPort
-          |akka.clustering.name=$clusterName
-          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]
-       """.stripMargin).withFallback(akkaConfig)
+      s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
   }
 
-  nodeConfig(node1, node2) {
-    ConfigFactory.parseString(
-      s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
-      .withFallback(akkaConfig)
-  }
+  // this configuration will be used for all nodes
+  commonConfig(ConfigFactory.parseString(
+    s"""akka.actor.kryo.idstrategy=explicit
+       |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+    .withFallback(akkaConfig))
 }
 
 class ClusterIntegrationSpec extends MultiNodeSpec(ClusterIntegrationConfig) with STMultiNodeSpec
