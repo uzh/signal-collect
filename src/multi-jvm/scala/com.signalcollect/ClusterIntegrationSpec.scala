@@ -65,8 +65,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
 
   // this configuration will be used for all nodes
   commonConfig(ConfigFactory.parseString(
-    s"""akka.actor.kryo.idstrategy=explicit
-       |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+    s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
     .withFallback(akkaConfig))
 }
 
@@ -78,6 +77,7 @@ with ImplicitSender with ScalaFutures {
   override def initialParticipants = roles.size
 
   val workers = 3
+  val provisionerAddress = node(provisioner).address
   val node1Address = node(node1).address
   val node2Address = node(node2).address
   val idleDetectionPropagationDelayInMilliseconds = 500
@@ -150,12 +150,12 @@ with ImplicitSender with ScalaFutures {
       enterBarrier("provisioner up")
 
       runOn(node1) {
-        Cluster(system).join(node1Address)
+        Cluster(system).join(provisionerAddress)
       }
       enterBarrier("node1 started")
 
       runOn(node2) {
-        Cluster(system).join(node2Address)
+        Cluster(system).join(provisionerAddress)
       }
       enterBarrier("node2 started")
 
