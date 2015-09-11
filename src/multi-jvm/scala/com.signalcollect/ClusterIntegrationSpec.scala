@@ -39,6 +39,8 @@ class ClusterIntegrationSpecMultiJvmNode1 extends ClusterIntegrationSpec
 
 class ClusterIntegrationSpecMultiJvmNode2 extends ClusterIntegrationSpec
 
+class ClusterIntegrationSpecMultiJvmNode3 extends ClusterIntegrationSpec
+
 class ModularAggregator(verify: Vertex[_, _, _, _] => Boolean) extends ModularAggregationOperation[Boolean] {
   val neutralElement = true
 
@@ -50,6 +52,7 @@ class ModularAggregator(verify: Vertex[_, _, _, _] => Boolean) extends ModularAg
 object ClusterIntegrationConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
   val node1 = role("node1")
+  val node2 = role("node2")
 
   val nodeConfig = ConfigFactory.load()
   val seedIp = nodeConfig.getString("akka.clustering.seed-ip")
@@ -67,10 +70,10 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   }
 
   commonConfig {
-    val mappingsConfig = """        akka.actor.kryo.mappings {
-                           |         "com.signalcollect.ModularAggregator" = 133,
-                           |          "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134
-                           |          }""".stripMargin
+    val mappingsConfig = """akka.actor.kryo.mappings {
+                           |  "com.signalcollect.ModularAggregator" = 133,
+                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134
+                           |    }""".stripMargin
     ConfigFactory.parseString(
       s"""akka.actor.kryo.idstrategy=incremental
          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
@@ -87,8 +90,6 @@ with ImplicitSender with ScalaFutures {
   override def initialParticipants = roles.size
 
   val workers = roles.size
-  val provisionerAddress = node(provisioner).address
-  val node1Address = node(node1).address
   val idleDetectionPropagationDelayInMilliseconds = 500
 
   override def atStartup() = println("STARTING UP!")
