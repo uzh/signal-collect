@@ -56,8 +56,6 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
   val clusterName = "ClusterIntegrationSpec"
 
-  def nodeList = Seq(provisioner, node1)
-
   val akkaConfig = Akka.config(serializeMessages = Some(false),
     loggingLevel = Some(Logging.WarningLevel),
     kryoRegistrations = List.empty,
