@@ -19,7 +19,6 @@
 package com.signalcollect
 
 import akka.actor.{ActorRef, Props}
-import akka.cluster.Cluster
 import akka.event.Logging
 import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
@@ -72,10 +71,14 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   commonConfig {
     val mappingsConfig = """akka.actor.kryo.mappings {
                            |  "com.signalcollect.ModularAggregator" = 133,
-                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134
+                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134,
+                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$3" = 135,
+                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$4" = 136,
+                           |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$5" = 137
                            |    }""".stripMargin
     ConfigFactory.parseString(
       s"""akka.actor.kryo.idstrategy=incremental
+         |akka.testconductor.barrier-timeout=400s
          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
       .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
@@ -144,15 +147,46 @@ with ImplicitSender with ScalaFutures {
     correct
   }
 
+  val pageRankFiveStarVerifier: (Vertex[_, _, _, _]) => Boolean = v => {
+    val state = v.state.asInstanceOf[Double]
+    val expectedState = if (v.id == 4.0) 0.66 else 0.15
+    val correct = (state - expectedState).abs < 0.00001
+    if (!correct) {
+      System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+    }
+    correct
+  }
+
+  val pageRankTwoOnTwoGridVerifier: Vertex[_, _, _, _] => Boolean = v => {
+    val state = v.state.asInstanceOf[Double]
+    val expectedState = 1.0
+    val correct = (state - expectedState).abs < 0.01
+    if (!correct) {
+      System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+    }
+    correct
+  }
+
+
+  val pageRankTorusVerifier: Vertex[_, _, _, _] => Boolean = v => {
+    val state = v.state.asInstanceOf[Double]
+    val expectedState = 1.0
+    val correct = (state - expectedState).abs < 0.01
+    if (!correct) {
+      System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+    }
+    correct
+  }
+
   "PageRank algorithm" must {
+    implicit val timeout = Timeout(30.seconds)
 
     "deliver correct results on a 5-cycle graph" in within(100.seconds) {
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
+
       runOn(provisioner) {
-        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
-        implicit val timeout = Timeout(300.seconds)
-        val masterActor = system.actorSelection(node(provisioner) / "user" / "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -163,6 +197,57 @@ with ImplicitSender with ScalaFutures {
         }
       }
       enterBarrier("test1 done!")
+    }
+
+    "deliver correct results on a 5-star graph" in {
+      val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
+
+      runOn(provisioner) {
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+        whenReady(nodeActorsFuture) { nodeActors =>
+          assert(nodeActors.length == workers)
+          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+            .withPreallocatedNodes(nodeActors).build)
+          test(graphProviders = computeGraphFactories, verify = pageRankFiveStarVerifier, buildGraph = buildPageRankGraph(_, fiveStarEdges)) shouldBe true
+        }
+      }
+      enterBarrier("test2 done")
+    }
+
+    "deliver correct results on a 2*2 symmetric grid" in {
+      val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
+
+      runOn(provisioner) {
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+        whenReady(nodeActorsFuture) { nodeActors =>
+          assert(nodeActors.length == workers)
+          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+            .withPreallocatedNodes(nodeActors).build)
+          test(graphProviders = computeGraphFactories, verify = pageRankTwoOnTwoGridVerifier, buildGraph = buildPageRankGraph(_, symmetricTwoOnTwoGridEdges), signalThreshold = 0.001) shouldBe true
+        }
+      }
+      enterBarrier("test3 done")
+    }
+
+    "deliver correct results on a 5*5 torus" in {
+      val symmetricTorusEdges = new Torus(5, 5)
+
+      runOn(provisioner) {
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+        whenReady(nodeActorsFuture) { nodeActors =>
+          assert(nodeActors.length == workers)
+          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+            .withPreallocatedNodes(nodeActors).build)
+          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
+        }
+      }
+      enterBarrier("test4 done")
     }
   }
 }
