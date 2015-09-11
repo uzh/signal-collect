@@ -40,11 +40,11 @@ class ClusterIntegrationSpecMultiJvmNode1 extends ClusterIntegrationSpec
 class ClusterIntegrationSpecMultiJvmNode2 extends ClusterIntegrationSpec
 
 class ModularAggregator(verify: Vertex[_, _, _, _] => Boolean) extends ModularAggregationOperation[Boolean] {
-    val neutralElement = true
+  val neutralElement = true
 
-    def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+  def aggregate(a: Boolean, b: Boolean): Boolean = a && b
 
-    def extract(v: Vertex[_, _, _, _]): Boolean = verify(v)
+  def extract(v: Vertex[_, _, _, _]): Boolean = verify(v)
 }
 
 object ClusterIntegrationConfig extends MultiNodeConfig {
@@ -68,7 +68,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
       s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
   }
 
-  commonConfig{
+  commonConfig {
     val mappingsConfig = """        akka.actor.kryo.mappings {
                            |         "com.signalcollect.ModularAggregator" = 133,
                            |          "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134
@@ -152,15 +152,6 @@ with ImplicitSender with ScalaFutures {
       runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
-      }
-      enterBarrier("provisioner up")
-
-      runOn(node1) {
-        Cluster(system).join(node1Address)
-      }
-      enterBarrier("node1 started")
-
-      runOn(provisioner) {
         implicit val timeout = Timeout(300.seconds)
         val masterActor = system.actorSelection(node(provisioner) / "user" / "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
