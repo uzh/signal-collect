@@ -135,7 +135,7 @@ with ImplicitSender with ScalaFutures {
     graph
   }
 
-  private[this] val pageRankFiveCycleVerifier: Vertex[_, _, _, _] => Boolean = v => {
+  val pageRankFiveCycleVerifier: Vertex[_, _, _, _] => Boolean = v => {
     val state = v.state.asInstanceOf[Double]
     val expectedState = 1.0
     val correct = (state - expectedState).abs < 0.01
