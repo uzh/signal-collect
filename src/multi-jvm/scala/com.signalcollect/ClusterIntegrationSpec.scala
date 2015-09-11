@@ -39,6 +39,14 @@ class ClusterIntegrationSpecMultiJvmNode1 extends ClusterIntegrationSpec
 
 class ClusterIntegrationSpecMultiJvmNode2 extends ClusterIntegrationSpec
 
+class ModularAggregator(verify: Vertex[_, _, _, _] => Boolean) extends ModularAggregationOperation[Boolean] {
+    val neutralElement = true
+
+    def aggregate(a: Boolean, b: Boolean): Boolean = a && b
+
+    def extract(v: Vertex[_, _, _, _]): Boolean = verify(v)
+}
+
 object ClusterIntegrationConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
   val node1 = role("node1")
@@ -50,26 +58,25 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
 
   def nodeList = Seq(provisioner, node1)
 
+  val akkaConfig = Akka.config(serializeMessages = Some(false),
+    loggingLevel = Some(Logging.WarningLevel),
+    kryoRegistrations = List.empty,
+    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
+
   nodeConfig(provisioner) {
-    val akkaConfig = Akka.config(serializeMessages = Some(false),
-      loggingLevel = Some(Logging.WarningLevel),
-      kryoRegistrations = List.empty,
-      kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
     ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-         |akka.remote.netty.tcp.port=$seedPort
-          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
-      .withFallback(akkaConfig)
+      s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
   }
 
-  nodeConfig(node1) {
-    val akkaConfig = Akka.config(serializeMessages = Some(false),
-      loggingLevel = Some(Logging.WarningLevel),
-      kryoRegistrations = List.empty,
-      kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
+  commonConfig{
+    val mappingsConfig = """        akka.actor.kryo.mappings {
+                           |         "com.signalcollect.ModularAggregator" = 133,
+                           |          "com.signalcollect.ClusterIntegrationSpec$$anonfun$2" = 134
+                           |          }""".stripMargin
     ConfigFactory.parseString(
       s"""akka.actor.kryo.idstrategy=incremental
          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+      .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
   }
 }
@@ -106,13 +113,7 @@ with ImplicitSender with ScalaFutures {
         try {
           buildGraph(graph)
           val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-          correct &= graph.aggregate(new ModularAggregationOperation[Boolean] {
-            val neutralElement = true
-
-            def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-
-            def extract(v: Vertex[_, _, _, _]): Boolean = true //verify(v)
-          })
+          correct &= graph.aggregate(new ModularAggregator(verify))
           if (!correct) {
             System.err.println("Test failed. Computation stats: " + stats)
           }
@@ -124,30 +125,30 @@ with ImplicitSender with ScalaFutures {
     correct
   }
 
-  "PageRank algorithm" must {
-
-    def buildPageRankGraph(graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
-      edgeTuples foreach {
-        case (sourceId: Int, targetId: Int) =>
-          graph.addVertex(new PageRankVertex(sourceId, 0.85))
-          graph.addVertex(new PageRankVertex(targetId, 0.85))
-          graph.addEdge(sourceId, new PageRankEdge(targetId))
-      }
-      graph
+  def buildPageRankGraph(graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
+    edgeTuples foreach {
+      case (sourceId: Int, targetId: Int) =>
+        graph.addVertex(new PageRankVertex(sourceId, 0.85))
+        graph.addVertex(new PageRankVertex(targetId, 0.85))
+        graph.addEdge(sourceId, new PageRankEdge(targetId))
     }
+    graph
+  }
+
+  private[this] val pageRankFiveCycleVerifier: Vertex[_, _, _, _] => Boolean = v => {
+    val state = v.state.asInstanceOf[Double]
+    val expectedState = 1.0
+    val correct = (state - expectedState).abs < 0.01
+    if (!correct) {
+      System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
+    }
+    correct
+  }
+
+  "PageRank algorithm" must {
 
     "deliver correct results on a 5-cycle graph" in within(100.seconds) {
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
-      def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {
-        val state = v.state.asInstanceOf[Double]
-        val expectedState = 1.0
-        val correct = (state - expectedState).abs < 0.01
-        if (!correct) {
-          System.err.println("Problematic vertex:  id=" + v.id + ", expected state=" + expectedState + ", actual state=" + state)
-        }
-        correct
-      }
-
       runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
