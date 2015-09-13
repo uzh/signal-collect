@@ -22,7 +22,11 @@ class TestEdgeAddedToNonExistentVertexHandler extends EdgeAddedToNonExistentVert
 class NonExistentVertexHandlerSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Handler for adding an edge to a nonexistent vertex" should "correctly create vertices if needed" in {
-    val g = GraphBuilder.withEdgeAddedToNonExistentVertexHandlerFactory(new TestEdgeAddedToNonExistentVertexHandlerFactory).build
+    val system = TestConfig.actorSystem(port = 2556)
+    val g = GraphBuilder
+      .withActorSystem(system)
+      .withEdgeAddedToNonExistentVertexHandlerFactory(new TestEdgeAddedToNonExistentVertexHandlerFactory)
+      .build
     try {
       g.addEdge(1, new PageRankEdge(2))
       g.addEdge(2, new PageRankEdge(1))
@@ -30,6 +34,7 @@ class NonExistentVertexHandlerSpec extends FlatSpec with Matchers with TestAnnou
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 2)
     } finally {
       g.shutdown
+      g.system.shutdown()
     }
   }
 

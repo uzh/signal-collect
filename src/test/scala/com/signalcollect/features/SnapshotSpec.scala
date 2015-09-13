@@ -19,9 +19,7 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GraphBuilder
-import com.signalcollect.Vertex
+import com.signalcollect.{TestConfig, ExecutionConfiguration, GraphBuilder, Vertex}
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
@@ -33,6 +31,7 @@ import org.scalatest.FlatSpec
 class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Snapshots" should "correctly store and load a small graph" in {
+
     def verify(v: Vertex[_, _, _, _], expectedState: Double): Boolean = {
       val state = v.state.asInstanceOf[Double]
       val correct = (state - expectedState).abs < 0.0001
@@ -41,7 +40,8 @@ class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
       correct
     }
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     try {
       graph.deleteSnapshot
       graph.restore
@@ -65,6 +65,7 @@ class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 

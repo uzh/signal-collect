@@ -20,7 +20,7 @@
 package com.signalcollect.features
 
 import org.scalatest.{ Finders, FlatSpec, Matchers }
-import com.signalcollect.{ ExecutionConfiguration, GraphBuilder, Vertex }
+import com.signalcollect.{TestConfig, ExecutionConfiguration, GraphBuilder, Vertex}
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.{ PageRankEdge, PageRankVertex }
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
@@ -40,7 +40,8 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       correct
     }
 
-    val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
     try {
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
@@ -60,6 +61,7 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
+      graph.system.shutdown()
     }
   }
 
@@ -74,7 +76,8 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       correct
     }
 
-    val graph = GraphBuilder.withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
     try {
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
@@ -91,6 +94,7 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
+      graph.system.shutdown()
     }
   }
 

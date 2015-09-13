@@ -19,17 +19,10 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.CountVertices
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GraphBuilder
-import com.signalcollect.ProductOfStates
-import com.signalcollect.SampleVertexIds
-import com.signalcollect.SumOfStates
-import com.signalcollect.TopKFinder
+import com.signalcollect._
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
-import com.signalcollect.GraphEditor
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import com.signalcollect.util.TestAnnouncements
@@ -37,7 +30,8 @@ import com.signalcollect.util.TestAnnouncements
 class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Graph" should "support the `loadGraph` command" in {
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>
@@ -51,11 +45,13 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 
   it should "support using the `loadGraph` command after the loading phase" in {
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>
@@ -73,6 +69,7 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 

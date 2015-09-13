@@ -26,7 +26,8 @@ import com.signalcollect.util.TestAnnouncements
 class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "GraphEditor" should "support modification functions" in {
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     try {
       graph.modifyGraph({ _.addVertex(new GraphModificationVertex(0, 1)) }, Some(0))
       graph.modifyGraph({ _.addVertex(new GraphModificationVertex(1, 1)) }, Some(1))
@@ -54,11 +55,13 @@ class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncement
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 
   it should "keep accurate statistics when using individual vertex removals" in {
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     try {
       graph.addVertex(new GraphModificationVertex(0, 1))
       graph.addVertex(new GraphModificationVertex(1, 1))
@@ -86,6 +89,7 @@ class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncement
       statistics.aggregatedWorkerStatistics.outgoingEdgesRemoved === 1
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 

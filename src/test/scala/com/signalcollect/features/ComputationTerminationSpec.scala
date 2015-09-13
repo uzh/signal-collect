@@ -20,19 +20,11 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GlobalTerminationDetection
-import com.signalcollect.Graph
-import com.signalcollect.GraphBuilder
-import com.signalcollect.SumOfStates
+import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.DataGraphVertex
-import com.signalcollect.StateForwarderEdge
-import com.signalcollect.DataFlowVertex
-import com.signalcollect.GraphEditor
 import akka.event.Logging
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
@@ -51,7 +43,8 @@ class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
 class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val graph = GraphBuilder.build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -63,7 +56,8 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
   }
 
   def createCountingCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val graph = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).build //.withLoggingLevel(Logging.DebugLevel)
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new CountingVertex(id))
@@ -82,6 +76,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
       g.foreachVertex(_.state shouldBe ((steps, steps)))
     } finally {
       g.shutdown
+      g.system.shutdown()
     }
   }
 
@@ -100,6 +95,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
         allResultsCorrect &= state === 0.2775
       } finally {
         graph.shutdown
+        graph.system.shutdown()
       }
     }
     allResultsCorrect === true
@@ -125,6 +121,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
       aggregate > 20.0 && aggregate < 29.0 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     } finally {
       graph.shutdown
+      graph.system.shutdown()
     }
   }
 
@@ -156,6 +153,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
       aggregate > 20.0 && aggregate < 99.99999999 && info.executionStatistics.terminationReason == TerminationReason.GlobalConstraintMet
     } finally {
       graph.shutdown
+      graph.system.shutdown()
     }
   }
 

@@ -13,8 +13,10 @@ import com.signalcollect.util.TestAnnouncements
 class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
   "Kryo serialization" should "support running PageRank with message serialization" in {
+    val system = TestConfig.actorSystem(port = 2556)
     val graph = new GraphBuilder[Int, Double]().
       withMessageSerialization(true).
+      withActorSystem(system).
       build
     try {
       graph.addVertex(new EfficientPageRankVertex(1))
@@ -27,6 +29,7 @@ class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Che
       val stats = graph.execute
     } finally {
       graph.shutdown
+      graph.system.shutdown()
     }
   }
 

@@ -26,18 +26,8 @@ import com.signalcollect.util.TestAnnouncements
 
 class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  val config = {
-    val default = ConfigFactory.load
-    val noDeadLetterTerminationLogging = ConfigFactory.parseString("""
-      akka {
-        log-dead-letters-during-shutdown = off
-      }
-      """)
-    noDeadLetterTerminationLogging.withFallback(default)
-  }
-
   "Signal/Collect" should "support multiple instances on the same actor system" in {
-    val a = ActorSystem("A", config)
+    val a = TestConfig.actorSystem(port = 2556)
     val graph1 = GraphBuilder.
       withActorSystem(a).
       withActorNamePrefix("a").
@@ -76,7 +66,7 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "support running on the same actor system with a shutdown in between" in {
-    val a = ActorSystem("A", config)
+    val a = TestConfig.actorSystem(port = 2556)
     val graph1 = GraphBuilder.
       withActorSystem(a).
       build
@@ -93,7 +83,7 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
     } finally {
       graph1.shutdown
     }
-    // Give Akka time to cleanup the old actors with the same names. 
+    // Give Akka time to cleanup the old actors with the same names.
     Thread.sleep(1000)
     val graph2 = GraphBuilder.
       withActorSystem(a).
@@ -116,8 +106,8 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "run on multiple actor systems inside the same JVM" in {
-    val a = ActorSystem("A", config)
-    val b = ActorSystem("B", config)
+    val a = TestConfig.actorSystem(port = 2556)
+    val b = TestConfig.actorSystem(port = 2557)
     val graph1 = GraphBuilder.
       withActorSystem(a).
       build

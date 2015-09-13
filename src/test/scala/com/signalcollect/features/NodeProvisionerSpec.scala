@@ -29,12 +29,14 @@ class NodeProvisionerSpec extends FlatSpec with Matchers with TestAnnouncements 
 
   "Signal/Collect" should "support setting the number of workers created" in {
     val numberOfWorkers = 100
-    val graph = GraphBuilder.withNodeProvisioner(new LocalNodeProvisioner(Some(numberOfWorkers))).build
+    val system = TestConfig.actorSystem(port = 2556)
+    val graph = GraphBuilder.withActorSystem(system).withNodeProvisioner(new LocalNodeProvisioner(Some(numberOfWorkers))).build
     try {
       val stats = graph.execute
       stats.individualWorkerStatistics.length == numberOfWorkers
     } finally {
       graph.shutdown
+      system.shutdown()
     }
   }
 
