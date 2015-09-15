@@ -45,9 +45,8 @@ object ClusterSpecConfig extends MultiNodeConfig {
   val worker1 = role("worker1")
   val worker2 = role("worker2")
 
-  val nodeConfig = ConfigFactory.load()
-  val seedIp = nodeConfig.getString("akka.clustering.seed-ip")
-  val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
+  val seedIp = "127.0.0.1"
+  val seedPort = 2556
   val clusterName = "ClusterSpec"
 
   nodeConfig(provisioner) {
@@ -84,27 +83,17 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
       }
-      enterBarrier("all nodes are up")
-
-      runOn(worker1) {
-        Cluster(system).join(worker1Address)
-      }
-      enterBarrier("worker1 started")
-
-      runOn(worker2) {
-        Cluster(system).join(worker2Address)
-      }
-      enterBarrier("worker2 started")
+      enterBarrier("all nodes up")
 
       runOn(provisioner) {
         implicit val timeout = Timeout(300.seconds)
         val masterActor = system.actorSelection(node(provisioner) / "user" / "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
-          assert(nodeActors.size == workers)
+          assert(nodeActors.length == workers)
         }
       }
-      enterBarrier("all done!")
+      enterBarrier("tests done!")
     }
   }
 }

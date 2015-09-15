@@ -53,9 +53,8 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   val node1 = role("node1")
   val node2 = role("node2")
 
-  val nodeConfig = ConfigFactory.load()
-  val seedIp = nodeConfig.getString("akka.clustering.seed-ip")
-  val seedPort = nodeConfig.getInt("akka.clustering.seed-port")
+  val seedIp = "127.0.0.1"
+  val seedPort = 2556
   val clusterName = "ClusterIntegrationSpec"
 
   val akkaConfig = Akka.config(serializeMessages = Some(false),
