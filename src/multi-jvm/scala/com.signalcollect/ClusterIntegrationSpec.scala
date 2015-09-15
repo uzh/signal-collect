@@ -25,7 +25,7 @@ import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.configuration.{Akka, ExecutionMode}
-import com.signalcollect.examples.{Path, Location, PageRankEdge, PageRankVertex}
+import com.signalcollect.examples.{Location, PageRankEdge, PageRankVertex, Path}
 import com.signalcollect.interfaces.ModularAggregationOperation
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.typesafe.config.ConfigFactory
@@ -53,8 +53,6 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   val node1 = role("node1")
   val node2 = role("node2")
 
-  val seedIp = "127.0.0.1"
-  val seedPort = 2556
   val clusterName = "ClusterIntegrationSpec"
 
   val akkaConfig = Akka.config(serializeMessages = Some(false),
@@ -63,8 +61,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
     kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
 
   nodeConfig(provisioner) {
-    ConfigFactory.parseString(
-      s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
+    TestClusterConfig.provisionerCommonConfig
   }
 
   commonConfig {
@@ -83,9 +80,8 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
                            |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$17" = 144
                            |    }""".stripMargin
     ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-         |akka.testconductor.barrier-timeout=400s
-         |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+      s"""akka.actor.kryo.idstrategy=incremental""".stripMargin)
+      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
   }
@@ -99,7 +95,6 @@ with ImplicitSender with ScalaFutures {
   override def initialParticipants = roles.size
 
   val workers = roles.size
-  val idleDetectionPropagationDelayInMilliseconds = 500
 
   override def atStartup() = println("STARTING UP!")
 
@@ -192,7 +187,7 @@ with ImplicitSender with ScalaFutures {
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -211,7 +206,7 @@ with ImplicitSender with ScalaFutures {
       val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -229,7 +224,7 @@ with ImplicitSender with ScalaFutures {
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -247,7 +242,7 @@ with ImplicitSender with ScalaFutures {
       val symmetricTorusEdges = new Torus(5, 5)
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -294,7 +289,7 @@ with ImplicitSender with ScalaFutures {
       val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -311,7 +306,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -328,7 +323,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -388,7 +383,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -405,7 +400,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>

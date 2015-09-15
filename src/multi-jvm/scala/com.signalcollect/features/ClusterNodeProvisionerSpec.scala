@@ -25,7 +25,7 @@ import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
-import com.signalcollect.{Graph, GraphBuilder, STMultiNodeSpec}
+import com.signalcollect.{TestClusterConfig, Graph, GraphBuilder, STMultiNodeSpec}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -43,19 +43,16 @@ object ClusterNodeProvisionerConfig extends MultiNodeConfig {
   val node1 = role("node1")
   val node2 = role("node2")
 
-  val seedIp = "127.0.0.1"
-  val seedPort = 2556
   val clusterName = "ClusterNodeProvisionerSpec"
 
   nodeConfig(provisioner) {
-    ConfigFactory.parseString(
-      s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
+   TestClusterConfig.provisionerCommonConfig
   }
 
   // this configuration will be used for all nodes
-  commonConfig(ConfigFactory.parseString(
-    s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
-    .withFallback(ConfigFactory.load()))
+  commonConfig {
+    TestClusterConfig.nodeCommonConfig(clusterName)
+  }
 }
 
 class ClusterNodeProvisionerSpec extends MultiNodeSpec(ClusterNodeProvisionerConfig) with STMultiNodeSpec
@@ -73,15 +70,11 @@ with ImplicitSender with ScalaFutures {
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
   val workers = roles.size
-  val node1Address = node(node1).address
-  val node2Address = node(node2).address
-  val idleDetectionPropagationDelayInMilliseconds = 500
 
-  
   "SignalCollect" should {
     "get the cluster up" in {
       runOn(provisioner) {
-        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
       }
       enterBarrier("all nodes up")

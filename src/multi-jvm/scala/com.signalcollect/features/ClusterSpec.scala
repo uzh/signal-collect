@@ -24,7 +24,7 @@ import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import com.signalcollect.{TestConfig, STMultiNodeSpec}
+import com.signalcollect.{TestClusterConfig, TestConfig, STMultiNodeSpec}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.signalcollect.util.TestAnnouncements
 import com.typesafe.config.ConfigFactory
@@ -45,17 +45,16 @@ object ClusterSpecConfig extends MultiNodeConfig {
   val worker1 = role("worker1")
   val worker2 = role("worker2")
 
-  val seedIp = "127.0.0.1"
-  val seedPort = 2556
   val clusterName = "ClusterSpec"
 
   nodeConfig(provisioner) {
-    ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort")
+    TestClusterConfig.provisionerCommonConfig
   }
 
   // this configuration will be used for all nodes
-  commonConfig(ConfigFactory.parseString( s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""")
-    .withFallback(ConfigFactory.load()))
+  commonConfig {
+    TestClusterConfig.nodeCommonConfig(clusterName)
+  }
 }
 
 class ClusterSpec extends MultiNodeSpec(ClusterSpecConfig) with STMultiNodeSpec
@@ -68,11 +67,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
-  val provisionerAddress = node(provisioner).address
-  val worker1Address = node(worker1).address
-  val worker2Address = node(worker2).address
-  val workers = 3
-  val idleDetectionPropagationDelayInMilliseconds = 500
+  val workers = roles.size
   val prefix = TestConfig.prefix
 
   muteDeadLetters(classOf[Any])(system)
@@ -80,7 +75,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   "SignalCollect" should {
     "get the cluster up" in {
       runOn(provisioner) {
-        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
+        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
       }
       enterBarrier("all nodes up")
