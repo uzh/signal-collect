@@ -14,7 +14,9 @@ object TestConfig {
        |akka.remote.netty.tcp.port=$seedPort
        |akka.cluster.seed-nodes=["akka.tcp://"${actorSystemName}"@"${seedIp}":"${seedPort}]""".stripMargin)
 
-  def actorSystem(name: String = UUID.randomUUID().toString, port: Int) = {
+  def actorSystem(name: String = UUID.randomUUID().toString.replace("-",""), port: Int) = {
     ActorSystem(name, seed(name, port).withFallback(ConfigFactory.load))
   }
+
+  def prefix = UUID.randomUUID().toString.replace("-", "")
 }

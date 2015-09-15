@@ -24,7 +24,7 @@ import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import com.signalcollect.STMultiNodeSpec
+import com.signalcollect.{TestConfig, STMultiNodeSpec}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.signalcollect.util.TestAnnouncements
 import com.typesafe.config.ConfigFactory
@@ -74,6 +74,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
   val worker2Address = node(worker2).address
   val workers = 3
   val idleDetectionPropagationDelayInMilliseconds = 500
+  val prefix = TestConfig.prefix
 
   muteDeadLetters(classOf[Any])(system)
 
@@ -81,7 +82,7 @@ with ImplicitSender with TestAnnouncements with ScalaFutures {
     "get the cluster up" in {
       runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
       }
       enterBarrier("all nodes are up")
 

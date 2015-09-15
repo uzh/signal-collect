@@ -44,7 +44,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
 
   def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -57,7 +57,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
 
   def createCountingCircleGraph(vertices: Int): Graph[Any, Any] = {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build //.withLoggingLevel(Logging.DebugLevel)
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build //.withLoggingLevel(Logging.DebugLevel)
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new CountingVertex(id))

@@ -16,7 +16,7 @@ class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Che
     val system = TestConfig.actorSystem(port = 2556)
     val graph = new GraphBuilder[Int, Double]().
       withMessageSerialization(true).
-      withActorSystem(system).
+      withActorSystem(system).withActorNamePrefix(TestConfig.prefix).
       build
     try {
       graph.addVertex(new EfficientPageRankVertex(1))
@@ -29,7 +29,7 @@ class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Che
       val stats = graph.execute
     } finally {
       graph.shutdown
-      graph.system.shutdown()
+      system.shutdown()
     }
   }
 

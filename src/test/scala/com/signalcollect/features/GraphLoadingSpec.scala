@@ -31,7 +31,7 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Graph" should "support the `loadGraph` command" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>
@@ -51,7 +51,7 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   it should "support using the `loadGraph` command after the loading phase" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>

@@ -27,7 +27,7 @@ class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncement
 
   "GraphEditor" should "support modification functions" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       graph.modifyGraph({ _.addVertex(new GraphModificationVertex(0, 1)) }, Some(0))
       graph.modifyGraph({ _.addVertex(new GraphModificationVertex(1, 1)) }, Some(1))
@@ -61,7 +61,7 @@ class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncement
 
   it should "keep accurate statistics when using individual vertex removals" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       graph.addVertex(new GraphModificationVertex(0, 1))
       graph.addVertex(new GraphModificationVertex(1, 1))

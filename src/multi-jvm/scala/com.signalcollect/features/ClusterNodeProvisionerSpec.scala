@@ -25,7 +25,7 @@ import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
-import com.signalcollect.{Graph, GraphBuilder, STMultiNodeSpec}
+import com.signalcollect.{TestConfig, Graph, GraphBuilder, STMultiNodeSpec}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -77,12 +77,13 @@ with ImplicitSender with ScalaFutures {
   val node1Address = node(node1).address
   val node2Address = node(node2).address
   val idleDetectionPropagationDelayInMilliseconds = 500
+  val prefix = TestConfig.prefix
   
   "SignalCollect" should {
     "get the cluster up" in {
       runOn(provisioner) {
         system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
       }
       enterBarrier("provisioner up")
 

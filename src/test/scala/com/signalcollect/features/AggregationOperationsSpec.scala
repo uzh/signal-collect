@@ -33,7 +33,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   "SumOfStates" should "sum all states correctly" in {
     val system = TestConfig.actorSystem(port = 2556)
     def createGraph = {
-      val graph = GraphBuilder.withActorSystem(system).build
+      val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
@@ -55,7 +55,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   "ProductOfStates" should "multiply all states correctly" in {
     val system = TestConfig.actorSystem(port = 2556)
     def createGraph = {
-      val graph = GraphBuilder.withActorSystem(system).build
+      val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
@@ -75,7 +75,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   def createSudokuGraph(system: ActorSystem) = {
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addVertex(new PageRankVertex(3))
@@ -111,7 +111,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
 
   val idSet = (1 to 1000).toSet
   def createPageRankGraph(system: ActorSystem) = {
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
     }
@@ -159,7 +159,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   "TopKFinder" should "find the largest vertices in the right order" in {
     val system = TestConfig.actorSystem(port = 2556)
     def createGraph = {
-      val graph = GraphBuilder.withActorSystem(system).build
+      val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
       graph.addVertex(new PageRankVertex(1, 0.3))
       graph.addVertex(new PageRankVertex(3, 0.2))
       graph.addVertex(new PageRankVertex(2, 0.1))

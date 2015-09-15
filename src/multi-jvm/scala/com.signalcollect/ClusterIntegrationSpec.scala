@@ -189,11 +189,12 @@ with ImplicitSender with ScalaFutures {
     implicit val timeout = Timeout(30.seconds)
 
     "deliver correct results on a 5-cycle graph" in within(100.seconds) {
+      val prefix = TestConfig.prefix
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
 
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -207,11 +208,12 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a 5-star graph" in {
+      val prefix = TestConfig.prefix
       val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
 
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -224,11 +226,12 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a 2*2 symmetric grid" in {
+      val prefix = TestConfig.prefix
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
 
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -241,11 +244,12 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a 5*5 torus" in {
+      val prefix = TestConfig.prefix
       val symmetricTorusEdges = new Torus(5, 5)
 
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -287,11 +291,12 @@ with ImplicitSender with ScalaFutures {
     implicit val timeout = Timeout(30.seconds)
 
     "deliver correct results on a symmetric 4-cycle" in {
+      val prefix = TestConfig.prefix
       val symmetricFourCycleEdges = List((0, 1), (1, 0), (1, 2), (2, 1), (2, 3), (3, 2), (3, 0), (0, 3))
 
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -304,10 +309,11 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a symmetric 5-star" in {
+      val prefix = TestConfig.prefix
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -320,10 +326,11 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a 2*2 symmetric grid" in {
+      val prefix = TestConfig.prefix
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -379,10 +386,11 @@ with ImplicitSender with ScalaFutures {
     implicit val timeout = Timeout(30.seconds)
 
     "deliver correct results on a symmetric 4-cycle" in {
+      val prefix = TestConfig.prefix
       val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
@@ -395,10 +403,11 @@ with ImplicitSender with ScalaFutures {
     }
 
     "deliver correct results on a symmetric 5-star" in {
+      val prefix = TestConfig.prefix
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       runOn(provisioner) {
         val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-          "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
+          prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)

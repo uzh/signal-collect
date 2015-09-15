@@ -51,7 +51,7 @@ class MultipleVertexAdditionsSpec extends FlatSpec with Matchers with TestAnnoun
 
   "Adding the same vertex multiple times" should "be ignored" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val g = GraphBuilder.withActorSystem(system).build //.withLoggingLevel(Logging.DebugLevel)
+    val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build //.withLoggingLevel(Logging.DebugLevel)
     try {
       g.addVertex(new DummyVertex(133))
       g.addVertex(new DummyVertex(134))
@@ -66,7 +66,8 @@ class MultipleVertexAdditionsSpec extends FlatSpec with Matchers with TestAnnoun
 
   it should "support merges via handler" in {
     val system = TestConfig.actorSystem(port = 2556)
-    val g = GraphBuilder.withActorSystem(system).withExistingVertexHandlerFactory(new TestExistingVertexHandlerFactory[Any, Any]).build
+    val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix)
+      .withExistingVertexHandlerFactory(new TestExistingVertexHandlerFactory[Any, Any]).build
     try {
       g.addVertex(new DummyVertex(133))
       g.addVertex(new DummyVertex(134))

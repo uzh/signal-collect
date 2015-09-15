@@ -41,7 +41,8 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
     }
 
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).
+      withMessageBusFactory(new BulkAkkaMessageBusFactory(1000, false)).build
     try {
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
@@ -61,7 +62,7 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
-      graph.system.shutdown()
+      system.shutdown()
     }
   }
 
@@ -77,7 +78,8 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
     }
 
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix)
+      .withMessageBusFactory(new BulkAkkaMessageBusFactory(1, true)).build
     try {
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
@@ -94,7 +96,7 @@ class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
-      graph.system.shutdown()
+      system.shutdown()
     }
   }
 

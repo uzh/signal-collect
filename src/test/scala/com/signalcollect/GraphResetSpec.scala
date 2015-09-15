@@ -38,7 +38,7 @@ class GraphResetSpec extends FlatSpec with Matchers with TestAnnouncements {
       graph.addEdge(3, new PageRankEdge(2))
     }
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       graph.awaitIdle
       editGraph(graph)
@@ -114,7 +114,7 @@ class GraphResetSpec extends FlatSpec with Matchers with TestAnnouncements {
       // Do not compare the individual worker statistics
     } finally {
       graph.shutdown
-      graph.system.shutdown()
+      system.shutdown()
     }
   }
 }

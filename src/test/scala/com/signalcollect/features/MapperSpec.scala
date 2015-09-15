@@ -66,7 +66,8 @@ class MapperSpec extends FlatSpec with Matchers with TestAnnouncements {
       correct
     }
     val system = TestConfig.actorSystem(port = 2556)
-    val graph = GraphBuilder.withActorSystem(system).withMapperFactory(new Worker0MapperFactory[Any]).build
+    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix)
+      .withMapperFactory(new Worker0MapperFactory[Any]).build
     try {
       for (i <- 0 until 5) {
         val v = new PageRankVertex(i)
