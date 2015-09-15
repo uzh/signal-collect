@@ -30,7 +30,7 @@ import org.scalatest.FlatSpec
 class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Kryo" should "correctly serialize Scala immutable maps" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       // Scala uses special representations for small maps.
@@ -42,12 +42,11 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
       kryoSerializeAndDeserialize(Map(1 -> 1.5, 2 -> 5.4, 3 -> 4.5, 4 -> 1.2, 6 -> 3.2))
     } finally {
       g.shutdown
-      system.shutdown()
     }
   }
 
   it should "correctly serialize Scala immutable sets" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       // Scala uses special representations for small sets.
@@ -59,23 +58,21 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
       kryoSerializeAndDeserialize(Set(1, 2, 3, 4, 5))
     } finally {
       g.shutdown
-      system.shutdown()
     }
   }
 
   it should "correctly serialize Scala None" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(None)
     } finally {
       g.shutdown
-      system.shutdown()
     }
   }
 
   it should "correctly serialize Scala List" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(List.empty[Int])
@@ -87,7 +84,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Scala Vector" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Vector.empty[Int])
@@ -99,7 +96,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Scala Seq" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Seq.empty[Int])
@@ -111,7 +108,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Scala Array" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       assert(kryoSerializeAndDeserializeSpecial(Array.empty[Int]).toList == List())
@@ -126,7 +123,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Array[Array[Int]]" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       assert(kryoSerializeAndDeserializeSpecial(
@@ -138,7 +135,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize integers" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Integer.valueOf(1))
@@ -149,7 +146,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize longs" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Long.box(1l))
@@ -160,7 +157,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize floats" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Float.box(1.0f))
@@ -171,7 +168,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize doubles" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Double.box(1.0d))
@@ -182,7 +179,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize booleans" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Boolean.box(true))
@@ -193,7 +190,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize shorts" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize(Short.box(1))
@@ -204,7 +201,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize strings" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize("abc")
@@ -215,7 +212,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Java strings" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       val javaString: java.lang.String = "abc"
@@ -227,7 +224,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Tuple2" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize((1, "second"))
@@ -238,7 +235,7 @@ class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "correctly serialize Tuple3" in {
-    val system = TestConfig.actorSystem(name = "SignalCollect", port = 2556)
+    val system = TestConfig.actorSystem(name = "SignalCollect")
     val g = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       kryoSerializeAndDeserialize((1, "second", 3.0))

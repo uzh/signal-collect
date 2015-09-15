@@ -27,7 +27,7 @@ import com.signalcollect.util.TestAnnouncements
 class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Signal/Collect" should "support multiple instances on the same actor system" in {
-    val a = TestConfig.actorSystem(port = 2556)
+    val a = TestConfig.actorSystem()
     val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graph2 = GraphBuilder.
@@ -58,12 +58,11 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
     } finally {
       graph1.shutdown
-      a.shutdown
     }
   }
 
   it should "support running on the same actor system with a shutdown in between" in {
-    val a = TestConfig.actorSystem(port = 2556)
+    val a = TestConfig.actorSystem()
     val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
     try {
       graph1.addVertex(new PageRankVertex(1))
@@ -97,12 +96,11 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
     } finally {
       graph2.shutdown
     }
-    a.shutdown
   }
 
   it should "run on multiple actor systems inside the same JVM" in {
-    val a = TestConfig.actorSystem(port = 2556)
-    val b = TestConfig.actorSystem(port = 2557)
+    val a = TestConfig.actorSystem()
+    val b = TestConfig.actorSystem()
     val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graph2 = GraphBuilder.withActorSystem(b).withActorNamePrefix(TestConfig.prefix).build
@@ -130,8 +128,6 @@ class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
     } finally {
       graph1.shutdown
-      a.shutdown
-      b.shutdown
     }
   }
 

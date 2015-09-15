@@ -40,7 +40,7 @@ class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
       correct
     }
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       graph.deleteSnapshot
@@ -65,7 +65,6 @@ class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
       allcorrect
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 

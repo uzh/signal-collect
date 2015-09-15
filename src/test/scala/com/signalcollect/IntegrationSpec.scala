@@ -36,7 +36,7 @@ import scala.language.postfixOps
 class IntegrationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).
       //      withMessageSerialization(true).
       //      withLoggingLevel(Logging.DebugLevel).
@@ -65,7 +65,6 @@ class IntegrationSpec extends FlatSpec with Matchers with TestAnnouncements {
           }
         } finally {
           graph.shutdown
-          graph.system.shutdown()
         }
       }
     }

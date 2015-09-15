@@ -30,7 +30,7 @@ import com.signalcollect.util.TestAnnouncements
 class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Graph" should "support the `loadGraph` command" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
@@ -45,12 +45,11 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   it should "support using the `loadGraph` command after the loading phase" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
@@ -69,7 +68,6 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 

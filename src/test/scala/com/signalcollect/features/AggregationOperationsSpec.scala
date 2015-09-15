@@ -31,7 +31,7 @@ import com.signalcollect.util.TestAnnouncements
 class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "SumOfStates" should "sum all states correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     def createGraph = {
       val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
       graph.addVertex(new PageRankVertex(1))
@@ -48,12 +48,11 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
       math.abs(sumOfStates - 2.0) <= 0.0001
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   "ProductOfStates" should "multiply all states correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     def createGraph = {
       val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
       graph.addVertex(new PageRankVertex(1))
@@ -70,7 +69,6 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
       math.abs(productOfStates - 1.0) <= 0.0001
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
@@ -86,26 +84,24 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   "CountVertices" should "count the number of PageRank vertices correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = createSudokuGraph(system)
     try {
       val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex[Any]])
       numberOfPRVertices === 2
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   it should "count the number of SudokuCell vertices correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = createSudokuGraph(system)
     try {
       val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
       numberOfSCVertices === 1
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
@@ -119,19 +115,18 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   "SampleVertexIds" should "sample 0 vertex ids correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = createPageRankGraph(system)
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(0))
       vertexSample.size === 0
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   it should "sample 50 vertex ids correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = createPageRankGraph(system)
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(50))
@@ -139,12 +134,11 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
       vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   it should "sample 1000 vertex ids correctly" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     val graph = createPageRankGraph(system)
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(1000))
@@ -152,12 +146,11 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
       vertexSample.forall(id => idSet.contains(id.asInstanceOf[Int]))
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
   "TopKFinder" should "find the largest vertices in the right order" in {
-    val system = TestConfig.actorSystem(port = 2556)
+    val system = TestConfig.actorSystem()
     def createGraph = {
       val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(system.name).build
       graph.addVertex(new PageRankVertex(1, 0.3))
@@ -172,7 +165,6 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
       largestVertices.toSeq == Array[(Int, Double)]((2, 0.9), (3, 0.8)).toSeq
     } finally {
       graph.shutdown
-      system.shutdown()
     }
   }
 
