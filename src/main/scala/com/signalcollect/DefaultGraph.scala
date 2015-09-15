@@ -782,8 +782,6 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
         workerActors.foreach(_ ! PoisonPill)
         nodeActors.foreach(_ ! PoisonPill)
         coordinatorActor ! PoisonPill
-        //Nodeactors seem to take time to shutdown. So, adding a delay
-        Thread.sleep(5000)
       }
     }
   }
