@@ -18,7 +18,7 @@ object TestConfig {
     // Private ports are those from 49152 through 65535
     val start = 49152
     val end = 65535
-    val rnd = new scala.util.Random
+    val rnd = new scala.util.Random(System.currentTimeMillis)
     start + rnd.nextInt((end - start) + 1)
   }
 
