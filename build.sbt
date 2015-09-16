@@ -5,7 +5,7 @@ assemblySettings
 /** Project */
 name := "signal-collect"
 
-version := "5.0.1-SNAPSHOT"
+version := "5.0.1"
 
 organization := "com.signalcollect"
 
