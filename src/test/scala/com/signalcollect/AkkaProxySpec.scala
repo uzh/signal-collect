@@ -54,7 +54,7 @@ class AkkaProxySpec extends FlatSpec with Matchers with TestAnnouncements {
       }
     }
 
-    val system = TestConfig.actorSystem("AkkaProxySpec", 2556)
+    val system = TestConfig.actorSystem("AkkaProxySpec")
     val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
     val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
 
