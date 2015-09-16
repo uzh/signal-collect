@@ -118,6 +118,7 @@ with ImplicitSender with ScalaFutures {
         val graph = graphProvider()
         try {
           buildGraph(graph)
+          graph.awaitIdle
           val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
           graph.awaitIdle
           correct &= graph.aggregate(new ModularAggregator(verify))
