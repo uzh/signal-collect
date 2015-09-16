@@ -1,7 +1,8 @@
 /*
  *  @author Bharath Kumar
+ *  @author Philip Stutz
  *
- *  Copyright 2014 University of Zurich
+ *  Copyright 2015 iHealth Technologies
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
