@@ -257,6 +257,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test4 done")
     }
+    enterBarrier("PageRank - all tests done")
   }
 
   val vertexColoringVerifier: Vertex[_, _, _, _] => Boolean = v => {
@@ -338,6 +339,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test3 done")
     }
+    enterBarrier("VertexColoring - all tests done")
   }
 
 
@@ -415,5 +417,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test2 done")
     }
+    enterBarrier("SSSP - all tests done")
   }
 }
