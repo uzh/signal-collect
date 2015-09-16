@@ -63,9 +63,9 @@ with ImplicitSender with ScalaFutures {
 
   override def initialParticipants = roles.size
 
-  override def atStartup() = println("STARTING UP!")
+  override def atStartup() = println("Starting")
 
-  override def afterTermination() = println("TERMINATION!")
+  override def afterTermination() = println("Terminated")
 
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
