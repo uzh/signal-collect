@@ -259,8 +259,8 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test4 done")
     }
-    enterBarrier("PageRank - all tests done")
   }
+  enterBarrier("PageRank - all tests done")
 
   val vertexColoringVerifier: Vertex[_, _, _, _] => Boolean = v => {
     v match {
@@ -341,9 +341,8 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test3 done")
     }
-    enterBarrier("VertexColoring - all tests done")
   }
-
+  enterBarrier("VertexColoring - all tests done")
 
   def buildSsspGraph(pathSourceId: Any, graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
     edgeTuples foreach {
@@ -419,6 +418,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test2 done")
     }
-    enterBarrier("SSSP - all tests done")
   }
+  enterBarrier("SSSP - all tests done")
 }
