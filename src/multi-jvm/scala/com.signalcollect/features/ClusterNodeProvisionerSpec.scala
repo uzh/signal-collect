@@ -44,14 +44,15 @@ object ClusterNodeProvisionerConfig extends MultiNodeConfig {
   val node2 = role("node2")
 
   val clusterName = "ClusterNodeProvisionerSpec"
+  val seedPort = 2559
 
   nodeConfig(provisioner) {
-   TestClusterConfig.provisionerCommonConfig
+   TestClusterConfig.provisionerCommonConfig(seedPort)
   }
 
   // this configuration will be used for all nodes
   commonConfig {
-    TestClusterConfig.nodeCommonConfig(clusterName)
+    TestClusterConfig.nodeCommonConfig(clusterName, seedPort)
   }
 }
 

@@ -55,6 +55,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
   val node2 = role("node2")
 
   val clusterName = "ClusterIntegrationSpec"
+  val seedPort = 2558
 
   val akkaConfig = Akka.config(serializeMessages = Some(false),
     loggingLevel = Some(Logging.WarningLevel),
@@ -62,7 +63,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
     kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
 
   nodeConfig(provisioner) {
-    TestClusterConfig.provisionerCommonConfig
+    TestClusterConfig.provisionerCommonConfig(seedPort)
   }
 
   commonConfig {
@@ -84,7 +85,7 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
       s"""akka.actor.kryo.idstrategy=incremental
          |akka.testconductor.barrier-timeout=60s
        """.stripMargin)
-      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName))
+      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
   }
