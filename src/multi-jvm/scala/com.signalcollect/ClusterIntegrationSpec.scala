@@ -103,8 +103,7 @@ with ImplicitSender with ScalaFutures {
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
-  //TODO: Its thorwing error for `OptimizedAsynchronous`, look into it
-  val executionModes = List(ExecutionMode.Synchronous) //, ExecutionMode.OptimizedAsynchronous)
+  val executionModes = List(ExecutionMode.ContinuousAsynchronous)
 
   def test(graphProviders: List[() => Graph[Any, Any]], verify: Vertex[_, _, _, _] => Boolean, buildGraph: Graph[Any, Any] => Unit = (graph: Graph[Any, Any]) => (), signalThreshold: Double = 0.01, collectThreshold: Double = 0): Boolean = {
     var correct = true
@@ -116,6 +115,7 @@ with ImplicitSender with ScalaFutures {
         try {
           buildGraph(graph)
           val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
+          graph.awaitIdle
           correct &= graph.aggregate(new ModularAggregator(verify))
           if (!correct) {
             System.err.println("Test failed. Computation stats: " + stats)
@@ -192,7 +192,7 @@ with ImplicitSender with ScalaFutures {
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
           assert(nodeActors.length == workers)
-          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system).withActorNamePrefix(prefix)
             .withPreallocatedNodes(nodeActors).build)
           test(graphProviders = computeGraphFactories, verify = pageRankFiveCycleVerifier, buildGraph = buildPageRankGraph(_, fiveCycleEdges),
             signalThreshold = 0.001) shouldBe true
