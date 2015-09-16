@@ -1,5 +1,6 @@
 package com.signalcollect
 
+import java.net.ServerSocket
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -15,11 +16,10 @@ object TestConfig {
         |akka.cluster.seed-nodes=["akka.tcp://"${actorSystemName}"@"${seedIp}":"${seedPort}]""".stripMargin)
 
   def randomPort: Int = {
-    // Private ports are those from 49152 through 65535
-    val start = 49152
-    val end = 65535
-    val rnd = new scala.util.Random(System.currentTimeMillis)
-    start + rnd.nextInt((end - start) + 1)
+    val socket = new ServerSocket(0)
+    val port = socket.getLocalPort
+    socket.close()
+    port
   }
 
   def actorSystem(name: String = UUID.randomUUID().toString.replace("-", ""), port: Int = randomPort) = {
