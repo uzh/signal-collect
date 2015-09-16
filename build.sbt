@@ -11,7 +11,7 @@ val project = Project(
   settings = Project.defaultSettings ++ SbtMultiJvm.multiJvmSettings ++ assemblySettings ++ Seq(
     organization := "com.signalcollect",
     name := "signal-collect",
-    version := "5.0.1-SNAPSHOT",
+    version := "5.0.2-SNAPSHOT",
     scalaVersion := "2.11.7",
     organization := "com.signalcollect",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -128,4 +128,3 @@ val project = Project(
     }
   )
 ) configs (MultiJvm)
-

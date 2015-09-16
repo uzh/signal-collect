@@ -318,6 +318,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       vertexOption.foreach { vertex =>
         addVertex(vertex)
         addEdgeToVertex(vertex)
+        messageBusFlushed = false
       }
     } else {
       addEdgeToVertex(v)
