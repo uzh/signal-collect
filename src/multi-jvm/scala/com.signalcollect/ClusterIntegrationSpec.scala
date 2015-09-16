@@ -124,6 +124,7 @@ with ImplicitSender with ScalaFutures {
           if (!correct) {
             System.err.println("Test failed. Computation stats: " + stats)
           }
+          graph.awaitIdle
         } finally {
           graph.shutdown
         }
