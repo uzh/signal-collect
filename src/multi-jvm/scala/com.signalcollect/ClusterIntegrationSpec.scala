@@ -81,7 +81,9 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
                            |  "com.signalcollect.ClusterIntegrationSpec$$anonfun$17" = 144
                            |    }""".stripMargin
     ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental""".stripMargin)
+      s"""akka.actor.kryo.idstrategy=incremental
+         |akka.testconductor.barrier-timeout=60s
+       """.stripMargin)
       .withFallback(TestClusterConfig.nodeCommonConfig(clusterName))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
