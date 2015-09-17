@@ -65,8 +65,7 @@ class MapperSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
       correct
     }
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix)
+    val graph = TestConfig.graphProvider()
       .withMapperFactory(new Worker0MapperFactory[Any]).build
     try {
       for (i <- 0 until 5) {

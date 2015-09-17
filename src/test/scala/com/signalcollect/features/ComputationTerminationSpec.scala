@@ -43,8 +43,7 @@ class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
 class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
+    val graph = TestConfig.graphProvider().build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -56,8 +55,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
   }
 
   def createCountingCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build //.withLoggingLevel(Logging.DebugLevel)
+    val graph = TestConfig.graphProvider().build //.withLoggingLevel(Logging.DebugLevel)
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new CountingVertex(id))

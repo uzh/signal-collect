@@ -39,4 +39,8 @@ object TestConfig {
     /* Total memory currently in use by the JVM */
     println("Total memory (MB): " + Runtime.getRuntime.totalMemory()/(1024*1024))
   }
+
+  def graphProvider(systemName: String = UUID.randomUUID().toString.replace("-", "")) = GraphBuilder
+    .withActorSystem(actorSystem(systemName))
+    .withActorNamePrefix(prefix)
 }

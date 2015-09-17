@@ -40,8 +40,7 @@ class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
       }
       correct
     }
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
+    val graph = TestConfig.graphProvider().build
     try {
       graph.deleteSnapshot
       graph.restore

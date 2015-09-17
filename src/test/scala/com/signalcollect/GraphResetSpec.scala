@@ -37,8 +37,7 @@ class GraphResetSpec extends FlatSpec with Matchers with TestAnnouncements {
       graph.addEdge(2, new PageRankEdge(3))
       graph.addEdge(3, new PageRankEdge(2))
     }
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
+    val graph = TestConfig.graphProvider().build
     try {
       graph.awaitIdle
       editGraph(graph)

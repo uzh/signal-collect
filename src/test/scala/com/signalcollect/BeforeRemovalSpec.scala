@@ -26,8 +26,7 @@ import com.signalcollect.util.TestAnnouncements
 class BeforeRemovalSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Framework" should "call the beforeRemoval function of a vertex before removing it" in {
-    val system = TestConfig.actorSystem()
-    val graph = GraphBuilder.withActorSystem(system).withActorNamePrefix(TestConfig.prefix).build
+    val graph = TestConfig.graphProvider().build
     try {
       graph.addVertex(new BeforeRemovalVertex)
       graph.removeVertex(1)
