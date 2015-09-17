@@ -27,6 +27,7 @@ import akka.util.Timeout
 import com.signalcollect.ClusterTestUtils._
 import com.signalcollect.examples.{PageRankEdge, PageRankVertex}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
+import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
@@ -60,7 +61,29 @@ object ClusterPageRankConfig extends MultiNodeConfig {
         |  "com.signalcollect.ClusterPageRankSpec$$anonfun$5" = 137
         |    }""".stripMargin
 
-    MultiJvmConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
+    val largeTimeoutConfig =
+      """
+        |akka {
+        |  testconductor {
+        |
+        |    # Timeout for joining a barrier: this is the maximum time any participants
+        |    # waits for everybody else to join a named barrier.
+        |    barrier-timeout = 100s
+        |
+        |    # Timeout for interrogation of TestConductor’s Controller actor
+        |    query-timeout = 20s
+        |
+        |    # amount of time for the ClientFSM to wait for the connection to the conductor
+        |    # to be successful
+        |    connect-timeout = 60s
+        |
+        |    # Number of connect attempts to be made to the conductor controller
+        |    client-reconnects = 20
+        |    }
+        |}
+      """.stripMargin
+
+    ConfigFactory.parseString(largeTimeoutConfig).withFallback(MultiJvmConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig))
   }
 }
 
@@ -189,24 +212,23 @@ with ImplicitSender with ScalaFutures {
       enterBarrier("PageRank - test3 done")
     }
 
-    //    "deliver correct results on a 5*5 torus" in {
-    //      val prefix = TestConfig.prefix
-    //      val symmetricTorusEdges = new Torus(5, 5)
-    //
-    //      runOn(provisioner) {
-    //        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
-    //          prefix, workers), "ClusterMasterBootstrap")
-    //        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
-    //        whenReady(nodeActorsFuture) { nodeActors =>
-    //          assert(nodeActors.length == workers)
-    //          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
-    //            .withPreallocatedNodes(nodeActors).build)
-    //          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
-    //        }
-    //      }
-    //      enterBarrier("PageRank - test4 done")
-    //    }
-    //    TestConfig.printStats()
+    "deliver correct results on a 5*5 torus" in {
+      val prefix = TestConfig.prefix
+      val symmetricTorusEdges = new Torus(5, 5)
+
+      runOn(provisioner) {
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
+          prefix, workers), "ClusterMasterBootstrap")
+        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+        whenReady(nodeActorsFuture) { nodeActors =>
+          assert(nodeActors.length == workers)
+          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+            .withPreallocatedNodes(nodeActors).build)
+          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
+        }
+      }
+      enterBarrier("PageRank - test4 done")
+    }
   }
   enterBarrier("PageRank - all tests done")
 }
