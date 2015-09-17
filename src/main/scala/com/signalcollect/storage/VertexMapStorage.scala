@@ -20,6 +20,7 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexStore
+import com.signalcollect.Vertex
 
 object StorageDefaultValues {
   final val defaultInitialSize = 32768
@@ -36,6 +37,8 @@ object StorageDefaultValues {
  */
 class VertexMapStorage[Id, Signal] extends Storage[Id, Signal] {
   import StorageDefaultValues._
+
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](

@@ -20,11 +20,12 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexStore
+import com.signalcollect.Vertex
 
 class JavaMapVertexStorage[Id, Signal] extends Storage[Id, Signal] {
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id, Signal] = new JavaVertexMap[Id, Signal]
-
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
   val toCollect = vertexSignalFactory //holds all signals that are not collected yet
   protected def vertexSignalFactory = new JavaVertexMap[Id, Signal]
   val toSignal = vertexSetFactory //holds all vertex ids that need to signal

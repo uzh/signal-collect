@@ -27,6 +27,7 @@ trait Storage[@specialized(Int, Long) Id, Signal] {
   def vertices: VertexStore[Id, Signal]
   def toSignal: VertexStore[Id, Signal] //collection of all vertices that need to signal
   def toCollect: VertexStore[Id, Signal] //collection of all vertices that need to collect
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit
 }
 
 /**
@@ -35,11 +36,12 @@ trait Storage[@specialized(Int, Long) Id, Signal] {
 trait VertexStore[@specialized(Int, Long) Id, Signal] {
   def get(id: Id): Vertex[Id, _, Id, Signal]
   def put(vertex: Vertex[Id, _, Id, Signal]): Boolean
-  def remove(id: Id)
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit
+  def remove(id: Id): Unit
   def isEmpty: Boolean
   def size: Long
   def stream: Stream[Vertex[Id, _, Id, Signal]]
-  def foreach(f: Vertex[Id, _, Id, Signal] => Unit)
+  def foreach(f: Vertex[Id, _, Id, Signal] => Unit): Unit
   def process(p: Vertex[Id, _, Id, Signal] => Unit, numberOfVertices: Option[Int] = None): Int
   def processWithCondition(p: Vertex[Id, _, Id, Signal] => Unit, breakCondition: () => Boolean): Int
 }
