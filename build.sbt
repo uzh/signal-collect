@@ -17,6 +17,7 @@ val project = Project(
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalacOptions ++= Seq("-optimize", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-Ywarn-adapted-args", "-Ywarn-inaccessible", "-feature", "-deprecation", "-Xelide-below", "INFO"),
     assembleArtifact in packageScala := true,
+    javaOptions in Test += "-Xmx2G",
     parallelExecution in Test := false,
     parallelExecution in Global := false,
     EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
