@@ -21,11 +21,14 @@ package com.signalcollect.storage
 
 import com.signalcollect.interfaces.Storage
 import com.signalcollect.interfaces.VertexStore
+import com.signalcollect.Vertex
 
 /**
  *  Storage backed by a custom-tailored open hash map implementation for vertices.
  */
 class MixedVertexStorage[Id, Signal] extends Storage[Id, Signal] {
+
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](initialSize = 32768, rehashFraction = .8f)

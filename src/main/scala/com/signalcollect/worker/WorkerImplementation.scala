@@ -186,7 +186,6 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
         sendPing(getRandomPingPongPartner)
       }
     }
-
   }
 
   def sendStatusToCoordinator {
@@ -209,11 +208,13 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     if (addToSignal && vertex.scoreSignal > signalThreshold) {
       vertexStore.toSignal.put(vertex)
     }
+    vertexStore.updateStateOfVertex(vertex)
   }
 
   def executeSignalOperationOfVertex(vertex: Vertex[Id, _, Id, Signal]) {
     counters.signalOperationsExecuted += 1
     vertex.executeSignalOperation(graphEditor)
+    vertexStore.updateStateOfVertex(vertex)
   }
 
   def processBulkSignalWithoutIds(signals: Array[Signal], targetIds: Array[Id]) {
@@ -238,6 +239,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
           vertexStore.toCollect.put(vertex)
         }
       }
+      vertexStore.updateStateOfVertex(vertex)
     } else {
       undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, Some(sourceId), graphEditor)
     }
@@ -257,6 +259,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
           vertexStore.toCollect.put(vertex)
         }
       }
+      vertexStore.updateStateOfVertex(vertex)
     } else {
       undeliverableSignalHandler.vertexForSignalNotFound(signal, targetId, None, graphEditor)
     }
@@ -296,9 +299,11 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
+      vertexStore.updateStateOfVertex(vertex)
     } else {
       val existing = vertexStore.vertices.get(vertex.id)
       existingVertexHandler.mergeVertices(existing, vertex, graphEditor)
+      vertexStore.updateStateOfVertex(existing)
     }
     messageBusFlushed = false
   }
@@ -310,6 +315,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
         }
+        vertexStore.updateStateOfVertex(vertex)
       }
     }
     val v = vertexStore.vertices.get(sourceId)
@@ -334,6 +340,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
         if (vertex.scoreSignal > signalThreshold) {
           vertexStore.toSignal.put(vertex)
         }
+        vertexStore.updateStateOfVertex(vertex)
       } else {
         log.warning("Outgoing edge not found when trying to remove edge with id " + edgeId)
       }
@@ -402,6 +409,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     val vertex = vertexStore.vertices.get(vertexId)
     if (vertex != null) {
       val result = f(vertex.asInstanceOf[VertexType])
+      vertexStore.updateStateOfVertex(vertex)
       result
     } else {
       throw new Exception("Vertex with id " + vertexId + " not found.")
@@ -409,12 +417,18 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   override def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit) {
-    vertexStore.vertices.foreach(f)
+    vertexStore.vertices.foreach { vertex =>
+      f(vertex)
+      vertexStore.updateStateOfVertex(vertex)
+    }
   }
 
   override def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit) {
     val function = f(graphEditor)
-    vertexStore.vertices.foreach(function)
+    vertexStore.vertices.foreach { vertex =>
+      function(vertex)
+      vertexStore.updateStateOfVertex(vertex)
+    }
     messageBusFlushed = false
   }
 

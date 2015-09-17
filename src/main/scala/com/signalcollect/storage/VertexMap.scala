@@ -33,9 +33,9 @@ import StorageDefaultValues._
 // we have to do an additional check to verify that the vertex id
 // matches indeed (and not just the hash of the vertex id).
 class VertexMap[@specialized(Int, Long) Id, Signal](
-  initialSize: Int = defaultInitialSize,
-  rehashFraction: Float = defaultRehashFraction,
-  shrinkFraction: Float = defaultShrinkFraction) extends VertexStore[Id, Signal] {
+    initialSize: Int = defaultInitialSize,
+    rehashFraction: Float = defaultRehashFraction,
+    shrinkFraction: Float = defaultShrinkFraction) extends VertexStore[Id, Signal] {
   assert(initialSize > 0)
   final var maxSize = nextPowerOfTwo(initialSize)
   assert(1.0f >= rehashFraction && rehashFraction > 0.1f, "Unreasonable rehash fraction.")
@@ -50,6 +50,8 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
   final override def size: Long = numberOfElements
   final def isEmpty: Boolean = numberOfElements == 0
   private[this] final var numberOfElements = 0
+
+  def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
 
   def stream: Stream[Vertex[Id, _, Id, Signal]] = {
     def remainder(i: Int, elementsProcessed: Int): Stream[Vertex[Id, _, Id, Signal]] = {
