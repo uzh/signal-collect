@@ -11,7 +11,7 @@ val project = Project(
   settings = Project.defaultSettings ++ SbtMultiJvm.multiJvmSettings ++ assemblySettings ++ Seq(
     organization := "com.signalcollect",
     name := "signal-collect",
-    version := "5.0.2-SNAPSHOT",
+    version := "6.0.0-SNAPSHOT",
     scalaVersion := "2.11.7",
     organization := "com.signalcollect",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -26,9 +26,9 @@ val project = Project(
     /** Dependencies */
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-library" % scalaVersion.value % "compile",
-      "com.typesafe.akka" %% "akka-actor" % "2.3.12" % "compile",
-      "com.typesafe.akka" %% "akka-remote" % "2.3.12" % "compile",
-      "com.typesafe.akka" %% "akka-cluster" % "2.3.12" % "compile",
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion % "compile",
+      "com.typesafe.akka" %% "akka-remote" % akkaVersion % "compile",
+      "com.typesafe.akka" %% "akka-cluster" % akkaVersion % "compile",
       "com.github.romix.akka" %% "akka-kryo-serialization" % "0.3.3" % "compile",
       "net.ceedubs" %% "ficus" % "1.1.2",
       "org.json4s" %% "json4s-native" % "3.2.11" % "compile",
@@ -40,7 +40,7 @@ val project = Project(
       "org.scalatest" %% "scalatest" % "2.2.5" % "compile", // 'compile' in order to share TestAnnouncement with other projects.
       "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
       "org.easymock" % "easymock" % "3.3.1" % "test",
-      "com.typesafe.akka" %% "akka-remote-tests" % "2.3.12" % "compile"
+      "com.typesafe.akka" %% "akka-remote-tests" % akkaVersion % "compile"
     ),
     resolvers += "Scala-Tools Repository" at "https://oss.sonatype.org/content/groups/scala-tools/",
     resolvers += "Sonatype Snapshots Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
