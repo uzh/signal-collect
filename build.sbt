@@ -3,7 +3,7 @@ import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import sbtassembly.Plugin._
 
-val akkaVersion = "2.3.12"
+val akkaVersion = "2.3.14"
 
 val project = Project(
   id = "signal-collect",
