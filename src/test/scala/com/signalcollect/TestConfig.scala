@@ -28,18 +28,6 @@ object TestConfig {
 
   def prefix = UUID.randomUUID().toString.replace("-", "")
 
-  def printStats() = {
-    /* Total amount of free memory available to the JVM */
-    println("Free memory (MB): " + Runtime.getRuntime.freeMemory()/(1024*1024))
-
-    val maxMemory = Runtime.getRuntime.maxMemory()
-    /* Maximum amount of memory the JVM will attempt to use */
-    println("Maximum memory (MB): " + maxMemory/(1024*1024))
-
-    /* Total memory currently in use by the JVM */
-    println("Total memory (MB): " + Runtime.getRuntime.totalMemory()/(1024*1024))
-  }
-
   def graphProvider(systemName: String = UUID.randomUUID().toString.replace("-", "")) = GraphBuilder
     .withActorSystem(actorSystem(systemName))
     .withActorNamePrefix(prefix)

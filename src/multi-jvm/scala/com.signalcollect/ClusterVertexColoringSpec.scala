@@ -104,7 +104,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test1 done")
     }
-    TestConfig.printStats()
 
     "deliver correct results on a symmetric 5-star" in {
       val prefix = TestConfig.prefix
@@ -122,7 +121,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test2 done")
     }
-    TestConfig.printStats()
 
     "deliver correct results on a 2*2 symmetric grid" in {
       val prefix = TestConfig.prefix
@@ -140,7 +138,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test3 done")
     }
-    TestConfig.printStats()
   }
   enterBarrier("VertexColoring - all tests done")
 }

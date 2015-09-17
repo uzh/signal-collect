@@ -152,7 +152,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test1 done")
     }
-    TestConfig.printStats()
 
     "deliver correct results on a 5-star graph" in {
       val prefix = TestConfig.prefix
@@ -171,7 +170,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test2 done")
     }
-    TestConfig.printStats()
 
     "deliver correct results on a 2*2 symmetric grid" in {
       val prefix = TestConfig.prefix
@@ -190,7 +188,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test3 done")
     }
-    TestConfig.printStats()
 
     //    "deliver correct results on a 5*5 torus" in {
     //      val prefix = TestConfig.prefix

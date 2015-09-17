@@ -116,7 +116,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test1 done")
     }
-    TestConfig.printStats()
 
     "deliver correct results on a symmetric 5-star" in {
       val prefix = TestConfig.prefix
@@ -134,7 +133,6 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test2 done")
     }
-    TestConfig.printStats()
   }
   enterBarrier("SSSP - all tests done")
 }
