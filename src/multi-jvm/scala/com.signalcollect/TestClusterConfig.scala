@@ -18,6 +18,8 @@
 
 package com.signalcollect
 
+import akka.event.Logging
+import com.signalcollect.configuration.Akka
 import com.typesafe.config.ConfigFactory
 
 object TestClusterConfig {
@@ -29,9 +31,18 @@ object TestClusterConfig {
       s"""akka.remote.netty.tcp.port=$seedPort""".stripMargin)
   }
 
-  def nodeCommonConfig(clusterName: String, seedPort: Int) = {
+  def nodeCommonConfig(clusterName: String, seedPort: Int, mappingsConfig: String = "") = {
     ConfigFactory.parseString(
-      s"""akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+      s"""akka.actor.kryo.idstrategy=incremental
+          |akka.testconductor.barrier-timeout=60s
+          |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
       .withFallback(ConfigFactory.load())
+      .withFallback(ConfigFactory.parseString(mappingsConfig))
+      .withFallback(akkaConfig)
   }
+
+  private[this] val akkaConfig = Akka.config(serializeMessages = Some(false),
+    loggingLevel = Some(Logging.WarningLevel),
+    kryoRegistrations = List.empty,
+    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
 }

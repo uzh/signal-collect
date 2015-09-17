@@ -1,15 +1,12 @@
 package com.signalcollect
 
 import akka.actor.{ActorRef, Props}
-import akka.event.Logging
 import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.ClusterTestUtils._
-import com.signalcollect.configuration.Akka
-import com.signalcollect.nodeprovisioning.cluster.{RetrieveNodeActors, ClusterNodeProvisionerActor}
-import com.typesafe.config.ConfigFactory
+import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
@@ -29,11 +26,6 @@ object ClusterVertexColoringConfig extends MultiNodeConfig {
   val clusterName = "ClusterVertexColoringSpec"
   val seedPort = 2561
 
-  val akkaConfig = Akka.config(serializeMessages = Some(false),
-    loggingLevel = Some(Logging.WarningLevel),
-    kryoRegistrations = List.empty,
-    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
-
   nodeConfig(provisioner) {
     TestClusterConfig.provisionerCommonConfig(seedPort)
   }
@@ -46,13 +38,8 @@ object ClusterVertexColoringConfig extends MultiNodeConfig {
         |  "com.signalcollect.VerifiedColoredVertex" = 135,
         |  "com.signalcollect.StateForwarderEdge" = 136
         |    }""".stripMargin
-    ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-          |akka.testconductor.barrier-timeout=60s
-       """.stripMargin)
-      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
-      .withFallback(ConfigFactory.parseString(mappingsConfig))
-      .withFallback(akkaConfig)
+
+    TestClusterConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
   }
 }
 

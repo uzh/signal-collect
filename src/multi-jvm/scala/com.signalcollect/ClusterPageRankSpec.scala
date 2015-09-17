@@ -20,16 +20,13 @@
 package com.signalcollect
 
 import akka.actor.{ActorRef, Props}
-import akka.event.Logging
 import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.ClusterTestUtils._
-import com.signalcollect.configuration.Akka
 import com.signalcollect.examples.{PageRankEdge, PageRankVertex}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
-import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
@@ -49,11 +46,6 @@ object ClusterPageRankConfig extends MultiNodeConfig {
   val clusterName = "ClusterPageRankSpec"
   val seedPort = 2558
 
-  val akkaConfig = Akka.config(serializeMessages = Some(false),
-    loggingLevel = Some(Logging.WarningLevel),
-    kryoRegistrations = List.empty,
-    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
-
   nodeConfig(provisioner) {
     TestClusterConfig.provisionerCommonConfig(seedPort)
   }
@@ -67,13 +59,8 @@ object ClusterPageRankConfig extends MultiNodeConfig {
         |  "com.signalcollect.ClusterPageRankSpec$$anonfun$4" = 136,
         |  "com.signalcollect.ClusterPageRankSpec$$anonfun$5" = 137
         |    }""".stripMargin
-    ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-          |akka.testconductor.barrier-timeout=60s
-       """.stripMargin)
-      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
-      .withFallback(ConfigFactory.parseString(mappingsConfig))
-      .withFallback(akkaConfig)
+
+    TestClusterConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
   }
 }
 
@@ -205,24 +192,24 @@ with ImplicitSender with ScalaFutures {
     }
     TestConfig.printStats()
 
-//    "deliver correct results on a 5*5 torus" in {
-//      val prefix = TestConfig.prefix
-//      val symmetricTorusEdges = new Torus(5, 5)
-//
-//      runOn(provisioner) {
-//        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
-//          prefix, workers), "ClusterMasterBootstrap")
-//        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
-//        whenReady(nodeActorsFuture) { nodeActors =>
-//          assert(nodeActors.length == workers)
-//          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
-//            .withPreallocatedNodes(nodeActors).build)
-//          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
-//        }
-//      }
-//      enterBarrier("PageRank - test4 done")
-//    }
-//    TestConfig.printStats()
+    //    "deliver correct results on a 5*5 torus" in {
+    //      val prefix = TestConfig.prefix
+    //      val symmetricTorusEdges = new Torus(5, 5)
+    //
+    //      runOn(provisioner) {
+    //        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+    //          prefix, workers), "ClusterMasterBootstrap")
+    //        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+    //        whenReady(nodeActorsFuture) { nodeActors =>
+    //          assert(nodeActors.length == workers)
+    //          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+    //            .withPreallocatedNodes(nodeActors).build)
+    //          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
+    //        }
+    //      }
+    //      enterBarrier("PageRank - test4 done")
+    //    }
+    //    TestConfig.printStats()
   }
   enterBarrier("PageRank - all tests done")
 }

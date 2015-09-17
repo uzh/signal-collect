@@ -1,16 +1,13 @@
 package com.signalcollect
 
 import akka.actor.{ActorRef, Props}
-import akka.event.Logging
 import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.ClusterTestUtils._
-import com.signalcollect.configuration.Akka
 import com.signalcollect.examples.{Location, Path}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
-import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
@@ -30,11 +27,6 @@ object ClusterSSSPConfig extends MultiNodeConfig {
   val clusterName = "ClusterSSSPSpec"
   val seedPort = 2560
 
-  val akkaConfig = Akka.config(serializeMessages = Some(false),
-    loggingLevel = Some(Logging.WarningLevel),
-    kryoRegistrations = List.empty,
-    kryoInitializer = Some("com.signalcollect.configuration.TestKryoInit"))
-
   nodeConfig(provisioner) {
     TestClusterConfig.provisionerCommonConfig(seedPort)
   }
@@ -46,13 +38,8 @@ object ClusterSSSPConfig extends MultiNodeConfig {
         |  "com.signalcollect.ClusterSSSPSpec$$anonfun$2" = 134,
         |  "com.signalcollect.ClusterSSSPSpec$$anonfun$3" = 135
         |    }""".stripMargin
-    ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-          |akka.testconductor.barrier-timeout=60s
-       """.stripMargin)
-      .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
-      .withFallback(ConfigFactory.parseString(mappingsConfig))
-      .withFallback(akkaConfig)
+
+    TestClusterConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
   }
 }
 
