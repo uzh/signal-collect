@@ -32,6 +32,7 @@ import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, 
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
+import ClusterTestUtils._
 
 import scala.concurrent.duration._
 
@@ -40,14 +41,6 @@ class ClusterIntegrationSpecMultiJvmNode1 extends ClusterIntegrationSpec
 class ClusterIntegrationSpecMultiJvmNode2 extends ClusterIntegrationSpec
 
 class ClusterIntegrationSpecMultiJvmNode3 extends ClusterIntegrationSpec
-
-class ModularAggregator(verify: Vertex[_, _, _, _] => Boolean) extends ModularAggregationOperation[Boolean] {
-  val neutralElement = true
-
-  def aggregate(a: Boolean, b: Boolean): Boolean = a && b
-
-  def extract(v: Vertex[_, _, _, _]): Boolean = verify(v)
-}
 
 object ClusterIntegrationConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
@@ -107,31 +100,6 @@ with ImplicitSender with ScalaFutures {
   implicit override val patienceConfig =
     PatienceConfig(timeout = scaled(Span(300, Seconds)), interval = scaled(Span(1000, Millis)))
 
-  val executionModes = List(ExecutionMode.ContinuousAsynchronous)
-
-  def test(graphProviders: List[() => Graph[Any, Any]], verify: Vertex[_, _, _, _] => Boolean, buildGraph: Graph[Any, Any] => Unit = (graph: Graph[Any, Any]) => (), signalThreshold: Double = 0.01, collectThreshold: Double = 0): Boolean = {
-    var correct = true
-    var computationStatistics = Map[String, List[ExecutionInformation[Any, Any]]]()
-
-    for (executionMode <- executionModes) {
-      for (graphProvider <- graphProviders) {
-        val graph = graphProvider()
-        try {
-          buildGraph(graph)
-          graph.awaitIdle
-          val stats = graph.execute(ExecutionConfiguration(executionMode = executionMode, signalThreshold = signalThreshold))
-          graph.awaitIdle
-          correct &= graph.aggregate(new ModularAggregator(verify))
-          if (!correct) {
-            System.err.println("Test failed. Computation stats: " + stats)
-          }
-        } finally {
-          graph.shutdown
-        }
-      }
-    }
-    correct
-  }
 
   def buildPageRankGraph(graph: Graph[Any, Any], edgeTuples: Traversable[Tuple2[Int, Int]]): Graph[Any, Any] = {
     edgeTuples foreach {
