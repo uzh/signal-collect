@@ -84,6 +84,8 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
     ConfigFactory.parseString(
       s"""akka.actor.kryo.idstrategy=incremental
          |akka.testconductor.barrier-timeout=60s
+         |akka.testconductor.query-timeout=20s
+         |akka.remote.flush-wait-on-shutdown=10s
        """.stripMargin)
       .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
