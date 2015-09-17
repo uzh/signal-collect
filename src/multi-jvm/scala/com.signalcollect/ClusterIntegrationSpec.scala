@@ -84,8 +84,6 @@ object ClusterIntegrationConfig extends MultiNodeConfig {
     ConfigFactory.parseString(
       s"""akka.actor.kryo.idstrategy=incremental
          |akka.testconductor.barrier-timeout=60s
-         |akka.testconductor.query-timeout=20s
-         |akka.remote.flush-wait-on-shutdown=10s
        """.stripMargin)
       .withFallback(TestClusterConfig.nodeCommonConfig(clusterName, seedPort))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
@@ -127,7 +125,6 @@ with ImplicitSender with ScalaFutures {
           if (!correct) {
             System.err.println("Test failed. Computation stats: " + stats)
           }
-          graph.awaitIdle
         } finally {
           graph.shutdown
         }
@@ -208,6 +205,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test1 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a 5-star graph" in {
       val prefix = TestConfig.prefix
@@ -226,6 +224,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test2 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a 2*2 symmetric grid" in {
       val prefix = TestConfig.prefix
@@ -244,6 +243,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test3 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a 5*5 torus" in {
       val prefix = TestConfig.prefix
@@ -262,6 +262,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("PageRank - test4 done")
     }
+    TestConfig.printStats()
   }
   enterBarrier("PageRank - all tests done")
 
@@ -310,6 +311,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test1 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a symmetric 5-star" in {
       val prefix = TestConfig.prefix
@@ -327,6 +329,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test2 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a 2*2 symmetric grid" in {
       val prefix = TestConfig.prefix
@@ -344,6 +347,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("VertexColoring - test3 done")
     }
+    TestConfig.printStats()
   }
   enterBarrier("VertexColoring - all tests done")
 
@@ -404,6 +408,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test1 done")
     }
+    TestConfig.printStats()
 
     "deliver correct results on a symmetric 5-star" in {
       val prefix = TestConfig.prefix
@@ -421,6 +426,7 @@ with ImplicitSender with ScalaFutures {
       }
       enterBarrier("SSSP - test2 done")
     }
+    TestConfig.printStats()
   }
   enterBarrier("SSSP - all tests done")
 }
