@@ -18,6 +18,7 @@ val project = Project(
     scalacOptions ++= Seq("-optimize", "-Ydelambdafy:inline", "-Yclosure-elim", "-Yinline-warnings", "-Ywarn-adapted-args", "-Ywarn-inaccessible", "-feature", "-deprecation", "-Xelide-below", "INFO"),
     assembleArtifact in packageScala := true,
     parallelExecution in Test := false,
+    parallelExecution in Global := false,
     EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
     EclipseKeys.withSource := true,
     jarName in assembly := "signal-collect.jar",
