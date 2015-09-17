@@ -22,7 +22,7 @@ import akka.event.Logging
 import com.signalcollect.configuration.Akka
 import com.typesafe.config.ConfigFactory
 
-object TestClusterConfig {
+object MultiJvmConfig {
   private[this] val seedIp = "127.0.0.1"
   val idleDetectionPropagationDelayInMilliseconds = 500
 

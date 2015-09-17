@@ -47,7 +47,7 @@ object ClusterPageRankConfig extends MultiNodeConfig {
   val seedPort = 2558
 
   nodeConfig(provisioner) {
-    TestClusterConfig.provisionerCommonConfig(seedPort)
+    MultiJvmConfig.provisionerCommonConfig(seedPort)
   }
 
   commonConfig {
@@ -60,7 +60,7 @@ object ClusterPageRankConfig extends MultiNodeConfig {
         |  "com.signalcollect.ClusterPageRankSpec$$anonfun$5" = 137
         |    }""".stripMargin
 
-    TestClusterConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
+    MultiJvmConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
   }
 }
 
@@ -139,7 +139,7 @@ with ImplicitSender with ScalaFutures {
       val fiveCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 4), (4, 0))
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -158,7 +158,7 @@ with ImplicitSender with ScalaFutures {
       val fiveStarEdges = List((0, 4), (1, 4), (2, 4), (3, 4))
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -176,7 +176,7 @@ with ImplicitSender with ScalaFutures {
       val symmetricTwoOnTwoGridEdges = new Grid(2, 2)
 
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>

@@ -46,7 +46,7 @@ object ClusterSSSPConfig extends MultiNodeConfig {
   val seedPort = 2560
 
   nodeConfig(provisioner) {
-    TestClusterConfig.provisionerCommonConfig(seedPort)
+    MultiJvmConfig.provisionerCommonConfig(seedPort)
   }
 
   commonConfig {
@@ -57,7 +57,7 @@ object ClusterSSSPConfig extends MultiNodeConfig {
         |  "com.signalcollect.ClusterSSSPSpec$$anonfun$3" = 135
         |    }""".stripMargin
 
-    TestClusterConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
+    MultiJvmConfig.nodeCommonConfig(clusterName, seedPort, mappingsConfig)
   }
 }
 
@@ -122,7 +122,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricFourCycleEdges = List((0, 1), (1, 2), (2, 3), (3, 0))
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>
@@ -139,7 +139,7 @@ with ImplicitSender with ScalaFutures {
       val prefix = TestConfig.prefix
       val symmetricFiveStarEdges = List((0, 4), (4, 0), (1, 4), (4, 1), (2, 4), (4, 2), (3, 4), (4, 3))
       runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           prefix, workers), "ClusterMasterBootstrap")
         val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
         whenReady(nodeActorsFuture) { nodeActors =>

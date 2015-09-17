@@ -25,7 +25,7 @@ import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
-import com.signalcollect.{TestClusterConfig, Graph, GraphBuilder, STMultiNodeSpec}
+import com.signalcollect.{MultiJvmConfig, Graph, GraphBuilder, STMultiNodeSpec}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -47,12 +47,12 @@ object ClusterNodeProvisionerConfig extends MultiNodeConfig {
   val seedPort = 2559
 
   nodeConfig(provisioner) {
-   TestClusterConfig.provisionerCommonConfig(seedPort)
+   MultiJvmConfig.provisionerCommonConfig(seedPort)
   }
 
   // this configuration will be used for all nodes
   commonConfig {
-    TestClusterConfig.nodeCommonConfig(clusterName, seedPort)
+    MultiJvmConfig.nodeCommonConfig(clusterName, seedPort)
   }
 }
 
@@ -75,7 +75,7 @@ with ImplicitSender with ScalaFutures {
   "SignalCollect" should {
     "get the cluster up" in {
       runOn(provisioner) {
-        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+        system.actorOf(Props(classOf[ClusterNodeProvisionerActor], MultiJvmConfig.idleDetectionPropagationDelayInMilliseconds,
           "ClusterMasterBootstrap", workers), "ClusterMasterBootstrap")
       }
       enterBarrier("all nodes up")
