@@ -19,6 +19,7 @@
 
 package com.signalcollect
 
+import com.typesafe.config.ConfigFactory
 import interfaces.{ WorkerApi, Request }
 import messaging.AkkaProxy
 import akka.actor.{ Props, ActorSystem, Actor }
@@ -53,7 +54,7 @@ class AkkaProxySpec extends FlatSpec with Matchers with TestAnnouncements {
       }
     }
 
-    val system = ActorSystem("AkkaProxySpec")
+    val system = TestConfig.actorSystem("AkkaProxySpec")
     val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
     val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
 
@@ -65,6 +66,7 @@ class AkkaProxySpec extends FlatSpec with Matchers with TestAnnouncements {
     val measuredSleepTime: Double = sleepStop - sleepStart
 
     measuredSleepTime should (be > expectedSleepTime * 0.9 and be < expectedSleepTime * 1.1)
+    system.shutdown()
   }
 
 }

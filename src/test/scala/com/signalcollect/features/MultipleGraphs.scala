@@ -29,8 +29,8 @@ import com.signalcollect.examples.PageRankVertex
 
 class MultipleGraphsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  def createComputation(p: String): Graph[_, _] = {
-    val graph = GraphBuilder.withActorNamePrefix(p).build
+  def createComputation(): Graph[_, _] = {
+    val graph = TestConfig.graphProvider().build
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addEdge(1, new PageRankEdge(2))
@@ -39,9 +39,9 @@ class MultipleGraphsSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   "Signal/Collect" should "support running multiple graph instances on the same actor system" in {
-    val graph1 = createComputation("prefix1")
-    val graph2 = createComputation("prefix2")
-    val graph3 = createComputation("prefix3")
+    val graph1 = createComputation()
+    val graph2 = createComputation()
+    val graph3 = createComputation()
     graph1.execute
     graph2.execute
     graph3.execute

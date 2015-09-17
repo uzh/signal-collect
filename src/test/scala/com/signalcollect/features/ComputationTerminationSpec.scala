@@ -20,19 +20,11 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GlobalTerminationDetection
-import com.signalcollect.Graph
-import com.signalcollect.GraphBuilder
-import com.signalcollect.SumOfStates
+import com.signalcollect._
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.TerminationReason
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
-import com.signalcollect.DataGraphVertex
-import com.signalcollect.StateForwarderEdge
-import com.signalcollect.DataFlowVertex
-import com.signalcollect.GraphEditor
 import akka.event.Logging
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
@@ -51,7 +43,7 @@ class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
 class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val graph = GraphBuilder.build
+    val graph = TestConfig.graphProvider().build
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
@@ -63,7 +55,7 @@ class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnounc
   }
 
   def createCountingCircleGraph(vertices: Int): Graph[Any, Any] = {
-    val graph = GraphBuilder.build //.withLoggingLevel(Logging.DebugLevel)
+    val graph = TestConfig.graphProvider().build //.withLoggingLevel(Logging.DebugLevel)
     val idSet = (1 to vertices).toSet
     for (id <- idSet) {
       graph.addVertex(new CountingVertex(id))

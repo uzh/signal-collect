@@ -30,7 +30,7 @@ class KryoInit {
     register(kryo)
   }
 
-  protected def register(kryo: Kryo): Unit = {
+  def register(kryo: Kryo): Unit = {
     try {
       def register(s: String) {
         kryo.register(Class.forName(s))
@@ -180,6 +180,36 @@ class KryoInit {
       registerClass(classOf[Array[Array[String]]])
       registerClass(classOf[Array[Array[Object]]])
       registerClass(classOf[Array[Array[AnyRef]]])
+      // Cluster
+      register("akka.cluster.InternalClusterAction$GetClusterCoreRef$")
+      register("akka.cluster.InternalClusterAction$PublisherCreated")
+      register("akka.cluster.InternalClusterAction$Subscribe")
+      register("akka.cluster.InternalClusterAction$JoinSeedNodes")
+      register("akka.cluster.InternalClusterAction$Unsubscribe")
+      register("akka.cluster.ClusterEvent$CurrentClusterState")
+      register("akka.cluster.InternalClusterAction$JoinSeedNode$")
+      register("akka.cluster.ClusterEvent$ClusterShuttingDown$")
+      register("akka.actor.Status$Failure")
+      register("akka.remote.EndpointWriter$FlushAndStop$")
+      register("akka.remote.EndpointWriter$FlushAndStop$")
+      register("akka.remote.EndpointWriter$AckIdleCheckTimer$")
+      register("akka.cluster.InternalClusterAction$ReapUnreachableTick$")
+      register("akka.cluster.InternalClusterAction$GossipTick$")
+      register("akka.cluster.InternalClusterAction$LeaderActionsTick$")
+      register("akka.remote.ReliableDeliverySupervisor$AttemptSysMsgRedelivery$")
+      register("akka.remote.EndpointWriter$AckIdleCheckTimer$")
+      register("akka.cluster.InternalClusterAction$LeaderActionsTick$")
+      register("akka.remote.EndpointWriter$StoppedReading")
+      register("akka.remote.EndpointWriter$StoppedReading")
+      register("akka.remote.ReliableDeliverySupervisor$Ungate$")
+      register("akka.remote.ReliableDeliverySupervisor$Ungate$")
+      register("akka.dispatch.sysmsg.Watch")
+      register("akka.remote.RemoteScope")
+      register("akka.dispatch.sysmsg.DeathWatchNotification")
+      register("akka.actor.Scope")
+      register("akka.dispatch.sysmsg.Supervise")
+      register("akka.actor.Address")
+      register("akka.remote.RemoteSystemDaemon")
     } catch {
       case t: Throwable => t.printStackTrace
     }

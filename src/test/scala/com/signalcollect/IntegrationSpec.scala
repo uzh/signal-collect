@@ -31,13 +31,16 @@ import akka.event.Logging
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import com.signalcollect.util.TestAnnouncements
+import scala.language.postfixOps
 
 class IntegrationSpec extends FlatSpec with Matchers with TestAnnouncements {
 
-  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.
-    //      withMessageSerialization(true).
-    //      withLoggingLevel(Logging.DebugLevel).
-    build)
+  val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => {
+    TestConfig.graphProvider().
+      //      withMessageSerialization(true).
+      //      withLoggingLevel(Logging.DebugLevel).
+      build
+  })
 
   val executionModes = List(ExecutionMode.Synchronous, ExecutionMode.OptimizedAsynchronous)
 

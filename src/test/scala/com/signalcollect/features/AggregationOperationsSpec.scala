@@ -19,25 +19,21 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.CountVertices
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GraphBuilder
-import com.signalcollect.ProductOfStates
-import com.signalcollect.SampleVertexIds
-import com.signalcollect.SumOfStates
-import com.signalcollect.TopKFinder
+import akka.actor.ActorSystem
+import com.signalcollect._
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import com.signalcollect.util.TestAnnouncements
+import TestConfig._
 
 class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "SumOfStates" should "sum all states correctly" in {
     def createGraph = {
-      val graph = GraphBuilder.build
+      val graph = graphProvider().build
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
@@ -57,7 +53,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
 
   "ProductOfStates" should "multiply all states correctly" in {
     def createGraph = {
-      val graph = GraphBuilder.build
+      val graph = graphProvider().build
       graph.addVertex(new PageRankVertex(1))
       graph.addVertex(new PageRankVertex(2))
       graph.addVertex(new SudokuCell(1, None))
@@ -75,8 +71,8 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
     }
   }
 
-  def createSudokuGraph = {
-    val graph = GraphBuilder.build
+  def createSudokuGraph() = {
+    val graph = graphProvider().build
     graph.addVertex(new PageRankVertex(1))
     graph.addVertex(new PageRankVertex(2))
     graph.addVertex(new PageRankVertex(3))
@@ -87,7 +83,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   "CountVertices" should "count the number of PageRank vertices correctly" in {
-    val graph = createSudokuGraph
+    val graph = createSudokuGraph()
     try {
       val numberOfPRVertices = graph.aggregate(new CountVertices[PageRankVertex[Any]])
       numberOfPRVertices === 2
@@ -97,7 +93,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   it should "count the number of SudokuCell vertices correctly" in {
-    val graph = createSudokuGraph
+    val graph = createSudokuGraph()
     try {
       val numberOfSCVertices = graph.aggregate(new CountVertices[SudokuCell])
       numberOfSCVertices === 1
@@ -107,8 +103,8 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   val idSet = (1 to 1000).toSet
-  def createPageRankGraph = {
-    val graph = GraphBuilder.build
+  def createPageRankGraph() = {
+    val graph = graphProvider().build
     for (id <- idSet) {
       graph.addVertex(new PageRankVertex(id))
     }
@@ -116,7 +112,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   "SampleVertexIds" should "sample 0 vertex ids correctly" in {
-    val graph = createPageRankGraph
+    val graph = createPageRankGraph()
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(0))
       vertexSample.size === 0
@@ -126,7 +122,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   it should "sample 50 vertex ids correctly" in {
-    val graph = createPageRankGraph
+    val graph = createPageRankGraph()
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(50))
       vertexSample.size === 50
@@ -137,7 +133,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
   }
 
   it should "sample 1000 vertex ids correctly" in {
-    val graph = createPageRankGraph
+    val graph = createPageRankGraph()
     try {
       val vertexSample = graph.aggregate(new SampleVertexIds(1000))
       vertexSample.size === 1000
@@ -149,7 +145,7 @@ class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnounce
 
   "TopKFinder" should "find the largest vertices in the right order" in {
     def createGraph = {
-      val graph = GraphBuilder.build
+      val graph = graphProvider().build
       graph.addVertex(new PageRankVertex(1, 0.3))
       graph.addVertex(new PageRankVertex(3, 0.2))
       graph.addVertex(new PageRankVertex(2, 0.1))

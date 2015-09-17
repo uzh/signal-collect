@@ -19,17 +19,10 @@
 
 package com.signalcollect.features
 
-import com.signalcollect.CountVertices
-import com.signalcollect.ExecutionConfiguration
-import com.signalcollect.GraphBuilder
-import com.signalcollect.ProductOfStates
-import com.signalcollect.SampleVertexIds
-import com.signalcollect.SumOfStates
-import com.signalcollect.TopKFinder
+import com.signalcollect._
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
-import com.signalcollect.GraphEditor
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
 import com.signalcollect.util.TestAnnouncements
@@ -37,7 +30,7 @@ import com.signalcollect.util.TestAnnouncements
 class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
 
   "Graph" should "support the `loadGraph` command" in {
-    val graph = GraphBuilder.build
+    val graph = TestConfig.graphProvider().build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>
@@ -55,7 +48,7 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
   }
 
   it should "support using the `loadGraph` command after the loading phase" in {
-    val graph = GraphBuilder.build
+    val graph = TestConfig.graphProvider().build
     try {
       val graphLoaders = (1 to 100).map(x => (10 * x until ((10 * x) + 10)).toIterator.map(y => new PageRankVertex(y)).map(z => {
         ge: GraphEditor[Any, Any] =>
