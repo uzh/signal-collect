@@ -205,24 +205,24 @@ with ImplicitSender with ScalaFutures {
     }
     TestConfig.printStats()
 
-    "deliver correct results on a 5*5 torus" in {
-      val prefix = TestConfig.prefix
-      val symmetricTorusEdges = new Torus(5, 5)
-
-      runOn(provisioner) {
-        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
-          prefix, workers), "ClusterMasterBootstrap")
-        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
-        whenReady(nodeActorsFuture) { nodeActors =>
-          assert(nodeActors.length == workers)
-          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
-            .withPreallocatedNodes(nodeActors).build)
-          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
-        }
-      }
-      enterBarrier("PageRank - test4 done")
-    }
-    TestConfig.printStats()
+//    "deliver correct results on a 5*5 torus" in {
+//      val prefix = TestConfig.prefix
+//      val symmetricTorusEdges = new Torus(5, 5)
+//
+//      runOn(provisioner) {
+//        val masterActor = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], TestClusterConfig.idleDetectionPropagationDelayInMilliseconds,
+//          prefix, workers), "ClusterMasterBootstrap")
+//        val nodeActorsFuture = (masterActor ? RetrieveNodeActors).mapTo[Array[ActorRef]]
+//        whenReady(nodeActorsFuture) { nodeActors =>
+//          assert(nodeActors.length == workers)
+//          val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => GraphBuilder.withActorSystem(system)
+//            .withPreallocatedNodes(nodeActors).build)
+//          test(graphProviders = computeGraphFactories, verify = pageRankTorusVerifier, buildGraph = buildPageRankGraph(_, symmetricTorusEdges), signalThreshold = 0.001) shouldBe true
+//        }
+//      }
+//      enterBarrier("PageRank - test4 done")
+//    }
+//    TestConfig.printStats()
   }
   enterBarrier("PageRank - all tests done")
 }
