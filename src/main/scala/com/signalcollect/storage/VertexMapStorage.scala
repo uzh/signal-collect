@@ -39,6 +39,7 @@ class VertexMapStorage[Id, Signal] extends Storage[Id, Signal] {
   import StorageDefaultValues._
 
   def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
+  def close(): Unit = Unit
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](

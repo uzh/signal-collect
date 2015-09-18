@@ -110,7 +110,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
 
   val counters: WorkerOperationCounters = new WorkerOperationCounters()
 
-  def initialize {
+  def initialize(): Unit = {
     messageBusFlushed = true
     slowPongDetected = false
     isIdle = true
@@ -134,9 +134,9 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
   }
 
   def getNodeId(workerId: Int): Int = workerId / workersPerNode
-  def getRandomPingPongPartner = Random.nextInt(numberOfWorkers)
+  def getRandomPingPongPartner(): Int = Random.nextInt(numberOfWorkers)
 
-  def sendPing(partner: Int) {
+  def sendPing(partner: Int)(): Unit = {
     if (messageBus.isInitialized) {
       pingPongScheduled = true
       waitingForPong = true
@@ -150,13 +150,17 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
    * Also does not reset the part of the counters which is part of
    * termination detection.
    */
-  override def reset {
+  override def reset(): Unit = {
     initialize
     counters.resetOperationCounters
     messageBus.reset
   }
 
-  def isAllWorkDone: Boolean = {
+  override def shutdown(): Unit = {
+    vertexStore.close()
+  }
+
+  def isAllWorkDone(): Boolean = {
     if (isPaused) {
       pendingModifications.isEmpty
     } else {
@@ -164,7 +168,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  override def initializeIdleDetection {
+  override def initializeIdleDetection(): Unit = {
     isIdleDetectionEnabled = true
 
     // Ensure that the current status is immediately reported.
@@ -688,23 +692,23 @@ trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
     println("aggregateAll")
     super.aggregateAll(aggregationOperation)
   }
-  abstract override def pauseComputation = {
+  abstract override def pauseComputation() = {
     println("pauseComputation")
     super.pauseComputation
   }
-  abstract override def startComputation = {
+  abstract override def startComputation() = {
     println("startComputation")
     super.startComputation
   }
-  abstract override def signalStep: Boolean = {
+  abstract override def signalStep(): Boolean = {
     println("signalStep")
     super.signalStep
   }
-  abstract override def collectStep: Boolean = {
+  abstract override def collectStep(): Boolean = {
     println("collectStep")
     super.collectStep
   }
-  abstract override def getWorkerStatistics: WorkerStatistics = {
+  abstract override def getWorkerStatistics(): WorkerStatistics = {
     println("getWorkerStatistics")
     super.getWorkerStatistics
   }
@@ -712,31 +716,35 @@ trait WorkerInterceptor[Id, Signal] extends WorkerApi[Id, Signal] {
     println("getIndividualWorkerStatistics")
     super.getIndividualWorkerStatistics
   }
-  abstract override def reset = {
+  abstract override def reset(): Unit = {
     println("reset")
     super.reset
   }
-  abstract override def initializeIdleDetection = {
+  abstract override def shutdown(): Unit = {
+    println("shutdown")
+    super.shutdown
+  }
+  abstract override def initializeIdleDetection(): Unit = {
     println("initializeIdleDetection")
     super.initializeIdleDetection
   }
-  abstract override def getNodeStatistics: NodeStatistics = {
+  abstract override def getNodeStatistics(): NodeStatistics = {
     println("getNodeStatistics")
     super.getNodeStatistics
   }
-  abstract override def getIndividualNodeStatistics: List[NodeStatistics] = {
+  abstract override def getIndividualNodeStatistics(): List[NodeStatistics] = {
     println("getIndividualNodeStatistics")
     super.getIndividualNodeStatistics
   }
-  abstract override def snapshot = {
+  abstract override def snapshot(): Unit = {
     println("snapshot")
     super.snapshot
   }
-  abstract override def restore = {
+  abstract override def restore(): Unit = {
     println("restore")
     super.restore
   }
-  abstract override def deleteSnapshot = {
+  abstract override def deleteSnapshot(): Unit = {
     println("deleteSnapshot")
     super.deleteSnapshot
   }

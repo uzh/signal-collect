@@ -53,15 +53,16 @@ trait WorkerApi[Id, Signal] {
   def collectStep: Boolean
 
   def getWorkerStatistics: WorkerStatistics
-  def getIndividualWorkerStatistics: List[WorkerStatistics]
+  def getIndividualWorkerStatistics(): List[WorkerStatistics]
 
-  def reset
+  def reset(): Unit
+  def shutdown(): Unit
 
-  def initializeIdleDetection
+  def initializeIdleDetection(): Unit
 
   //TODO: Implement system information accessors on node instead.
-  def getNodeStatistics: NodeStatistics
-  def getIndividualNodeStatistics: List[NodeStatistics]
+  def getNodeStatistics(): NodeStatistics
+  def getIndividualNodeStatistics(): List[NodeStatistics]
 
   /**
    * Creates a snapshot of all the vertices in all workers.

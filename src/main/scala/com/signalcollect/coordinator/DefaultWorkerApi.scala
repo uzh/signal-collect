@@ -46,7 +46,7 @@ import com.signalcollect.interfaces.NodeStatistics
 class DefaultWorkerApi[Id, Signal](
   val workers: Array[WorkerApi[Id, Signal]],
   val mapper: VertexToWorkerMapper[Id])
-  extends WorkerApi[Id, Signal] {
+    extends WorkerApi[Id, Signal] {
 
   protected val random = new Random
 
@@ -143,6 +143,10 @@ class DefaultWorkerApi[Id, Signal](
     get(futures(_.reset))
   }
 
+  override def shutdown {
+    get(futures(_.shutdown))
+  }
+
   override def initializeIdleDetection {
     get(futures(_.initializeIdleDetection))
   }
@@ -227,11 +231,11 @@ class DefaultWorkerApi[Id, Signal](
   def snapshot {
     get(futures(_.snapshot))
   }
-  
+
   def restore {
     get(futures(_.restore))
   }
-  
+
   def deleteSnapshot = {
     get(futures(_.deleteSnapshot))
   }

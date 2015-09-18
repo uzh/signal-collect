@@ -29,6 +29,7 @@ import com.signalcollect.Vertex
 class MixedVertexStorage[Id, Signal] extends Storage[Id, Signal] {
 
   def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
+  def close(): Unit = Unit
 
   val vertices = vertexStoreFactory
   protected def vertexStoreFactory: VertexStore[Id, Signal] = new VertexMap[Id, Signal](initialSize = 32768, rehashFraction = .8f)

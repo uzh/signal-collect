@@ -33,6 +33,7 @@ class JavaVertexMap[Id, Signal] extends VertexStore[Id, Signal] {
   protected var vertexMap = new HashMap[Id, Vertex[Id, _, Id, Signal]]()
 
   def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
+  def close(): Unit = Unit
 
   /**
    * Returns a vertex from the store that has the specified id.

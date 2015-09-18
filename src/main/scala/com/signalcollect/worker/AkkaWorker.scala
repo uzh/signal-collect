@@ -150,6 +150,8 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     signalThreshold = 0.01,
     collectThreshold = 0.0) //with WorkerInterceptor[Id, Signal]
 
+  context.system.registerOnTermination(worker.shutdown)
+
   /**
    * How many graph modifications this worker will execute in one batch.
    */

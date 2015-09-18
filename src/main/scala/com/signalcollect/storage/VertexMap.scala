@@ -52,6 +52,7 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
   private[this] final var numberOfElements = 0
 
   def updateStateOfVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = Unit
+  def close(): Unit = Unit
 
   def stream: Stream[Vertex[Id, _, Id, Signal]] = {
     def remainder(i: Int, elementsProcessed: Int): Stream[Vertex[Id, _, Id, Signal]] = {
