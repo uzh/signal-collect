@@ -33,8 +33,7 @@ object MultiJvmConfig {
 
   def nodeCommonConfig(clusterName: String, seedPort: Int, mappingsConfig: String = "") = {
     ConfigFactory.parseString(
-      s"""akka.actor.kryo.idstrategy=incremental
-          |akka.testconductor.barrier-timeout=60s
+      s"""akka.testconductor.barrier-timeout=60s
           |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
       .withFallback(ConfigFactory.load())
       .withFallback(ConfigFactory.parseString(mappingsConfig))
