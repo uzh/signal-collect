@@ -34,14 +34,14 @@ import scala.concurrent.duration._
 
 class ClusterNodeProvisionerSpecMultiJvmNode1 extends ClusterNodeProvisionerSpec
 
-class ClusterNodeProvisionerSpecMultiJvmNode2 extends ClusterNodeProvisionerSpec
+//class ClusterNodeProvisionerSpecMultiJvmNode2 extends ClusterNodeProvisionerSpec
 
-class ClusterNodeProvisionerSpecMultiJvmNode3 extends ClusterNodeProvisionerSpec
+//class ClusterNodeProvisionerSpecMultiJvmNode3 extends ClusterNodeProvisionerSpec
 
 object ClusterNodeProvisionerConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
-  val node1 = role("node1")
-  val node2 = role("node2")
+//  val node1 = role("node1")
+//  val node2 = role("node2")
 
   val clusterName = "ClusterNodeProvisionerSpec"
   val seedPort = 2559

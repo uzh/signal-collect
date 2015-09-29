@@ -35,14 +35,14 @@ import scala.concurrent.duration._
 
 class ClusterPageRankSpecMultiJvmNode1 extends ClusterPageRankSpec
 
-class ClusterPageRankSpecMultiJvmNode2 extends ClusterPageRankSpec
+//class ClusterPageRankSpecMultiJvmNode2 extends ClusterPageRankSpec
 
-class ClusterPageRankSpecMultiJvmNode3 extends ClusterPageRankSpec
+//class ClusterPageRankSpecMultiJvmNode3 extends ClusterPageRankSpec
 
 object ClusterPageRankConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
-  val node1 = role("node1")
-  val node2 = role("node2")
+//  val node1 = role("node1")
+//  val node2 = role("node2")
 
   val clusterName = "ClusterPageRankSpec"
   val seedPort = 2558

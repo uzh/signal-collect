@@ -32,14 +32,14 @@ import scala.concurrent.duration._
 
 class ClusterVertexColoringSpecMultiJvmNode1 extends ClusterVertexColoringSpec
 
-class ClusterVertexColoringSpecMultiJvmNode2 extends ClusterVertexColoringSpec
+//class ClusterVertexColoringSpecMultiJvmNode2 extends ClusterVertexColoringSpec
 
-class ClusterVertexColoringSpecMultiJvmNode3 extends ClusterVertexColoringSpec
+//class ClusterVertexColoringSpecMultiJvmNode3 extends ClusterVertexColoringSpec
 
 object ClusterVertexColoringConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
-  val node1 = role("node1")
-  val node2 = role("node2")
+//  val node1 = role("node1")
+//  val node2 = role("node2")
 
   val clusterName = "ClusterVertexColoringSpec"
   val seedPort = 2561

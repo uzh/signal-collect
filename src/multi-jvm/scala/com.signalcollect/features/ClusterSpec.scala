@@ -36,14 +36,14 @@ import scala.language.postfixOps
 
 class ClusterSpecMultiJvmNode1 extends ClusterSpec
 
-class ClusterSpecMultiJvmNode2 extends ClusterSpec
+//class ClusterSpecMultiJvmNode2 extends ClusterSpec
 
-class ClusterSpecMultiJvmNode3 extends ClusterSpec
+//class ClusterSpecMultiJvmNode3 extends ClusterSpec
 
 object ClusterSpecConfig extends MultiNodeConfig {
   val provisioner = role("provisioner")
-  val worker1 = role("worker1")
-  val worker2 = role("worker2")
+//  val worker1 = role("worker1")
+//  val worker2 = role("worker2")
 
   val clusterName = "ClusterSpec"
   val seedPort = 2557
