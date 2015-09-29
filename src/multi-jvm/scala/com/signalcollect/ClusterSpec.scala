@@ -16,18 +16,15 @@
  *  limitations under the License.
  */
 
-package com.signalcollect.features
+package com.signalcollect
 
 import akka.actor.{ActorRef, Props}
-import akka.cluster.Cluster
 import akka.pattern.ask
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import com.signalcollect.{MultiJvmConfig, TestConfig, STMultiNodeSpec}
 import com.signalcollect.nodeprovisioning.cluster.{ClusterNodeProvisionerActor, RetrieveNodeActors}
 import com.signalcollect.util.TestAnnouncements
-import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
