@@ -61,6 +61,7 @@ val project = Project(
           testResults.events ++ multiNodeResults.events,
           testResults.summaries ++ multiNodeResults.summaries)
     },
+    unmanagedSourceDirectories in Test += baseDirectory.value / "src" / "multi-jvm" / "scala",
     pomExtra := (
       <url>https://github.com/uzh/signal-collect</url>
         <scm>
