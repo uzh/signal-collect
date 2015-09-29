@@ -62,6 +62,7 @@ class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
       for (loader <- graphLoaders) {
         graph.loadGraph(loader, Some(0))
       }
+      graph.awaitIdle
       val stats = graph.execute(ExecutionConfiguration.withSignalThreshold(0.01))
       assert(stats.aggregatedWorkerStatistics.numberOfVertices == 1000, s"Only ${stats.aggregatedWorkerStatistics.numberOfVertices} vertices were added, instead of 1000.")
     } finally {
