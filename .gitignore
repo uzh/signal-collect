@@ -13,6 +13,7 @@ graph-data/
 log_messages.txt
 references.nt
 web-BerkStan.txt
+.idea/*
 
 web-BerkStan.txt.gz
 
