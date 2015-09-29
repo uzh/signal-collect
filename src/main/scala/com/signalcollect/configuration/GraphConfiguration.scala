@@ -24,7 +24,6 @@ import com.signalcollect.interfaces.MessageBusFactory
 import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
 import com.signalcollect.factory.messagebus.AkkaMessageBusFactory
 import akka.event.Logging.LogLevel
 import akka.event.Logging

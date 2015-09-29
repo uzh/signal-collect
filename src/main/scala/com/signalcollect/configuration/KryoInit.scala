@@ -23,7 +23,6 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.serializers.DeflateSerializer
 import com.signalcollect.interfaces._
 import com.signalcollect.util.BitSet
-import com.signalcollect.nodeprovisioning.local._
 import com.signalcollect.factory.scheduler._
 import com.signalcollect.WorkerCreator
 import scala.collection._
@@ -82,7 +81,6 @@ class KryoInit {
       registerClass(classOf[Left[_, _]])
       registerClass(classOf[Right[_, _]])
       registerClass(classOf[GraphConfiguration[_, _]])
-      registerClass(classOf[LocalNodeProvisioner[_, _]])
       registerClass(classOf[Throughput[_, _]])
       registerClass(classOf[LowLatency[_, _]])
       registerClass(classOf[Class[_]])

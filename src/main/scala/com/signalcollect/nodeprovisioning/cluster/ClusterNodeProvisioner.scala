@@ -30,22 +30,15 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.pattern.ask
 import akka.util.Timeout
 
-class ClusterNodeProvisioner[Id, Signal](
-    numberOfNodes: Int,
-    config: Config = ConfigFactory.load().getConfig("signalcollect"),
-    actorNamePrefix: String = "") extends NodeProvisioner[Id, Signal] {
+class ClusterNodeProvisioner[Id, Signal](numberOfNodes: Int) extends NodeProvisioner[Id, Signal] {
 
-  val seedPort = config.getInt("akka.clustering.seed-port")
-  val clusterSystem = config.getString("akka.clustering.name")
-  val configWithSeed = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$seedPort").withFallback(config)
-  val system = ActorSystem(clusterSystem, configWithSeed)
-
-  def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
+  def getNodes(system: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     implicit val timeout = Timeout(300.seconds)
     //TODO: Is this coming from some config?
     val idleDetectionPropagationDelayInMilliseconds = 500
-    val provisioner = system.actorOf(Props(classOf[ClusterNodeProvisionerActor], idleDetectionPropagationDelayInMilliseconds,
-      actorNamePrefix + "ClusterMasterBootstrap", numberOfNodes), actorNamePrefix + "ClusterMasterBootstrap")
+    val provisioner = system.actorOf(Props(classOf[ClusterNodeProvisionerActor],
+      idleDetectionPropagationDelayInMilliseconds, actorNamePrefix, numberOfNodes),
+      actorNamePrefix + "ClusterNodeProvisionerActor")
     val nodeActorsFuture = provisioner ? RetrieveNodeActors
     val nodeActors = Await.result(nodeActorsFuture, timeout.duration)
     nodeActors match {

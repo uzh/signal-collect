@@ -21,7 +21,6 @@ package com.signalcollect
 
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
-
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory
 import com.signalcollect.factory.handler.DefaultExistingVertexHandlerFactory
@@ -40,12 +39,11 @@ import com.signalcollect.interfaces.StorageFactory
 import com.signalcollect.interfaces.UndeliverableSignalHandlerFactory
 import com.signalcollect.interfaces.WorkerFactory
 import com.signalcollect.nodeprovisioning.NodeProvisioner
-import com.signalcollect.nodeprovisioning.local.LocalNodeProvisioner
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.event.Logging.LogLevel
+import com.signalcollect.nodeprovisioning.cluster.ClusterNodeProvisioner
 
 /**
  *  A graph builder holds a configuration with parameters for building a graph,
@@ -77,7 +75,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
       storageFactory = new MemoryEfficientStorage[Id, Signal],
       schedulerFactory = new Throughput[Id, Signal],
       preallocatedNodes = None,
-      nodeProvisioner = new LocalNodeProvisioner[Id, Signal](),
+      nodeProvisioner = new ClusterNodeProvisioner(numberOfNodes = 1),
       statsReportingIntervalInMilliseconds = 0,
       kryoRegistrations = List(),
       kryoInitializer = None,

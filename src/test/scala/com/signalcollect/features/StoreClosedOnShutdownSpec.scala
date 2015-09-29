@@ -41,6 +41,7 @@ class StoreClosedOnShutdownSpec extends FlatSpec with Matchers with TestAnnounce
 
   "Store" should "be closed on shutdown" in {
     val graph = GraphBuilder.withStorageFactory(TestStorageFactory).build
+    graph.awaitIdle
     graph.shutdown
     assert(TestStorage.closed == true)
   }
