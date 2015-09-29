@@ -32,7 +32,7 @@ import akka.util.Timeout
 
 class ClusterNodeProvisioner[Id, Signal](
     numberOfNodes: Int,
-    config: Config = ConfigFactory.load(),
+    config: Config = ConfigFactory.load().getConfig("signalcollect"),
     actorNamePrefix: String = "") extends NodeProvisioner[Id, Signal] {
 
   val seedPort = config.getInt("akka.clustering.seed-port")

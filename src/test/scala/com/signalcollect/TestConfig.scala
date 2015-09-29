@@ -41,7 +41,7 @@ object TestConfig {
   }
 
   def actorSystem(name: String = UUID.randomUUID().toString.replace("-", ""), port: Int = randomPort) = {
-    ActorSystem(name, seed(name, port).withFallback(ConfigFactory.load))
+    ActorSystem(name, seed(name, port).withFallback(ConfigFactory.load().getConfig("signalcollect")))
   }
 
   def prefix = UUID.randomUUID().toString.replace("-", "")
