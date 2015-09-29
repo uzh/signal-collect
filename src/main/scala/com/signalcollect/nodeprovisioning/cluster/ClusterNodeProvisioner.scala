@@ -30,7 +30,7 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.pattern.ask
 import akka.util.Timeout
 
-class ClusterNodeProvisioner[Id, Signal](numberOfNodes: Int) extends NodeProvisioner[Id, Signal] {
+class ClusterNodeProvisioner[Id, Signal](val numberOfNodes: Int) extends NodeProvisioner[Id, Signal] {
 
   def getNodes(system: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef] = {
     implicit val timeout = Timeout(300.seconds)

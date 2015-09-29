@@ -25,5 +25,6 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 
 trait NodeProvisioner[Id, Signal] extends Serializable {
+  def numberOfNodes: Int
   def getNodes(localSystem: ActorSystem, actorNamePrefix: String, akkaConfig: Config): Array[ActorRef]
 }
