@@ -35,7 +35,7 @@ object MultiJvmConfig {
     ConfigFactory.parseString(
       s"""akka.testconductor.barrier-timeout=60s
           |akka.cluster.seed-nodes=["akka.tcp://"${clusterName}"@"${seedIp}":"${seedPort}]""".stripMargin)
-      .withFallback(ConfigFactory.load())
+      .withFallback(ConfigFactory.load().getConfig("signalcollect"))
       .withFallback(ConfigFactory.parseString(mappingsConfig))
       .withFallback(akkaConfig)
   }

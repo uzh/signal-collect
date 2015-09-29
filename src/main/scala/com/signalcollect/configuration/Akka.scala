@@ -114,7 +114,7 @@ pool-size-max = $numberOfCores
     hostname: String = InetAddress.getLocalHost.getHostAddress,
     port: Int = 0,
     numberOfCores: Int = Runtime.getRuntime.availableProcessors): Config = {
-    val defaults = ConfigFactory.load()
+    val defaults = ConfigFactory.load().getConfig("signalcollect")
     val configWithParameters = defaults.
       optionalMap(serializeMessagesPath, serializeMessages, serializeMessagesValues).
       optionalMap(loggingLevelPath, loggingLevel, loggingLevelValues _).
