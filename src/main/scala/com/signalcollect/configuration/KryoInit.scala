@@ -113,6 +113,7 @@ class KryoInit {
       registerClass(classOf[ImmutableVector[_]])
       registerClass(ReceiveTimeout.getClass)
       // TODO: Convert to safe notation.
+      register("com.signalcollect.nodeprovisioning.cluster.RetrieveNodeActors$")
       register("com.signalcollect.interfaces.SignalMessageWithoutSourceId$mcJ$sp")
       register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcI$sp")
       register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcJ$sp")
@@ -235,6 +236,7 @@ class KryoInit {
       registerClass(classOf[AkkaProtocolException])
       registerClass(classOf[akka.remote.transport.netty.NettyTransport$$anonfun$associate$1$$anon$2])
       register("akka.cluster.ClusterEvent$InitialStateAsSnapshot$")
+      register("akka.cluster.ClusterEvent$InitialStateAsEvents$")
       register("akka.cluster.ClusterEvent$ClusterDomainEvent")
       register("akka.cluster.ClusterEvent$MemberEvent")
       registerClass(classOf[Array[StackTraceElement]])
