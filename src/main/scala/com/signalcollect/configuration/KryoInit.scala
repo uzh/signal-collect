@@ -117,6 +117,7 @@ class KryoInit {
       // TODO: Convert to safe notation.
       register("com.signalcollect.interfaces.SignalMessageWithoutSourceId$mcJ$sp")
       register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcI$sp")
+      register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcJ$sp")
       register("scala.collection.immutable.$colon$colon")
       register("com.signalcollect.WorkerCreator$$anonfun$create$1")
       register("scala.reflect.ManifestFactory$$anon$1")
