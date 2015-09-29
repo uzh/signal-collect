@@ -34,6 +34,7 @@ import scala.collection.immutable.{ Map => ImmutableMap }
 import scala.collection.immutable.{ HashSet => ImmutableHashSet }
 import scala.collection.immutable.{ Set => ImmutableSet }
 import scala.collection.immutable.{ Vector => ImmutableVector }
+import scala.collection.immutable.{ TreeSet => ImmutableTreeSet }
 import akka.actor.ReceiveTimeout
 import akka.remote.transport.AkkaProtocolException
 import scala.reflect.ManifestFactory
@@ -57,22 +58,14 @@ class KryoInit {
       registerClass(classOf[Some[_]])
       registerClass(None.getClass)
       registerClass(classOf[SignalMessageWithSourceId[_, _]])
-      registerClass(classOf[SignalMessageWithSourceId[Int, _]])
-      registerClass(classOf[SignalMessageWithSourceId[Long, _]])
       registerClass(classOf[SignalMessageWithoutSourceId[_, _]])
-      registerClass(classOf[SignalMessageWithoutSourceId[Int, _]])
-      registerClass(classOf[SignalMessageWithoutSourceId[Long, _]])
       registerClass(classOf[BulkStatus])
       registerClass(classOf[BulkSignal[_, _]])
       registerClass(classOf[BulkSignal[Int, _]])
       registerClass(classOf[BulkSignal[Long, _]])
       registerClass(classOf[BulkSignalNoSourceIds[_, _]])
-      registerClass(classOf[BulkSignalNoSourceIds[Int, _]])
-      registerClass(classOf[BulkSignalNoSourceIds[Long, _]])
       registerClass(classOf[AddVertex[_, _, _, _]])
       registerClass(classOf[AddEdge[_, _]])
-      registerClass(classOf[AddEdge[Int, Int]])
-      registerClass(classOf[AddEdge[Long, Long]])
       registerClass(classOf[WorkerCreator[_, _]])
       registerClass(classOf[Tuple2[_, _]])
       registerClass(classOf[Tuple3[_, _, _]])
@@ -89,15 +82,9 @@ class KryoInit {
       registerClass(classOf[Left[_, _]])
       registerClass(classOf[Right[_, _]])
       registerClass(classOf[GraphConfiguration[_, _]])
-      registerClass(classOf[GraphConfiguration[Int, _]])
-      registerClass(classOf[GraphConfiguration[Long, _]])
       registerClass(classOf[LocalNodeProvisioner[_, _]])
       registerClass(classOf[Throughput[_, _]])
-      registerClass(classOf[Throughput[Int, _]])
-      registerClass(classOf[Throughput[Long, _]])
       registerClass(classOf[LowLatency[_, _]])
-      registerClass(classOf[LowLatency[Int, _]])
-      registerClass(classOf[LowLatency[Long, _]])
       registerClass(classOf[Class[_]])
       registerClass(classOf[Object])
       registerClass(classOf[Wrappers.JMapWrapper[_, _]])
@@ -123,10 +110,13 @@ class KryoInit {
       registerClass(classOf[ImmutableSet.Set2[_]])
       registerClass(classOf[ImmutableSet.Set3[_]])
       registerClass(classOf[ImmutableSet.Set4[_]])
+      registerClass(classOf[ImmutableTreeSet[_]])
       registerClass(Nil.getClass)
       registerClass(classOf[ImmutableVector[_]])
       registerClass(ReceiveTimeout.getClass)
       // TODO: Convert to safe notation.
+      register("com.signalcollect.interfaces.SignalMessageWithoutSourceId$mcJ$sp")
+      register("com.signalcollect.interfaces.BulkSignalNoSourceIds$mcI$sp")
       register("scala.collection.immutable.$colon$colon")
       register("com.signalcollect.WorkerCreator$$anonfun$create$1")
       register("scala.reflect.ManifestFactory$$anon$1")
@@ -181,6 +171,7 @@ class KryoInit {
       register("com.signalcollect.factory.mapper.DefaultMapperFactory$mcI$sp")
       register("com.signalcollect.factory.handler.DefaultEdgeAddedToNonExistentVertexHandlerFactory$mcI$sp")
       register("com.signalcollect.factory.scheduler.Throughput$mcI$sp")
+      register("com.signalcollect.factory.scheduler.Throughput$mcJ$sp")
       register("com.signalcollect.factory.storage.MemoryEfficientStorage$mcI$sp")
       register("com.signalcollect.factory.handler.DefaultUndeliverableSignalHandlerFactory$mcI$sp")
       register("com.signalcollect.node.IdleReportRequested")
