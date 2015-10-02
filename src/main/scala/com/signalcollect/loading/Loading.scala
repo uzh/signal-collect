@@ -21,6 +21,7 @@ package com.signalcollect.loading
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 import com.signalcollect.util.FileReader
+import java.io.FileInputStream
 
 object Loading {
 
@@ -47,7 +48,7 @@ object Loading {
    * @note Negative numbers are unsupported.
    */
   @inline def intEdgeIdsOrderedBySourceId(f: String): Iterator[(Int, List[Int])] = {
-    new VertexTupleIterator(FileReader.intIterator(f))
+    new VertexTupleIterator(FileReader.intIterator(new FileInputStream(f)))
   }
 
 }

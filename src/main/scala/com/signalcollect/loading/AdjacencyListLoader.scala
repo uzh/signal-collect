@@ -21,6 +21,7 @@ package com.signalcollect.loading
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 import com.signalcollect.util.FileReader
+import java.io.FileInputStream
 
 /**
  * Loads a graph from an adjacency list format.
@@ -63,7 +64,7 @@ case class AdjacencyListLoader[SignalType](
   var nextVertex: Vertex[Int, _, Int, SignalType] = null
 
   def initialize {
-    intIterator = FileReader.intIterator(filePath)
+    intIterator = FileReader.intIterator(new FileInputStream(filePath))
     isInitialized = true
     nextVertex = readNextVertex
   }
