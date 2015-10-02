@@ -12,6 +12,7 @@
 	<version>6.1.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>signal-collect</name>
+	<description>A framework for parallel and distributed graph processing.</description>
 	<properties>
 		<team.group.id>uzh</team.group.id>
 		<scala.version>2.11.7</scala.version>
