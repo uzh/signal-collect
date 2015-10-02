@@ -34,10 +34,10 @@ import java.io.FileInputStream
 class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
   val sep = File.separator
-  val testFilePath = "com.signalcollect.adjacency-list-format"
+  val testFilePath = "adjacency-list-format"
 
   "AsciiIntIterator" should "correctly parse the integers from an adjacency list file" in {
-    val l = FileReader.intIterator(getClass.getClassLoader.getResourceAsStream(testFilePath)).toList
+    val l = FileReader.intIterator(getClass.getResourceAsStream(testFilePath)).toList
     val correct = List(1, 0, 4, 1, 5, 2, 3, 1, 5, 4, 5, 0)
     assert(l == correct,
       s"Read Ints were $l instead of the correct $correct.")
@@ -46,7 +46,7 @@ class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers
   "AdjacencyListLoader" should "correctly parse vertex data from a file" in {
     var count = 0
     var parsed = List.empty[(Int, List[Int])]
-    AdjacencyListLoader[Double](testFilePath, {
+    AdjacencyListLoader[Double](() => getClass.getResourceAsStream(testFilePath), {
       case (id, array) =>
         val dummy = new EfficientPageRankVertex(1)
         parsed = (id, array.toList) :: parsed
