@@ -90,12 +90,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>intro.js</artifactId>
-			<version>${introjs.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_${scala.minor.version}</artifactId>
 			<version>${scalatest.version}</version>
