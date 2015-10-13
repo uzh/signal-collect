@@ -9,7 +9,7 @@ Install the [Typesafe IDE for Scala 2.11](http://scala-ide.org/download/sdk.html
 
 Ensure that Eclipse uses a Java 8 library and JVM: Preferences → Java → Installed JREs → JRE/JDK 8 should be installed and selected.
 
-Open the Scala project and import it with: File → Import... → Maven → Existing Maven Projects → select "signal-collect" folder
+Import the project into Eclipse: File → Import... → Maven → Existing Maven Projects → select "signal-collect" folder
 
 Thanks a lot to
 ---------------
