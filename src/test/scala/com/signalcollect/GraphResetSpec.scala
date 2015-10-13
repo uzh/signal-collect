@@ -22,9 +22,8 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
-class GraphResetSpec extends FlatSpec with Matchers with TestAnnouncements {
+class GraphResetSpec extends FlatSpec with Matchers {
 
   "Graph.reset" should "reset the graph into a state similar to the one it had after Graph.build" in {
 

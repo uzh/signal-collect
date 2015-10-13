@@ -25,9 +25,8 @@ import messaging.AkkaProxy
 import akka.actor.{ Props, ActorSystem, Actor }
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
-class AkkaProxySpec extends FlatSpec with Matchers with TestAnnouncements {
+class AkkaProxySpec extends FlatSpec with Matchers {
 
   "AkkaProxy" should "invoke blocking methods" in {
 

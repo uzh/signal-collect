@@ -33,7 +33,7 @@ case class SimpleSplayIntSet(
   val overheadFraction: Float,
   val maxNodeIntSetSize: Int) extends SplayIntSet
 
-class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class SplayIntSetSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 

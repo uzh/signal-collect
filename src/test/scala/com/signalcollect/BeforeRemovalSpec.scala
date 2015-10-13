@@ -21,9 +21,8 @@ package com.signalcollect
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
-class BeforeRemovalSpec extends FlatSpec with Matchers with TestAnnouncements {
+class BeforeRemovalSpec extends FlatSpec with Matchers {
 
   "Framework" should "call the beforeRemoval function of a vertex before removing it" in {
     val graph = TestConfig.graphProvider().build

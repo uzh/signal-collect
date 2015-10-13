@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
 
-class FastInsertIntSetSpec extends FlatSpec with Checkers with TestAnnouncements {
+class FastInsertIntSetSpec extends FlatSpec with Checkers {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 

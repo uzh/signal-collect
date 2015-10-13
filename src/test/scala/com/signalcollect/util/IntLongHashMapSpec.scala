@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
 
-class IntLongHashMapSpec extends FlatSpec with Checkers with TestAnnouncements {
+class IntLongHashMapSpec extends FlatSpec with Checkers {
 
   "IntLongHashMap" should "support inserts" in {
     check(

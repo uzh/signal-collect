@@ -24,9 +24,8 @@ import org.scalatest.{Finders, FlatSpec, Matchers}
 
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.factory.storage.{JavaMapStorage, MemoryEfficientStorage}
-import com.signalcollect.util.TestAnnouncements
 
-class VertexStorageSpec extends FlatSpec with Matchers with TestAnnouncements {
+class VertexStorageSpec extends FlatSpec with Matchers {
 
   val memoryEfficientStorage = new MemoryEfficientStorage[Any, Any]
 

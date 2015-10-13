@@ -21,13 +21,11 @@ package com.signalcollect.features
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 import com.signalcollect._
-import com.signalcollect.util.TestAnnouncements
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 
-class MultipleGraphsSpec extends FlatSpec with Matchers with TestAnnouncements {
+class MultipleGraphsSpec extends FlatSpec with Matchers {
 
   def createComputation(): Graph[_, _] = {
     val graph = TestConfig.graphProvider().build

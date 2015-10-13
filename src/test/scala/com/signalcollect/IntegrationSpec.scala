@@ -30,10 +30,9 @@ import com.signalcollect.interfaces.ModularAggregationOperation
 import akka.event.Logging
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 import scala.language.postfixOps
 
-class IntegrationSpec extends FlatSpec with Matchers with TestAnnouncements {
+class IntegrationSpec extends FlatSpec with Matchers {
 
   val computeGraphFactories: List[() => Graph[Any, Any]] = List(() => {
     TestConfig.graphProvider().

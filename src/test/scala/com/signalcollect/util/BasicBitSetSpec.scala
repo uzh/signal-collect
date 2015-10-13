@@ -28,7 +28,7 @@ import java.io.DataOutputStream
 import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
 
-class BasicBitSetSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class BasicBitSetSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   "BasicBitSet" should "correctly retrieve all entries when all bits are set" in {
     val longBitSet = new BasicBitSet(-1l) // -1 has all bits set (2's complement)

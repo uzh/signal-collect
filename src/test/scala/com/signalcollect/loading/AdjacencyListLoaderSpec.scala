@@ -28,10 +28,9 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.EfficientPageRankVertex
 import com.signalcollect.util.AsciiIntIterator
 import com.signalcollect.util.AsciiIntIterator
-import com.signalcollect.util.TestAnnouncements
 import java.io.FileInputStream
 
-class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   val sep = File.separator
   val testFilePath = "adjacency-list-format"

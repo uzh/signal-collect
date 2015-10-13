@@ -25,9 +25,8 @@ import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.examples.{ PageRankEdge, PageRankVertex }
 import com.signalcollect.factory.messagebus.BulkAkkaMessageBusFactory
 import com.signalcollect.interfaces.ModularAggregationOperation
-import com.signalcollect.util.TestAnnouncements
 
-class BulkSignalingSpec extends FlatSpec with Matchers with TestAnnouncements {
+class BulkSignalingSpec extends FlatSpec with Matchers {
 
   "Bulk signaling" should "deliver correct results on a 5-cycle graph" in {
     def pageRankFiveCycleVerifier(v: Vertex[_, _, _, _]): Boolean = {

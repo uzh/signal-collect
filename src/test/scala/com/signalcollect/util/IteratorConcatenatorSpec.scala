@@ -28,7 +28,7 @@ import java.io.DataOutputStream
 import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
 
-class IteratorConcatenatorSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class IteratorConcatenatorSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   "IteratorConcatenator" should "correctly concatenate multiple iterators" in {
     val c = new IteratorConcatenator[Int]

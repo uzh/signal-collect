@@ -30,7 +30,6 @@ import com.signalcollect.interfaces.VertexToWorkerMapper
 import com.signalcollect.interfaces.MapperFactory
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
 class Worker0Mapper[Id] extends VertexToWorkerMapper[Id] {
   def getWorkerIdForVertexId(vertexId: Id): Int = 0
@@ -44,7 +43,7 @@ class Worker0MapperFactory[Id] extends MapperFactory[Id] {
 /**
  * Unit and integration tests for vertex mappers.
  */
-class MapperSpec extends FlatSpec with Matchers with TestAnnouncements {
+class MapperSpec extends FlatSpec with Matchers {
 
   val defaultMapper = new DefaultVertexToWorkerMapper[Int](1, 10)
 

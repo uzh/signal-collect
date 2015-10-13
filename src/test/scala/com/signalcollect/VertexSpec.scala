@@ -12,9 +12,8 @@ import org.scalatest.mock.EasyMockSugar
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.interfaces.SignalMessageWithSourceId
-import com.signalcollect.util.TestAnnouncements
 
-class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar with TestAnnouncements {
+class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMockSugar {
 
   lazy val smallInt = Gen.chooseNum(0, 100)
   lazy val smallDouble = Gen.chooseNum(0.0, 10.0)

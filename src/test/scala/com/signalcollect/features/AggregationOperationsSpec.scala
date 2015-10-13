@@ -26,10 +26,9 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 import TestConfig._
 
-class AggregationOperationsSpec extends FlatSpec with Matchers with TestAnnouncements {
+class AggregationOperationsSpec extends FlatSpec with Matchers {
 
   "SumOfStates" should "sum all states correctly" in {
     def createGraph = {

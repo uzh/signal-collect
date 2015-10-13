@@ -29,7 +29,6 @@ import org.scalatest.Matchers
 import akka.event.Logging
 import com.signalcollect.interfaces.ExistingVertexHandlerFactory
 import com.signalcollect.interfaces.ExistingVertexHandler
-import com.signalcollect.util.TestAnnouncements
 
 class DummyVertex(id: Int) extends PageRankVertex(id) {
   state = 1
@@ -47,7 +46,7 @@ class TestExistingVertexHandler[Id, Signal] extends ExistingVertexHandler[Id, Si
   }
 }
 
-class MultipleVertexAdditionsSpec extends FlatSpec with Matchers with TestAnnouncements {
+class MultipleVertexAdditionsSpec extends FlatSpec with Matchers {
 
   "Adding the same vertex multiple times" should "be ignored" in {
     val g = TestConfig.graphProvider().build //.withLoggingLevel(Logging.DebugLevel)
