@@ -25,10 +25,9 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.interfaces.ModularAggregationOperation
 import org.scalatest.Matchers
-import com.signalcollect.util.TestAnnouncements
 import org.scalatest.FlatSpec
 
-class SnapshotSpec extends FlatSpec with Matchers with TestAnnouncements {
+class SnapshotSpec extends FlatSpec with Matchers {
 
   "Snapshots" should "correctly store and load a small graph" in {
 

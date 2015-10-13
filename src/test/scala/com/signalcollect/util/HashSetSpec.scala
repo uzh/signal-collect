@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
 
-class HasSetSpec extends FlatSpec with Checkers with TestAnnouncements {
+class HasSetSpec extends FlatSpec with Checkers {
 
   "HasSet" should "support inserts" in {
     check(

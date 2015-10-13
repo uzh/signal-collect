@@ -25,9 +25,8 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
-class GraphLoadingSpec extends FlatSpec with Matchers with TestAnnouncements {
+class GraphLoadingSpec extends FlatSpec with Matchers {
 
   "Graph" should "support the `loadGraph` command" in {
     val graph = TestConfig.graphProvider().build

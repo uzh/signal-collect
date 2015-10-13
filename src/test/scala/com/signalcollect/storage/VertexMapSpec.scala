@@ -23,10 +23,9 @@ import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.SudokuCell
 import com.signalcollect.Vertex
 import org.scalatest.Matchers
-import com.signalcollect.util.TestAnnouncements
 import org.scalatest.FlatSpec
 
-class VertexMapSpec extends FlatSpec with Matchers with TestAnnouncements {
+class VertexMapSpec extends FlatSpec with Matchers {
 
   "VertexMap" should "support puts" in {
     val vm = new VertexMap[Any, Any](8, 0.99f)

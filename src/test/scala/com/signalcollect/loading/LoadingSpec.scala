@@ -24,9 +24,8 @@ import org.scalatest.ShouldMatchers
 import org.scalatest.FlatSpec
 import java.io.File
 import com.signalcollect.util.FileReader
-import com.signalcollect.util.TestAnnouncements
 
-class LoadingSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class LoadingSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   val testFile = s"notredame2"
   

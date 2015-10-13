@@ -28,7 +28,7 @@ import java.io.DataOutputStream
 import java.io.ByteArrayOutputStream
 import org.scalacheck.Arbitrary
 
-class IntsSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class IntsSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 

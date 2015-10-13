@@ -24,7 +24,6 @@ import org.scalatest.{ FlatSpec, Matchers }
 import com.signalcollect.GraphBuilder
 import com.signalcollect.interfaces.{ Storage, StorageFactory }
 import com.signalcollect.storage.VertexMapStorage
-import com.signalcollect.util.TestAnnouncements
 
 object TestStorageFactory extends StorageFactory[Any, Any] {
   def createInstance: Storage[Any, Any] = TestStorage
@@ -37,7 +36,7 @@ object TestStorage extends VertexMapStorage[Any, Any] {
   }
 }
 
-class StoreClosedOnShutdownSpec extends FlatSpec with Matchers with TestAnnouncements {
+class StoreClosedOnShutdownSpec extends FlatSpec with Matchers {
 
   "Store" should "be closed on shutdown" in {
     val graph = GraphBuilder.withStorageFactory(TestStorageFactory).build

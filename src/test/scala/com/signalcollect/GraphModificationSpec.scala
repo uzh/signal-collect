@@ -21,9 +21,8 @@ package com.signalcollect
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
-class GraphModificationSpec extends FlatSpec with Matchers with TestAnnouncements {
+class GraphModificationSpec extends FlatSpec with Matchers {
 
   "GraphEditor" should "support modification functions" in {
     val graph = TestConfig.graphProvider().build

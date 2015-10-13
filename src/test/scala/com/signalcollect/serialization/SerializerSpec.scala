@@ -24,11 +24,10 @@ import com.signalcollect.configuration.ActorSystemRegistry
 import akka.serialization.SerializationExtension
 import com.romix.akka.serialization.kryo.KryoSerializer
 import org.scalatest.Matchers
-import com.signalcollect.util.TestAnnouncements
 import org.scalatest.FlatSpec
 import TestConfig._
 
-class SerializerSpec extends FlatSpec with Matchers with TestAnnouncements {
+class SerializerSpec extends FlatSpec with Matchers {
 
   "Kryo" should "correctly serialize Scala immutable maps" in {
     val g = graphProvider("SignalCollect").build

@@ -25,7 +25,7 @@ import org.scalatest.FlatSpec
 import java.io.File
 import com.signalcollect.loading.LoadingSpec
 
-class FileReaderSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class FileReaderSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   val sep = File.separator
   val testFilePath1 = s"ascii-ints.txt"

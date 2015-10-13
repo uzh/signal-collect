@@ -22,9 +22,8 @@ import org.scalatest.{ FlatSpec, Matchers }
 import com.signalcollect.examples.{ PageRankEdge, PageRankVertex }
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
-import com.signalcollect.util.TestAnnouncements
 
-class ActorSystemSpec extends FlatSpec with Matchers with TestAnnouncements {
+class ActorSystemSpec extends FlatSpec with Matchers {
 
   "Signal/Collect" should "support multiple instances on the same actor system" in {
     val a = TestConfig.actorSystem()

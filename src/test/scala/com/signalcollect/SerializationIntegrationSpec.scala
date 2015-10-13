@@ -8,9 +8,8 @@ import com.signalcollect.examples.PageRankEdge
 import com.signalcollect.examples.PageRankVertex
 import com.signalcollect.examples.EfficientPageRankVertex
 import com.signalcollect.examples.PlaceholderEdge
-import com.signalcollect.util.TestAnnouncements
 
-class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
+class SerializationIntegrationSpec extends FlatSpec with ShouldMatchers with Checkers {
 
   "Kryo serialization" should "support running PageRank with message serialization" in {
     val system = TestConfig.actorSystem()

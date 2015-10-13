@@ -28,7 +28,6 @@ import com.signalcollect.examples.PageRankVertex
 import akka.event.Logging
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import com.signalcollect.util.TestAnnouncements
 
 class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
   type Signal = Int
@@ -40,7 +39,7 @@ class CountingVertex(id: Int) extends DataGraphVertex(id, (0, 0)) {
   }
 }
 
-class ComputationTerminationSpec extends FlatSpec with Matchers with TestAnnouncements {
+class ComputationTerminationSpec extends FlatSpec with Matchers {
 
   def createPageRankCircleGraph(vertices: Int): Graph[Any, Any] = {
     val graph = TestConfig.graphProvider().build

@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.scalatest.FlatSpec
 import org.scalatest.prop.Checkers
 
-class FastInsertIntSetSpec extends FlatSpec with Checkers with TestAnnouncements {
+class FastInsertIntSetSpec extends FlatSpec with Checkers {
 
   implicit lazy val arbInt = Arbitrary(Gen.chooseNum(Int.MinValue, Int.MaxValue))
 
@@ -39,7 +39,6 @@ class FastInsertIntSetSpec extends FlatSpec with Checkers with TestAnnouncements
       }
       val finish = System.currentTimeMillis
       val time = finish - start
-      println("It took " + (time.toDouble / 1000) + " seconds with factor " + factor)
       assert(new FastInsertIntSet(fastInsertSet).toSet == randomInts.toSet)
     } catch {
       case t: Throwable => t.printStackTrace
