@@ -21,6 +21,7 @@ package com.signalcollect.util
 import java.io.FileInputStream
 import java.io.BufferedInputStream
 import scala.annotation.switch
+import java.io.InputStream
 
 object FileReader {
 
@@ -33,8 +34,8 @@ object FileReader {
    *
    * @note Negative numbers are unsupported.
    */
-  @inline def intIterator(filePath: String): Iterator[Int] = {
-    new AsciiIntIterator(filePath)
+  @inline def intIterator(inputStream: InputStream): Iterator[Int] = {
+    new AsciiIntIterator(inputStream)
   }
 
   /**
@@ -47,9 +48,9 @@ object FileReader {
    *
    * @note Negative numbers are unsupported.
    */
-  @inline def processInts(filePath: String, p: Int => Unit) {
+  @inline def processInts(inputStream: InputStream, p: Int => Unit) {
     val BLOCK_SIZE = 8 * 32768
-    val in = new BufferedInputStream(new FileInputStream(filePath))
+    val in = new BufferedInputStream(inputStream)
     var currentNumber = 0
     var inputIndex = 0
     val buf = new Array[Byte](BLOCK_SIZE)
@@ -91,7 +92,7 @@ object FileReader {
 
 }
 
-private final class AsciiIntIterator(filePath: String) extends Iterator[Int] {
+private final class AsciiIntIterator(inputStream: InputStream) extends Iterator[Int] {
   var initialized = false
   final val BLOCK_SIZE = 8 * 32768
   var in: BufferedInputStream = _
@@ -172,7 +173,7 @@ private final class AsciiIntIterator(filePath: String) extends Iterator[Int] {
   }
 
   @inline def initialize {
-    in = new BufferedInputStream(new FileInputStream(filePath))
+    in = new BufferedInputStream(inputStream)
     buf = new Array[Byte](BLOCK_SIZE)
     read = in.read(buf)
     initialized = true

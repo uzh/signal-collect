@@ -18,8 +18,9 @@
 
 package com.signalcollect.loading
 
-import com.signalcollect.GraphEditor
-import com.signalcollect.Vertex
+import java.io.InputStream
+
+import com.signalcollect.{ GraphEditor, Vertex }
 import com.signalcollect.util.FileReader
 
 /**
@@ -37,7 +38,7 @@ import com.signalcollect.util.FileReader
  * @note The vertex ids have to be positive Ints.
  */
 case class AdjacencyListLoader[SignalType](
-  filePath: String, combinedVertexBuilder: (Int, Array[Int]) => Vertex[Int, _, Int, SignalType])
+  inputStream: () => InputStream, combinedVertexBuilder: (Int, Array[Int]) => Vertex[Int, _, Int, SignalType])
   extends Iterator[GraphEditor[Int, SignalType] => Unit] {
 
   var intIterator: Iterator[Int] = _
@@ -63,7 +64,7 @@ case class AdjacencyListLoader[SignalType](
   var nextVertex: Vertex[Int, _, Int, SignalType] = null
 
   def initialize {
-    intIterator = FileReader.intIterator(filePath)
+    intIterator = FileReader.intIterator(inputStream())
     isInitialized = true
     nextVertex = readNextVertex
   }

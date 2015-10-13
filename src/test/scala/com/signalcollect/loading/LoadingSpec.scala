@@ -28,10 +28,10 @@ import com.signalcollect.util.TestAnnouncements
 
 class LoadingSpec extends FlatSpec with ShouldMatchers with Checkers with TestAnnouncements {
 
+  val testFile = s"notredame2"
+  
   "Loader" should "correctly parse vertex data from an ordered integer edge list" in {
-    val sep = File.separator
-    val testFilePath = s".${sep}test-data${sep}notredame2"
-    val d = Loading.intEdgeIdsOrderedBySourceId(testFilePath).toList
+    val d = Loading.intEdgeIdsOrderedBySourceId(getClass.getResourceAsStream(testFile)).toList
     assert(d == List((0, List(1, 0)), (1, List(0)), (3, List(2))))
   }
 

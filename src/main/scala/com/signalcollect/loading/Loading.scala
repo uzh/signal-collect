@@ -21,6 +21,8 @@ package com.signalcollect.loading
 import com.signalcollect.GraphEditor
 import com.signalcollect.Vertex
 import com.signalcollect.util.FileReader
+import java.io.FileInputStream
+import java.io.InputStream
 
 object Loading {
 
@@ -43,11 +45,11 @@ object Loading {
   /**
    * Returns an iterator that transforms a list of ASCII encoded Int Int tuples that are ordered by source ID into
    * a tuple of the source vertex ID with a list of the respective target IDs.
-   * 
+   *
    * @note Negative numbers are unsupported.
    */
-  @inline def intEdgeIdsOrderedBySourceId(f: String): Iterator[(Int, List[Int])] = {
-    new VertexTupleIterator(FileReader.intIterator(f))
+  @inline def intEdgeIdsOrderedBySourceId(inputStream: InputStream): Iterator[(Int, List[Int])] = {
+    new VertexTupleIterator(FileReader.intIterator(inputStream))
   }
 
 }
