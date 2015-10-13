@@ -57,7 +57,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @note It may make sense to call this method repeatedly, for example if a compute graph is modified after execution.
    */
-  def execute: ExecutionInformation[Id, Signal]
+  def execute(): ExecutionInformation[Id, Signal]
 
   /**
    *  Starts the execution of the computation using the default execution parameters and
@@ -89,21 +89,21 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @see `foreachVertex`
    */
-  def recalculateScores
+  def recalculateScores(): Unit
 
   /**
    *  Waits until all processing has finished.
    *
    *  @note Only used with continuous asynchronous execution.
    */
-  def awaitIdle
+  def awaitIdle(): Unit
 
   /**
    *  Shuts down the compute graph and frees associated resources.
    *
    *  @note If methods on a ComputeGraph instance get called after having called `shutdown`, then the behavior is not specified.
    */
-  def shutdown
+  def shutdown(): Unit
 
   /**
    *  Executes the function `f` on the vertex with id `vertexId` and returns the result.
@@ -131,7 +131,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  @note This function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit)
+  def foreachVertex(f: Vertex[Id, _, Id, Signal] => Unit): Unit
 
   /**
    *  The worker passes a GraphEditor to function `f`, and then executes the resulting function on all vertices.
@@ -141,7 +141,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  @note The resulting function may be executed on other machines and references
    *  		to objects that are not reachable from the vertex-parameter may not be accessible.
    */
-  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit)
+  def foreachVertexWithGraphEditor(f: GraphEditor[Id, Signal] => Vertex[Id, _, Id, Signal] => Unit): Unit
 
   /**
    *  Applies an aggregation operation to the graph and returns the result.
@@ -191,7 +191,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.
    */
-  def reset
+  def reset(): Unit
 
   /**
    *  Returns the local internally used actor system of this this Signal/Collect graph.
@@ -205,7 +205,7 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    *
    *  @return Various individual statistics from all workers.
    */
-  private[signalcollect] def getWorkerStatistics: List[WorkerStatistics]
+  private[signalcollect] def getWorkerStatistics(): List[WorkerStatistics]
 
   /**
    * Creates a snapshot of all the vertices in all workers.
@@ -213,19 +213,19 @@ trait Graph[Id, Signal] extends GraphEditor[Id, Signal] {
    * Should only be used when the workers are idle.
    * Overwrites any previous snapshot that might exist.
    */
-  private[signalcollect] def snapshot
+  private[signalcollect] def snapshot(): Unit
 
   /**
    * Restores the last snapshot of all the vertices in all workers.
    * Does not store the toSignal/toCollect collections or pending messages.
    * Should only be used when the workers are idle.
    */
-  private[signalcollect] def restore
+  private[signalcollect] def restore(): Unit
 
   /**
    * Deletes the worker snapshots if they exist.
    */
-  private[signalcollect] def deleteSnapshot
+  private[signalcollect] def deleteSnapshot(): Unit
 
 }
 
@@ -240,14 +240,14 @@ object ExtendedGraph {
      *
      *  @return the internal ActorSystem.
      */
-    def system: ActorSystem = g.system
+    def system(): ActorSystem = g.system
 
     /**
      *  Gathers worker statistics.
      *
      *  @return Various individual statistics from all workers.
      */
-    def getWorkerStatistics = g.getWorkerStatistics
+    def getWorkerStatistics() = g.getWorkerStatistics
 
     /**
      * Creates a snapshot of all the vertices in all workers.
@@ -255,18 +255,18 @@ object ExtendedGraph {
      * Should only be used when the workers are idle.
      * Overwrites any previous snapshot that might exist.
      */
-    def snapshot = g.snapshot
+    def snapshot() = g.snapshot
 
     /**
      * Restores the last snapshot of all the vertices in all workers.
      * Does not store the toSignal/toCollect collections or pending messages.
      * Should only be used when the workers are idle.
      */
-    def restore = g.restore
+    def restore() = g.restore
 
     /**
      * Deletes the worker snapshots if they exist.
      */
-    def deleteSnapshot = g.deleteSnapshot
+    def deleteSnapshot() = g.deleteSnapshot
   }
 }
