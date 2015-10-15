@@ -144,9 +144,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = {
-    config.actorSystem.getOrElse(
-      ActorSystemRegistry.retrieve("SignalCollect").
-        getOrElse(ActorSystem("SignalCollect", akkaConfig)))
+    config.actorSystem.getOrElse(ActorSystem("SignalCollect", akkaConfig))
   }
 
   if (!ActorSystemRegistry.contains(system)) {

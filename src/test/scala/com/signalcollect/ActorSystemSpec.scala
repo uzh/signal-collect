@@ -26,12 +26,15 @@ import akka.actor.ActorSystem
 class ActorSystemSpec extends FlatSpec with Matchers {
 
   "Signal/Collect" should "support multiple instances on the same actor system" in {
-    val a = TestConfig.actorSystem()
-    val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
+    val a = TestGraph.instantiateUniqueActorSystem()
+    val graph1 = GraphBuilder.
+      withActorSystem(a).
+      withActorNamePrefix(TestGraph.nextUniquePrefix).
+      build
     try {
       val graph2 = GraphBuilder.
         withActorSystem(a).
-        withActorNamePrefix("b").
+        withActorNamePrefix(TestGraph.nextUniquePrefix).
         build
       try {
         graph2.addVertex(new PageRankVertex(1))
@@ -61,8 +64,11 @@ class ActorSystemSpec extends FlatSpec with Matchers {
   }
 
   it should "support running on the same actor system with a shutdown in between" in {
-    val a = TestConfig.actorSystem()
-    val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
+    val a = TestGraph.instantiateUniqueActorSystem()
+    val graph1 = GraphBuilder.
+      withActorSystem(a).
+      withActorNamePrefix(TestGraph.nextUniquePrefix).
+      build
     try {
       graph1.addVertex(new PageRankVertex(1))
       graph1.addVertex(new PageRankVertex(2))
@@ -80,7 +86,7 @@ class ActorSystemSpec extends FlatSpec with Matchers {
     Thread.sleep(1000)
     val graph2 = GraphBuilder.
       withActorSystem(a).
-      //withActorNamePrefix("b").
+      withActorNamePrefix(TestGraph.nextUniquePrefix).
       build
     try {
       graph2.addVertex(new PageRankVertex(1))
@@ -98,11 +104,11 @@ class ActorSystemSpec extends FlatSpec with Matchers {
   }
 
   it should "run on multiple actor systems inside the same JVM" in {
-    val a = TestConfig.actorSystem()
-    val b = TestConfig.actorSystem()
-    val graph1 = GraphBuilder.withActorSystem(a).withActorNamePrefix(TestConfig.prefix).build
+    val a = TestGraph.instantiateUniqueActorSystem()
+    val b = TestGraph.instantiateUniqueActorSystem()
+    val graph1 = GraphBuilder.withActorSystem(a).build
     try {
-      val graph2 = GraphBuilder.withActorSystem(b).withActorNamePrefix(TestConfig.prefix).build
+      val graph2 = GraphBuilder.withActorSystem(b).build
       try {
         graph2.addVertex(new PageRankVertex(1))
         graph2.addVertex(new PageRankVertex(2))

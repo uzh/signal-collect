@@ -20,13 +20,14 @@
 
 package com.signalcollect.nodeprovisioning.cluster
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import akka.actor.ActorSystem
 import com.signalcollect.configuration.Akka
+import com.signalcollect.TestGraph
 
 object ClusterNodeEntryPointTemplate {
 
-    start()
+  start()
 
   def config: Config = Akka.config(
     serializeMessages = None,
@@ -34,10 +35,11 @@ object ClusterNodeEntryPointTemplate {
     kryoRegistrations = List.empty,
     kryoInitializer = None)
 
-  def systemName: String = "SignalCollect"
+  def systemName: String = TestGraph.nextUniqueName
 
   def start(): Unit = {
     val system = ActorSystem(systemName, config)
     system.awaitTermination()
   }
+
 }

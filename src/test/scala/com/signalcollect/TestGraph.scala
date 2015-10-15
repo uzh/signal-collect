@@ -17,20 +17,57 @@
  *
  */
 
-package com.signalcollect.triplerush
+package com.signalcollect
 
-import com.signalcollect.GraphBuilder
 import java.util.concurrent.atomic.AtomicInteger
 import org.scalatest.fixture.NoArg
-import com.signalcollect.Graph
+import akka.actor.ActorSystem
+import com.typesafe.config.ConfigFactory
+import com.signalcollect.configuration.Akka
 
 object TestGraph {
 
-  val nextUniquePrefix = new AtomicInteger(0)
+  private[this] val uniquePrefixTracker = new AtomicInteger(0)
+
+  private[this] val uniqueNameTracker = new AtomicInteger(0)
+
+  def nextUniquePrefix = uniquePrefixTracker.incrementAndGet.toString
+
+  def nextUniqueName = uniqueNameTracker.incrementAndGet.toString
+
+//    private[this] def seed(actorSystemName: String, seedPort: Int, seedIp: String = "127.0.0.1") = ConfigFactory.parseString(
+//    s"""akka.log-dead-letters-during-shutdown=off
+//       |akka.clustering.name=$actorSystemName
+//        |akka.clustering.seed-ip=$seedIp
+//        |akka.clustering.seed-port=$seedPort
+//        |akka.remote.netty.tcp.port=$seedPort
+//        |akka.cluster.seed-nodes=["akka.tcp://"${actorSystemName}"@"${seedIp}":"${seedPort}]""".stripMargin)
+//
+//  def randomPort: Int = {
+//    val socket = new ServerSocket(0)
+//    val port = socket.getLocalPort
+//    socket.close()
+//    port
+//  }
+//
+//  def actorSystem(name: String = UUID.randomUUID().toString.replace("-", ""), port: Int = randomPort) = {
+//    ActorSystem(name, seed(name, port).withFallback(ConfigFactory.load().getConfig("signalcollect")))
+//  }
+  
+  def instantiateUniqueActorSystem(): ActorSystem = {
+    val defaultConfig = GraphBuilder.config
+    val config = Akka.config(
+      serializeMessages = None,
+      loggingLevel = None,
+      kryoRegistrations = defaultConfig.kryoRegistrations,
+      kryoInitializer = None)
+    ActorSystem(nextUniqueName, config)
+  }
 
   def instantiateUniqueGraph(): Graph[Any, Any] = {
-    val uniquePrefix = nextUniquePrefix.incrementAndGet.toString
-    val graphBuilder = GraphBuilder.withActorNamePrefix(uniquePrefix)
+    val graphBuilder = GraphBuilder
+      .withActorNamePrefix(nextUniquePrefix)
+      .withActorSystem(instantiateUniqueActorSystem())
     graphBuilder.build
   }
 
