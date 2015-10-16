@@ -32,7 +32,6 @@ import java.io.FileInputStream
 
 class AdjacencyListLoaderSpec extends FlatSpec with ShouldMatchers with Checkers {
 
-  val sep = File.separator
   val testFilePath = "adjacency-list-format"
 
   "AsciiIntIterator" should "correctly parse the integers from an adjacency list file" in {
