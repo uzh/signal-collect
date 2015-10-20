@@ -15,7 +15,7 @@
 	<description>A framework for parallel and distributed graph processing.</description>
 	<properties>
 		<team.group.id>uzh</team.group.id>
-		<scala.version>2.11.7</scala.version>
+		<scala.release>7</scala.release>
 		<akka.version>2.4.0</akka.version>
 		<akka.kryo.version>0.3.3</akka.kryo.version>
 		<d3js.version>3.5.6</d3js.version>
