@@ -14,6 +14,8 @@
 	<name>signal-collect</name>
 	<description>A framework for parallel and distributed graph processing.</description>
 	<properties>
+		<!-- TEMPORARY FIX -->
+		<proxy.url.base>http://ihealthtechnologies.artifactoryonline.com/ihealthtechnologies</proxy.url.base>
 		<team.group.id>uzh</team.group.id>
 		<scala.release>7</scala.release>
 		<akka.version>2.4.0</akka.version>
@@ -33,6 +35,27 @@
 		<developerConnection>scm:git:${git.url}</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>central</id>
+			<name>Proxy Releases</name>
+			<url>${proxy.url.base}/external-local</url>
+			<layout>default</layout>
+		</repository>
+
+		<snapshotRepository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>snapshots</id>
+			<name>Proxy Snapshots</name>
+			<url>${proxy.url.base}/external-local</url>
+		</snapshotRepository>
+		<site>
+			<id>githubsite</id>
+			<name>GitHub Pages</name>
+			<url>${site.target.url}</url>
+		</site>
+	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.scala-lang</groupId>
@@ -183,10 +206,4 @@
 			<url>https://github.com/sunnylbk</url>
 		</developer>
 	</developers>
-	<distributionManagement>
-		<repository>
-			<id>bintray-maven</id>
-			<url>https://bintray.com/pstutz/maven/signal-collect/;publish=1</url>
-		</repository>
-	</distributionManagement>
 </project>
