@@ -25,7 +25,7 @@
 		<jquery.version>2.1.4</jquery.version>
 		<reconnecting-websocket.version>1.0.0</reconnecting-websocket.version>
 		<scalatest.version>2.2.5</scalatest.version>
-		<scalacheck.version>1.12.4</scalacheck.version>
+		<scalacheck.version>1.12.5</scalacheck.version>
 		<easymock.version>3.3.1</easymock.version>
 	</properties>
 	<url>${ghe.url.base}/${project.artifactId}</url>
