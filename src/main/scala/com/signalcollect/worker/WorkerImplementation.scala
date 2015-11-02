@@ -58,6 +58,7 @@ import com.sun.management.OperatingSystemMXBean
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import com.signalcollect.util.IteratorConcatenator
+import scala.util.control.NonFatal
 
 /**
  * Main implementation of the WorkerApi interface.
@@ -299,7 +300,11 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     if (vertexStore.vertices.put(vertex)) {
       counters.verticesAdded += 1
       counters.outgoingEdgesAdded += vertex.edgeCount
-      vertex.afterInitialization(graphEditor)
+      try {
+        vertex.afterInitialization(graphEditor)
+      } catch {
+        case NonFatal(e) => log.error(e, s"Error in `afterInitialization` method of vertex with ID ${vertex.id}: ${e.getMessage}")
+      }
       if (vertex.scoreSignal > signalThreshold) {
         vertexStore.toSignal.put(vertex)
       }
