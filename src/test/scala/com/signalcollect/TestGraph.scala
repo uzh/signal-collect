@@ -17,12 +17,11 @@
  *
  */
 
-package com.signalcollect.triplerush
+package com.signalcollect
 
-import com.signalcollect.GraphBuilder
 import java.util.concurrent.atomic.AtomicInteger
+
 import org.scalatest.fixture.NoArg
-import com.signalcollect.Graph
 
 object TestGraph {
 
@@ -38,6 +37,8 @@ object TestGraph {
 
 class TestGraph(val g: Graph[Any, Any]) extends NoArg {
 
+  lazy implicit val system = g.system
+
   def this() = this(TestGraph.instantiateUniqueGraph())
 
   def shutdown(): Unit = {
@@ -45,8 +46,11 @@ class TestGraph(val g: Graph[Any, Any]) extends NoArg {
   }
 
   override def apply(): Unit = {
-    try super.apply()
-    finally shutdown()
+    try {
+      super.apply()
+    } finally {
+      shutdown()
+    }
   }
 
 }
