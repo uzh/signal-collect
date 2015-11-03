@@ -19,18 +19,62 @@
 
 package com.signalcollect
 
+import java.net.ServerSocket
 import java.util.concurrent.atomic.AtomicInteger
+
+import scala.annotation.tailrec
+import scala.reflect.runtime.universe
+import scala.util.{ Failure, Success, Try }
 
 import org.scalatest.fixture.NoArg
 
+import com.signalcollect.configuration.Akka
+
+import akka.actor.ActorSystem
+
 object TestGraph {
 
-  val nextUniquePrefix = new AtomicInteger(0)
-
   def instantiateUniqueGraph(): Graph[Any, Any] = {
-    val uniquePrefix = nextUniquePrefix.incrementAndGet.toString
-    val graphBuilder = GraphBuilder.withActorNamePrefix(uniquePrefix)
-    graphBuilder.build
+    instantiateUniqueGraphBuilder().build
+  }
+
+  def instantiateUniqueActorSystem(): ActorSystem = {
+    val port = freePort
+    val akkaConfig = Akka.config(
+      serializeMessages = None,
+      loggingLevel = None,
+      kryoRegistrations = GraphBuilder.config.kryoRegistrations,
+      kryoInitializer = None,
+      port = Some(port),
+      seedPort = Some(port))
+    val actorSystemName = "SignalCollectTestSystem"
+    ActorSystem(actorSystemName, akkaConfig)
+  }
+
+  def instantiateUniqueGraphBuilder(): GraphBuilder[Any, Any] = {
+    new GraphBuilder[Any, Any]()
+      .withActorSystem(instantiateUniqueActorSystem())
+  }
+
+  private[this] val portUsageTracker = new AtomicInteger(2500)
+
+  def freePort: Int = {
+    @tailrec def attemptToBindAPort(failuresSoFar: Int): Int = {
+      val checkedPort = portUsageTracker.incrementAndGet
+      val socketTry = Try(new ServerSocket(checkedPort))
+      socketTry match {
+        case Success(s) =>
+          s.close()
+          checkedPort
+        case Failure(f) =>
+          if (failuresSoFar > 10) {
+            throw f
+          } else {
+            attemptToBindAPort(failuresSoFar + 1)
+          }
+      }
+    }
+    attemptToBindAPort(0)
   }
 
 }

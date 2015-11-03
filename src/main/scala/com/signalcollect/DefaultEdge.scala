@@ -21,9 +21,6 @@ package com.signalcollect
 
 import com.signalcollect.interfaces.EdgeId
 import akka.event.Logging
-import com.signalcollect.configuration.ActorSystemRegistry
-import scala.annotation.elidable
-import scala.annotation.elidable._
 import com.signalcollect.interfaces.SignalMessageWithSourceId
 
 /**
@@ -37,48 +34,6 @@ abstract class DefaultEdge[TargetId](val targetId: TargetId) extends Edge[Target
 
   /** The type of signals that are sent along this edge. */
   type Signal = Any
-
-  /**
-   * Calls to debug level logging are by default disregarded by the compiler and do not get executed.
-   * To enable them decrease the default S/C "-Xelide-below" compiler parameter from "INFO" to "ALL".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(FINEST) def debug(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).debug(message)
-      case None =>
-    }
-  }
-
-  /**
-   * Info level logging is by default enabled and very expensive.
-   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "WARNING".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(INFO) def info(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).info(message)
-      case None =>
-    }
-  }
-
-  /**
-   * Warning level logging is by default enabled and very expensive.
-   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "SEVERE".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(WARNING) def warning(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).warning(message)
-      case None =>
-    }
-  }
 
   var source: Source = _
 

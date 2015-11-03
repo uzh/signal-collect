@@ -28,7 +28,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 import scala.reflect.ClassTag
-import com.signalcollect.configuration.ActorSystemRegistry
 import com.signalcollect.configuration.ExecutionMode
 import com.signalcollect.configuration.GraphConfiguration
 import com.signalcollect.configuration.TerminationReason
@@ -144,13 +143,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   override def toString: String = "DefaultGraph"
 
   val system: ActorSystem = {
-    config.actorSystem.getOrElse(
-      ActorSystemRegistry.retrieve("SignalCollect").
-        getOrElse(ActorSystem("SignalCollect", akkaConfig)))
-  }
-
-  if (!ActorSystemRegistry.contains(system)) {
-    ActorSystemRegistry.register(system)
+    config.actorSystem.getOrElse(ActorSystem("SignalCollect", akkaConfig))
   }
 
   val log = system.log
@@ -773,8 +766,6 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
         }
       } catch {
         case t: Throwable =>
-      } finally {
-        ActorSystemRegistry.remove(system)
       }
     } else {
       // If the system is preserved, just cleanup the actors.

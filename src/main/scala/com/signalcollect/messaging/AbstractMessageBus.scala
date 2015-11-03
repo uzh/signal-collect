@@ -37,7 +37,6 @@ import akka.actor.actorRef2Scala
 import com.signalcollect.interfaces.AddVertex
 import com.signalcollect.interfaces.AddEdge
 import akka.event.Logging
-import com.signalcollect.configuration.ActorSystemRegistry
 import akka.actor.ActorSystem
 import com.signalcollect.interfaces.SignalMessageWithSourceId
 import com.signalcollect.interfaces.SignalMessageWithoutSourceId

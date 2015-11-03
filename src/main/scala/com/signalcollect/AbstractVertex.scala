@@ -21,9 +21,6 @@ package com.signalcollect
 
 import akka.event.LoggingAdapter
 import akka.event.Logging
-import com.signalcollect.configuration.ActorSystemRegistry
-import scala.annotation.elidable
-import scala.annotation.elidable._
 
 abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
 
@@ -33,48 +30,6 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
   override lazy val hashCode = id.hashCode // Lazy to prevent premature initialization when using Java API.
 
   def afterInitialization(graphEditor: GraphEditor[Any, Any]) = {}
-
-  /**
-   * Calls to debug level logging are by default disregarded by the compiler and do not get executed.
-   * To enable them decrease the default S/C "-Xelide-below" compiler parameter from "INFO" to "ALL".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(FINEST) def debug(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).debug(message)
-      case None =>
-    }
-  }
-
-  /**
-   * Info level logging is by default enabled and very expensive.
-   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "WARNING".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(INFO) def info(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).info(message)
-      case None =>
-    }
-  }
-
-  /**
-   * Warning level logging is by default enabled and very expensive.
-   * To disable increase the default S/C "-Xelide-below" compiler parameter from "INFO" to "SEVERE".
-   *
-   * Note: this logging has no memory overhead for a reference.
-   */
-  @elidable(WARNING) def warning(message: String) {
-    val system = ActorSystemRegistry.retrieve("SignalCollect")
-    system match {
-      case Some(s) => Logging.getLogger(s, this).warning(message)
-      case None =>
-    }
-  }
 
   /**
    * Access to the outgoing edges is required for some calculations and for executing the signal operations.

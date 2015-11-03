@@ -16,10 +16,10 @@ object Akka {
 
   private[this] def value(v: Any): ConfigValue = {
     v match {
-      case s: ConfigValue => s
+      case s: ConfigValue               => s
       case m: Map[String @unchecked, _] => ConfigValueFactory.fromMap(m)
       case l: List[_]                   => ConfigValueFactory.fromIterable(l)
-      case _ => ConfigValueFactory.fromAnyRef(v)
+      case _                            => ConfigValueFactory.fromAnyRef(v)
     }
   }
 
@@ -61,7 +61,11 @@ object Akka {
 
   val hostnamePath = "akka.actor.remote.netty.tcp.hostname"
 
-  val portPath = "akka.actor.remote.netty.tcp.port"
+  val portPath = "akka.remote.netty.tcp.port"
+  
+  val seedPortPath = "akka.clustering.seed-port"
+  
+  val seedNodesPath = "akka.cluster.seed-nodes"
 
   val backoffRemoteDispatcherPath = "akka.actor.remote.backoff-remote-dispatcher"
 
@@ -112,10 +116,12 @@ pool-size-max = $numberOfCores
     kryoRegistrations: List[String],
     kryoInitializer: Option[String],
     hostname: String = InetAddress.getLocalHost.getHostAddress,
-    port: Int = 0,
+    port: Option[Int] = None,
+    seedPort: Option[Int] = None,
+    seedNodes: Option[List[String]] = Some(List.empty),
     numberOfCores: Int = Runtime.getRuntime.availableProcessors): Config = {
     val defaults = ConfigFactory.load().getConfig("signalcollect")
-    val configWithParameters = defaults.
+    val configWithParameters = ConfigFactory.empty.
       optionalMap(serializeMessagesPath, serializeMessages, serializeMessagesValues).
       optionalMap(loggingLevelPath, loggingLevel, loggingLevelValues _).
       optionalMap(serializationBindingsPath, Some(kryoRegistrations), serializationBindingsValues(defaults.as[Map[String, String]](serializationBindingsPath)) _).
@@ -123,12 +129,15 @@ pool-size-max = $numberOfCores
       optionalMap(kryoInitializerPath, kryoInitializer, value _).
       optionalMap(kryoSerializerPoolSizePath, Some(2 * numberOfCores), value _).
       optionalMap(hostnamePath, Some(hostname), value _).
-      optionalMap(portPath, Some(port), value _).
+      optionalMap(portPath, port, value _).
+      optionalMap(seedPortPath, seedPort, value _).
+      optionalMap(seedNodesPath, seedNodes, value _).
       optionalMap(defaultRemoteDispatcherPath, Some(dispatcherConfig(numberOfCores)), value _).
       optionalMap(backoffRemoteDispatcherPath, Some(dispatcherConfig(numberOfCores)), value _).
       optionalMap(serverSocketWorkerPoolPath, Some(workerPoolConfig(numberOfCores)), value _).
       optionalMap(clientSocketWorkerPoolPath, Some(workerPoolConfig(numberOfCores)), value _)
-    configWithParameters
+    val finalConfig = configWithParameters.withFallback(defaults)
+    finalConfig
   }
 
   /**
