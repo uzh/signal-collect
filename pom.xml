@@ -8,7 +8,7 @@
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<groupId>com.signalcollect</groupId>
-	<version>8.0.0-SNAPSHOT</version>
+	<version>8.0.0</version>
 	<packaging>jar</packaging>
 	<name>signal-collect</name>
 	<description>A framework for parallel and distributed graph processing.</description>
@@ -32,7 +32,7 @@
 		<connection>scm:git:${git.url}</connection>
 		<url>${git.http.url}</url>
 		<developerConnection>scm:git:${git.url}</developerConnection>
-		<tag>HEAD</tag>
+		<tag>signal-collect_2.11-8.0.0</tag>
 	</scm>
 	<distributionManagement>
 		<site>
