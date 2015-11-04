@@ -9,13 +9,11 @@
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<groupId>com.signalcollect</groupId>
-	<version>8.0.0-SNAPSHOT</version>
+	<version>7.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>signal-collect</name>
 	<description>A framework for parallel and distributed graph processing.</description>
 	<properties>
-		<!-- TEMPORARY FIX -->
-		<proxy.url.base>http://ihealthtechnologies.artifactoryonline.com/ihealthtechnologies</proxy.url.base>
 		<team.group.id>uzh</team.group.id>
 		<scala.release>7</scala.release>
 		<akka.version>2.4.0</akka.version>
@@ -36,19 +34,6 @@
 		<tag>HEAD</tag>
 	</scm>
 	<distributionManagement>
-		<repository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>central</id>
-			<name>Proxy Releases</name>
-			<url>${proxy.url.base}/external-local</url>
-			<layout>default</layout>
-		</repository>
-		<snapshotRepository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>snapshots</id>
-			<name>Proxy Snapshots</name>
-			<url>${proxy.url.base}/external-local</url>
-		</snapshotRepository>
 		<site>
 			<id>githubsite</id>
 			<name>GitHub Pages</name>
@@ -218,6 +203,17 @@
 			<id>sunnylbk</id>
 			<name>Bharath Kumar</name>
 			<url>https://github.com/sunnylbk</url>
+		</developer>
+		<developer>
+			<id>mykelalvis</id>
+			<name>Mykel Alvis</name>
+            <organization>Cotiviti</organization>
+            <organizationUrl>http://www.cotiviti.io</organizationUrl>
+			<url>https://github.com/mykelalvis</url>
+            <timezone>America/Chicago</timezone>
+            <roles>
+                <role>release management</role>
+            </roles>
 		</developer>
 	</developers>
 </project>
