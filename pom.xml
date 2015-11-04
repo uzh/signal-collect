@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>io.cotiviti</groupId>
 		<artifactId>cotiviti-scala-parent</artifactId>
-		<version>0.2.2</version>
+		<version>0.2.3</version>
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<groupId>com.signalcollect</groupId>
@@ -25,11 +25,13 @@
 		<scalatest.version>2.2.5</scalatest.version>
 		<scalacheck.version>1.12.5</scalacheck.version>
 		<easymock.version>3.3.1</easymock.version>
+		<git.url>${git.url.base}/signal-collect.git</git.url>
+		<git.http.url>${ghe.url.base}/signal-collect</git.http.url>
 	</properties>
-	<url>${ghe.url.base}/${project.artifactId}</url>
+	<url>${git.http.url}</url>
 	<scm>
 		<connection>scm:git:${git.url}</connection>
-		<url>scm:git:${git.url}</url>
+		<url>${git.http.url}</url>
 		<developerConnection>scm:git:${git.url}</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
