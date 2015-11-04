@@ -8,7 +8,7 @@
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<groupId>com.signalcollect</groupId>
-	<version>7.0.1-SNAPSHOT</version>
+	<version>8.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>signal-collect</name>
 	<description>A framework for parallel and distributed graph processing.</description>
