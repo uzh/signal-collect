@@ -2,28 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>io.cotiviti</groupId>
-		<artifactId>cotiviti-scala-parent</artifactId>
-		<version>0.2.4</version>
+		<groupId>com.signalcollect</groupId>
+		<artifactId>signal-collect-maven-parent</artifactId>
+		<version>0.0.2</version>
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<groupId>com.signalcollect</groupId>
-	<version>8.0.1-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>signal-collect</name>
 	<description>A framework for parallel and distributed graph processing.</description>
 	<properties>
-		<team.group.id>uzh</team.group.id>
-		<scala.release>7</scala.release>
-		<akka.version>2.4.0</akka.version>
-		<akka.kryo.version>0.3.3</akka.kryo.version>
-		<d3js.version>3.5.6</d3js.version>
-		<introjs.version>1.0.0</introjs.version>
-		<jquery.version>2.1.4</jquery.version>
-		<reconnecting-websocket.version>1.0.0</reconnecting-websocket.version>
-		<scalatest.version>2.2.5</scalatest.version>
-		<scalacheck.version>1.12.5</scalacheck.version>
-		<easymock.version>3.3.1</easymock.version>
 		<git.url>${git.url.base}/signal-collect.git</git.url>
 		<git.http.url>${ghe.url.base}/signal-collect</git.http.url>
 	</properties>
