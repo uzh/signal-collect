@@ -19,26 +19,32 @@
 
 package com.signalcollect
 
-import com.typesafe.config.ConfigFactory
-import interfaces.{ WorkerApi, Request }
+import java.util.concurrent.CountDownLatch
+
+import org.scalatest.{ Finders, FlatSpec, Matchers }
+
+import akka.actor.{ Actor, Props, actorRef2Scala }
+import interfaces.Request
 import messaging.AkkaProxy
-import akka.actor.{ Props, ActorSystem, Actor }
-import org.scalatest.Matchers
-import org.scalatest.FlatSpec
 
 class AkkaProxySpec extends FlatSpec with Matchers {
 
   "AkkaProxy" should "invoke blocking methods" in {
 
-    trait Sleeper extends Actor {
-      def sleep(milliSeconds: Int) = {
-        Thread.sleep(milliSeconds)
+    object Counter {
+      val latch = new CountDownLatch(3)
+    }
+
+    trait CommandExecutor extends Actor {
+
+      def countDown(): Unit = {
+        Counter.latch.countDown()
       }
 
       def receive = {
         case Request(command, reply, incrementor) =>
           try {
-            val result = command.asInstanceOf[Sleeper => Any](this)
+            val result = command.asInstanceOf[CommandExecutor => Any](this)
             if (reply) {
               if (result == null) {
                 sender ! None
@@ -54,18 +60,13 @@ class AkkaProxySpec extends FlatSpec with Matchers {
     }
 
     val system = TestConfig.actorSystem("AkkaProxySpec")
-    val sleeper = system.actorOf(Props(new Object with Sleeper), name = "sleeper")
-    val sleeperProxy = AkkaProxy.newInstance[Sleeper](sleeper)
-
-    val expectedSleepTime = 300
-
-    val sleepStart = System.currentTimeMillis()
-    sleeperProxy.sleep(expectedSleepTime)
-    val sleepStop = System.currentTimeMillis()
-    val measuredSleepTime: Double = sleepStop - sleepStart
-
-    measuredSleepTime should (be > expectedSleepTime * 0.9 and be < expectedSleepTime * 1.1)
-    system.shutdown()
+    val executor = system.actorOf(Props(new Object with CommandExecutor))
+    val proxy = AkkaProxy.newInstance[CommandExecutor](executor)
+    proxy.countDown
+    proxy.countDown
+    proxy.countDown
+    Counter.latch.await()
+    system.terminate
   }
 
 }
