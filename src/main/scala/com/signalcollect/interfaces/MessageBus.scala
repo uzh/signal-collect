@@ -29,7 +29,7 @@ import akka.event.Logging.LogEvent
  *  It has to guarantee per-sender FIFO when delivering messages.
  */
 trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientRegistry with VertexToWorkerMapper[Id] {
-  def flush
+  def flush(): Unit
 
   def isInitialized: Boolean
 
@@ -78,7 +78,7 @@ trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientReg
   /**
    * Resets the message but does not touch the counters.
    */
-  def reset
+  def reset(): Unit
 
   // Returns an api that treats all workers as if there were only one.
   def getWorkerApi: WorkerApi[Id, Signal]
