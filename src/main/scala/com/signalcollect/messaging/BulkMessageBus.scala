@@ -59,9 +59,9 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
   val withSourceIds: Boolean,
   val sendCountIncrementorForRequests: MessageBus[_, _] => Unit,
   workerApiFactory: WorkerApiFactory[Id, Signal])
-  extends AbstractMessageBus[Id, Signal] {
+    extends AbstractMessageBus[Id, Signal] {
 
-  override def reset {
+  override def reset(): Unit = {
     super.reset
     pendingSignals = 0
     var i = 0
@@ -81,7 +81,7 @@ final class BulkMessageBus[Id: ClassTag, Signal: ClassTag](
     outgoingMessages(i) = new SignalBulker[Id, Signal](flushThreshold)
   }
 
-  override def flush {
+  override def flush(): Unit = {
     if (pendingSignals > 0) {
       var workerId = 0
       while (workerId < numberOfWorkers) {

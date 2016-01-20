@@ -42,17 +42,17 @@ import com.signalcollect.interfaces.SignalMessageWithSourceId
 import com.signalcollect.interfaces.SignalMessageWithoutSourceId
 
 abstract class AbstractMessageBus[Id, Signal]
-  extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
+    extends MessageBus[Id, Signal] with GraphEditor[Id, Signal] {
 
   protected def system: ActorSystem
 
   val log = Logging.getLogger(system, this)
 
-  def reset {}
+  def reset(): Unit = {}
 
   protected val registrations = new AtomicInteger()
 
-  def flush = {}
+  def flush(): Unit = {}
 
   def isInitialized = registrations.get == numberOfWorkers + numberOfNodes + 1
 
