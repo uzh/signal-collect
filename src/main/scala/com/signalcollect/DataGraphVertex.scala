@@ -72,7 +72,6 @@ abstract class DataGraphVertex[Id, State](
 
   override def deliverSignalWithoutSourceId(signal: Any, graphEditor: GraphEditor[Any, Any]): Boolean = {
     throw new Exception("Data graph vertices only make sense if the source id is known.")
-    false
   }
 
   def signals = mostRecentSignalMap.values

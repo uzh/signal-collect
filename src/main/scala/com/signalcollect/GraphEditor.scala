@@ -192,7 +192,7 @@ trait GraphEditor[@specialized(Int, Long) Id, Signal] {
   /**
    * Forces the underlying MessageBus to send all messages immediately.
    */
-  private[signalcollect] def flush
+  private[signalcollect] def flush(): Unit
 
   private[signalcollect] def sendToWorkerForVertexIdHash(m: Any, vertexIdHash: Int)
 

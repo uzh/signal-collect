@@ -27,12 +27,12 @@ object FileReader {
 
   /**
    * Returns an iterator for all Ints in the file at the file path.
-   * @Note The numbers need to be positive, fit into a Java Integer,
+   * The numbers need to be positive, fit into a Java Integer,
    * be encoded in ASCII/UTF8 format and can only be separated by
    * single spaces, single newlines, and tabs.
    * Whole lines can be commented out by starting them with '#'.
    *
-   * @note Negative numbers are unsupported.
+   * Negative numbers are unsupported.
    */
   @inline def intIterator(inputStream: InputStream): Iterator[Int] = {
     new AsciiIntIterator(inputStream)
@@ -41,12 +41,12 @@ object FileReader {
   /**
    * Sequentially applies the function 'p' to all integers that
    * are read from file 'filePath'.
-   * @Note The numbers need to be positive, fit into a Java Integer,
+   * The numbers need to be positive, fit into a Java Integer,
    * be encoded in ASCII/UTF8 format and can only be separated by
    * single spaces, single newlines, and tabs.
    * Whole lines can be commented out by starting them with '#'.
    *
-   * @note Negative numbers are unsupported.
+   * Negative numbers are unsupported.
    */
   @inline def processInts(inputStream: InputStream, p: Int => Unit) {
     val BLOCK_SIZE = 8 * 32768

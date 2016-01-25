@@ -288,16 +288,16 @@ class ConsoleServer[Id: TypeTag, Signal: TypeTag](graphConfiguration: GraphConfi
  */
 class FileServer() extends HttpHandler {
 
-  /** Handles requests to files */
+  // Handles requests to files
   def handle(t: HttpExchange) {
 
-    /** The name of the file to store the log messages to */
+    // The name of the file to store the log messages to
     val logFileName = "log_messages.txt"
 
-    /** The name of the folder where all web data is stored */
+    // The name of the folder where all web data is stored
     val folderName = "web-data"
 
-    /** The URI of the current request without the leading slash */
+    // The URI of the current request without the leading slash
     var target = t.getRequestURI.getPath.replaceFirst("^[/.]*", "")
 
     // the root location, /graph and /resources all point to main.html
@@ -314,7 +314,7 @@ class FileServer() extends HttpHandler {
       case otherwise => "text/plain"
     }
 
-    /** Get the responseBody of the stream */
+    // Get the responseBody of the stream
     def os: OutputStream = t.getResponseBody
     t.getResponseHeaders.set("Content-Type", fileType)
 

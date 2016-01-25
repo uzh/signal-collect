@@ -284,7 +284,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
         workerApi.startComputation
         stats.terminationReason = TerminationReason.Ongoing
       case ExecutionMode.Interactive =>
-        new InteractiveExecution[Id, Signal](this, console, stats, parameters).run()
+        new InteractiveExecution(this, console, stats, parameters).run()
         if (console != null) { console.shutdown }
     }
     stats.jvmCpuTime = new FiniteDuration(getJVMCpuTime - jvmCpuStartTime, TimeUnit.NANOSECONDS)
@@ -364,7 +364,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
    * @param stats the ExecutionStatistics instance
    * @param parameters the ExecutionConfiguration instance
    */
-  class InteractiveExecution[Id, Signal](
+  class InteractiveExecution(
     graph: Graph[Id, Signal],
     console: ConsoleServer[Id, Signal],
     stats: ExecutionStatistics,
@@ -711,7 +711,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     workerApi.pauseComputation
   }
 
-  def awaitIdle {
+  def awaitIdle(): Unit = {
     awaitIdle(Duration.create(1, TimeUnit.DAYS).toNanos)
   }
 
@@ -742,13 +742,13 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
 
   /** WorkerApi */
 
-  def recalculateScores = workerApi.recalculateScores
+  def recalculateScores(): Unit = workerApi.recalculateScores
 
-  def recalculateScoresForVertexWithId(vertexId: Id) {
+  def recalculateScoresForVertexWithId(vertexId: Id): Unit = {
     workerApi.recalculateScoresForVertexWithId(vertexId)
   }
 
-  def shutdown {
+  def shutdown(): Unit = {
     if (console != null) { console.shutdown }
     // Only shut down the actor system if it was not passed to us and if it's still running.
     if (config.actorSystem.isEmpty && !system.isTerminated) {
@@ -782,7 +782,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     workerApi.forVertexWithId(vertexId, f)
   }
 
-  def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit) {
+  def foreachVertex(f: (Vertex[Id, _, Id, Signal]) => Unit): Unit = {
     workerApi.foreachVertex(f)
   }
 
@@ -800,7 +800,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
    *  Resets operation statistics and removes all the vertices and edges in this graph.
    *  Leaves the message counters untouched.
    */
-  def reset {
+  def reset(): Unit = {
     workerApi.reset
   }
 

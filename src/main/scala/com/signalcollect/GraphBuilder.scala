@@ -141,7 +141,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
    *  When throttling is enabled, the workers monitor the
    *  messaging load of the system and stop signaling in case
    *  the system should get overloaded.
-   *  @note: Throttling during graph loading is enabled with a separate flag.
+   *  Throttling during graph loading is enabled with a separate flag.
    */
   def withThrottlingEnabled(newThrottlingEnabled: Boolean) = {
     builder(config.copy(throttlingEnabled = newThrottlingEnabled))
@@ -169,7 +169,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
   /**
    *  Configures the logging level.
    *
-   *  @note Logging levels available:
+   *  Logging levels available:
    *    Debug = 0
    *    Config = 100
    *    Info = 200
@@ -237,7 +237,7 @@ class GraphBuilder[@specialized(Int, Long) Id: ClassTag: TypeTag, Signal: ClassT
    *  configuring options related to serialization, networking,
    *  port, etc in a way that agrees with S/C.
    *
-   *  @note: The logging inside the default vertices and edges only works when the
+   *  The logging inside the default vertices and edges only works when the
    *  actor system is called "SignalCollect".
    *
    *  @param system: The actor system on which S/C will be deployed.
