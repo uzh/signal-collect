@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.signalcollect</groupId>
 		<artifactId>signal-collect-maven-parent</artifactId>
-		<version>8.0.1</version>
+		<version>8.0.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>signal-collect_2.11</artifactId>
 	<version>8.0.5-SNAPSHOT</version>
@@ -29,15 +30,6 @@
 			<url>${site.target.url}</url>
 		</site>
 	</distributionManagement>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-kernel_${scala.minor.version}</artifactId>
-				<version>${akka.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.scala-lang</groupId>
@@ -52,7 +44,6 @@
 		<dependency>
 			<groupId>com.github.romix.akka</groupId>
 			<artifactId>akka-kryo-serialization_${scala.minor.version}</artifactId>
-			<version>${akka.kryo.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -73,56 +64,42 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>d3js</artifactId>
-			<version>${d3js.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>jquery</artifactId>
-			<version>${jquery.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>reconnecting-websocket</artifactId>
-			<version>${reconnecting-websocket.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>intro.js</artifactId>
-			<version>${introjs.version}</version>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.scalatest</groupId>
-			<artifactId>scalatest_${scala.minor.version}</artifactId>
-			<version>${scalatest.version}</version>
-			<!-- 'compile' scope in order to share TestAnnouncement with other projects. -->
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-testkit_${scala.minor.version}</artifactId>
-			<version>${akka.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.scalacheck</groupId>
-			<artifactId>scalacheck_${scala.minor.version}</artifactId>
-			<version>${scalacheck.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymock</artifactId>
-			<version>${easymock.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_${scala.minor.version}</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_${scala.minor.version}</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scalacheck</groupId>
+			<artifactId>scalacheck_${scala.minor.version}</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
 		</dependency>
 	</dependencies>
 	<build>
@@ -196,13 +173,13 @@
 		<developer>
 			<id>mykelalvis</id>
 			<name>Mykel Alvis</name>
-            <organization>Cotiviti</organization>
-            <organizationUrl>http://www.cotiviti.io</organizationUrl>
+			<organization>Cotiviti</organization>
+			<organizationUrl>http://www.cotiviti.io</organizationUrl>
 			<url>https://github.com/mykelalvis</url>
-            <timezone>America/Chicago</timezone>
-            <roles>
-                <role>release management</role>
-            </roles>
+			<timezone>America/Chicago</timezone>
+			<roles>
+				<role>release management</role>
+			</roles>
 		</developer>
 	</developers>
 </project>
