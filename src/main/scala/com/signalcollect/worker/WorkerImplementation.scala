@@ -193,7 +193,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  def sendStatusToCoordinator {
+  def sendStatusToCoordinator(): Unit = {
     if (messageBus.isInitialized) {
       val status = getWorkerStatusForCoordinator
       messageBus.sendToCoordinatorUncounted(status)
@@ -600,7 +600,7 @@ class WorkerImplementation[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  protected def logIntialization {
+  protected def logIntialization(): Unit = {
     if (messageBus.isInitialized) {
       val msg = s"Worker $workerId has a fully initialized message bus."
       log.debug(msg)

@@ -65,46 +65,46 @@ class DefaultWorkerApi[Id, Signal](
 
   protected val timeout = 2 hours
 
-  def getIndividualWorkerStatistics: List[WorkerStatistics] = {
+  def getIndividualWorkerStatistics(): List[WorkerStatistics] = {
     get(futures(_.getWorkerStatistics))
   }
 
-  override def getWorkerStatistics: WorkerStatistics = {
+  override def getWorkerStatistics(): WorkerStatistics = {
     getIndividualWorkerStatistics.fold(WorkerStatistics())(_ + _)
   }
 
   // TODO: Move to node.
-  def getIndividualNodeStatistics: List[NodeStatistics] = {
+  def getIndividualNodeStatistics(): List[NodeStatistics] = {
     get(futures(_.getNodeStatistics))
   }
 
-  override def getNodeStatistics: NodeStatistics = {
+  override def getNodeStatistics(): NodeStatistics = {
     getIndividualNodeStatistics.fold(NodeStatistics())(_ + _)
   }
 
-  override def signalStep = {
+  override def signalStep(): Boolean = {
     val stepResults = get(futures(_.signalStep))
     stepResults.forall(_ == true)
   }
 
-  override def collectStep: Boolean = {
+  override def collectStep(): Boolean = {
     val stepResults = get(futures(_.collectStep))
     stepResults.forall(_ == true)
   }
 
-  override def startComputation {
+  override def startComputation(): Unit = {
     get(futures(_.startComputation))
   }
 
-  override def pauseComputation = {
+  override def pauseComputation(): Unit = {
     get(futures(_.pauseComputation))
   }
 
-  override def recalculateScores = {
+  override def recalculateScores(): Unit = {
     get(futures(_.recalculateScores))
   }
 
-  override def recalculateScoresForVertexWithId(vertexId: Id) = {
+  override def recalculateScoresForVertexWithId(vertexId: Id): Unit = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).recalculateScoresForVertexWithId(vertexId)
   }
 
@@ -139,15 +139,15 @@ class DefaultWorkerApi[Id, Signal](
     get(futures(_.setCollectThreshold(t)))
   }
 
-  override def reset {
+  override def reset(): Unit = {
     get(futures(_.reset))
   }
 
-  override def shutdown {
+  override def shutdown(): Unit = {
     get(futures(_.shutdown))
   }
 
-  override def initializeIdleDetection {
+  override def initializeIdleDetection(): Unit = {
     get(futures(_.initializeIdleDetection))
   }
 
@@ -158,7 +158,7 @@ class DefaultWorkerApi[Id, Signal](
    *
    *  @note If a vertex with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  override def addVertex(vertex: Vertex[Id, _, Id, Signal]) {
+  override def addVertex(vertex: Vertex[Id, _, Id, Signal]): Unit = {
     workers(mapper.getWorkerIdForVertexId(vertex.id)).addVertex(vertex)
   }
 
@@ -168,7 +168,7 @@ class DefaultWorkerApi[Id, Signal](
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If an edge with the same id already exists, then this operation will be ignored and NO warning is logged.
    */
-  override def addEdge(sourceId: Id, edge: Edge[Id]) {
+  override def addEdge(sourceId: Id, edge: Edge[Id]): Unit = {
     workers(mapper.getWorkerIdForVertexId(sourceId)).addEdge(sourceId, edge)
   }
 
@@ -177,7 +177,7 @@ class DefaultWorkerApi[Id, Signal](
    *  `vertex.id==edgeId.targetId`.
    *  Blocks until the operation has completed.
    */
-  override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id) {
+  override def processSignalWithSourceId(signal: Signal, targetId: Id, sourceId: Id): Unit = {
     workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithSourceId(signal, targetId, sourceId)
   }
 
@@ -186,7 +186,7 @@ class DefaultWorkerApi[Id, Signal](
    *  `vertex.id==edgeId.targetId`.
    *  Blocks until the operation has completed.
    */
-  override def processSignalWithoutSourceId(signal: Signal, targetId: Id) {
+  override def processSignalWithoutSourceId(signal: Signal, targetId: Id): Unit = {
     workers(mapper.getWorkerIdForVertexId(targetId)).processSignalWithoutSourceId(signal, targetId)
   }
 
@@ -195,7 +195,7 @@ class DefaultWorkerApi[Id, Signal](
    *
    *  @note If no vertex with this id is found, then the operation is ignored and a warning is logged.
    */
-  override def removeVertex(vertexId: Id) {
+  override def removeVertex(vertexId: Id): Unit = {
     workers(mapper.getWorkerIdForVertexId(vertexId)).removeVertex(vertexId)
   }
 
@@ -205,14 +205,14 @@ class DefaultWorkerApi[Id, Signal](
    *  @note If no vertex with the required source id is found, then the operation is ignored and a warning is logged.
    *  @note If no edge with with this id is found, then this operation will be ignored and a warning is logged.
    */
-  override def removeEdge(edgeId: EdgeId[Id]) {
+  override def removeEdge(edgeId: EdgeId[Id]): Unit = {
     workers(mapper.getWorkerIdForVertexId(edgeId.sourceId)).removeEdge(edgeId)
   }
 
   /**
    * Runs a graph loading function on a worker
    */
-  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None) {
+  def modifyGraph(graphModification: GraphEditor[Id, Signal] => Unit, vertexIdHint: Option[Id] = None): Unit = {
     workers(workerIdForHint(vertexIdHint)).modifyGraph(graphModification)
   }
 
@@ -224,19 +224,19 @@ class DefaultWorkerApi[Id, Signal](
    *        the loading function will be able to exploit locality.
    *  @note For distributed graph loading use separate calls of this method with vertexIdHints targeting different workers.
    */
-  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]) {
+  def loadGraph(graphModifications: Iterator[GraphEditor[Id, Signal] => Unit], vertexIdHint: Option[Id]): Unit = {
     workers(workerIdForHint(vertexIdHint)).loadGraph(graphModifications)
   }
 
-  def snapshot {
+  def snapshot(): Unit = {
     get(futures(_.snapshot))
   }
 
-  def restore {
+  def restore(): Unit = {
     get(futures(_.restore))
   }
 
-  def deleteSnapshot = {
+  def deleteSnapshot(): Unit = {
     get(futures(_.deleteSnapshot))
   }
 

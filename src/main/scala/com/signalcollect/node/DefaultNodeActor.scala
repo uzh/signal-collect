@@ -46,6 +46,7 @@ import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.BulkStatus
 import akka.actor.Scheduler
+import scala.concurrent.duration.Duration
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -84,7 +85,7 @@ class DefaultNodeActor[Id, Signal](
   var binaryTreeIdleDetector: BinaryTreeIdleDetector = _
   var workersOnNodeIdleDetector: WorkersOnNodeIdleDetector = _
 
-  def initializeIdleDetection {
+  def initializeIdleDetection(): Unit = {
     receivedMessagesCounter -= 1
     binaryTreeIdleDetector = new BinaryTreeIdleDetector(
       nodeId,
@@ -150,7 +151,7 @@ class DefaultNodeActor[Id, Signal](
 
   protected var lastStatusUpdate = System.currentTimeMillis
 
-  protected def getNodeStatus: NodeStatus = {
+  protected def getNodeStatus(): NodeStatus = {
     NodeStatus(
       nodeId = nodeId,
       messagesSent = SentMessagesStats(
@@ -161,7 +162,7 @@ class DefaultNodeActor[Id, Signal](
       messagesReceived = receivedMessagesCounter)
   }
 
-  protected def sendStatusToCoordinator {
+  protected def sendStatusToCoordinator(): Unit = {
     if (isInitialized) {
       val status = getNodeStatus
       messageBus.sendToCoordinatorUncounted(status)
@@ -181,12 +182,12 @@ class DefaultNodeActor[Id, Signal](
     AkkaRemoteAddress.get(worker, context.system)
   }
 
-  def numberOfCores = {
+  def numberOfCores: Int = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
     fixedNumberOfCores.getOrElse(Runtime.getRuntime.availableProcessors)
   }
 
-  override def preStart = {
+  override def preStart(): Unit = {
     if (nodeProvisionerAddress.isDefined) {
       println(s"Registering with node provisioner @ ${nodeProvisionerAddress.get}")
       val selection = context.actorSelection(nodeProvisionerAddress.get)
@@ -196,9 +197,9 @@ class DefaultNodeActor[Id, Signal](
     }
   }
 
-  def shutdown = {
+  def shutdown(): Unit = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    context.system.shutdown
+    Await.ready(context.system.terminate(), Duration.Inf)
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {

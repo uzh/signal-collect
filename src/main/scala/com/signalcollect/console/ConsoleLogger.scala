@@ -60,7 +60,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
   val maxReadLines = 1000;
 
   // reset log file
-  resetLog
+  resetLog()
 
   /**
    * Writes the passed `message` to the log message file.
@@ -130,7 +130,7 @@ class ConsoleLogger extends Actor with Logger with ActorLogging {
     message: Any): String = createJsonString(level, "", logSource, logClass, message)
 
   /** Clears the file in which log messages are stored. */
-  def resetLog {
+  def resetLog(): Unit = {
     if (logFileExists) {
       val fileWriter = new FileWriter(logFileName, false)
       try {

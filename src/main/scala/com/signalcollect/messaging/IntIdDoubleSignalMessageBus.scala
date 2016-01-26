@@ -47,7 +47,7 @@ class CombingingDoubleBulkerNoIds {
     val bulkSignal = new BulkSignalNoSourceIds(signals, targetIds)
     bulkSignal
   }
-  def clear {
+  def clear(): Unit = {
     map.clear
   }
 }

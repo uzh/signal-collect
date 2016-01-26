@@ -31,15 +31,15 @@ final class IteratorConcatenator[U] extends Iterator[U] {
 
   val iterators = new Queue[Iterator[U]]()
 
-  def clear {
+  def clear(): Unit = {
     iterators.clear
   }
 
-  def appendIterator(i: Iterator[U]) {
+  def appendIterator(i: Iterator[U]): Unit = {
     iterators.enqueue(i)
   }
 
-  def next: U = {
+  def next(): U = {
     iterators.head.next
   }
 

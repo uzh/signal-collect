@@ -27,9 +27,9 @@ class VertexSpec extends FlatSpec with ShouldMatchers with Checkers with EasyMoc
 
   lazy val outEdgeIds = containerOf[Set, Int](smallInt)
 
-  implicit def arbSignalMap[Map[Int, Double]] = Arbitrary(signalMap)
+  implicit def arbSignalMap = Arbitrary(signalMap)
 
-  implicit def arbEdgeIds[Set[Int]] = Arbitrary(outEdgeIds)
+  implicit def arbEdgeIds = Arbitrary(outEdgeIds)
 
   "PageRankVertex" should "correctly collect and signal" in {
     check(

@@ -37,7 +37,7 @@ class HashSet[Key <: AnyRef: ClassTag](
   final def isEmpty: Boolean = numberOfElements == 0
   private[this] final var numberOfElements = 0
 
-  final def clear {
+  final def clear(): Unit = {
     keys = new Array[Key](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
@@ -47,7 +47,7 @@ class HashSet[Key <: AnyRef: ClassTag](
     keys.filter(_ != null).toSet
   }
 
-  private[this] final def tryDouble {
+  private[this] final def tryDouble(): Unit = {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
       val oldKeys = keys
@@ -70,7 +70,7 @@ class HashSet[Key <: AnyRef: ClassTag](
     }
   }
 
-  final def foreach(f: Key => Unit) {
+  final def foreach(f: Key => Unit): Unit = {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -83,11 +83,11 @@ class HashSet[Key <: AnyRef: ClassTag](
     }
   }
 
-  final def remove(key: Key) {
+  final def remove(key: Key): Unit = {
     remove(key, true)
   }
 
-  private final def remove(key: Key, optimize: Boolean) {
+  private final def remove(key: Key, optimize: Boolean): Unit = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != null && key != keyAtPosition) {
@@ -106,7 +106,7 @@ class HashSet[Key <: AnyRef: ClassTag](
 
   // Try to reinsert all elements that are not optimally placed until an empty position is found.
   // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-  private[this] final def optimizeFromPosition(startingPosition: Int) {
+  private[this] final def optimizeFromPosition(startingPosition: Int): Unit = {
     var currentPosition = startingPosition
     var keyAtPosition = keys(currentPosition)
     while (isCurrentPositionOccupied) {
@@ -118,20 +118,20 @@ class HashSet[Key <: AnyRef: ClassTag](
       }
       advance
     }
-    @inline def advance {
+    @inline def advance(): Unit = {
       currentPosition = ((currentPosition + 1) & mask)
       keyAtPosition = keys(currentPosition)
     }
-    @inline def isCurrentPositionOccupied = {
+    @inline def isCurrentPositionOccupied: Boolean = {
       keyAtPosition != null
     }
-    @inline def removeCurrentEntry {
+    @inline def removeCurrentEntry(): Unit = {
       keys(currentPosition) = null.asInstanceOf[Key]
       numberOfElements -= 1
     }
   }
 
-  final def apply(key: Key) = contains(key)
+  final def apply(key: Key): Boolean = contains(key)
 
   @inline final def contains(key: Key): Boolean = {
     var position = keyToPosition(key)
@@ -172,7 +172,7 @@ class HashSet[Key <: AnyRef: ClassTag](
     alreadyContained
   }
 
-  private[this] final def keyToPosition(key: Key) = {
+  private[this] final def keyToPosition(key: Key): Int = {
     key.hashCode & mask
   }
 

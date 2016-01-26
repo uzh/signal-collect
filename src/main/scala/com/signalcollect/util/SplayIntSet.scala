@@ -151,7 +151,7 @@ final class SplayNode(
     }
   }
 
-  final def validate {
+  final def validate(): Unit = {
     foreachNode {
       node =>
         if (?(node.left)) {
@@ -163,7 +163,7 @@ final class SplayNode(
     }
   }
 
-  @tailrec @inline final def foreachNode(f: SplayNode => Unit, pending: List[SplayNode] = Nil) {
+  @tailrec @inline final def foreachNode(f: SplayNode => Unit, pending: List[SplayNode] = Nil)(): Unit = {
     f(this)
     if (?(left) && ?(right)) {
       left.foreachNode(f, right :: pending)
@@ -231,7 +231,7 @@ final class SplayNode(
 abstract class SplayIntSet {
   import SplayIntSet._
 
-  def printDiagnosticInfo {
+  def printDiagnosticInfo(): Unit = {
     val id = Random.nextInt(10)
     println(s"$id: SplayIntSet diagnostic info:")
     if (root != null) {
@@ -278,7 +278,7 @@ abstract class SplayIntSet {
   /**
    * Asserts that the root has been set.
    */
-  @inline final def foreach(f: Int => Unit) {
+  @inline final def foreach(f: Int => Unit): Unit = {
     if (size > 0) {
       root.foreach(f)
     }
@@ -335,7 +335,7 @@ abstract class SplayIntSet {
    * Searches from root for an insertion point for 'newNode'.
    * There can be no other node in the tree that intersects with the interval of 'newNode'.
    */
-  @tailrec private def insertNode(root: SplayNode, newNode: SplayNode) {
+  @tailrec private def insertNode(root: SplayNode, newNode: SplayNode): Unit = {
     if (newNode.intervalTo < root.intervalFrom) {
       val rootLeft = root.left
       if (?(rootLeft)) {

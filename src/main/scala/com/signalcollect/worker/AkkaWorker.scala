@@ -172,7 +172,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  def applyPendingGraphModifications {
+  def applyPendingGraphModifications(): Unit = {
     try {
       for (modification <- worker.pendingModifications.take(graphModificationBatchProcessingSize)) {
         modification(worker.graphEditor)
@@ -185,7 +185,7 @@ class AkkaWorker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](
     worker.messageBusFlushed = false
   }
 
-  def scheduleOperations {
+  def scheduleOperations(): Unit = {
     setIdle(false)
     self ! ScheduleOperations
     schedulingTimestamp = System.nanoTime

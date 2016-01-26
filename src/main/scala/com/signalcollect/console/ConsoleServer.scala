@@ -60,12 +60,12 @@ abstract class Execution {
   var conditionsReached: Map[String, String] // Map of fired conditions
   var state: String // Current state of the computation
   var iteration: Int // Computation iteration number
-  def step: Unit // Perform a partial step
-  def collect: Unit // Perform all steps until after the next collect
-  def continue: Unit // Continue the computation
-  def pause: Unit // Pause the computation
-  def reset: Unit // Reset the graph to its initial state
-  def terminate: Unit // Terminate the computation and Signal/Collect
+  def step(): Unit // Perform a partial step
+  def collect(): Unit // Perform all steps until after the next collect
+  def continue(): Unit // Continue the computation
+  def pause(): Unit // Pause the computation
+  def reset(): Unit // Reset the graph to its initial state
+  def terminate(): Unit // Terminate the computation and Signal/Collect
   def addCondition(condition: BreakCondition): Unit // Add a condition
   def removeCondition(id: String): Unit // Remove a condition
 }
@@ -269,7 +269,7 @@ class ConsoleServer[Id: TypeTag, Signal: TypeTag](graphConfiguration: GraphConfi
   }
 
   /** Stop both HTTP and WebSocket servers and exit */
-  def shutdown {
+  def shutdown(): Unit = {
     println("Stopping WebSocket...")
     sockets.stop(5000)
     println("Stopping http server...")

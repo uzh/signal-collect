@@ -34,18 +34,18 @@ class SignalBulker[@specialized(Int, Long) Id: ClassTag, Signal: ClassTag](size:
   final val sourceIds = new Array[Id](size)
   final val targetIds = new Array[Id](size)
   final val signals = new Array[Signal](size)
-  def addSignal(signal: Signal, targetId: Id, sourceId: Id) {
+  def addSignal(signal: Signal, targetId: Id, sourceId: Id): Unit = {
     signals(itemCount) = signal
     targetIds(itemCount) = targetId
     sourceIds(itemCount) = sourceId
     itemCount += 1
   }
-  def addSignal(signal: Signal, targetId: Id) {
+  def addSignal(signal: Signal, targetId: Id): Unit = {
     signals(itemCount) = signal
     targetIds(itemCount) = targetId
     itemCount += 1
   }
-  def clear {
+  def clear(): Unit = {
     itemCount = 0
   }
 }

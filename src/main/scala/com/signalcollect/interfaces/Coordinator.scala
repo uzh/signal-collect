@@ -32,11 +32,11 @@ trait Coordinator[Id, Signal] extends Actor with MessageRecipientRegistry {
 
   override def toString: String = this.getClass.getSimpleName
 
-  def getWorkerApi: WorkerApi[Id, Signal]
+  def getWorkerApi(): WorkerApi[Id, Signal]
 
-  def getGraphEditor: GraphEditor[Id, Signal]
+  def getGraphEditor(): GraphEditor[Id, Signal]
 
-  def getGlobalInboxSize: Long
+  def getGlobalInboxSize(): Long
 
-  def getWorkerStatuses: Array[WorkerStatus]
+  def getWorkerStatuses(): Array[WorkerStatus]
 }

@@ -43,7 +43,7 @@ class IntIntHashMap(
   final def isEmpty: Boolean = numberOfElements == 0
   private[this] final var numberOfElements = 0
 
-  final def clear {
+  final def clear(): Unit = {
     keys = new Array[Int](maxSize)
     numberOfElements = 0
   }
@@ -52,7 +52,7 @@ class IntIntHashMap(
     keys.zip(values).filter(_._1 != 0).toMap
   }
 
-  private[this] final def tryDouble {
+  private[this] final def tryDouble(): Unit = {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
       val oldValues = values
@@ -77,7 +77,7 @@ class IntIntHashMap(
     }
   }
 
-  @inline final def foreach(f: (Int, Int) => Unit) {
+  @inline final def foreach(f: (Int, Int) => Unit): Unit = {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -94,7 +94,7 @@ class IntIntHashMap(
   /**
    * Like foreach, but removes the entry after applying the function.
    */
-  @inline final def process(f: (Int, Int) => Unit) {
+  @inline final def process(f: (Int, Int) => Unit): Unit = {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -110,11 +110,11 @@ class IntIntHashMap(
     numberOfElements = 0
   }
 
-  final def remove(key: Int) {
+  final def remove(key: Int): Unit = {
     remove(key, true)
   }
 
-  private final def remove(key: Int, optimize: Boolean) {
+  private final def remove(key: Int, optimize: Boolean): Unit = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != 0 && key != keyAtPosition) {
@@ -133,7 +133,7 @@ class IntIntHashMap(
 
   // Try to reinsert all elements that are not optimally placed until an empty position is found.
   // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-  private[this] final def optimizeFromPosition(startingPosition: Int) {
+  private[this] final def optimizeFromPosition(startingPosition: Int): Unit = {
     var currentPosition = startingPosition
     var keyAtPosition = keys(currentPosition)
     while (isCurrentPositionOccupied) {
@@ -146,20 +146,20 @@ class IntIntHashMap(
       }
       advance
     }
-    @inline def advance {
+    @inline def advance(): Unit = {
       currentPosition = ((currentPosition + 1) & mask)
       keyAtPosition = keys(currentPosition)
     }
-    @inline def isCurrentPositionOccupied = {
+    @inline def isCurrentPositionOccupied: Boolean = {
       keyAtPosition != 0
     }
-    @inline def removeCurrentEntry {
+    @inline def removeCurrentEntry(): Unit = {
       keys(currentPosition) = 0
       numberOfElements -= 1
     }
   }
 
-  final def apply(key: Int) = get(key)
+  final def apply(key: Int): Int = get(key)
 
   @inline final def get(key: Int): Int = {
     var position = keyToPosition(key)
@@ -175,7 +175,7 @@ class IntIntHashMap(
     }
   }
 
-  @inline final def increment(key: Int) {
+  @inline final def increment(key: Int): Unit = {
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
     while (keyAtPosition != 0 && key != keyAtPosition) {
@@ -190,7 +190,7 @@ class IntIntHashMap(
     }
   }
 
-  def update(key: Int, value: Int) {
+  def update(key: Int, value: Int): Unit = {
     put(key, value)
   }
 
@@ -223,7 +223,7 @@ class IntIntHashMap(
     overridden
   }
 
-  private[this] final def keyToPosition(key: Int) = {
+  private[this] final def keyToPosition(key: Int): Int = {
     key & mask
   }
 

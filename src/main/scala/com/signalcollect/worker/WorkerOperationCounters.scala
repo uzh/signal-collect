@@ -37,7 +37,7 @@ class WorkerOperationCounters(
     var requestMessagesReceived: Long = 0l,
     var otherMessagesReceived: Long = 0) {
   // Resets operation counters but not messages received/sent counters.
-  def resetOperationCounters {
+  def resetOperationCounters(): Unit = {
     collectOperationsExecuted = 0l
     signalOperationsExecuted = 0l
     verticesAdded = 0l

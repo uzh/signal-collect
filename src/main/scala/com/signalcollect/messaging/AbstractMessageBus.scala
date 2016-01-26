@@ -70,20 +70,20 @@ abstract class AbstractMessageBus[Id, Signal]
 
   protected var coordinator: ActorRef = _
 
-  def incrementMessagesSentToWorker(workerId: Int) = sentWorkerMessageCounters(workerId).incrementAndGet
-  def incrementMessagesSentToNode(nodeId: Int) = sentNodeMessageCounters(nodeId).incrementAndGet
-  def incrementMessagesSentToCoordinator = sentCoordinatorMessageCounter.incrementAndGet
-  def incrementMessagesSentToOthers = sentOtherMessageCounter.incrementAndGet
+  def incrementMessagesSentToWorker(workerId: Int): Unit = sentWorkerMessageCounters(workerId).incrementAndGet
+  def incrementMessagesSentToNode(nodeId: Int): Unit = sentNodeMessageCounters(nodeId).incrementAndGet
+  def incrementMessagesSentToCoordinator(): Unit = sentCoordinatorMessageCounter.incrementAndGet
+  def incrementMessagesSentToOthers(): Unit = sentOtherMessageCounter.incrementAndGet()
 
   protected val sentWorkerMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfWorkers)
   protected val sentNodeMessageCounters: Array[AtomicInteger] = getInitializedAtomicArray(numberOfNodes)
   protected val sentCoordinatorMessageCounter = new AtomicInteger(0)
   protected val sentOtherMessageCounter = new AtomicInteger(0)
 
-  def messagesSentToWorkers: Array[Int] = sentWorkerMessageCounters.map((c: AtomicInteger) => c.get)
-  def messagesSentToNodes: Array[Int] = sentNodeMessageCounters.map((c: AtomicInteger) => c.get)
-  def messagesSentToCoordinator: Int = sentCoordinatorMessageCounter.get
-  def messagesSentToOthers: Int = sentOtherMessageCounter.get
+  def messagesSentToWorkers(): Array[Int] = sentWorkerMessageCounters.map((c: AtomicInteger) => c.get)
+  def messagesSentToNodes(): Array[Int] = sentNodeMessageCounters.map((c: AtomicInteger) => c.get)
+  def messagesSentToCoordinator(): Int = sentCoordinatorMessageCounter.get
+  def messagesSentToOthers(): Int = sentOtherMessageCounter.get
 
   protected def getInitializedAtomicArray(numberOfEntries: Int): Array[AtomicInteger] = {
     val atomicInts = new Array[AtomicInteger](numberOfEntries)
@@ -114,47 +114,47 @@ abstract class AbstractMessageBus[Id, Signal]
 
   //--------------------MessageRecipientRegistry--------------------
 
-  override def registerWorker(workerId: Int, worker: ActorRef) {
+  override def registerWorker(workerId: Int, worker: ActorRef): Unit = {
     workers(workerId) = worker
     registrations.incrementAndGet
   }
 
-  override def registerNode(nodeId: Int, node: ActorRef) {
+  override def registerNode(nodeId: Int, node: ActorRef): Unit = {
     nodes(nodeId) = node
     registrations.incrementAndGet
   }
 
-  override def registerCoordinator(c: ActorRef) {
+  override def registerCoordinator(c: ActorRef): Unit = {
     coordinator = c
     registrations.incrementAndGet
   }
 
   //--------------------MessageBus--------------------
 
-  override def sendToActor(actor: ActorRef, message: Any) {
+  override def sendToActor(actor: ActorRef, message: Any): Unit = {
     actor.tell(message, ActorRef.noSender)
   }
 
-  override def sendToWorkerForVertexId(message: Any, recipientId: Id) {
+  override def sendToWorkerForVertexId(message: Any, recipientId: Id): Unit = {
     val workerId = mapper.getWorkerIdForVertexId(recipientId)
     sendToWorker(workerId, message)
   }
 
-  override def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int) {
+  override def sendToWorkerForVertexIdHash(message: Any, recipientIdHash: Int): Unit = {
     val workerId = mapper.getWorkerIdForVertexIdHash(recipientIdHash)
     sendToWorker(workerId, message)
   }
 
-  override def sendToWorker(workerId: Int, message: Any) {
+  override def sendToWorker(workerId: Int, message: Any): Unit = {
     incrementMessagesSentToWorker(workerId)
     workers(workerId).tell(message, ActorRef.noSender)
   }
 
-  override def sendToWorkerUncounted(workerId: Int, message: Any) {
+  override def sendToWorkerUncounted(workerId: Int, message: Any): Unit = {
     workers(workerId).tell(message, ActorRef.noSender)
   }
 
-  override def sendToWorkers(message: Any, messageCounting: Boolean) {
+  override def sendToWorkers(message: Any, messageCounting: Boolean): Unit = {
     for (workerId <- 0 until numberOfWorkers) {
       if (messageCounting) {
         incrementMessagesSentToWorker(workerId)
@@ -163,16 +163,16 @@ abstract class AbstractMessageBus[Id, Signal]
     }
   }
 
-  override def sendToNode(nodeId: Int, message: Any) {
+  override def sendToNode(nodeId: Int, message: Any): Unit = {
     incrementMessagesSentToNode(nodeId)
     nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
-  override def sendToNodeUncounted(nodeId: Int, message: Any) {
+  override def sendToNodeUncounted(nodeId: Int, message: Any): Unit = {
     nodes(nodeId).tell(message, ActorRef.noSender)
   }
 
-  override def sendToNodes(message: Any, messageCounting: Boolean) {
+  override def sendToNodes(message: Any, messageCounting: Boolean): Unit = {
     for (nodeId <- 0 until numberOfNodes) {
       if (messageCounting) {
         incrementMessagesSentToNode(nodeId)
@@ -181,12 +181,12 @@ abstract class AbstractMessageBus[Id, Signal]
     }
   }
 
-  override def sendToCoordinator(message: Any) {
+  override def sendToCoordinator(message: Any): Unit = {
     incrementMessagesSentToCoordinator
     coordinator.tell(message, ActorRef.noSender)
   }
 
-  override def sendToCoordinatorUncounted(message: Any) {
+  override def sendToCoordinatorUncounted(message: Any): Unit = {
     coordinator.tell(message, ActorRef.noSender)
   }
 

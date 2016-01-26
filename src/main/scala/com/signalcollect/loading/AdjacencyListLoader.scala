@@ -45,14 +45,14 @@ case class AdjacencyListLoader[SignalType](
 
   var isInitialized = false
 
-  protected def readNextVertex: Vertex[Int, _, Int, SignalType] = {
+  protected def readNextVertex(): Vertex[Int, _, Int, SignalType] = {
     if (intIterator.hasNext) {
       val id = intIterator.next
       val numberOfLinks = intIterator.next
       val outlinks = new Array[Int](numberOfLinks)
       var i = 0
       while (i < numberOfLinks) {
-        outlinks(i) = intIterator.next
+        outlinks(i) = intIterator.next()
         i += 1
       }
       combinedVertexBuilder(id, outlinks)
@@ -63,22 +63,22 @@ case class AdjacencyListLoader[SignalType](
 
   var nextVertex: Vertex[Int, _, Int, SignalType] = null
 
-  def initialize {
+  def initialize(): Unit = {
     intIterator = FileReader.intIterator(inputStream())
     isInitialized = true
     nextVertex = readNextVertex
   }
 
-  def hasNext = {
+  def hasNext: Boolean = {
     if (!isInitialized) {
       initialize
     }
     nextVertex != null
   }
 
-  def next: GraphEditor[Int, SignalType] => Unit = {
+  def next(): GraphEditor[Int, SignalType] => Unit = {
     if (!isInitialized) {
-      initialize
+      initialize()
     }
     if (nextVertex == null) {
       throw new Exception("next was called when hasNext is false.")

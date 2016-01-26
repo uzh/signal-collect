@@ -37,43 +37,43 @@ trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientReg
 
   def numberOfNodes: Int
 
-  def incrementMessagesSentToWorker(workerId: Int)
-  def messagesSentToWorkers: Array[Int]
+  def incrementMessagesSentToWorker(workerId: Int): Unit
+  def messagesSentToWorkers(): Array[Int]
 
-  def incrementMessagesSentToNode(nodeId: Int)
-  def messagesSentToNodes: Array[Int]
+  def incrementMessagesSentToNode(nodeId: Int): Unit
+  def messagesSentToNodes(): Array[Int]
 
-  def incrementMessagesSentToCoordinator
-  def messagesSentToCoordinator: Int
+  def incrementMessagesSentToCoordinator(): Unit
+  def messagesSentToCoordinator(): Int
 
-  def incrementMessagesSentToOthers
-  def messagesSentToOthers: Int
+  def incrementMessagesSentToOthers(): Unit
+  def messagesSentToOthers(): Int
 
   def messagesReceived: Long
 
-  def getReceivedMessagesCounter: AtomicInteger
+  def getReceivedMessagesCounter(): AtomicInteger
 
-  def sendToActor(actor: ActorRef, message: Any)
+  def sendToActor(actor: ActorRef, message: Any): Unit
 
-  def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int)
+  def sendToWorkerForVertexIdHash(message: Any, vertexIdHash: Int): Unit
 
-  def sendToWorkerForVertexId(message: Any, vertexId: Id)
+  def sendToWorkerForVertexId(message: Any, vertexId: Id): Unit
 
-  def sendToWorker(workerId: Int, message: Any)
+  def sendToWorker(workerId: Int, message: Any): Unit
 
-  def sendToWorkerUncounted(workerId: Int, message: Any)
+  def sendToWorkerUncounted(workerId: Int, message: Any): Unit
 
-  def sendToWorkers(message: Any, messageCounting: Boolean)
+  def sendToWorkers(message: Any, messageCounting: Boolean): Unit
 
-  def sendToNode(nodeId: Int, message: Any)
+  def sendToNode(nodeId: Int, message: Any): Unit
 
-  def sendToNodeUncounted(nodeId: Int, message: Any)
+  def sendToNodeUncounted(nodeId: Int, message: Any): Unit
 
-  def sendToNodes(message: Any, messageCounting: Boolean)
+  def sendToNodes(message: Any, messageCounting: Boolean): Unit
 
-  def sendToCoordinator(message: Any)
+  def sendToCoordinator(message: Any): Unit
 
-  def sendToCoordinatorUncounted(message: Any)
+  def sendToCoordinatorUncounted(message: Any): Unit
 
   /**
    * Resets the message but does not touch the counters.
@@ -81,13 +81,13 @@ trait MessageBus[@specialized(Int, Long) Id, Signal] extends MessageRecipientReg
   def reset(): Unit
 
   // Returns an api that treats all workers as if there were only one.
-  def getWorkerApi: WorkerApi[Id, Signal]
+  def getWorkerApi(): WorkerApi[Id, Signal]
 
   // Returns an array of worker proxies for all workers, indexed by workerId.
-  def getWorkerProxies: Array[WorkerApi[Id, Signal]]
+  def getWorkerProxies(): Array[WorkerApi[Id, Signal]]
 
   // Returns a graph editor that allows to manipulate the graph.
-  def getGraphEditor: GraphEditor[Id, Signal]
+  def getGraphEditor(): GraphEditor[Id, Signal]
 }
 
 trait MessageRecipientRegistry {
@@ -98,7 +98,7 @@ trait MessageRecipientRegistry {
    *  @param workerId is the worker id
    *  @param worker is the worker to be registered
    */
-  def registerWorker(workerId: Int, worker: ActorRef)
+  def registerWorker(workerId: Int, worker: ActorRef): Unit
 
   /**
    *  Registers a node.
@@ -106,13 +106,13 @@ trait MessageRecipientRegistry {
    *  @param nodeId is the node id
    *  @param node is the node to be registered
    */
-  def registerNode(nodeId: Int, node: ActorRef)
+  def registerNode(nodeId: Int, node: ActorRef): Unit
 
   /**
    *  Registers a coordinator.
    *
    *  @param coordinator is the coordinator to be registered
    */
-  def registerCoordinator(coordinator: ActorRef)
+  def registerCoordinator(coordinator: ActorRef): Unit
 
 }

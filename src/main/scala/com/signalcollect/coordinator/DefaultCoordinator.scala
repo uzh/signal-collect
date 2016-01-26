@@ -62,12 +62,12 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   throttlingEnabled: Boolean,
   messageBusFactory: MessageBusFactory[Id, Signal],
   mapperFactory: MapperFactory[Id]) extends Coordinator[Id, Signal]
-  with Actor
-  with ActorLogging
-  with ActorRestartLogging
-  with MessageRecipientRegistry {
+    with Actor
+    with ActorLogging
+    with ActorRestartLogging
+    with MessageRecipientRegistry {
 
-  override def postStop {
+  override def postStop(): Unit = {
     log.debug(s"Coordinator has stopped.")
   }
 
@@ -173,7 +173,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
       }
   }
 
-  def updateWorkerStatusMap(ws: WorkerStatus) {
+  def updateWorkerStatusMap(ws: WorkerStatus): Unit = {
     workerStatus(ws.workerId) = ws
     workerStatusTimestamps(ws.workerId) = System.nanoTime
     if (!allWorkersInitialized) {
@@ -181,11 +181,11 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     }
   }
 
-  def updateNodeStatusMap(ns: NodeStatus) {
+  def updateNodeStatusMap(ns: NodeStatus): Unit = {
     nodeStatus(ns.nodeId) = ns
   }
 
-  def onIdle {
+  def onIdle(): Unit = {
     for ((from, action) <- onIdleList) {
       action(this, from)
     }
@@ -200,9 +200,9 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   def getWorkerApi = workerApi
 
   protected lazy val graphEditor = messageBus.getGraphEditor
-  def getGraphEditor = graphEditor
+  def getGraphEditor() = graphEditor
 
-  def getWorkerStatuses: Array[WorkerStatus] = workerStatus.clone
+  def getWorkerStatuses(): Array[WorkerStatus] = workerStatus.clone
 
   def totalMessagesSent = messagesSentToWorkers.sum + messagesSentToNodes.sum + messagesSentToCoordinator
   def totalMessagesReceived = messagesReceivedByWorkers.sum + messagesReceivedByNodes.sum + messagesReceivedByCoordinator
@@ -214,7 +214,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   var messagesReceivedByWorkers: Array[Long] = new Array(numberOfWorkers)
   var messagesReceivedByNodes: Array[Long] = new Array(numberOfNodes)
 
-  def resetMessagingStats {
+  def resetMessagingStats(): Unit = {
     messagesSentToCoordinator = 0
     messagesReceivedByCoordinator = 0
     messagesSentToWorkers = new Array(numberOfWorkers)
@@ -223,7 +223,7 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
     messagesReceivedByNodes = new Array(numberOfNodes)
   }
 
-  def computeMessagingStats {
+  def computeMessagingStats(): Unit = {
     def updateSentMessages(stats: SentMessagesStats) {
       messagesSentToCoordinator += stats.coordinator
       for (recipientId <- 0 until numberOfWorkers) {
@@ -253,8 +253,8 @@ class DefaultCoordinator[Id: ClassTag, Signal: ClassTag](
   }
 
   def allSentMessagesReceived: Boolean = {
-    resetMessagingStats
-    computeMessagingStats
+    resetMessagingStats()
+    computeMessagingStats()
     if (messagesSentToCoordinator != messagesReceivedByCoordinator) {
       //println(s"Coordinator: $messagesReceivedByCoordinator/$messagesSentToCoordinator, globalInbox=${getGlobalInboxSize}")
       return false

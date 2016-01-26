@@ -172,7 +172,7 @@ private final class AsciiIntIterator(inputStream: InputStream) extends Iterator[
     }
   }
 
-  @inline def initialize {
+  @inline def initialize(): Unit = {
     in = new BufferedInputStream(inputStream)
     buf = new Array[Byte](BLOCK_SIZE)
     read = in.read(buf)

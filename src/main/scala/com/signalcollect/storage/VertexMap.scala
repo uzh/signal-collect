@@ -72,14 +72,14 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     remainder(0, 0)
   }
 
-  final def clear {
+  final def clear(): Unit = {
     values = new Array[Vertex[Id, _, Id, Signal]](maxSize)
     keys = new Array[Int](maxSize)
     numberOfElements = 0
     nextPositionToProcess = 0
   }
 
-  final def foreach(f: Vertex[Id, _, Id, Signal] => Unit) {
+  final def foreach(f: Vertex[Id, _, Id, Signal] => Unit): Unit = {
     var i = 0
     var elementsProcessed = 0
     while (elementsProcessed < numberOfElements) {
@@ -144,7 +144,7 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     elementsProcessed
   }
 
-  private[this] final def shrink {
+  private[this] final def shrink(): Unit = {
     val oldSize = maxSize
     val oldValues = values
     val oldKeys = keys
@@ -167,7 +167,7 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  private[this] final def tryDouble {
+  private[this] final def tryDouble(): Unit = {
     // 1073741824 is the largest size and cannot be doubled anymore.
     if (maxSize != 1073741824) {
       val oldSize = maxSize
@@ -193,11 +193,11 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     }
   }
 
-  final def remove(vertexId: Id) {
+  final def remove(vertexId: Id): Unit = {
     remove(vertexId, true)
   }
 
-  private final def remove(vertexId: Id, optimize: Boolean) {
+  private final def remove(vertexId: Id, optimize: Boolean): Unit = {
     val key = idToKey(vertexId)
     var position = keyToPosition(key)
     var keyAtPosition = keys(position)
@@ -218,7 +218,7 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
 
   // Try to reinsert all elements that are not optimally placed until an empty position is found.
   // See http://stackoverflow.com/questions/279539/best-way-to-remove-an-entry-from-a-hash-table
-  private[this] final def optimizeFromPosition(startingPosition: Int) {
+  private[this] final def optimizeFromPosition(startingPosition: Int): Unit = {
     var currentPosition = startingPosition
     var keyAtPosition = keys(currentPosition)
     while (isCurrentPositionOccupied) {
@@ -231,14 +231,14 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
       }
       advance
     }
-    def advance {
+    def advance(): Unit = {
       currentPosition = ((currentPosition + 1) & mask)
       keyAtPosition = keys(currentPosition)
     }
-    def isCurrentPositionOccupied = {
+    def isCurrentPositionOccupied: Boolean = {
       keyAtPosition != 0
     }
-    def removeCurrentEntry {
+    def removeCurrentEntry(): Unit = {
       keys(currentPosition) = 0
       values(currentPosition) = null
       numberOfElements -= 1
@@ -290,11 +290,11 @@ class VertexMap[@specialized(Int, Long) Id, Signal](
     doPut
   }
 
-  private[this] final def keyToPosition(key: Int) = {
+  private[this] final def keyToPosition(key: Int): Int = {
     key & mask
   }
 
-  private[this] final def idToKey(vertexId: Any) = {
+  private[this] final def idToKey(vertexId: Any): Int = {
     // No key can be 0, because 0 is reserved for no-entry.
     // This is why zero gets mapped to Int.MinValue.
     // The increase in collisions should be negligible,

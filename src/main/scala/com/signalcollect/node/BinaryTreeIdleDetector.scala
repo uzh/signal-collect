@@ -74,7 +74,7 @@ class BinaryTreeIdleDetector(
 
   val numberOfWorkersUnderIdleDetection = computeNumberOfSubnodes(nodeId) * workersPerNode
 
-  def receivedBulkStatus(b: BulkStatus) {
+  def receivedBulkStatus(b: BulkStatus): Unit = {
     assert(b.fromWorkers.length > 0)
     b.fromWorkers.foreach { s =>
       unreportedWorkerStats += ((s.workerId, s))
@@ -87,7 +87,7 @@ class BinaryTreeIdleDetector(
     }
   }
 
-  def computeAllIdleAndRequestReportIfNecessary {
+  def computeAllIdleAndRequestReportIfNecessary(): Unit = {
     if (!reportRequestedPending) {
       val allNewReportsIdle = unreportedWorkerStats.values.forall(_.isIdle)
       if (allIdleReported && allNewReportsIdle) {
@@ -125,7 +125,7 @@ class BinaryTreeIdleDetector(
     }
   }
 
-  def reportToParent(allIdle: Boolean) {
+  def reportToParent(allIdle: Boolean): Unit = {
     assert(reportRequestedPending == true)
     assert(unreportedWorkerStats.size > 0)
     if (statusReceivedSinceIdleReportRequested) {

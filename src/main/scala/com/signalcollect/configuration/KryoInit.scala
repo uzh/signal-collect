@@ -112,6 +112,7 @@ class KryoInit {
       registerClass(Nil.getClass)
       registerClass(classOf[ImmutableVector[_]])
       registerClass(ReceiveTimeout.getClass)
+      registerClass(Ordering.Double.getClass)
       // TODO: Convert to safe notation.
       register("com.signalcollect.nodeprovisioning.cluster.RetrieveNodeActors$")
       register("com.signalcollect.interfaces.SignalMessageWithoutSourceId$mcJ$sp")
@@ -155,7 +156,6 @@ class KryoInit {
       register("com.signalcollect.util.MemoryEfficientSplayIntSet")
       register("scala.math.Ordering$$anon$9")
       register("scala.math.Ordering$$anonfun$by$1")
-      register("scala.math.Ordering$Double$")
       register("com.signalcollect.util.SplayNode")
       register("com.signalcollect.util.IntHashMap")
       register("com.signalcollect.SumOfStates")

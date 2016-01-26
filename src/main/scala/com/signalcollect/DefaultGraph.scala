@@ -230,7 +230,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   /** Returns the ConsoleServer */
   def getConsole = console
 
-  def initializeMessageBuses {
+  def initializeMessageBuses(): Unit = {
     log.debug("Default graph is initializing registries ...")
     val registries: List[MessageRecipientRegistry] = coordinatorProxy :: bootstrapWorkerProxies.toList ++ bootstrapNodeProxies.toList
     for (registry <- registries.par) {
@@ -430,7 +430,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     }
 
     /** Perform a single, partial step. */
-    def step {
+    def step(): Unit = {
       lock.synchronized {
         stepTokens = 1
         lock.notifyAll
@@ -438,7 +438,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     }
 
     /** Complete the current iteration and pause before the next signal step. */
-    def collect {
+    def collect(): Unit = {
       lock.synchronized {
         stepTokens = state match {
           case "pausedBeforeSignal"             => 4
@@ -453,7 +453,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     }
 
     /** Continue computation until paused by the user or a break condition. */
-    def continue {
+    def continue(): Unit = {
       lock.synchronized {
         stepTokens = infinite
         lock.notifyAll
@@ -461,13 +461,13 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     }
 
     /** Pause the computation. */
-    def pause {
+    def pause(): Unit = {
       stepTokens = 0
     }
 
     /** Reset the graph to its initial state and pause the computation. */
-    def reset {
-      pause
+    def reset(): Unit = {
+      pause()
       lock.synchronized {
         setState("resetting")
         resetting = true
@@ -482,7 +482,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
     }
 
     /** Terminate the computation and Signal/Collect. */
-    def terminate {
+    def terminate(): Unit = {
       userTermination = true
       setState("terminating")
       resetting = true
@@ -495,7 +495,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
      *
      * @param s the new state
      */
-    private def setState(s: String) {
+    private def setState(s: String): Unit = {
       state = s
       if (console != null) { console.sockets.updateClientState() }
     }
@@ -505,7 +505,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
      *
      * @param s the state to be published to clients
      */
-    private def waitAs(s: String) {
+    private def waitAs(s: String): Unit = {
       while (stepTokens == 0 && !resetting) {
         setState(s)
         try { lock.wait } catch {
@@ -520,7 +520,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
      * @param s the state to be published to clients
      * @param f the function to perform
      */
-    private def performStep(s: String, f: () => Unit) {
+    private def performStep(s: String, f: () => Unit): Unit = {
       if (!resetting) {
         setState(s)
         if (stepTokens > 0) { stepTokens -= 1 }
@@ -535,7 +535,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
      * because not all conditions make sense depending on the type. See the
      * BreakConditionsAggregator documentation.
      */
-    private def checkBreakConditions() {
+    private def checkBreakConditions(): Unit = {
       conditionsReached = workerApi.aggregateAll(
         new BreakConditionsAggregator(conditions, state))
       if (conditionsReached.size > 0) {
@@ -556,7 +556,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
      * When continuing the computation, stepTokens is set to infinite, which
      * is simply an alias for -1.
      */
-    def run() {
+    def run(): Unit = {
       println("Entering interactive execution mode")
       lock.synchronized {
         while (!userTermination) {
@@ -620,7 +620,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   protected def optimizedAsynchronousExecution(
     stats: ExecutionStatistics,
     timeLimit: Option[Long],
-    globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]]) = {
+    globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]]): Unit = {
     val startTime = System.nanoTime
     workerApi.signalStep
     stats.signalSteps += 1
@@ -635,7 +635,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   protected def pureAsynchronousExecution(
     stats: ExecutionStatistics,
     timeLimit: Option[Long],
-    globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]]) {
+    globalTerminationDetection: Option[GlobalTerminationDetection[Id, Signal]]): Unit = {
     workerApi.startComputation
     (timeLimit, globalTerminationDetection) match {
       case (None, None) =>
@@ -708,7 +708,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
         def remainingTimeLimit = timeLimitNanoseconds - elapsedTimeNanoseconds
         def isTimeLimitReached = remainingTimeLimit <= 0
     }
-    workerApi.pauseComputation
+    workerApi.pauseComputation()
   }
 
   def awaitIdle(): Unit = {
@@ -751,7 +751,7 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
   def shutdown(): Unit = {
     if (console != null) { console.shutdown }
     // Only shut down the actor system if it was not passed to us and if it's still running.
-    if (config.actorSystem.isEmpty && !system.isTerminated) {
+    if (config.actorSystem.isEmpty && !system.whenTerminated.isCompleted) {
       try {
         // The node proxies also shutdown their respective actor systems.
         parallelBootstrapNodeProxies.foreach(_.shutdown)
@@ -760,16 +760,15 @@ class DefaultGraph[Id: ClassTag: TypeTag, Signal: ClassTag: TypeTag](
       }
       try {
         Thread.sleep(20)
-        if (!system.isTerminated) {
-          system.shutdown
-          system.awaitTermination
+        if (!system.whenTerminated.isCompleted) {
+          Await.ready(system.terminate(), Duration.Inf)
         }
       } catch {
         case t: Throwable =>
       }
     } else {
       // If the system is preserved, just cleanup the actors.
-      if (!system.isTerminated) {
+      if (!system.whenTerminated.isCompleted) {
         workerActors.foreach(_ ! PoisonPill)
         nodeActors.foreach(_ ! PoisonPill)
         coordinatorActor ! PoisonPill

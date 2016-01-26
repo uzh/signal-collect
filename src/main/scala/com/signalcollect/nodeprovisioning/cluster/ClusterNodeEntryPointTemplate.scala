@@ -20,13 +20,15 @@
 
 package com.signalcollect.nodeprovisioning.cluster
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import akka.actor.ActorSystem
 import com.signalcollect.configuration.Akka
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 object ClusterNodeEntryPointTemplate {
 
-    start()
+  start()
 
   def config: Config = Akka.config(
     serializeMessages = None,
@@ -38,6 +40,7 @@ object ClusterNodeEntryPointTemplate {
 
   def start(): Unit = {
     val system = ActorSystem(systemName, config)
-    system.awaitTermination()
+    Await.ready(system.whenTerminated, Duration.Inf)
   }
+
 }

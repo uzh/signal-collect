@@ -35,7 +35,7 @@ class ClusterNodeShutdownHandlerActor extends Actor with ActorLogging {
     case MemberExited(m) =>
       log.info(s"Cluster node received member exited message for {} and is shutting down as well.", m)
       cluster.down(cluster.selfAddress)
-      context.system.shutdown()
+      context.system.terminate()
   }
 
 }
