@@ -130,7 +130,7 @@ abstract class AbstractVertex[Id, State] extends Vertex[Id, State, Any, Any] {
   /**
    * This method is used by the framework in order to decide if the vertex' signal operation should be executed.
    * The higher the returned value the more likely the vertex will be scheduled for executing its signal method.
-   * @return the score value. The meaning of this value depends on the thresholds set in {@link Graph#execute}.
+   * @return the score value.
    */
   def scoreSignal: Double = {
     if (edgesModifiedSinceSignalOperation) {

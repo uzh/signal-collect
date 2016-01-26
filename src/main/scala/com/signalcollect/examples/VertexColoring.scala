@@ -24,9 +24,9 @@ import scala.util.Random
 import com.signalcollect._
 
 /**
- * 	This algorithm attempts to find a vertex coloring.
+ * This algorithm attempts to find a vertex coloring.
  * A valid vertex coloring is defined as an assignment of labels (colors)
- * 	to vertices such that no two vertices that share an edge have the same label.
+ * to vertices such that no two vertices that share an edge have the same label.
  *
  * Usage restriction: this implementation *ONLY* works on *UNDIRECTED* graphs.
  * In Signal/Collect this means that there is either no edge between 2 vertices
