@@ -47,6 +47,7 @@ import com.signalcollect.interfaces.BulkStatus
 import com.signalcollect.interfaces.BulkStatus
 import akka.actor.Scheduler
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
 /**
  * Incrementor function needs to be defined in its own class to prevent unnecessary
@@ -199,7 +200,7 @@ class DefaultNodeActor[Id, Signal](
 
   def shutdown(): Unit = {
     receivedMessagesCounter -= 1 // Node messages are not counted.
-    Await.ready(context.system.terminate(), Duration.Inf)
+    context.system.terminate()
   }
 
   def registerWorker(workerId: Int, worker: ActorRef) {
