@@ -21,11 +21,11 @@
 package com.signalcollect.nodeprovisioning.cluster
 
 import com.signalcollect.node.DefaultNodeActor
-
 import akka.actor.{ Actor, ActorLogging, ActorRef, Address, Deploy, Props, actorRef2Scala }
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent.{ InitialStateAsEvents, MemberUp }
 import akka.remote.RemoteScope
+import akka.actor.PoisonPill
 
 case object RetrieveNodeActors
 
@@ -39,10 +39,10 @@ class ClusterNodeProvisionerActor(
   val masterNodeActor = startNodeActor(cluster.selfAddress, 0)
 
   override def preStart(): Unit = {
-    cluster.subscribe(self, initialStateMode = InitialStateAsEvents, classOf[MemberUp])
+    if (numberOfNodes > 1) {
+      cluster.subscribe(self, initialStateMode = InitialStateAsEvents, classOf[MemberUp])
+    }
   }
-
-  override def postStop(): Unit = cluster.unsubscribe(self)
 
   private[this] var nodeActorArrayRequestor: Option[ActorRef] = None
 
@@ -72,7 +72,8 @@ class ClusterNodeProvisionerActor(
       nodeActors.foreach { case (k, v) => nodeActorArray(k) = v }
       nodeActorArrayRequestor.foreach { _ ! nodeActorArray }
       log.info(s"All expected {} nodes are up and the respective node actors were created.", numberOfNodes)
-      context.stop(self)
+      cluster.unsubscribe(self)
+      self ! PoisonPill
     }
   }
 
