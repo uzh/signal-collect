@@ -25,13 +25,14 @@ import org.scalatest.fixture.FlatSpec
 import org.scalatest.fixture.UnitFixture
 import com.signalcollect.DataGraphVertex
 import com.signalcollect.GraphEditor
+import com.signalcollect.TestEventGraph
 
 class TestError() extends Exception("Just a test exception.")
 
 class ErrorSpec extends FlatSpec with UnitFixture {
 
-  "Signal/Collect" should "log errors during vertex initialization" in new TestGraph {
-    EventFilter[TestError]() intercept {
+  "Signal/Collect" should "log errors during vertex initialization" in new TestEventGraph {
+    EventFilter[TestError](occurrences = 1) intercept {
       g.addVertex(new DataGraphVertex(1, 1) {
         override def afterInitialization(graphEditor: GraphEditor[Any, Any]) = throw new TestError
         def collect: Int = 1
